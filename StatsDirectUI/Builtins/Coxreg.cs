@@ -2694,10 +2694,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, ChartRenderer.CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
             cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, ChartRenderer.CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)

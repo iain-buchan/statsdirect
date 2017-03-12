@@ -31,6 +31,8 @@ namespace StatsDirect.Charting
 
         public ChartOptions ChartOptions { get; set; }
 
+        public bool IsAscii { get; set; }
+
         public ChartDefinition()
         {
             YSeries = new List<Series>();

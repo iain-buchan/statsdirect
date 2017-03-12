@@ -145,6 +145,7 @@ namespace StatsDirect.Templates
         {
             definition.ScaleParameters = MaybeFindScaleParameters(step, parameters, isRedo);
             definition.ChartOptions = FindOrPreprocessChartOptions(step, parameters, isRedo, definition, dataName);
+            definition.IsAscii = step.IsAscii;
 
             // TODO: Gross hack (see #993): Forest lin/log depends on the chart options for the data.
             if (step.ChartType == ChartType.Forest)
@@ -243,7 +244,6 @@ namespace StatsDirect.Templates
             ParameterBag results;
             using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(definition))
             {
-                ch.IsAscii = step.IsAscii;
                 string rtf;
                 results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
                 results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));

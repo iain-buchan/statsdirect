@@ -7,7 +7,7 @@ namespace StatsDirect.Numerics
         ///  <summary>
         ///  Ranks the input values in a, returning the ranks in r.  r need not be initialised.
         ///  </summary>
-        ///  <param name="a">LowerBound-based input vector of n values</param>
+        ///  <param name="a">LowerBound-based input vector of n values. Read-only.</param>
         ///  <param name="r">LowerBound-based output vector of length n. smallest value is ranked 1, largest is ranked n. ties are assigned average of tied ranks</param>
         ///  <param name="lowerBound">The lower bound of the array being passed in, typically 0 or 1.</param>
         ///  <param name="n">number of values passed in (so upper bound is n + lowerBound - 1)</param>
@@ -22,15 +22,12 @@ namespace StatsDirect.Numerics
         ///  <remarks></remarks>
         public static void Rank(double[] a, double[] r, int lowerBound, int n, int qt, out double xf)
         {
-            int i;
             int upperBound = n + lowerBound - 1;
-            for (i = lowerBound; i <= upperBound; i++)
-            {
+            for (int i = lowerBound; i <= upperBound; i++)
                 r[i] = 0.0;
-            }
             xf = 0.0;
-            //      find ranks 
-            for (i = lowerBound; i <= upperBound; i++)
+            // find ranks 
+            for (int i = lowerBound; i <= upperBound; i++)
             {
                 //         test whether point already ranked
                 if (r[i] <= 0.0)
@@ -45,13 +42,13 @@ namespace StatsDirect.Numerics
                         if (a[j] < x)
                         {
                             //                  count number of data points which are smaller
-                            nxlt = nxlt + 1;
+                            nxlt++;
                         }
                         else if (a[j] == x)
                         {
                             //                  count number of data points which are equal.
                             //                  mark these by setting their ranks to -1.
-                            ntie = ntie + 1;
+                            ntie++;
                             r[j] = -1.0;
                         }
                     }
@@ -59,47 +56,29 @@ namespace StatsDirect.Numerics
                     if (ntie <= 1)
                     {
                         //               store rank of untied data points
-                        r[i] = Convert.ToDouble(nxlt) + 1.0;
-                        //               store rank of tied data points
+                        r[i] = nxlt + 1.0;
+                        
                     }
                     else if (ntie > 1)
-                    {
+                    {//               store rank of tied data points
                         double p;
                         if (ntie % 2 == 0)
-                        {
-                            p = Convert.ToDouble(nxlt) + Convert.ToDouble(ntie / 2) + 0.5;
-                        }
+                            p = nxlt + (ntie / 2) + 0.5;
                         else
-                        {
-                            p = Convert.ToDouble(nxlt) + Convert.ToDouble((ntie + 1) / 2);
-                        }
+                            p = nxlt + ((ntie + 1) / 2);
                         for (j = i; j <= upperBound; j++)
-                        {
                             if (r[j] == -1.0)
-                            {
                                 r[j] = p;
-                            }
-                        }
                         if (qt == 1)
-                        {
-                            xf = xf + (Math.Pow(ntie, 3) - ntie) / 12.0;
-                        }
+                            xf += (Math.Pow(ntie, 3) - ntie) / 12.0;
                         else if (qt == 2)
-                        {
-                            xf = xf + ntie * (ntie - 1.0) / 2.0;
-                        }
+                            xf += ntie * (ntie - 1.0) / 2.0;
                         else if (qt == 3)
-                        {
-                            xf = xf + Convert.ToDouble(ntie * (ntie - 1) * (2 * ntie + 5));
-                        }
+                            xf += ntie * (ntie - 1) * (2 * ntie + 5);
                         else if (qt == 4)
-                        {
-                            xf = xf + Convert.ToDouble(ntie * (ntie - 1) * (ntie - 2));
-                        }
+                            xf += ntie * (ntie - 1) * (ntie - 2);
                         else if (qt == 5)
-                        {
-                            xf = xf + Convert.ToDouble(ntie * (ntie - 1) * (ntie + 1));
-                        }
+                            xf += ntie * (ntie - 1) * (ntie + 1);
                     }
                 }
             }

@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using StatsDirect.Numerics;
 using StatsDirect.Charting;
 using StatsDirect.Templates;
+using ChartRenderer = StatsDirect.Charting.Renderer.ChartRenderer;
 using System.Collections.Generic;
 
 namespace StatsDirect.UI
@@ -26,97 +27,53 @@ namespace StatsDirect.UI
         {
             options.UseColour = rdoColour.Checked;
             if (options.UsesShowLegend && options.ShowLegendIsRelevant)
-            {
                 options.ShowLegend = chkShowLegend.Checked;
-            }
             if (options.UsesBoxAxes)
-            {
                 options.ShouldBoxAxes = chkBoxAxes.Checked;
-            }
             if (options.UsesChartTitle)
-            {
                 options.Title = txtChartTitle.Text;
-            }
             if (options.UsesSeriesLabels)
-            {
                 for (int i = 0; i < options.SeriesTitles.Length; i++)
                     options.SeriesTitles[i] = (string)gridSeriesLabels.Rows[i].Cells[0].Value;
-            }
             if (options.UsesXAxisTitle)
-            {
                 options.XAxisTitle = ctlAxisOptions.X.Title;
-            }
             if (options.UsesYAxisTitle)
-            {
                 options.YAxisTitle = ctlAxisOptions.Y.Title;
-            }
             ScaleParameters scaleParameters = definition.ScaleParameters;
             FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X);
             FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y);
             if (options.UsesAxisLabelFontDescriptor)
-            {
                 options.AxisLabelFontDescriptor = ChartRenderer.SaveStringFromFont(ctlAxisLabelFont.UserFont);
-            }
             if (options.UsesAxisTitleFontDescriptor)
-            {
                 options.AxisTitleFontDescriptor = ChartRenderer.SaveStringFromFont(ctlAxisTitleFont.UserFont);
-            }
             if (options.UsesTitleFontDescriptor)
-            {
                 options.TitleFontDescriptor = ChartRenderer.SaveStringFromFont(ctlTitleFont.UserFont);
-            }
             if (options.UsesLegendFontDescriptor)
-            {
                 options.LegendFontDescriptor = ChartRenderer.SaveStringFromFont(ctlLegendFont.UserFont);
-            }
             if (options.ShowBarOptions)
-            {
                 FillBarOptionsFromForm();
-            }
             if (options.ShowBoxWhiskerOptions)
-            {
                 FillBoxWhiskerOptionsFromForm();
-            }
             if (options.ShowControlOptions)
-            {
                 FillControlOptionsFromForm();
-            }
             if (options.ShowErrorBarOptions)
-            {
                 FillErrorBarOptionsFromForm();
-            }
             if (options.ShowForestOptions)
-            {
                 FillForestOptionsFromForm();
-            }
             if (options.ShowHistogramOptions)
-            {
                 FillHistogramOptionsFromForm();
-            }
             if (options.ShowNormalOptions)
-            {
                 FillNormalOptionsFromForm();
-            }
             if (options.ShowPyramidOptions)
-            {
                 FillPyramidOptionsFromForm();
-            }
             if (options.ShowRocOptions)
-            {
                 FillRocOptionsFromForm();
-            }
             if (options.ShowScatterXYOptions)
-            {
                 FillScatterXYOptionsFromForm();
-            }
             if (options.ShowSurvivalOptions)
-            {
                 FillSurvivalOptionsFromForm();
-            }
             if (options.UsesAxisLineThickness)
-            {
                 options.AxisLineThickness = ctlAxisLineThickness.LineThickness;
-            }
             if (null != options.SeriesOptions)
             {
                 seriesOptions.Save();

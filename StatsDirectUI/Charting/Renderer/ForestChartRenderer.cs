@@ -4,16 +4,16 @@ using StatsDirect.Utilities;
 using System;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class ForestChartRenderer: AbstractChartRenderer
+    class ForestChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public ForestChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             ForestOptions fOptions = (ForestOptions)definition.ChartOptions;
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
@@ -83,7 +83,7 @@ namespace StatsDirect.Charting
             };
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             int pbias = 0;
 

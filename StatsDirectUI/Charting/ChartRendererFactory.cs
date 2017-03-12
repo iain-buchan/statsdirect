@@ -5,6 +5,7 @@ using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
+using StatsDirect.Charting.Renderer;
 
 namespace StatsDirect.Charting
 {
@@ -24,7 +25,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string PlotCorrelationAndReturnRtf(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, ChartRenderer.CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        public static string PlotCorrelationAndReturnRtf(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
             ChartDefinition cd = new ChartDefinition();
             cd.ScaleParameters.X.ScaleType = Transformation.Log == xform ? ScaleType.Log10 : ScaleType.Linear;
@@ -88,7 +89,7 @@ namespace StatsDirect.Charting
             cd.AddYSeriesAt(ys, 0);
             DoubleSeries xs = new DoubleSeries(xData, xAxisTitle);
             cd.AddXSeriesAt(xs, 0);
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
+            using (LinearRegressionChartRenderer ch = (LinearRegressionChartRenderer)ChartRendererFor(cd))
             {
                 double maxpcon = double.MinValue;
                 double minpcon = double.MaxValue;
@@ -152,7 +153,7 @@ namespace StatsDirect.Charting
             ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions };
             cd.XSeries.Add(new DoubleSeries(y, title));
 
-            using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
+            using (NormalChartRenderer ch = (NormalChartRenderer)ChartRendererFor(cd))
             {
                 ch.PlotNormal(y);
                 return Render(ch);
@@ -217,7 +218,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string SurvivalOrHazardPlot(CoxP[] z, int iobs, int istrata, ChartRenderer.CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] ARR3, ColumnData[] cdat1, bool use_tic, bool use_marker, int[] gn)
+        public static string SurvivalOrHazardPlot(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] ARR3, ColumnData[] cdat1, bool use_tic, bool use_marker, int[] gn)
         {
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
             {
@@ -343,14 +344,26 @@ namespace StatsDirect.Charting
                     return new BoxWhiskerChartRenderer(chartDefinition);
                 case ChartType.Control:
                     return new ControlChartRenderer(chartDefinition);
+                case ChartType.ErrorBar:
+                    return new ErrorBarChartRenderer(chartDefinition);
                 case ChartType.Forest:
                     return new ForestChartRenderer(chartDefinition);
+                case ChartType.Gini:
+                    return new GiniChartRenderer(chartDefinition);
                 case ChartType.Histogram:
                     return new HistogramChartRenderer(chartDefinition);
                 case ChartType.Ladder:
                     return new LadderChartRenderer(chartDefinition);
+                case ChartType.LinearRegression:
+                    return new LinearRegressionChartRenderer(chartDefinition);
+                case ChartType.LineXY:
+                    return new ScatterChartRenderer(chartDefinition);
+                case ChartType.Normal:
+                    return new NormalChartRenderer(chartDefinition);
                 case ChartType.Pyramid:
                     return new PyramidChartRenderer(chartDefinition);
+                case ChartType.ScatterXY:
+                    return new ScatterChartRenderer(chartDefinition);
                 case ChartType.Spread:
                     return new SpreadChartRenderer(chartDefinition);
                 case ChartType.Survival:

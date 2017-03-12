@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class SpreadChartRenderer: AbstractChartRenderer
+    class SpreadChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public SpreadChartRenderer(ChartDefinition definition)
             : base(definition)
@@ -12,21 +12,19 @@ namespace StatsDirect.Charting
         }
 
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
-            double xMin;
-            double xMax;
-            GetMinMaxSort(seriesToUse, out xMin, out xMax);
+            Layout.Range xRange = GetMinMaxSort(seriesToUse);
 
             return new ScaleParameters
             {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = xMin, MinGreaterThanZero = xMin, Max = xMax },
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = xRange.Min, MinGreaterThanZero = xRange.Min, Max = xRange.Max },
                 Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
             };
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
             if (sOptions.Orientation == ChartOrientation.Horizontal)
@@ -60,7 +58,9 @@ namespace StatsDirect.Charting
                 imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
             }
 
-            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            DataMinX = dataRangeX.Min;
+            DataMaxX = dataRangeX.Max;
 
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(sOptions);
@@ -155,7 +155,9 @@ namespace StatsDirect.Charting
                 imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
             }
 
-            GetMinMaxSort(seriesToUse, out DataMinY, out DataMaxY);
+            Layout.Range dataRangeY = GetMinMaxSort(seriesToUse);
+            DataMinY = dataRangeY.Min;
+            DataMaxY = dataRangeY.Max;
 
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(sOptions);
@@ -195,9 +197,7 @@ namespace StatsDirect.Charting
                     }
                     int count = r1 - r;
                     if (count > maxcount)
-                    {
                         maxcount = count;
-                    }
                 }
 
                 double scl;

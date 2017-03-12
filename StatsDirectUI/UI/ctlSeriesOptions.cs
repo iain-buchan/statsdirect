@@ -45,7 +45,7 @@ namespace StatsDirect.UI
         {
             // If we don't yet have any marker types passed in by an outside party, fake it from the saved details.
             if (null == markerTypes && null != seriesOptionsDescriptors)
-                markerTypes = ChartRenderer.MarkersFromDescriptors(seriesOptionsDescriptors, ShouldForceIsFilled, ForcedIsFilled, ShouldForceFillStyle, ForcedFillStyle);
+                markerTypes = Charting.Renderer.AbstractChartRenderer.MarkersFromDescriptors(seriesOptionsDescriptors, ShouldForceIsFilled, ForcedIsFilled, ShouldForceFillStyle, ForcedFillStyle);
 
             cboSeries.Items.Clear();
             if (null != seriesOptionsDescriptors)

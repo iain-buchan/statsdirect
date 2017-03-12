@@ -4,16 +4,16 @@ using StatsDirect.Templates;
 using System;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class PyramidChartRenderer: AbstractChartRenderer
+    class PyramidChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public PyramidChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             PyramidOptions pOptions = (PyramidOptions)definition.ChartOptions;
 
@@ -61,7 +61,7 @@ namespace StatsDirect.Charting
             Pairs
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             const int MINIMUM_X_WHITESPACE = 30;
 

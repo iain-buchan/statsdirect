@@ -2,16 +2,16 @@
 using StatsDirect.Utilities;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class AgreementPairChartRenderer: AbstractChartRenderer
+    class AgreementPairChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public AgreementPairChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             double avMin = 0;
             double avMax = 0;
@@ -20,7 +20,9 @@ namespace StatsDirect.Charting
             if (!(definition == null || definition.ChartOptions == null))
             {
                 AgreementOptions aOptions = (AgreementOptions)definition.ChartOptions;
-                GetMinMaxArray(aOptions.mxd, ScaleType.Linear, out mxdMin, out mxdMax);
+                Layout.Range mxdRange = GetMinMaxArray(aOptions.mxd, ScaleType.Linear);
+                mxdMin = mxdRange.Min;
+                mxdMax = mxdRange.Max;
                 if (aOptions.HasLimits)
                 {
                     if (aOptions.lla < mxdMin)
@@ -28,7 +30,9 @@ namespace StatsDirect.Charting
                     if (aOptions.ula > mxdMax)
                         mxdMax = aOptions.ula;
                 }
-                GetMinMaxArray(aOptions.av, ScaleType.Linear, out avMin, out avMax);
+                Layout.Range avRange = GetMinMaxArray(aOptions.av, ScaleType.Linear);
+                avMin = avRange.Min;
+                avMax = avRange.Max;
             }
 
             return new ScaleParameters
@@ -48,13 +52,15 @@ namespace StatsDirect.Charting
             };
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             AgreementOptions aOptions = (AgreementOptions)definition.ChartOptions;
             StartVectorPlot();
             double mxdMin;
             double mxdMax;
-            GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType, out mxdMin, out mxdMax);
+            Layout.Range mxdRange = GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType);
+            mxdMin = mxdRange.Min;
+            mxdMax = mxdRange.Max;
             using (Pen p = GetMarkerPen(MarkerTypes[0]))
             {
                 if (aOptions.HasLimits)

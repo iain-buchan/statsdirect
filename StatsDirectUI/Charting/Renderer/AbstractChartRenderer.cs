@@ -10,9 +10,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    public abstract class AbstractChartRenderer : IChartRenderer, IDisposable
+    public abstract class AbstractChartRenderer : IDisposable
     {
         const float PIXELS_PER_INCH = 96.0f;
         const float POINTS_PER_INCH = 72.0f;
@@ -25,22 +25,14 @@ namespace StatsDirect.Charting
         protected const int MAX_LABEL_LENGTH = 50;
         protected const int MINIMUM_X_WHITESPACE = 70;
 
-        //  PUBLIC VARIABLES - users can set these
-        ///  <summary>
-        ///  If true, a textual representation of the chart is plotted.  If false (default) a metafile is plotted.
-        ///  </summary>
-        public bool IsAscii { get; set; } = false;
-
-
-        //  PRIVATE VARIABLES - callers should be unable to touch anything below here
-        protected double DataMinX; //TODO: { get; set; }
+        protected double DataMinX { get; set; }
         protected double DataMinGreaterThanZeroX { get; set; }
-        protected double DataMaxX; //TODO: { get; set; }
-        protected double DataMinY; //TODO: { get; set; }
+        protected double DataMaxX { get; set; }
+        protected double DataMinY { get; set; }
         protected double DataMinGreaterThanZeroY { get; set; }
-        protected double DataMaxY; //TODO: { get; set; }
+        protected double DataMaxY { get; set; }
 
-        protected ChartDefinition definition;
+        protected ChartDefinition definition { get; set; }
 
         private IStatsDirectCanvas statsDirectCanvas;
 
@@ -54,39 +46,39 @@ namespace StatsDirect.Charting
 
         private static bool defaultAllBlack;
 
-        protected Font axisLabelFont;
-        protected Font axisTitleFont;
-        protected float axisLineThickness;
-        protected Pen axisPen;
+        protected Font axisLabelFont { get; private set; }
+        protected Font axisTitleFont { get; private set; }
+        protected float axisLineThickness { get; private set; }
+        protected Pen axisPen { get; private set; }
         private Brush axisBrush;
         private const double AXIS_LITTLE_TICK = 4;
         protected const double AXIS_BIG_TICK = 7;
-        protected Font titleFont;
-        protected Font legendFont;
-        protected bool boxAxes = defaultBoxAxes;
+        protected Font titleFont { get; private set; }
+        protected Font legendFont { get; private set; }
+        protected bool boxAxes { get; private set; } = defaultBoxAxes;
 
-        protected Font labelFont;
+        protected Font labelFont { get; private set; }
 
         private bool isXAxisReversed;
         private bool isYAxisReversed;
         /// <summary>
         /// The X-position in canvas co-ordinates of the left-hand end of the chart's X-axis
         /// </summary>
-        protected double xAxisCanvas;
+        protected double xAxisCanvas { get; set; }
         /// <summary>
         /// The length in canvas co-ordinates of the chart's X-axis
         /// </summary>
-        protected double xExtCanvas;
+        protected double xExtCanvas { get; set; }
         /// <summary>
         /// The Y-position in canvas co-ordinates of the bottom of the chart's Y-axis
         /// </summary>
-        protected double yAxisCanvas;
-        protected double yExtCanvas;
+        protected double yAxisCanvas { get; set; }
+        protected double yExtCanvas { get; set; }
 
-        protected double divx;
-        protected double offx;
-        protected double divy;
-        protected double offy;
+        protected double divx { get; set; }
+        protected double offx { get; set; }
+        protected double divy { get; set; }
+        protected double offy { get; set; }
 
         protected const int DEFAULT_METAFILE_HEIGHT = 800;
         protected const int DEFAULT_METAFILE_WIDTH = 1132;
@@ -96,7 +88,7 @@ namespace StatsDirect.Charting
         protected int imageWidth = DEFAULT_METAFILE_WIDTH;
         protected const int LABEL_TO_AXIS_LABEL_GAP = 15;
 
-        protected string[] shTx;
+        protected string[] shTx { get; set; }
 
         private static bool AreSharedValuesInitialised;
 
@@ -106,7 +98,7 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  Several methods take a colour, not a pen.  This caches the most recent pen used by those methods, so that it can be re-used rather than regenerated each time.
         ///  </summary>
-        protected Pen mostRecentPen;
+        private Pen mostRecentPen;
         /// <summary>
         /// Default marker types; shared between renderers.
         /// </summary>
@@ -263,13 +255,10 @@ namespace StatsDirect.Charting
         ///  Note and return the global minimum and maximum values.
         ///  </summary>
         /// <param name="seriesToUse"></param>
-        /// <param name="min">Filled in with the global minimum value</param>
-        ///  <param name="max">Filled in with the global maximum value</param>
-        ///  <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        protected void GetMinMaxSort(List<Series> seriesToUse, out double min, out double max)
+        protected static Layout.Range GetMinMaxSort(List<Series> seriesToUse)
         {
-            min = double.MaxValue;
-            max = double.MinValue;
+            double min = double.MaxValue;
+            double max = double.MinValue;
             foreach (DoubleSeries s in seriesToUse)
             {
                 Array.Sort(s.Data);
@@ -278,6 +267,7 @@ namespace StatsDirect.Charting
                 if (s.Data[s.Data.Length - 1] > max)
                     max = s.Data[s.Data.Length - 1];
             }
+            return new Layout.Range(min, max);
         }
 
         /// <summary>
@@ -570,7 +560,6 @@ namespace StatsDirect.Charting
         protected void StartVectorPlot(bool shouldDefaultAxes = true)
         {
             // Initialise scaling and resources
-            IsAscii = false;
             if (shouldDefaultAxes)
                 DefaultAxes();
             if (!(AreSharedValuesInitialised))
@@ -2185,11 +2174,11 @@ namespace StatsDirect.Charting
         /// <param name="min">Filled in with the global minimum value</param>
         /// <param name="max">Filled in with the global maximum value</param>
         /// <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        protected void GetMinMaxArray(double[] data, ScaleType scaleType, out double min, out double max)
+        protected Layout.Range GetMinMaxArray(double[] data, ScaleType scaleType)
         {
             bool ignoreZeroOrLess = scaleType == ScaleType.LogNatural || scaleType == ScaleType.Log10;
-            min = double.MaxValue;
-            max = double.MinValue;
+            double min = double.MaxValue;
+            double max = double.MinValue;
             for (int i = data.GetLowerBound(0); i <= data.GetUpperBound(0); i++)
             {
                 if (data[i] != Constant.MISSING && !(ignoreZeroOrLess && data[i] <= 0))
@@ -2200,6 +2189,7 @@ namespace StatsDirect.Charting
                         max = data[i];
                 }
             }
+            return new Layout.Range(min, max);
         }
 
         /// <summary>
@@ -2324,8 +2314,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public abstract ParameterBag Plot(ITemplateHost host);
-        public abstract ScaleParameters GetScaleParameters();
+        protected bool IsAscii { get { return null != definition && definition.IsAscii; } }
 
         protected class AxisScaleAndSize
         {

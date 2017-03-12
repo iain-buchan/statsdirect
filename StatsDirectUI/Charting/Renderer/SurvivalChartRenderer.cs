@@ -3,16 +3,16 @@ using StatsDirect.Templates;
 using System;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class SurvivalChartRenderer: AbstractChartRenderer
+    class SurvivalChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public SurvivalChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             SurvivalOptions sOptions = ((SurvivalOptions)(definition.ChartOptions));
 
@@ -69,7 +69,7 @@ namespace StatsDirect.Charting
             };
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             SurvivalOptions sOptions = ((SurvivalOptions)(definition.ChartOptions));
 

@@ -3,16 +3,16 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class HistogramChartRenderer: AbstractChartRenderer
+    class HistogramChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public HistogramChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             HistogramOptions options = ((HistogramOptions)(definition.ChartOptions));
             bool showRelativeFrequencies = options.ShowRelativeFrequencies;
@@ -54,7 +54,7 @@ namespace StatsDirect.Charting
             return sp;
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             HistogramOptions options = (HistogramOptions)definition.ChartOptions;
             List<Series> seriesToUse = definition.YSeries;
@@ -63,7 +63,9 @@ namespace StatsDirect.Charting
             List<string> savedLines = null;
 
             //  Ensure the data is sorted
-            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            DataMinX = dataRangeX.Min;
+            DataMaxX = dataRangeX.Max;
 
             // get settings for plot
             bool overlayNormalCurve = options.OverlayNormalCurve;
@@ -82,13 +84,7 @@ namespace StatsDirect.Charting
                     for (int i = 0; i < originalMarkerTypes.Length; i++)
                         MarkerTypes[i].Width = options.LineWidth;
                     AssignMarkersToSeries(seriesToUse);
-
-                    if (!(string.IsNullOrEmpty(options.AxisFontDescriptor)))
-                        axisLabelFont = FontFromSaveString(options.AxisFontDescriptor);
-                    if (!(string.IsNullOrEmpty(options.AxisTitleFontDescriptor)))
-                        axisTitleFont = FontFromSaveString(options.AxisTitleFontDescriptor);
-                    if (!(string.IsNullOrEmpty(options.TitleFontDescriptor)))
-                        titleFont = FontFromSaveString(options.TitleFontDescriptor);
+                    SetFontsAndThicknessesFromOptions(options);
                 }
                 else
                 {

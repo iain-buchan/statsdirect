@@ -1,21 +1,18 @@
 ﻿using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class ControlChartRenderer: AbstractChartRenderer
+    class ControlChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public ControlChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
@@ -117,7 +114,7 @@ namespace StatsDirect.Charting
         ///  Do a control plot.  Expects one X series and one Y series.
         ///  </summary>
         /// <returns>True if the plot succeeds, False otherwise.</returns>
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;

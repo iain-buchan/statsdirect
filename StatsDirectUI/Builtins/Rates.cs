@@ -642,9 +642,9 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("srr_to", srru_bino);
             }
 
-            ChartRenderer.CorrelationRowType[] pg = new ChartRenderer.CorrelationRowType[k + 2 + 1 /* VB to C# conversion */ ];
-            pg[k + 1] = ChartRenderer.CorrelationRowType.Subgroup;
-            pg[k + 2] = ChartRenderer.CorrelationRowType.Pooled;
+            CorrelationRowType[] pg = new CorrelationRowType[k + 2 + 1 /* VB to C# conversion */ ];
+            pg[k + 1] = CorrelationRowType.Subgroup;
+            pg[k + 2] = CorrelationRowType.Pooled;
 
             rkr[k + 2] = srr;
             rkrl[k + 2] = srrl;

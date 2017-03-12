@@ -4,16 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class BarChartRenderer: AbstractChartRenderer
+    class BarChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public BarChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             BarOptions bOptions = ((BarOptions)(definition.ChartOptions));
 
@@ -80,7 +80,7 @@ namespace StatsDirect.Charting
         ///  Plot a bar, stacked bar or 100% stacked bar chart.
         ///  </summary>
         ///  <remarks></remarks>
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             definition = definition.Clone();
 

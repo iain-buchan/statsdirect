@@ -13,8 +13,8 @@ namespace StatsDirect.Charting
             
             //  A ladder plot's markers are derived from the first two series.
             MarkerTypes = new List<MarkerType>(); 
-            MarkerType leftHandMarkerType = ChartRenderer.MarkerTypes[ 0 ].Clone(); 
-            MarkerType rightHandMarkerType = ChartRenderer.MarkerTypes[ 1 ].Clone(); 
+            MarkerType leftHandMarkerType = Renderer.AbstractChartRenderer.MarkerTypes[ 0 ].Clone(); 
+            MarkerType rightHandMarkerType = Renderer.AbstractChartRenderer.MarkerTypes[ 1 ].Clone(); 
             leftHandMarkerType.MarkerSize = 6; 
             rightHandMarkerType.MarkerSize = 6; 
             MarkerTypes.Add( leftHandMarkerType ); 

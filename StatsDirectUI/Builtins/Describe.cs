@@ -1046,18 +1046,17 @@ namespace StatsDirect.Builtins
                     cd.AddXSeries(times, null);
                     cd.AddYSeries(subjectObservations, null);
                 }
-                Charting.ScatterXYOptions options = new ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true)
+                ScatterXYOptions options = new ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true)
                 {
                     Title = group.Group.Label,
                     XAxisTitle = timesVariable.Title,
                     YAxisTitle = observationsVariable.Title
                 };
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
-                    options.MarkerTypes[marker] = AbstractChartRenderer.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
+                    options.MarkerTypes[marker] = Charting.Renderer.AbstractChartRenderer.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
-                IChartRenderer chart = ChartRendererFactory.ChartRendererFor(cd);
                 string rtf;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
                 groupParameters.AddOutput("chart", rtf);
             }
 
@@ -1079,9 +1078,8 @@ namespace StatsDirect.Builtins
                     ShouldScaleZ = true
                 };
                 cd.ChartOptions = options;
-                IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd);
                 string rtf;
-                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
+                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
                 outputParameters.AddOutput("aucNormalChart", rtf);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
@@ -1091,8 +1089,7 @@ namespace StatsDirect.Builtins
                 cd.AddXSeries(points, "Log Area Under Curve");
                 options.Title = "Normal Plot for Log(AUC)";
                 options.XAxisTitle = "Log Area Under Curve";
-                ch = ChartRendererFactory.ChartRendererFor(cd);
-                results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
+                results = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
                 outputParameters.AddOutput("aucLogNormalChart", rtf);
                 outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
             }
@@ -1136,9 +1133,8 @@ namespace StatsDirect.Builtins
                 };
                 options.SetMarkers();
                 cd.ChartOptions = options;
-                IChartRenderer chart = ChartRendererFactory.ChartRendererFor(cd);
                 string rtf;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, chart, out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
                 outputParameters.AddOutput("meanAucChart", rtf);
             }
 

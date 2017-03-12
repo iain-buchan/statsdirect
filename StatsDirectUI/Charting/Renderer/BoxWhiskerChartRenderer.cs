@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class BoxWhiskerChartRenderer : AbstractChartRenderer
+    class BoxWhiskerChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         //  Box and Whisker constants
         private const double WHISKER_END_LENGTH = 9;
@@ -19,7 +19,7 @@ namespace StatsDirect.Charting
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
             if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
@@ -29,7 +29,9 @@ namespace StatsDirect.Charting
             List<Series> SeriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
             // sort the array and get the min, max values
-            GetMinMaxSort(SeriesToUse, out DataMinX, out DataMaxX);
+            Layout.Range dataRangeX = GetMinMaxSort(SeriesToUse);
+            DataMinX = dataRangeX.Min;
+            DataMaxX = dataRangeX.Max;
 
             return new ScaleParameters
             {
@@ -42,7 +44,7 @@ namespace StatsDirect.Charting
         ///  Plot a box and whisker chart.
         ///  </summary>
         ///  <remarks></remarks>
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
             if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
@@ -73,7 +75,9 @@ namespace StatsDirect.Charting
             }
 
             // sort the array and get the min, max values
-            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            DataMinX = dataRangeX.Min;
+            DataMaxX = dataRangeX.Max;
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
@@ -84,14 +88,7 @@ namespace StatsDirect.Charting
             // Plot a Metafile version
             StartVectorPlot();
 
-            //  Fonts
-            if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
-                axisLabelFont = FontFromSaveString(bwOptions.AxisLabelFontDescriptor);
-            if (!(string.IsNullOrEmpty(bwOptions.AxisFontDescriptor)))
-                axisTitleFont = FontFromSaveString(bwOptions.AxisFontDescriptor);
-            if (!(string.IsNullOrEmpty(bwOptions.TitleFontDescriptor)))
-                titleFont = FontFromSaveString(bwOptions.TitleFontDescriptor);
-
+            SetFontsAndThicknessesFromOptions(bwOptions);
             AssignMarkersToSeries();
 
             DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
@@ -354,7 +351,9 @@ namespace StatsDirect.Charting
             }
 
             // sort the array and get the min, max values
-            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            DataMinX = dataRangeX.Min;
+            DataMaxX = dataRangeX.Max;
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 
@@ -365,14 +364,7 @@ namespace StatsDirect.Charting
             // Plot a Metafile version
             StartVectorPlot();
 
-            //  Fonts
-            if (!(string.IsNullOrEmpty(bwOptions.AxisLabelFontDescriptor)))
-                axisLabelFont = FontFromSaveString(bwOptions.AxisLabelFontDescriptor);
-            if (!(string.IsNullOrEmpty(bwOptions.AxisFontDescriptor)))
-                axisTitleFont = FontFromSaveString(bwOptions.AxisFontDescriptor);
-            if (!(string.IsNullOrEmpty(bwOptions.TitleFontDescriptor)))
-                titleFont = FontFromSaveString(bwOptions.TitleFontDescriptor);
-
+            SetFontsAndThicknessesFromOptions(bwOptions);
             AssignMarkersToSeries();
             //  Not horizontal, so vertical
 
@@ -671,7 +663,9 @@ namespace StatsDirect.Charting
         private ParameterBag PlotBoxWhiskerAscii(List<Series> seriesToUse)
         {
             // sort the array and get the min, max values
-            GetMinMaxSort(seriesToUse, out DataMinX, out DataMaxX);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            DataMinX = dataRangeX.Min;
+            DataMaxX = dataRangeX.Max;
 
             BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
 

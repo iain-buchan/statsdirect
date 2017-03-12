@@ -2,16 +2,16 @@
 using StatsDirect.Templates;
 using System.Drawing;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Renderer
 {
-    class LadderChartRenderer : AbstractChartRenderer
+    class LadderChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public LadderChartRenderer(ChartDefinition definition)
             : base(definition)
         {
         }
 
-        public override ScaleParameters GetScaleParameters()
+        ScaleParameters IChartRenderer.GetScaleParameters()
         {
             return new ScaleParameters
             {
@@ -30,7 +30,7 @@ namespace StatsDirect.Charting
             };
         }
 
-        public override ParameterBag Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             // Get the plot title
             LadderOptions lOptions = ((LadderOptions)(definition.ChartOptions));

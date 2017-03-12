@@ -2917,16 +2917,16 @@ namespace StatsDirect.Builtins
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, spare at end */
 
             // Pooling
-            ChartRenderer.CorrelationRowType[] pg = new ChartRenderer.CorrelationRowType[k + 2];
+            CorrelationRowType[] pg = new CorrelationRowType[k + 2];
             for (int i = 1; i <= k; i++)
-                pg[i] = ChartRenderer.CorrelationRowType.Study;
+                pg[i] = CorrelationRowType.Study;
             // pooled indicator for last element - needed by plot_cp
-            pg[k + 1] = ChartRenderer.CorrelationRowType.Pooled;
+            pg[k + 1] = CorrelationRowType.Pooled;
 
             bool hasUserSuppliedLabels;
             string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out hasUserSuppliedLabels);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
-            title[k + 1] = ChartRenderer.combo_ti(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractChartRenderer.combo_ti(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3128,16 +3128,16 @@ namespace StatsDirect.Builtins
             double[] y = new double[k + 2];
             // double[] n = new double[k + 2 ]; - unused
             string[] title = new string[k + 2];
-            ChartRenderer.CorrelationRowType[] pg = new ChartRenderer.CorrelationRowType[k + 2];
+            CorrelationRowType[] pg = new CorrelationRowType[k + 2];
             for (i = 1; i <= k; i++)
             {
                 y[i] = rVariable.Data[i - 1];
-                pg[i] = ChartRenderer.CorrelationRowType.Study;
+                pg[i] = CorrelationRowType.Study;
                 if (y[i] < -1.0 || y[i] > 1.0)
                     throw new Exception("r(" + i + ") must be between -1 and 1");
             }
             // pooled indicator for last element - needed by plot_cp
-            pg[k + 1] = ChartRenderer.CorrelationRowType.Pooled;
+            pg[k + 1] = CorrelationRowType.Pooled;
 
             DataFrame nFrame = parameters["n"].AsDataFrame;
             DoubleVariable nVariable = nFrame.Variables[0] as DoubleVariable;
@@ -3188,7 +3188,7 @@ namespace StatsDirect.Builtins
                     title[i] = "study " + i;
                 }
             }
-            title[k + 1] = AbstractChartRenderer.combo_ti(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractChartRenderer.combo_ti(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3614,7 +3614,7 @@ namespace StatsDirect.Builtins
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
-            title[k + 1] = AbstractChartRenderer.combo_ti(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractChartRenderer.combo_ti(string.Empty);
 
             bool allRZero = true;
             bool allREqualN = true;
@@ -3632,10 +3632,10 @@ namespace StatsDirect.Builtins
             double[] seY = new double[k + 2];
             double[] llY = new double[k + 2];
             double[] ulY = new double[k + 2];
-            ChartRenderer.CorrelationRowType[] pg = new ChartRenderer.CorrelationRowType[k + 2];
+            CorrelationRowType[] pg = new CorrelationRowType[k + 2];
             for (int i = 1; i <= k; i++)
-                pg[i] = ChartRenderer.CorrelationRowType.Study;
-            pg[k + 1] = ChartRenderer.CorrelationRowType.Pooled;
+                pg[i] = CorrelationRowType.Study;
+            pg[k + 1] = CorrelationRowType.Pooled;
 
             // Pool
             double sumwt = 0.0;

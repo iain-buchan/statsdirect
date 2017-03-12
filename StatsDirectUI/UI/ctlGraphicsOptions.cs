@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using StatsDirect.Charting;
+using ChartRenderer = StatsDirect.Charting.Renderer.ChartRenderer;
 
 namespace StatsDirect.UI
 {

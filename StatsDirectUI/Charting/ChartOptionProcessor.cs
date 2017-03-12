@@ -2,6 +2,7 @@
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using ChartRenderer = StatsDirect.Charting.Renderer.ChartRenderer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -195,7 +196,7 @@ namespace StatsDirect.Charting
 
             ROCOptions rocOptions = new ROCOptions(host.Preferences.ShouldUseColour, definition.XSeries)
             {
-                ShouldAutoscale = !AbstractChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                 Title =
                     null == dataName ? "ROC plot" : "ROC plot from " + dataName,
                 ShowCutOffCalculator = true,
@@ -219,7 +220,7 @@ namespace StatsDirect.Charting
             ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, false)
             {
                 IsAscii = step.IsAscii,
-                ShouldAutoscale = !AbstractChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                 Title = string.IsNullOrWhiteSpace(step.ChartTitle) ? (
                     null == dataName
                         ? "Scatter plot"
@@ -477,7 +478,7 @@ namespace StatsDirect.Charting
             ErrorBarOptions errorBarOptions = new ErrorBarOptions(host.Preferences.ShouldUseColour)
             {
                 ShouldAutoscale =
-                    !AbstractChartRenderer.DefaultRequestScaleLimits,
+                    !ChartRenderer.DefaultRequestScaleLimits,
                 Title = null == dataName
                             ? "Error bar plot"
                             : "Error bar plot plot from " + dataName,
@@ -620,7 +621,7 @@ namespace StatsDirect.Charting
         {
             AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !AbstractChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
                 Title = step.ChartTitle,
                 lla = parameters["lla"].AsDouble,
                 mean = parameters["mean"].AsDouble,
