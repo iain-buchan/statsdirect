@@ -451,7 +451,7 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.EraseAnyOutstandingParameters();
-                SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
+                SdApplication.SoleInstance.FriendlyError(string.Format("Error while running operation '{0}'", operation.Name), ex, false);
             }
 #endif
         }
@@ -485,7 +485,7 @@ namespace StatsDirect.UI
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.EraseAnyOutstandingParameters();
-                SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
+                SdApplication.SoleInstance.FriendlyError(string.Format("Error while running operation '{0}'", operationName), ex, false);
             }
 #endif
         }
