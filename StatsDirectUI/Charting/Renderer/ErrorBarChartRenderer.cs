@@ -7,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class ErrorBarChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public ErrorBarChartRenderer(ChartDefinition cd)
-            : base(cd)
+        public ErrorBarChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
+            : base(cd, canvasFactory)
         {
         }
 

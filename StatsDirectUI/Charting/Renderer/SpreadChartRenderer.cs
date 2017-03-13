@@ -6,8 +6,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class SpreadChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public SpreadChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public SpreadChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 
@@ -71,7 +71,7 @@ namespace StatsDirect.Charting.Renderer
             double ygap = yExtCanvas / divy;
 
             //  Work out what markers to use
-            MarkerType mt = MarkerTypes[10]; // Default
+            MarkerType mt = ChartPreferences.MarkerTypes[10]; // Default
             double diam = mt.MarkerSize;
             if ((sOptions.MarkerTypes != null) && sOptions.MarkerTypes.Count > 0)
             {
@@ -168,7 +168,7 @@ namespace StatsDirect.Charting.Renderer
             double xgap = xExtCanvas / divx;
 
             //  Work out what markers to use
-            MarkerType mt = MarkerTypes[10]; //  Default
+            MarkerType mt = ChartPreferences.MarkerTypes[10]; //  Default
             double diam = mt.MarkerSize;
             if ((sOptions.MarkerTypes != null) && sOptions.MarkerTypes.Count > 0)
             {

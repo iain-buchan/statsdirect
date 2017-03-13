@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
 using StatsDirect.Charting;
-using ChartRenderer = StatsDirect.Charting.Renderer.ChartRenderer;
 
 namespace StatsDirect.UI
 {
@@ -135,35 +134,33 @@ namespace StatsDirect.UI
         private void SaveOptions()
         {
             SdApplication.SoleInstance.Preferences.ShouldUseColour = !chkAllBlack.Checked;
-            ChartRenderer.DefaultBoxAxes = chkBoxAxes.Checked;
-            ChartRenderer.SaveFlags();
+            ChartPreferences.DefaultBoxAxes = chkBoxAxes.Checked;
+            ChartPreferences.SaveFlags();
 
             for (int i = 0; i < 10; i++)
-            {
-                ChartRenderer.MarkerTypes[i] = workingMarkerTypes[i];
-            }
-            ChartRenderer.SaveMarkerTypes();
+                ChartPreferences.MarkerTypes[i] = workingMarkerTypes[i];
+            ChartPreferences.SaveMarkerTypes();
 
-            ChartRenderer.DefaultAxisLabelFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
-            ChartRenderer.DefaultAxisTitleFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
-            ChartRenderer.DefaultLabelFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
-            ChartRenderer.DefaultLegendFont = ChartRenderer.SaveStringFromFont(lblAxisLabelFont.Font);
-            ChartRenderer.DefaultTitleFont = ChartRenderer.SaveStringFromFont(lblTitleFont.Font);
-            ChartRenderer.SaveFonts();
+            ChartPreferences.DefaultAxisLabelFont = ChartPreferences.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultAxisTitleFont = ChartPreferences.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultLabelFont = ChartPreferences.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultLegendFont = ChartPreferences.SaveStringFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultTitleFont = ChartPreferences.SaveStringFromFont(lblTitleFont.Font);
+            ChartPreferences.SaveFonts();
         }
 
         private void LoadOptions()
         {
-            lblAxisLabelFont.Font = ChartRenderer.FontFromSaveString(ChartRenderer.DefaultLabelFont);
-            lblTitleFont.Font = ChartRenderer.FontFromSaveString(ChartRenderer.DefaultTitleFont);
+            lblAxisLabelFont.Font = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLabelFont);
+            lblTitleFont.Font = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultTitleFont);
 
             chkAllBlack.Checked = !SdApplication.SoleInstance.Preferences.ShouldUseColour;
-            chkBoxAxes.Checked = ChartRenderer.DefaultBoxAxes;
+            chkBoxAxes.Checked = ChartPreferences.DefaultBoxAxes;
 
             workingMarkerTypes = new MarkerType[10];
             for (int i = 0; i < 10; i++)
             {
-                workingMarkerTypes[i] = ChartRenderer.MarkerTypes[i].Clone();
+                workingMarkerTypes[i] = ChartPreferences.MarkerTypes[i].Clone();
             }
             rdoSeries1.Checked = true;
             LoadSeriesOptions();

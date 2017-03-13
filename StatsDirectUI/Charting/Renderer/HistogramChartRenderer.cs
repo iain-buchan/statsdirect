@@ -7,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class HistogramChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public HistogramChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public HistogramChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 
@@ -79,10 +79,10 @@ namespace StatsDirect.Charting.Renderer
 
                     StartVectorPlot();
 
-                    originalMarkerTypes = MarkerTypes;
-                    PushAndCloneMarkerTypes();
+                    originalMarkerTypes = ChartPreferences.MarkerTypes;
+                    ChartPreferences.PushAndCloneMarkerTypes();
                     for (int i = 0; i < originalMarkerTypes.Length; i++)
-                        MarkerTypes[i].Width = options.LineWidth;
+                        ChartPreferences.MarkerTypes[i].Width = options.LineWidth;
                     AssignMarkersToSeries(seriesToUse);
                     SetFontsAndThicknessesFromOptions(options);
                 }
@@ -245,7 +245,7 @@ namespace StatsDirect.Charting.Renderer
                 if (originalMarkerTypes != null)
                 {
                     //  TODO: Resource leak on pens?
-                    PopMarkerTypes();
+                    ChartPreferences.PopMarkerTypes();
                 }
             }
         }

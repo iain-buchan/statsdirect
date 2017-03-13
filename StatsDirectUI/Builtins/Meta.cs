@@ -247,8 +247,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            bool scrap;
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio", out scrap /* , "Pooled Peto odds ratio" */));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */));
 
             if (k > 2)
             {
@@ -638,14 +637,13 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false));
             }
 
-            bool bfault;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference", out bfault));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference"));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [random effects]", 1, "risk difference", out bfault));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [random effects]", 1, "risk difference"));
 
             return outputParameters;
         }
@@ -806,13 +804,12 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
 
-            bool fault;
-            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", out fault);
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk");
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", rtf);
 
-            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", out fault);
+            rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk");
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", rtf);
@@ -1997,11 +1994,11 @@ namespace StatsDirect.Builtins
                 bool bfault;
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference", out bfault));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference"));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference", out bfault));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference"));
             }
             else
             {
@@ -2013,13 +2010,12 @@ namespace StatsDirect.Builtins
                     chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false));
                 }
 
-                bool fault;
-                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio", out fault);
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
 
-                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio", out fault);
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
@@ -2278,14 +2274,12 @@ namespace StatsDirect.Builtins
 
             if (sk != 0)
             {
-                bool fault;
-
-                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out fault);
+                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
 
-                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out fault);
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);

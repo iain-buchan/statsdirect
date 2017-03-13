@@ -5,8 +5,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class GiniChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public GiniChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public GiniChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 

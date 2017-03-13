@@ -12,7 +12,7 @@ namespace StatsDirect.Charting
 
             MarkerTypes = new List<MarkerType>();
             int mkr = SeriesNumberToMarkerNumber(0);
-            MarkerType markerType = Renderer.AbstractChartRenderer.MarkerTypes[mkr].Clone();
+            MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
             markerType.MarkerSize = 6;
             MarkerTypes.Add(markerType);
 

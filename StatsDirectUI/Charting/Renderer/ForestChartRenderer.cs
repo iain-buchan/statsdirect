@@ -8,8 +8,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class ForestChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public ForestChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public ForestChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 
@@ -206,9 +206,9 @@ namespace StatsDirect.Charting.Renderer
 
             int r = 0;
 
-            using (Pen effectTenPen = GetLinePen(MarkerTypes[10], false),
+            using (Pen effectTenPen = GetLinePen(ChartPreferences.MarkerTypes[10], false),
                 ciPen = GetLinePen(studyMarkerType, true),
-                dotPen = GetMarkerPen(MarkerTypes[10]),
+                dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]),
                 pooledCiPen = GetLinePen(pooledMarkerType, true))
             {
                 double yt = 0;

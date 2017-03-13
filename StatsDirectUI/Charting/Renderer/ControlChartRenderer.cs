@@ -7,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class ControlChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public ControlChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public ControlChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 

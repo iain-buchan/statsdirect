@@ -588,13 +588,12 @@ namespace StatsDirect.Builtins
 
             if (plotForest)
             {
-                bool scrap;
-                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", out scrap);
+                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio");
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
 
-                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", out scrap);
+                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);

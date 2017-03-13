@@ -22,7 +22,7 @@ namespace StatsDirect.Charting
             for (int i = 0; i < xSeries.Count; i++)
             {
                 int mkr = SeriesNumberToMarkerNumber(i);
-                MarkerType markerType = Renderer.AbstractChartRenderer.MarkerTypes[mkr].Clone();
+                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 markerType.MarkerSize = 6;
                 MarkerTypes.Add(markerType);
 

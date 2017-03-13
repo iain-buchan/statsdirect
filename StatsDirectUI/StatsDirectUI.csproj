@@ -221,8 +221,11 @@
     <Compile Include="Calculator\frmStatsDirectCalculator.Designer.cs">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </Compile>
+    <Compile Include="Charting\ChartPreferences.cs" />
     <Compile Include="Charting\CorrelationRowType.cs" />
     <Compile Include="Charting\CoxPlotMode.cs" />
+    <Compile Include="Charting\EmfCanvasFactory.cs" />
+    <Compile Include="Charting\ICanvasFactory.cs" />
     <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\Renderer\AbstractChartRenderer.cs" />
     <Compile Include="Charting\AgreementOptions.cs" />

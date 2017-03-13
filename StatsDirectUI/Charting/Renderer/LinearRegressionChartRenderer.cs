@@ -7,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class LinearRegressionChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public LinearRegressionChartRenderer(ChartDefinition cd)
-            : base (cd)
+        public LinearRegressionChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
+            : base (cd, canvasFactory)
         {
         }
 

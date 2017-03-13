@@ -2,7 +2,6 @@
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using ChartRenderer = StatsDirect.Charting.Renderer.ChartRenderer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -63,7 +62,7 @@ namespace StatsDirect.Charting
             SurvivalOptions survivalOptions = new SurvivalOptions(host.Preferences.ShouldUseColour)
             {
                 ShouldAutoscale =
-                    !ChartRenderer.DefaultRequestScaleLimits,
+                    !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Survival plot"
@@ -148,7 +147,7 @@ namespace StatsDirect.Charting
 
             SpreadOptions spreadOptions = new SpreadOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Spread plot"
@@ -196,7 +195,7 @@ namespace StatsDirect.Charting
 
             ROCOptions rocOptions = new ROCOptions(host.Preferences.ShouldUseColour, definition.XSeries)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName ? "ROC plot" : "ROC plot from " + dataName,
                 ShowCutOffCalculator = true,
@@ -220,7 +219,7 @@ namespace StatsDirect.Charting
             ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, false)
             {
                 IsAscii = step.IsAscii,
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title = string.IsNullOrWhiteSpace(step.ChartTitle) ? (
                     null == dataName
                         ? "Scatter plot"
@@ -237,7 +236,7 @@ namespace StatsDirect.Charting
 
         private static PyramidOptions PreprocessPyramidOptions(ITemplateHost host, ParameterBag parameters, string dataName)
         {
-            PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour) { ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits };
+            PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour) { ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits };
             if (parameters.ContainsKey("male"))
                 pOptions.MaleFrame = parameters["male"].AsDataFrame;
             if (parameters.ContainsKey("female"))
@@ -253,7 +252,7 @@ namespace StatsDirect.Charting
         {
             NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Method = parameters.ContainsKey("ScoreMethod")
                              ? (NormalOptions.ScoreMethod)Parsing.Cint_Txt(parameters["ScoreMethod"].AsString)
                              : NormalOptions.ScoreMethod.VanDerWaerden,
@@ -285,7 +284,7 @@ namespace StatsDirect.Charting
         {
             ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, true)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Line plot"
@@ -308,7 +307,7 @@ namespace StatsDirect.Charting
 
             LadderOptions ladderOptions = new LadderOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Ladder plot"
@@ -349,7 +348,7 @@ namespace StatsDirect.Charting
         {
             GiniOptions giniOptions = new GiniOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Lorenz plot"
@@ -366,7 +365,7 @@ namespace StatsDirect.Charting
         {
             ForestOptions fOptions = new ForestOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Forest plot"
@@ -478,7 +477,7 @@ namespace StatsDirect.Charting
             ErrorBarOptions errorBarOptions = new ErrorBarOptions(host.Preferences.ShouldUseColour)
             {
                 ShouldAutoscale =
-                    !ChartRenderer.DefaultRequestScaleLimits,
+                    !ChartPreferences.DefaultRequestScaleLimits,
                 Title = null == dataName
                             ? "Error bar plot"
                             : "Error bar plot plot from " + dataName,
@@ -502,9 +501,9 @@ namespace StatsDirect.Charting
         {
             ControlOptions controlOptions = new ControlOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldBoxAxes = ChartRenderer.DefaultBoxAxes,
+                ShouldBoxAxes = ChartPreferences.DefaultBoxAxes,
                 ShouldAutoscale =
-                    !ChartRenderer.DefaultRequestScaleLimits,
+                    !ChartPreferences.DefaultRequestScaleLimits,
                 RightHandDecimalPlaces = 3,
                 Title =
                     null == dataName
@@ -587,7 +586,7 @@ namespace StatsDirect.Charting
         {
             BarOptions barOptions = new BarOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
                         ? "Bar chart"
@@ -621,7 +620,7 @@ namespace StatsDirect.Charting
         {
             AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour)
             {
-                ShouldAutoscale = !ChartRenderer.DefaultRequestScaleLimits,
+                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title = step.ChartTitle,
                 lla = parameters["lla"].AsDouble,
                 mean = parameters["mean"].AsDouble,

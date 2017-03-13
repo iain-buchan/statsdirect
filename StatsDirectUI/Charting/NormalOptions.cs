@@ -27,7 +27,7 @@ namespace StatsDirect.Charting
 
             //  A normal plot's marker is derived from the first series
             MarkerTypes = new List<MarkerType>();
-            MarkerType markerType = Renderer.AbstractChartRenderer.MarkerTypes[0].Clone();
+            MarkerType markerType = ChartPreferences.MarkerTypes[0].Clone();
             markerType.MarkerSize = 6;
             MarkerTypes.Add(markerType);
 

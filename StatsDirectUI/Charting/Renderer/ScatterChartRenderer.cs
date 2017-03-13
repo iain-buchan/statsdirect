@@ -7,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class ScatterChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public ScatterChartRenderer(ChartDefinition cd)
-            : base (cd)
+        public ScatterChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
+            : base (cd, canvasFactory)
         {
         }
 

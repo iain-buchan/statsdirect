@@ -12,8 +12,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class RocChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public RocChartRenderer(ChartDefinition cd)
-            : base(cd)
+        public RocChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
+            : base(cd, canvasFactory)
         {
         }
 
@@ -114,7 +114,7 @@ namespace StatsDirect.Charting.Renderer
             DrawAxesOrEnlargeCanvas(rOptions.Title, new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
 
             // null effect diagonal
-            using (Pen tenPenDiagonal = new Pen(MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
+            using (Pen tenPenDiagonal = new Pen(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
             {
                 DrawLineInCanvasCoordinates(tenPenDiagonal, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
             }

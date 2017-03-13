@@ -6,8 +6,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class LadderChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public LadderChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public LadderChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 
@@ -59,7 +59,7 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
             //  Lines
-            MarkerType rungMarkerType = MarkerTypes[10];
+            MarkerType rungMarkerType = ChartPreferences.MarkerTypes[10];
             if ((lOptions.MarkerTypes != null) && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
                 rungMarkerType = lOptions.MarkerTypes[0];
 

@@ -24,7 +24,7 @@ namespace StatsDirect.Charting
             {
                 Series series = seriesToUse[markerIndex];
                 int mkr = SeriesNumberToMarkerNumber(markerIndex);
-                MarkerType markerType = Renderer.AbstractChartRenderer.MarkerTypes[mkr].Clone();
+                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 markerType.MarkerSize = 6;
                 MarkerTypes.Add(markerType);
 
@@ -44,7 +44,7 @@ namespace StatsDirect.Charting
             {
                 Series series = seriesToUse[markerIndex];
                 int mkr = SeriesNumberToMarkerNumber(markerIndex);
-                MarkerType markerType = Renderer.AbstractChartRenderer.MarkerTypes[mkr].Clone();
+                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 //  Increase the size of the optimum cut-off indicators by default
                 markerType.MarkerSize = 12;
                 MarkerTypes.Add(markerType);

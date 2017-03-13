@@ -8,8 +8,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class BarChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public BarChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public BarChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 

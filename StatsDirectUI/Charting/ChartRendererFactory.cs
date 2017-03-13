@@ -14,6 +14,9 @@ namespace StatsDirect.Charting
     /// </summary>
     public static class ChartRendererFactory
     {
+        // Configuration as to what canvas we're using, and hence the kind of image that will result from a chart being plotted.
+        private static readonly ICanvasFactory canvasFactory = new EmfCanvasFactory();
+
         public static string PlotBiasMAAndReturnRtf(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
             ChartDefinition cd = new ChartDefinition();
@@ -127,22 +130,22 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string PlotMHAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
+        public static string PlotMHAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
         {
             ChartDefinition cd = new ChartDefinition();
             cd.ScaleParameters.X.ScaleType = ScaleType.Log10;
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(cd))
             {
-                ch.Plot_MH(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
+                ch.Plot_MH(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid);
                 return Render(ch);
             }
         }
 
-        public static string PlotMHRDAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, out bool ifault)
+        public static string PlotMHRDAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
         {
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
             {
-                ch.Plot_MHRiskDifference(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
+                ch.Plot_MHRiskDifference(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid);
                 return Render(ch);
             }
         }
@@ -334,43 +337,43 @@ namespace StatsDirect.Charting
             switch (chartDefinition.ChartType)
             {
                 case ChartType.AgreementPair:
-                    return new AgreementPairChartRenderer(chartDefinition);
+                    return new AgreementPairChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Bar:
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
-                    return new BarChartRenderer(chartDefinition);
+                    return new BarChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.BoxWhisker:
-                    return new BoxWhiskerChartRenderer(chartDefinition);
+                    return new BoxWhiskerChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Control:
-                    return new ControlChartRenderer(chartDefinition);
+                    return new ControlChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.ErrorBar:
-                    return new ErrorBarChartRenderer(chartDefinition);
+                    return new ErrorBarChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Forest:
-                    return new ForestChartRenderer(chartDefinition);
+                    return new ForestChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Gini:
-                    return new GiniChartRenderer(chartDefinition);
+                    return new GiniChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Histogram:
-                    return new HistogramChartRenderer(chartDefinition);
+                    return new HistogramChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Ladder:
-                    return new LadderChartRenderer(chartDefinition);
+                    return new LadderChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.LinearRegression:
-                    return new LinearRegressionChartRenderer(chartDefinition);
+                    return new LinearRegressionChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.LineXY:
-                    return new ScatterChartRenderer(chartDefinition);
+                    return new ScatterChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Normal:
-                    return new NormalChartRenderer(chartDefinition);
+                    return new NormalChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Pyramid:
-                    return new PyramidChartRenderer(chartDefinition);
+                    return new PyramidChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.ROC:
-                    return new RocChartRenderer(chartDefinition);
+                    return new RocChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.ScatterXY:
-                    return new ScatterChartRenderer(chartDefinition);
+                    return new ScatterChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Spread:
-                    return new SpreadChartRenderer(chartDefinition);
+                    return new SpreadChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Survival:
-                    return new SurvivalChartRenderer(chartDefinition);
+                    return new SurvivalChartRenderer(chartDefinition, canvasFactory);
                 default:
-                    return new ChartRenderer(chartDefinition);
+                    return new ChartRenderer(chartDefinition, canvasFactory);
             }
         }
 

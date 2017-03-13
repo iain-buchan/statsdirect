@@ -8,7 +8,7 @@ namespace StatsDirect.Charting
     /// <summary>
     /// A chart drawing surface that is appropriate for ChartRenderer to draw on.  (0, 0) is at the bottom-left of the canvas.
     /// </summary>
-    internal interface IStatsDirectCanvas : IDisposable
+    public interface IStatsDirectCanvas : IDisposable
     {
         void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat);
 

@@ -8,8 +8,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class PyramidChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public PyramidChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public PyramidChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 
@@ -189,7 +189,7 @@ namespace StatsDirect.Charting.Renderer
 
                 double xstep = xExtCanvas / 2;
                 double xc = xAxisCanvas + xstep;
-                using (Pen blackPen = GetMarkerPen(MarkerTypes[10]))
+                using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
                 {
                     for (int i = 0; i < nmale; i++)
                     {

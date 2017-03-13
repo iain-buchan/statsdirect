@@ -7,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class SurvivalChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public SurvivalChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public SurvivalChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 

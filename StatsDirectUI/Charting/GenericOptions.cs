@@ -27,13 +27,13 @@ namespace StatsDirect.Charting
         {
             SeriesOptions = new List<SeriesOptionsDescriptor>();
             if (UsesAxisLabelFontDescriptor)
-                AxisLabelFontDescriptor = Renderer.AbstractChartRenderer.DefaultAxisLabelFont;
+                AxisLabelFontDescriptor = ChartPreferences.DefaultAxisLabelFont;
             if (UsesAxisTitleFontDescriptor)
-                AxisTitleFontDescriptor = Renderer.AbstractChartRenderer.DefaultAxisTitleFont;
+                AxisTitleFontDescriptor = ChartPreferences.DefaultAxisTitleFont;
             if (UsesLegendFontDescriptor)
-                LegendFontDescriptor = Renderer.AbstractChartRenderer.DefaultLegendFont;
+                LegendFontDescriptor = ChartPreferences.DefaultLegendFont;
             if (UsesTitleFontDescriptor)
-                TitleFontDescriptor = Renderer.AbstractChartRenderer.DefaultTitleFont;
+                TitleFontDescriptor = ChartPreferences.DefaultTitleFont;
         }
 
         public virtual bool UsesChartTitle

@@ -41,7 +41,7 @@ namespace StatsDirect.Charting
             for (int seriesIndex = 0; seriesIndex <= SeriesTitles.Length - 1; seriesIndex++)
             {
                 int mkr = SeriesNumberToMarkerNumber(seriesIndex);
-                MarkerType markerType = Renderer.AbstractChartRenderer.MarkerTypes[mkr].Clone();
+                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 MarkerTypes.Add(markerType);
 
                 SeriesOptionsDescriptor sod = new SeriesOptionsDescriptor
@@ -53,7 +53,7 @@ namespace StatsDirect.Charting
             }
 
             //  Now add one more for the CIs
-            MarkerType ciMarkerType = Renderer.AbstractChartRenderer.MarkerTypes[10].Clone();
+            MarkerType ciMarkerType = ChartPreferences.MarkerTypes[10].Clone();
             MarkerTypes.Add(ciMarkerType);
 
             SeriesOptionsDescriptor cisod = new SeriesOptionsDescriptor

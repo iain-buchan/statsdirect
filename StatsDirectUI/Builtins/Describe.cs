@@ -381,12 +381,10 @@ namespace StatsDirect.Builtins
             return new ParameterBag();
         }
 
-
         public static ParameterBag RptUnivariateSummary(ITemplateHost host, ParameterBag parameters)
         {
             return RptDescriptive(host, parameters, false);
         }
-
 
         public static ParameterBag RptWeightedUnivariateSummary(ITemplateHost host, ParameterBag parameters)
         {
@@ -631,7 +629,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         ///  <summary>
         ///  Return the median of the elements of x from ia to iz inclusive.
         ///  </summary>
@@ -679,7 +676,6 @@ namespace StatsDirect.Builtins
             return Constant.MISSING;
         }
 
-
         private static string Caption(SummaryType summaryType, Summary sx, string[] titles)
         {
             switch (summaryType)
@@ -691,7 +687,6 @@ namespace StatsDirect.Builtins
                 default:
                     return titles[(int)summaryType];
             }
-
         }
 
         private static double Value(SummaryType summaryType, Summary sx)
@@ -780,7 +775,6 @@ namespace StatsDirect.Builtins
                 v.SetData(i, Value(summaryType, sx[i]));
             return v;
         }
-
 
         private static ParameterBag FillField(ITemplateHost host, SummaryType opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool isWeighted)
         {
@@ -1053,7 +1047,7 @@ namespace StatsDirect.Builtins
                     YAxisTitle = observationsVariable.Title
                 };
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
-                    options.MarkerTypes[marker] = Charting.Renderer.AbstractChartRenderer.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
+                    options.MarkerTypes[marker] = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
                 string rtf;
                 ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
@@ -1121,7 +1115,7 @@ namespace StatsDirect.Builtins
                 }
 
                 ChartDefinition cd = new ChartDefinition() { ChartType = ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
-                Charting.ErrorBarOptions options = new Charting.ErrorBarOptions(host.Preferences.ShouldUseColour)
+                ErrorBarOptions options = new ErrorBarOptions(host.Preferences.ShouldUseColour)
                 {
                     Series = errorSeries,
                     Title = "Group comparison",
@@ -1134,7 +1128,7 @@ namespace StatsDirect.Builtins
                 options.SetMarkers();
                 cd.ChartOptions = options;
                 string rtf;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
+                RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
                 outputParameters.AddOutput("meanAucChart", rtf);
             }
 

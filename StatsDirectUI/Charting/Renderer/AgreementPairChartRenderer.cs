@@ -6,8 +6,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class AgreementPairChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public AgreementPairChartRenderer(ChartDefinition definition)
-            : base(definition)
+        public AgreementPairChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
+            : base(definition, canvasFactory)
         {
         }
 
@@ -61,7 +61,7 @@ namespace StatsDirect.Charting.Renderer
             Layout.Range mxdRange = GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType);
             mxdMin = mxdRange.Min;
             mxdMax = mxdRange.Max;
-            using (Pen p = GetMarkerPen(MarkerTypes[0]))
+            using (Pen p = GetMarkerPen(ChartPreferences.MarkerTypes[0]))
             {
                 if (aOptions.HasLimits)
                 {
@@ -75,7 +75,7 @@ namespace StatsDirect.Charting.Renderer
                     string ytxt = definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, MarkerTypes[0].MarkerSize, MarkerTypes[0].MarkerShape, MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
                 }
                 else
                 {
@@ -85,7 +85,7 @@ namespace StatsDirect.Charting.Renderer
                     string ytxt = definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "maximum difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, MarkerTypes[0].MarkerSize, MarkerTypes[0].MarkerShape, MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
                 }
             }
 

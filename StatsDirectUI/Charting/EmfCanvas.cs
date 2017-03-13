@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using StatsDirect.Templates;
-using System.Windows.Forms;
 
 namespace StatsDirect.Charting
 {
