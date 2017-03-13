@@ -142,7 +142,7 @@ namespace StatsDirect.Charting
         {
             using (ChartRenderer ch = (ChartRenderer)ChartRendererFor(new ChartDefinition()))
             {
-                ch.Plot_MHRD(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
+                ch.Plot_MHRiskDifference(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid, out ifault);
                 return Render(ch);
             }
         }
@@ -277,14 +277,14 @@ namespace StatsDirect.Charting
                         switch (plotMode)
                         {
                             case 1:
-                                nx = nx + 1;
+                                nx++;
                                 x[nx, k] = stime[j, k];
                                 y[nx, k] = s[j, k];
                                 break;
                             case 2:
                                 if (h[j, k] != Constant.MISSING)
                                 {
-                                    nx = nx + 1;
+                                    nx++;
                                     x[nx, k] = stime[j, k];
                                     y[nx, k] = h[j, k];
                                 }
@@ -292,7 +292,7 @@ namespace StatsDirect.Charting
                             case 3:
                                 if (h[j, k] != Constant.MISSING & stime[j, k] > 0 & h[j, k] > 0)
                                 {
-                                    nx = nx + 1;
+                                    nx++;
                                     x[nx, k] = Math.Log(stime[j, k]);
                                     y[nx, k] = Math.Log(h[j, k]);
                                 }
@@ -302,7 +302,7 @@ namespace StatsDirect.Charting
                                 double Q = PDF.gauinv(s[j, k], out fault);
                                 if (fault == 0 & stime[j, k] > 0)
                                 {
-                                    nx = nx + 1;
+                                    nx++;
                                     x[nx, k] = Math.Log(stime[j, k]);
                                     y[nx, k] = Q;
                                 }
@@ -310,13 +310,12 @@ namespace StatsDirect.Charting
                             case 5:
                                 if (h[j, k] != Constant.MISSING & stime[j, k] != 0)
                                 {
-                                    nx = nx + 1;
+                                    nx++;
                                     x[nx, k] = stime[j, k];
                                     y[nx, k] = h[j, k] / stime[j, k];
                                 }
                                 break;
                         }
-
                     }
                     cnx[k] = nx;
                 }
@@ -362,6 +361,8 @@ namespace StatsDirect.Charting
                     return new NormalChartRenderer(chartDefinition);
                 case ChartType.Pyramid:
                     return new PyramidChartRenderer(chartDefinition);
+                case ChartType.ROC:
+                    return new RocChartRenderer(chartDefinition);
                 case ChartType.ScatterXY:
                     return new ScatterChartRenderer(chartDefinition);
                 case ChartType.Spread:

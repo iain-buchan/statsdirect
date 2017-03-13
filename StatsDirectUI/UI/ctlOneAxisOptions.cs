@@ -8,7 +8,6 @@ namespace StatsDirect.UI
 {
     public partial class ctlOneAxisOptions : UserControl
     {
-        private bool hasScale;
         private ICollection<ScaleType> allowedScaleTypes;
         private double dataMinimum;
         private double dataMinGreaterThanZero;
@@ -27,7 +26,6 @@ namespace StatsDirect.UI
         public ctlOneAxisOptions()
         {
             InitializeComponent();
-            hasScale = true; // By default
             cboGridLines.SelectedIndex = 0;
             cboScaleTextDirection.SelectedIndex = 0;
             scaleTypesInCboScale = new List<ScaleType>();
@@ -154,16 +152,6 @@ namespace StatsDirect.UI
             }
         }
 
-        public bool HasScale
-        {
-            get { return hasScale; }
-            set
-            {
-                hasScale = value;
-                SetScaleVisibility();
-            }
-        }
-
         public bool HasTitle
         {
             get { return pnlTitle.Visible; }
@@ -193,11 +181,11 @@ namespace StatsDirect.UI
 
         private void SetScaleVisibility()
         {
-            pnlScale.Visible = hasScale;
-            pnlScaleTextMask.Visible = hasScale && ShouldShowScaleTextMask;
-            pnlScaleTextDirection.Visible = hasScale && ShouldShowScaleTextDirection;
-            pnlRange.Visible = hasScale && ShouldShowRange;
-            pnlMarkerLine.Visible = hasScale && ShouldShowMarkerLine;
+            pnlScale.Visible = ShouldShowScaleChooser;
+            pnlScaleTextMask.Visible = ShouldShowScaleTextMask;
+            pnlScaleTextDirection.Visible = ShouldShowScaleTextDirection;
+            pnlRange.Visible = ShouldShowRange;
+            pnlMarkerLine.Visible = ShouldShowMarkerLine;
         }
 
         private bool ShouldShowMarkerLine
@@ -206,6 +194,14 @@ namespace StatsDirect.UI
             {
                 ScaleType selectedScaleType = ScaleType;
                 return selectedScaleType == ScaleType.Linear;
+            }
+        }
+
+        private bool ShouldShowScaleChooser
+        {
+            get
+            {
+                return null != allowedScaleTypes && allowedScaleTypes.Count > 1;
             }
         }
 

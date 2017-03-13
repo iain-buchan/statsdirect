@@ -213,7 +213,10 @@ namespace StatsDirect.Charting.Renderer
                 }
                 xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired }, new AxisDefinition(yAxisTitle, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title,
+                    new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired },
+                    new AxisDefinition(yAxisTitle, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles },
+                    bOptions.ShouldBoxAxes, false);
                 divy = ((DoubleSeries)(seriesToUse[0])).Points;
                 offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
 

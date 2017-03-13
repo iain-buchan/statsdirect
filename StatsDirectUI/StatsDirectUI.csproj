@@ -241,6 +241,7 @@
     <Compile Include="Charting\LogNaturalAxisScaler.cs" />
     <Compile Include="Charting\Renderer\LinearRegressionChartRenderer.cs" />
     <Compile Include="Charting\Renderer\NormalChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\RocChartRenderer.cs" />
     <Compile Include="Charting\Renderer\ScatterChartRenderer.cs" />
     <Compile Include="Charting\TalbotLinHanrahanAxisScale.cs" />
     <Compile Include="Charting\TalbotLinHanrahanAxisScaler.cs" />

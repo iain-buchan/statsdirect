@@ -1120,7 +1120,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ChartDefinition cd = new ChartDefinition() { ChartType = Templates.ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                ChartDefinition cd = new ChartDefinition() { ChartType = ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
                 Charting.ErrorBarOptions options = new Charting.ErrorBarOptions(host.Preferences.ShouldUseColour)
                 {
                     Series = errorSeries,
