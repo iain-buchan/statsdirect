@@ -63,14 +63,6 @@ namespace StatsDirect.Charting
             showLegendIsRelevant = seriesToUse.Count > 2; //  2 series per ROC series
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.ROC;
-            }
-        }
-
         public override bool UsesChartTitle
         {
             get
@@ -127,5 +119,9 @@ namespace StatsDirect.Charting
             }
         }
 
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

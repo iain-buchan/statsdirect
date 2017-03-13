@@ -104,14 +104,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.ErrorBars;
-            }
-        }
-
         public override bool ShowErrorBarOptions
         {
             get
@@ -134,6 +126,11 @@ namespace StatsDirect.Charting
             {
                 return true;
             }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

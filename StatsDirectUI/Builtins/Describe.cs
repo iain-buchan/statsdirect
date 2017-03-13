@@ -1056,7 +1056,7 @@ namespace StatsDirect.Builtins
                     options.MarkerTypes[marker] = Charting.Renderer.AbstractChartRenderer.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
                 string rtf;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
                 groupParameters.AddOutput("chart", rtf);
             }
 
@@ -1079,7 +1079,7 @@ namespace StatsDirect.Builtins
                 };
                 cd.ChartOptions = options;
                 string rtf;
-                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
+                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
                 outputParameters.AddOutput("aucNormalChart", rtf);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
@@ -1089,7 +1089,7 @@ namespace StatsDirect.Builtins
                 cd.AddXSeries(points, "Log Area Under Curve");
                 options.Title = "Normal Plot for Log(AUC)";
                 options.XAxisTitle = "Log Area Under Curve";
-                results = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
+                results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
                 outputParameters.AddOutput("aucLogNormalChart", rtf);
                 outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
             }
@@ -1134,7 +1134,7 @@ namespace StatsDirect.Builtins
                 options.SetMarkers();
                 cd.ChartOptions = options;
                 string rtf;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, ChartRendererFactory.ChartRendererFor(cd), out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
                 outputParameters.AddOutput("meanAucChart", rtf);
             }
 

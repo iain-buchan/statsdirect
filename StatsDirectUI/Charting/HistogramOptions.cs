@@ -79,14 +79,6 @@ namespace StatsDirect.Charting
             get { return false; }
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Histogram;
-            }
-        }
-
         public override bool ShowHistogramOptions
         {
             get { return true; }
@@ -95,6 +87,11 @@ namespace StatsDirect.Charting
         public override bool ShowLegendIsRelevant
         {
             get { return HistoSeriesOptions.Count > 1; }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

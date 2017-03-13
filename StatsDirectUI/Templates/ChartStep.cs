@@ -3,38 +3,6 @@ using System.Xml.Serialization;
 namespace StatsDirect.Templates
 {
     /// <summary>
-    /// The type of chart that will be plotted
-    /// </summary>
-    public enum ChartType
-    {
-        AgreementPair,
-        Bar,
-        BoxWhisker,
-        Control,
-        Curve,
-        ErrorBar,
-        Forest, // Variants: Log, linear, fixed, flexible
-        Gini,
-        Histogram,
-        Labbe,
-        Ladder,
-        LinearRegression,
-        LineXY,
-        MetaBias,
-        MultiLineXY,
-        Normal,
-        Pyramid,
-        QQ,
-        ROC,
-        ScatterXY,
-        ScatterXYZ,
-        Spread,
-        StackedBar,
-        StackedBar100Percent,
-        Survival
-    };
-
-    /// <summary>
     /// Superclass for chart templates.  Subclasses may be made for particular types of chart; this contains data common to all.
     /// </summary>
     public class ChartStep : Step

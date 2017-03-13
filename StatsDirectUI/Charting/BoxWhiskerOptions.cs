@@ -34,14 +34,6 @@ namespace StatsDirect.Charting
         { 
         } 
         
-        public override ChartOptionType OptionType 
-        { 
-            get 
-            { 
-                return ChartOptionType.BoxWhisker; 
-            } 
-        } 
-        
         public void SetDefaultXAxisTitle() 
         { 
             //  This used to try to be cleverer, but it turns out that formatting for each combination is almost essential to allow variation.
@@ -206,8 +198,11 @@ namespace StatsDirect.Charting
             { 
                 return Orientation == ChartOrientation.Horizontal; 
             } 
-        } 
-    } 
-    
-    
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
 } 

@@ -96,14 +96,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.ScatterXY;
-            }
-        }
-
         public override bool ShowScatterXYOptions
         {
             get
@@ -119,7 +111,10 @@ namespace StatsDirect.Charting
                 return showLegendIsRelevant;
             }
         }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
-
-
 }

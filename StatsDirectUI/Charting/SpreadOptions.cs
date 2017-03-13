@@ -27,14 +27,6 @@ namespace StatsDirect.Charting
             SeriesOptions.Add(soleOptions);
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Spread;
-            }
-        }
-
         public override bool UsesAutoscale
         {
             get
@@ -121,6 +113,11 @@ namespace StatsDirect.Charting
             {
                 return Orientation == ChartOrientation.Horizontal;
             }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

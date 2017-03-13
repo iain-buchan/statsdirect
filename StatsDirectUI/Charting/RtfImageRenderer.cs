@@ -6,14 +6,17 @@ namespace StatsDirect.Charting
 {
     public static class RtfImageRenderer
     {
-        public static ParameterBag PlotAndReturnRtf(ITemplateHost host, IChartRenderer ch, out string rtf)
+        public static ParameterBag PlotAndReturnRtf(ITemplateHost host, ChartDefinition cd, out string rtf)
         {
-            ParameterBag results = ch.Plot(host);
-            if (ch.IsAscii)
-                rtf = ch.GetAsciiRTF();
-            else
-                rtf = ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
-            return results;
+            using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd))
+            {
+                ParameterBag results = ch.Plot(host);
+                if (cd.IsAscii)
+                    rtf = ch.GetAsciiRTF();
+                else
+                    rtf = ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
+                return results;
+            }
         }
 
         public static string ImageStreamToRtf(Stream stream, int width, int height)

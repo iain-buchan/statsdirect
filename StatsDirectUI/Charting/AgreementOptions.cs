@@ -10,14 +10,6 @@ namespace StatsDirect.Charting
         {
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Agreement;
-            }
-        }
-
         public double[] av;
         public double[] mxd;
         public double lla;
@@ -41,7 +33,10 @@ namespace StatsDirect.Charting
                 return false;
             }
         }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
-
-
 }

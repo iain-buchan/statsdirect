@@ -3,33 +3,21 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
-    [ Serializable ]
-    public class BarOptions : GenericOptions 
-    { 
-        
-        private double _MaxBarWidth = 0.5; 
-        
-        public BarOptions( bool UseColour ) : base( UseColour )
+    [Serializable]
+    public class BarOptions : GenericOptions
+    {
+        private bool showLegendIsRelevant;
+
+        public BarOptions(bool UseColour) : base(UseColour)
         {
             RotateWhenStacked = true;
-        } 
-        
+        }
+
         ///  <summary>
         ///  The widest a bar may be, as a fraction of its containing space.
         ///  </summary>
-        public double MaxBarWidth 
-        { 
-            get 
-            { 
-                return _MaxBarWidth; 
-            } 
-            set 
-            { 
-                _MaxBarWidth = value; 
-            } 
-        } 
-        
-        
+        public double MaxBarWidth { get; set; } = 0.5;
+
         ///  <summary>
         ///  If false, bars should be drawn side-by-side.  If true, bars should be drawn end-to-end.
         ///  </summary>
@@ -44,144 +32,126 @@ namespace StatsDirect.Charting
         ///  If Stacked and true, bars should be drawn end-to-end scaled 0..1.  If Stacked and false, bars should be drawn end-to-end scaled to the largest bar.
         ///  If not Stacked, no effect.
         ///  </summary>
-        public bool Stacked100Percent { get; set; } 
+        public bool Stacked100Percent { get; set; }
 
-        private bool _ShowLegendIsRelevant; 
-        
-        public void SetMarkers( IList <Series>seriesToUse ) 
-        { 
+        public void SetMarkers(IList<Series> seriesToUse)
+        {
             //  Markers will be calculated automatically as required (though we need to force fills); we just need to set up the option descriptors.
             // ShouldForceIsFilled = True
             // ForcedIsFilled = True
             // ShouldForceFillStyle = True
             // ForcedFillStyle = FillStyle.None
-            
-            for ( int i=0; i <= seriesToUse.Count - 1; i++ ) 
+
+            for (int i = 0; i <= seriesToUse.Count - 1; i++)
             {
                 SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
-                                                          {
-                                                              SeriesName = seriesToUse[i].Title,
-                                                              AllowChangeToMarkerSize = false,
-                                                              AllowChangeToMarkerType = false,
-                                                              AllowChangeToDashStyle = true,
-                                                              AllowChangeToLineThickness = true,
-                                                              AllowChangeToFill = true,
-                                                              MarkerIndex = i
-                                                          };
-                SeriesOptions.Add( soleOptions ); 
-            } 
-            _ShowLegendIsRelevant = Stacked || seriesToUse.Count > 1; 
-        } 
-        
-        
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
-        public override bool UsesChartTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesYAxisTitle
-        public override bool UsesYAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesAutoscale
-        public override bool UsesAutoscale 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesAxisLabelFontDescriptor
-        public override bool UsesAxisLabelFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesAxisTitleFontDescriptor
-        public override bool UsesAxisTitleFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesBoxAxes
-        public override bool UsesBoxAxes 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property OptionType
-        public override ChartOptionType OptionType 
-        { 
-            get 
-            { 
-                return ChartOptionType.Bar; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesOrientation
-        public override bool UsesOrientation 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property ShowBarOptions
-        public override bool ShowBarOptions 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property OrientationLabel
-        public override string OrientationLabel 
-        { 
-            get 
-            { 
-                return "Bar orientation"; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
-        public override bool ShowLegendIsRelevant 
-        { 
-            get 
-            { 
-                return _ShowLegendIsRelevant; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property IsNaturalOrientation
-        public override bool IsNaturalOrientation 
-        { 
-            get 
-            { 
-                return Orientation == ChartOrientation.Vertical; 
-            } 
-        } 
-    } 
-    
-    
-} 
+                {
+                    SeriesName = seriesToUse[i].Title,
+                    AllowChangeToMarkerSize = false,
+                    AllowChangeToMarkerType = false,
+                    AllowChangeToDashStyle = true,
+                    AllowChangeToLineThickness = true,
+                    AllowChangeToFill = true,
+                    MarkerIndex = i
+                };
+                SeriesOptions.Add(soleOptions);
+            }
+            showLegendIsRelevant = Stacked || seriesToUse.Count > 1;
+        }
+
+        public override bool UsesChartTitle
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesXAxisTitle
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesYAxisTitle
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesAutoscale
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesAxisLabelFontDescriptor
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesAxisTitleFontDescriptor
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesBoxAxes
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool UsesOrientation
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override bool ShowBarOptions
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override string OrientationLabel
+        {
+            get
+            {
+                return "Bar orientation";
+            }
+        }
+
+        public override bool ShowLegendIsRelevant { get { return showLegendIsRelevant; } }
+
+        public override bool IsNaturalOrientation
+        {
+            get
+            {
+                return Orientation == ChartOrientation.Vertical;
+            }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
+}

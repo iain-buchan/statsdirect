@@ -90,7 +90,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public abstract ChartOptionType OptionType { get; }
+        public abstract void Accept(IChartOptionVisitor visitor);
 
         public abstract bool ShowLegendIsRelevant { get; }
 
@@ -101,32 +101,5 @@ namespace StatsDirect.Charting
                 theClone.MarkerTypes = new List<MarkerType>(MarkerTypes);
             return theClone;
         }
-    }
-
-    public enum ChartOptionType
-    {
-        Agreement,
-        ///  <summary>
-        ///  Bar, stacked bar and 100% stacked bar
-        ///  </summary>
-        Bar,
-        BoxWhisker,
-        Control,
-        ///  <summary>
-        ///  Markers with error bars
-        ///  </summary>
-        ///  <remarks>Should really be Error, but that's a reserved word in VB.Net</remarks>
-        ErrorBars,
-        Forest,
-        Gini,
-        Histogram,
-        Ladder,
-        LinearRegression,
-        Normal,
-        Pyramid,
-        ROC,
-        ScatterXY,
-        Spread,
-        Survival,
     }
 }

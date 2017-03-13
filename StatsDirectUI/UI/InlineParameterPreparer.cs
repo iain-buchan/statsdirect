@@ -308,7 +308,7 @@ namespace StatsDirect.UI
                 DataFrame frame = Context[parameter.Name].AsDataFrame;
                 for (int col = 0; col < frame.VariableCount; col++)
                 {
-                    DoubleVariable v = frame.Variables[col]as DoubleVariable;
+                    DoubleVariable v = frame.Variables[col] as DoubleVariable;
                     for (int row = 0; row < v.Length; row++)
                         usedRange.Cells[row, col].Value = v.Data[row];
                 }
@@ -746,7 +746,7 @@ namespace StatsDirect.UI
             if ("addedConstant".Equals(parameter.SpecialType))
             {
                 DataFrame frame = Context["data"].AsDataFrame;
-                DoubleVariable dv = frame.Variables[0]as DoubleVariable;
+                DoubleVariable dv = frame.Variables[0] as DoubleVariable;
                 double minimumC = Sheet.XConstant(dv.Data);
                 Context.AddOutput("a_min", minimumC);
 
@@ -1041,8 +1041,8 @@ namespace StatsDirect.UI
             ((ISupportInitialize)gridEditGrid).EndInit();
             EditGridParameter egp = parameter;
             DataFrame sourceFrame = Context[egp.Source].AsDataFrame;
-            StringVariable keyVariable = sourceFrame.FindVariable(egp.KeyVariable)as StringVariable;
-            StringVariable valueVariable = sourceFrame.FindVariable(egp.ValueVariable)as StringVariable;
+            StringVariable keyVariable = sourceFrame.FindVariable(egp.KeyVariable) as StringVariable;
+            StringVariable valueVariable = sourceFrame.FindVariable(egp.ValueVariable) as StringVariable;
             gridEditGrid.Rows.Clear();
             for (int i = 0; i < keyVariable.Length; i++)
             {
@@ -1138,8 +1138,8 @@ namespace StatsDirect.UI
                 int tableCount = sourceFrame.MinRows / 2;
                 if (sourceFrame.VariableCount == 2 && sourceFrame.Variables is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
                 {
-                    DoubleVariable var1 = sourceFrame.Variables[0]as DoubleVariable;
-                    DoubleVariable var2 = sourceFrame.Variables[1]as DoubleVariable;
+                    DoubleVariable var1 = sourceFrame.Variables[0] as DoubleVariable;
+                    DoubleVariable var2 = sourceFrame.Variables[1] as DoubleVariable;
                     txtTL.Text = var1.Data[0].ToString();
                     txtTR.Text = var2.Data[0].ToString();
                     txtBL.Text = var1.Data[1].ToString();
@@ -1191,34 +1191,14 @@ namespace StatsDirect.UI
             ChartDefinition chartDefinition = parameter.ChartDefinition;
             ChartOptions chartOptions = chartDefinition.ChartOptions;
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            Control ctl;
-            switch (chartOptions.OptionType)
+            ChartOptionToControlVisitor visitor = new ChartOptionToControlVisitor(chartDefinition);
+            chartOptions.Accept(visitor);
+            Control ctl = visitor.Control;
+            if (null == ctl)
             {
-                case ChartOptionType.Bar:
-                case ChartOptionType.BoxWhisker:
-                case ChartOptionType.Control:
-                case ChartOptionType.ErrorBars:
-                case ChartOptionType.Forest:
-                case ChartOptionType.Histogram:
-                case ChartOptionType.Ladder:
-                case ChartOptionType.Normal:
-                case ChartOptionType.Pyramid:
-                case ChartOptionType.ROC:
-                case ChartOptionType.ScatterXY:
-                case ChartOptionType.Spread:
-                case ChartOptionType.Survival:
-                    ctl = new ctlChartOptions(chartDefinition);
-                    break;
-                case ChartOptionType.Agreement:
-                case ChartOptionType.Gini:
-                case ChartOptionType.LinearRegression:
-                    // Do nothing - there are no options to fill
-                    {
-                        FilledParameter = new FilledParameter(FilledParameterDirection.Input, parameter.ChartDefinition);
-                        return;
-                    }
-                default:
-                    throw new ArgumentOutOfRangeException("parameter", chartOptions.OptionType.ToString(), "ChartOptions.OptionType: Don't know how to ask the user for options for the specified chart type");
+                // Do nothing - there are no options to fill
+                FilledParameter = new FilledParameter(FilledParameterDirection.Input, parameter.ChartDefinition);
+                return;
             }
             // At this point, ctl is always assigned.
             ctl.Tag = parameter;
@@ -1235,7 +1215,7 @@ namespace StatsDirect.UI
                 AutoSize = true,
                 Tag = parameter,
                 Text = parameter.Prompt(Processor, Context, string.Empty)
-        };
+            };
             AddAppropriateEventHandlersTo(cb);
             if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsBoolean)
             {
@@ -1514,6 +1494,97 @@ namespace StatsDirect.UI
                         values.SetText(i, column, Formatting.ASTERISK);
                     else
                         values.SetNumber(i, column, data[i]);
+            }
+        }
+
+        private class ChartOptionToControlVisitor : IChartOptionVisitor
+        {
+            private readonly ChartDefinition chartDefinition;
+            public Control Control { get; private set; }
+
+            public ChartOptionToControlVisitor(ChartDefinition definition)
+            {
+                chartDefinition = definition;
+            }
+
+            void IChartOptionVisitor.Visit(AgreementOptions options)
+            {
+                Control = null;
+            }
+
+            void IChartOptionVisitor.Visit(BarOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(BoxWhiskerOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(ControlOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(ErrorBarOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(ForestOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(GiniOptions options)
+            {
+                Control = null;
+            }
+
+            void IChartOptionVisitor.Visit(HistogramOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(LadderOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(LinearRegressionOptions options)
+            {
+                Control = null;
+            }
+
+            void IChartOptionVisitor.Visit(NormalOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(PyramidOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(ROCOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(ScatterXYOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(SpreadOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(SurvivalOptions options)
+            {
+                Control = new ctlChartOptions(chartDefinition);
             }
         }
     }

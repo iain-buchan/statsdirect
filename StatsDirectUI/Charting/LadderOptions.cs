@@ -66,14 +66,6 @@ namespace StatsDirect.Charting
             SeriesOptions.Add( rightHandOptions ); 
         } 
         
-        public override ChartOptionType OptionType 
-        { 
-            get 
-            { 
-                return ChartOptionType.Ladder; 
-            } 
-        } 
-
         public override bool UsesAutoscale 
         { 
             get 
@@ -136,8 +128,11 @@ namespace StatsDirect.Charting
             { 
                 return false; 
             } 
-        } 
-    } 
-    
-    
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
 } 

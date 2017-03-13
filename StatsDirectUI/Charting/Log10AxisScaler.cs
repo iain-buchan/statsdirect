@@ -1,8 +1,5 @@
 using System;
-
 using StatsDirect.Templates;
-using StatsDirect.Numerics;
-using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
@@ -26,13 +23,26 @@ namespace StatsDirect.Charting
             //  Start at the first power of 10 smaller than or equal to qminGreaterThanZero, stop at the first power of 10 greater than or equal to qmax.
             int minPower = (int)Math.Floor(Math.Log10(qMinGreaterThanZero));
             int maxPower = qmax <= 0 ? int.MinValue : (int)Math.Ceiling(Math.Log10(Math.Max(qMinGreaterThanZero, qmax)));
+            int minimumScaleTicMultiplier = 1;
+            int maximumScaleTicMultiplier = 10;
             int candidateDivisions = maxPower - minPower;
-            double[] minorTicMultipliers;
+            int[] minorTicMultipliers;
             if (candidateDivisions <= 5)
-                minorTicMultipliers = new double[] { 2, 3, 5 };
+            {
+                minorTicMultipliers = new int[] { 2, 5 };
+                foreach (int candidateScaleTicMultiplier in minorTicMultipliers)
+                    if (Math.Pow(10, minPower) * candidateScaleTicMultiplier <= qmin)
+                        minimumScaleTicMultiplier = candidateScaleTicMultiplier;
+                foreach (int candidateScaleTicMultiplier in minorTicMultipliers)
+                    if (Math.Pow(10, maxPower - 1) * candidateScaleTicMultiplier >= qmax)
+                    {
+                        maximumScaleTicMultiplier = candidateScaleTicMultiplier;
+                        break;
+                    }
+            }
             else
-                minorTicMultipliers = new double[0];
-            return new Log10AxisScale(qmin, qmax, minPower, maxPower, minorTicMultipliers);
+                minorTicMultipliers = new int[0];
+            return new Log10AxisScale(qmin, qmax, minPower, minimumScaleTicMultiplier, maxPower, maximumScaleTicMultiplier, minorTicMultipliers);
         }
     }
 }

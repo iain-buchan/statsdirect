@@ -69,14 +69,6 @@ namespace StatsDirect.Charting
             ScaleMaximum = axisScale.MaximumScaleValue;
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Pyramid;
-            }
-        }
-
         public override bool UsesChartTitle
         {
             get
@@ -123,6 +115,11 @@ namespace StatsDirect.Charting
             {
                 return false;
             }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

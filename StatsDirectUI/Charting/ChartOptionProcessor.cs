@@ -710,8 +710,7 @@ namespace StatsDirect.Charting
 
         public static DoubleSeries VariableToSeries(DoubleVariable variable)
         {
-            DoubleSeries series = new DoubleSeries { Title = variable.Title, Data = variable.Data };
-            return series;
+            return new DoubleSeries { Title = variable.Title, Data = variable.Data };
         }
     }
 }

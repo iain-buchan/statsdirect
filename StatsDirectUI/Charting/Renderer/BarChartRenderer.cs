@@ -87,7 +87,8 @@ namespace StatsDirect.Charting.Renderer
             IList<Series> seriesToUse = definition.YSeries;
             BarOptions bOptions = ((BarOptions)(definition.ChartOptions));
 
-            string axisTitle = bOptions.YAxisTitle;
+            string xAxisTitle = bOptions.XAxisTitle;
+            string yAxisTitle = bOptions.YAxisTitle;
 
             // If we've been asked to flip rows and columns, do so
             if (bOptions.Stacked && bOptions.RotateWhenStacked)
@@ -193,6 +194,9 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxX = DataMaxY;
                 DataMinY = 0;
                 DataMaxY = 0;
+                string temp = yAxisTitle;
+                yAxisTitle = xAxisTitle;
+                xAxisTitle = temp;
 
                 StartVectorPlot(false);
                 SetFontsAndThicknessesFromOptions(bOptions);
@@ -209,7 +213,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired }, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired }, new AxisDefinition(yAxisTitle, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles }, bOptions.ShouldBoxAxes, false);
                 divy = ((DoubleSeries)(seriesToUse[0])).Points;
                 offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
 
@@ -355,7 +359,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(axisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
                 divx = ((DoubleSeries)(seriesToUse[0])).Points;
                 offx = -(0 / divx * xExtCanvas) + xAxisCanvas;
 

@@ -241,14 +241,10 @@ namespace StatsDirect.Templates
                 definition.ChartOptions.YAxisTitle = yAxisTitle;
 
             // Plot to metafile if ascii, text otherwise
-            ParameterBag results;
-            using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(definition))
-            {
-                string rtf;
-                results = RtfImageRenderer.PlotAndReturnRtf(host, ch, out rtf);
-                results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
-                SaveChartDefinition(step, results, definition);
-            }
+            string rtf;
+            ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, definition, out rtf);
+            results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
+            SaveChartDefinition(step, results, definition);
             return results;
         }
 
@@ -264,30 +260,20 @@ namespace StatsDirect.Templates
             int lower = 0;
             int upper = 0;
             if (step.LowerBound.HasValue)
-            {
                 lower = step.LowerBound.Value;
-            }
             if (step.UpperBound.HasValue)
-            {
                 upper = step.UpperBound.Value;
-            }
             if (null != step.LowerBoundParameterName)
-            {
                 if (parms.ContainsKey(step.LowerBoundParameterName))
                     lower = parms[step.LowerBoundParameterName].AsInt32;
-            }
             if (null != step.UpperBoundParameterName)
-            {
                 if (parms.ContainsKey(step.UpperBoundParameterName))
                     upper = parms[step.UpperBoundParameterName].AsInt32;
-            }
             ParameterBag filledParameters = new ParameterBag();
             for (int i = lower; i <= upper; i++)
             {
                 if (null != step.LoopVariableName)
-                {
                     filledParameters[step.LoopVariableName] = new FilledParameter(FilledParameterDirection.Output, i);
-                }
                 foreach (Step s in step.Steps)
                 {
                     // TODO: How to handle execution failures?

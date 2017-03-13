@@ -43,14 +43,6 @@ namespace StatsDirect.Charting
             SeriesOptions.Add(soleOptions);
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Normal;
-            }
-        }
-
         public override bool UsesChartTitle
         {
             get
@@ -113,6 +105,11 @@ namespace StatsDirect.Charting
             {
                 return false;
             }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

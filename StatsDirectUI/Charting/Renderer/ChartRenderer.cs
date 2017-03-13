@@ -23,28 +23,10 @@ namespace StatsDirect.Charting.Renderer
         {
             switch (definition.ChartType)
             {
-                case ChartType.AgreementPair:
-                case ChartType.Bar:
-                case ChartType.StackedBar:
-                case ChartType.StackedBar100Percent:
-                case ChartType.BoxWhisker:
-                case ChartType.Control:
-                case ChartType.ErrorBar:
-                case ChartType.Forest:
-                case ChartType.Gini:
-                case ChartType.Histogram:
-                case ChartType.Ladder:
-                case ChartType.LineXY:
-                case ChartType.LinearRegression:
-                case ChartType.Normal:
-                case ChartType.Pyramid:
-                    throw new NotImplementedException();
+                case ChartType.NotSet:
+                    return GetDefaultScaleParameters();
                 case ChartType.ROC:
                     return GetRocScaleParameters();
-                case ChartType.ScatterXY:
-                case ChartType.Spread:
-                case ChartType.Survival:
-                    throw new NotImplementedException();
                 default:
                     throw new Exception("Unknown chart type");
             }
@@ -60,28 +42,8 @@ namespace StatsDirect.Charting.Renderer
         {
             switch (definition.ChartType)
             {
-                case ChartType.AgreementPair:
-                case ChartType.Bar:
-                case ChartType.StackedBar:
-                case ChartType.StackedBar100Percent:
-                case ChartType.BoxWhisker:
-                case ChartType.Control:
-                case ChartType.ErrorBar:
-                case ChartType.Forest:
-                case ChartType.Gini:
-                case ChartType.Histogram:
-                case ChartType.Ladder:
-                case ChartType.LineXY:
-                case ChartType.ScatterXY:
-                case ChartType.LinearRegression:
-                case ChartType.Normal:
-                case ChartType.Pyramid:
-                    throw new NotImplementedException();
                 case ChartType.ROC:
                     return PlotROC(host);
-                case ChartType.Spread:
-                case ChartType.Survival:
-                    throw new NotImplementedException();
                 default:
                     throw new Exception("Unknown chart type");
             }
@@ -737,6 +699,15 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot();
             PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, 0, 1, 0, 1);
             EndVectorPlot();
+        }
+
+        private ScaleParameters GetDefaultScaleParameters()
+        {
+            return new ScaleParameters
+            {
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
+                Y = { AllowedScaleTypes = new[] { ScaleType.Linear } },
+            };
         }
 
         private ScaleParameters GetRocScaleParameters()

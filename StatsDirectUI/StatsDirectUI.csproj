@@ -223,6 +223,7 @@
     </Compile>
     <Compile Include="Charting\CorrelationRowType.cs" />
     <Compile Include="Charting\CoxPlotMode.cs" />
+    <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\Renderer\AbstractChartRenderer.cs" />
     <Compile Include="Charting\AgreementOptions.cs" />
     <Compile Include="Charting\Renderer\AgreementPairChartRenderer.cs" />
@@ -243,6 +244,7 @@
     <Compile Include="Charting\Renderer\ScatterChartRenderer.cs" />
     <Compile Include="Charting\TalbotLinHanrahanAxisScale.cs" />
     <Compile Include="Charting\TalbotLinHanrahanAxisScaler.cs" />
+    <Compile Include="Templates\ChartType.cs" />
     <Compile Include="Templates\IAxisScale.cs" />
     <Compile Include="Templates\ILinearAxisScale.cs" />
     <Compile Include="Templates\CategoryAxisScale.cs" />
@@ -1963,7 +1965,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

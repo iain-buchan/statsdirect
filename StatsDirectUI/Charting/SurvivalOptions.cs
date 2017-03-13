@@ -66,14 +66,6 @@ namespace StatsDirect.Charting
             SeriesOptions.Add(cisod);
         }
 
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Survival;
-            }
-        }
-
         public override bool UsesChartTitle
         {
             get
@@ -128,6 +120,11 @@ namespace StatsDirect.Charting
             {
                 return Series.Count > 1;
             }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

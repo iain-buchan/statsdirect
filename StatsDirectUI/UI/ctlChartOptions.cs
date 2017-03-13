@@ -97,7 +97,7 @@ namespace StatsDirect.UI
                     asp.AxisScale = new LinearAxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, ao.Intervals, ao.IntervalsPerMajorTic);
                     break;
                 case ScaleType.Log10:
-                    asp.AxisScale = new Log10AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Math.Log10(ao.MinimumScaleValue)), (int)Math.Round(Math.Log10(ao.MaximumScaleValue)), new List<double>());
+                    asp.AxisScale = new Log10AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Math.Log10(ao.MinimumScaleValue)), 1, (int)Math.Round(Math.Log10(ao.MaximumScaleValue)), 10, new List<int>());
                     break;
                 case ScaleType.LogNatural:
                     asp.AxisScale = new Log2AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Log2(ao.MinimumScaleValue)), (int)Math.Round(Log2(ao.MaximumScaleValue)));
@@ -640,11 +640,11 @@ namespace StatsDirect.UI
         private void PreviewChart()
         {
             ChartOptionProcessor.PostProcessFilledChartOptions(definition);
+            definition.IsAscii = PreviewAsAscii;
             using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(definition))
             {
                 if (PreviewAsAscii)
                 {
-                    renderer.IsAscii = true;
                     ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance);
                     if (null == outputParameters)
                     {

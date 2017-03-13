@@ -11,16 +11,6 @@ namespace StatsDirect.Charting
             
         } 
         
-        // TRANSMISSINGCOMMENT: Property OptionType
-        public override ChartOptionType OptionType 
-        { 
-            get 
-            { 
-                return ChartOptionType.Gini; 
-            } 
-        } 
-        
-        // TRANSMISSINGCOMMENT: Property UsesChartTitle
         public override bool UsesChartTitle 
         { 
             get 
@@ -29,7 +19,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesXAxisTitle
         public override bool UsesXAxisTitle 
         { 
             get 
@@ -38,7 +27,6 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property UsesYAxisTitle
         public override bool UsesYAxisTitle 
         { 
             get 
@@ -47,14 +35,17 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        // TRANSMISSINGCOMMENT: Property ShowLegendIsRelevant
         public override bool ShowLegendIsRelevant 
         { 
             get 
             { 
                 return false; 
             } 
-        } 
-        
-    } 
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
 } 

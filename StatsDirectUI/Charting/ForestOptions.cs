@@ -7,14 +7,6 @@ namespace StatsDirect.Charting
     [Serializable]
     public class ForestOptions : GenericOptions
     {
-        public override ChartOptionType OptionType
-        {
-            get
-            {
-                return ChartOptionType.Forest;
-            }
-        }
-
         public double[] gn;
         public int k;
         public double[] OddsRatios { get; set; }
@@ -128,6 +120,11 @@ namespace StatsDirect.Charting
             {
                 return false;
             }
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
         }
     }
 }

@@ -8,20 +8,23 @@ namespace StatsDirect.Templates
     {
         public double MinimumDataValue { get; private set; }
         public double MaximumDataValue { get; private set; }
-        public double MinimumScaleValue { get { return Math.Pow(10, MinimumPower); } }
-        public double MaximumScaleValue { get { return Math.Pow(10, MaximumPower); } }
-        /// The number of intervals between tics (one less than the number of tics).  20 intervals = 21 tics - one extra at the end.
+        public double MinimumScaleValue { get { return Math.Pow(10, MinimumPower) * MinimumScaleTicMultiplier; } }
+        public double MaximumScaleValue { get { return Math.Pow(10, MaximumPower - 1) * MaximumScaleTicMultiplier; } }
         private int MinimumPower { get; set; }
+        private int MinimumScaleTicMultiplier { get; set; }
         private int MaximumPower { get; set; }
-        private double[] MinorTicMultipliers { get; set; }
+        private int MaximumScaleTicMultiplier { get; set; }
+        private IList<int> MinorTicMultipliers { get; set; }
 
-        public Log10AxisScale(double minimumDataValue, double maximumDataValue, int minimumPower, int maximumPower, IList<double> minorTicMultipliers)
+        public Log10AxisScale(double minimumDataValue, double maximumDataValue, int minimumPower, int minimumScaleTicMultiplier, int maximumPower, int maximumScaleTicMultiplier, IList<int> minorTicMultipliers)
         {
             MinimumDataValue = minimumDataValue;
             MaximumDataValue = maximumDataValue;
             MinimumPower = minimumPower;
+            MinimumScaleTicMultiplier = minimumScaleTicMultiplier;
             MaximumPower = maximumPower;
-            MinorTicMultipliers = minorTicMultipliers.ToArray();
+            MaximumScaleTicMultiplier = maximumScaleTicMultiplier;
+            MinorTicMultipliers = minorTicMultipliers;
         }
 
         /// <summary>
@@ -33,11 +36,18 @@ namespace StatsDirect.Templates
             for (int power = MinimumPower; power < MaximumPower; power++)
             {
                 double basePower = Math.Pow(10, power);
-                tics.Add(new Tic { TicType = TicType.Major, Value = basePower });
+                if (basePower >= MinimumScaleValue && basePower <= MaximumScaleValue)
+                    tics.Add(new Tic { TicType = TicType.Major, Value = basePower });
                 foreach (double multiplier in MinorTicMultipliers)
-                    tics.Add(new Tic { TicType = TicType.Minor, Value = basePower * multiplier });
+                {
+                    double ticValue = basePower * multiplier;
+                    if (ticValue >= MinimumScaleValue && ticValue <= MaximumScaleValue)
+                        tics.Add(new Tic { TicType = TicType.Major, Value = ticValue });
+                }
             }
-            tics.Add(new Tic { TicType = TicType.Major, Value = Math.Pow(10, MaximumPower) });
+            double lastMajorTicValue = Math.Pow(10, MaximumPower);
+            if (lastMajorTicValue >= MinimumScaleValue && lastMajorTicValue <= MaximumScaleValue)
+                tics.Add(new Tic { TicType = TicType.Major, Value = lastMajorTicValue });
             return tics;
         }
     }

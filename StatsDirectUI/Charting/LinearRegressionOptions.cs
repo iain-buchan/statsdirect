@@ -15,22 +15,17 @@ namespace StatsDirect.Charting
             
         } 
         
-        public override ChartOptionType OptionType 
-        { 
-            get 
-            { 
-                return ChartOptionType.LinearRegression; 
-            } 
-        } 
-        
         public override bool ShowLegendIsRelevant 
         { 
             get 
             { 
                 return false; 
             } 
-        } 
-    } 
-    
-    
+        }
+
+        public override void Accept(IChartOptionVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+    }
 } 
