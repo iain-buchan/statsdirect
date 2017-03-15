@@ -153,7 +153,7 @@ namespace StatsDirect.Charting
         public static string PlotNormalAndReturnRtf(double[] y, string title, bool shouldUseColour)
         {
             NormalOptions nOptions = new NormalOptions(shouldUseColour) { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
-            ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions };
+            ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions, ChartType = ChartType.Normal };
             cd.XSeries.Add(new DoubleSeries(y, title));
 
             using (NormalChartRenderer ch = (NormalChartRenderer)ChartRendererFor(cd))
