@@ -53,7 +53,7 @@
             this.cmdCancel.Location = new System.Drawing.Point(296, 12);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(75, 23);
-            this.cmdCancel.TabIndex = 11;
+            this.cmdCancel.TabIndex = 4;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
             this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
@@ -64,7 +64,7 @@
             this.cmdHelp.Location = new System.Drawing.Point(215, 12);
             this.cmdHelp.Name = "cmdHelp";
             this.cmdHelp.Size = new System.Drawing.Size(75, 23);
-            this.cmdHelp.TabIndex = 10;
+            this.cmdHelp.TabIndex = 3;
             this.cmdHelp.Text = "&Help";
             this.cmdHelp.UseVisualStyleBackColor = true;
             this.cmdHelp.Click += new System.EventHandler(this.cmdHelp_Click);
@@ -75,7 +75,7 @@
             this.cmdOK.Location = new System.Drawing.Point(134, 12);
             this.cmdOK.Name = "cmdOK";
             this.cmdOK.Size = new System.Drawing.Size(75, 23);
-            this.cmdOK.TabIndex = 9;
+            this.cmdOK.TabIndex = 2;
             this.cmdOK.Text = "&OK";
             this.cmdOK.UseVisualStyleBackColor = true;
             this.cmdOK.Click += new System.EventHandler(this.cmdOK_Click);
@@ -121,7 +121,7 @@
             // lblKey
             // 
             this.lblKey.AutoSize = true;
-            this.lblKey.Location = new System.Drawing.Point(12, 156);
+            this.lblKey.Location = new System.Drawing.Point(13, 130);
             this.lblKey.Name = "lblKey";
             this.lblKey.Size = new System.Drawing.Size(68, 13);
             this.lblKey.TabIndex = 17;
@@ -134,17 +134,17 @@
             this.txtEmail.Location = new System.Drawing.Point(117, 101);
             this.txtEmail.Name = "txtEmail";
             this.txtEmail.Size = new System.Drawing.Size(254, 20);
-            this.txtEmail.TabIndex = 18;
+            this.txtEmail.TabIndex = 0;
             this.txtEmail.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtEmail_KeyDown);
             // 
             // txtKey
             // 
             this.txtKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtKey.Location = new System.Drawing.Point(117, 153);
+            this.txtKey.Location = new System.Drawing.Point(117, 127);
             this.txtKey.Name = "txtKey";
             this.txtKey.Size = new System.Drawing.Size(254, 20);
-            this.txtKey.TabIndex = 20;
+            this.txtKey.TabIndex = 1;
             this.txtKey.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtKey_KeyDown);
             // 
             // txtInstructions
@@ -153,13 +153,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtInstructions.BackColor = System.Drawing.SystemColors.Window;
             this.txtInstructions.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtInstructions.Location = new System.Drawing.Point(15, 193);
+            this.txtInstructions.Location = new System.Drawing.Point(15, 153);
             this.txtInstructions.Multiline = true;
             this.txtInstructions.Name = "txtInstructions";
             this.txtInstructions.ReadOnly = true;
             this.txtInstructions.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.txtInstructions.Size = new System.Drawing.Size(356, 127);
             this.txtInstructions.TabIndex = 21;
+            this.txtInstructions.TabStop = false;
             this.txtInstructions.Text = resources.GetString("txtInstructions.Text");
             // 
             // lblWeb
@@ -167,10 +168,10 @@
             this.lblWeb.AutoSize = true;
             this.lblWeb.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblWeb.ForeColor = System.Drawing.Color.Purple;
-            this.lblWeb.Location = new System.Drawing.Point(13, 337);
+            this.lblWeb.Location = new System.Drawing.Point(13, 297);
             this.lblWeb.Name = "lblWeb";
             this.lblWeb.Size = new System.Drawing.Size(223, 13);
-            this.lblWeb.TabIndex = 22;
+            this.lblWeb.TabIndex = 5;
             this.lblWeb.Text = "Click here for the StatsDirect web site";
             this.lblWeb.Click += new System.EventHandler(this.lblWeb_Click);
             // 
@@ -180,7 +181,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(383, 366);
+            this.ClientSize = new System.Drawing.Size(383, 324);
             this.Controls.Add(this.lblWeb);
             this.Controls.Add(this.txtInstructions);
             this.Controls.Add(this.txtKey);
