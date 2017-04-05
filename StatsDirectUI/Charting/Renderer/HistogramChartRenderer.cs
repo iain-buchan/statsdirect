@@ -150,7 +150,7 @@ namespace StatsDirect.Charting.Renderer
                         }
 
                         // Draw the axes
-                        DrawAxesOrFail(title,
+                        AxisScalesAndExtraSize ases = DrawAxesOrFail(title,
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
                             false,
@@ -174,6 +174,7 @@ namespace StatsDirect.Charting.Renderer
                             double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
                             PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, true);
                         }
+                        MaybeDrawMarkerLines(ases.AxisScales);
                     }
                     else
                     {
@@ -190,7 +191,7 @@ namespace StatsDirect.Charting.Renderer
                         DataMaxX = DataMaxY;
 
                         DefaultAxes();
-                        DrawAxesOrEnlargeCanvas(title, new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.None, definition.ScaleParameters.Y.ScaleType), false, true);
+                        AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.None, definition.ScaleParameters.Y.ScaleType), false, true);
 
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
@@ -227,7 +228,6 @@ namespace StatsDirect.Charting.Renderer
 
                 if (!IsAscii)
                 {
-                    MaybeDrawMarkerLines();
                     EndVectorPlot();
                 }
                 else

@@ -148,13 +148,7 @@ namespace StatsDirect.Charting.Renderer
             if (pOptions.MarkerTypes.Count >= 2)
                 femaleBrush = MarkerTypeToBrush(pOptions.MarkerTypes[1]);
 
-            if (nmale > 10)
-            {
-                double scaleYAxis = 1 + (nmale - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(nmale);
 
             StartVectorPlot();
 

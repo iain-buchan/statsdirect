@@ -327,7 +327,6 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (cOptions.HasUserSpecifiedLimits)
                 {
-
                     // user specified control and warning lines
                     x1 = xAxisCanvas + xExtCanvas;
                     y1 = ToCanvasY(cOptions.UpperWarningLimit);

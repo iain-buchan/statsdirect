@@ -65,7 +65,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                 }
 
-                DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, boxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, boxAxes, false);
 
                 float size2 = labelFont.Size * 2;
                 //  If there are multiple series, draw the legends
@@ -112,7 +112,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     DrawMarkerSeriesInCanvasCoordinates(xys, ys.MarkerDetails.MarkerSize, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, joinMarkersWithLines, shouldDrawMarkers);
                 }
-                MaybeDrawMarkerLines();
+                MaybeDrawMarkerLines(axisScales);
                 EndVectorPlot();
             }
             else

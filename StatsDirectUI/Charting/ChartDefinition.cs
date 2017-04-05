@@ -9,7 +9,6 @@ namespace StatsDirect.Charting
     ///  <summary>
     ///  Holds all the data for a ChartRenderer to be able to render a chart with particular data and options.
     ///  </summary>
-    ///  <remarks></remarks>
     public class ChartDefinition : IFillable
     {
         private ScaleParameters scaleParameters;
@@ -105,7 +104,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public virtual ScaleParameters ScaleParameters
+        public ScaleParameters ScaleParameters
         {
             get { return scaleParameters ?? (scaleParameters = GetScaleParameters()); }
             set { scaleParameters = value; }

@@ -49,14 +49,7 @@ namespace StatsDirect.Charting.Renderer
             SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
             List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
-            int k = seriesToUse.Count;
-            if (k > 10)
-            {
-                double scaleYAxis = 1 + (k - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(seriesToUse.Count);
 
             Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
@@ -79,8 +72,8 @@ namespace StatsDirect.Charting.Renderer
                 mt = sOptions.MarkerTypes[0];
             }
 
-            double INC = 2 * diam;
-            double xxwid = divx / (xExtCanvas / INC);
+            double inc = 2 * diam;
+            double xxwid = divx / (xExtCanvas / inc);
             ygap -= diam * 2;
 
             for (int c = 0; c < seriesToUse.Count; c++)
@@ -88,11 +81,11 @@ namespace StatsDirect.Charting.Renderer
                 DoubleSeries s = seriesToUse[c].AsDoubleSeries;
                 int maxcount = 0;
                 int r;
-                for (r = 0; r <= s.Points - 1; r++)
+                for (r = 0; r < s.Points; r++)
                 {
                     double v1 = s.Data[r];
                     int r1;
-                    for (r1 = r + 1; r1 <= s.Points - 1; r1++)
+                    for (r1 = r + 1; r1 < s.Points; r1++)
                     {
                         if (Math.Abs(v1 - s.Data[r1]) > xxwid)
                             break;
@@ -103,8 +96,8 @@ namespace StatsDirect.Charting.Renderer
                 }
 
                 double scl;
-                if (maxcount * INC > ygap)
-                    scl = ygap / (maxcount * INC);
+                if (maxcount * inc > ygap)
+                    scl = ygap / (maxcount * inc);
                 else
                     scl = 1.0;
                 // #1316: Plot labels are plotted top-down, data was plotted bottom-up.  Reverse the data so that the first series is at the top to match the labels.
@@ -123,14 +116,13 @@ namespace StatsDirect.Charting.Renderer
                     // Plot r1-r markers
                     int count = r1 - r;
                     double y1 = yctr - scl * ((count * diam) + diam);
-                    double x1 = ToCanvasX(v1);
                     double lasty1 = 0;
                     for (int i = 1; i <= count; i++)
                     {
-                        y1 += (INC * scl);
+                        y1 += (inc * scl);
                         if (Math.Abs(lasty1 - y1) > 2)
                         {
-                            DrawMarkerInCanvasCoordinates(x1, y1, mt.MarkerSize, mt);
+                            DrawMarkerInCanvasCoordinates(ToCanvasX(v1), y1, mt.MarkerSize, mt);
                             lasty1 = y1;
                         }
                     }
@@ -146,14 +138,7 @@ namespace StatsDirect.Charting.Renderer
             SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
             List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
-            int k = seriesToUse.Count;
-            if (k > 10)
-            {
-                double scaleXAxis = 1 + (k - 10) / 20.0;
-                if (scaleXAxis > 5)
-                    scaleXAxis = 5;
-                imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
-            }
+            ScaleWidth(seriesToUse.Count);
 
             Layout.Range dataRangeY = GetMinMaxSort(seriesToUse);
             DataMinY = dataRangeY.Min;
@@ -176,7 +161,6 @@ namespace StatsDirect.Charting.Renderer
                 mt = sOptions.MarkerTypes[0];
             }
 
-            // double diamy = diam - 1; 
             double inc = 2 * diam;
             double yywid = divy / (yExtCanvas / inc);
             xgap -= diam * 2;

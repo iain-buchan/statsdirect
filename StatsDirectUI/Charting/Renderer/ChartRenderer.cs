@@ -1465,13 +1465,7 @@ namespace StatsDirect.Charting.Renderer
 
         internal void Plot_MH(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
         {
-            if (k > 10)
-            {
-                double scaleYAxis = 1 + (k - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(k);
 
             double[] gw = new double[k + 1];
             double ormax = double.NegativeInfinity;
@@ -1677,13 +1671,7 @@ namespace StatsDirect.Charting.Renderer
 
         internal void Plot_MHRiskDifference(int k, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
         {
-            if (k > 10)
-            {
-                double scaleYAxis = 1 + (k - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(k);
 
             StartVectorPlot();
 
@@ -1869,13 +1857,7 @@ namespace StatsDirect.Charting.Renderer
 
         internal void PlotEffect(ITemplateHost host, int k, double[] cn, double[] En, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
-            if (k > 10)
-            {
-                double scaleYAxis = 1 + (k - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(k);
 
             StartVectorPlot();
 
@@ -2006,13 +1988,7 @@ namespace StatsDirect.Charting.Renderer
 
         internal void PlotCorrelation(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
-            if (k > 10)
-            {
-                double scaleYAxis = 1 + (k - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(k);
 
             StartVectorPlot();
 

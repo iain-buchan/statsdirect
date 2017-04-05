@@ -79,7 +79,7 @@ namespace StatsDirect.Charting.Renderer
                 oldy = calcy;
             }
 
-            MaybeDrawMarkerLines();
+            MaybeDrawMarkerLines(axisScales);
             EndVectorPlot();
             return new ParameterBag();
         }

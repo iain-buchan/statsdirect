@@ -341,6 +341,7 @@ namespace StatsDirect.Charting.Renderer
                     if (barBrush != null)
                         barBrush.Dispose();
                 }
+                MaybeDrawMarkerLines(axisScales);
             }
             else
             {
@@ -492,8 +493,8 @@ namespace StatsDirect.Charting.Renderer
                     if (barBrush != null)
                         barBrush.Dispose();
                 }
+                MaybeDrawMarkerLines(axisScales);
             }
-            MaybeDrawMarkerLines();
             EndVectorPlot();
             return new ParameterBag();
         }

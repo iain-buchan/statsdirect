@@ -39,12 +39,14 @@ namespace StatsDirect.Charting.Renderer
             {
                 X =
                 {
+                    ScaleType = ScaleType.Linear,
                     AllowedScaleTypes = new[] { ScaleType.Linear },
                     Max = avMax,
                     Min = avMin
                 },
                 Y =
                 {
+                    ScaleType = ScaleType.Linear,
                     AllowedScaleTypes = new[] { ScaleType.Linear },
                     Max = mxdMax,
                     Min = mxdMin
@@ -61,6 +63,7 @@ namespace StatsDirect.Charting.Renderer
             Layout.Range mxdRange = GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType);
             mxdMin = mxdRange.Min;
             mxdMax = mxdRange.Max;
+            AxisScales axisScales;
             using (Pen p = GetMarkerPen(ChartPreferences.MarkerTypes[0]))
             {
                 if (aOptions.HasLimits)
@@ -75,7 +78,7 @@ namespace StatsDirect.Charting.Renderer
                     string ytxt = definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                    axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
                 }
                 else
                 {
@@ -85,23 +88,20 @@ namespace StatsDirect.Charting.Renderer
                     string ytxt = definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "maximum difference";
-                    PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                    axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
                 }
             }
 
             // Plot mean
             using (Pen greenPen = new Pen(grGreen, 2))
             {
-                double y1 = ToCanvasY(aOptions.mean);
-                DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
+                DrawLineInChartCoordinates(greenPen, axisScales.X.MinimumScaleValue, aOptions.mean, axisScales.X.MaximumScaleValue, aOptions.mean);
                 if (aOptions.HasLimits)
                 {
                     // Plot upper limit
-                    y1 = ToCanvasY(aOptions.ula);
-                    DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
+                    DrawLineInChartCoordinates(greenPen, axisScales.X.MinimumScaleValue, aOptions.ula, axisScales.X.MaximumScaleValue, aOptions.ula);
                     // Plot lower limit
-                    y1 = ToCanvasY(aOptions.lla);
-                    DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
+                    DrawLineInChartCoordinates(greenPen, axisScales.X.MinimumScaleValue, aOptions.lla, axisScales.X.MaximumScaleValue, aOptions.lla);
                 }
             }
             EndVectorPlot();

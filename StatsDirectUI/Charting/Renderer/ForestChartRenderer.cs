@@ -101,13 +101,7 @@ namespace StatsDirect.Charting.Renderer
 
             string[] title = Numerics.Utilities.CopyValidRows(fOptions.Titles, copiesRemovingMissingRows.ValidRowsInOriginal, 0, fOptions.k, 0, k);
 
-            if (k > 10)
-            {
-                double scaleYAxis = 1.0 + (k - 10.0) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(k);
 
             int kok = 0;
             DataMaxX = double.NegativeInfinity;

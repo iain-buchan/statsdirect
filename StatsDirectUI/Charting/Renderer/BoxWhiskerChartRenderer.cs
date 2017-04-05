@@ -64,15 +64,7 @@ namespace StatsDirect.Charting.Renderer
 
         private ParameterBag PlotBoxWhiskerHorizontal(List<Series> seriesToUse)
         {
-
-            int k = seriesToUse.Count + 1;
-            if (k > 10)
-            {
-                double scaleYAxis = 1 + (k - 10) / 20.0;
-                if (scaleYAxis > 5)
-                    scaleYAxis = 5;
-                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
-            }
+            ScaleHeight(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
             Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
@@ -91,7 +83,7 @@ namespace StatsDirect.Charting.Renderer
             SetFontsAndThicknessesFromOptions(bwOptions);
             AssignMarkersToSeries();
 
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
             Color black = Color.Black;
             MarkerType crossMarker = new MarkerType() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
@@ -161,7 +153,7 @@ namespace StatsDirect.Charting.Renderer
                                 innerPen = dottedBlackPen;
                             else
                                 innerPen = blackPen;
-                            DrawLineInCanvasCoordinates(innerPen, ToCanvasX(innerFenceL), ToCanvasY(yTop), ToCanvasX(innerFenceL), ToCanvasY(yBottom));
+                            DrawLineInChartCoordinates(innerPen, innerFenceL, yTop, innerFenceL, yBottom);
                         }
 
                         //  Draw min whisker
@@ -251,7 +243,7 @@ namespace StatsDirect.Charting.Renderer
                                 innerPen = dottedBlackPen;
                             else
                                 innerPen = blackPen;
-                            DrawLineInCanvasCoordinates(innerPen, ToCanvasX(innerFenceR), ToCanvasY(yTop), ToCanvasX(innerFenceR), ToCanvasY(yBottom));
+                            DrawLineInChartCoordinates(innerPen, innerFenceR, yTop, innerFenceR, yBottom);
                         }
 
                         //  Draw max whisker
@@ -334,21 +326,14 @@ namespace StatsDirect.Charting.Renderer
                     }
                 }
             }
-            MaybeDrawMarkerLines();
+            MaybeDrawMarkerLines(axisScales);
             EndVectorPlot();
             return new ParameterBag();
         }
 
         private ParameterBag PlotBoxWhiskerVertical(List<Series> seriesToUse)
         {
-            int k = seriesToUse.Count + 1;
-            if (k > 10)
-            {
-                double scaleXAxis = 1 + (k - 10) / 20.0;
-                if (scaleXAxis > 5)
-                    scaleXAxis = 5;
-                imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
-            }
+            ScaleWidth(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
             Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
@@ -379,7 +364,7 @@ namespace StatsDirect.Charting.Renderer
             definition.YSeries = definition.XSeries;
             definition.XSeries = tempSeries;
 
-            DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
 
             using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
             {
@@ -623,7 +608,7 @@ namespace StatsDirect.Charting.Renderer
 
                 }
             }
-            MaybeDrawMarkerLines();
+            MaybeDrawMarkerLines(axisScales);
             EndVectorPlot();
             return new ParameterBag();
         }

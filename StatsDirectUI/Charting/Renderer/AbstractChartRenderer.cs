@@ -65,8 +65,8 @@ namespace StatsDirect.Charting.Renderer
         protected double divy { get; set; }
         protected double offy { get; set; }
 
-        protected const int DEFAULT_METAFILE_HEIGHT = 800;
-        protected const int DEFAULT_METAFILE_WIDTH = 1132;
+        private const int DEFAULT_METAFILE_HEIGHT = 800;
+        private const int DEFAULT_METAFILE_WIDTH = 1132;
         protected const double DEFAULT_X_GAP = 80;
         protected const double DEFAULT_Y_GAP = 80;
         protected int imageHeight = DEFAULT_METAFILE_HEIGHT;
@@ -1466,7 +1466,7 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// Marker lines are single values on the X or Y axis that the user has requested to be drawn.
         /// </summary>
-        protected void MaybeDrawMarkerLines()
+        protected void MaybeDrawMarkerLines(AxisScales axisScales)
         {
             if (null == definition)
                 return;
@@ -1474,19 +1474,13 @@ namespace StatsDirect.Charting.Renderer
                 return;
             if (definition.ScaleParameters.X.MarkerLineValue.HasValue)
             {
-                double x = ToCanvasX(definition.ScaleParameters.X.MarkerLineValue.Value);
-                using (Pen tenPen = new Pen(grBlack, 1))
-                {
-                    DrawLineInCanvasCoordinates(tenPen, x, yAxisCanvas, x, yAxisCanvas + yExtCanvas);
-                }
+                double x = definition.ScaleParameters.X.MarkerLineValue.Value;
+                DrawLineInChartCoordinates(grBlack, x, axisScales.Y.MinimumScaleValue, x, axisScales.Y.MaximumScaleValue);
             }
             if (definition.ScaleParameters.Y.MarkerLineValue.HasValue)
             {
-                double y = ToCanvasY(definition.ScaleParameters.Y.MarkerLineValue.Value);
-                using (Pen tenPen = new Pen(grBlack, 1))
-                {
-                    DrawLineInCanvasCoordinates(tenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
-                }
+                double y = definition.ScaleParameters.Y.MarkerLineValue.Value;
+                DrawLineInChartCoordinates(grBlack, axisScales.X.MinimumScaleValue, y, axisScales.X.MaximumScaleValue, y);
             }
         }
 
@@ -1773,7 +1767,7 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="p"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         /// <remarks></remarks>
-        protected void PlotXYInternal(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, double markerSize, MarkerShape shape, bool isFilled, Pen p, bool useCalculatedScalesEvenWithDefinition, double presetXMin = 0, double presetXMax = 0, double presetYMin = 0, double presetYMax = 0)
+        protected AxisScales PlotXYInternal(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, double markerSize, MarkerShape shape, bool isFilled, Pen p, bool useCalculatedScalesEvenWithDefinition, double presetXMin = 0, double presetXMax = 0, double presetYMin = 0, double presetYMax = 0)
         {
             ScaleType scaleTypeX = ScaleType.Linear;
             ScaleType scaleTypeY = ScaleType.Linear;
@@ -1839,7 +1833,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinGreaterThanZeroX = axisXMinGreaterThanZero;
             DataMaxX = axisXMax;
 
-            DrawAxesOrEnlargeCanvas(title,
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
                 new AxisDefinition(xtxt, AxisMode.Scale, scaleTypeX),
                 new AxisDefinition(ytxt, AxisMode.Scale, scaleTypeY),
                 false, useCalculatedScalesEvenWithDefinition);
@@ -1867,6 +1861,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, markerSize, shape, isFilled, p, p, false, true);
+
+            return axisScales;
         }
 
         ///  <summary>
@@ -1879,6 +1875,31 @@ namespace StatsDirect.Charting.Renderer
             using (Pen greenPen = new Pen(grGreen, 2))
             {
                 DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
+            }
+        }
+
+        /// <summary>
+        /// Find an appropriate height for a chart with k series, between 1 and 5 times the nominal height.
+        /// </summary>
+        protected void ScaleHeight(int k)
+        {
+            if (k > 10)
+            {
+                double scaleYAxis = 1 + (k - 10) / 20.0;
+                if (scaleYAxis > 5)
+                    scaleYAxis = 5;
+                imageHeight = (int)Math.Ceiling(scaleYAxis * DEFAULT_METAFILE_HEIGHT);
+            }
+        }
+
+        protected void ScaleWidth(int k)
+        {
+            if (k > 10)
+            {
+                double scaleXAxis = 1 + (k - 10) / 20.0;
+                if (scaleXAxis > 5)
+                    scaleXAxis = 5;
+                imageWidth = (int)Math.Ceiling(scaleXAxis * DEFAULT_METAFILE_WIDTH);
             }
         }
 

@@ -289,7 +289,7 @@ namespace StatsDirect.Charting
                                 }
                                 break;
                             case 3:
-                                if (h[j, k] != Constant.MISSING & stime[j, k] > 0 & h[j, k] > 0)
+                                if (h[j, k] != Constant.MISSING && stime[j, k] > 0 & h[j, k] > 0)
                                 {
                                     nx++;
                                     x[nx, k] = Math.Log(stime[j, k]);
@@ -299,7 +299,7 @@ namespace StatsDirect.Charting
                             case 4:
                                 int fault;
                                 double Q = PDF.gauinv(s[j, k], out fault);
-                                if (fault == 0 & stime[j, k] > 0)
+                                if (fault == 0 && stime[j, k] > 0)
                                 {
                                     nx++;
                                     x[nx, k] = Math.Log(stime[j, k]);
@@ -307,7 +307,7 @@ namespace StatsDirect.Charting
                                 }
                                 break;
                             case 5:
-                                if (h[j, k] != Constant.MISSING & stime[j, k] != 0)
+                                if (h[j, k] != Constant.MISSING && stime[j, k] != 0)
                                 {
                                     nx++;
                                     x[nx, k] = stime[j, k];
@@ -335,8 +335,6 @@ namespace StatsDirect.Charting
                 case ChartType.AgreementPair:
                     return new AgreementPairChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Bar:
-                case ChartType.StackedBar:
-                case ChartType.StackedBar100Percent:
                     return new BarChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.BoxWhisker:
                     return new BoxWhiskerChartRenderer(chartDefinition, canvasFactory);
@@ -366,6 +364,9 @@ namespace StatsDirect.Charting
                     return new ScatterChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Spread:
                     return new SpreadChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.StackedBar:
+                case ChartType.StackedBar100Percent:
+                    return new BarChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Survival:
                     return new SurvivalChartRenderer(chartDefinition, canvasFactory);
                 default:
