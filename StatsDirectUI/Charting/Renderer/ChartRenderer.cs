@@ -10,33 +10,11 @@ namespace StatsDirect.Charting.Renderer
     ///  <summary>
     ///  Converts a chart definition into an ASCII or metafile rendering of that definition.
     ///  </summary>
-    public class ChartRenderer : AbstractChartRenderer, IChartRenderer
+    public class ChartRenderer : AbstractChartRenderer
     {
         public ChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
         {
-        }
-
-        ScaleParameters IChartRenderer.GetScaleParameters()
-        {
-            switch (definition.ChartType)
-            {
-                case ChartType.NotSet:
-                    return GetDefaultScaleParameters();
-                default:
-                    throw new Exception("Unknown chart type");
-            }
-
-        }
-
-        ///  <summary>
-        ///  Plot a chart.
-        ///  </summary>
-        ///  <returns>Any output parameters created as side-effects of the plotting</returns>
-        ///  <remarks>Postcondition: Another plot can be called on the same chart object and give the same results.  This is required for previewing.</remarks>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
-        {
-            throw new Exception("Charts plotted via ChartRenderer are plotted via their own methods, not via Plot()");
         }
 
         internal void PlotCox2(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
@@ -301,7 +279,7 @@ namespace StatsDirect.Charting.Renderer
                     DrawMarkerInCanvasCoordinates(ix2, iy2, 6, shape, isFilled, markerPen);
 
                 // Then the lines
-                if (ix1 != ix2 | iy1 != iy2)
+                if (ix1 != ix2 || iy1 != iy2)
                 {
                     DrawLineInCanvasCoordinates(linePen, ix1, iy1, ix2, iy1);
                     DrawLineInCanvasCoordinates(linePen, ix2, iy1, ix2, iy2);
@@ -364,11 +342,11 @@ namespace StatsDirect.Charting.Renderer
             // Plot regression
             using (Pen p = new Pen(grBlack, 2))
             {
-                double oldx = 0;
-                double oldy = 0;
+                double oldx = Constant.MISSING;
+                double oldy = Constant.MISSING;
                 for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
-                    double calcy = 0;
+                    double calcy;
                     switch (model)
                     {
                         case 0:
@@ -383,14 +361,16 @@ namespace StatsDirect.Charting.Renderer
                                 denom = 0.0000001;
                             calcy = calcx / denom;
                             break;
+                        default:
+                            throw new Exception("Unknown mode");
                     }
 
-                    double x1 = ToCanvasX(calcx);
-                    double y1 = ToCanvasY(calcy);
-                    if (calcx > axisScales.X.MinimumScaleValue && y1 > yAxisCanvas && x1 > xAxisCanvas && y1 < yAxisCanvas + yExtCanvas)
-                        DrawLineInCanvasCoordinates(p, x1, y1, oldx, oldy);
-                    oldx = x1;
-                    oldy = y1;
+                    if (oldx >= axisScales.X.MinimumScaleValue && oldx <= axisScales.X.MaximumScaleValue
+                        && calcy >= axisScales.Y.MinimumScaleValue && calcy <= axisScales.Y.MaximumScaleValue
+                        && oldy >= axisScales.Y.MinimumScaleValue && oldy <= axisScales.Y.MaximumScaleValue)
+                        DrawLineInChartCoordinates(p, calcx, calcy, oldx, oldy);
+                    oldx = calcx;
+                    oldy = calcy;
                 }
             }
             EndVectorPlot();
@@ -556,24 +536,19 @@ namespace StatsDirect.Charting.Renderer
             DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
-            double[] x = new double[xdat.Length];
-            for (int i = 0; i < xdat.Length; i++)
-                if (xdat[i] > 0 && x[i] != Constant.MISSING)
-                    x[i] = Math.Log10(xdat[i]);
-                else
-                    x[i] = xdat[i];
 
             double cl = 0;
             int nx = 0;
-            foreach (double v in x)
+            foreach (double v in xdat)
             {
                 if (v != Constant.MISSING)
                 {
-                    cl += v;
+                    // TODO: Why is it correct to take log10(x) here?  It matches the old code to move to a log10 axis, but...?
+                    cl += v <= 0 ? v : Math.Log10(v);
                     nx++;
                 }
             }
-            double xm = cl / Convert.ToDouble(nx);
+            double xm = cl / nx;
 
             StartVectorPlot();
             AssignMarkersToSeries();
@@ -582,11 +557,14 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+                new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                false, false);
 
             // plot points
             PointF[] xys = new PointF[Math.Min(xdat.Length, ydat.Length)];
-            for (int r = 0; r <= Math.Min(xdat.Length, ydat.Length) - 1; r++)
+            for (int r = 0; r < Math.Min(xdat.Length, ydat.Length); r++)
             {
                 if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
                 {
@@ -601,7 +579,8 @@ namespace StatsDirect.Charting.Renderer
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data)
+            // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data).
+            // TODO: How to handle this on a log X scale?
             double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / 100.0;
 
             // This routine has changed from the original
@@ -615,7 +594,6 @@ namespace StatsDirect.Charting.Renderer
                 // Transformations on this get messy: axisXMin and axisXMax are in transformed non-canvas units (e.g. log10); originalX is therefore the original value.
                 // However a and b are based on the transformed non-canvas unit!
                 // So we need to keep both around.
-                // TODO: Better names for Transform and InverseTransform.
                 for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
@@ -796,13 +774,13 @@ namespace StatsDirect.Charting.Renderer
                     {
                         calcy = miny;
                         if (b[g] != 0.0)
-                            x1 = ToCanvasX(((calcy - a[g]) / b[g]));
+                            x1 = ToCanvasX((calcy - a[g]) / b[g]);
                     }
                     else if (calcy > maxy)
                     {
                         calcy = maxy;
                         if (b[g] != 0.0)
-                            x1 = ToCanvasX(((calcy - a[g]) / b[g]));
+                            x1 = ToCanvasX((calcy - a[g]) / b[g]);
                     }
                     y1 = ToCanvasY(calcy);
                     double x2 = ToCanvasX(maxx);
@@ -819,8 +797,7 @@ namespace StatsDirect.Charting.Renderer
                         if (b[g] != 0.0)
                             x2 = ToCanvasX(((calcy - a[g]) / b[g]));
                     }
-                    double y2 = ToCanvasY(calcy);
-                    DrawLineInCanvasCoordinates(p, x1, y1, x2, y2);
+                    DrawLineInCanvasCoordinates(p, x1, y1, x2, ToCanvasY(calcy));
                 }
             }
             EndVectorPlot();
