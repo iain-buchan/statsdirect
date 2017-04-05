@@ -1149,11 +1149,12 @@ namespace StatsDirect.Charting.Renderer
         }
         public void DrawLineInChartCoordinates(Color color, double x1, double y1, double x2, double y2)
         {
-            double dx1 = ToCanvasX(x1);
-            double dy1 = ToCanvasY(y1);
-            double dx2 = ToCanvasX(x2);
-            double dy2 = ToCanvasY(y2);
-            statsDirectCanvas.DrawLine(GetSameOrDifferentPen(color), dx1, dy1, dx2, dy2);
+            DrawLineInChartCoordinates(GetSameOrDifferentPen(color), x1, y1, x2, y2);
+        }
+
+        public void DrawLineInChartCoordinates(Pen p, double x1, double y1, double x2, double y2)
+        {
+            statsDirectCanvas.DrawLine(p, ToCanvasX(x1), ToCanvasY(y1), ToCanvasX(x2), ToCanvasY(y2));
         }
 
         protected void DrawRectangleInChartCoordinates(Color color, double left, double top, double width, double height)
@@ -1838,7 +1839,10 @@ namespace StatsDirect.Charting.Renderer
             DataMinGreaterThanZeroX = axisXMinGreaterThanZero;
             DataMaxX = axisXMax;
 
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, scaleTypeX), new AxisDefinition(ytxt, AxisMode.Scale, scaleTypeY), false, useCalculatedScalesEvenWithDefinition);
+            DrawAxesOrEnlargeCanvas(title,
+                new AxisDefinition(xtxt, AxisMode.Scale, scaleTypeX),
+                new AxisDefinition(ytxt, AxisMode.Scale, scaleTypeY),
+                false, useCalculatedScalesEvenWithDefinition);
 
             if (zPlot)
                 DrawQCanvas(offy);
