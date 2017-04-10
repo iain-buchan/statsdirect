@@ -15,8 +15,7 @@
         </frame>
       </parameters>
 		<builtin function-name="rptOneWay" />
-		<report type="text/rtf" filename="oneway.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="oneway.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="oneway.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>Bonferroni</suggested-operation>
