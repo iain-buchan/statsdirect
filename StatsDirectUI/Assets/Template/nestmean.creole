@@ -3,6 +3,6 @@
 <line>Grand mean = <inu>g_mean</inu>  (n = <in>g_n</in>)</line>
 <line></line>
 <table>
-<block name="subgroup"><tr><td>Group <in>sggrp</in></td><td>(subgroup <in>sgsub_grp</in>)</td><td><in>sgtitle</in>    mean = <inu>sgmean</inu></td></tr></block>
+<block name="subgroup"><tr><td>Group <in>sggrp</in></td><td>(subgroup <in>sgsub_grp</in>)</td><td><in>sgtitle</in> mean = <inu>sgmean</inu></td></tr></block>
 </table>
 </report>

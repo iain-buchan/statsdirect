@@ -28,8 +28,8 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizePopSurvey" />
-	  <report type="text/rtf" filename="s_survey.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="s_survey.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>SizePopSurvey</suggested-operation>
   </suggested-operations>

@@ -29,6 +29,6 @@
         </confidence-interval>
       </parameters>
 		<builtin function-name="rptKappaSimulateExactP" />
-    <report type="text/rtf" filename="kappaSimulatedExactP.rtf" />
+    <report type="application/x-statsdirect-creole" filename="kappaSimulatedExactP.creole"/>
   </steps>
 </operation>

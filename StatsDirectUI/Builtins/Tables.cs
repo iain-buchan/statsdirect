@@ -6795,6 +6795,7 @@ namespace StatsDirect.Builtins
             ierr = true;
 
             ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 1));
             List<ParameterBag> tableList = new List<ParameterBag>();
             outputParameters.AddOutput("*table", tableList);
             for (int idx = 1; idx <= k; idx++)
@@ -6809,9 +6810,8 @@ namespace StatsDirect.Builtins
                 double s = b + d;
                 double n = p + q;
                 if (p <= 0.0 || n <= 0.0 || q <= 0.0)
-                {
                     throw new InvalidDataException();
-                }
+
                 ParameterBag tableParameters = new ParameterBag();
                 if (showIntermediates)
                 {
@@ -7000,7 +7000,6 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
 
         public static ParameterBag RptChiWoolfWorksheet(ITemplateHost host, ParameterBag parameters)
         {

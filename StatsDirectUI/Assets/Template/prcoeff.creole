@@ -1,6 +1,6 @@
 <report>
 <table>
 <tr><th>Variable</th><block name="pc"><th>PC<in>pc</in></th></block></tr>
-<block name="var"><tr><td><ci><in>lab</in></ci></td><block name="res"><td><in>res</in></td></block></tr></block>
+<block name="var"><tr><td><subtotal><in>lab</in></subtotal></td><block name="res"><td><in>res</in></td></block></tr></block>
 </table>
 </report>

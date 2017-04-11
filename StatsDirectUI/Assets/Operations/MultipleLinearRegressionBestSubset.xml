@@ -25,8 +25,8 @@
 				</option>
 			</parameters>
 		<builtin function-name="rptMultipleLinearRegressionBestSubset" />
-		<report type="text/rtf" filename="subset.rtf" />
-		<test>
+    <report type="application/x-statsdirect-creole" filename="subset.creole" />
+    <test>
 			<condition>=parameters.ContainsKey("subsetApplied") &amp;&amp; parameters["subsetApplied"].AsBoolean</condition>
 			<iftrue>
         <report type="application/x-statsdirect-creole" filename="multi.creole" />

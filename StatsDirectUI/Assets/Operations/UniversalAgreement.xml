@@ -57,7 +57,7 @@
       </pick-from-list>
     </parameters>
     <builtin function-name="rptUniversalAgreement" />
-    <report type="text/rtf" filename="universalAgreement.rtf" />
+    <report type="application/x-statsdirect-creole" filename="universalAgreement.creole" />
   </steps>
   <suggested-operations>
     <suggested-operation suggest-if='=null != parameters &amp;&amp; !(parameters.ContainsKey("reference") &amp;&amp; null != parameters["reference"])'>UniversalAgreementSimulateExactP</suggested-operation>

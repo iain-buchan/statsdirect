@@ -29,7 +29,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptPreferences" />
-		<report type="text/rtf" filename="prefer.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="prefer.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="prefer.creole" />
 	</steps>
 </operation>

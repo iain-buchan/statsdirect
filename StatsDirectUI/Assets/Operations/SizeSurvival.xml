@@ -71,8 +71,8 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizeSurvival" />
-	  <report type="text/rtf" filename="s_survival.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="s_survival.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>SizeSurvival</suggested-operation>
   </suggested-operations>

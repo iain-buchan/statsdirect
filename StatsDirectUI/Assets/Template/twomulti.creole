@@ -5,18 +5,18 @@
 <line></line>
 <table>
 <tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Blocks (rows)</td><td><in>sub_sum</in></td><td><in>sub_df</in></td><td><in>sub_mean</in></td></tr>
-<tr><td>Treatments (columns)</td><td><in>grp_sum</in></td><td><in>grp_df</in></td><td><in>grp_mean</in></td></tr>
-<tr><td>Interaction</td><td><in>int_sum</in></td><td><in>int_df</in></td><td><in>int_mean</in></td></tr>
-<tr><td>Residual (error)</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
-<tr><td>Corrected total</td><td><in>tot_sum</in></td><td><in>tot_df</in></td><td></td></tr>
+<tr><td>Blocks (rows)</td><td><inu>sub_sum</inu></td><td><in>sub_df</in></td><td><inu>sub_mean</inu></td></tr>
+<tr><td>Treatments (columns)</td><td><inu>grp_sum</inu></td><td><in>grp_df</in></td><td><inu>grp_mean</inu></td></tr>
+<tr><td>Interaction</td><td><inu>int_sum</inu></td><td><in>int_df</in></td><td><inu>int_mean</inu></td></tr>
+<tr><td>Residual (error)</td><td><inu>res_sum</inu></td><td><in>res_df</in></td><td><inu>res_mean</inu></td></tr>
+<tr><td>Corrected total</td><td><inu>tot_sum</inu></td><td><in>tot_df</in></td><td></td></tr>
 </table>
 <line></line>
-<line>F (VR blocks) = <in>sub_vr</in>  <in>sub_p</in></line>
+<line>F (VR blocks) = <inu>sub_vr</inu>  <pval><inp>sub_p</inp></pval></line>
 <line></line>
-<line>F (VR treatments) = <in>grp_vr</in>  <in>grp_p</in></line>
+<line>F (VR treatments) = <inu>grp_vr</inu>  <pval><inp>grp_p</inp></pval></line>
 <line></line>
-<line>F (VR interaction) = <in>int_vr</in>  <in>int_p</in></line>
+<line>F (VR interaction) = <inu>int_vr</inu>  <pval><inp>int_p</inp></pval></line>
 <block name="warn">
 <line></line>
 <line><in>warn</in></line>

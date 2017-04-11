@@ -27,7 +27,7 @@
         </boolean>
       </parameters>
   	<builtin function-name="rptChiWoolf" />
-	  <report type="text/rtf" filename="woolf.rtf" />
+    <report type="application/x-statsdirect-creole" filename="woolf.creole" />
   </steps>
   <suggested-operations>
     <suggested-operation>ChiWoolfScreen</suggested-operation>

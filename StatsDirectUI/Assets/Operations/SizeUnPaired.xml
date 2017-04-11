@@ -45,8 +45,8 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizeUnPaired" />
-	  <report type="text/rtf" filename="s_t.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="s_t.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>SizeUnPaired</suggested-operation>
   </suggested-operations>

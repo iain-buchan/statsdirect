@@ -15,8 +15,7 @@
         </frame2d>
       </parameters>
 		<builtin function-name="rptTwoMulti" />
-		<report type="text/rtf" filename="twomulti.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="twomulti.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="twomulti.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>Bonferroni</suggested-operation>

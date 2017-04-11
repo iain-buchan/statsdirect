@@ -42,27 +42,27 @@
         <confidence-interval>
           <name>p</name>
           <prompt>% POWER (% probability of correctly detecting a real effect)</prompt>
+          <must-request>true</must-request>
           <minimum-suggested-value>0.7</minimum-suggested-value>
           <maximum-suggested-value>0.95</maximum-suggested-value>
           <suggested-step>0.05</suggested-step>
           <default-value>0.8</default-value>
-          <must-request>true</must-request>
           <can-default>false</can-default>
         </confidence-interval>
         <confidence-interval>
           <name>a</name>
           <prompt>% ALPHA (% probability of incorrectly rejecting the null hypothesis)</prompt>
+          <must-request>true</must-request>
           <minimum-suggested-value>0.001</minimum-suggested-value>
           <maximum-suggested-value>0.05</maximum-suggested-value>
           <suggested-step>0.001</suggested-step>
           <default-value>0.05</default-value>
-          <must-request>true</must-request>
           <can-default>false</can-default>
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizeMatchProp" />
-	  <report type="text/rtf" filename="s_maprop.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="s_maprop.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>SizeMatchProp</suggested-operation>
   </suggested-operations>

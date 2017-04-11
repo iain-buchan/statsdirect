@@ -4,7 +4,7 @@
 <line>median survival time for controls = <inu>ctFmt</inu></line>
 <line>hazard ratio = <inu>hrFmt</inu></line>
 <line>accrual time for recruitment = <inu>atFmt</inu></line>
-<line>additional follow-up time after recruitment = <inu>futFmt</in></line>
+<line>additional follow-up time after recruitment = <inu>futFmt</inu></line>
 <line>alpha = <inu>alpha</inu></line>
 <line>power = <inu>power</inu></line>
 <line></line>

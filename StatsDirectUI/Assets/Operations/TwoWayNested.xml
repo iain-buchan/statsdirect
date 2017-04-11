@@ -16,7 +16,7 @@
       </frame2d>
     </parameters>
     <builtin function-name="rptTwoNest" />
-    <report type="text/rtf" filename="twonest.rtf" />
+    <report type="application/x-statsdirect-creole" filename="twonest.creole" />
   </steps>
   <suggested-operations>
     <suggested-operation>TwoWayNestedMeans</suggested-operation>

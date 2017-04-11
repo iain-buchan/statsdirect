@@ -8,12 +8,12 @@
 <tr><td>Between Groups</td><td><inu>grp_sum</inu></td><td><in>grp_df</in></td><td><inu>grp_mean</inu></td></tr>
 <tr><td>Between Subgroups within Groups</td><td><inu>sub_sum</inu></td><td><in>sub_df</in></td><td><inu>sub_mean</inu></td></tr>
 <tr><td>Residual</td><td><inu>res_sum</inu></td><td><in>res_df</in></td><td><inu>res_mean</inu></td></tr>
-<tr><td>Total</td><td><inu>tot_sum</inu></td><td><in>tot_df</in></td></tr>
+<tr><td>Total</td><td><inu>tot_sum</inu></td><td><in>tot_df</in></td><td></td></tr>
 </table>
 <line></line>
-<line>F (VR between groups) = <inu>f_1</inu>  <inp>p_1</inp></line>
+<line>F (VR between groups) = <inu>f_1</inu>  <pval><inp>p_1</inp></pval></line>
 <line></line>
-<line>F (using group/subgroup msqr) = <inu>f_2</inu>  <inp>p_2</inp></line>
+<line>F (using group/subgroup msqr) = <inu>f_2</inu>  <pval><inp>p_2</inp></pval></line>
 <line></line>
-<line>F (VR between subgroups within groups) = <inu>f_3</inu>  <inp>p_3</inp></line>
+<line>F (VR between subgroups within groups) = <inu>f_3</inu>  <pval><inp>p_3</inp></pval></line>
 </report>

@@ -54,7 +54,6 @@
 			</test>
 			<builtin function-name="rptKappa" />
       <report type="application/x-statsdirect-creole" filename="xtab.creole"/>
-			<report type="text/rtf" filename="kappa.rtf" />
       <report type="application/x-statsdirect-creole" filename="kappa.creole"/>
 		</iftrue>
 		<iffalse>

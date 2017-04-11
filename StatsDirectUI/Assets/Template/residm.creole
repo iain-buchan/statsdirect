@@ -12,8 +12,8 @@
 </table>
 <line></line>
 <table>
-<tr><thfirst>Index</thfirst><threst/><thfirst>Jackknife</thfirst><threst/><th>DFIT</th></tr>
-<block name="jackknife"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><warn><in>jack</in></warn></td><td><in>jack*</in></td><td><in>dfit</in></td></tr></block>
+<tr><thfirst>Index</thfirst><thspan/><thfirst>Jackknife</thfirst><thspan/><th>DFIT</th></tr>
+<block name="jackknife"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><in>jack</in></td><td><warn><in>jack*</in></warn></td><td><in>dfit</in></td></tr></block>
 </table>
 <line></line>
 <line><u>Critical levels for unusual observations (marked *)</u></line>

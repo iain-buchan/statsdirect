@@ -1158,7 +1158,6 @@
     </None>
     <None Include="Assets\Template\asciigr.creole" />
     <None Include="Assets\Template\BACKINT.creole" />
-    <None Include="Assets\Template\blank.creole" />
     <None Include="Assets\Template\BONFERR.creole" />
     <None Include="Assets\Template\chartonly-ascii.creole" />
     <None Include="Assets\Template\chartonly.creole">
@@ -1265,7 +1264,9 @@
     <None Include="Assets\Template\nkeuls.creole" />
     <None Include="Assets\Template\normality.creole" />
     <None Include="Assets\Template\nplinreg.creole" />
-    <None Include="Assets\Template\oneway.creole" />
+    <None Include="Assets\Template\oneway.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\orci.creole">
       <SubType>Designer</SubType>
     </None>
@@ -1332,7 +1333,7 @@
     <None Include="Assets\Template\sign.creole">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Assets\Template\SIMANAL.creole" />
+    <None Include="Assets\Template\simanal.creole" />
     <None Include="Assets\Template\simple.creole">
       <SubType>Designer</SubType>
     </None>
@@ -1349,11 +1350,11 @@
     <None Include="Assets\Template\s_corr.creole">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Assets\Template\S_INCASE.creole" />
-    <None Include="Assets\Template\S_IND.creole" />
-    <None Include="Assets\Template\S_MACASE.creole" />
-    <None Include="Assets\Template\S_MAPROP.creole" />
-    <None Include="Assets\Template\S_SURVEY.creole" />
+    <None Include="Assets\Template\s_incase.creole" />
+    <None Include="Assets\Template\s_ind.creole" />
+    <None Include="Assets\Template\s_macase.creole" />
+    <None Include="Assets\Template\s_maprop.creole" />
+    <None Include="Assets\Template\s_survey.creole" />
     <None Include="Assets\Template\s_survival.creole" />
     <None Include="Assets\Template\S_T.creole" />
     <None Include="Assets\Template\treat.creole">
@@ -1363,7 +1364,7 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Assets\Template\twomulti.creole" />
-    <None Include="Assets\Template\TWONEST.creole" />
+    <None Include="Assets\Template\twonest.creole" />
     <None Include="Assets\Template\twoway.creole" />
     <None Include="Assets\Template\universalAgreement.creole" />
     <None Include="Assets\Template\universal_r_compare.creole" />
@@ -1384,35 +1385,7 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="Assets\STATSDIRECT.chm" />
-    <None Include="Assets\Template\BACKINT.rtf" />
     <None Include="Assets\Template\blank.rtf" />
-    <None Include="Assets\Template\universalAgreement.rtf" />
-    <None Include="Assets\Template\kappaSimulatedExactP.rtf" />
-    <None Include="Assets\Template\kappa.rtf" />
-    <None Include="Assets\Template\kappa2.rtf" />
-    <None Include="Assets\Template\kappam.rtf" />
-    <None Include="Assets\Template\latin.rtf" />
-    <None Include="Assets\Template\mantel.rtf" />
-    <None Include="Assets\Template\nestmean.rtf" />
-    <None Include="Assets\Template\oneway.rtf" />
-    <None Include="Assets\Template\pardet.rtf" />
-    <None Include="Assets\Template\prcoeff.rtf" />
-    <None Include="Assets\Template\prefer.rtf" />
-    <None Include="Assets\Template\prmatrix.rtf" />
-    <None Include="Assets\Template\prscores.rtf" />
-    <None Include="Assets\Template\residm.rtf" />
-    <None Include="Assets\Template\subset.rtf" />
-    <None Include="Assets\Template\s_corr.rtf" />
-    <None Include="Assets\Template\S_INCASE.rtf" />
-    <None Include="Assets\Template\S_IND.rtf" />
-    <None Include="Assets\Template\S_MAPROP.rtf" />
-    <None Include="Assets\Template\S_SURVEY.rtf" />
-    <None Include="Assets\Template\s_survival.rtf" />
-    <None Include="Assets\Template\S_T.rtf" />
-    <None Include="Assets\Template\twomulti.rtf" />
-    <None Include="Assets\Template\TWONEST.rtf" />
-    <None Include="Assets\Template\twoway.rtf" />
-    <None Include="Assets\Template\woolf.rtf" />
     <Compile Include="UI\Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -1971,7 +1944,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

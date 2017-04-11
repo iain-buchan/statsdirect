@@ -30,28 +30,24 @@ namespace StatsDirect.Builtins
             double p;
 
             if (standard)
-            {
                 AgreeStandard(n, b, c, data, out delta, out edel, out var, out gam, out r, out p);
-            }
             else
-            {
                 Agree(n, b, c, data, out delta, out edel, out var, out gam, out r, out p);
-            }
 
             ParameterBag outputParameters = new ParameterBag();
 
             outputParameters.AddOutput("name", title);
-            outputParameters.AddOutput("nobs", nobs.ToString());
-            outputParameters.AddOutput("n", n.ToString());
-            outputParameters.AddOutput("b", b.ToString());
-            outputParameters.AddOutput("c", c.ToString());
+            outputParameters.AddOutput("nobs", nobs);
+            outputParameters.AddOutput("n", n);
+            outputParameters.AddOutput("b", b);
+            outputParameters.AddOutput("c", c);
             outputParameters.AddOutput("ref", refIdent);
-            outputParameters.AddOutput("delta", host.RoundU(delta));
-            outputParameters.AddOutput("edel", host.RoundU(edel));
-            outputParameters.AddOutput("vardel", host.RoundU(var));
-            outputParameters.AddOutput("skewdel", host.RoundU(gam));
-            outputParameters.AddOutput("R", host.RoundU(r));
-            outputParameters.AddOutput("p", host.pval(p));
+            outputParameters.AddOutput("delta", delta);
+            outputParameters.AddOutput("edel", edel);
+            outputParameters.AddOutput("vardel", var);
+            outputParameters.AddOutput("skewdel", gam);
+            outputParameters.AddOutput("R", r);
+            outputParameters.AddOutput("p", p);
             return outputParameters;
         }
 
@@ -80,15 +76,9 @@ namespace StatsDirect.Builtins
 
             data = new double[n + 1, b + 1, c + 1];
             for (int i = 1; i <= n; i++)
-            {
                 for (int j = 1; j <= b; j++)
-                {
                     for (int k = 1; k <= c; k++)
-                    {
                         data[i, j, k] = Constant.MISSING;
-                    }
-                }
-            }
 
             //  In the XML we ask the user to select "Which observer is a reference standard (leave blank for none)?" then set the standard flag to true if there is a reference standard
             standard = parameters.ContainsKey("reference");
@@ -107,9 +97,8 @@ namespace StatsDirect.Builtins
                     }
                 }
                 if (referenceName == null)
-                {
                     throw new Exception("Could not match reference standard string");
-                }
+
                 //  set the ref string to "Observer <name of reference category>" if there is a reference category
                 refIdent = "Observer " + referenceName;
 
@@ -212,7 +201,6 @@ namespace StatsDirect.Builtins
                 title = dataVariable.Title;
         }
 
-
         public static ParameterBag RptUniversalRCompare(ITemplateHost host, ParameterBag parameters)
         {
             double r1 = parameters["r1_in"].AsDouble;
@@ -240,10 +228,9 @@ namespace StatsDirect.Builtins
             double sigd = Math.Sqrt(vard);
             double gamd = (Math.Pow(mu1, 3.0) * Math.Pow(sig2, 3.0) * gam2 - Math.Pow(mu2, 3.0) * Math.Pow(sig1, 3.0) * gam1) / (Math.Pow(mu1, 3.0) * Math.Pow(mu2, 3.0) * Math.Pow(sigd, 3.0));
             double t = dr / sigd;
-            double p1, p2, pd;
-            Pgamt((mu1 - e1) / sig1, gam1, out p1);
-            Pgamt((mu2 - e2) / sig2, gam2, out p2);
-            Pgamt(t, gamd, out pd);
+            double p1 = Pgamt((mu1 - e1) / sig1, gam1);
+            double p2 = Pgamt((mu2 - e2) / sig2, gam2);
+            double pd = Pgamt(t, gamd);
 
             ParameterBag outputParameters = new ParameterBag();
 
@@ -462,7 +449,7 @@ namespace StatsDirect.Builtins
             }
             delta = delta / (fac);
             double t = (delta - edel) / Math.Sqrt(var);
-            Pgamt(t, gam, out p);
+            p = Pgamt(t, gam);
             r = 1.0 - (delta / edel);
         }
 
@@ -473,7 +460,7 @@ namespace StatsDirect.Builtins
         ///  <param name="t">standardized test statistic</param>
         ///  <param name="gam">skewness of the delta distribution</param>
         ///  <param name="prob">probability of the test statistic</param>
-        private static void Pgamt(double t, double gam, out double prob)
+        private static double Pgamt(double t, double gam)
         {
             double w;
 
@@ -508,10 +495,7 @@ namespace StatsDirect.Builtins
                 {
 
                     if (t < w)
-                    {
-                        prob = zero;
-                        return;
-                    }
+                        return zero;
                     x = t;
                     y = t + 9.0;
                     for (i = 1; i <= 99; i++)
@@ -522,16 +506,12 @@ namespace StatsDirect.Builtins
                     h0 = Math.Exp(a * Math.Log(r + x) - r * x + b);
                     h3 = Math.Exp(a * Math.Log(r + y) - r * y + b);
                     h4 = Math.Exp(a * Math.Log(r + x + g1 * 199.0) - r * (x + g1 * 199.0) + b);
-                    prob = 1.0 - g3 * (h0 + (h1 + h4) * 4.0 + 2.0 * h2 + h3);
-                    return;
+                    return 1.0 - g3 * (h0 + (h1 + h4) * 4.0 + 2.0 * h2 + h3);
 
                 }
 
                 if (t > w)
-                {
-                    prob = 1.0;
-                    return;
-                }
+                    return 1.0;
                 x = t - 9.0;
                 y = t;
                 for (i = 1; i <= 99; i++)
@@ -542,9 +522,7 @@ namespace StatsDirect.Builtins
                 h0 = Math.Exp(a * Math.Log(r - x) + r * x + b);
                 h3 = Math.Exp(a * Math.Log(r - y) + r * y + b);
                 h4 = Math.Exp(a * Math.Log(r - x - g1 * 199.0) + r * (x + g1 * 199.0) + b);
-                prob = g3 * (h0 + (h1 + h4) * 4.0 + 2.0 * h2 + h3);
-                return;
-
+                return g3 * (h0 + (h1 + h4) * 4.0 + 2.0 * h2 + h3);
             }
 
             const double e1 = 0.31938153;
@@ -554,12 +532,10 @@ namespace StatsDirect.Builtins
             const double e5 = 1.330274429;
             const double h = 0.2316419;
             w = 1.0 / (h * Math.Abs(t) + 1.0);
-            prob = ((((e5 * w + e4) * w + e3) * w + e2) * w + e1) * w * Math.Exp(-t * t / 2.0) / Math.Sqrt(pi * 2.0);
+            double prob = ((((e5 * w + e4) * w + e3) * w + e2) * w + e1) * w * Math.Exp(-t * t / 2.0) / Math.Sqrt(pi * 2.0);
             if (t > zero)
-            {
                 prob = 1.0 - prob;
-            }
-
+            return prob;
         }
 
         ///  <summary>
@@ -634,7 +610,7 @@ namespace StatsDirect.Builtins
             double t = (delta - edel) / Math.Sqrt(var);
             rho = 1.0 - (delta / edel);
 
-            Pgamt(t, gam, out prob);
+            prob = Pgamt(t, gam);
         }
 
 
@@ -774,7 +750,7 @@ namespace StatsDirect.Builtins
             double delta, edel, var, gam, r, t, prob;
 
             Agree(n, b, c, data, out delta, out edel, out var, out gam, out r, out t);
-            Pgamt(t, gam, out prob);
+            prob = Pgamt(t, gam);
 
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
@@ -943,7 +919,6 @@ namespace StatsDirect.Builtins
             }
             Calc(host, v, kg, kb, kr, iseed, ms, data, out mp, out mpd);
         }
-
 
         private static void Rank(int kg, int kb, int kr, int h, ref double[, ,] data)
         {

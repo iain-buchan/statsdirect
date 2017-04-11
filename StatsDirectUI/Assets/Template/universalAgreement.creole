@@ -11,14 +11,14 @@
 </table>
 <line></line>
 <table>
-<tr><td>Observed (realised) delta: </td><td><in>delta</in></td></tr>
-<tr><td>Expected (mean) delta:</td><td><in>edel</in></td></tr>
-<tr><td>Variance of delta:</td><td><in>vardel</in></td></tr>
-<tr><td>Skewness of delta:</td><td><in>skewdel</in></td></tr>
+<tr><td>Observed (realised) delta: </td><td><inu>delta</inu></td></tr>
+<tr><td>Expected (mean) delta:</td><td><inu>edel</inu></td></tr>
+<tr><td>Variance of delta:</td><td><inu>vardel</inu></td></tr>
+<tr><td>Skewness of delta:</td><td><inu>skewdel</inu></td></tr>
 </table>
 <line></line>
 <table>
-<tr><td>Agreement coefficient R:</td><td><in>R</in></td></tr>
-<tr><td><pval>Significance:</pval></td><td><pval><in>p</in></pval></td></tr>
+<tr><td>Agreement coefficient R:</td><td><inu>R</inu></td></tr>
+<tr><td><pval>Significance:</pval></td><td><pval><inp>p</inp></pval></td></tr>
 </table>
 </report>

@@ -17,7 +17,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptPrincipalComponentsRegressionCoefficients" />
-		<report type="text/rtf" filename="prcoeff.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="prcoeff.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="prcoeff.creole" />
 	</steps>
 </operation>

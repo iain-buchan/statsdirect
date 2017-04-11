@@ -42,8 +42,7 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizeCorrelation" />
-	  <report type="text/rtf" filename="s_corr.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="s_corr.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="s_corr.creole" />
 	</steps>
   <suggested-operations>
     <suggested-operation>SizeCorrelation</suggested-operation>

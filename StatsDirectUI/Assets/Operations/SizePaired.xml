@@ -38,8 +38,8 @@
         </confidence-interval>
       </parameters>
   	<builtin function-name="rptSizePaired" />
-	  <report type="text/rtf" filename="s_t.rtf" />
-	</steps>
+    <report type="application/x-statsdirect-creole" filename="s_t.creole" />
+  </steps>
   <suggested-operations>
     <suggested-operation>SizePaired</suggested-operation>
   </suggested-operations>

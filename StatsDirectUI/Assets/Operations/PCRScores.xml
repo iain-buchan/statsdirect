@@ -17,7 +17,6 @@
         </frame>
       </parameters>
 		<builtin function-name="rptPrincipalComponentsRegressionScores" />
-		<report type="text/rtf" filename="prscores.rtf" />
-    <!-- <report type="application/x-statsdirect-creole" filename="prscores.creole" /> -->
+    <report type="application/x-statsdirect-creole" filename="prscores.creole" />
 	</steps>
 </operation>
