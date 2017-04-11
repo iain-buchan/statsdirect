@@ -75,7 +75,7 @@ namespace StatsDirect.TemplateProcessing
                 { "<title>", new CreoleReportSubstitute(@"{\ul\b ") },
                 { "</title>", new CreoleReportSubstitute(@"}") },
                 { "<tr>", new CreoleReportSubstitute(@"\trowd\trgaph135\trleft0\trautofit1!!CELLDEFINITION!! ") },
-                { "</tr>", new CreoleReportSubstitute(@"\row ") },
+                { "</tr>", new CreoleReportSubstitute(@"\row " + Environment.NewLine) },
                 { "<u>", new CreoleReportSubstitute(@"{\ul ") },
                 { "</u>", new CreoleReportSubstitute(@"}") },
                 { "<warn>", new CreoleReportSubstitute(@"{\cf6 ") },
