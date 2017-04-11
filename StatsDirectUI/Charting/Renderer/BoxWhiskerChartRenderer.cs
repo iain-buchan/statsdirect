@@ -630,7 +630,10 @@ namespace StatsDirect.Charting.Renderer
 
             // Draw the scale
             DefaultAxes();
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n", new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n",
+                new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType),
+                false, false);
             divx = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
             offx = Convert.ToInt32(-(axisScales.X.MinimumScaleValue / divx * 60) + 16);
             divy = seriesToUse.Count + 1;
@@ -647,7 +650,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // work through the columns
-            for (int c = 0; c <= seriesToUse.Count - 1; c++)
+            for (int c = 0; c < seriesToUse.Count; c++)
             {
                 DoubleSeries s = seriesToUse[c].AsDoubleSeries;
                 double mdn = 0; double Q1 = 0; double Q3 = 0;

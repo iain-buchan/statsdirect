@@ -191,7 +191,10 @@ namespace StatsDirect.Charting.Renderer
                         DataMaxX = DataMaxY;
 
                         DefaultAxes();
-                        AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.None, definition.ScaleParameters.Y.ScaleType), false, true);
+                        AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+                            new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                            false, true);
 
                         for (int c = 0; c < descriptor.Bins; c++)
                         {

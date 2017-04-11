@@ -405,7 +405,10 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = new AxisScales { X = xAss.AxisScale, Y = yAss.AxisScale };
 
             if (IsAscii)
-                SetStandardAsciiScaling(yAss.AxisScale.Tics().Count, axisScales);
+            {
+                int tics = (null != yAss.AxisScale) ? yAss.AxisScale.Tics().Count : 1;
+                SetStandardAsciiScaling(tics, axisScales);
+            }
             else
             {
                 //  We now know by how much we might have to shift the titles.  If we have to, restart our drawing process.
@@ -903,8 +906,11 @@ namespace StatsDirect.Charting.Renderer
         {
             divx = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
             offx = SafeToInt32(-(axisScales.X.MinimumScaleValue / divx * 60) + 15);
-            divy = axisScales.Y.MaximumScaleValue - axisScales.Y.MinimumScaleValue;
-            offy = SafeToInt32(-(axisScales.Y.MinimumScaleValue / divy * yDivisions) + ASCII_Ytxt);
+            if (null != axisScales.Y)
+            {
+                divy = axisScales.Y.MaximumScaleValue - axisScales.Y.MinimumScaleValue;
+                offy = SafeToInt32(-(axisScales.Y.MinimumScaleValue / divy * yDivisions) + ASCII_Ytxt);
+            }
         }
 
         protected double SafeToInt32(double d)
