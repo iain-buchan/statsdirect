@@ -10,14 +10,14 @@
 </table>
 <line></line>
 <table>
-<tr><td>Skewness</td><td><in>skewness</in>  <pval><inp>b1_p</inp></pval></td></tr>
-<tr><td>Kurtosis</td><td><in>kurtosis</in>  <pval><inp>b2_p</inp></pval></td></tr>
-<tr><td>Royston chi-sq</td><td><in>k2</in>  <pval><inp>k2_p</inp></pval></td></tr>
+<tr><td>Skewness</td><td><in>skewness</in>  <pval><in>b1_p</in></pval></td></tr>
+<tr><td>Kurtosis</td><td><in>kurtosis</in>  <pval><in>b2_p</in></pval></td></tr>
+<tr><td>Royston chi-sq</td><td><in>k2</in>  <pval><in>k2_p</in></pval></td></tr>
 </table>
 <line></line>
 <table>
-<tr><td>Shapiro-Wilk W</td><td><in>sw_w</in>  <in>sw_v</in>  <pval><inp>sw_p</inp></pval></td></tr>
-<tr><td>Shapiro-Francia W'</td><td><in>sf_w</in>  <in>sf_v</in>  <pval><inp>sf_p</inp></pval></td></tr>
+<tr><td>Shapiro-Wilk W</td><td><in>sw_w</in>  <in>sw_v</in>  <pval><in>sw_p</in></pval></td></tr>
+<tr><td>Shapiro-Francia W'</td><td><in>sf_w</in>  <in>sf_v</in>  <pval><in>sf_p</in></pval></td></tr>
 </table>
 <line></line>
 <line><in>result</in></line>
