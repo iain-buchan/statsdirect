@@ -309,9 +309,7 @@
           <help chm-id="1005" />
           <sub-items>
             <menu-item label="&amp;One Way..." operation="OneWay" />
-            <!-- <menu-item label="One Way Grouped by a Classifier..." operation="GroupedOneWay" /> -->
             <menu-item label="&amp;Two Way..." operation="TwoWay" />
-            <!-- <menu-item label="Two Way Grouped by a Classifier..." operation="GroupedTwoWay" /> -->
             <menu-item label="&amp;Replicate Two Way..." operation="ReplicateTwoWay" />
             <menu-item label="&amp;Fully Nested..." operation="TwoWayNested" />
             <menu-item label="&amp;Latin Square..." operation="LatinSquare" />
