@@ -293,8 +293,8 @@ namespace StatsDirect.Builtins
             {
                 if (qm[i] != 0)
                 {
-                    bx += (Math.Pow((qx[i] - qm[i] * pbar), 2.0)) / qm[i];
-                    wx += (qx[i] * (qm[i] - qx[i])) / qm[i];
+                    bx += Math.Pow(qx[i] - qm[i] * pbar, 2.0) / qm[i];
+                    wx += qx[i] * (qm[i] - qx[i]) / qm[i];
                 }
             }
             bx = bx / xn;
@@ -391,22 +391,22 @@ namespace StatsDirect.Builtins
             double y3 = (a2 + (1.0 - 2.0 * pq) * zsq) / den - 1.0;
             den = 4.0 * an * pq * den;
             double y2 = (a2 * a2 - 4.0 * an * pq * (1.0 - 4.0 * pq) * zsq) / den - 1.0;
-            double y1 = (Math.Pow((a2 - 2.0 * an * pq), 2.0) + 4.0 * an * an * pq * pq) / den - 1.0;
-            double vv = (Math.Pow(y3, 3.0)) / 27.0 - (y2 * y3 - 3.0 * y1) / 6.0;
-            double w = (Math.Pow(y3, 2.0)) / 9.0 - y2 / 3.0;
+            double y1 = (Math.Pow(a2 - 2.0 * an * pq, 2.0) + 4.0 * an * an * pq * pq) / den - 1.0;
+            double vv = Math.Pow(y3, 3.0) / 27.0 - (y2 * y3 - 3.0 * y1) / 6.0;
+            double w = Math.Pow(y3, 2.0) / 9.0 - y2 / 3.0;
             w = Math.Pow(w, 1.5);
             double th = Math.Acos(vv / w);
             double th120 = (th + 2.0 * Constant.PI) / 3.0;
             double th300 = (th + 5.0 * Constant.PI) / 3.0;
-            double b = (Math.Pow(y3, 2.0)) / 9.0 - y2 / 3.0;
+            double b = Math.Pow(y3, 2.0) / 9.0 - y2 / 3.0;
             b = Math.Pow(b, 0.5);
-            lwr = b * (Math.Cos(th120) + (Math.Pow(3.0, 0.5)) * Math.Sin(th120)) - y3 / 3.0;
+            lwr = b * (Math.Cos(th120) + Math.Pow(3.0, 0.5) * Math.Sin(th120)) - y3 / 3.0;
             upr = 2.0 * b * Math.Cos(th300) - y3 / 3.0;
             if (n2 == 0)
             {
                 upr = 1.0;
-                double a = zsq * (Math.Pow(p, 2.0) + Math.Pow((1.0 - p), 2.0)) / pq;
-                lwr = (-a + Math.Pow((Math.Pow(a, 2.0) - 4.0 * (zsq + an) * (zsq - an)), 0.5)) / (2.0 * (zsq + an));
+                double a = zsq * (Math.Pow(p, 2.0) + Math.Pow(1.0 - p, 2.0)) / pq;
+                lwr = (-a + Math.Pow(Math.Pow(a, 2.0) - 4.0 * (zsq + an) * (zsq - an), 0.5)) / (2.0 * (zsq + an));
             }
             fault = 0;
         }
@@ -479,7 +479,7 @@ namespace StatsDirect.Builtins
                 pe += pdotj[i] * pidot[i];
                 px += pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
                 pik = (pdotj[i] + pidot[i]) / 2.0;
-                pog += (o[i, i] / gt) * (1.0 - pik);
+                pog += o[i, i] / gt * (1.0 - pik);
                 peg += pik * (1.0 - pik);
             }
             pegama = peg / (g - 1.0);
@@ -487,13 +487,13 @@ namespace StatsDirect.Builtins
             // gama is Gwett's AC1 statistic and pegama is the chance-independent agreement with po as the observed agreement
             k = (po - pe) / (1.0 - pe);
             // standard error for the z test
-            sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
+            sek = 1.0 / ((1.0 - pe) * Math.Sqrt(gt)) * Math.Sqrt(pe + pe * pe - px);
             // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
             double sumpa = 0.0;
             double sumpb = 0.0;
             for (i = 0; i <= g - 1; i++)
             {
-                sumpa += (o[i, i] / gt) * Math.Pow((1.0-pe)-(pdotj[i] + pidot[i])*(1.0-po),2.0);
+                sumpa += o[i, i] / gt * Math.Pow(1.0-pe-(pdotj[i] + pidot[i])*(1.0-po),2.0);
             }
             for (i = 0; i <= g - 1; i++)
             {
@@ -501,7 +501,7 @@ namespace StatsDirect.Builtins
                 {
                     if (i != j)
                     {
-                        sumpb += (o[i, j] / gt) * Math.Pow(pdotj[j] + pidot[i], 2.0);
+                        sumpb += o[i, j] / gt * Math.Pow(pdotj[j] + pidot[i], 2.0);
                     }
                 }
             }
@@ -521,10 +521,10 @@ namespace StatsDirect.Builtins
             {
                 for (j = 0; j < g; j++)
                 {
-                    pkl = (o[i, j] / gt);
+                    pkl = o[i, j] / gt;
                     pow += w[i, j] * pkl;
                     pew += w[i, j] * pidot[i] * pdotj[j];
-                    soma += pkl * Math.Pow(1.0 - (((pdotj[i] + pidot[i]) / 2.0) + ((pdotj[j] + pidot[j]) / 2.0)) / 2.0, 2.0);
+                    soma += pkl * Math.Pow(1.0 - ((pdotj[i] + pidot[i]) / 2.0 + (pdotj[j] + pidot[j]) / 2.0) / 2.0, 2.0);
                 }
             }
             kw = (pow - pew) / (1.0 - pew);
@@ -532,7 +532,7 @@ namespace StatsDirect.Builtins
             double vgama = 0.0;
             double f = 0.0;
             // set f to gt/population size if population size is known, otherwise assume an infinite inference population thus f = 0
-            vgama = ((1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0))) * (po * (1.0 - po) - 4.0 * (1.0 - gama) * ((1.0 / (g - 1.0)) * pog - po * pegama) + 4.0 * (Math.Pow(1.0 - gama, 2.0)) * ((1.0 / (Math.Pow(g - 1.0, 2.0))) * soma - Math.Pow(pegama, 2.0)));
+            vgama = (1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0)) * (po * (1.0 - po) - 4.0 * (1.0 - gama) * (1.0 / (g - 1.0) * pog - po * pegama) + 4.0 * Math.Pow(1.0 - gama, 2.0) * (1.0 / Math.Pow(g - 1.0, 2.0) * soma - Math.Pow(pegama, 2.0)));
             segama = Math.Sqrt(vgama);
             gamacil = gama - cit * segama;
             gamaciu = gama + cit * segama;
@@ -552,7 +552,7 @@ namespace StatsDirect.Builtins
             {
                 for (j = 0; j < g; j++)
                 {
-                    px += pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
+                    px += pidot[i] * pdotj[j] * Math.Pow(w[i, j] - (wibar[i] + wjbar[j]), 2.0);
                 }
             }
             // standard error for z test
@@ -563,7 +563,7 @@ namespace StatsDirect.Builtins
             {
                 for (j = 0; j <= g - 1; j++)
                 {
-                    sumpw += (o[i, j] / gt) * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
+                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
                 }
             }
             sekwci = (sumpw  - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
@@ -577,7 +577,7 @@ namespace StatsDirect.Builtins
             spe = 0.0;
             for (i = 0; i < g; i++)
             {
-                spe += Math.Pow((crtot[i] / (gt * 2.0)), 2.0);
+                spe += Math.Pow(crtot[i] / (gt * 2.0), 2.0);
             }
             spi = (po - spe) / (1.0 - spe);
             ierror = false;
@@ -648,13 +648,13 @@ namespace StatsDirect.Builtins
             }
             k = (po - pe) / (1.0 - pe);
             // standard error for the z test
-            sek = (1.0 / ((1.0 - pe) * Math.Sqrt(gt))) * Math.Sqrt(pe + pe * pe - px);
+            sek = 1.0 / ((1.0 - pe) * Math.Sqrt(gt)) * Math.Sqrt(pe + pe * pe - px);
             // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
             double sumpa = 0.0;
             double sumpb = 0.0;
             for (int i = 0; i <= g - 1; i++)
             {
-                sumpa += (o[i, i] / gt) * Math.Pow((1.0 - pe) - (pdotj[i] + pidot[i]) * (1.0 - po), 2.0);
+                sumpa += o[i, i] / gt * Math.Pow(1.0 - pe - (pdotj[i] + pidot[i]) * (1.0 - po), 2.0);
             }
             for (int i = 0; i <= g - 1; i++)
             {
@@ -662,7 +662,7 @@ namespace StatsDirect.Builtins
                 {
                     if (i != j)
                     {
-                        sumpb += (o[i, j] / gt) * Math.Pow(pdotj[j] + pidot[i], 2.0);
+                        sumpb += o[i, j] / gt * Math.Pow(pdotj[j] + pidot[i], 2.0);
                     }
                 }
             }
@@ -701,7 +701,7 @@ namespace StatsDirect.Builtins
             {
                 for (int j = 0; j <= g - 1; j++)
                 {
-                    px += pidot[i] * pdotj[j] * Math.Pow((w[i, j] - (wibar[i] + wjbar[j])), 2.0);
+                    px += pidot[i] * pdotj[j] * Math.Pow(w[i, j] - (wibar[i] + wjbar[j]), 2.0);
                 }
             }
             //standard error for the z test
@@ -712,7 +712,7 @@ namespace StatsDirect.Builtins
             {
                 for (int j = 0; j <= g - 1; j++)
                 {
-                    sumpw += (o[i, j] / gt) * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
+                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
                 }
             }
             sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
@@ -726,7 +726,7 @@ namespace StatsDirect.Builtins
             spe = 0.0;
             for (int i = 0; i <= g - 1; i++)
             {
-                spe += Math.Pow((crtot[i] / (gt * 2.0)), 2.0);
+                spe += Math.Pow(crtot[i] / (gt * 2.0), 2.0);
             }
             spi = (po - spe) / (1.0 - spe);
             ierror = false;
@@ -797,7 +797,7 @@ namespace StatsDirect.Builtins
                 }
             }
             // general McNemar
-            dfm = ((int)(Math.Floor(k / 2.0 * (k - 1))));
+            dfm = (int)Math.Floor(k / 2.0 * (k - 1));
             x2M = 0;
             for (i = 0; i <= k - 2; i++)
             {
@@ -805,7 +805,7 @@ namespace StatsDirect.Builtins
                 {
                     if (o[i, j] + o[j, i] > 0.0)
                     {
-                        x2M += ((o[i, j] - o[j, i]) * (o[i, j] - o[j, i])) / (o[i, j] + o[j, i]);
+                        x2M += (o[i, j] - o[j, i]) * (o[i, j] - o[j, i]) / (o[i, j] + o[j, i]);
                         //   Else
                         //    x2m = MISSING
                         //    Exit sub
@@ -960,7 +960,7 @@ namespace StatsDirect.Builtins
                             switch (wtype)
                             {
                                 case 2:
-                                    w[i, j] = 1.0 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
+                                    w[i, j] = 1.0 - Math.Pow(Convert.ToDouble(i - j) / Convert.ToDouble(g - 1), 2.0);
                                     break;
                                 default:
                                     w[i, j] = 1.0 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
@@ -993,7 +993,7 @@ namespace StatsDirect.Builtins
                 double pegama;
                 bool ierror;
                 Kappa(host, o, w, g, out k, out sek, out sekci, out kcil, out kciu, out kw, out sekw, out sekwci, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
-                if (!(ierror))
+                if (!ierror)
                 {
                     outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
                     outputParameters.AddOutput("pe", Formatting.XRound(pe * 100, 2));
@@ -1099,7 +1099,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         outputParameters.AddOutput("x2", x2);
-                        outputParameters.AddOutput("df", (g - 1));
+                        outputParameters.AddOutput("df", g - 1);
                         outputParameters.AddOutput("pmaxwell", host.pval(PDF.chivalp(x2, Convert.ToDouble(g - 1))));
                     }
 
@@ -1140,7 +1140,7 @@ namespace StatsDirect.Builtins
                     foreach (Group gr in (v as ClassifierVariable).Groups)
                     {
                         string nm = gr.Label;
-                        if (!(categoryList.Contains(nm)) && !(Formatting.MISSINGLABEL.Equals(nm)))
+                        if (!categoryList.Contains(nm) && !Formatting.MISSINGLABEL.Equals(nm))
                             categoryList.Add(nm);
                     }
                 }
@@ -1163,7 +1163,7 @@ namespace StatsDirect.Builtins
                     double maxm;
                     double medm;
                     KappaHat(frame, catz[0], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
-                    double sek = (1.0 / ((mbar - 1.0) * Math.Sqrt(Convert.ToDouble(n) * mbarh))) * Math.Sqrt(2.0 * (mbarh - 1.0) + ((mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar))) / (mbar * pbar * (1.0 - pbar)));
+                    double sek = 1.0 / ((mbar - 1.0) * Math.Sqrt(Convert.ToDouble(n) * mbarh)) * Math.Sqrt(2.0 * (mbarh - 1.0) + (mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar)) / (mbar * pbar * (1.0 - pbar)));
                     double z;
                     if (sek != 0.0)
                         z = k / sek;
@@ -1220,7 +1220,7 @@ namespace StatsDirect.Builtins
                     if (Math.Pow(kbard, 2.0) - se2 < 0.0)
                         sek = Constant.MISSING;
                     else
-                        sek = (Math.Sqrt(2.0) / (kbard * Math.Sqrt(Convert.ToDouble(n) * mx * (mx - 1.0)))) * Math.Sqrt(Math.Pow(kbard, 2.0) - se2);
+                        sek = Math.Sqrt(2.0) / (kbard * Math.Sqrt(Convert.ToDouble(n) * mx * (mx - 1.0))) * Math.Sqrt(Math.Pow(kbard, 2.0) - se2);
                     double z;
                     if (sek != 0.0 & sek != Constant.MISSING)
                         z = kbar / sek;
@@ -1360,7 +1360,7 @@ namespace StatsDirect.Builtins
                     for (int j = 0; j <= cols - 1; j++)
                     {
                         double transTemp0 = (frame.Variables[j] as DoubleVariable).Data[i];
-                        o[i, j] = ((int)(Math.Floor(transTemp0)));
+                        o[i, j] = (int)Math.Floor(transTemp0);
                     }
                 }
             }
@@ -1492,7 +1492,7 @@ namespace StatsDirect.Builtins
                         switch (wtype)
                         {
                             case 2:
-                                w[i, j] = 1.0 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
+                                w[i, j] = 1.0 - Math.Pow(Convert.ToDouble(i - j) / Convert.ToDouble(g - 1), 2.0);
                                 break;
                             default:
                                 w[i, j] = 1.0 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
@@ -1634,7 +1634,7 @@ namespace StatsDirect.Builtins
                 double spi = 0;
                 bool wasError;
                 Kappa(host, o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out wasError);
-                if (!(wasError))
+                if (!wasError)
                 {
                     if (sek != 0.0)
                     {
@@ -1859,7 +1859,7 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= k; i++)
             {
                 double xe = nt * p[i];
-                x2 += ((x[i] - xe) * (x[i] - xe)) / xe;
+                x2 += (x[i] - xe) * (x[i] - xe) / xe;
             }
             return x2;
         }
@@ -1926,7 +1926,7 @@ namespace StatsDirect.Builtins
                     expectedsBelow5 += 1;
             }
             string w2;
-            if (!((expectedIsProbability || Convert.ToInt32(expectedTotal) == Convert.ToInt32(observedTotal))))
+            if (!(expectedIsProbability || Convert.ToInt32(expectedTotal) == Convert.ToInt32(observedTotal)))
                 w2 = Formatting.WRNCOLON + "total expected not equal to total observed";
             else
                 w2 = string.Empty;
@@ -1960,7 +1960,7 @@ namespace StatsDirect.Builtins
                 frequenciesParameters.AddOutput("x", tx);
                 frequenciesParameters.AddOutput("o", xn[i]);
                 frequenciesParameters.AddOutput("e", xe[i]);
-                x2 += ((xn[i] - xe[i]) * (xn[i] - xe[i])) / xe[i];
+                x2 += (xn[i] - xe[i]) * (xn[i] - xe[i]) / xe[i];
                 frequenciesList.Add(frequenciesParameters);
             }
 
@@ -2060,7 +2060,7 @@ namespace StatsDirect.Builtins
                         throw new TemplateOperationCancelledException();
                 }
 
-                if (!(XSymmetrical(xcats, xcat, ycats, ycat, false)))
+                if (!XSymmetrical(xcats, xcat, ycats, ycat, false))
                 {
                     bool symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
                     if (wasCancelled)
@@ -2180,7 +2180,7 @@ namespace StatsDirect.Builtins
                         throw new TemplateOperationCancelledException();
                 }
 
-                if (!(XSymmetrical(xcats, xcat, ycats, ycat, false)))
+                if (!XSymmetrical(xcats, xcat, ycats, ycat, false))
                 {
                     bool symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
                     if (wasCancelled)
@@ -2189,7 +2189,7 @@ namespace StatsDirect.Builtins
                         XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 1);
                 }
 
-                if (!(ok))
+                if (!ok)
                     continue;
 
                 ParameterBag columnsParameters = new ParameterBag();
@@ -2764,21 +2764,21 @@ namespace StatsDirect.Builtins
                 }
                 if (ctot[c] != 0.0)
                 {
-                    dsrs = dsrs + (xi * xi) / ctot[c];
+                    dsrs = dsrs + xi * xi / ctot[c];
                 }
             }
 
-            double sxx = sumWtSqRow - ((sumWtRow * sumWtRow) / gtot);
+            double sxx = sumWtSqRow - sumWtRow * sumWtRow / gtot;
             //  ANOVA style equality of variance test
-            double x2Eq = ((gtot - 1.0) / sxx) * (dsrs - ((sumWtRow * sumWtRow) / gtot));
-            double syy = sumWtSqCol - ((sumWtCol * sumWtCol) / gtot);
+            double x2Eq = (gtot - 1.0) / sxx * (dsrs - sumWtRow * sumWtRow / gtot);
+            double syy = sumWtSqCol - sumWtCol * sumWtCol / gtot;
             double sxy = sumWeighted - sumWtCol * sumWtRow / gtot;
             //  Chi-square for linear trend
             double x2Trend = (gtot - 1.0) * (sxy * sxy) / (sxx * syy);
 
             //  sample correlation
-            double corr = sumWeighted - (sumWtRow * sumWtCol) / gtot;
-            corr = corr / Math.Sqrt((sumWtSqRow - (Math.Pow(sumWtRow, 2.0) / gtot)) * (sumWtSqCol - (Math.Pow(sumWtCol, 2.0) / gtot)));
+            double corr = sumWeighted - sumWtRow * sumWtCol / gtot;
+            corr = corr / Math.Sqrt((sumWtSqRow - Math.Pow(sumWtRow, 2.0) / gtot) * (sumWtSqCol - Math.Pow(sumWtCol, 2.0) / gtot));
             //  m2 from Agresti = x2trend from Armitage
             //  m2 = (gtot - 1) * corr * corr
 
@@ -2846,13 +2846,13 @@ namespace StatsDirect.Builtins
             {
                 for (int c = 1; c <= cols; c++)
                 {
-                    vg = vg + o[r, c] * Math.Pow((dc * cx[r, c] - cc * dx[r, c]), 2.0);
-                    vgi = vgi + o[r, c] * Math.Pow((cx[r, c] - dx[r, c]), 2.0);
+                    vg = vg + o[r, c] * Math.Pow(dc * cx[r, c] - cc * dx[r, c], 2.0);
+                    vgi = vgi + o[r, c] * Math.Pow(cx[r, c] - dx[r, c], 2.0);
                 }
             }
-            vgi = vgi - (1.0 / gtot) * Math.Pow((cc - dc), 2.0);
-            double seg = (4.0 / (Math.Pow((cc + dc), 2.0))) * Math.Sqrt(vg);
-            double segi = (2.0 / (cc + dc)) * Math.Sqrt(vgi);
+            vgi = vgi - 1.0 / gtot * Math.Pow(cc - dc, 2.0);
+            double seg = 4.0 / Math.Pow(cc + dc, 2.0) * Math.Sqrt(vg);
+            double segi = 2.0 / (cc + dc) * Math.Sqrt(vgi);
 
             // tau-b
             double drx = 0.0;
@@ -2876,10 +2876,10 @@ namespace StatsDirect.Builtins
                 for (int c = 1; c <= cols; c++)
                 {
                     double vij = rtot[r] * dcx + ctot[c] * drx;
-                    vt = vt + o[r, c] * Math.Pow((tsdd * (cx[r, c] - dx[r, c]) + taub * vij), 2.0);
+                    vt = vt + o[r, c] * Math.Pow(tsdd * (cx[r, c] - dx[r, c]) + taub * vij, 2.0);
                 }
             }
-            vt = vt - Math.Pow(gtot, 3.0) * Math.Pow(taub, 2.0) * Math.Pow((drx + dcx), 2.0);
+            vt = vt - Math.Pow(gtot, 3.0) * Math.Pow(taub, 2.0) * Math.Pow(drx + dcx, 2.0);
             double setaub = 1.0 / (drx * dcx) * Math.Sqrt(vt);
             double setaubi = 2.0 * Math.Sqrt(vgi / (drx * dcx));
 
@@ -2961,10 +2961,10 @@ namespace StatsDirect.Builtins
                 // chi-square calculations
                 for (int c = 1; c <= cols; c++)
                 {
-                    double ef = (rtot[r] * ctot[c]) / gtot;
+                    double ef = rtot[r] * ctot[c] / gtot;
                     if (ef != 0.0)
                     {
-                        x2 += Math.Pow((o[r, c] - ef), 2.0) / ef;
+                        x2 += Math.Pow(o[r, c] - ef, 2.0) / ef;
                         if (o[r, c] != 0.0)
                         {
                             g2 = g2 + o[r, c] * Math.Log(o[r, c] / ef);
@@ -2986,7 +2986,7 @@ namespace StatsDirect.Builtins
                     {
                         if (ex[r, c] != 0.0)
                         {
-                            dchi2 = Math.Pow((o[r, c] - ex[r, c]), 2.0) / ex[r, c];
+                            dchi2 = Math.Pow(o[r, c] - ex[r, c], 2.0) / ex[r, c];
                         }
                         else { dchi2 = Constant.MISSING; }
                         ParameterBag chiParameters = new ParameterBag();
@@ -3185,7 +3185,7 @@ namespace StatsDirect.Builtins
 
             // equality ANOVA (see Armitage)
             outputParameters.AddOutput("chie", x2Eq);
-            outputParameters.AddOutput("dfe", (nzCols - 1));
+            outputParameters.AddOutput("dfe", nzCols - 1);
             outputParameters.AddOutput("pe", host.pval(PDF.chivalp(x2Eq, nzCols - 1))+pmcx2eq);
 
             // linear trend MH type (see Armitage)
@@ -3205,7 +3205,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                c1 = Math.Sqrt((x2 / (gtot) / Math.Min(Convert.ToDouble(rows - 1), Convert.ToDouble(cols - 1))));
+                c1 = Math.Sqrt(x2 / gtot / Math.Min(Convert.ToDouble(rows - 1), Convert.ToDouble(cols - 1)));
                 outputParameters.AddOutput("cramer", c1);
             }
 
@@ -3376,7 +3376,7 @@ namespace StatsDirect.Builtins
                 tbl[i].M1 = o[i, 1] + o[i, 2];
                 tbl[i].N1 = o[i, 1] + o[i, 3];
                 tbl[i].N0 = o[i, 2] + o[i, 4];
-                tbl[i].Informative = (o[i, 1] * o[i, 4] != 0.0) || (o[i, 2] * o[i, 3] != 0.0);
+                tbl[i].Informative = o[i, 1] * o[i, 4] != 0.0 || o[i, 2] * o[i, 3] != 0.0;
             }
             bool useLogScale = false;
             new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
@@ -3634,7 +3634,7 @@ namespace StatsDirect.Builtins
             }
             if (ir > 1 & ic > 1)
             {
-                iq = ((int)(Math.Floor((double)iq / (ir * ic))));
+                iq = (int)Math.Floor((double)iq / (ir * ic));
                 if (ldres <= iq)
                 {
                     ierr = 8;
@@ -3741,7 +3741,7 @@ namespace StatsDirect.Builtins
             }
             if (ir > 1 & ic > 1)
             {
-                iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+                iq = (int)Math.Floor((double)lentbl / (ir * ic));
                 if (ldstat <= iq)
                 {
                     ierr = 8;
@@ -3949,7 +3949,7 @@ namespace StatsDirect.Builtins
             {
                 lentbl = lentbl * nclval[i];
             }
-            int iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+            int iq = (int)Math.Floor((double)lentbl / (ir * ic));
             int nzt = iq;
             int lm1 = (ir - 1) * (ic - 1);
             int lm2 = lm1 * lm1;
@@ -4029,7 +4029,7 @@ namespace StatsDirect.Builtins
                         {
                             if (colsum[j] > tol & rowsum[i] > tol)
                             {
-                                tmp = tmp + Math.Pow((f[ij] - colsum[j] * rowsum[i] / rnh), 2.0) / (colsum[j] * rowsum[i] / rnh);
+                                tmp = tmp + Math.Pow(f[ij] - colsum[j] * rowsum[i] / rnh, 2.0) / (colsum[j] * rowsum[i] / rnh);
                             }
                             ij = ij + 1;
                         }
@@ -4106,7 +4106,7 @@ namespace StatsDirect.Builtins
             {
                 lentbl = lentbl * nclval[i];
             }
-            int iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+            int iq = (int)Math.Floor((double)lentbl / (ir * ic));
             int nzt = iq;
             for (int i = 1; i <= ir * ir; i++)
             {
@@ -4201,13 +4201,13 @@ namespace StatsDirect.Builtins
                     double dela = 0.0;
                     for (int j = 1; j <= ic; j++)
                     {
-                        dela = dela + Math.Pow((rowscr[j] - abar), 2.0) * colsum[j] / rnh;
+                        dela = dela + Math.Pow(rowscr[j] - abar, 2.0) * colsum[j] / rnh;
                     }
                     //       between populations variance
                     double delf = 0.0;
                     for (int i = 1; i <= ir; i++)
                     {
-                        delf = delf + Math.Pow((fh[i] - abar), 2.0) * rowsum[i] / rnh;
+                        delf = delf + Math.Pow(fh[i] - abar, 2.0) * rowsum[i] / rnh;
                     }
                     if (dela > tol)
                     {
@@ -4317,7 +4317,7 @@ namespace StatsDirect.Builtins
             {
                 lentbl = lentbl * nclval[i];
             }
-            int iq = ((int)(Math.Floor((double)lentbl / (ir * ic))));
+            int iq = (int)Math.Floor((double)lentbl / (ir * ic));
             difsum = 0.0;
             covsum = 0.0;
             for (i = 1; i <= nclvar; i++)
@@ -4390,13 +4390,13 @@ namespace StatsDirect.Builtins
                     double dela = 0.0;
                     for (j = 1; j <= ic; j++)
                     {
-                        dela = dela + Math.Pow((rowscr[j] - abar), 2.0) * colsum[j] / rnh;
+                        dela = dela + Math.Pow(rowscr[j] - abar, 2.0) * colsum[j] / rnh;
                     }
                     //       col score variance
                     double delb = 0.0;
                     for (i = 1; i <= ir; i++)
                     {
-                        delb = delb + Math.Pow((colscr[i] - bbar), 2.0) * rowsum[i] / rnh;
+                        delb = delb + Math.Pow(colscr[i] - bbar, 2.0) * rowsum[i] / rnh;
                     }
                     //       row and col score covariance
                     double delab = 0.0;
@@ -4455,7 +4455,7 @@ namespace StatsDirect.Builtins
 
             for (int j = nclvar - 1; j >= 1; j--)
             {
-                iprod = iprod * (nclval[j + 1]);
+                iprod = iprod * nclval[j + 1];
                 i1 = i1 + (ix[j] - 1) * iprod;
             }
             int ii = 1;
@@ -4691,7 +4691,7 @@ namespace StatsDirect.Builtins
                             ierr = 1;
                             return;
                         }
-                        ntot = ntot + ((int)(Math.Floor(table[i, j])));
+                        ntot = ntot + (int)Math.Floor(table[i, j]);
                     }
                 }
                 if (ntot == 0)
@@ -4849,8 +4849,8 @@ namespace StatsDirect.Builtins
                         return;
                     }
                     double transTemp9 = table[i, j];
-                    iro[i] = iro[i] + ((int)(Math.Floor(transTemp9)));
-                    ntot = ntot + ((int)(Math.Floor(transTemp9)));
+                    iro[i] = iro[i] + (int)Math.Floor(transTemp9);
+                    ntot = ntot + (int)Math.Floor(transTemp9);
                 }
             }
 
@@ -4868,7 +4868,7 @@ namespace StatsDirect.Builtins
                 for (j = 1; j <= nrow; j++)
                 {
                     double transTemp11 = table[j, i];
-                    ico[i] = ico[i] + ((int)(Math.Floor(transTemp11)));
+                    ico[i] = ico[i] + (int)Math.Floor(transTemp11);
                 }
             }
             // (sort)
@@ -4955,12 +4955,12 @@ namespace StatsDirect.Builtins
                     if (nrow <= ncol)
                     {
                         double transTemp12 = table[i, j];
-                        dd = dd + fact[((int)(Math.Floor(transTemp12)))];
+                        dd = dd + fact[(int)Math.Floor(transTemp12)];
                     }
                     else
                     {
                         double transTemp13 = table[j, i];
-                        dd = dd + fact[((int)(Math.Floor(transTemp13)))];
+                        dd = dd + fact[(int)Math.Floor(transTemp13)];
                     }
                 }
                 obs = obs + fact[ico[j]] - dd;
@@ -5151,7 +5151,7 @@ namespace StatsDirect.Builtins
                                 kval = kval + irn[i] * kyy[i];
                             }
                             //                                   get hash table entry
-                            i = (kval % 2 * ldkey) + 1;
+                            i = kval % 2 * ldkey + 1;
                             //                                   search for unused location
                             bool found = false;
                             for (itp = i; itp <= 2 * ldkey; itp++)
@@ -5994,7 +5994,7 @@ namespace StatsDirect.Builtins
                             lev = lev + 1;
                             int nc1 = nco - lev;
                             nct = ico[lev];
-                            lb[lev] = ((int)(Math.Floor(Convert.ToDouble((nrt + 1) * (nct + 1)) / Convert.ToDouble(nn1 + nr1 * nc1 + 1) - tol)));
+                            lb[lev] = (int)Math.Floor(Convert.ToDouble((nrt + 1) * (nct + 1)) / Convert.ToDouble(nn1 + nr1 * nc1 + 1) - tol);
                             nu[lev] = Convert.ToInt32(Math.Floor(Convert.ToDouble((nrt + nc1) * (nct + nr1)) / Convert.ToDouble(nn1 + nr1 + nc1)) - lb[lev] + 1);
                             nr[lev] = nrt - lb[lev];
                         }
@@ -6096,7 +6096,7 @@ namespace StatsDirect.Builtins
                                 key = it[i] + key * kyy;
                             }
                             //                                table index
-                            int ipn = (key % ldst) + 1;
+                            int ipn = key % ldst + 1;
                             //                                find empty position
                             itp = ipn - 1;
                             bool cycleinner = false;
@@ -6404,7 +6404,7 @@ namespace StatsDirect.Builtins
 
             if (ipsh)
             {
-                int ird = (kval % ldkey) + 1;
+                int ird = kval % ldkey + 1;
                 int jq = 0;
                 for (itp = jkey - 1 + ird; itp <= jkey - 1 + ldkey; itp++)
                 {
@@ -6576,7 +6576,7 @@ namespace StatsDirect.Builtins
                 p1 = zp;
             }
             else { p1 = 1.0 - p1; }
-            it = ((int)(Math.Floor((2.0 * expect[i, 3] * expect[3, j] - rn * table[i, j]) / rn + 0.00001)));
+            it = (int)Math.Floor((2.0 * expect[i, 3] * expect[3, j] - rn * table[i, j]) / rn + 0.00001);
             if (k == it)
             {
                 p2 = 1.0;
@@ -7219,13 +7219,7 @@ namespace StatsDirect.Builtins
             Xe = new List<double>();
         }
 
-        public string FillerToUse
-        {
-            get
-            {
-                return "ChiSquareGoodnessOfFit";
-            }
-        }
+        public string FillerToUse => "ChiSquareGoodnessOfFit";
     }
 
     public class ScoresOptions : IFillable
@@ -7241,12 +7235,6 @@ namespace StatsDirect.Builtins
             Values2 = new List<double>();
         }
 
-        public string FillerToUse
-        {
-            get
-            {
-                return "Scores";
-            }
-        }
+        public string FillerToUse => "Scores";
     }
 }

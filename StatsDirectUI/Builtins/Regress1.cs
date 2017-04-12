@@ -41,7 +41,7 @@ namespace StatsDirect.Builtins
                 ep = ep + s;
                 var = var + P;
             }
-            var = (var - (ep * ep) / Convert.ToDouble(nx)) / Convert.ToDouble(nx - 1);
+            var = (var - ep * ep / Convert.ToDouble(nx)) / Convert.ToDouble(nx - 1);
             sd = Math.Sqrt(var);
         }
 
@@ -158,7 +158,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                if ((Math.Abs(wd[i]) + Math.Abs(rv1[i])) > anorm)
+                if (Math.Abs(wd[i]) + Math.Abs(rv1[i]) > anorm)
                 {
                     anorm = Math.Abs(wd[i]) + Math.Abs(rv1[i]);
                 }
@@ -172,7 +172,7 @@ namespace StatsDirect.Builtins
                     {
                         for (j = L; j <= P; j++)
                         {
-                            vd[j, i] = (ad[i, j] / ad[i, L]) / g;
+                            vd[j, i] = ad[i, j] / ad[i, L] / g;
                         }
                         for (j = L; j <= P; j++)
                         {
@@ -215,7 +215,7 @@ namespace StatsDirect.Builtins
                         {
                             s = s + ad[k, i] * ad[k, j];
                         }
-                        f = (s / ad[i, i]) * g;
+                        f = s / ad[i, i] * g;
                         for (k = i; k <= nx; k++)
                         {
                             ad[k, j] = ad[k, j] + f * ad[k, i];
@@ -247,17 +247,17 @@ namespace StatsDirect.Builtins
                     for (L = k; L >= 1; L--)
                     {
                         nm = L - 1;
-                        if ((Math.Abs(rv1[L]) + anorm) == anorm)
+                        if (Math.Abs(rv1[L]) + anorm == anorm)
                         {
                             break;
                         }
-                        if ((Math.Abs(wd[nm]) + anorm) == anorm)
+                        if (Math.Abs(wd[nm]) + anorm == anorm)
                         {
                             s = 1.0;
                             for (i = L; i <= k; i++)
                             {
                                 f = s * rv1[i];
-                                if ((Math.Abs(f) + anorm) != anorm)
+                                if (Math.Abs(f) + anorm != anorm)
                                 {
                                     break;
                                 }
@@ -265,14 +265,14 @@ namespace StatsDirect.Builtins
                                 h = X_PYTHAG(f, g);
                                 wd[i] = h;
                                 h = 1.0 / h;
-                                C = (g * h);
+                                C = g * h;
                                 s = -(f * h);
                                 for (j = 1; j <= nx; j++)
                                 {
                                     y = ad[j, nm];
                                     z = ad[j, i];
-                                    ad[j, nm] = (y * C) + (z * s);
-                                    ad[j, i] = -(y * s) + (z * C);
+                                    ad[j, nm] = y * C + z * s;
+                                    ad[j, i] = -(y * s) + z * C;
                                 }
                             }
                             break;
@@ -312,7 +312,7 @@ namespace StatsDirect.Builtins
                     {
                         temp = -Math.Abs(g);
                     }
-                    f = ((x - z) * (x + z) + h * ((y / (f + temp)) - h)) / x;
+                    f = ((x - z) * (x + z) + h * (y / (f + temp) - h)) / x;
                     C = 1.0;
                     s = 1.0;
                     for (j = L; j <= nm; j++)
@@ -326,8 +326,8 @@ namespace StatsDirect.Builtins
                         rv1[j] = z;
                         C = f / z;
                         s = h / z;
-                        f = (x * C) + (g * s);
-                        g = -(x * s) + (g * C);
+                        f = x * C + g * s;
+                        g = -(x * s) + g * C;
                         h = y * s;
                         y = y * C;
                         int jj;
@@ -335,8 +335,8 @@ namespace StatsDirect.Builtins
                         {
                             x = vd[jj, j];
                             z = vd[jj, i];
-                            vd[jj, j] = (x * C) + (z * s);
-                            vd[jj, i] = -(x * s) + (z * C);
+                            vd[jj, j] = x * C + z * s;
+                            vd[jj, i] = -(x * s) + z * C;
                         }
                         z = X_PYTHAG(f, h);
                         wd[j] = z;
@@ -346,14 +346,14 @@ namespace StatsDirect.Builtins
                             C = f * z;
                             s = h * z;
                         }
-                        f = (C * g) + (s * y);
-                        x = -(s * g) + (C * y);
+                        f = C * g + s * y;
+                        x = -(s * g) + C * y;
                         for (jj = 1; jj <= nx; jj++)
                         {
                             y = ad[jj, j];
                             z = ad[jj, i];
-                            ad[jj, j] = (y * C) + (z * s);
-                            ad[jj, i] = -(y * s) + (z * C);
+                            ad[jj, j] = y * C + z * s;
+                            ad[jj, i] = -(y * s) + z * C;
                         }
                     }
                     rv1[L] = 0.0;
@@ -369,10 +369,10 @@ namespace StatsDirect.Builtins
             double absa = Math.Abs(a);
             double absb = Math.Abs(b);
             if (absa > absb)
-                return absa * Math.Sqrt(1.0 + (absb / absa) * (absb / absa));
+                return absa * Math.Sqrt(1.0 + absb / absa * (absb / absa));
             if (absb == 0.0)
                 return 0.0;
-            return absb * Math.Sqrt(1.0 + (absa / absb) * (absa / absb));
+            return absb * Math.Sqrt(1.0 + absa / absb * (absa / absb));
         }
 
 
@@ -1499,7 +1499,7 @@ namespace StatsDirect.Builtins
                 //  equation a6
                 p[1] = 0.0;
                 h11 = 1.0;
-                h12 = (d2 * y) / (d1 * x);
+                h12 = d2 * y / (d1 * x);
                 h21 = -y / x;
                 h22 = 1.0;
                 u = 1.0 - h21 * h12;
@@ -1536,7 +1536,7 @@ namespace StatsDirect.Builtins
                     return;
                 }
                 p[1] = 1.0;
-                h11 = (d1 * x) / (d2 * y);
+                h11 = d1 * x / (d2 * y);
                 h12 = 1.0;
                 h21 = -1.0;
                 h22 = x / y;
@@ -1550,7 +1550,7 @@ namespace StatsDirect.Builtins
             }
 
             //  rescale d1 in the range rg2, g2
-            while ((d1 <= 1.0 / g2 & d1 != 0.0))
+            while (d1 <= 1.0 / g2 & d1 != 0.0)
             {
                 p[1] = -1.0;
                 d1 = d1 * g2;
@@ -1558,7 +1558,7 @@ namespace StatsDirect.Builtins
                 h11 = h11 / g;
                 h12 = h12 / g;
             }
-            while ((d1 >= g2))
+            while (d1 >= g2)
             {
                 p[1] = -1.0;
                 d1 = d1 / g2;
@@ -1567,14 +1567,14 @@ namespace StatsDirect.Builtins
                 h12 = h12 * g;
             }
             //  rescale d2 in the range rg2, g2
-            while ((Math.Abs(d2) <= 1.0 / g2 & d2 != 0.0))
+            while (Math.Abs(d2) <= 1.0 / g2 & d2 != 0.0)
             {
                 p[1] = -1.0;
                 d2 = d2 * g2;
                 h21 = h21 / g;
                 h22 = h22 / g;
             }
-            while ((Math.Abs(d2) >= g2))
+            while (Math.Abs(d2) >= g2)
             {
                 p[1] = -1.0;
                 d2 = d2 / g2;
@@ -1582,19 +1582,19 @@ namespace StatsDirect.Builtins
                 h22 = h22 * g;
             }
             //  populate the parameter array with rescaled values
-            if ((p[1] == -1.0))
+            if (p[1] == -1.0)
             {
                 p[2] = h11;
                 p[3] = h21;
                 p[4] = h12;
                 p[5] = h22;
             }
-            else if ((p[1] == 0.0))
+            else if (p[1] == 0.0)
             {
                 p[3] = h21;
                 p[4] = h12;
             }
-            else if ((p[1] == 1.0))
+            else if (p[1] == 1.0)
             {
                 p[2] = h11;
                 p[5] = h22;
@@ -1698,7 +1698,7 @@ namespace StatsDirect.Builtins
                 {
                     for (j = i + 1; j <= n; j++)
                     {
-                        if ((r[i, j] != 0.0))
+                        if (r[i, j] != 0.0)
                         {
                             ifault = 5;
                             irank = 0;
@@ -2058,7 +2058,7 @@ namespace StatsDirect.Builtins
                         for (j = l; j <= n; j++)
                         {
                             //          .......... double division avoids possible underflow ..........
-                            v[j, i] = (u[i, j] / u[i, l]) / g;
+                            v[j, i] = u[i, j] / u[i, l] / g;
                         }
                         for (j = l; j <= n; j++)
                         {
@@ -2114,7 +2114,7 @@ namespace StatsDirect.Builtins
                                 s = s + u[k, i] * u[k, j];
                             }
                             //          .......... double division avoids possible underflow ..........
-                            f = (s / u[i, i]) / g;
+                            f = s / u[i, i] / g;
                             for (k = i; k <= m; k++)
                             {
                                 u[k, j] = u[k, j] + f * u[k, i];
@@ -2216,9 +2216,9 @@ namespace StatsDirect.Builtins
                         y = w[k1];
                         g = rv1[k1];
                         h = rv1[k];
-                        f = 0.5 * (((g + z) / h) * ((g - z) / y) + y / h - h / y);
+                        f = 0.5 * ((g + z) / h * ((g - z) / y) + y / h - h / y);
                         g = pythag(f, 1.0);
-                        f = x - (z / x) * z + (h / x) * (y / (f + dsign(g, f)) - h);
+                        f = x - z / x * z + h / x * (y / (f + dsign(g, f)) - h);
                         //      .......... next qr transformation ..........
                         c = 1.0;
                         s = 1.0;
@@ -2298,7 +2298,7 @@ namespace StatsDirect.Builtins
             double p = Math.Max(Math.Abs(a), Math.Abs(b));
             if (p != 0.0)
             {
-                double r = Math.Pow((Math.Min(Math.Abs(a), Math.Abs(b)) / p), 2.0);
+                double r = Math.Pow(Math.Min(Math.Abs(a), Math.Abs(b)) / p, 2.0);
                 do
                 {
                     double t = 4.0 + r;
@@ -2309,7 +2309,7 @@ namespace StatsDirect.Builtins
                     double s = r / t;
                     double u = 1.0 + 2.0 * s;
                     p = u * p;
-                    r = Math.Pow((s / u), 2.0) * r;
+                    r = Math.Pow(s / u, 2.0) * r;
                 }
                 while (true);
             }
@@ -2387,7 +2387,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                int it = Convert.ToInt32(Math.Pow(2, (n - 2)));
+                int it = Convert.ToInt32(Math.Pow(2, n - 2));
                 double tnm = it;
                 double del = (b - a) / tnm;
                 double x = a + 0.5 * del;
@@ -2671,9 +2671,9 @@ namespace StatsDirect.Builtins
             X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
             for (i = 1; i <= parameters; i++)
             {
-                if ((covariance[((int)(Math.Floor((i * i + i) / 2.0)))] > 0.0))
+                if (covariance[(int)Math.Floor((i * i + i) / 2.0)] > 0.0)
                 {
-                    se_beta[i] = Math.Sqrt(covariance[((int)(Math.Floor((i * i + i) / 2.0)))]);
+                    se_beta[i] = Math.Sqrt(covariance[(int)Math.Floor((i * i + i) / 2.0)]);
                 }
                 else
                 {
@@ -2885,8 +2885,8 @@ namespace StatsDirect.Builtins
             X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
             for (int i = 1; i <= parameters; i++)
             {
-                int idx = ((int)(Math.Floor((i * i + i) / 2.0)));
-                if ((covariance[idx] > 0.0))
+                int idx = (int)Math.Floor((i * i + i) / 2.0);
+                if (covariance[idx] > 0.0)
                 {
                     se_beta[i] = Math.Sqrt(covariance[idx]);
                 }
@@ -3379,7 +3379,7 @@ namespace StatsDirect.Builtins
             {
                 if (y > 0.0 & y < t)
                 {
-                    dev = (y * Math.Log(y / fit) + (t - y) * Math.Log((t - y) / (t - fit)));
+                    dev = y * Math.Log(y / fit) + (t - y) * Math.Log((t - y) / (t - fit));
                 }
             }
             if (dev < 0.0)
@@ -3691,16 +3691,16 @@ namespace StatsDirect.Builtins
                 for (int i = n - k - 1; i >= 2; i--)
                 {
                     iax = ix - m;
-                    int iz = iax - (iax / m) * m + k - 1;
+                    int iz = iax - iax / m * m + k - 1;
                     int iz2 = iax / m + 2 + k;
                     iax = ix;
-                    izb = iax - (iax / m) * m + k - 1;
+                    izb = iax - iax / m * m + k - 1;
                     iz2b = iax / m + 2 + k;
                     X_SVD_Rotation_Angle(ref a[iz, iz2], ref a[izb, iz2b], out super_diag[i + k], out diag[i + k]);
                     ix = ix - m;
                 }
                 iax = ix;
-                izb = iax - (iax / m) * m + k - 1;
+                izb = iax - iax / m * m + k - 1;
                 iz2b = iax / m + 1 + k + 1;
                 X_SVD_Rotation_Angle(ref a[k, k + 1], ref a[izb, iz2b], out super_diag[k + 1], out diag[k + 1]);
                 X_SVD_Roatation_Transform(n - k, 1, n - k, super_diag, diag, a, m, k);
@@ -3844,7 +3844,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    double ekm2 = i0 > (i3 + 1) ? super_diag[i0 - 2] : 0.0;
+                    double ekm2 = i0 > i3 + 1 ? super_diag[i0 - 2] : 0.0;
                     double cs;
                     double sn;
                     X_SVD_QR_Shift_Parameters(diag[i3], super_diag[i3], diag[i0 - 1], diag[i0], ekm2, super_diag[i0 - 1], out cs, out sn);
@@ -4170,11 +4170,11 @@ namespace StatsDirect.Builtins
                     {
                         if (Math.Abs(alpha) >= Math.Abs(a[iz1, iz2]))
                         {
-                            beta = Math.Abs(alpha) * Math.Sqrt(1.0 + Math.Pow((a[iz1, iz2] / alpha), 2.0));
+                            beta = Math.Abs(alpha) * Math.Sqrt(1.0 + Math.Pow(a[iz1, iz2] / alpha, 2.0));
                         }
                         else
                         {
-                            beta = Math.Abs(a[iz1, iz2]) * Math.Sqrt(1.0 + Math.Pow((alpha / a[iz1, iz2]), 2.0));
+                            beta = Math.Abs(a[iz1, iz2]) * Math.Sqrt(1.0 + Math.Pow(alpha / a[iz1, iz2], 2.0));
                         }
                         zeta = Math.Sqrt((Math.Abs(alpha) + beta) / beta);
                         if (alpha >= 0.0)
@@ -4198,12 +4198,12 @@ namespace StatsDirect.Builtins
                             double absxi = Math.Abs(a[i1, i2]);
                             if (scale < absxi)
                             {
-                                sum_squares = 1 + sum_squares * Math.Pow((scale / absxi), 2.0);
+                                sum_squares = 1 + sum_squares * Math.Pow(scale / absxi, 2.0);
                                 scale = absxi;
                             }
                             else
                             {
-                                sum_squares = sum_squares + Math.Pow((absxi / scale), 2.0);
+                                sum_squares = sum_squares + Math.Pow(absxi / scale, 2.0);
                             }
                         }
                         i1 = i1 + 1;
@@ -4238,11 +4238,11 @@ namespace StatsDirect.Builtins
                     {
                         if (scale < Math.Abs(alpha))
                         {
-                            beta = Math.Abs(alpha) * Math.Sqrt(1.0 + sum_squares * Math.Pow((scale / alpha), 2.0));
+                            beta = Math.Abs(alpha) * Math.Sqrt(1.0 + sum_squares * Math.Pow(scale / alpha, 2.0));
                         }
                         else
                         {
-                            beta = scale * Math.Sqrt(sum_squares + Math.Pow((alpha / scale), 2.0));
+                            beta = scale * Math.Sqrt(sum_squares + Math.Pow(alpha / scale, 2.0));
                         }
                         zeta = Math.Sqrt((beta + Math.Abs(alpha)) / beta);
                         if (alpha > 0.0)
@@ -4456,7 +4456,7 @@ namespace StatsDirect.Builtins
         {
             double a; double b; double q;
 
-            double top = Math.Pow((diag_n * super_diag_m1), 2.0);
+            double top = Math.Pow(diag_n * super_diag_m1, 2.0);
             if (top == 0.0)
             {
                 q = 0.0;
@@ -4600,7 +4600,7 @@ namespace StatsDirect.Builtins
                         {
                             // err averted
                             div = flmax;
-                            if ((a < 0.0 && b > 0.0) || (a > 0.0 && b < 0.0))
+                            if (a < 0.0 && b > 0.0 || a > 0.0 && b < 0.0)
                             {
                                 div = -div;
                             }

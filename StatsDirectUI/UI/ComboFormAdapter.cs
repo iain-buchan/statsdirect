@@ -9,10 +9,7 @@ namespace StatsDirect.UI
             this.statsDirectForm = statsDirectForm;
         }
 
-        public StatsDirectForm StatsDirectForm
-        {
-            get { return statsDirectForm; }
-        }
+        public StatsDirectForm StatsDirectForm => statsDirectForm;
 
         public override bool Equals(object obj)
         {

@@ -12,7 +12,7 @@ namespace StatsDirect.Charting
 
         public AxisMode Mode { get; set; }
 
-        public bool Reverse { get { return (Mode & AxisMode.Reverse) != 0; } }
+        public bool Reverse => (Mode & AxisMode.Reverse) != 0;
 
         ///  <summary>
         ///  Space by which the axis should be shifted in or the canvas enlarged, depending on the renderer

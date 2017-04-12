@@ -83,10 +83,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The steps that will be run as the body of the iteration.
         /// </summary>
-        public IList<Step> Steps
-        {
-            get { return steps; }
-        }
+        public IList<Step> Steps => steps;
 
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {

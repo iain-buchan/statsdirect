@@ -6,9 +6,10 @@ using System.CodeDom.Compiler;
 using System.IO;
 using System.Reflection;
 using StatsDirect.R;
+using StatsDirect.Templates;
 using StatsDirect.Utilities;
 
-namespace StatsDirect.Templates
+namespace StatsDirect.TemplateProcessing
 {
     public sealed class ScriptEngine : IScriptEngine
     {
@@ -50,7 +51,7 @@ namespace StatsDirect.Templates
                 case R:
                     return RunR(host, code, parameters);
                 default:
-                    throw new ArgumentOutOfRangeException("scriptLanguage", scriptLanguage, "Must be CSharp, R, VB");
+                    throw new ArgumentOutOfRangeException(nameof(scriptLanguage), scriptLanguage, "Must be CSharp, R, VB");
             }
         }
 
@@ -216,7 +217,7 @@ namespace StatsDirect.Templates
                             entryPoint = "DoIt";
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException("scriptType", scriptType, "Cannot construct code for that script type");
+                            throw new ArgumentOutOfRangeException(nameof(scriptType), scriptType, "Cannot construct code for that script type");
                     }
                     sourceBuilder.AppendLine("} // class");
                     sourceBuilder.AppendLine("} // namespace");
@@ -270,14 +271,14 @@ namespace StatsDirect.Templates
                             entryPoint = "DoIt";
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException("scriptType", scriptType, "Cannot construct code for that script type");
+                            throw new ArgumentOutOfRangeException(nameof(scriptType), scriptType, "Cannot construct code for that script type");
                     }
                     sourceBuilder.AppendLine("End Class");
                     sourceBuilder.AppendLine("End Namespace");
                     codeProvider = new Microsoft.VisualBasic.VBCodeProvider();
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("scriptLanguage", scriptLanguage, "Only CSharp and VB are known");
+                    throw new ArgumentOutOfRangeException(nameof(scriptLanguage), scriptLanguage, "Only CSharp and VB are known");
             }
             const string typeName = "StatsDirect.Templates.Temp1";
             CompilerParameters compilerParameters = new CompilerParameters();
@@ -335,7 +336,7 @@ namespace StatsDirect.Templates
                         // No way of detecting errors at present
                         return null;
                     default:
-                        throw new ArgumentOutOfRangeException("scriptLanguage", scriptLanguage, "Must be CSharp, R, VB");
+                        throw new ArgumentOutOfRangeException(nameof(scriptLanguage), scriptLanguage, "Must be CSharp, R, VB");
                 }
             }
             catch (Exception ex)

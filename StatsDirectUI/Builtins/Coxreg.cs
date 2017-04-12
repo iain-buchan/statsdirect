@@ -163,7 +163,7 @@ namespace StatsDirect.Builtins
                         adjt = Math.Abs(x[ik]) + 1;
                 }
             }
-            if (!(ok))
+            if (!ok)
             {
                 if (host.Query("Times must be > 0: Do you want to add " + adjt.ToString() + " to all of your times?", "Cox Regression"))
                 {
@@ -1371,7 +1371,7 @@ namespace StatsDirect.Builtins
                                 for (iq = 1; iq <= ncoef; iq++)
                                 {
                                     OBS[iq] = OBS[iq] + -1.0 * xmean[iq];
-                                    smg[iq] = smg[iq] + (xfrq * caze[kk, 5]) * OBS[iq];
+                                    smg[iq] = smg[iq] + xfrq * caze[kk, 5] * OBS[iq];
                                 }
                             }
                         }
@@ -1388,7 +1388,7 @@ namespace StatsDirect.Builtins
                         for (iq = 1; iq <= ncoef; iq++)
                         {
                             OBS[iq] = OBS[iq] + -1.0 * xmean[iq];
-                            smg[iq] = smg[iq] + (-caze[k, 2] * caze[k, 5]) * OBS[iq];
+                            smg[iq] = smg[iq] + -caze[k, 2] * caze[k, 5] * OBS[iq];
                         }
                         caze[k, 1] = Math.Exp(-smd[1]);
                         caze[k, 2] = Constant.MISSING;
@@ -1427,8 +1427,8 @@ namespace StatsDirect.Builtins
                             for (iq = 1; iq <= ncoef; iq++)
                             {
                                 OBS[iq] = OBS[iq] + -1.0 * xmean[iq];
-                                smh[iq] = smh[iq] + (caze[k, 2] * caze[k, 5]) * OBS[iq];
-                                OBS[iq] = OBS[iq] + (-1.0 / smu) * smg[iq];
+                                smh[iq] = smh[iq] + caze[k, 2] * caze[k, 5] * OBS[iq];
+                                OBS[iq] = OBS[iq] + -1.0 / smu * smg[iq];
                             }
                             int M;
                             for (M = 1; M <= ncoef; M++)
@@ -1606,7 +1606,7 @@ namespace StatsDirect.Builtins
                             smu = smu + xfrq * u;
                             for (iq = 1; iq <= ncoef; iq++)
                             {
-                                smg[iq] = smg[iq] + (xfrq * u) * OBS[iq];
+                                smg[iq] = smg[iq] + xfrq * u * OBS[iq];
                             }
                             double xtmp;
                             if (ihess)
@@ -1629,14 +1629,14 @@ namespace StatsDirect.Builtins
                                     algl = algl - xfrq * Math.Log(smu);
                                     for (iq = 1; iq <= ncoef; iq++)
                                     {
-                                        GR[iq] = GR[iq] + (-xfrq / smu) * smg[iq];
+                                        GR[iq] = GR[iq] + -xfrq / smu * smg[iq];
                                     }
                                     int L;
-                                    if (!(ihess))
+                                    if (!ihess)
                                     {
                                         for (iq = 1; iq <= ncoef; iq++)
                                         {
-                                            OBS[iq] = OBS[iq] + (-1.0 / smu) * smg[iq];
+                                            OBS[iq] = OBS[iq] + -1.0 / smu * smg[iq];
                                         }
                                         for (L = 1; L <= ncoef; L++)
                                         {
@@ -1796,7 +1796,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                if (!(strat))
+                if (!strat)
                 {
                     break;
                 }
@@ -2056,12 +2056,12 @@ namespace StatsDirect.Builtins
                         double absxi = Math.Abs(x[i, col]);
                         if (scal < absxi)
                         {
-                            ssq = 1.0 + ssq * Math.Pow((scal / absxi), 2.0);
+                            ssq = 1.0 + ssq * Math.Pow(scal / absxi, 2.0);
                             scal = absxi;
                         }
                         else
                         {
-                            ssq = ssq + Math.Pow((absxi / scal), 2.0);
+                            ssq = ssq + Math.Pow(absxi / scal, 2.0);
                         }
                     }
                 }
@@ -2211,7 +2211,7 @@ namespace StatsDirect.Builtins
                 return;
             }
             int mn = m * n;
-            int iwrk = ((int)(Math.Floor((double)(m + n) / 2)));
+            int iwrk = (int)Math.Floor((double)(m + n) / 2);
             int[] move = new int[iwrk + 1];
 
             if (m == n)
@@ -2298,7 +2298,7 @@ namespace StatsDirect.Builtins
                             i1 = i2;
                             do
                             {
-                                i1divn = ((int)(Math.Floor((double)i1 / n)));
+                                i1divn = (int)Math.Floor((double)i1 / n);
                                 i2 = m * (i1 - n * i1divn) + i1divn;
                                 if (i2 <= i | i2 >= max)
                                 {
@@ -2329,7 +2329,7 @@ namespace StatsDirect.Builtins
                     double C = a[i1c + 1];
                     do
                     {
-                        i1divn = ((int)(Math.Floor((double)i1 / n)));
+                        i1divn = (int)Math.Floor((double)i1 / n);
                         i2 = m * (i1 - n * i1divn) + i1divn;
                         int i2c = k - i2;
                         if (i1 <= iwrk)
@@ -2397,7 +2397,7 @@ namespace StatsDirect.Builtins
                 {
                     double xii = Math.Pow(alpha, dead_theta[i]);
                     gi = gi + dead_theta[i] / (1.0 - xii);
-                    gi1 = gi1 + xii * Math.Pow(dead_theta[i], 2.0) / (alpha * Math.Pow((1.0 - xii), 2.0));
+                    gi1 = gi1 + xii * Math.Pow(dead_theta[i], 2.0) / (alpha * Math.Pow(1.0 - xii, 2.0));
                 }
                 double stp = (gi - risk_theta) / gi1;
                 alpha = alpha - stp;
@@ -2430,7 +2430,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxHazardPlots(ITemplateHost host, ParameterBag parameters)
         {
-            bool[] selectedGroups = ((bool[])(parameters["group"].Data));
+            bool[] selectedGroups = (bool[])parameters["group"].Data;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
             StringVariable subgroupsVariable = subgroupsFrame.Variables[0]as StringVariable;
             for (int i = 0; i <= selectedGroups.Length - 1; i++)
@@ -2450,7 +2450,7 @@ namespace StatsDirect.Builtins
             int i;
             double watch_time;
 
-            double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
+            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
 
             //  baseline S and H and S and H values at mean covariate
             int iobs = Convert.ToInt32(ARR2[0, 0]);
@@ -2533,14 +2533,14 @@ namespace StatsDirect.Builtins
                 }
                 else if (dead == 1.0)
                 {
-                    alpha_i = Math.Pow((1.0 - z[i].Exb / risk_theta), (1.0 / z[i].Exb));
+                    alpha_i = Math.Pow(1.0 - z[i].Exb / risk_theta, 1.0 / z[i].Exb);
                     alpha_ix = Math.Exp(-dead / risk_theta);
                 }
                 else
                 {
                     alpha_ix = Math.Exp(-dead / risk_theta);
                     alpha_i = alpha_solve(dead, dead_theta, risk_theta);
-                    erra = (alpha_i == Constant.MISSING);
+                    erra = alpha_i == Constant.MISSING;
                 }
                 alpha_product = alpha_product * alpha_i;
                 //  use a non-iterative solution for the hazard - see Stata manual
@@ -2561,7 +2561,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new ParameterBag();
-            if (!(plot))
+            if (!plot)
             {
                 // write to report in time-sorted order
                 watch_time = Constant.MISSING;
@@ -2621,10 +2621,10 @@ namespace StatsDirect.Builtins
             int groupid = 0;
             bool grouped; bool stratified;
 
-            double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
-            double[, ,] ARR3 = ((double[, ,])(parameters["ARR3"].Data));
-            ColumnData[] CDAT1 = ((ColumnData[])(parameters["CDAT1"].Data));
-            double[,] holdx = ((double[,])(parameters["holdx"].Data));
+            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
+            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].Data;
+            ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].Data;
+            double[,] holdx = (double[,])parameters["holdx"].Data;
             bool use_tic = parameters["use-tics"].AsBoolean;
             bool use_marker = parameters["use-markers"].AsBoolean;
 
@@ -2653,7 +2653,7 @@ namespace StatsDirect.Builtins
                     igroups = 0;
                     for (int i = 1; i <= ncoef; i++)
                     {
-                        if ((CDAT1[i].Title).Trim().ToLower(CultureInfo.CurrentCulture).Equals(groupVar.ToLower(CultureInfo.CurrentCulture)))
+                        if (CDAT1[i].Title.Trim().ToLower(CultureInfo.CurrentCulture).Equals(groupVar.ToLower(CultureInfo.CurrentCulture)))
                         {
                             groupid = i;
                             igroups = CDAT1[i].Groups.Count;
@@ -2726,7 +2726,7 @@ namespace StatsDirect.Builtins
             int lastStratum = 0;
             double alpha_product = 0; double alpha_productx = 0;
 
-            double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
+            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
 
             bool save = parameters["save"].AsBoolean;
 
@@ -2807,14 +2807,14 @@ namespace StatsDirect.Builtins
                 }
                 else if (dead == 1.0)
                 {
-                    alpha_i = Math.Pow((1.0 - z[i].Exb / risk_theta), (1.0 / z[i].Exb));
+                    alpha_i = Math.Pow(1.0 - z[i].Exb / risk_theta, 1.0 / z[i].Exb);
                     alpha_ix = Math.Exp(-dead / risk_theta);
                 }
                 else
                 {
                     alpha_ix = Math.Exp(-dead / risk_theta);
                     alpha_i = alpha_solve(dead, dead_theta, risk_theta);
-                    erra = (alpha_i == Constant.MISSING);
+                    erra = alpha_i == Constant.MISSING;
                 }
                 alpha_product = alpha_product * alpha_i;
                 //  use a non-iterative solution for the hazard - see Stata manual
@@ -2842,7 +2842,7 @@ namespace StatsDirect.Builtins
                 {
                     double rc = z[i].Exb * z[i].H;
                     double rm = z[i].Censor - rc;
-                    double rd = (z[i].Censor - rm <= 0) ? Constant.MISSING : Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
+                    double rd = z[i].Censor - rm <= 0 ? Constant.MISSING : Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
                     ictr++;
                     yp[ictr] = rd;
                 }
@@ -2903,9 +2903,9 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxHazardRatios(ITemplateHost host, ParameterBag parameters)
         {
-            double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
-            double[, ,] ARR3 = ((double[, ,])(parameters["ARR3"].Data));
-            ColumnData[] CDAT1 = ((ColumnData[])(parameters["CDAT1"].Data));
+            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
+            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].Data;
+            ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].Data;
 
             double GAMMA = parameters["gamma"].AsDouble;
             double cit;
@@ -2942,7 +2942,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxModelAnalysis(ITemplateHost host, ParameterBag parameters)
         {
-            double[,] ARR2 = ((double[,])(parameters["ARR2"].Data));
+            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ll0", ARR2[3, 0]);
             outputParameters.AddOutput("ll", ARR2[2, 0]);

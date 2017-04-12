@@ -17,10 +17,7 @@ namespace StatsDirect.Builtins
 
         #region IFillable Members
 
-        public string FillerToUse
-        {
-            get { return "ChartExplorer"; }
-        }
+        public string FillerToUse => "ChartExplorer";
 
         #endregion
     }

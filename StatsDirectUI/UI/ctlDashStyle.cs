@@ -34,7 +34,7 @@ namespace StatsDirect.UI
             }
             set
             {
-                if (dashStyle != value && value >= 0 && ((int)value) < cboDashStyle.Items.Count)
+                if (dashStyle != value && value >= 0 && (int)value < cboDashStyle.Items.Count)
                 {
                     dashStyle = value;
                     cboDashStyle.SelectedIndex = (int)value;

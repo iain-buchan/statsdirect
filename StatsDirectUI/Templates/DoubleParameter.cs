@@ -19,10 +19,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// true iff the parameter defines a default.
         /// </summary>
-        public bool HasDefaultValue
-        {
-            get { return null != DefaultValueExpression; }
-        }
+        public bool HasDefaultValue => null != DefaultValueExpression;
 
         public double MinimumValue(ITemplateProcessor processor, ParameterBag parameters)
         {

@@ -9,15 +9,9 @@ namespace StatsDirect.UI
         private bool userCancelled = true;
         private PasteType pasteType;
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
-        public PasteType PasteType
-        {
-            get { return pasteType; }
-        }
+        public PasteType PasteType => pasteType;
 
         public frmPasteSpecial()
         {

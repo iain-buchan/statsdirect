@@ -24,7 +24,7 @@ namespace StatsDirect.Templates
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

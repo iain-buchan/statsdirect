@@ -7,22 +7,17 @@ namespace StatsDirect.UI
     /// </summary>
     public class FillableParameter : Parameter
     {
-        private readonly IFillable fillable;
-
         public FillableParameter(string name, IFillable fillable)
         {
             Name = name;
-            this.fillable = fillable;
+            Fillable = fillable;
         }
 
-        public IFillable Fillable
-        {
-            get { return fillable; }
-        }
+        public IFillable Fillable { get; }
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

@@ -192,7 +192,7 @@ namespace StatsDirect.Numerics
             if (Math.Abs(x) <= .375)
             {
                 if (Math.Abs(x) < .5 * Constant.DBL_LRS) return x;
-                if ((0.0 < x && x < 1e-8) || (-1e-9 < x && x < 0.0)) return x * (1.0 - .5 * x);
+                if (0.0 < x && x < 1e-8 || -1e-9 < x && x < 0.0) return x * (1.0 - .5 * x);
                 return x * (1.0 - x * cheby(x / .375, alnrcs, nlnrel));
             }
             if (x < xmin)
@@ -449,7 +449,7 @@ namespace StatsDirect.Numerics
                 }
                 else
                 {
-                    ret = Base.cheby(2.0 * Math.Pow((10.0 / x), 2.0) - 1.0, algmcs, nalgm) / x;
+                    ret = Base.cheby(2.0 * Math.Pow(10.0 / x, 2.0) - 1.0, algmcs, nalgm) / x;
                 }
             }
             else
@@ -960,7 +960,7 @@ namespace StatsDirect.Numerics
                 double c = ((20700.0 * a / b - 98.0) * a - 16.0) * a + 96.36;
                 double d = ((94.5 / (b + c) - 3.0) / b + 1.0) * Math.Sqrt(a * pib2) * dn;
                 double x = d * p;
-                double y = Math.Pow(x, (2.0 / dn));
+                double y = Math.Pow(x, 2.0 / dn);
                 double pp = p * 0.5;
                 x = gauinv(pp, out ifault);
                 if (y <= 0.5 + a)
@@ -1018,7 +1018,7 @@ namespace StatsDirect.Numerics
             }
             if (x > plimit)
             {
-                pn1 = three * Math.Sqrt(p) * (Math.Pow((x / p), (one / three)) + one / (nine * p) - one);
+                pn1 = three * Math.Sqrt(p) * (Math.Pow(x / p, one / three) + one / (nine * p) - one);
                 ret = alnorm(pn1);
                 return ret;
             }
@@ -1402,8 +1402,8 @@ namespace StatsDirect.Numerics
             //  start approximation for small chi-squared
             if (v < -1.24 * Math.Log(p))
             {
-                ch = Math.Pow((p * xx * Math.Exp(g + xx * aa)), (1.0 / xx));
-                if ((ch - e) < 0.0) return ch;
+                ch = Math.Pow(p * xx * Math.Exp(g + xx * aa), 1.0 / xx);
+                if (ch - e < 0.0) return ch;
             }
             else
             {
@@ -1419,7 +1419,7 @@ namespace StatsDirect.Numerics
                         p2 = ch * (6.73 + ch * (6.66 + ch));
                         t = -0.5 + (4.67 + 2.0 * ch) / p1 - (6.73 + ch * (13.32 + 3.0 * ch)) / p2;
                         ch = ch - (1.0 - Math.Exp(a + g + 0.5 * ch + c * aa) * p2 / p1) / t;
-                        if ((Math.Abs(q / ch - 1.0) - 0.01) <= 0.0) break;
+                        if (Math.Abs(q / ch - 1.0) - 0.01 <= 0.0) break;
                     }
                 }
                 else
@@ -1429,7 +1429,7 @@ namespace StatsDirect.Numerics
                     if (ifault != 0) return ret;
                     //  start approximation using wilson and hilferty estimate
                     p1 = 0.222222 / v;
-                    ch = v * Math.Pow((x * Math.Sqrt(p1) + 1.0 - p1), 3);
+                    ch = v * Math.Pow(x * Math.Sqrt(p1) + 1.0 - p1, 3);
                     //  start approximation for p tending to 1
                     if (ch > 2.2 * v + 6.0) ch = -2.0 * (Math.Log(1.0 - p) - c * Math.Log(0.5 * ch) + g);
                 }
@@ -1469,7 +1469,7 @@ namespace StatsDirect.Numerics
             double xint = gauinv(p, out ifault);
             if (ifault != 0) return ret;
             double x0 = 2.0 / (9.0 * df);
-            double x1 = df * Math.Pow((1.0 - x0 + xint * Math.Sqrt(x0)), 3.0);
+            double x1 = df * Math.Pow(1.0 - x0 + xint * Math.Sqrt(x0), 3.0);
             if (x1 < 0.0) x1 = 0.0;
             double f1 = chivalp(x1, df) - p;
             if (f1 == 0.0)
@@ -1747,7 +1747,7 @@ namespace StatsDirect.Numerics
             term = ppoiseq(k, xlam);
             plo = ppoisle(k, xlam);
             phi = 1.0 - plo + term;
-            ifault = (double.IsNaN(term) || double.IsNaN(plo)) ? 1 : 0;
+            ifault = double.IsNaN(term) || double.IsNaN(plo) ? 1 : 0;
         }
 
         /// <summary>
@@ -1795,7 +1795,7 @@ namespace StatsDirect.Numerics
                     if (ifault != 0)
                         break;
                     if (fmid - p <= 0.0) bis = xmid;
-                    if ((Math.Abs(dx) <= acc) || (Math.Abs(fmid - p) == 0.0))
+                    if (Math.Abs(dx) <= acc || Math.Abs(fmid - p) == 0.0)
                         break;
                     istep++;
                     if (istep > imax)
@@ -2469,7 +2469,7 @@ namespace StatsDirect.Numerics
                 ir[2] = 1;
             do
             {
-                double retval = x1 - ((valx1 * (x1 - x0)) / (valx1 - valx0));
+                double retval = x1 - valx1 * (x1 - x0) / (valx1 - valx0);
                 valx0 = valx1;
                 // new iterate must be >= 0
                 x0 = x1;
@@ -2606,7 +2606,7 @@ namespace StatsDirect.Numerics
             }
             // calculate leading constant
             double f2 = df * 0.5;
-            double f2lf = ((f2 * Math.Log(df)) - (df * r2)) - alogam(f2);
+            double f2lf = f2 * Math.Log(df) - df * r2 - alogam(f2);
             double f21 = f2 - 1.0;
 
             // integral is divided into unit, half-unit, quarter-unit, or          
@@ -2640,7 +2640,7 @@ namespace StatsDirect.Numerics
 
                 // legendre quadrature with order = nlegq                          
                 // nodes (stored in xlegq) are symmetric around zero.              
-                double twa1 = ((2.0 * i) - 1.0) * ulen;
+                double twa1 = (2.0 * i - 1.0) * ulen;
                 for (int jj = 1; jj <= nlegq; jj++)
                 {
                     int j;
@@ -2648,12 +2648,12 @@ namespace StatsDirect.Numerics
                     if (ihalfq < jj)
                     {
                         j = jj - ihalfq;
-                        t1 = (f2lf + (f21 * Math.Log(twa1 + (xlegq[j] * ulen)))) - (((xlegq[j] * ulen) + twa1) * ff4);
+                        t1 = f2lf + f21 * Math.Log(twa1 + xlegq[j] * ulen) - (xlegq[j] * ulen + twa1) * ff4;
                     }
                     else
                     {
                         j = jj;
-                        t1 = (f2lf + (f21 * Math.Log(twa1 - (xlegq[j] * ulen)))) + (((xlegq[j] * ulen) - twa1) * ff4);
+                        t1 = f2lf + f21 * Math.Log(twa1 - xlegq[j] * ulen) + (xlegq[j] * ulen - twa1) * ff4;
                     }
 
                     // if exp(t1) < 9e-14, then doesn't contribute to integral     
@@ -2662,11 +2662,11 @@ namespace StatsDirect.Numerics
                         double qsqz;
                         if (ihalfq < jj)
                         {
-                            qsqz = q * Math.Sqrt(((xlegq[j] * ulen) + twa1) * 0.5);
+                            qsqz = q * Math.Sqrt((xlegq[j] * ulen + twa1) * 0.5);
                         }
                         else
                         {
-                            qsqz = q * Math.Sqrt(((-(xlegq[j] * ulen)) + twa1) * 0.5);
+                            qsqz = q * Math.Sqrt((-(xlegq[j] * ulen) + twa1) * 0.5);
                         }
 
                         // call wprob to find integral of range portion 
@@ -2676,14 +2676,14 @@ namespace StatsDirect.Numerics
                         {
                             ir[1] = 1;
                         }
-                        double rotsum = (wprb * alegq[j]) * Math.Exp(t1);
+                        double rotsum = wprb * alegq[j] * Math.Exp(t1);
                         otsum = rotsum + otsum;
                     }
 
                     // end legendre integral for interval i                            
                     // if integral for interval i < 1e-14, then stop.  however, in order to avoid small area under left tail, at least 1/ulen intervals are calculated
                 }
-                if (((i * ulen) >= 1.0) && (otsum <= eps2))
+                if (i * ulen >= 1.0 && otsum <= eps2)
                 {
                     break;
                 }
@@ -2692,7 +2692,7 @@ namespace StatsDirect.Numerics
             }
             if (retval > eps)
                 ir[2] = 1;
-            if ((retval > 1.0) && (retval <= eps))
+            if (retval > 1.0 && retval <= eps)
             {
                 retval = 1.0;
             }
@@ -2796,7 +2796,7 @@ namespace StatsDirect.Numerics
                     double xx;
                     if (ihalf < jj)
                     {
-                        j = (nleg - jj) + 1;
+                        j = nleg - jj + 1;
                         xx = xleg[j];
                     }
                     else
@@ -2826,23 +2826,23 @@ namespace StatsDirect.Numerics
                     double pminus;
                     if (ac > w)
                     {
-                        pminus = 1.0 + derf((ac / qsqr2) - (w / qsqr2));
+                        pminus = 1.0 + derf(ac / qsqr2 - w / qsqr2);
                     }
                     else
                     {
-                        pminus = derfc((w / qsqr2) - (ac / qsqr2));
+                        pminus = derfc(w / qsqr2 - ac / qsqr2);
                     }
 
                     // if rinsum ** (cc-1) < 9e-14, then doesn't contribute to integral
-                    double rinsum = (pplus * 0.5) - (pminus * 0.5);
+                    double rinsum = pplus * 0.5 - pminus * 0.5;
                     if (rinsum >= Math.Exp(eps1 / cc1))
                     {
-                        rinsum = (aleg[j] * Math.Exp(-(0.5 * qexpo))) * Math.Pow(rinsum, cc1);
+                        rinsum = aleg[j] * Math.Exp(-(0.5 * qexpo)) * Math.Pow(rinsum, cc1);
                         elsum = elsum + rinsum;
                     }
                     // end legendre quadrature
                 }
-                elsum = (((2.0 * b) * cc) * sq2pii) * elsum;
+                elsum = 2.0 * b * cc * sq2pii * elsum;
                 einsum = einsum + elsum;
                 blb = bub;
                 bub = bub + binc;
@@ -2858,7 +2858,7 @@ namespace StatsDirect.Numerics
             retval = Math.Pow(retval, rr);
             if (retval > eps)
                 ir = 1;
-            if ((retval > 1.0) && (retval < eps))
+            if (retval > 1.0 && retval < eps)
             {
                 return 1.0;
             }

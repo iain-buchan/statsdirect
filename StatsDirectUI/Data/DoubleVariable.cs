@@ -42,7 +42,7 @@ namespace StatsDirect.Data
         {
             get
             {
-                if (!(hasSummaries))
+                if (!hasSummaries)
                     CalculateSummaries();
                 return sum;
             }
@@ -52,7 +52,7 @@ namespace StatsDirect.Data
         {
             get
             {
-                if (!(hasSummaries))
+                if (!hasSummaries)
                     CalculateSummaries();
                 return min;
             }
@@ -62,7 +62,7 @@ namespace StatsDirect.Data
         {
             get
             {
-                if (!(hasSummaries))
+                if (!hasSummaries)
                     CalculateSummaries();
                 return max;
             }
@@ -121,17 +121,11 @@ namespace StatsDirect.Data
             hasSummaries = false;
         }
 
-        public override int Length
-        {
-            get
-            {
-                return (data == null) ? 0 : data.Length;
-            }
-        }
+        public override int Length => data == null ? 0 : data.Length;
 
         public override void EnsureLength(int minimumLength)
         {
-            if ((data == null))
+            if (data == null)
             {
                 data = new double[minimumLength];
             }
@@ -148,7 +142,7 @@ namespace StatsDirect.Data
 
         public void EnsureLength(int minimumLength, double fillValue)
         {
-            if ((data == null))
+            if (data == null)
             {
                 data = new double[minimumLength];
                 for (int i = 0; i <= minimumLength - 1; i++)
@@ -178,7 +172,7 @@ namespace StatsDirect.Data
 
         public override void TruncateDataToLength(int maximumLength)
         {
-            if ((data.Length > maximumLength))
+            if (data.Length > maximumLength)
             {
                 double[] transTemp2 = new double[maximumLength];
                 Array.Copy(data, transTemp2, Math.Min(data.Length, transTemp2.Length));
@@ -224,13 +218,7 @@ namespace StatsDirect.Data
             return Data[i];
         }
 
-        protected override bool HasData
-        {
-            get
-            {
-                return data != null;
-            }
-        }
+        protected override bool HasData => data != null;
 
         public override void Accept(IVariableVisitor visitor)
         {

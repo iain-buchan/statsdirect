@@ -41,7 +41,7 @@ namespace StatsDirect.Numerics
         private double MUPREV2;
         // private double MUOLD; 
 
-        private readonly double Sqr2PI = Math.Pow((2.0 * Constant.PI), -0.5);
+        private readonly double Sqr2PI = Math.Pow(2.0 * Constant.PI, -0.5);
 
         private bool SEEDED;
 
@@ -115,7 +115,7 @@ namespace StatsDirect.Numerics
                 new_big_mu = false;
             }
 
-            if (!((big_mu && (mu == MUPREV))))
+            if (!(big_mu && mu == MUPREV))
             { // /* maybe compute new persistent par.s */
 
 
@@ -140,7 +140,7 @@ namespace StatsDirect.Numerics
                     if (mu != MUPREV)
                     {
                         MUPREV = mu;
-                        M = Math.Max(1, ((int)(Math.Floor(mu))));
+                        M = Math.Max(1, (int)Math.Floor(mu));
                         L = 0; //  pp[] is already ok up to pp[l]
                         P = Math.Exp(-mu);
                         Q = P;
@@ -257,7 +257,7 @@ namespace StatsDirect.Numerics
                     { // { use factorials from table fact[]
 
                         px = -mu;
-                        py = (Math.Pow(mu, pois)) / FACT[((int)(Math.Floor(pois)))];
+                        py = Math.Pow(mu, pois) / FACT[(int)Math.Floor(pois)];
                     }
                     else
                     {
@@ -308,7 +308,7 @@ namespace StatsDirect.Numerics
                         { // { use factorials from table fact[]
 
                             px = -mu;
-                            py = (Math.Pow(mu, pois)) / FACT[((int)(Math.Floor(pois)))];
+                            py = Math.Pow(mu, pois) / FACT[(int)Math.Floor(pois)];
                         }
                         else
                         {

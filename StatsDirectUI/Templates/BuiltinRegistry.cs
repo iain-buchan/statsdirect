@@ -9,10 +9,7 @@ namespace StatsDirect.Templates
 
         private static BuiltinRegistry soleInstance;
 
-        public static BuiltinRegistry SoleInstance
-        {
-            get { return soleInstance ?? (soleInstance = new BuiltinRegistry()); }
-        }
+        public static BuiltinRegistry SoleInstance => soleInstance ?? (soleInstance = new BuiltinRegistry());
 
         private BuiltinRegistry()
         {

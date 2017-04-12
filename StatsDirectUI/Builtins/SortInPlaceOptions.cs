@@ -4,12 +4,6 @@ namespace StatsDirect.Builtins
 {
     public class SortInPlaceOptions : IFillable
     {
-        public string FillerToUse
-        {
-            get
-            {
-                return "SortInPlace";
-            }
-        }
+        public string FillerToUse => "SortInPlace";
     }
 }

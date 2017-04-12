@@ -136,7 +136,7 @@ namespace StatsDirect.Builtins
             for (int n = 0; n < data.Length; n++)
                 if (data[n] != Constant.MISSING && data[n] < minimum)
                     minimum = data[n];
-            return (minimum < 0) ? Math.Abs(minimum) : Constant.MISSING;
+            return minimum < 0 ? Math.Abs(minimum) : Constant.MISSING;
         }
 
         public static ParameterBag ShtClearMissing(ITemplateHost host, ParameterBag parameters)
@@ -162,7 +162,7 @@ namespace StatsDirect.Builtins
                 for (r = 0; r <= totrows - 1; r++)
                 {
                     rx++;
-                    hold[rx, c] = ((v.Length <= r) || IsMissing(v.Data[r], userNumber, userText)) ? string.Empty : v.Data[r];
+                    hold[rx, c] = v.Length <= r || IsMissing(v.Data[r], userNumber, userText) ? string.Empty : v.Data[r];
                 }
                 hold[0, c] = v.Title;
             }
@@ -336,7 +336,7 @@ namespace StatsDirect.Builtins
             for (int j = 0; j < ng; j++)
                 dm.CategoryNames.Add(gcat[j].Title);
             bool wasOk = null != host.Amend(dm, new ParameterBag());
-            if (!(wasOk))
+            if (!wasOk)
                 throw new TemplateOperationCancelledException();
 
             DataFrame outputFrame = new DataFrame();
@@ -735,7 +735,7 @@ namespace StatsDirect.Builtins
                 uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i], out lambda, out mu, out sigma);
                 correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode, measure [i], lambda, mu, sigma);
                 if (includeCentiles)
-                    centile[i] = (Constant.MISSING == correctedZ[i]) ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
+                    centile[i] = Constant.MISSING == correctedZ[i] ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
                 if (includeBmi)
                 {
                     bmiCategory[i] = ZanthroCalculateBmiCategory(isMale[i] ? maleBmiCategories : femaleBmiCategories, measure[i], t[i]);
@@ -922,14 +922,14 @@ namespace StatsDirect.Builtins
                         double sd3pos = WhoCutoff(3, lambda, mu, sigma);
                         double sd2pos = WhoCutoff(2, lambda, mu, sigma);
                         double sd23pos = sd3pos - sd2pos;
-                        return 3 + ((y - sd3pos) / sd23pos);
+                        return 3 + (y - sd3pos) / sd23pos;
                     }
                     else
                     {
                         double sd3neg = WhoCutoff(-3, lambda, mu, sigma);
                         double sd2neg = WhoCutoff(-2, lambda, mu, sigma);
                         double sd23neg = sd2neg - sd3neg;
-                        return -3 + ((y - sd3neg) / sd23neg);
+                        return -3 + (y - sd3neg) / sd23neg;
                     }
                 default:
                     throw new Exception("Unknown Z correction mode " + zCorrectionMode.ToString());
@@ -951,8 +951,8 @@ namespace StatsDirect.Builtins
 
         public class LmsTable
         {
-            public double XmrgLowerBound { get { return Rows[0].Xmrg; } }
-            public double XmrgUpperBound { get { return Rows[Rows.Length - 1].Xmrg; } }
+            public double XmrgLowerBound => Rows[0].Xmrg;
+            public double XmrgUpperBound => Rows[Rows.Length - 1].Xmrg;
             public LmsTableRow[] Rows { get; set; }
         }
 
@@ -1040,7 +1040,7 @@ namespace StatsDirect.Builtins
         {
             const double ROW_AGE_SPAN = 0.5; // years
             double ageInWholeYears = Math.Floor(age);
-            double halfYearAge = ageInWholeYears + ((age - ageInWholeYears >= 0.5) ? 0.5 : 0);
+            double halfYearAge = ageInWholeYears + (age - ageInWholeYears >= 0.5 ? 0.5 : 0);
 
             double agefrac = (age - halfYearAge) / ROW_AGE_SPAN;
             return quad.Value + agefrac * (quad.Nx - quad.Value);
@@ -1051,7 +1051,7 @@ namespace StatsDirect.Builtins
             const double ROW_AGE_SPAN = 0.5; // years
 
             double ageInWholeYears = Math.Floor(age);
-            double halfYearAge = ageInWholeYears + ((age - ageInWholeYears >= 0.5) ? 0.5 : 0);
+            double halfYearAge = ageInWholeYears + (age - ageInWholeYears >= 0.5 ? 0.5 : 0);
 
             double agefrac = (age - halfYearAge) / ROW_AGE_SPAN;
             double agefrac2 = agefrac * agefrac;
@@ -1079,10 +1079,10 @@ namespace StatsDirect.Builtins
 
         private static double CubicInterpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
-            return (lms.Pre * (t - xvar.Value) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Pre - xvar.Value) * (xvar.Pre - xvar.Nx) * (xvar.Pre - xvar.Nx2))
-                + (lms.Value * (t - xvar.Pre) * (t - xvar.Nx) * (t - xvar.Nx2)) / ((xvar.Value - xvar.Pre) * (xvar.Value - xvar.Nx) * (xvar.Value - xvar.Nx2))
-                + (lms.Nx * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx2)) / ((xvar.Nx - xvar.Pre) * (xvar.Nx - xvar.Value) * (xvar.Nx - xvar.Nx2))
-                + (lms.Nx2 * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx)) / ((xvar.Nx2 - xvar.Pre) * (xvar.Nx2 - xvar.Value) * (xvar.Nx2 - xvar.Nx));
+            return lms.Pre * (t - xvar.Value) * (t - xvar.Nx) * (t - xvar.Nx2) / ((xvar.Pre - xvar.Value) * (xvar.Pre - xvar.Nx) * (xvar.Pre - xvar.Nx2))
+                + lms.Value * (t - xvar.Pre) * (t - xvar.Nx) * (t - xvar.Nx2) / ((xvar.Value - xvar.Pre) * (xvar.Value - xvar.Nx) * (xvar.Value - xvar.Nx2))
+                + lms.Nx * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx2) / ((xvar.Nx - xvar.Pre) * (xvar.Nx - xvar.Value) * (xvar.Nx - xvar.Nx2))
+                + lms.Nx2 * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx) / ((xvar.Nx2 - xvar.Pre) * (xvar.Nx2 - xvar.Value) * (xvar.Nx2 - xvar.Nx));
         }
 
         private static double LinearInterpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
@@ -1103,7 +1103,7 @@ namespace StatsDirect.Builtins
             DataType inputType = isNumeric ? DataType.Double : DataType.String;
 
             // Use the expression parser and evaluator to make this simple
-            string wrappedUserSearchExpression = isNumeric ? userSearchExpression : ("\"" + userSearchExpression.Replace("\"", "\"\"") + "\"");
+            string wrappedUserSearchExpression = isNumeric ? userSearchExpression : "\"" + userSearchExpression.Replace("\"", "\"\"") + "\"";
             string searchExpression;
             switch (searchRule)
             {
@@ -1336,14 +1336,14 @@ namespace StatsDirect.Builtins
                     break;
                 }
                 datti = v.Title.Substring(0, tp);
-                if ((!string.IsNullOrEmpty(lastdatti)) && datti != lastdatti)
+                if (!string.IsNullOrEmpty(lastdatti) && datti != lastdatti)
                 {
                     ok = false;
                     break;
                 }
                 lastdatti = datti;
                 gpti = v.Title.Substring(tp + 1, ep - tp - 1);
-                if ((!string.IsNullOrEmpty(lastgpti)) && gpti != lastgpti)
+                if (!string.IsNullOrEmpty(lastgpti) && gpti != lastgpti)
                 {
                     ok = false;
                     break;
@@ -1416,7 +1416,7 @@ namespace StatsDirect.Builtins
                     q = "Seconds";
                     break;
                 default:
-                    throw new ArgumentException("parameters[interval]: Unexpected interval", "parameters");
+                    throw new ArgumentException("parameters[interval]: Unexpected interval", nameof(parameters));
             }
 
             string outputTitle = inputVariable.Title + "~" + q + " from " + indate;
@@ -1821,7 +1821,7 @@ namespace StatsDirect.Builtins
                                 }
                             }
                             Array.Sort(pws, 1, cnt);
-                            int ri = ((int)(Math.Floor(0.5 * Convert.ToDouble(cnt - ix))));
+                            int ri = (int)Math.Floor(0.5 * Convert.ToDouble(cnt - ix));
                             int si = Convert.ToInt32(0.5 * Convert.ToDouble(cnt + ix));
                             double imdn = 0.5 * Convert.ToDouble(cnt + 1);
                             if (imdn < 1.0)
@@ -1831,7 +1831,7 @@ namespace StatsDirect.Builtins
                             if (imdn - Math.Floor(imdn) == 0.0)
                                 mdn = pws[Convert.ToInt32(imdn)];
                             if (imdn - Math.Floor(imdn) != 0.0)
-                                mdn = pws[((int)(Math.Floor(imdn)))] + (pws[Convert.ToInt32(Math.Floor(imdn) + 1.0)] - pws[((int)(Math.Floor(imdn)))]) * (imdn - Math.Floor(imdn));
+                                mdn = pws[(int)Math.Floor(imdn)] + (pws[Convert.ToInt32(Math.Floor(imdn) + 1.0)] - pws[(int)Math.Floor(imdn)]) * (imdn - Math.Floor(imdn));
                             double lci = pws[ri];
                             double uci = pws[si];
                             t = t + " [Median slope (" + Formatting.XRound(gamma * 100, 2) + "% CI)= " + host.RoundU(mdn) + " (" + host.RoundU(lci) + " to " + host.RoundU(uci) + ")]";
@@ -2040,7 +2040,7 @@ namespace StatsDirect.Builtins
             double[] r = new double[nx + 1];
             double tie;
             ExFortran.Rank(prk, r, 1, nx, q, out tie);
-            string title = "Rank: " + inputVariable.Title + ((q < 2) ? string.Empty : " [tie correction = " + tie.ToString() + "]");
+            string title = "Rank: " + inputVariable.Title + (q < 2 ? string.Empty : " [tie correction = " + tie.ToString() + "]");
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(rows, title);
             outputFrame.Variables.Add(outputVariable);
@@ -2284,7 +2284,7 @@ namespace StatsDirect.Builtins
             int rows = inputData.Length;
 
             double[] a = new double[rows];
-            if ((index == 0))
+            if (index == 0)
             {
                 double cons = Constant.MISSING;
                 if (parameters.ContainsKey("c"))
@@ -2326,7 +2326,7 @@ namespace StatsDirect.Builtins
                 }
                 return WrapDoubleVariable(a, title);
             }
-            if ((index == 1))
+            if (index == 1)
             {
                 double cons = Constant.MISSING;
                 if (parameters.ContainsKey("c"))
@@ -2369,7 +2369,7 @@ namespace StatsDirect.Builtins
                 }
                 return WrapDoubleVariable(a, title);
             }
-            if ((index == 2))
+            if (index == 2)
             {
                 double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
                 for (int n = 0; n <= rows - 1; n++)
@@ -2400,7 +2400,7 @@ namespace StatsDirect.Builtins
                 }
                 return WrapDoubleVariable(a, "Logit: " + inputVariable.Title);
             }
-            if ((index == 3))
+            if (index == 3)
             {
                 double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
                 for (int n = 0; n <= rows - 1; n++)
@@ -2430,7 +2430,7 @@ namespace StatsDirect.Builtins
                 }
                 return WrapDoubleVariable(a, "Probit: " + inputVariable.Title);
             }
-            if ((index == 4))
+            if (index == 4)
             {
                 double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
                 for (int n = 0; n <= rows - 1; n++)
@@ -2442,28 +2442,28 @@ namespace StatsDirect.Builtins
                     else
                     {
                         double prop = Math.Abs(inputData[n] / maxi);
-                        if ((prop == 0.0))
+                        if (prop == 0.0)
                         {
                             a[n] = 0;
                         }
-                        else if ((prop == 1.0))
+                        else if (prop == 1.0)
                         {
                             a[n] = 90;
                         }
-                        else if ((prop < 0.0) || (prop > 1.0))
+                        else if (prop < 0.0 || prop > 1.0)
                         {
                             a[n] = Constant.MISSING;
                         }
                         else
                         {
                             double x = Math.Sqrt(prop);
-                            a[n] = 57.2957795130824 * (Math.Atan(x / Math.Sqrt(1.0 - x * x)));
+                            a[n] = 57.2957795130824 * Math.Atan(x / Math.Sqrt(1.0 - x * x));
                         }
                     }
                 }
                 return WrapDoubleVariable(a, "Angle: " + inputVariable.Title);
             }
-            if ((index == 5))
+            if (index == 5)
             {
                 for (int n = 0; n <= rows - 1; n++)
                 {
@@ -2482,7 +2482,7 @@ namespace StatsDirect.Builtins
                 }
                 return WrapDoubleVariable(a, "Cumulate: " + inputVariable.Title);
             }
-            if ((index == 6))
+            if (index == 6)
             {
                 double[] fn = new double[inputData.Length];
                 int err;
@@ -2493,7 +2493,7 @@ namespace StatsDirect.Builtins
                 }
                 throw new ArgumentException("Insufficient data");
             }
-            if ((index == 7))
+            if (index == 7)
             {
                 double[] fn = new double[inputData.Length];
                 int err;
@@ -2504,7 +2504,7 @@ namespace StatsDirect.Builtins
                 }
                 throw new ArgumentException("Insufficient data");
             }
-            if ((index == 8))
+            if (index == 8)
             {
                 double[] fn = new double[inputData.Length];
                 int err;
@@ -2563,7 +2563,7 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
             DataFrame outputFrame = new DataFrame();
-            if ((options.PassX != null) && options.PassX.Length > 0)
+            if (options.PassX != null && options.PassX.Length > 0)
             {
                 string lab = options.Title;
                 DoubleVariable boundariesVariable = new DoubleVariable(options.PassX, lab);
@@ -3051,7 +3051,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < differenceArray.Length; i++)
                 {
                     int differenceValue = differenceArray[i];
-                    IntAndSomething<T> probe = new IntAndSomething<T> { i = differenceValue, t = (i < testArray.Length) ? testArray[i] : default(T) };
+                    IntAndSomething<T> probe = new IntAndSomething<T> { i = differenceValue, t = i < testArray.Length ? testArray[i] : default(T) };
                     int target; // Holds the value we'll use
                     if (differenceMapper.TryGetValue(probe, out target))
                     {
@@ -3116,8 +3116,8 @@ namespace StatsDirect.Builtins
         private class RespondersCountAndRowIndex : CountAndRowIndex
         {
             public int Responders { get; set; }
-            public int NonResponders { get { return Count - Responders; } }
-            public double ProportionResponding { get { return Responders / (double)Count; } }
+            public int NonResponders => Count - Responders;
+            public double ProportionResponding => Responders / (double)Count;
         }
 
         internal static ParameterBag ValuesToFrequencies(ITemplateHost host, ParameterBag parameters)
@@ -3129,7 +3129,7 @@ namespace StatsDirect.Builtins
             Dictionary<string, int[]> countsByLabelAndVariable = new Dictionary<string, int[]>();
             for (int variableIndex = 0; variableIndex < rawValuesFrame.Variables.Count; variableIndex++)
             {
-                ClassifierVariable cv = rawValuesFrame.Variables[variableIndex] as ClassifierVariable;
+                ClassifierVariable cv = (ClassifierVariable) rawValuesFrame.Variables[variableIndex];
                 foreach (Group group in cv.Groups)
                 {
                     // HACK: There has to be a better way of getting rid of missing values - but there's no CategorySkipMissing selection.

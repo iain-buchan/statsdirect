@@ -3,7 +3,7 @@ using System.Drawing;
 
 namespace Layout
 {
-    abstract public class AxisLabeler
+    public abstract class AxisLabeler
     {
         // input to the optimization routines.
         public class Options

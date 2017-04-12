@@ -6,8 +6,9 @@ using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
 using System.Globalization;
+using StatsDirect.Templates;
 
-namespace StatsDirect.Templates
+namespace StatsDirect.TemplateProcessing
 {
     /// <summary>
     /// An interface-agnostic template operation processor.
@@ -24,7 +25,7 @@ namespace StatsDirect.Templates
         public TemplateProcessor(ITemplateHost host)
         {
             this.host = host;
-            this.takeAnOriginGroup = new TakeANumber();
+            takeAnOriginGroup = new TakeANumber();
         }
 
         /// <summary>
@@ -130,7 +131,7 @@ namespace StatsDirect.Templates
         public ParameterBag ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo)
         {
             if (null == parameters)
-                throw new ArgumentOutOfRangeException("parameters", "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
+                throw new ArgumentOutOfRangeException(nameof(parameters), "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
             Builtin builtin = BuiltinRegistry.SoleInstance.Builtin(step.FunctionName);
             if (null == builtin)
                 throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
@@ -418,7 +419,7 @@ namespace StatsDirect.Templates
                     Step frameStep;
                     if (step.Operation.ShouldRequestTargetAfter(step, typeof(OutputFrameStep), out frameStep) == HasInput.NoAndTypeFound)
                     {
-                        RelativePosition rp = (null == frameStep) ? RelativePosition.AfterSelection : ((OutputFrameStep)frameStep).DefaultPlacement;
+                        RelativePosition rp = null == frameStep ? RelativePosition.AfterSelection : ((OutputFrameStep)frameStep).DefaultPlacement;
                         string missingIndicator = null == frameStep ? Formatting.ASTERISK : ((OutputFrameStep)frameStep).MissingIndicator;
                         SpecialParameter frameParameter = new SpecialParameter { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { rp, missingIndicator } };
                         host.FillParameter(this, frameParameter, parmsAndFilledParameters, true);
@@ -468,7 +469,7 @@ namespace StatsDirect.Templates
             if (null != bag1)
             {
                 foreach (KeyValuePair<string, FilledParameter> pair in bag1.Pairs)
-                    if ((!combinedParameters.ContainsKey(pair.Key)) || combinedParameters[pair.Key].Direction == FilledParameterDirection.Default)
+                    if (!combinedParameters.ContainsKey(pair.Key) || combinedParameters[pair.Key].Direction == FilledParameterDirection.Default)
                         combinedParameters[pair.Key] = pair.Value;
             }
 
@@ -758,7 +759,7 @@ namespace StatsDirect.Templates
                 case "Pooling":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure all values are in {-1, 0, 1}
@@ -774,7 +775,7 @@ namespace StatsDirect.Templates
                 case "Square":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure the number of values is a square number
@@ -789,7 +790,7 @@ namespace StatsDirect.Templates
                 case "SquareBins":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure the number of bins is the square root of the number of values
@@ -805,7 +806,7 @@ namespace StatsDirect.Templates
                 case "CheckForNonDummiedCategories":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure the number of bins, if >2, is at least 12 (or they're all distinct)
@@ -867,7 +868,7 @@ namespace StatsDirect.Templates
                 case "Boolean":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure all values are in {0, 1}
@@ -891,7 +892,7 @@ namespace StatsDirect.Templates
                 case "Positive":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure all values are > 0
@@ -915,7 +916,7 @@ namespace StatsDirect.Templates
                 case "PositiveRows":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
@@ -941,7 +942,7 @@ namespace StatsDirect.Templates
                 case "PositiveRowsExceptLastColumn":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
@@ -968,7 +969,7 @@ namespace StatsDirect.Templates
                 case "NonNegative":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure all values are >= 0
@@ -992,7 +993,7 @@ namespace StatsDirect.Templates
                 case "ZeroToOneExclusive":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure all values are in the range (0, 1)
@@ -1016,7 +1017,7 @@ namespace StatsDirect.Templates
                 case "ZeroToOneInclusive":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure all values are in the range [0, 1]
@@ -1036,7 +1037,7 @@ namespace StatsDirect.Templates
                 case "TwoBinsAndNoMissingData":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure there are exactly two bins in the classifier variable
@@ -1051,7 +1052,7 @@ namespace StatsDirect.Templates
                 case "NoMissingData":
                     {
                         // If we're allowing blank parameters, accept a blank
-                        if ((null != parameter.CancelSkipsParameter) && (null == filledParameters || 0 == filledParameters.Count))
+                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                             return null;
 
                         // Otherwise ensure there's no missing data in any of the numeric variables in the frame
@@ -1099,7 +1100,7 @@ namespace StatsDirect.Templates
                     }
                     return null;
                 default:
-                    throw new ArgumentOutOfRangeException("validatorName", validatorName, "No validator with the specified name");
+                    throw new ArgumentOutOfRangeException(nameof(validatorName), validatorName, "No validator with the specified name");
             }
         }
 

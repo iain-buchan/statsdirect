@@ -31,7 +31,7 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            GiniOptions gOptions = ((GiniOptions)(definition.ChartOptions));
+            GiniOptions gOptions = (GiniOptions)definition.ChartOptions;
             DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
             DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
             StartVectorPlot();

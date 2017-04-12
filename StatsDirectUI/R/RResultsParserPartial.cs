@@ -42,7 +42,7 @@ namespace StatsDirect.R
                 object value = values[i];
                 if (value is List<object>)
                 {
-                    string title = (null != titles && titles.Count > i) ? titles[i] : names[i];
+                    string title = null != titles && titles.Count > i ? titles[i] : names[i];
                     coalesced[name] = new TitleAndValue { Title = title, Value = value };
                 }
                 else

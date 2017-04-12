@@ -15,9 +15,9 @@ namespace StatsDirect.Templates
         /// Where to put the major tics.  Phase 0 gives the first tic as a major, phase 1 gives the second tic as a major, etc..
         public int Phase { get; private set; }
 
-        public double Interval { get { return (MaximumScaleValue - MinimumScaleValue) / Intervals; } }
+        public double Interval => (MaximumScaleValue - MinimumScaleValue) / Intervals;
 
-        public double FirstMajorTicValue { get { return MinimumScaleValue + Interval * IntervalsPerMajorTic; } }
+        public double FirstMajorTicValue => MinimumScaleValue + Interval * IntervalsPerMajorTic;
 
         public LinearAxisScale(double minimumDataValue, double maximumDataValue, double minimumScaleValue, double maximumScaleValue, int intervals, int intervalsPerMajorTic, int phase = 0)
         {
@@ -41,7 +41,7 @@ namespace StatsDirect.Templates
             List<Tic> tics = new List<Tic>(Intervals + 1);
             double interval = (MaximumScaleValue - MinimumScaleValue) / Intervals;
             for (int i = 0; i <= Intervals; i++)
-                tics.Add(new Tic { Value = MinimumScaleValue + interval * i, TicType = ((i - Phase) % IntervalsPerMajorTic == 0) ? TicType.Major : TicType.Minor });
+                tics.Add(new Tic { Value = MinimumScaleValue + interval * i, TicType = (i - Phase) % IntervalsPerMajorTic == 0 ? TicType.Major : TicType.Minor });
             return tics;
         }
 

@@ -69,10 +69,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public ICollection<string> Keys
-        {
-            get { return filledParameters.Keys; }
-        }
+        public ICollection<string> Keys => filledParameters.Keys;
 
         public bool Remove(string key)
         {
@@ -85,10 +82,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public ICollection<FilledParameter> Values
-        {
-            get { return filledParameters.Values; }
-        }
+        public ICollection<FilledParameter> Values => filledParameters.Values;
 
         [XmlIgnore]
         public FilledParameter this[string key]
@@ -130,16 +124,10 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public int Count
-        {
-            get { return filledParameters.Count; }
-        }
+        public int Count => filledParameters.Count;
 
         [XmlIgnore]
-        public bool IsReadOnly
-        {
-            get { return filledParameters.IsReadOnly; }
-        }
+        public bool IsReadOnly => filledParameters.IsReadOnly;
 
         public bool Remove(KeyValuePair<string, FilledParameter> item)
         {
@@ -152,10 +140,7 @@ namespace StatsDirect.Templates
         /// Enumeration interface removed and pairs set up for access due to XML serialization issues
         /// </summary>
         [XmlIgnore]
-        public ICollection<KeyValuePair<string, FilledParameter>> Pairs
-        {
-            get { return filledParameters; }
-        }
+        public ICollection<KeyValuePair<string, FilledParameter>> Pairs => filledParameters;
 
         #region IEnumerable<KeyValuePair<string,FilledParameter>> Members
         IEnumerator<KeyValuePair<string, FilledParameter>> IEnumerable<KeyValuePair<string, FilledParameter>>.GetEnumerator()
@@ -269,7 +254,7 @@ namespace StatsDirect.Templates
 
             [XmlElement("boolean", typeof(Boolean))]
             [XmlElement("datetime", typeof(DateTime))]
-            [XmlElement("double", typeof(Double))]
+            [XmlElement("double", typeof(double))]
             [XmlElement("frame", typeof(DataFrame))]
             [XmlElement("int", typeof(Int32))]
             [XmlElement("string", typeof(String))]

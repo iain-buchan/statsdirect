@@ -34,6 +34,6 @@ namespace StatsDirect.UI
             Close();
         }
 
-        public bool UserThinksRIsInstalled { get { return userThinksRIsInstalled; } }
+        public bool UserThinksRIsInstalled => userThinksRIsInstalled;
     }
 }

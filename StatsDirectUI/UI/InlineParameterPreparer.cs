@@ -65,7 +65,7 @@ namespace StatsDirect.UI
             cbo.Items.Clear();
             for (int multiplier = 0; multiplier < 500; multiplier++)
             {
-                double suggestedValue = parameter.MinimumSuggestedValue + (multiplier * parameter.SuggestedStep);
+                double suggestedValue = parameter.MinimumSuggestedValue + multiplier * parameter.SuggestedStep;
                 if (suggestedValue > parameter.MaximumSuggestedValue)
                     break;
                 cbo.Items.Add((suggestedValue * 100.0).ToString("##0.0"));
@@ -181,17 +181,17 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
             TextBox txt = new TextBox { Size = new Size(100, 18), Tag = parameter };
-            if ((!parameter.ForceDefault) && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDouble)
+            if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDouble)
             {
                 double defaultValue = Context[parameter.Name].AsDouble;
-                if ((!double.IsNaN(defaultValue)) && defaultValue != Constant.MISSING)
+                if (!double.IsNaN(defaultValue) && defaultValue != Constant.MISSING)
                     txt.Text = Context[parameter.Name].AsDouble.ToString();
             }
             else
             {
                 double? defaultValue = parameter.DefaultValue(Processor, Context);
                 string defaultValueString = string.Empty;
-                if (defaultValue.HasValue && (!double.IsNaN(defaultValue.Value)) && defaultValue.Value != Constant.MISSING)
+                if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value) && defaultValue.Value != Constant.MISSING)
                     defaultValueString = defaultValue.Value.ToString();
                 txt.Text = defaultValueString;
             }
@@ -280,7 +280,7 @@ namespace StatsDirect.UI
                     ctl = new ctlScores((ScoresOptions)fillable);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("parameter", fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
+                    throw new ArgumentOutOfRangeException(nameof(parameter), fillable.FillerToUse, "fillableParameter.Fillable.FillerToUse: Unknown option");
             }
             ctl.Tag = parameter;
             tlp.Controls.Add(ctl);
@@ -308,7 +308,7 @@ namespace StatsDirect.UI
                 DataFrame frame = Context[parameter.Name].AsDataFrame;
                 for (int col = 0; col < frame.VariableCount; col++)
                 {
-                    DoubleVariable v = frame.Variables[col] as DoubleVariable;
+                    DoubleVariable v = (DoubleVariable) frame.Variables[col];
                     for (int row = 0; row < v.Length; row++)
                         usedRange.Cells[row, col].Value = v.Data[row];
                 }
@@ -340,7 +340,7 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
             TextBox txt = new TextBox { Size = new Size(100, 18), Tag = parameter };
-            if ((!parameter.ForceDefault) && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsInt32)
+            if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsInt32)
             {
                 txt.Text = Context[parameter.Name].AsInt32.ToString();
             }
@@ -461,7 +461,7 @@ namespace StatsDirect.UI
                     initialState[i] = i;
             }
             if (parameter.MinimumVariables < 1)
-                throw new ArgumentOutOfRangeException("parameter", parameter.MinimumVariables, "pickVariablesParameter.MinimumVariables: Must obtain values for at least one variable");
+                throw new ArgumentOutOfRangeException(nameof(parameter), parameter.MinimumVariables, "pickVariablesParameter.MinimumVariables: Must obtain values for at least one variable");
             if (parameter.MinimumVariables > parameter.MaximumVariables)
                 throw new ArgumentException("minimumVariables must not be larger than maximumVariables");
 
@@ -493,14 +493,11 @@ namespace StatsDirect.UI
                 ComboBox cbo = new ComboBox { FormattingEnabled = true };
                 for (int i = 0; i < frame.VariableCount; i++)
                 {
-                    string rubric = (null == frame.Variables[i]) ? string.Empty : frame.Variables[i].Title;
+                    string rubric = null == frame.Variables[i] ? string.Empty : frame.Variables[i].Title;
                     cbo.Items.Add(rubric);
                 }
-                if (null != initialState)
-                {
-                    if (initialState.Length > v)
-                        cbo.SelectedIndex = initialState[v];
-                }
+                if (initialState?.Length > v)
+                    cbo.SelectedIndex = initialState[v];
                 cbo.AutoSizeToList();
                 holder.Controls.Add(cbo);
                 Label l = new Label
@@ -532,10 +529,10 @@ namespace StatsDirect.UI
                     enEnWidth = tapeMeasure.MeasureString("nn", txt.Font).Width;
                 }
                 txt.MaxLength = parameter.MaxLength;
-                txt.Size = new Size(6 + (int)Math.Ceiling(enWidth + ((enEnWidth - enWidth) * (parameter.MaxLength - 1))), 18);
+                txt.Size = new Size(6 + (int)Math.Ceiling(enWidth + (enEnWidth - enWidth) * (parameter.MaxLength - 1)), 18);
             }
             txt.Tag = parameter;
-            if ((!parameter.ForceDefault) && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsString)
+            if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsString)
             {
                 txt.Text = Context[parameter.Name].AsString;
             }
@@ -575,11 +572,11 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
-            if (("chi-2-column".Equals(parameter.SpecialType))
-                || ("chi-3-column".Equals(parameter.SpecialType))
-                || ("rr-index".Equals(parameter.SpecialType))
-                || ("person-time-size".Equals(parameter.SpecialType))
-                || ("likelihood".Equals(parameter.SpecialType)))
+            if ("chi-2-column".Equals(parameter.SpecialType)
+                || "chi-3-column".Equals(parameter.SpecialType)
+                || "rr-index".Equals(parameter.SpecialType)
+                || "person-time-size".Equals(parameter.SpecialType)
+                || "likelihood".Equals(parameter.SpecialType))
             {
                 bool isLikelihood = "likelihood".Equals(parameter.SpecialType);
                 bool isRrIndex = "rr-index".Equals(parameter.SpecialType);
@@ -594,7 +591,7 @@ namespace StatsDirect.UI
                     AutoSize = true
                 };
 
-                Panel colsPanel = new Panel { Padding = new Padding(0, 0, 0, 0), Margin = new Padding(0, 0, 0, 3), Size = new Size(300, 16), AutoSize = true, AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink };
+                Panel colsPanel = new Panel { Padding = new Padding(0, 0, 0, 0), Margin = new Padding(0, 0, 0, 3), Size = new Size(300, 16), AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
                 ssgContainer.Controls.Add(colsPanel, 1, 0);
 
                 if (isLikelihood)
@@ -621,9 +618,9 @@ namespace StatsDirect.UI
                         DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                         if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0] is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
                         {
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, sourceFrame.Variables[0] as DoubleVariable);
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, sourceFrame.Variables[1] as DoubleVariable);
-                            if (has3Columns && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[0] is DoubleVariable)
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, (DoubleVariable) sourceFrame.Variables[0]);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, (DoubleVariable) sourceFrame.Variables[1]);
+                            if (has3Columns && sourceFrame.VariableCount >= 3)
                                 DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2] as DoubleVariable);
                         }
                     }
@@ -644,7 +641,7 @@ namespace StatsDirect.UI
 
                     // Set the control size
                     double pointsToPixels = 2; // TODO: HACK: Fudge factor.  How do we get this to be saner?
-                    int aHair = 3; // Fudge factor: Extra width in pixels for things like scrollbar edges and ensuring that the right-hand end of the last cell is visible
+                    const int aHair = 3; // Fudge factor: Extra width in pixels for things like scrollbar edges and ensuring that the right-hand end of the last cell is visible
                     int overallWidthInPixels = (int)((rowHeaderWidthInPoints + visibleColumnsWidthInPoints) * pointsToPixels) + SystemInformation.VerticalScrollBarWidth + aHair;
                     grid.Size = new Size((int)(overallWidthInPixels * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height));
                     int rowHeaderWidthInPixels = (int)(rowHeaderWidthInPoints * pointsToPixels);
@@ -660,18 +657,18 @@ namespace StatsDirect.UI
                                     ? "Reference rate"
                                     : isLikelihood ? "+ feature" : "+ success",
                         AutoSize = true,
-                        Location = new Point(rowHeaderWidthInPixels + (0 * oneColumnWidthInPixels) + fudge, 0)
+                        Location = new Point(rowHeaderWidthInPixels + 0 * oneColumnWidthInPixels + fudge, 0)
                     };
                     colsPanel.Controls.Add(col1Label);
 
                     Label col2Label = new Label
                     {
                         Text =
-                            (isPersonTimeSize || isRrIndex)
+                            isPersonTimeSize || isRrIndex
                                 ? "Index Person-time"
                                 : isLikelihood ? "- feature" : "- failure",
                         AutoSize = true,
-                        Location = new Point(rowHeaderWidthInPixels + (1 * oneColumnWidthInPixels) + fudge, 0)
+                        Location = new Point(rowHeaderWidthInPixels + 1 * oneColumnWidthInPixels + fudge, 0)
                     };
                     colsPanel.Controls.Add(col2Label);
 
@@ -681,7 +678,7 @@ namespace StatsDirect.UI
                         {
                             Text = isPersonTimeSize ? "Reference size" : "score",
                             AutoSize = true,
-                            Location = new Point(rowHeaderWidthInPixels + (2 * oneColumnWidthInPixels) + fudge, 0)
+                            Location = new Point(rowHeaderWidthInPixels + 2 * oneColumnWidthInPixels + fudge, 0)
                         };
                         colsPanel.Controls.Add(col3Label);
                     }
@@ -725,7 +722,7 @@ namespace StatsDirect.UI
                         DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                         for (int col = 0; col < sourceFrame.VariableCount; col++)
                             if (sourceFrame.Variables[col] is DoubleVariable)
-                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, sourceFrame.Variables[col] as DoubleVariable);
+                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, (DoubleVariable) sourceFrame.Variables[col]);
                     }
                     grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
@@ -746,7 +743,7 @@ namespace StatsDirect.UI
             if ("addedConstant".Equals(parameter.SpecialType))
             {
                 DataFrame frame = Context["data"].AsDataFrame;
-                DoubleVariable dv = frame.Variables[0] as DoubleVariable;
+                DoubleVariable dv = (DoubleVariable) frame.Variables[0];
                 double minimumC = Sheet.XConstant(dv.Data);
                 Context.AddOutput("a_min", minimumC);
 
@@ -807,7 +804,7 @@ namespace StatsDirect.UI
                 tlp.SetColumnSpan(ctl, 2);
                 return;
             }
-            throw new ArgumentOutOfRangeException("parameter", parameter.SpecialType, "parameter.SpecialType: Unknown option");
+            throw new ArgumentOutOfRangeException(nameof(parameter), parameter.SpecialType, "parameter.SpecialType: Unknown option");
         }
 
         public void Visit(PickFromListParameter parameter)
@@ -815,9 +812,9 @@ namespace StatsDirect.UI
             DataFrame sourceFrame = Context[parameter.Source].AsDataFrame;
             string[] values;
             if (sourceFrame.Variables[0] is StringVariable)
-                values = (sourceFrame.Variables[0] as StringVariable).Data;
+                values = ((StringVariable) sourceFrame.Variables[0]).Data;
             else if (sourceFrame.Variables[0] is ClassifierVariable)
-                values = (sourceFrame.Variables[0] as ClassifierVariable).SortedCategoryNames;
+                values = ((ClassifierVariable) sourceFrame.Variables[0]).SortedCategoryNames;
             else
                 throw new ArgumentException("A PickFromListParameter can only pick from string or classifier variables");
 
@@ -994,7 +991,7 @@ namespace StatsDirect.UI
                     }
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("parameter", parameter.OptionFormatType, "optionParameter.OptionFormatType: Only Dropdown and Radio are known");
+                    throw new ArgumentOutOfRangeException(nameof(parameter), parameter.OptionFormatType, "optionParameter.OptionFormatType: Only Dropdown and Radio are known");
             }
         }
 
@@ -1020,7 +1017,7 @@ namespace StatsDirect.UI
             gridEditGrid.AllowUserToDeleteRows = false;
             gridEditGrid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             gridEditGrid.ColumnHeadersVisible = false;
-            gridEditGrid.Columns.AddRange(new DataGridViewColumn[] { colKey, colValue });
+            gridEditGrid.Columns.AddRange(colKey, colValue);
             gridEditGrid.EditMode = DataGridViewEditMode.EditOnEnter;
             gridEditGrid.MultiSelect = false;
             gridEditGrid.Name = "gridEditGrid";
@@ -1041,13 +1038,11 @@ namespace StatsDirect.UI
             ((ISupportInitialize)gridEditGrid).EndInit();
             EditGridParameter egp = parameter;
             DataFrame sourceFrame = Context[egp.Source].AsDataFrame;
-            StringVariable keyVariable = sourceFrame.FindVariable(egp.KeyVariable) as StringVariable;
-            StringVariable valueVariable = sourceFrame.FindVariable(egp.ValueVariable) as StringVariable;
+            StringVariable keyVariable = (StringVariable) sourceFrame.FindVariable(egp.KeyVariable);
+            StringVariable valueVariable = (StringVariable) sourceFrame.FindVariable(egp.ValueVariable);
             gridEditGrid.Rows.Clear();
             for (int i = 0; i < keyVariable.Length; i++)
-            {
                 gridEditGrid.Rows.Add(keyVariable.Data[i], valueVariable.Data[i]);
-            }
             gridEditGrid.Visible = true;
 
             Label lbl = new Label
@@ -1136,15 +1131,15 @@ namespace StatsDirect.UI
             {
                 DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                 int tableCount = sourceFrame.MinRows / 2;
-                if (sourceFrame.VariableCount == 2 && sourceFrame.Variables is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
+                if (sourceFrame.VariableCount == 2 && sourceFrame.Variables[0] is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
                 {
-                    DoubleVariable var1 = sourceFrame.Variables[0] as DoubleVariable;
-                    DoubleVariable var2 = sourceFrame.Variables[1] as DoubleVariable;
+                    DoubleVariable var1 = (DoubleVariable) sourceFrame.Variables[0];
+                    DoubleVariable var2 = (DoubleVariable) sourceFrame.Variables[1];
                     txtTL.Text = var1.Data[0].ToString();
                     txtTR.Text = var2.Data[0].ToString();
                     txtBL.Text = var1.Data[1].ToString();
                     txtBR.Text = var2.Data[1].ToString();
-                    lblStratum.Text = "Stratum 1 of " + tableCount.ToString();
+                    lblStratum.Text = "Stratum 1 of " + tableCount;
                     // Copy the data for maintenance and use by the controls
                     List<double>[] newData = (List<double>[])pnlNavigation.Tag;
                     newData[0].AddRange(var1.Data);
@@ -1160,7 +1155,7 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
             TextBox txt = new TextBox { Size = new Size(80, 18), Tag = parameter };
-            if ((!parameter.ForceDefault) && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsInt32)
+            if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsInt32)
             {
                 txt.Text = Context[parameter.Name].AsInt32.ToString();
             }
@@ -1443,7 +1438,7 @@ namespace StatsDirect.UI
                     txtBL.Clear();
                     txtBR.Clear();
                 }
-                lblStratum.Text = "Stratum " + stratum + " of " + (Math.Max(strata, stratum));
+                lblStratum.Text = "Stratum " + stratum + " of " + Math.Max(strata, stratum);
                 txtTL.BackColor = System.Drawing.SystemColors.Window;
                 txtTR.BackColor = System.Drawing.SystemColors.Window;
                 txtBL.BackColor = System.Drawing.SystemColors.Window;

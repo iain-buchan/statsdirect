@@ -325,7 +325,7 @@ namespace StatsDirect.TemplateProcessing
         {
             string searchSuffix = string.Empty;
             if (null != templateName)
-                searchSuffix = ((0 == templateName.Length) ? templateName : " name=\"" + templateName + "\"") + ">";
+                searchSuffix = (0 == templateName.Length ? templateName : " name=\"" + templateName + "\"") + ">";
 
             int startOfTemplate = template.IndexOf("<block" + searchSuffix, StringComparison.Ordinal);
             if (startOfTemplate >= 0)

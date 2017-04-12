@@ -159,7 +159,7 @@ namespace StatsDirect.Charting
         {
             double[] edges = new double[pieces + 1];
             for (int i = 0; i < pieces; i++)
-                edges[i] = min + ((max - min) * (i / (double)pieces));
+                edges[i] = min + (max - min) * (i / (double)pieces);
             edges[edges.Length - 1] = max;
             return edges;
         }

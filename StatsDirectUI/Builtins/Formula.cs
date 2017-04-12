@@ -86,10 +86,10 @@ namespace StatsDirect.Builtins
                 // FIXED BLOCK SIZE
                 if (N / (double)b != Math.Floor(N / (double)b))
                 {
-                    host.Warning("The final block size will be " + (N % b) + " not " + b + " because" + "\r\n" + "the number of subjects is not divisible by the block size.", caption);
+                    host.Warning("The final block size will be " + N % b + " not " + b + " because" + "\r\n" + "the number of subjects is not divisible by the block size.", caption);
                     // incomplete = true; 
                 }
-                bks = ((int)(Math.Floor((double)N / b)));
+                bks = (int)Math.Floor((double)N / b);
                 if (b / (double)t != Math.Floor(b / (double)t))
                 {
                     throw new InvalidDataException("Block size must be divisible by the number of treatments");
@@ -108,7 +108,7 @@ namespace StatsDirect.Builtins
                         bs = b;
                     }
                     // for each block allocate the block pattern as treatments in alphanumeric order
-                    for (j = 1; j <= ((int)(Math.Floor((double)bs / t))); j++)
+                    for (j = 1; j <= (int)Math.Floor((double)bs / t); j++)
                     {
                         for (i = 1; i <= t; i++)
                         {
@@ -121,7 +121,7 @@ namespace StatsDirect.Builtins
                     low = ctr - bs + 1;
                     for (j = high; j >= low; j--)
                     {
-                        x[j].Id = ((int)(Math.Floor((high - low + 1) * mt.NextDouble() + low)));
+                        x[j].Id = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
                     }
                     // exit the loop if all subjects have been allocated a block
                     if (ctr >= N)
@@ -152,10 +152,10 @@ namespace StatsDirect.Builtins
                     else
                     {
                         // pick a multiplier at random between 'low' and 'high' if there is room in the allocation space
-                        bs = t * ((int)(Math.Floor((maxBlockMult - minBlockMult + 1) * mt.NextDouble() + minBlockMult)));
+                        bs = t * (int)Math.Floor((maxBlockMult - minBlockMult + 1) * mt.NextDouble() + minBlockMult);
                     }
                     // for each block allocate the block pattern as treatments in alphanumeric order
-                    for (j = 1; j <= ((int)(Math.Floor((double)bs / t))); j++)
+                    for (j = 1; j <= (int)Math.Floor((double)bs / t); j++)
                     {
                         for (i = 1; i <= t; i++)
                         {
@@ -168,7 +168,7 @@ namespace StatsDirect.Builtins
                     low = ctr - bs + 1;
                     for (j = high; j >= low; j--)
                     {
-                        x[j].Id = ((int)(Math.Floor((high - low + 1) * mt.NextDouble() + low)));
+                        x[j].Id = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
                     }
                     // exit the loop if all subjects have been allocated a block
                     if (ctr >= N)
@@ -191,7 +191,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                outputParameters.AddOutput("b", "random between " + (minBlockMult * t) + " and " + (maxBlockMult * t));
+                outputParameters.AddOutput("b", "random between " + minBlockMult * t + " and " + maxBlockMult * t);
             }
             outputParameters.AddOutput("t_out", t);
             List<ParameterBag> subjectsList = new List<ParameterBag>();
@@ -231,7 +231,7 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
 
             double ztot = zpow + zsig;
-            double sn = Math.Pow((ztot / dif), 2.0) + 3.0;
+            double sn = Math.Pow(ztot / dif, 2.0) + 3.0;
             // get precise (to 0.001) result by monotone bisection
             const double acc = 0.0000001;
             double stp = sn / 10.0;
@@ -273,7 +273,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("power", P);
             outputParameters.AddOutput("r0Fmt", r0);
             outputParameters.AddOutput("r1Fmt", r1);
-            outputParameters.AddOutput("size", (Math.Floor(sn) + 1));
+            outputParameters.AddOutput("size", Math.Floor(sn) + 1);
             return outputParameters;
         }
 
@@ -322,7 +322,7 @@ namespace StatsDirect.Builtins
                 double N;
                 try
                 {
-                    N = Math.Pow((zalpha + zbeta), 2.0) * ((1.0 + 1.0 / M) / P) / Math.Pow((Math.Log(hr)), 2.0) + 1.0;
+                    N = Math.Pow(zalpha + zbeta, 2.0) * ((1.0 + 1.0 / M) / P) / Math.Pow(Math.Log(hr), 2.0) + 1.0;
                     if (N != Math.Floor(N))
                     {
                         N = Math.Floor(N) + 1;
@@ -348,7 +348,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("size", N);
-                    outputParameters.AddOutput("controls", (N * M));
+                    outputParameters.AddOutput("controls", N * M);
                 }
                 List<ParameterBag> assumptionsList = new List<ParameterBag>();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
@@ -379,7 +379,7 @@ namespace StatsDirect.Builtins
                 //  Reproduce previous behaviour
                 if (double.IsNaN(beta_t))
                     beta_t = Constant.MISSING;
-                x_fReturn = Math.Pow((alpha_t + beta_t), 2.0) / Math.Pow(k, 2.0) - N;
+                x_fReturn = Math.Pow(alpha_t + beta_t, 2.0) / Math.Pow(k, 2.0) - N;
                 //  Reproduce previous behaviour
                 if (double.IsInfinity(x_fReturn))
                     x_fReturn = 0;
@@ -395,7 +395,7 @@ namespace StatsDirect.Builtins
                 double t2 = PDF.tfromp(BETA, N * (M + 1.0) - 2.0);
                 if (double.IsNaN(t2))
                     t2 = Constant.MISSING;
-                x_fReturn = (1.0 + 1.0 / M) * Math.Pow((t1 + t2), 2.0) / Math.Pow(k, 2.0) - N;
+                x_fReturn = (1.0 + 1.0 / M) * Math.Pow(t1 + t2, 2.0) / Math.Pow(k, 2.0) - N;
                 //  Reproduce previous behaviour
                 if (double.IsInfinity(x_fReturn))
                     x_fReturn = 0;
@@ -415,7 +415,7 @@ namespace StatsDirect.Builtins
             double M = MM;
             if (typ == 1)
             {
-                n0 = (Math.Pow((x_zvalc(alpha / 2.0, out er) + x_zvalc(BETA, out er)), 2.0)) / (Math.Pow(k, 2.0)); // TODO: This has always been unable to detect one of the errors in er on this line.
+                n0 = Math.Pow(x_zvalc(alpha / 2.0, out er) + x_zvalc(BETA, out er), 2.0) / Math.Pow(k, 2.0); // TODO: This has always been unable to detect one of the errors in er on this line.
                 if (er != 0)
                 {
                     return;
@@ -425,7 +425,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                n0 = ((1.0 + 1.0 / M) * Math.Pow((x_zvalc(alpha / 2.0, out er) + x_zvalc(BETA, out er)), 2.0)) / (Math.Pow(k, 2.0));
+                n0 = (1.0 + 1.0 / M) * Math.Pow(x_zvalc(alpha / 2.0, out er) + x_zvalc(BETA, out er), 2.0) / Math.Pow(k, 2.0);
                 if (er != 0)
                 {
                     return;
@@ -463,7 +463,7 @@ namespace StatsDirect.Builtins
                     er = 1;
                     break;
                 }
-                double xnext = x1 - ((fx1 * (x1 - x0)) / (fx1 - fx0));
+                double xnext = x1 - fx1 * (x1 - x0) / (fx1 - fx0);
                 x0 = x1;
                 x1 = xnext;
             }
@@ -480,7 +480,7 @@ namespace StatsDirect.Builtins
             int Seed = AutoSeed(parameters);
             MersenneTwister mt = new MersenneTwister(Seed);
             int pairs = parameters["pairs"].AsInt32;
-            bool balance = pairs >= 1 && (Math.Floor(pairs / 2.0) == pairs / 2.0) && parameters["balance"].AsBoolean;
+            bool balance = pairs >= 1 && Math.Floor(pairs / 2.0) == pairs / 2.0 && parameters["balance"].AsBoolean;
 
             ParameterBag outputParameters = new ParameterBag();
             if (balance)
@@ -496,7 +496,7 @@ namespace StatsDirect.Builtins
                 {
                     for (N = 1; N <= pairs; N++)
                     {
-                        rand[N] = !(rand[N - 1]);
+                        rand[N] = !rand[N - 1];
                     }
                     int tn;
                     for (tn = 1; tn <= 3; tn++)
@@ -543,15 +543,15 @@ namespace StatsDirect.Builtins
             {
                 int dimit = Math.Abs(high - low) + 1;
                 int[] rand = new int[dimit + 1 /* VB to C# conversion */ ];
-                int[] arand = new int[((int)(Math.Floor((double)dimit / 2))) + 1 ];
-                int[] brand = new int[((int)(Math.Floor((double)dimit / 2))) + 1 ];
+                int[] arand = new int[(int)Math.Floor((double)dimit / 2) + 1 ];
+                int[] brand = new int[(int)Math.Floor((double)dimit / 2) + 1 ];
                 for (int N = low; N <= high; N++)
                 {
                     rand[N] = N;
                 }
                 for (int N = low; N <= high; N++)
                 {
-                    int nrp = ((int)(Math.Floor((high - low + 1) * mt.NextDouble() + low)));
+                    int nrp = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
                     int tmp = rand[N];
                     rand[N] = rand[nrp];
                     rand[nrp] = tmp;
@@ -607,7 +607,7 @@ namespace StatsDirect.Builtins
                 {
                     for (N = low; N <= high; N++)
                     {
-                        int nrp = ((int)(Math.Floor((high - low + 1) * mt.NextDouble() + low)));
+                        int nrp = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
                         int tmp = rand[N];
                         rand[N] = rand[nrp];
                         rand[nrp] = tmp;
@@ -675,9 +675,9 @@ namespace StatsDirect.Builtins
                 {
                     zalpha = zcvalue(alpha / 2.0);
                     pbar = (P1 + M * P0) / (M + 1.0);
-                    double nx = Math.Pow((zalpha * Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar)) + zcvalue(1.0 - power) * Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1))), 2.0) / Math.Pow((P0 - P1), 2.0);
+                    double nx = Math.Pow(zalpha * Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar)) + zcvalue(1.0 - power) * Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1)), 2.0) / Math.Pow(P0 - P1, 2.0);
                     N = Math.Floor(nx) + 1.0;
-                    ncor = Math.Floor(N / 4.0 * Math.Pow((1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (N * M * Math.Abs(P0 - P1)))), 2.0)) + 1.0;
+                    ncor = Math.Floor(N / 4.0 * Math.Pow(1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (N * M * Math.Abs(P0 - P1))), 2.0)) + 1.0;
                 }
                 catch (Exception)
                 {
@@ -763,9 +763,9 @@ namespace StatsDirect.Builtins
                 {
                     zalpha = zcvalue(alpha / 2.0);
                     pbar = (P1 + M * P0) / (M + 1.0);
-                    double nx = Math.Pow((zalpha * Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar)) + zcvalue(1.0 - power) * Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1))), 2.0) / Math.Pow((P0 - P1), 2.0);
+                    double nx = Math.Pow(zalpha * Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar)) + zcvalue(1.0 - power) * Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1)), 2.0) / Math.Pow(P0 - P1, 2.0);
                     N = Math.Floor(nx) + 1.0;
-                    ncor = Math.Floor(N / 4.0 * Math.Pow((1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (N * M * Math.Abs(P0 - P1)))), 2.0)) + 1.0;
+                    ncor = Math.Floor(N / 4.0 * Math.Pow(1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (N * M * Math.Abs(P0 - P1))), 2.0)) + 1.0;
                 }
                 catch (Exception)
                 {
@@ -921,7 +921,7 @@ namespace StatsDirect.Builtins
                 }
                 try
                 {
-                    N = Math.Floor(Math.Pow((zalpha * 0.5 + zbeta * Math.Sqrt(Math.Abs(pa * qa))), 2.0) / (Math.Pow((pa - 0.5), 2.0) * (p01 + p10))) + 1.0;
+                    N = Math.Floor(Math.Pow(zalpha * 0.5 + zbeta * Math.Sqrt(Math.Abs(pa * qa)), 2.0) / (Math.Pow(pa - 0.5, 2.0) * (p01 + p10))) + 1.0;
                     outputParameters.AddOutput("size", N);
                 }
                 catch (Exception)
@@ -982,7 +982,7 @@ namespace StatsDirect.Builtins
             double p00 = P0 - r * Math.Sqrt(P1 * P0 * Q0 / Q1);
             double q01 = 1.0 - p01;
             double q00 = 1.0 - p00;
-            int im = ((int)(Math.Floor(M)));
+            int im = (int)Math.Floor(M);
             do
             {
                 double C1 = 1;
@@ -997,36 +997,36 @@ namespace StatsDirect.Builtins
                 double E1 = 0;
                 for (i = 1; i <= im; i++)
                 {
-                    E1 = E1 + (Convert.ToDouble(i) * t[i] / (rm + 1.0));
+                    E1 = E1 + Convert.ToDouble(i) * t[i] / (rm + 1.0);
                 }
                 double v1 = 0.0;
                 for (i = 1; i <= im; i++)
                 {
-                    v1 = v1 + (Convert.ToDouble(i) * t[i] * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow((rm + 1.0), 2.0));
+                    v1 = v1 + Convert.ToDouble(i) * t[i] * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow(rm + 1.0, 2.0);
                 }
                 double epsi = 0.0;
                 for (i = 1; i <= im; i++)
                 {
-                    epsi = epsi + (Convert.ToDouble(i) * t[i] * dpsi / (Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1.0));
+                    epsi = epsi + Convert.ToDouble(i) * t[i] * dpsi / (Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1.0);
                 }
                 double vpsi = 0;
                 for (i = 1; i <= im; i++)
                 {
-                    vpsi = vpsi + (Convert.ToDouble(i) * t[i] * dpsi * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow((Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1), 2.0));
+                    vpsi = vpsi + Convert.ToDouble(i) * t[i] * dpsi * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow(Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1, 2.0);
                 }
                 double S1 = Math.Sqrt(v1);
                 double spsi = Math.Sqrt(vpsi);
                 sigmar = S1 / spsi;
                 if (rm > 1.0)
                 {
-                    nm = Math.Pow((zbeta * spsi + zalpha * S1), 2.0) / Math.Pow((epsi - E1), 2.0);
+                    nm = Math.Pow(zbeta * spsi + zalpha * S1, 2.0) / Math.Pow(epsi - E1, 2.0);
                     N = Math.Floor(nm) + 1.0;
                     rm = 1.0;
                     im = 1;
                 }
                 else if (rm == 1.0)
                 {
-                    n1 = Math.Pow((zbeta * spsi + zalpha * S1), 2.0) / Math.Pow((epsi - E1), 2.0);
+                    n1 = Math.Pow(zbeta * spsi + zalpha * S1, 2.0) / Math.Pow(epsi - E1, 2.0);
                     break;
                 }
                 else
@@ -1091,7 +1091,7 @@ namespace StatsDirect.Builtins
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("tt", "a paired or single sample");
                 x_tres(host, outputParameters, false, a, b, P, M, N, D, sd);
-                if (!(OK))
+                if (!OK)
                 {
                     host.Error("Estimate of sample size is greater than StatsDirect can display: a very large but lower value is given", caption);
                 }
@@ -1131,7 +1131,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("rate", P * 100);
                 outputParameters.AddOutput("deviation", xd * 100);
                 outputParameters.AddOutput("level", 100 * cco);
-                outputParameters.AddOutput("size", (Math.Floor(sn) + 1));
+                outputParameters.AddOutput("size", Math.Floor(sn) + 1);
                 return outputParameters;
             }
             return null;
@@ -1185,7 +1185,7 @@ namespace StatsDirect.Builtins
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("tt", "an unpaired two sample");
                 x_tres(host, outputParameters, true, a, b, P, M, N, D, sd);
-                if (!(ok))
+                if (!ok)
                 {
                     host.Error("Estimate of sample size is greater than StatsDirect can display: a very large but lower value is given", caption);
                 }

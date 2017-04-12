@@ -283,7 +283,7 @@ namespace StatsDirect.UI
             pnlPyramidOptions.Visible = options.ShowPyramidOptions;
             pnlRocOptions.Visible = options.ShowRocOptions;
             // Pure scatter charts always show their markers, which is the only option; line charts may or may not, and error bars may or may not.
-            tlpScatterXYOptions.Visible = (options.ShowScatterXYOptions) || options.ShowErrorBarOptions;
+            tlpScatterXYOptions.Visible = options.ShowScatterXYOptions || options.ShowErrorBarOptions;
             chkScatterXYPlotMarkers.Visible = definition.ChartType != ChartType.ScatterXY;
             chkScatterXYPlotLines.Visible = definition.ChartType != ChartType.LineXY;
             pnlSurvivalOptions.Visible = options.ShowSurvivalOptions;
@@ -291,7 +291,7 @@ namespace StatsDirect.UI
             pnlTitleFont.Visible = options.UsesTitleFontDescriptor;
             pnlAxisLabelFont.Visible = options.UsesAxisLabelFontDescriptor;
             pnlAxisTitleFont.Visible = options.UsesAxisTitleFontDescriptor;
-            pnlSeriesOptions.Visible = (null != options.SeriesOptions && options.SeriesOptions.Count > 0);
+            pnlSeriesOptions.Visible = null != options.SeriesOptions && options.SeriesOptions.Count > 0;
             pnlAxisLineThickness.Visible = options.UsesAxisLineThickness;
             pnlLegendFont.Visible = options.UsesLegendFontDescriptor;
             pnlOrientation.Visible = options.UsesOrientation;

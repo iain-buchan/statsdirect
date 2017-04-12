@@ -31,14 +31,8 @@ namespace StatsDirect.Templates
             return requiresInput;
         }
 
-        public BuiltinFunction FunctionToCall
-        {
-            get { return func; }
-        }
+        public BuiltinFunction FunctionToCall => func;
 
-        public string Name
-        {
-            get { return name; }
-        }
+        public string Name => name;
     }
 }

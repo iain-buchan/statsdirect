@@ -59,8 +59,8 @@ namespace StatsDirect.UI
             {
                 double screenCentreY = candidate.Bounds.Top + candidate.Bounds.Height / 2.0;
                 double screenCentreX = candidate.Bounds.Left + candidate.Bounds.Width / 2.0;
-                double squaredDistanceBetweenCentres = ((mainMidX - screenCentreX) * (mainMidX - screenCentreX)) + ((mainMidY - screenCentreY) * (mainMidY - screenCentreY));
-                if (squaredDistanceBetweenCentres < smallestSquaredDistanceSoFar || (squaredDistanceBetweenCentres == smallestSquaredDistanceSoFar && candidate.Primary))
+                double squaredDistanceBetweenCentres = (mainMidX - screenCentreX) * (mainMidX - screenCentreX) + (mainMidY - screenCentreY) * (mainMidY - screenCentreY);
+                if (squaredDistanceBetweenCentres < smallestSquaredDistanceSoFar || squaredDistanceBetweenCentres == smallestSquaredDistanceSoFar && candidate.Primary)
                 {
                     bestSoFar = candidate;
                     smallestSquaredDistanceSoFar = squaredDistanceBetweenCentres;
@@ -222,7 +222,7 @@ namespace StatsDirect.UI
                         int nonExistingVersion = 1;
                         while (true)
                         {
-                            string probePath = string.Format("{0}_old_{1}{2}", prefix, nonExistingVersion, extension);
+                            string probePath = $"{prefix}_old_{nonExistingVersion}{extension}";
                             if (File.Exists(probePath))
                                 nonExistingVersion++;
                             else
@@ -268,8 +268,7 @@ namespace StatsDirect.UI
                 return;
             File.Copy(distTestXlsx, myTestXlsx, false);
             // Set the copied file read-only
-            FileInfo tx = new FileInfo(myTestXlsx);
-            tx.IsReadOnly = true;
+            FileInfo tx = new FileInfo(myTestXlsx) {IsReadOnly = true};
         }
 
         /// <summary>

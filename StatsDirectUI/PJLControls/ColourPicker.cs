@@ -136,7 +136,7 @@ namespace StatsDirect.PJLControls
             }
 
             // fill rectangle with window color or control color if disabled
-            KnownColor color_background = (Enabled) ? (KnownColor.Window) : (KnownColor.Control);
+            KnownColor color_background = Enabled ? KnownColor.Window : KnownColor.Control;
             using (SolidBrush br = new SolidBrush(Color.FromKnownColor(color_background)))
             {
 
@@ -177,9 +177,9 @@ namespace StatsDirect.PJLControls
 
                 // draw text in fore color or control dark if disabled
                 br.Color =
-                    (Enabled) ? ((Focused) ? Color.FromKnownColor(KnownColor.HighlightText) : (ForeColor)) : (Color.FromKnownColor(KnownColor.ControlDark));
+                    Enabled ? (Focused ? Color.FromKnownColor(KnownColor.HighlightText) : ForeColor) : Color.FromKnownColor(KnownColor.ControlDark);
 
-                string text = (bDisplayColorName) ? (panel_color.Name) : (base.Text);
+                string text = bDisplayColorName ? panel_color.Name : base.Text;
 
                 e.Graphics.DrawString(text, Font, br, text_p);
 
@@ -212,7 +212,7 @@ namespace StatsDirect.PJLControls
         {
             bool bIsInputKey = true;
 
-            if ((keyData == Keys.Down) || (keyData == (Keys.Down | Keys.Alt)))
+            if (keyData == Keys.Down || keyData == (Keys.Down | Keys.Alt))
             {
                 ShowDropdown();
             }
@@ -404,7 +404,7 @@ namespace StatsDirect.PJLControls
                     case BorderStyle.None:
                         break;
                     default:
-                        throw new InvalidEnumArgumentException("value", (int)value, typeof(BorderStyle));
+                        throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(BorderStyle));
                 }
 
                 borderStyle = value;
@@ -611,7 +611,7 @@ namespace StatsDirect.PJLControls
         {
             base.OnEnabledChanged(e);
 
-            buttonState = (Enabled) ? ButtonState.Normal : ButtonState.Inactive;
+            buttonState = Enabled ? ButtonState.Normal : ButtonState.Inactive;
 
             Refresh();
         }

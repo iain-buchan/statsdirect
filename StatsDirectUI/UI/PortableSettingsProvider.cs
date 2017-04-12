@@ -40,10 +40,7 @@ namespace StatsDirect.UI
             return ApplicationName + ".settings";
         }
 
-        protected string SettingsFileName
-        {
-            get { return Path.Combine(SDConfiguration.MyStatsDirectFolder, GetAppSettingsFilename()); }
-        }
+        protected string SettingsFileName => Path.Combine(SDConfiguration.MyStatsDirectFolder, GetAppSettingsFilename());
 
         public override void SetPropertyValues(SettingsContext context, SettingsPropertyValueCollection propvals)
         {
@@ -121,15 +118,13 @@ namespace StatsDirect.UI
             catch (Exception)
             {
                 usingDefault = true;
-                return null != setting.DefaultValue ? setting.DefaultValue.ToString() : null;
+                return setting.DefaultValue?.ToString();
             }
         }
 
         private void SetValue(SettingsPropertyValue propVal)
         {
-            if (null == propVal)
-                return;
-            if (null == propVal.SerializedValue)
+            if (propVal?.SerializedValue == null)
                 return;
             if (null == propVal.Name)
                 return;
@@ -142,9 +137,9 @@ namespace StatsDirect.UI
             try
             {
                 if (IsRoaming(propVal.Property))
-                    settingNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + propVal.Name));
+                    settingNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + propVal.Name);
                 else
-                    settingNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName + "/" + propVal.Name));
+                    settingNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName + "/" + propVal.Name);
             }
             catch (Exception)
             {
@@ -172,7 +167,7 @@ namespace StatsDirect.UI
                     XmlElement machineNode;
                     try
                     {
-                        machineNode = (XmlElement)(SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName));
+                        machineNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName);
                     }
                     catch (Exception)
                     {
@@ -190,8 +185,7 @@ namespace StatsDirect.UI
 
                 settingNode = SettingsXML.CreateElement(propVal.Name);
                 settingNode.InnerText = propVal.SerializedValue.ToString();
-                if (null != parentNode)
-                    parentNode.AppendChild(settingNode);
+                parentNode?.AppendChild(settingNode);
             }
         }
 

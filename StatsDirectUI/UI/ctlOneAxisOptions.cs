@@ -76,10 +76,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public int Intervals
-        {
-            get { return intervals; }
-        }
+        public int Intervals => intervals;
 
         public LabelDirection LabelDirection
         {
@@ -87,25 +84,13 @@ namespace StatsDirect.UI
             set { cboScaleTextDirection.SelectedIndex = (int)value; }
         }
 
-        public string Mask
-        {
-            get { return mask; }
-        }
+        public string Mask => mask;
 
-        public int IntervalsPerMajorTic
-        {
-            get { return intervalsPerMajorTic; }
-        }
+        public int IntervalsPerMajorTic => intervalsPerMajorTic;
 
-        public double MinimumScaleValue
-        {
-            get { return scaleMinimum; }
-        }
+        public double MinimumScaleValue => scaleMinimum;
 
-        public double MaximumScaleValue
-        {
-            get { return scaleMaximum; }
-        }
+        public double MaximumScaleValue => scaleMaximum;
 
         public ScaleType ScaleType
         {
@@ -138,10 +123,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public bool HasGridLines
-        {
-            get { return cboGridLines.SelectedIndex > 0; }
-        }
+        public bool HasGridLines => cboGridLines.SelectedIndex > 0;
 
         public bool HasMarkerLine
         {
@@ -158,10 +140,7 @@ namespace StatsDirect.UI
             set { pnlTitle.Visible = value; }
         }
 
-        public double MarkerLineValue
-        {
-            get { return Utilities.Parsing.Cdbl_Txt(cboMarkerLineAt.Text); }
-        }
+        public double MarkerLineValue => Utilities.Parsing.Cdbl_Txt(cboMarkerLineAt.Text);
 
         private void SetFormFromAllowedScaleTypes()
         {
@@ -197,13 +176,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool ShouldShowScaleChooser
-        {
-            get
-            {
-                return null != allowedScaleTypes && allowedScaleTypes.Count > 1;
-            }
-        }
+        private bool ShouldShowScaleChooser => null != allowedScaleTypes && allowedScaleTypes.Count > 1;
 
         private bool ShouldShowRange
         {
@@ -228,10 +201,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private static bool ShouldShowScaleTextDirection
-        {
-            get { return true; }
-        }
+        private static bool ShouldShowScaleTextDirection => true;
 
         private void cboScale_SelectedIndexChanged(object sender, EventArgs e)
         {

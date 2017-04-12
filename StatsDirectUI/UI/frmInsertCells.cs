@@ -10,20 +10,11 @@ namespace StatsDirect.UI
         private InsertShiftDirection insertShiftDirection;
         private bool isEntire;
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
-        public InsertShiftDirection InsertShiftDirection
-        {
-            get { return insertShiftDirection; }
-        }
+        public InsertShiftDirection InsertShiftDirection => insertShiftDirection;
 
-        public bool IsEntire
-        {
-            get { return isEntire; }
-        }
+        public bool IsEntire => isEntire;
 
         public frmInsertCells()
         {

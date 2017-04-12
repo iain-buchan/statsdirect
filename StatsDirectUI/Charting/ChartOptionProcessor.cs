@@ -53,7 +53,7 @@ namespace StatsDirect.Charting
                 case ChartType.Survival:
                     return PreprocessSurvivalOptions(host, parameters, dataName);
                 default:
-                    throw new ArgumentOutOfRangeException("step", step, "step.ChartType: Not all types can be plotted yet");
+                    throw new ArgumentOutOfRangeException(nameof(step), step, "step.ChartType: Not all types can be plotted yet");
             }
         }
 
@@ -202,7 +202,7 @@ namespace StatsDirect.Charting
                 ShowOptimumCutOff = true,
                 Weight = 1.0,
                 GAMMA = host.Preferences.DefaultConfidenceInterval,
-                Showopts = (pmn > amn) ? ComparisonValue.GE : ComparisonValue.LE
+                Showopts = pmn > amn ? ComparisonValue.GE : ComparisonValue.LE
             };
 
             if (parameters.ContainsKey("GAMMA"))
@@ -271,8 +271,8 @@ namespace StatsDirect.Charting
                 Slope = parameters["mdnValue"].AsDouble,
                 Intercept = parameters["interceptValue"].AsDouble,
                 FullWidth =
-                    (parameters.ContainsKey("chartIsFullWidth") &&
-                     parameters["chartIsFullWidth"].AsBoolean),
+                    parameters.ContainsKey("chartIsFullWidth") &&
+                    parameters["chartIsFullWidth"].AsBoolean,
                 Title = step.ChartTitle,
                 XAxisTitle = parameters["xtitle"].AsString,
                 YAxisTitle = parameters["ytitle"].AsString
@@ -570,7 +570,7 @@ namespace StatsDirect.Charting
             if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
             IList<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
-            bwOptions.Orientation = (definition.YSeries.Count > 0) ? ChartOrientation.Horizontal : ChartOrientation.Vertical;
+            bwOptions.Orientation = definition.YSeries.Count > 0 ? ChartOrientation.Horizontal : ChartOrientation.Vertical;
 
             bwOptions.SeriesTitles = new string[seriesToUse.Count];
             for (int i = 0; i < seriesToUse.Count; i++)
@@ -655,7 +655,7 @@ namespace StatsDirect.Charting
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = bwOptions.SeriesTitles[i];
                         // Reverse series before plotting if required
-                        if ((bwOptions.Orientation == ChartOrientation.Horizontal && definition.XSeries.Count > 0) || (bwOptions.Orientation == ChartOrientation.Vertical && definition.YSeries.Count > 0))
+                        if (bwOptions.Orientation == ChartOrientation.Horizontal && definition.XSeries.Count > 0 || bwOptions.Orientation == ChartOrientation.Vertical && definition.YSeries.Count > 0)
                         {
                             List<Series> temp = definition.YSeries;
                             definition.YSeries = definition.XSeries;
@@ -703,7 +703,7 @@ namespace StatsDirect.Charting
                         break;
                     }
                 default:
-                    throw new ArgumentOutOfRangeException("definition", definition, "definition.ChartType: Not all types can be plotted yet");
+                    throw new ArgumentOutOfRangeException(nameof(definition), definition, "definition.ChartType: Not all types can be plotted yet");
             }
         }
 

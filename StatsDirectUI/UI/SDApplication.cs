@@ -9,6 +9,7 @@ using System.Windows.Forms;
 using StatsDirect.Templates;
 using StatsDirect.Configuration;
 using StatsDirect.Data;
+using StatsDirect.TemplateProcessing;
 using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
@@ -47,7 +48,7 @@ namespace StatsDirect.UI
 
         private ParameterBag sessionParametersAcrossOperations;
 
-        private Queue<DialogAndAction> queuedDialogs;
+        private readonly Queue<DialogAndAction> queuedDialogs;
         /// <summary>
         /// If true, the UI is presently showing a dialog that was submitted using QueueDialog.
         /// </summary>
@@ -65,13 +66,7 @@ namespace StatsDirect.UI
             }
         }
 
-        internal static bool HasInstance
-        {
-            get
-            {
-                return null != soleInstance;
-            }
-        }
+        internal static bool HasInstance => null != soleInstance;
 
         /// <summary>
         /// Sole constructor.  Because this follows the singleton pattern, the constructor is private.
@@ -117,21 +112,21 @@ namespace StatsDirect.UI
             if (null != MainWindow)
                 if (MainWindow.InvokeRequired)
                 {
-                    MainWindow.Invoke(new Action(() => { DialogResult result = f.ShowDialog(MainWindow); if (null != postDisplayAction) postDisplayAction(f, result); f.Dispose(); }));
+                    MainWindow.Invoke(new Action(() => { DialogResult result = f.ShowDialog(MainWindow);
+                        postDisplayAction?.Invoke(f, result);
+                        f.Dispose(); }));
                 }
                 else
                 {
                     DialogResult result = f.ShowDialog(MainWindow);
-                    if (null != postDisplayAction)
-                        postDisplayAction(f, result);
+                    postDisplayAction?.Invoke(f, result);
                     f.Dispose();
                 }
             else
             {
                 // If there's no main window at present, we'd expect to be on the UI thread.  TODO: Prove this assumption.
                 DialogResult result = f.ShowDialog();
-                if (null != postDisplayAction)
-                    postDisplayAction(f, result);
+                postDisplayAction?.Invoke(f, result);
                 f.Dispose();
             }
 
@@ -224,7 +219,7 @@ namespace StatsDirect.UI
                 bool acceptable = true;
                 foreach (WindowInformation wi in windows)
                 {
-                    if (wi.HasWindow && (wi.Window is IGrid))
+                    if (wi.HasWindow && wi.Window is IGrid)
                     {
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Data "))
@@ -344,20 +339,11 @@ namespace StatsDirect.UI
                 windows.Remove(info);
         }
 
-        internal WindowInformation ActiveWindow
-        {
-            get { return activeWindow; }
-        }
+        internal WindowInformation ActiveWindow => activeWindow;
 
-        internal WindowInformation ActiveGrid
-        {
-            get { return activeGrid; }
-        }
+        internal WindowInformation ActiveGrid => activeGrid;
 
-        public ICollection<WindowInformation> Windows
-        {
-            get { return windows; }
-        }
+        public ICollection<WindowInformation> Windows => windows;
 
         /// <summary>
         /// A form has found itself closing by some means and has informed us.
@@ -370,10 +356,9 @@ namespace StatsDirect.UI
             WindowInformation info = (WindowInformation)window.Tag;
             if (null != info)
             {
-                if (null != info.TabPage && null != MainWindow)
-                {
-                    MainWindow.RemoveWindow(window);
-                }
+                if (null != info.TabPage)
+                    MainWindow?.RemoveWindow(window);
+
                 // Break reference cycles
                 info.Window = null;
                 info.TabPage = null;
@@ -422,7 +407,7 @@ namespace StatsDirect.UI
             else
             {
                 // Nothing in particular, guess something useful or show the ToC if we can't.
-                if (null != SoleInstance && null != SoleInstance.ActiveWindow && SoleInstance.ActiveWindow.HasWindow && (SoleInstance.ActiveWindow.Window is IGrid))
+                if (SoleInstance?.ActiveWindow != null && SoleInstance.ActiveWindow.HasWindow && SoleInstance.ActiveWindow.Window is IGrid)
                 {
                     // Grid - show the worksheet help, which is 1040.
                     Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, "1040");
@@ -434,10 +419,7 @@ namespace StatsDirect.UI
             }
         }
 
-        internal string HelpFilePath
-        {
-            get { return SDConfiguration.HelpFilePath; }
-        }
+        internal string HelpFilePath => SDConfiguration.HelpFilePath;
 
         internal int ActiveHelpTopic
         {
@@ -546,7 +528,7 @@ namespace StatsDirect.UI
                         PromptExpression = new Expression("Pick the sheet in which you want the output to appear")
                     };
                     ParameterBag results = FillSingleParameter(parameter); // Will never return a null value as the parameter cannot be skipped
-                    bool cancelled = (null == results || !results.ContainsKey(KEY));
+                    bool cancelled = null == results || !results.ContainsKey(KEY);
                     if (cancelled)
                         throw new TemplateOperationCancelledException();
                     PaneAndPosition selectedPaneAndCurrent = results[KEY].AsPaneAndPosition;
@@ -569,7 +551,7 @@ namespace StatsDirect.UI
 
         private IGrid SelectGridWindow(Pane selectedPane, ref RelativePosition writePosition)
         {
-            if (null == selectedPane || null == selectedPane.WindowInformation)
+            if (selectedPane?.WindowInformation == null)
             {
                 // Create a new grid, write at the end of it
                 IGrid grid = (IGrid)MainWindow.CreateGrid();
@@ -628,10 +610,7 @@ namespace StatsDirect.UI
             {
                 grid = (IGrid)activeGrid.Window;
                 // If we're writing multiple outputs that won't be written over the top of each other, each one is selected after it is written.  Therefore we can use that to ensure subsequent output is written directly after the initial output.
-                if (defaultPosition != RelativePosition.ReplaceSelection)
-                    writePosition = RelativePosition.AfterSelection;
-                else
-                    writePosition = defaultPosition;
+                writePosition = defaultPosition != RelativePosition.ReplaceSelection ? RelativePosition.AfterSelection : defaultPosition;
             }
             else
             {
@@ -778,7 +757,7 @@ namespace StatsDirect.UI
         /// <param name="showHelpButton"></param>
         internal void FriendlyError(string explanation, Exception ex, bool showHelpButton)
         {
-            MsgboxX(explanation + (null == ex ? string.Empty : ("\r\n" + ex.Message)), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
+            MsgboxX(explanation + (null == ex ? string.Empty : "\r\n" + ex.Message), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
         }
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
@@ -823,15 +802,9 @@ namespace StatsDirect.UI
             return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        public bool MetaPlotCI
-        {
-            get { return Preferences.MetaPlotCI; }
-        }
+        public bool MetaPlotCI => Preferences.MetaPlotCI;
 
-        public int MetaPlotMethod
-        {
-            get { return Preferences.MetaPlotMethod; }
-        }
+        public int MetaPlotMethod => Preferences.MetaPlotMethod;
 
         public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
@@ -871,7 +844,7 @@ namespace StatsDirect.UI
                 CancelSkipsParameter = "Skip"
             };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
+            cancelled = null == results || !results.ContainsKey(key) || null == results[key];
             return cancelled ? 0.0 : results[key].AsDouble;
         }
 
@@ -886,7 +859,7 @@ namespace StatsDirect.UI
                 CancelSkipsParameter = "Skip"
             };
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
+            cancelled = null == results || !results.ContainsKey(key) || null == results[key];
             return cancelled ? 0 : results[key].AsInt32;
         }
 
@@ -902,7 +875,7 @@ namespace StatsDirect.UI
             for (int i = 0; i < options.Count; i++ )
                 parameter.Options.Add(new OptionOption { Label = options[i], Value = i.ToString() });
             ParameterBag results = FillSingleParameter(parameter);
-            cancelled = (null == results || !results.ContainsKey(key) || null == results[key]);
+            cancelled = null == results || !results.ContainsKey(key) || null == results[key];
             return cancelled ? 0 : int.Parse(results[key].AsString);
         }
 
@@ -918,27 +891,20 @@ namespace StatsDirect.UI
 
         public void StartProgress(string operationDescription, bool provideProgress)
         {
-            if (null != MainWindow)
-                MainWindow.StartProgress(operationDescription, provideProgress);
+            MainWindow?.StartProgress(operationDescription, provideProgress);
         }
 
         public bool UpdateProgress(double fractionComplete)
         {
-            if (null == MainWindow)
-                return false;
-            return MainWindow.UpdateProgress(fractionComplete);
+            return null != MainWindow && MainWindow.UpdateProgress(fractionComplete);
         }
 
         public void FinishProgress()
         {
-            if (null != MainWindow)
-                MainWindow.FinishProgress();
+            MainWindow?.FinishProgress();
         }
 
-        public int PDecimalPlaces
-        {
-            get { return Properties.Settings.Default.PDecimalPlaces; }
-        }
+        public int PDecimalPlaces => Properties.Settings.Default.PDecimalPlaces;
 
         public void NoteError(Exception ex)
         {
@@ -982,14 +948,13 @@ namespace StatsDirect.UI
                 case "SummaryStatistics":
                     return Amend((Builtins.SummaryStatisticsOptions)fillable);
                 default:
-                    throw new ArgumentOutOfRangeException("fillable", fillable, "fillable.FillerToUse: Unknown option");
+                    throw new ArgumentOutOfRangeException(nameof(fillable), fillable, "fillable.FillerToUse: Unknown option");
             }
         }
 
         private ParameterBag ToggleFilters()
         {
-            if (null != MainWindow)
-                MainWindow.ToggleFilters();
+            MainWindow?.ToggleFilters();
             return new ParameterBag();
         }
 
@@ -1040,10 +1005,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public SDPreferences Preferences
-        {
-            get { return preferences ?? (preferences = LoadPreferences()); }
-        }
+        public SDPreferences Preferences => preferences ?? (preferences = LoadPreferences());
 
         public class SDPreferencesImpl : SDPreferences
         {
@@ -1179,26 +1141,11 @@ namespace StatsDirect.UI
                 }
             }
 
-            public string DECP_CHAR
-            {
-                get
-                {
-                    return System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-                }
-            }
+            public string DECP_CHAR => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
-            public string Numeric_Thousands_Separator
-            {
-                get
-                {
-                    return System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
-                }
-            }
+            public string Numeric_Thousands_Separator => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
 
-            public int MaxRows
-            {
-                get { return 64000; }
-            }
+            public int MaxRows => 64000;
 
             public bool ShouldKeepData
             {
@@ -1218,13 +1165,7 @@ namespace StatsDirect.UI
             return new SDPreferencesImpl();
         }
 
-        internal bool SelectingData
-        {
-            get
-            {
-                return null != MainWindow && MainWindow.SelectingData;
-            }
-        }
+        internal bool SelectingData => null != MainWindow && MainWindow.SelectingData;
 
         public Operation Operation { get; set; }
 
@@ -1283,8 +1224,7 @@ namespace StatsDirect.UI
                 }
             }
             Properties.Settings.Default.RecentFileList = recentFiles;
-            if (null != MainWindow)
-                MainWindow.UpdateFileList();
+            MainWindow?.UpdateFileList();
         }
 
         internal IList<string> RecentFiles
@@ -1374,7 +1314,7 @@ namespace StatsDirect.UI
                         workbookPath = worksheetOrigin.WorkbookPath;
                     else
                     {
-                        if (!(workbookPath.Equals(worksheetOrigin.WorkbookPath)))
+                        if (!workbookPath.Equals(worksheetOrigin.WorkbookPath))
                         {
                             atLeastOneFailedVariable = true;
                             break;
@@ -1398,28 +1338,13 @@ namespace StatsDirect.UI
             }
         }
 
-        public IDictionary<string, ParameterBag> SessionParametersPerOperation
-        {
-            get { return sessionParametersPerOperation ?? (sessionParametersPerOperation = new Dictionary<string, ParameterBag>()); }
-        }
+        public IDictionary<string, ParameterBag> SessionParametersPerOperation => sessionParametersPerOperation ?? (sessionParametersPerOperation = new Dictionary<string, ParameterBag>());
 
-        public ParameterBag SessionParametersAcrossOperations
-        {
-            get { return sessionParametersAcrossOperations ?? (sessionParametersAcrossOperations = new ParameterBag()); }
-        }
+        public ParameterBag SessionParametersAcrossOperations => sessionParametersAcrossOperations ?? (sessionParametersAcrossOperations = new ParameterBag());
 
-        public IDictionary<string, object> Session
-        {
-            get { return session ?? (session = new Dictionary<string, object>()); }
-        }
+        public IDictionary<string, object> Session => session ?? (session = new Dictionary<string, object>());
 
-        public string TemplateFileForNewReports
-        {
-            get
-            {
-                return Path.Combine(SDConfiguration.TemplatePath, "blank.rtf");
-            }
-        }
+        public string TemplateFileForNewReports => Path.Combine(SDConfiguration.TemplatePath, "blank.rtf");
 
         internal void ClearBatchMode()
         {
@@ -1450,14 +1375,8 @@ namespace StatsDirect.UI
             }
         }
 
-        public bool ClosingForUpgrade
-        {
-            get { return closingForUpgrade; }
-        }
+        public bool ClosingForUpgrade => closingForUpgrade;
 
-        public static bool IsRunningOnMono
-        {
-            get { return Type.GetType("Mono.Runtime") != null; }
-        }
+        public static bool IsRunningOnMono => Type.GetType("Mono.Runtime") != null;
     }
 }

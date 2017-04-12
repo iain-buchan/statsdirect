@@ -23,10 +23,7 @@ namespace StatsDirect.UI
         private bool userCancelled;
         private bool filling; // Used to prevent changes to textboxes forcing user-defined values
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
         public frmCategorise(CategoriseOptions options)
         {
@@ -226,7 +223,7 @@ namespace StatsDirect.UI
                 return;
             for (int i = 1; i <= k; i++)
             {
-                double centile = i / ((double)k);
+                double centile = i / (double)k;
 
                 switch (method)
                 {
@@ -256,7 +253,7 @@ namespace StatsDirect.UI
                         {
                             double index = Math.Floor(centile * (n + 1));
                             double h = centile * (n + 1) - index;
-                            int bottom = (index < 1) ? 1 : index > n ? n : Convert.ToInt32(index);
+                            int bottom = index < 1 ? 1 : index > n ? n : Convert.ToInt32(index);
                             int top = index + 1 > n ? n : Convert.ToInt32(index) + 1;
                             q[i] = (1.0 - h) * ao[bottom] + h * ao[top];
                         }

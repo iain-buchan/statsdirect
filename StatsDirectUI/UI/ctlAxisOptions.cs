@@ -17,15 +17,9 @@ namespace StatsDirect.UI
             tab1 = tabAxis.TabPages[1];
         }
 
-        public ctlOneAxisOptions X
-        {
-            get { return ctlOneAxisOptionsX; }
-        }
+        public ctlOneAxisOptions X => ctlOneAxisOptionsX;
 
-        public ctlOneAxisOptions Y
-        {
-            get { return ctlOneAxisOptionsY; }
-        }
+        public ctlOneAxisOptions Y => ctlOneAxisOptionsY;
 
         public bool ShowX
         {

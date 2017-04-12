@@ -46,7 +46,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
             int nx = predictorFrame.Variables[0].Length;
-            double[] x = (predictorFrame.Variables[0] as DoubleVariable).Data; //  0-based
+            double[] x = ((DoubleVariable) predictorFrame.Variables[0]).Data; //  0-based
 
             DataFrame outcomesFrame = parameters["outcomes"].AsDataFrame;
 
@@ -54,26 +54,26 @@ namespace StatsDirect.Builtins
             double tntot = 0;
             for (int j = 0; j < nx; j++)
             {
-                DoubleVariable v = outcomesFrame.Variables[j]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable) outcomesFrame.Variables[j];
                 double[] data = v.Data;
                 double ysum = 0;
                 double ysum2 = 0;
                 for (int j2 = 0; j2 <= v.Length - 1; j2++)
                 {
                     ysum += data[j2];
-                    ysum2 += (data[j2] * data[j2]);
+                    ysum2 += data[j2] * data[j2];
                 }
                 totssy += ysum2;
                 totny += v.Length;
                 totsy += ysum;
-                tntot += (ysum * ysum / Convert.ToDouble(v.Length));
+                tntot += ysum * ysum / Convert.ToDouble(v.Length);
                 sx += v.Length * x[j];
                 ssx += v.Length * x[j] * x[j];
                 sxy += x[j] * ysum;
             }
-            double totssq = totssy - (totsy * totsy / totny);
+            double totssq = totssy - totsy * totsy / totny;
             double rsdssq = totssy - tntot;
-            double regssq = (sxy - (sx * totsy / totny)) * (sxy - (sx * totsy / totny)) / (ssx - (sx * sx / totny));
+            double regssq = (sxy - sx * totsy / totny) * (sxy - sx * totsy / totny) / (ssx - sx * sx / totny);
             // ssx = ssx - sx * sx / totny; 
             // sxy = sxy - sx * totsy / totny; 
             double devssq = totssq - regssq - rsdssq;
@@ -86,19 +86,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("reg_msq", regssq);
             outputParameters.AddOutput("reg_vr", vr);
             outputParameters.AddOutput("reg_p", P);
-            vr = (devssq / Convert.ToDouble(nx - 2)) / (rsdssq / (totny - nx));
+            vr = devssq / Convert.ToDouble(nx - 2) / (rsdssq / (totny - nx));
             P = PDF.fvalp(vr, nx - 2, totny - nx);
             string Q = P <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("dev_ssq", devssq);
-            outputParameters.AddOutput("dev_df", (nx - 2));
+            outputParameters.AddOutput("dev_df", nx - 2);
             outputParameters.AddOutput("dev_msq", devssq / Convert.ToDouble(nx - 2));
             outputParameters.AddOutput("dev_vr", vr);
             outputParameters.AddOutput("dev_p", P);
             outputParameters.AddOutput("res_ssq", rsdssq);
-            outputParameters.AddOutput("res_df", (totny - nx));
+            outputParameters.AddOutput("res_df", totny - nx);
             outputParameters.AddOutput("res_msq", rsdssq / (totny - nx));
             outputParameters.AddOutput("tot_ssq", totssq);
-            outputParameters.AddOutput("tot_df", (totny - 1));
+            outputParameters.AddOutput("tot_df", totny - 1);
             outputParameters.AddOutput("reg", Q2);
             outputParameters.AddOutput("lin", Q);
             return outputParameters;
@@ -114,7 +114,7 @@ namespace StatsDirect.Builtins
             double residssq = 0; double t;
             double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
 
-            GroupedCovarianceData gcd = ((GroupedCovarianceData)(parameters["gcd"].Data));
+            GroupedCovarianceData gcd = (GroupedCovarianceData)parameters["gcd"].Data;
             double[] a = gcd.a;
             double[] b = gcd.b;
             string[] bnam = gcd.bnam;
@@ -151,7 +151,7 @@ namespace StatsDirect.Builtins
                     for (int j2 = 1; j2 <= ny[g, j]; j2++)
                     {
                         qsy += y[g, j, j2];
-                        tyy += (y[g, j, j2] * y[g, j, j2]);
+                        tyy += y[g, j, j2] * y[g, j, j2];
                     }
                     tny += ny[g, j];
                     sy += qsy;
@@ -164,23 +164,23 @@ namespace StatsDirect.Builtins
                 gtyy += tyy;
                 xmean[g] = sx / tny;
                 ymean[g] = sy / tny;
-                double ssx = txx - (sx * sx / tny);
+                double ssx = txx - sx * sx / tny;
                 rssx[g] = 1.0 / ssx;
-                double ssy = tyy - (sy * sy / tny);
-                double ssxy = txy - (sx * sy / tny);
+                double ssy = tyy - sy * sy / tny;
+                double ssxy = txy - sx * sy / tny;
                 b[g] = ssxy / ssx;
-                a[g] = (sy / tny) - b[g] * (sx / tny);
+                a[g] = sy / tny - b[g] * (sx / tny);
                 bnam[g] = g.ToString() + " (" + cx[g].Title + ")";
                 grandn += tny;
                 grandx += sx;
                 grandsqx += ssx;
                 grandsqy += ssy;
                 grandcpr += ssxy;
-                grandbit += (ssxy * ssxy / ssx);
-                residssq += ssy - (ssxy * ssxy / ssx);
-                syy += (sy * sy / tny);
-                sxx += (sx * sx / tny);
-                sxy += (sx * sy / tny);
+                grandbit += ssxy * ssxy / ssx;
+                residssq += ssy - ssxy * ssxy / ssx;
+                syy += sy * sy / tny;
+                sxx += sx * sx / tny;
+                sxy += sx * sy / tny;
                 tsx += sx;
                 tsy += sy;
                 tn += tny;
@@ -205,19 +205,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("com_msq", comssq);
             outputParameters.AddOutput("com_vr", vr);
             outputParameters.AddOutput("com_p", p);
-            vr = (btwnssq / Convert.ToDouble(k - 1)) / (residssq / (grandn - 2 * k));
+            vr = btwnssq / Convert.ToDouble(k - 1) / (residssq / (grandn - 2 * k));
             p = PDF.fvalp(vr, k - 1, grandn - 2 * k);
             string q2 = p > 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("bet_ssq", btwnssq);
-            outputParameters.AddOutput("bet_df", (k - 1));
+            outputParameters.AddOutput("bet_df", k - 1);
             outputParameters.AddOutput("bet_msq", btwnssq / Convert.ToDouble(k - 1));
             outputParameters.AddOutput("bet_vr", vr);
             outputParameters.AddOutput("bet_p", p);
             outputParameters.AddOutput("res_ssq", residssq);
-            outputParameters.AddOutput("res_df", (grandn - 2 * k));
+            outputParameters.AddOutput("res_df", grandn - 2 * k);
             outputParameters.AddOutput("res_msq", residmsq);
             outputParameters.AddOutput("grp_ssq", grandsqy);
-            outputParameters.AddOutput("grp_df", (grandn - k));
+            outputParameters.AddOutput("grp_df", grandn - k);
             outputParameters.AddOutput("com", Q);
             outputParameters.AddOutput("diff", q2);
             int degf = Convert.ToInt32(grandn - 2 * k);
@@ -250,44 +250,44 @@ namespace StatsDirect.Builtins
                     slopeParameters.AddOutput("p", p * 2.0);
                 }
             }
-            double syyb = syy - (tsy * tsy / tn);
-            double sxxb = sxx - (tsx * tsx / tn);
-            double sxyb = sxy - (tsx * tsy / tn);
-            double syyt = gtyy - (tsy * tsy / tn);
-            double sxyt = gtxy - (tsx * tsy / tn);
-            double sxxt = gtxx - (tsx * tsx / tn);
+            double syyb = syy - tsy * tsy / tn;
+            double sxxb = sxx - tsx * tsx / tn;
+            double sxyb = sxy - tsx * tsy / tn;
+            double syyt = gtyy - tsy * tsy / tn;
+            double sxyt = gtxy - tsx * tsy / tn;
+            double sxxt = gtxx - tsx * tsx / tn;
             double sxyw = gtxy - sxy;
             double sxxw = gtxx - sxx;
             double syyw = gtyy - syy;
-            double csst = syyt - (sxyt * sxyt / sxxt);
-            double cssw = syyw - (sxyw * sxyw / sxxw);
+            double csst = syyt - sxyt * sxyt / sxxt;
+            double cssw = syyw - sxyw * sxyw / sxxw;
             double cssb = csst - cssw;
             // Uncorrected
             outputParameters.AddOutput("uc_bet_yy", syyb);
             outputParameters.AddOutput("uc_bet_xy", sxyb);
             outputParameters.AddOutput("uc_bet_xx", sxxb);
-            outputParameters.AddOutput("uc_bet_df", (k - 1));
+            outputParameters.AddOutput("uc_bet_df", k - 1);
             outputParameters.AddOutput("uc_with_yy", syyw);
             outputParameters.AddOutput("uc_with_xy", sxyw);
             outputParameters.AddOutput("uc_with_xx", sxxw);
-            outputParameters.AddOutput("uc_with_df", (tnx - k));
+            outputParameters.AddOutput("uc_with_df", tnx - k);
             outputParameters.AddOutput("uc_tot_yy", syyt);
             outputParameters.AddOutput("uc_tot_xy", sxyt);
             outputParameters.AddOutput("uc_tot_xx", sxxt);
-            outputParameters.AddOutput("uc_tot_df", (tnx - 1));
+            outputParameters.AddOutput("uc_tot_df", tnx - 1);
             // Corrected
             double crWithDf = tnx - k - 1;
-            vr = (cssb / Convert.ToDouble(k - 1)) / (cssw / crWithDf);
+            vr = cssb / Convert.ToDouble(k - 1) / (cssw / crWithDf);
             p = PDF.fvalp(vr, k - 1, crWithDf);
             outputParameters.AddOutput("cr_bet_ssq", cssb);
-            outputParameters.AddOutput("cr_bet_df", (k - 1));
+            outputParameters.AddOutput("cr_bet_df", k - 1);
             outputParameters.AddOutput("cr_bet_msq", cssb / Convert.ToDouble(k - 1));
             outputParameters.AddOutput("cr_bet_vr", vr);
             outputParameters.AddOutput("cr_with_ssq", cssw);
             outputParameters.AddOutput("cr_with_df", crWithDf);
             outputParameters.AddOutput("cr_with_msq", cssw / crWithDf);
             outputParameters.AddOutput("cr_tot_ssq", csst);
-            outputParameters.AddOutput("cr_tot_df", (tnx - 2));
+            outputParameters.AddOutput("cr_tot_df", tnx - 2);
             Q = p <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("p", p);
             double bs = sxyw / sxxw;
@@ -298,8 +298,8 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag cmyParameters = new ParameterBag();
                 cmyList.Add(cmyParameters);
-                double cmy = ymean[g] + (bs * (mx0 - xmean[g]));
-                double secmy = Math.Sqrt((cssw / crWithDf) * ((1.0 / Convert.ToDouble(nxi[g]) + ((mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw))));
+                double cmy = ymean[g] + bs * (mx0 - xmean[g]);
+                double secmy = Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + (mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw));
                 cmyParameters.AddOutput("y", cmy);
                 cmyParameters.AddOutput("res", secmy);
             }
@@ -323,17 +323,17 @@ namespace StatsDirect.Builtins
             {
                 for (int j = g + 1; j <= k; j++)
                 {
-                    t = ymean[g] - ymean[j] - (bs * (xmean[g] - xmean[j]));
+                    t = ymean[g] - ymean[j] - bs * (xmean[g] - xmean[j]);
                     ParameterBag sepParameters = new ParameterBag();
                     sepList.Add(sepParameters);
                     sepParameters.AddOutput("lab1", bnam[g]);
                     sepParameters.AddOutput("lab2", bnam[j]);
                     sepParameters.AddOutput("sep", t);
-                    double zz = cit * Math.Sqrt((cssw / crWithDf) * ((1.0 / Convert.ToDouble(nxi[g])) + (1.0 / Convert.ToDouble(nxi[j])) + ((xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw)));
+                    double zz = cit * Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + 1.0 / Convert.ToDouble(nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
                     sepParameters.AddOutput("pc", Formatting.XRound((1 - p0) * 100, 2));
                     sepParameters.AddOutput("fromSep", t - zz);
                     sepParameters.AddOutput("toSep", t + zz);
-                    t = t / Math.Sqrt((cssw / crWithDf) * ((1.0 / Convert.ToDouble(nxi[g])) + (1.0 / Convert.ToDouble(nxi[j])) + ((xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw)));
+                    t = t / Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + 1.0 / Convert.ToDouble(nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
                     sepParameters.AddOutput("t", t);
                     sepParameters.AddOutput("df", tnx - k - 1);
                     p = PDF.tvalp(Math.Abs(t), crWithDf);
@@ -362,7 +362,7 @@ namespace StatsDirect.Builtins
 
             // bool OK = false; 
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;
-            ClassifierVariable stratumVariable = stratumFrame.Variables[0] as ClassifierVariable;
+            ClassifierVariable stratumVariable = (ClassifierVariable) stratumFrame.Variables[0];
             int rows = stratumVariable.Length;
             int[] isi = new int[rows + 1];
             int[] ic = new int[rows + 1];
@@ -383,7 +383,7 @@ namespace StatsDirect.Builtins
                 stratlab[i] = stratumVariable.Groups[i - 1].Label;
 
             DataFrame caseControlFrame = parameters["case-control"].AsDataFrame;
-            DoubleVariable caseControlVariable = caseControlFrame.Variables[0]as DoubleVariable;
+            DoubleVariable caseControlVariable = (DoubleVariable) caseControlFrame.Variables[0];
             for (int i = 1; i <= rows; i++)
             {
                 //  Pre-validated to 0 or 1
@@ -400,7 +400,7 @@ namespace StatsDirect.Builtins
             ColumnData[] cd = new ColumnData[cols + 1];
             for (int c = 1; c <= cols; c++)
             {
-                DoubleVariable v = predictorsFrame.Variables[c - 1]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable) predictorsFrame.Variables[c - 1];
                 cd[c] = new ColumnData { Title = v.Title };
 
                 for (int r = 1; r <= rows; r++)
@@ -424,7 +424,7 @@ namespace StatsDirect.Builtins
             }
 
             double[] b = new double[cols + 1];
-            double[] cov = new double[((int)(Math.Floor((double)cols * (cols + 1) / 2))) + 1];
+            double[] cov = new double[(int)Math.Floor((double)cols * (cols + 1) / 2) + 1];
             double[] sc = new double[cols + 1 ];
             double[] se = new double[cols + 1];
             int[] isz = new int[cols + 1];
@@ -598,13 +598,11 @@ namespace StatsDirect.Builtins
             dev = Constant.MISSING;
 
             if (m < 1 || n < 2 || ns < 1 || ip < 1 || ldz < n)
-            {
                 return;
-            }
             int j = 0;
             for (int i = 1; i <= m; i++)
             {
-                if ((isz[i] < 0))
+                if (isz[i] < 0)
                     return;
 
                 if (isz[i] > 0)
@@ -675,7 +673,7 @@ namespace StatsDirect.Builtins
                 int l = isi[i];
                 if (l > 0)
                 {
-                    if ((ic[i] == 0))
+                    if (ic[i] == 0)
                     {
                         k = nca[l];
                         nca[l] = k + 1;
@@ -756,9 +754,7 @@ namespace StatsDirect.Builtins
                 else
                     se[i] = 0.0;
             }
-
         }
-
 
         private static void clmain2(int nobs, int maxobs, int ns, double[,] z, int[] nca, int[] nct, int ip, out double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault)
         {
@@ -1172,7 +1168,7 @@ namespace StatsDirect.Builtins
                 return;
             }
 
-            bool nounit = (udiag == false);
+            bool nounit = udiag == false;
 
             if (incx <= 0)
             {
@@ -1184,7 +1180,7 @@ namespace StatsDirect.Builtins
             }
             if (ntrans)
             {
-                kk = idap + (n * (n + 1)) / 2 - 1;
+                kk = idap + n * (n + 1) / 2 - 1;
                 jx = kx + (n - 1) * incx;
                 for (j = n; j >= 1; j--)
                 {
@@ -1261,7 +1257,7 @@ namespace StatsDirect.Builtins
             {
                 return;
             }
-            bool nounit = (udiag == false);
+            bool nounit = udiag == false;
             if (incx <= 0)
             {
                 kx = idx - (n - 1) * incx;
@@ -1297,7 +1293,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                kk = idap + (n * (n + 1)) / 2 - 1;
+                kk = idap + n * (n + 1) / 2 - 1;
                 jx = kx + (n - 1) * incx;
                 for (j = n; j >= 1; j--)
                 {
@@ -1326,7 +1322,7 @@ namespace StatsDirect.Builtins
         private static void dtptri(bool udiag, int n, double[] ap, out int info)
         {
             info = 0;
-            bool nounit = (udiag == false);
+            bool nounit = udiag == false;
             if (n < 0)
             {
                 info = -3;

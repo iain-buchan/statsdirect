@@ -7,9 +7,6 @@ namespace StatsDirect.Builtins
     /// </summary>
     public sealed class GraphicsOptions : IFillable
     {
-        public string FillerToUse
-        {
-            get { return "GraphicsOptions"; }
-        }
+        public string FillerToUse => "GraphicsOptions";
     }
 }

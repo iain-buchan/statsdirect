@@ -4,7 +4,7 @@ namespace StatsDirect.Numerics
 {
     public static class Expnos
     {
-        private static readonly double[] q = { Double.NaN, // 1-based
+        private static readonly double[] q = { double.NaN, // 1-based
             -0.2995732273553875e+01, -0.2302585092993988e+01,
             -0.1897119984885843e+01, -0.1609437912434071e+01,
             -0.1386294361119867e+01, -0.1203972804325917e+01,
@@ -83,7 +83,7 @@ namespace StatsDirect.Numerics
             0.2021547563260935e+01, 0.2028148247292287e+01
         };
 
-        private static readonly double[] r = { Double.NaN, // 1-based
+        private static readonly double[] r = { double.NaN, // 1-based
             -0.1476596622751468e-13,-0.2176037128265329e-13,
             -0.3186340080674248e-13,-0.4662936703425763e-13,
             -0.6805667140952435e-13,-0.9914291609903131e-13,
@@ -238,7 +238,7 @@ namespace StatsDirect.Numerics
             -0.3145868591044658e+02,-0.3184645144145535e+02
         };
 
-        private static readonly double[] s = { Double.NaN, // 1-based
+        private static readonly double[] s = { double.NaN, // 1-based
             -0.2979893853320468e+02,-0.2942018853320467e+02,
             -0.2904393853320467e+02,-0.2867018853320467e+02,
             -0.2829893853320467e+02,-0.2793018853320467e+02,

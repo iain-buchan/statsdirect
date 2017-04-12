@@ -35,7 +35,7 @@ namespace StatsDirect.UI
             }
             set
             {
-                if (fillStyle != value && value >= 0 && ((int)value) < cboFillStyle.Items.Count)
+                if (fillStyle != value && value >= 0 && (int)value < cboFillStyle.Items.Count)
                 {
                     fillStyle = value;
                     cboFillStyle.SelectedIndex = (int)value;

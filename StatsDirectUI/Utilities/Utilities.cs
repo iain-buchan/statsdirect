@@ -20,15 +20,14 @@ namespace StatsDirect.Utilities
         {
             string[] fontStrings = descriptor.Split(';');
             string familyName = fontStrings[0];
-            FontStyle style = ((FontStyle)(Parsing.Cint_Txt(fontStrings[1])));
+            FontStyle style = (FontStyle)Parsing.Cint_Txt(fontStrings[1]);
             float emSize = float.Parse(fontStrings[2]);
             return new Font(familyName, emSize, style);
         }
 
         public static string SaveStringFromFont(Font f)
         {
-            return f.FontFamily.Name + ";" + ((int)f.Style).ToString() + ";" + f.Size.ToString();
+            return f.FontFamily.Name + ";" + (int)f.Style + ";" + f.Size;
         }
-
     }
 }

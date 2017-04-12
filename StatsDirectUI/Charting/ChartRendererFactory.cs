@@ -100,9 +100,9 @@ namespace StatsDirect.Charting
                     for (calcx = xs.Min; calcx <= xs.Max; calcx += (xs.Max - xs.Min) / 20.0)
                     {
                         double calcy = slope * calcx + intercept;
-                        double sey = Math.Sqrt(MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((calcx - (SUMX / Convert.ToDouble(nx))), 2.0) / SSX)));
-                        double pconu = calcy + (sey * PERT);
-                        double pconl = calcy - (sey * PERT);
+                        double sey = Math.Sqrt(MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow(calcx - SUMX / Convert.ToDouble(nx), 2.0) / SSX)));
+                        double pconu = calcy + sey * PERT;
+                        double pconl = calcy - sey * PERT;
                         if (pconu > maxpcon)
                             maxpcon = pconu;
                         if (pconl < minpcon)

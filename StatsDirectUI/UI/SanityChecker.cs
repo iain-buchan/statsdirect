@@ -42,10 +42,10 @@ namespace StatsDirect.UI
                 steps[i].Accept(new StepChecker(prefix + "[" + i + "]"));
         }
 
-        private static void CheckAllDynamicContentCompiles(IList<Parameter> parameters, string prefix)
+        private static void CheckAllDynamicContentCompiles(IList<Parameter> parameters)
         {
             for (int i = 0; i < parameters.Count; i++)
-                parameters[i].Accept(new ParameterChecker(prefix + "[" + i + "]"));
+                parameters[i].Accept(new ParameterChecker());
         }
 
         private static void CheckAllDynamicContentCompiles(SuggestedOperation suggestedOperation, string prefix)
@@ -64,9 +64,7 @@ namespace StatsDirect.UI
 
         private static void CheckAllDynamicContentCompiles(Expression condition, string prefix)
         {
-            if (null == condition)
-                return;
-            if (null == condition.Body)
+            if (condition?.Body == null)
                 return;
             if (!condition.Body.StartsWith("="))
                 return;
@@ -80,7 +78,7 @@ namespace StatsDirect.UI
 
         private static void CheckScript(string language, string script, ScriptType scriptType, string entryPoint, string identifier)
         {
-            IScriptEngine engine = ((ITemplateHost)(SdApplication.SoleInstance)).GetScriptEngine(language);
+            IScriptEngine engine = ((ITemplateHost)SdApplication.SoleInstance).GetScriptEngine(language);
             string result = engine.Check(language, script, scriptType, entryPoint);
             if (null != result)
                 throw new Exception(identifier + " failed: " + result);
@@ -88,13 +86,6 @@ namespace StatsDirect.UI
 
         private class ParameterChecker : IParameterVisitor
         {
-            private string prefix;
-
-            public ParameterChecker(string prefix)
-            {
-                this.prefix = prefix;
-            }
-
             private void CheckCommon(Parameter parameter)
             {
                 CheckAllDynamicContentCompiles(parameter.AcquireIfTrueExpression, ".AcquireIfTrueExpression");
@@ -221,7 +212,7 @@ namespace StatsDirect.UI
 
         private class StepChecker : IStepVisitor
         {
-            private string prefix;
+            private readonly string prefix;
 
             public StepChecker(string prefix)
             {
@@ -235,7 +226,7 @@ namespace StatsDirect.UI
 
             public void Visit(ParametersStep step)
             {
-                CheckAllDynamicContentCompiles(step.Parameters, prefix + ".Parameters");
+                CheckAllDynamicContentCompiles(step.Parameters);
             }
 
             public void Visit(ScriptStep step)

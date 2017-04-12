@@ -25,7 +25,7 @@ namespace StatsDirect.UI
             set
             {
                 pic.Image = value;
-                aspectRatio = value.Width / ((double)value.Height);
+                aspectRatio = value.Width / (double)value.Height;
                 SetHeight();
             }
         }

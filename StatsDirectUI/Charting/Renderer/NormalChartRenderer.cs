@@ -79,7 +79,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         internal ParameterBag PlotNormal(double[] y)
         {
-            NormalOptions nOptions = ((NormalOptions)(definition.ChartOptions));
+            NormalOptions nOptions = (NormalOptions)definition.ChartOptions;
             NormalOptions.ScoreMethod method = nOptions.Method;
             bool shouldScaleZ = nOptions.ShouldScaleZ;
 

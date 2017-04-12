@@ -10,7 +10,7 @@ namespace StatsDirect.UI
         {
             // There's no way of autosizing a combo... so we do it by hand!
             float maximumItemWidth = MaximumItemWidth(cbo);
-            int vertScrollBarWidth = (cbo.Items.Count > cbo.MaxDropDownItems) ? SystemInformation.VerticalScrollBarWidth : 0;
+            int vertScrollBarWidth = cbo.Items.Count > cbo.MaxDropDownItems ? SystemInformation.VerticalScrollBarWidth : 0;
             int currentTextWidth = cbo.DropDownWidth - vertScrollBarWidth;
             // Prefer to grow but not shrink
             int preferredTextWidth = (int)Math.Max(currentTextWidth, maximumItemWidth);

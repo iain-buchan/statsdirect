@@ -8,7 +8,7 @@
             Max = max;
         }
 
-        public double Min { get; private set; }
-        public double Max { get; private set; }
+        public double Min { get; }
+        public double Max { get; }
     }
 }

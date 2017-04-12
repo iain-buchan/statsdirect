@@ -32,19 +32,13 @@ namespace StatsDirect.Charting
             Title = title;
         }
 
-        public int Points
-        {
-            get
-            {
-                return Data.Length;
-            }
-        }
+        public int Points => Data.Length;
 
         public double Sum
         {
             get
             {
-                if (!(hasSum))
+                if (!hasSum)
                 {
                     double s = 0.0;
                     for (int i = Data.GetLowerBound(0); i <= Data.GetUpperBound(0); i++)
@@ -61,7 +55,7 @@ namespace StatsDirect.Charting
         {
             get
             {
-                if (!(hasStdDev))
+                if (!hasStdDev)
                 {
                     double avg = Sum / Convert.ToDouble(Points);
                     double ep = 0.0; double var = 0.0;
@@ -83,7 +77,7 @@ namespace StatsDirect.Charting
         {
             get
             {
-                if (!(hasMinMax))
+                if (!hasMinMax)
                     CalcMinMax();
                 return min;
             }
@@ -93,7 +87,7 @@ namespace StatsDirect.Charting
         {
             get
             {
-                if (!(hasMinMax))
+                if (!hasMinMax)
                     CalcMinMax();
                 return minGreaterThanZero;
             }
@@ -103,7 +97,7 @@ namespace StatsDirect.Charting
         {
             get
             {
-                if (!(hasMinMax))
+                if (!hasMinMax)
                     CalcMinMax();
                 return max;
             }
@@ -133,12 +127,6 @@ namespace StatsDirect.Charting
             hasMinMax = true;
         }
 
-        public override DoubleSeries AsDoubleSeries
-        {
-            get
-            {
-                return this;
-            }
-        }
+        public override DoubleSeries AsDoubleSeries => this;
     }
 }

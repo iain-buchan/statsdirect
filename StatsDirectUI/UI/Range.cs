@@ -14,9 +14,6 @@ namespace StatsDirect.UI
             areas = new List<Area>(Areas);
         }
 
-        public IList<Area> Areas
-        {
-            get { return areas; }
-        }
+        public IList<Area> Areas => areas;
     }
 }

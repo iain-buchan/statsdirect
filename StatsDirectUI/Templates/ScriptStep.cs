@@ -41,10 +41,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public override bool RequiresGrid
-        {
-            get { return requiresGrid; }
-        }
+        public override bool RequiresGrid => requiresGrid;
 
         public override void Accept(IStepVisitor visitor)
         {

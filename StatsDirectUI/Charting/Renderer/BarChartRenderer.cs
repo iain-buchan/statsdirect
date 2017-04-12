@@ -15,7 +15,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            BarOptions bOptions = ((BarOptions)(definition.ChartOptions));
+            BarOptions bOptions = (BarOptions)definition.ChartOptions;
 
             // No false origins
             DataMinY = 0;
@@ -85,7 +85,7 @@ namespace StatsDirect.Charting.Renderer
             definition = definition.Clone();
 
             IList<Series> seriesToUse = definition.YSeries;
-            BarOptions bOptions = ((BarOptions)(definition.ChartOptions));
+            BarOptions bOptions = (BarOptions)definition.ChartOptions;
 
             string xAxisTitle = bOptions.XAxisTitle;
             string yAxisTitle = bOptions.YAxisTitle;
@@ -155,7 +155,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
-            bool shouldDrawLegend = bOptions.Stacked || (bOptions.ShowLegend && bOptions.ShowLegendIsRelevant);
+            bool shouldDrawLegend = bOptions.Stacked || bOptions.ShowLegend && bOptions.ShowLegendIsRelevant;
 
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             StartVectorPlot();
@@ -170,7 +170,7 @@ namespace StatsDirect.Charting.Renderer
             double legendSpaceRequired = 0;
             if (shouldDrawLegend)
             {
-                double legendBottom = legendTop - (seriesToUse.Count * legendSpacing);
+                double legendBottom = legendTop - seriesToUse.Count * legendSpacing;
                 if (legendBottom < LOWEST_ALLOWED_LEGEND)
                 {
                     legendSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
@@ -217,7 +217,7 @@ namespace StatsDirect.Charting.Renderer
                     new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired },
                     new AxisDefinition(yAxisTitle, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles },
                     bOptions.ShouldBoxAxes, false);
-                divy = ((DoubleSeries)(seriesToUse[0])).Points;
+                divy = ((DoubleSeries)seriesToUse[0]).Points;
                 offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
 
                 double eachAreaHeight = yExtCanvas / divy;
@@ -319,7 +319,7 @@ namespace StatsDirect.Charting.Renderer
                                     {
                                         FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
                                     }
-                                    if (!(definition.ChartOptions.UseColour))
+                                    if (!definition.ChartOptions.UseColour)
                                     {
                                         DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
                                     }
@@ -332,10 +332,10 @@ namespace StatsDirect.Charting.Renderer
                     if (shouldDrawLegend)
                     {
                         if (barBrush != null)
-                            FillRectangleInCanvasCoordinates(barBrush, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        if (!(definition.ChartOptions.UseColour))
-                            DrawRectangleInCanvasCoordinates(barPen, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        DrawStringLegendL(definition.XSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - (c * legendSpacing));
+                            FillRectangleInCanvasCoordinates(barBrush, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                        if (!definition.ChartOptions.UseColour)
+                            DrawRectangleInCanvasCoordinates(barPen, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                        DrawStringLegendL(definition.XSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
                     }
 
                     if (barBrush != null)
@@ -364,7 +364,7 @@ namespace StatsDirect.Charting.Renderer
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
                 AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
-                divx = ((DoubleSeries)(seriesToUse[0])).Points;
+                divx = ((DoubleSeries)seriesToUse[0]).Points;
                 offx = -(0 / divx * xExtCanvas) + xAxisCanvas;
 
                 double eachAreaWidth = xExtCanvas / divx;
@@ -473,7 +473,7 @@ namespace StatsDirect.Charting.Renderer
 
                                     if (barBrush != null)
                                         FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
-                                    if (!(definition.ChartOptions.UseColour))
+                                    if (!definition.ChartOptions.UseColour)
                                         DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
                                 }
                             }
@@ -484,10 +484,10 @@ namespace StatsDirect.Charting.Renderer
                     if (shouldDrawLegend)
                     {
                         if (barBrush == null)
-                            DrawRectangleInCanvasCoordinates(barPen, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
+                            DrawRectangleInCanvasCoordinates(barPen, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
                         else
-                            FillRectangleInCanvasCoordinates(barBrush, xAxisCanvas, legendTop - (c * legendSpacing), legendRowHeight, legendRowHeight);
-                        DrawStringLegendL(definition.YSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - (c * legendSpacing));
+                            FillRectangleInCanvasCoordinates(barBrush, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                        DrawStringLegendL(definition.YSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
                     }
 
                     if (barBrush != null)

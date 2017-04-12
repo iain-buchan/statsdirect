@@ -204,7 +204,7 @@ namespace StatsDirect.Builtins
                                     first = false;
                                 else
                                     sw.Write(delimiter);
-                                string buf = (v.Length > r) ? v.Data[r] : string.Empty;
+                                string buf = v.Length > r ? v.Data[r] : string.Empty;
                                 sw.Write(ToCsvCell(buf));
                             }
                             sw.WriteLine();

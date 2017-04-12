@@ -6,6 +6,7 @@ using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.UI
 {
@@ -14,7 +15,7 @@ namespace StatsDirect.UI
     /// </summary>
     class GridSelectionProcessor
     {
-        private IGrid grid;
+        private readonly IGrid grid;
 
         public GridSelectionProcessor(IGrid g)
         {
@@ -32,7 +33,7 @@ namespace StatsDirect.UI
                 bool userCancelled;
                 bool wasPivoted;
                 DataFrame frame;
-                if (frameParameter.ColumnsAreSameLength || frameParameter.HasLength || (null != frameParameter.SameLengthAsParameter && frameParameter.SameLengthAsParameter.Count > 0))
+                if (frameParameter.ColumnsAreSameLength || frameParameter.HasLength || null != frameParameter.SameLengthAsParameter && frameParameter.SameLengthAsParameter.Count > 0)
                 {
                     int requiredLength = 0;
                     if (frameParameter.HasLength)
@@ -256,7 +257,7 @@ namespace StatsDirect.UI
                                     rows = repeatFrame.MinRows;
                                     cols = repeatFrame.VariableCount;
                                     frame.EnsureVariablesSquare(rows, cols);
-                                    foreach (List<Variable> vl in frame.Variables)
+                                    foreach (IList<Variable> vl in frame.Variables)
                                     {
                                         for (int i = 0; i < vl.Count; i++)
                                         {
@@ -279,10 +280,10 @@ namespace StatsDirect.UI
                                 {
                                     for (int c = 0; c < cols; c++)
                                     {
-                                        DoubleVariable v = repeatFrame.Variables[c]as DoubleVariable;
+                                        DoubleVariable v = (DoubleVariable)repeatFrame.Variables[c];
                                         // 'CDAT2(rpt, c) = CDAT1(c)
                                         for (int r = 0; r < rows; r++)
-                                            (frame.Variables[r][c] as DoubleVariable).Data[rpt - 1] = v.Data[r];
+                                            ((DoubleVariable)frame.Variables[r][c]).Data[rpt - 1] = v.Data[r];
                                         if (0 == c)
                                             frame.Name += repeatFrame.Variables[c].Title;
                                         else
@@ -296,7 +297,7 @@ namespace StatsDirect.UI
                         }
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("parameter", frame2dParameter.DataAcquisitionMode, "Only GroupThenBlock and BlockThenGroup are known");
+                        throw new ArgumentOutOfRangeException(nameof(parameter), frame2dParameter.DataAcquisitionMode, "Only GroupThenBlock and BlockThenGroup are known");
                 }
             }
         }
@@ -368,10 +369,10 @@ namespace StatsDirect.UI
                 {
                     minMax = new MinMax
                     {
-                        MinX = Double.MaxValue,
-                        MaxX = Double.MinValue,
-                        MinY = Double.MaxValue,
-                        MaxY = Double.MinValue
+                        MinX = double.MaxValue,
+                        MaxX = double.MinValue,
+                        MinY = double.MaxValue,
+                        MaxY = double.MinValue
                     };
                     bool cancelled;
                     bool wasPivoted;
@@ -388,7 +389,7 @@ namespace StatsDirect.UI
                     cx = new ColumnData[k + 1];
                     for (int c = 1; c <= k; c++)
                     {
-                        DoubleVariable v = predictorsFrame.Variables[c - 1]as DoubleVariable;
+                        DoubleVariable v = (DoubleVariable)predictorsFrame.Variables[c - 1];
                         cx[c] = new ColumnData { Title = v.Title, Rows = v.Length, Sum = v.Sum };
                         xlab += v.Title + " ";
                         for (int r = 1; r <= cx[c].Rows; r++)
@@ -434,7 +435,7 @@ namespace StatsDirect.UI
                             if (replicatesFrame.MaxRows > maxreps)
                             {
                                 maxreps = replicatesFrame.MaxRows;
-                                double[, ,] yNew = new double[k + 1, maxr + 1, maxreps + 1];
+                                double[,,] yNew = new double[k + 1, maxr + 1, maxreps + 1];
                                 for (int i0 = 0; i0 <= y.GetUpperBound(0); i0++)
                                     for (int i1 = 0; i1 <= y.GetUpperBound(1); i1++)
                                         for (int i2 = 0; i2 <= y.GetUpperBound(2); i2++)
@@ -443,7 +444,7 @@ namespace StatsDirect.UI
                             }
                             for (int j = 1; j <= nx; j++)
                             {
-                                DoubleVariable v = replicatesFrame.Variables[j - 1]as DoubleVariable;
+                                DoubleVariable v = (DoubleVariable)replicatesFrame.Variables[j - 1];
                                 ny[g, j] = v.Length;
                                 for (int j2 = 1; j2 <= ny[g, j]; j2++)
                                 {
@@ -461,7 +462,7 @@ namespace StatsDirect.UI
                         else
                         {
                             // Get single column values for y
-                            double[, ,] yNew = new double[k + 1, maxr + 1, 2];
+                            double[,,] yNew = new double[k + 1, maxr + 1, 2];
                             for (int i0 = 0; i0 <= y.GetUpperBound(0); i0++)
                                 for (int i1 = 0; i1 <= y.GetUpperBound(1); i1++)
                                     for (int i2 = 0; i2 <= y.GetUpperBound(2); i2++)
@@ -471,7 +472,7 @@ namespace StatsDirect.UI
                             DataFrame outcomeFrame = GetCellEqual(nx, DataAcquisitionMode.NumericSkipMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, "Select Data for OUTCOME (Y) for PREDICTOR " + g + " {" + cx[g].Title.Substring(0, Math.Min(20, cx[g].Title.Length)) + "}", null, false, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted, 0);
                             if (cancelled || wasPivoted)
                                 break; // Failed selection, go round again
-                            DoubleVariable outcomeVariable = outcomeFrame.Variables[0]as DoubleVariable;
+                            DoubleVariable outcomeVariable = (DoubleVariable)outcomeFrame.Variables[0];
                             for (int j = 1; j <= nx; j++)
                             {
                                 ny[g, j] = 1;
@@ -524,6 +525,7 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="requiredRows">If 0, no further requirement.  If non-zero, all rows must be requiredRows in length.</param>
         /// <param name="mode">The way in which the acquired data will be placed into the data structure</param>
+        /// <param name="groupIdentifierMode"></param>
         /// <param name="minimumColumns">The smallest acceptable number of columns</param>
         /// <param name="maximumColumns">The largest acceptable number of columns</param>
         /// <param name="selectionMessage">The prompt for the user</param>
@@ -533,6 +535,7 @@ namespace StatsDirect.UI
         /// <param name="mightBeBatching">If true, we might be selecting data in a batch.  If batching, GetCellEqual should remember where its data came from and should re-select if such memory is present.  If not batching, GetCellEqual should clear memory and not pre-select.</param>
         /// <param name="userCancelled">Output. If true, the user explicitly cancelled the operation; if false, the data is valid or the user selected no data but did not explicitly cancel.</param>
         /// <param name="wasPivoted">If true, the user switched from selecting groups by column to by identifier or vice versa.</param>
+        /// <param name="originGroup"></param>
         /// <returns></returns>
         private DataFrame GetCellEqual(int requiredRows, DataAcquisitionMode mode, GroupIdentifierMode groupIdentifierMode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, DataAcquisitionWidth width, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
@@ -551,7 +554,7 @@ namespace StatsDirect.UI
                         isLong = true;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("width");
+                        throw new ArgumentOutOfRangeException(nameof(width));
                 }
                 DataFrame frame;
                 if (isLong)
@@ -627,6 +630,7 @@ namespace StatsDirect.UI
         /// <param name="maximumColumns">Maximum number of variables</param>
         /// <param name="userCancelled"></param>
         /// <param name="wasPivoted"></param>
+        /// <param name="originGroup"></param>
         /// <returns></returns>
         private DataFrame Gidx1(DataAcquisitionMode mode, int minimumColumns, int maximumColumns, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
@@ -641,7 +645,7 @@ namespace StatsDirect.UI
                 if (userCancelled || wasPivoted)
                     return null;
 
-                ClassifierVariable groupIdVariable = groupIdFrame.Variables[0] as ClassifierVariable;
+                ClassifierVariable groupIdVariable = (ClassifierVariable)groupIdFrame.Variables[0];
 
                 if (groupIdVariable.GroupCount < minimumColumns || groupIdVariable.GroupCount > maximumColumns)
                 {
@@ -665,7 +669,7 @@ namespace StatsDirect.UI
                 if (userCancelled || wasPivoted)
                     return null;
 
-                DoubleVariable dataVariable = dataFrame.Variables[0]as DoubleVariable;
+                DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
 
                 DataFrame outputFrame = new DataFrame();
                 for (int i = 0; i < groupIdVariable.GroupCount; i++)
@@ -711,6 +715,7 @@ namespace StatsDirect.UI
         /// <param name="max"></param>
         /// <param name="userCancelled"></param>
         /// <param name="wasPivoted"></param>
+        /// <param name="originGroup"></param>
         /// <returns></returns>
         private DataFrame Gidx2(int min, int max, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
@@ -727,7 +732,7 @@ namespace StatsDirect.UI
                 DataFrame treatmentFrame = grid.GetCellArray(0, DataAcquisitionMode.GroupIdentifiers, 1, 1, labt, null, true, false, out userCancelled, out wasPivoted, originGroup);
                 if (userCancelled || wasPivoted)
                     return null;
-                ClassifierVariable treatmentVariable = treatmentFrame.Variables[0] as ClassifierVariable;
+                ClassifierVariable treatmentVariable = (ClassifierVariable)treatmentFrame.Variables[0];
                 int treatment_cats = treatmentVariable.GroupCount;
                 double[] treatment_gid = treatmentVariable.Data;
                 string[] treatment_gcat = new string[treatment_cats];
@@ -755,7 +760,7 @@ namespace StatsDirect.UI
                 // call for block ID
                 ClearSelection();
                 DataFrame blockFrame = grid.GetCellArray(0, DataAcquisitionMode.GroupIdentifiers, 1, 1, labb, null, true, false, out userCancelled, out wasPivoted, originGroup);
-                ClassifierVariable blockVariable = blockFrame.Variables[0] as ClassifierVariable;
+                ClassifierVariable blockVariable = (ClassifierVariable)blockFrame.Variables[0];
                 if (userCancelled || wasPivoted)
                     return null;
                 double[] block_gid = blockVariable.Data;
@@ -766,11 +771,11 @@ namespace StatsDirect.UI
 
                 if (block_maxgn > treatment_cats)
                 {
-                    SdApplication.SoleInstance.Error("Two way ANOVA requires only one observation per block - you entered " + (block_maxgn / (double)treatment_cats) + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
+                    SdApplication.SoleInstance.Error("Two way ANOVA requires only one observation per block - you entered " + block_maxgn / (double)treatment_cats + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
                     continue;
                 }
 
-                int rows = (treatmentVariable.Length < blockVariable.Length) ? treatmentVariable.Length : blockVariable.Length;
+                int rows = treatmentVariable.Length < blockVariable.Length ? treatmentVariable.Length : blockVariable.Length;
 
                 // call for data
                 ClearSelection();
@@ -778,7 +783,7 @@ namespace StatsDirect.UI
                 if (userCancelled || wasPivoted)
                     return null;
 
-                DoubleVariable dataVariable = dataFrame.Variables[0]as DoubleVariable;
+                DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
                 double[] dt = dataVariable.Data;
 
                 DataFrame outputFrame = new DataFrame();
@@ -791,7 +796,7 @@ namespace StatsDirect.UI
                     for (int j = 0; j < rows; j++)
                         if (treatment_gid[j] == treatment_g[i])
                             data[(int)block_gid[j]] = dt[j];
-                    string title = dataVariable.Title + ((treatment_cats > 1) ? "_" + treatmentVariable.Title + "_" + treatment_gcat[i] : string.Empty);
+                    string title = dataVariable.Title + (treatment_cats > 1 ? "_" + treatmentVariable.Title + "_" + treatment_gcat[i] : string.Empty);
                     outputFrame.Variables.Add(new DoubleVariable(data, title));
                 }
                 return outputFrame;
@@ -808,6 +813,7 @@ namespace StatsDirect.UI
         /// <param name="mode"></param>
         /// <param name="userCancelled"></param>
         /// <param name="wasPivoted"></param>
+        /// <param name="originGroup"></param>
         /// <returns></returns>
         private DataFrame2D Gidx3(int min, int max, int neq, string subGroupSelectionLabel, DataAcquisitionMode2D mode, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
@@ -819,7 +825,7 @@ namespace StatsDirect.UI
             if (wasPivoted)
                 return null;
 
-            ClassifierVariable groupVariable = groupFrame.Variables[0] as ClassifierVariable;
+            ClassifierVariable groupVariable = (ClassifierVariable)groupFrame.Variables[0];
             int rows = groupVariable.Length;
             int cats = groupVariable.GroupCount;
             double[] gid = groupVariable.Data;
@@ -858,7 +864,7 @@ namespace StatsDirect.UI
             DataFrame subGroupFrame = GetCellEqual(rows, DataAcquisitionMode.GroupIdentifiers, GroupIdentifierMode.GroupIdentifier, 1, 1, subGroupSelectionLabel, null, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted, originGroup);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
-            ClassifierVariable subGroupVariable = subGroupFrame.Variables[0] as ClassifierVariable;
+            ClassifierVariable subGroupVariable = (ClassifierVariable)subGroupFrame.Variables[0];
 
             int scats = subGroupVariable.GroupCount;
             double[] sgid = subGroupVariable.Data;
@@ -871,7 +877,7 @@ namespace StatsDirect.UI
             for (int i = 0; i < scats; i++)
             {
                 sgcat[i] = subGroupVariable.Groups[i].Label;
-                sg[i] = (double)i;
+                sg[i] = i;
                 int sgin = subGroupVariable.Groups[i].NBin;
                 if (sgin > maxsgn)
                     maxsgn = sgin;
@@ -883,7 +889,7 @@ namespace StatsDirect.UI
             DataFrame dataFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, "Select DATA column", null, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted, originGroup);
             if (userCancelled)
                 throw new TemplateOperationCancelledException();
-            DoubleVariable dataVariable = dataFrame.Variables[0]as DoubleVariable;
+            DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
 
             string dlab = dataVariable.Title;
             double[] dt = dataVariable.Data;
@@ -934,12 +940,11 @@ namespace StatsDirect.UI
                                     {
                                         if (null == resultFrame.Variables[subGroup][group])
                                         {
-                                            DoubleVariable v = new DoubleVariable(); // TODO: Origin
-                                            v.Title = groupVariable.Title + "_" + gcat[(int)g[group]] + " (" + subGroupVariable.Title + "_" + sgcat[(int)sg[subGroup]] + ")";
+                                            DoubleVariable v = new DoubleVariable { Title = groupVariable.Title + "_" + gcat[(int)g[group]] + " (" + subGroupVariable.Title + "_" + sgcat[(int)sg[subGroup]] + ")" }; // TODO: Origin
                                             v.EnsureLength(maxsgn, Constant.MISSING);
                                             resultFrame.Variables[subGroup][group] = v;
                                         }
-                                        (resultFrame.Variables[subGroup][group] as DoubleVariable).Data[cnt++] = dt[row];
+                                        ((DoubleVariable)resultFrame.Variables[subGroup][group]).Data[cnt++] = dt[row];
                                     }
                                 }
                                 highestCnt = Math.Max(highestCnt, cnt);
@@ -1137,7 +1142,7 @@ namespace StatsDirect.UI
                 }
         */
 
-        private bool Gidxyr(out double[,] x, ref double[, ,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax)
+        private bool Gidxyr(out double[,] x, ref double[,,] y, ref int ng, ref int maxgn, ref int nrep, ref ColumnData[] cd, ref string xlab, ref MinMax minMax)
         {
             const string msgTi = "StatsDirect Data Selection";
             const string labd = "Select DATA";
@@ -1158,7 +1163,7 @@ namespace StatsDirect.UI
                     continue;
 
                 minMax = new MinMax();
-                ClassifierVariable groupIdentifierVariable = groupIdentifiers.Variables[0] as ClassifierVariable;
+                ClassifierVariable groupIdentifierVariable = (ClassifierVariable)groupIdentifiers.Variables[0];
                 int rows = groupIdentifierVariable.Length;
                 int cats = groupIdentifierVariable.GroupCount;
                 string catlab = groupIdentifierVariable.Title;
@@ -1238,7 +1243,7 @@ namespace StatsDirect.UI
                 y = new double[ng + 1, maxgn + 1, nrep + 1];
                 for (int k = 1; k <= nrep; k++)
                 {
-                    DoubleVariable v = replicatesFrame.Variables[k - 1]as DoubleVariable;
+                    DoubleVariable v = (DoubleVariable)replicatesFrame.Variables[k - 1];
                     for (int i = 1; i <= ng; i++)
                     {
                         int cnt = 0;
@@ -1268,7 +1273,7 @@ namespace StatsDirect.UI
                 DataFrame xFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 1, 1, labd + " for X (HORIZONTAL AXIS)", null, true, DataAcquisitionWidth.Wide, false, out cancelled, out wasPivoted, 0);
                 if (cancelled || wasPivoted)
                     break;
-                DoubleVariable xVariable = xFrame.Variables[0]as DoubleVariable;
+                DoubleVariable xVariable = (DoubleVariable)xFrame.Variables[0];
                 xlab = xVariable.Title;
                 x = new double[ng + 1, maxgn + 1];
                 cd = new ColumnData[ng + 1];

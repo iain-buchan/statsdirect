@@ -4,10 +4,11 @@ namespace StatsDirect.Templates
 {
     public class CategoryAxisScale: IAxisScale
     {
-        public double MinimumDataValue { get { return 0; } }
-        public double MaximumDataValue { get { return Categories; } }
-        public double MinimumScaleValue { get { return 0; } }
-        public double MaximumScaleValue { get { return Categories; } }
+        public double MinimumDataValue => 0;
+        public double MaximumDataValue => Categories;
+        public double MinimumScaleValue => 0;
+        public double MaximumScaleValue => Categories;
+
         /// The number of intervals between tics (one less than the number of tics).  20 intervals = 21 tics - one extra at the end.
 
             private int Categories { get; set; }

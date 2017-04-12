@@ -10,11 +10,11 @@ namespace StatsDirect.Expressions
     {
         public static double Factorial(double n)
         {
-            if ((n < 0.0))
+            if (n < 0.0)
                 return Constant.MISSING;
-            if ((n == 0.0))
+            if (n == 0.0)
                 return 1.0;
-            if ((0.0 <= n) && (n <= 50.0))
+            if (0.0 <= n && n <= 50.0)
             {
                 if (n != Math.Floor(n))
                     return Math.Exp(PDF.alogam(n + 1.0));
@@ -148,7 +148,7 @@ namespace StatsDirect.Expressions
             int ifault;
             double term = PDF.gauinv(1.0 - arg, out ifault);
             if (ifault != 0)
-                throw new ArgumentOutOfRangeException("arg", arg, "gauinv returned fault");
+                throw new ArgumentOutOfRangeException(nameof(arg), arg, "gauinv returned fault");
             return term;
         }
 
@@ -165,7 +165,7 @@ namespace StatsDirect.Expressions
         public static double Logit(double x)
         {
             if (x < 0.0 || x > 1.0)
-                throw new ArgumentOutOfRangeException("x", x, "logit: x must be between 0 and 1");
+                throw new ArgumentOutOfRangeException(nameof(x), x, "logit: x must be between 0 and 1");
             if (x == 0.0)
                 x = Constant.EPSNEG;
             else if (x == 1.0)

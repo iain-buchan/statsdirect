@@ -108,7 +108,7 @@ namespace StatsDirect.Builtins
             if (fault == 0)
             {
                 outputParameters.AddOutput("ratio", dead / etot);
-                outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt32((dead / etot) * 100), 0));
+                outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt32(dead / etot * 100), 0));
 
                 double xu;
                 double xl;
@@ -378,7 +378,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     f = PDF.ffromp(2.0 * asum, 2.0 * (bsum + 1.0), 1.0 - p);
-                    crrl = (pt2Sum / pt1Sum) * (asum / (bsum + 1.0)) * (1.0 / f);
+                    crrl = pt2Sum / pt1Sum * (asum / (bsum + 1.0)) * (1.0 / f);
                 }
                 if (bsum == 0.0)
                 {
@@ -388,7 +388,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     f = PDF.ffromp(2.0 * bsum, 2.0 * (asum + 1.0), 1.0 - p);
-                    crru = (pt2Sum / pt1Sum) * ((asum + 1.0) / bsum) * f;
+                    crru = pt2Sum / pt1Sum * ((asum + 1.0) / bsum) * f;
                 }
             }
             else
@@ -442,7 +442,7 @@ namespace StatsDirect.Builtins
                         else
                         {
                             f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
-                            rkrl[i] = (pt2[i] / pt1[i]) * (a[i] / (b[i] + 1.0)) * (1.0 / f);
+                            rkrl[i] = pt2[i] / pt1[i] * (a[i] / (b[i] + 1.0)) * (1.0 / f);
                         }
                         if (b[i] == 0.0)
                         {
@@ -452,7 +452,7 @@ namespace StatsDirect.Builtins
                         else
                         {
                             f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
-                            rkru[i] = (pt2[i] / pt1[i]) * ((a[i] + 1.0) / b[i]) * f;
+                            rkru[i] = pt2[i] / pt1[i] * ((a[i] + 1.0) / b[i]) * f;
                         }
                     }
                     else

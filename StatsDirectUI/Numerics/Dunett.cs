@@ -456,7 +456,7 @@ namespace StatsDirect.Numerics
         public static double pnct(double t, int idf, double delta, out int ifault)
         {
             ifault = 0;
-            if ((idf <= 0))
+            if (idf <= 0)
             {
                 ifault = 1;
                 return Constant.MISSING;
@@ -467,7 +467,7 @@ namespace StatsDirect.Numerics
             const double r2pi = 0.5 / pi;
             double emin = Math.Sqrt(-1.9 * Math.Log(Constant.SPREAL));
             double df = Convert.ToDouble(idf);
-            int i1 = ((int)(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor((double)idf - 2 * (idf / 2))));
+            int i1 = (int)Math.Floor((double)idf - 2 * (idf / 2));
             double a = t / Math.Sqrt(df);
             double b = df / (df + t * t);
             double sb = Math.Sqrt(b);
@@ -476,21 +476,21 @@ namespace StatsDirect.Numerics
             double dasb = a * dsb;
             double p1 = PDF.alnorm(dasb);
             double f2 = 0.0;
-            if ((Math.Abs(dsb) < emin))
+            if (Math.Abs(dsb) < emin)
             {
                 f2 = a * sb * Math.Exp(-0.5 * dsb * dsb) * p1 * rs2pi;
             }
             double f1 = b * da * f2;
-            if ((Math.Abs(delta) < emin))
+            if (Math.Abs(delta) < emin)
             {
                 f1 = f1 + b * a * r2pi * Math.Exp(-0.5 * delta * delta);
             }
             double sum = 0.0;
             double p;
-            if ((idf != 1))
+            if (idf != 1)
             {
-                sum = (i1 <= 0) ? f2 : f1;
-                if ((idf >= 4))
+                sum = i1 <= 0 ? f2 : f1;
+                if (idf >= 4)
                 {
                     int idfm2 = idf - 2;
                     double az = 1.0;
@@ -501,7 +501,7 @@ namespace StatsDirect.Numerics
                         f2 = b * (da * az * f1 + f2) * fkm1 / fz;
                         az = 1.0 / (az * fkm1);
                         f1 = b * (da * az * f2 + f1) * fz / (fz + 1.0);
-                        if ((i1 <= 0))
+                        if (i1 <= 0)
                         {
                             sum = sum + f2;
                         }
@@ -513,7 +513,7 @@ namespace StatsDirect.Numerics
                         fz = fz + 2.0;
                     }
                 }
-                if ((i1 <= 0))
+                if (i1 <= 0)
                 {
                     p1 = PDF.alnorm(-delta);
                     p = p1 + sum * s2pi;
@@ -549,7 +549,7 @@ namespace StatsDirect.Numerics
             double big1 = Math.Pow(double.MaxValue, 0.25);
             double big2 = big1 / Math.Log(big1);
             double t = 0;
-            if ((a > big2))
+            if (a > big2)
             {
                 t = 0.5 * (1.0 - PDF.alnorm(b));
                 if (z < 0.0)
@@ -557,24 +557,24 @@ namespace StatsDirect.Numerics
                 return 0.0; //  TODO: Should be t?
             }
             double ta = Math.Atan(a);
-            if ((b == 0.0))
+            if (b == 0.0)
             {
                 t = oned2p * ta;
-                if ((z < 0.0))
+                if (z < 0.0)
                     t = -t;
                 return 0.0; //  TODO: Should be t?
             }
-            if ((a * b > 4.0))
+            if (a * b > 4.0)
             {
                 t = 0.25 - 0.5 * (PDF.alnorm(b) - 0.5);
-                if ((z < 0.0))
+                if (z < 0.0)
                 {
                     t = -t;
                 }
                 return 0.0; //  TODO: Should be t?
             }
             double hsqb = 0.5 * b * b;
-            if ((hsqb <= expov))
+            if (hsqb <= expov)
             {
                 double bexp = Math.Exp(-hsqb);
                 double asq = a * a;
@@ -594,7 +594,7 @@ namespace StatsDirect.Numerics
                     do
                     {
                         ber += ter;
-                        if ((ter > ber * eps))
+                        if (ter > ber * eps)
                         {
                             ter *= hsqb / g1;
                             g1 += 1.0;
@@ -611,7 +611,7 @@ namespace StatsDirect.Numerics
                     sum += d;
                     t = ta - sum * bexp;
                     double aeps;
-                    if ((t > 0.0))
+                    if (t > 0.0)
                     {
                         aeps = eps * t;
                     }
@@ -623,14 +623,14 @@ namespace StatsDirect.Numerics
                     ab4 *= a4b4 / ((g + 1.0) * g);
                     f += 4.0;
                     g += 2.0;
-                    if ((d2 * bexp < aeps))
+                    if (d2 * bexp < aeps)
                     {
                         break;
                     }
                 }
                 while (true);
                 t *= oned2p;
-                if ((z < 0.0))
+                if (z < 0.0)
                 {
                     t = -t;
                 }
@@ -654,22 +654,22 @@ namespace StatsDirect.Numerics
         ///  <remarks></remarks>
         public static double nchi2(double df, double elambda, double xx)
         {
-            if ((xx <= 0.0))
+            if (xx <= 0.0)
                 return 0.0;
             double x = 0.5 * xx;
             double del = 0.5 * elambda;
             int k = (int)Math.Floor(del);
             double a = 0.5 * df + k;
             double gamkf = gamf(x, a);
-            if ((gamkf == Constant.MISSING))
+            if (gamkf == Constant.MISSING)
                 return Constant.MISSING;
             double gamkb = gamkf;
-            if ((del == 0.0))
+            if (del == 0.0)
                 return gamkf;
             double poikf = poipro(ref k, ref del);
             double poikb = poikf;
             double gl = PDF.alogam(a);
-            if ((gl == Constant.MISSING))
+            if (gl == Constant.MISSING)
                 return Constant.MISSING;
             double xtermf = Math.Exp((a - 1.0) * Math.Log(x) - x - gl);
             double xtermb = xtermf * x / a;
@@ -686,9 +686,9 @@ namespace StatsDirect.Numerics
                 sum = sum + termf;
                 double error = remain * gamkf;
                 remain = remain - poikf;
-                if ((i > k))
+                if (i > k)
                 {
-                    if ((error <= 0.000000000001 || i > 5000))
+                    if (error <= 0.000000000001 || i > 5000)
                         break;
                 }
                 else
@@ -699,14 +699,14 @@ namespace StatsDirect.Numerics
                     double termb = gamkb * poikb;
                     sum = sum + termb;
                     remain = remain - poikb;
-                    if ((remain <= 0.000000000001 || i > 5000))
+                    if (remain <= 0.000000000001 || i > 5000)
                     {
                         break;
                     }
                 }
             }
             while (true);
-            return (i > 5000) ? Constant.MISSING : sum;
+            return i > 5000 ? Constant.MISSING : sum;
         }
 
 
@@ -715,7 +715,7 @@ namespace StatsDirect.Numerics
         {
             double ek = k;
             double gl = PDF.alogam(ek + 1.0);
-            if ((gl == Constant.MISSING))
+            if (gl == Constant.MISSING)
             {
                 return Constant.MISSING;
             }
@@ -725,7 +725,7 @@ namespace StatsDirect.Numerics
         private static double gamf(double x, double a)
         {
             double gl = PDF.alogam(a + 1.0);
-            if ((gl == Constant.MISSING))
+            if (gl == Constant.MISSING)
                 return Constant.MISSING;
 
             double com = Math.Exp(a * Math.Log(x) - gl - x);
@@ -736,7 +736,7 @@ namespace StatsDirect.Numerics
             {
                 term = term * x / (a + one);
                 sum = sum + term;
-                if ((term <= 0.000000000001))
+                if (term <= 0.000000000001)
                 {
                     break;
                 }
@@ -762,7 +762,7 @@ namespace StatsDirect.Numerics
             term = ppoiseq(k, xlam);
             plo = ppoisle(k, xlam);
             phi = 1.0 - plo + term;
-            ifault = (term == Constant.MISSING || plo == Constant.MISSING) ? 1 : 0;
+            ifault = term == Constant.MISSING || plo == Constant.MISSING ? 1 : 0;
         }
 
 
@@ -831,7 +831,7 @@ namespace StatsDirect.Numerics
                     {
                         bis = xmid;
                     }
-                    if (((Math.Abs(dx) <= acc) || (Math.Abs(fmid - p) == 0.0)))
+                    if (Math.Abs(dx) <= acc || Math.Abs(fmid - p) == 0.0)
                     {
                         break;
                     }
@@ -856,7 +856,7 @@ namespace StatsDirect.Numerics
                         break;
                     if (fmid - p > 0.0)
                         bis = xmid;
-                    if (((Math.Abs(dx) <= acc) || (Math.Abs(fmid - p) == 0.0)))
+                    if (Math.Abs(dx) <= acc || Math.Abs(fmid - p) == 0.0)
                         break;
                     istep += 1;
                     if (istep > imax)
@@ -928,7 +928,7 @@ namespace StatsDirect.Numerics
                     {
                         bis = nl;
                     }
-                    if (((Math.Abs(intdx) <= 1) || (Math.Abs(fmid - p) == 0.0)))
+                    if (Math.Abs(intdx) <= 1 || Math.Abs(fmid - p) == 0.0)
                     {
                         break;
                     }
@@ -954,7 +954,7 @@ namespace StatsDirect.Numerics
                         break;
                     if (fmid - p <= 0.0)
                         bis = nl;
-                    if (((Math.Abs(lastIntdx) <= 1) || (Math.Abs(fmid - p) == 0.0)))
+                    if (Math.Abs(lastIntdx) <= 1 || Math.Abs(fmid - p) == 0.0)
                         break;
                     istep += 1;
                     if (istep > imax)
@@ -1025,7 +1025,7 @@ namespace StatsDirect.Numerics
                 double y = 1.0;
                 int jj = 1;
                 double p1 = -theta;
-                int icnt = ((int)(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor(p1 / alnsml)));
+                int icnt = (int)Math.Floor(p1 / alnsml);
                 p1 = p1 - icnt * alnsml;
                 p1 = Math.Exp(p1);
                 //  prep backward calc
@@ -1035,7 +1035,7 @@ namespace StatsDirect.Numerics
                 double h = k1;
                 h = PDF.alogam(h);
                 double p2 = -y2 + g - h;
-                int kcnt = ((int)(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor(p2 / alnsml)));
+                int kcnt = (int)Math.Floor(p2 / alnsml);
                 p2 = p2 - kcnt * alnsml;
                 p2 = Math.Exp(p2);
                 g = 1.0;
@@ -1053,7 +1053,7 @@ namespace StatsDirect.Numerics
                 do
                 {
                     int j = icnt - kcnt;
-                    if (j > 0.0 || (j == 0.0 && p1 <= p2))
+                    if (j > 0.0 || j == 0.0 && p1 <= p2)
                     {
                         //  forward
                         //  no need to scale, just store term
@@ -1134,36 +1134,36 @@ namespace StatsDirect.Numerics
         ///  <returns></returns>
         public static double tnct(double p, int idf, double delta, out int ifault)
         {
-            if ((p <= 0.0 || p >= 1.0))
+            if (p <= 0.0 || p >= 1.0)
             {
                 ifault = 1;
                 return Constant.MISSING;
             }
-            if ((idf <= 0))
+            if (idf <= 0)
             {
                 ifault = 2;
                 return Constant.MISSING;
             }
             const double eps = Constant.EPSILON;
             double xinit = PDF.gauinv(p, out ifault) + delta;
-            if ((ifault != 0))
+            if (ifault != 0)
             {
                 return Constant.MISSING;
             }
             double x1 = xinit;
             double f1 = pnct(x1, idf, delta, out ifault) - p;
-            if ((ifault != 0))
+            if (ifault != 0)
             {
                 return Constant.MISSING;
             }
             double x2;
             double xd;
-            if ((f1 == 0.0))
+            if (f1 == 0.0)
             {
                 x2 = x1;
                 return (x1 + x2) * 0.5;
             }
-            if ((Math.Abs(xinit) >= 1.0))
+            if (Math.Abs(xinit) >= 1.0)
             {
                 x2 = xinit * 1.05;
                 xd = x2 - x1;
@@ -1174,7 +1174,7 @@ namespace StatsDirect.Numerics
                 xd = 0.05;
             }
             double f2 = pnct(x2, idf, delta, out ifault) - p;
-            if ((ifault != 0))
+            if (ifault != 0)
             {
                 return Constant.MISSING;
             }
@@ -1185,18 +1185,18 @@ namespace StatsDirect.Numerics
             {
                 del = 2.0 * del;
                 iter += 1;
-                if ((iter > 200))
+                if (iter > 200)
                 {
                     ifault = 3;
                     return Constant.MISSING;
                 }
                 x2 = x1 + del;
                 f2 = pnct(x2, idf, delta, out ifault) - p;
-                if ((ifault != 0))
+                if (ifault != 0)
                 {
                     return Constant.MISSING;
                 }
-                if ((f1 * f2 >= 0.0))
+                if (f1 * f2 >= 0.0)
                 {
                     x1 = x2;
                 }
@@ -1212,16 +1212,16 @@ namespace StatsDirect.Numerics
                 double xm = (x1 + x2) * 0.5;
                 double fd = f2 - f1;
                 xd = x2 - x1;
-                if ((xm != 0.0))
+                if (xm != 0.0)
                 {
-                    if ((Math.Abs(xd) < Math.Abs(xm * eps)))
+                    if (Math.Abs(xd) < Math.Abs(xm * eps))
                     {
                         return (x1 + x2) * 0.5;
                     }
                 }
                 else
                 {
-                    if ((Math.Abs(xd) < eps))
+                    if (Math.Abs(xd) < eps)
                     {
                         return (x1 + x2) * 0.5;
                     }
@@ -1229,11 +1229,11 @@ namespace StatsDirect.Numerics
                 double x3 = ibisec ? xm : x2 - f2 * xd / fd;
                 ibisec = false;
                 double f3 = pnct(x3, idf, delta, out ifault) - p;
-                if ((ifault != 0))
+                if (ifault != 0)
                 {
                     return Constant.MISSING;
                 }
-                if ((f3 * f2 <= 0.0))
+                if (f3 * f2 <= 0.0)
                 {
                     x1 = x2;
                     f1 = f2;
@@ -1245,7 +1245,7 @@ namespace StatsDirect.Numerics
                     x2 = x3;
                     f2 = f3;
                     f1 = f1 * 0.5;
-                    if ((Math.Abs(f2) > Math.Abs(f1)))
+                    if (Math.Abs(f2) > Math.Abs(f1))
                     {
                         f1 = 2.0 * f1;
                         ibisec = true;

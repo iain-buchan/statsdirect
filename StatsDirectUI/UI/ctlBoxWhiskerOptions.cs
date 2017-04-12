@@ -150,16 +150,10 @@ namespace StatsDirect.UI
             grpFences.Enabled = fencesAreAvailable;
         }
 
-        private bool FencesAreAvailable
-        {
-            get
-            {
-                return BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange == options.Method
-                    || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange == options.Method
-                    || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange == options.Method
-                    || BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange == options.Method;
-            }
-        }
+        private bool FencesAreAvailable => BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange == options.Method
+                                           || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange == options.Method
+                                           || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange == options.Method
+                                           || BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange == options.Method;
 
         private void chkUseInnerFence_CheckedChanged(object sender, EventArgs e)
         {

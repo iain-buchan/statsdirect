@@ -40,93 +40,27 @@ namespace StatsDirect.Charting
             }
         }
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesXAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesXAxisTitle => true;
 
-        public override bool UsesYAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesYAxisTitle => true;
 
-        public override bool UsesAutoscale
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAutoscale => true;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool UsesAxisTitleFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisTitleFontDescriptor => true;
 
-        public override bool UsesBoxAxes
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesBoxAxes => true;
 
-        public override bool UsesSeriesLabels
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesSeriesLabels => true;
 
-        public override bool ShowErrorBarOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ShowErrorBarOptions => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return Series.Count > 1;
-            }
-        }
+        public override bool ShowLegendIsRelevant => Series.Count > 1;
 
-        public override bool UsesLegendFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesLegendFontDescriptor => true;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

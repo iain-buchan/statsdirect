@@ -67,16 +67,10 @@ namespace StatsDirect.Templates
         public bool MustRequest { get; set; }
 
         [XmlIgnore]
-        public bool HasPrompt
-        {
-            get { return null != PromptExpression && null != PromptExpression.Body; }
-        }
+        public bool HasPrompt => null != PromptExpression && null != PromptExpression.Body;
 
         [XmlIgnore]
-        public bool HasAcquireIfTrue
-        {
-            get { return null != AcquireIfTrueExpression && null != AcquireIfTrueExpression.Body; }
-        }
+        public bool HasAcquireIfTrue => null != AcquireIfTrueExpression && null != AcquireIfTrueExpression.Body;
 
         [XmlElement(ElementName = "prompt")]
         public Expression PromptExpression { get; set; }
@@ -135,10 +129,7 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "help")]
         public HelpTip Help { get; set; }
 
-        public virtual bool RequiresGrid
-        {
-            get { return false; }
-        }
+        public virtual bool RequiresGrid => false;
 
         public abstract InputDuringStep RequiresInputGiven(ParameterBag parameters);
 

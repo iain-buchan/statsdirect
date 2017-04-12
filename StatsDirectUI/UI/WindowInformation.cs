@@ -30,10 +30,7 @@ namespace StatsDirect.UI
             }
         }
 
-        internal bool HasWindow
-        {
-            get { return null != window && window.IsAlive; }
-        }
+        internal bool HasWindow => null != window && window.IsAlive;
 
         internal TabPage TabPage
         {
@@ -41,10 +38,7 @@ namespace StatsDirect.UI
             set { tabPage = value; }
         }
 
-        internal bool IsNew
-        {
-            get { return null == path; }
-        }
+        internal bool IsNew => null == path;
 
         internal string FriendlyName
         {

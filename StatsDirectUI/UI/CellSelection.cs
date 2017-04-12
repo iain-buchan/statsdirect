@@ -30,9 +30,6 @@ namespace StatsDirect.UI
             LongestRowCount = 0;
         }
 
-        public int TotalColumns
-        {
-            get { return ColumnSelections.Count; }
-        }
+        public int TotalColumns => ColumnSelections.Count;
     }
 }

@@ -55,10 +55,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// true iff the parameter defines the exact number of rows that must be selected with this operation.
         /// </summary>
-        public bool HasLength
-        {
-            get { return null != LengthExpression; }
-        }
+        public bool HasLength => null != LengthExpression;
 
         /// <summary>
         /// The exact number of rows that must be selected with this operation, or null for any number.
@@ -124,17 +121,11 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "data")]
         public FrameData Data { get; set; }
 
-        public override bool RequiresGrid
-        {
-            get
-            {
-                return CanSelect && null == Data;
-            }
-        }
+        public override bool RequiresGrid => CanSelect && null == Data;
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && (null != parameters && !parameters.ContainsKey(Name) || null != Data)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && (null != parameters && !parameters.ContainsKey(Name) || null != Data) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

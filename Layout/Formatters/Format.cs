@@ -7,9 +7,9 @@ namespace Layout.Formatters
 {
     public abstract class Format
     {
-        protected double Weight { get; private set; }
+        protected double Weight { get; }
 
-        public Format(double weight)
+        protected Format(double weight)
         {
             Weight = weight;
         }
@@ -22,11 +22,11 @@ namespace Layout.Formatters
     public abstract class NumericFormat : Format
     {
         /// <summary>if true, 10^power portion will be placed on the axis title</summary>
-        protected bool IsFactored { get; private set; }
+        protected bool IsFactored { get; }
         /// <summary>if true, labels will be extended to the same number of decimal places</summary>
-        protected bool DecimalExtend { get; private set; }
+        protected bool DecimalExtend { get; }
 
-        public NumericFormat(bool isFactored, bool decimalExtend, double weight) : base(weight)
+        protected NumericFormat(bool isFactored, bool decimalExtend, double weight) : base(weight)
         {
             IsFactored = isFactored;
             DecimalExtend = decimalExtend;
@@ -61,7 +61,7 @@ namespace Layout.Formatters
             return a;
         }
 
-        protected int decimalPlaces(decimal i)
+        protected int DecimalPlaces(decimal i)
         {
             string t = i.ToString("G29", CultureInfo.InvariantCulture);
             int s = t.IndexOf(".");
@@ -71,9 +71,9 @@ namespace Layout.Formatters
 
     public class UnitFormat : NumericFormat
     {
-        private decimal unit;
-        private string name;
-        private Range potRange;
+        private readonly decimal unit;
+        private readonly string name;
+        private readonly Range potRange;
 
         public UnitFormat(decimal unit, string name, Range potRange, bool factored, bool decimalExtend, double weight)
             : base(factored, decimalExtend, weight)
@@ -85,13 +85,13 @@ namespace Layout.Formatters
 
         public override double Score(decimal d)
         {
-            return (FloorLog10(d) >= potRange.Min && FloorLog10(d) <= potRange.Max) ? 1 : 0;
+            return FloorLog10(d) >= potRange.Min && FloorLog10(d) <= potRange.Max ? 1 : 0;
         }
 
         public override Tuple<IEnumerable<string>, string> FormatLabels(IEnumerable<decimal> d)
         {
             IEnumerable<decimal> r = from x in d select x / unit;
-            int decimals = (from x in r select decimalPlaces(x)).Max();
+            int decimals = (from x in r select DecimalPlaces(x)).Max();
             return new Tuple<IEnumerable<string>, string>(from x in r select x.ToString(DecimalExtend ? "N" + decimals : "G29") + (IsFactored ? "" : name), (IsFactored ? name : ""));
         }
     }
@@ -114,7 +114,7 @@ namespace Layout.Formatters
             int avgpot = (int)Math.Round((from x in d.Where(x => x != 0) select FloorLog10(x)).Average());
             decimal s = Pow10(avgpot);
             IEnumerable<decimal> r = from x in d select x / s;
-            int decimals = (from x in r select decimalPlaces(x)).Max();
+            int decimals = (from x in r select DecimalPlaces(x)).Max();
             string label = "x10\\^" + avgpot + "\\^";
             return new Tuple<IEnumerable<string>, string>(from x in r select x.ToString(DecimalExtend ? "N" + decimals : "0.#") + (IsFactored ? "" : label), (IsFactored ? label : ""));
         }

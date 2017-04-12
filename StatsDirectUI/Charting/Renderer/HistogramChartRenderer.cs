@@ -14,7 +14,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            HistogramOptions options = ((HistogramOptions)(definition.ChartOptions));
+            HistogramOptions options = (HistogramOptions)definition.ChartOptions;
             bool showRelativeFrequencies = options.ShowRelativeFrequencies;
 
             //  We're looking over multiple histograms and getting a merged view
@@ -132,7 +132,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         // Plot a Metafile version
                         double heightPerChart = imageHeight / seriesToUse.Count; //  Should end up as the old MetaH
-                        double thisChartTop = imageHeight - (seriesIndex * heightPerChart);
+                        double thisChartTop = imageHeight - seriesIndex * heightPerChart;
                         double thisChartBottom = thisChartTop - heightPerChart;
 
                         //  No longer the default Y axis!
@@ -277,7 +277,7 @@ namespace StatsDirect.Charting.Renderer
             zint /= div;
 
             //  Move the cursor to the start
-            double y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
+            double y = bins * Math.Exp(-0.5 * Math.Pow((sumx - xbar) / sdv, 2.0)) * proportionScaler;
             double yMax = y;
             double yold = ToCanvasY(y);
             double xold = xAxisCanvas;
@@ -285,13 +285,13 @@ namespace StatsDirect.Charting.Renderer
             for (int c = 1; c <= count; c++)
             {
                 sumx += zint;
-                y = bins * Math.Exp(-0.5 * Math.Pow(((sumx - xbar) / sdv), 2.0)) * proportionScaler;
+                y = bins * Math.Exp(-0.5 * Math.Pow((sumx - xbar) / sdv, 2.0)) * proportionScaler;
                 if (y > yMax)
                     yMax = y;
                 if (shouldPlot)
                 {
                     double y1 = ToCanvasY(y);
-                    double x1 = xAxisCanvas + (c / (double)count * xExtCanvas);
+                    double x1 = xAxisCanvas + c / (double)count * xExtCanvas;
                     DrawLineInCanvasCoordinates(s.MarkerDetails.MarkerPen, xold, yold, x1, y1);
                     xold = x1;
                     yold = y1;

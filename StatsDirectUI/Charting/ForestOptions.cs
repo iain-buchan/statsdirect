@@ -66,61 +66,19 @@ namespace StatsDirect.Charting
             SeriesOptions.Add(pooledOptions);
         }
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesXAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesXAxisTitle => true;
 
-        public override bool ShowForestOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ShowForestOptions => true;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool UsesAxisTitleFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisTitleFontDescriptor => true;
 
-        public override bool UsesShowLegend
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool UsesShowLegend => false;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

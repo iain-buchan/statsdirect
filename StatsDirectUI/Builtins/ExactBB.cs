@@ -455,12 +455,12 @@ namespace StatsDirect.Builtins
             }
 
             // Check for errors
-            if ((maxSumA - minSumA > MAXDEGREE))
+            if (maxSumA - minSumA > MAXDEGREE)
             {
                 // Poly too small
                 ierr = 1;
             }
-            else if ((minSumA == maxSumA))
+            else if (minSumA == maxSumA)
             {
                 // No informative strata }
                 ierr = 2;
@@ -651,7 +651,7 @@ namespace StatsDirect.Builtins
                     for (int i = 1; i <= degDi; i++)
                     {
                         double xi = Convert.ToDouble(i);
-                        polyDi[i] = polyDi[i - 1] + Math.Log(((bb - xi) / (aa + xi)) * ((cc - xi) / (dd + xi)));
+                        polyDi[i] = polyDi[i - 1] + Math.Log((bb - xi) / (aa + xi) * ((cc - xi) / (dd + xi)));
                     }
                 }
                 else
@@ -842,7 +842,7 @@ namespace StatsDirect.Builtins
                             PolyStratPt1(tables[i], poly2, out deg2, ref ierr); // Stratified person-time }
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException("dataType", dataType, "Datatype must be 1 to 4");
+                            throw new ArgumentOutOfRangeException(nameof(dataType), dataType, "Datatype must be 1 to 4");
                     }
 
                     if (ierr != 0)
@@ -887,14 +887,14 @@ namespace StatsDirect.Builtins
                     y = c[degC];
                     if (r < 1)
                     {
-                        for (i = (degC - 1); i >= 0; i--)
+                        for (i = degC - 1; i >= 0; i--)
                         {
                             y = SumLog(y + Math.Log(r), c[i]);
                         }
                     }
                     else
                     {
-                        for (i = (degC - 1); i >= 0; i--)
+                        for (i = degC - 1; i >= 0; i--)
                         {
                             y = SumLog(y, c[i]);
                         }
@@ -923,14 +923,14 @@ namespace StatsDirect.Builtins
                     y = c[degC];
                     if (r < 1.0)
                     {
-                        for (i = (degC - 1); i >= 0; i--)
+                        for (i = degC - 1; i >= 0; i--)
                         {
                             y = y * r + c[i];
                         }
                     }
                     else
                     {
-                        for (i = (degC - 1); i >= 0; i--)
+                        for (i = degC - 1; i >= 0; i--)
                         {
                             y = y + c[i];
                         }
@@ -967,7 +967,7 @@ namespace StatsDirect.Builtins
                     return Math.Exp(numer - denom) - value;
                 if (degD - degN == 0)
                     return Math.Exp(numer - denom) - value;
-                return Math.Exp((numer - (Math.Log(r) * (Convert.ToDouble(degD - degN)))) - denom) - value;
+                return Math.Exp(numer - Math.Log(r) * Convert.ToDouble(degD - degN) - denom) - value;
             }
             if (denom == 0.0)
             {
@@ -976,7 +976,7 @@ namespace StatsDirect.Builtins
             }
             if (r <= 1.0)
                 return numer / denom - value;
-            return (numer / (Math.Pow(r, degD - degN))) / denom - value;
+            return numer / Math.Pow(r, degD - degN) / denom - value;
         }
 
         /// <summary>
@@ -1063,14 +1063,14 @@ namespace StatsDirect.Builtins
                 f1 = swap;
             }
 
-            bool found = (f1 == 0.0);
-            if ((found == false) && (f0 * f1 > 0.0))
+            bool found = f1 == 0.0;
+            if (found == false && f0 * f1 > 0.0)
             {
                 ierr = 1; // Root not bracketed
             }
 
             // Converge to root
-            while ((found == false) && (iter < MAX_ITER) && (ierr == 0))
+            while (found == false && iter < MAX_ITER && ierr == 0)
             {
                 iter = iter + 1;
                 double x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
@@ -1093,11 +1093,11 @@ namespace StatsDirect.Builtins
                 }
                 x1 = x2;
                 f1 = f2;
-                found = (Math.Abs(x1 - x0) < (Math.Abs(x1) * TOLERANCE)) | (f1 == 0.0);
+                found = (Math.Abs(x1 - x0) < Math.Abs(x1) * TOLERANCE) | (f1 == 0.0);
             }
 
             root = x1; // Estimated root
-            if ((!(found)) & (iter >= MAX_ITER) & (ierr == 0))
+            if (!found & (iter >= MAX_ITER) & (ierr == 0))
             {
                 ierr = 2; // Too many iterations
             }
@@ -1230,7 +1230,7 @@ namespace StatsDirect.Builtins
         /// <param name="ierr"></param>
         private void CalcCmle(double approx, out double cMLE, ref int ierr)
         {
-            if ((minSumA < sumA) && (sumA < maxSumA))
+            if (minSumA < sumA && sumA < maxSumA)
             { // Can calc point estimate
                 value = sumA; // The sum of the observed "a" cells
                 degN = degD; // Degree of the numerator polynomial
@@ -1297,7 +1297,7 @@ namespace StatsDirect.Builtins
         /// <param name="ierr"></param>
         private void CalcExactLim(bool lower, bool fisher, double approx, double confLevel, out double limit, ref int ierr)
         {
-            if ((sumA == minSumA))
+            if (sumA == minSumA)
             { // Point estimate = 0 => lower limit = 0
 
                 if (lower)
@@ -1306,7 +1306,7 @@ namespace StatsDirect.Builtins
                     return;
                 }
             }
-            else if ((sumA == maxSumA))
+            else if (sumA == maxSumA)
             { // Point estimate = inf => upper limit = inf
 
                 if (lower == false)
@@ -1340,14 +1340,14 @@ namespace StatsDirect.Builtins
             // Mid-P adjustment
             if (logScale)
             {
-                if (!(fisher))
+                if (!fisher)
                 {
                     polyN[degN] = polyD[degN] - Math.Log(2.0);
                 }
             }
             else
             {
-                if (!(fisher))
+                if (!fisher)
                 {
                     polyN[degN] = 0.5 * polyD[degN];
                 }
@@ -1376,7 +1376,7 @@ namespace StatsDirect.Builtins
 
         public static void OddsRatioCI(ITemplateHost host, double cco, double a, double b, double c, double d, ref double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
         {
-            if ((((a == 0) && (b == 0)) || ((c == 0) && (d == 0))))
+            if (a == 0 && b == 0 || c == 0 && d == 0)
             {
                 ulf = double.PositiveInfinity;
                 llf = 0;
@@ -1384,7 +1384,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                if ((a * d != 0) || (b * c != 0))
+                if (a * d != 0 || b * c != 0)
                 {
                     ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
                     tabl[1].Freq = 1;
@@ -1392,7 +1392,7 @@ namespace StatsDirect.Builtins
                     tabl[1].M1 = a + b;
                     tabl[1].N1 = a + c;
                     tabl[1].N0 = b + d;
-                    tabl[1].Informative = (a * d != 0) || (b * c != 0);
+                    tabl[1].Informative = a * d != 0 || b * c != 0;
                     bool useLogScale = false;
                     double ulm;
                     int ierr;
@@ -1417,8 +1417,8 @@ namespace StatsDirect.Builtins
                     ulf = double.PositiveInfinity;
                 }
             }
-            lerr = (llf == Constant.MISSING);
-            uerr = (ulf == Constant.MISSING);
+            lerr = llf == Constant.MISSING;
+            uerr = ulf == Constant.MISSING;
         }
         public static void OddsRatioCMLE(ITemplateHost host, double cco, double a, double b, double c, double d, ref double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
         {
@@ -1432,7 +1432,7 @@ namespace StatsDirect.Builtins
             p1m = Constant.MISSING;
             p2m = Constant.MISSING;
             ierr = 0;
-            if ((((a == 0) && (b == 0)) || ((c == 0) && (d == 0))))
+            if (a == 0 && b == 0 || c == 0 && d == 0)
             {
                 ulf = double.PositiveInfinity;
                 llf = 0.0;
@@ -1440,7 +1440,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                if ((a * d != 0) || (b * c != 0))
+                if (a * d != 0 || b * c != 0)
                 {
                     ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
                     tabl[1].Freq = 1;
@@ -1448,7 +1448,7 @@ namespace StatsDirect.Builtins
                     tabl[1].M1 = a + b;
                     tabl[1].N1 = a + c;
                     tabl[1].N0 = b + d;
-                    tabl[1].Informative = (a * d != 0) || (b * c != 0);
+                    tabl[1].Informative = a * d != 0 || b * c != 0;
                     bool useLogScale = false;
                     new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1f, out p2f, out p1m, out p2m, ref useLogScale, out ierr);
                 }
@@ -1467,11 +1467,11 @@ namespace StatsDirect.Builtins
 
         public static double OddsRatio(double diseasedExposed, double healthyExposed, double diseasedNotExposed, double healthyNotExposed)
         {
-            if ((diseasedExposed == 0) || (healthyNotExposed == 0))
+            if (diseasedExposed == 0 || healthyNotExposed == 0)
                 return 0;
-            if ((healthyExposed == 0) || (diseasedNotExposed == 0))
+            if (healthyExposed == 0 || diseasedNotExposed == 0)
                 return double.PositiveInfinity;
-            return (diseasedExposed * healthyNotExposed) / (healthyExposed * diseasedNotExposed);
+            return diseasedExposed * healthyNotExposed / (healthyExposed * diseasedNotExposed);
         }
     }
 }

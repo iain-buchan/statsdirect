@@ -34,7 +34,7 @@ namespace StatsDirect.Calculator
                 {
                     Calcit c = new Calcit(equation, new DataType[0], false);
                     object res = c.EvaluateObject(null);
-                    txtResult.Text = (res is double && Constant.MISSING == (double)res) ? Formatting.ERRR : res.ToString();
+                    txtResult.Text = res is double && Constant.MISSING == (double)res ? Formatting.ERRR : res.ToString();
                 }
                 else
                 {
@@ -122,7 +122,7 @@ namespace StatsDirect.Calculator
 #endif
                 if (lstSavedExpressions.SelectedIndex >= 0)
                 {
-                    string toPaste = ((string)lstSavedExpressions.SelectedItem);
+                    string toPaste = (string)lstSavedExpressions.SelectedItem;
                     toPaste = toPaste.Substring(0, toPaste.IndexOf('\t'));
                     txtExpression.SelectionLength = 0;
                     txtExpression.SelectedText = toPaste;

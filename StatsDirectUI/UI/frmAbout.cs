@@ -60,18 +60,18 @@ namespace StatsDirect.UI
                     // No check on major version!
                     // Flags are additive.  Test for highest need, or lowest acceptable.
                     m95 = true;
-                    m98 = (osInfo.Version.Minor >= 10);
+                    m98 = osInfo.Version.Minor >= 10;
                     mMe = (osInfo.Version.Build & 0xffff) >= 3000;
                     break;
                 case PlatformID.Win32NT:
                     mNt = true;
-                    m_2K = (osInfo.Version.Major >= 5);
-                    mXP = (osInfo.Version.Major >= 5) && (osInfo.Version.Minor >= 1);
-                    mVista = (osInfo.Version.Major >= 6);
-                    m7 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 1);
-                    m8 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 2);
-                    m81 = (osInfo.Version.Major >= 6) && (osInfo.Version.Minor >= 3);
-                    m10 = (osInfo.Version.Major >= 10);
+                    m_2K = osInfo.Version.Major >= 5;
+                    mXP = osInfo.Version.Major >= 5 && osInfo.Version.Minor >= 1;
+                    mVista = osInfo.Version.Major >= 6;
+                    m7 = osInfo.Version.Major >= 6 && osInfo.Version.Minor >= 1;
+                    m8 = osInfo.Version.Major >= 6 && osInfo.Version.Minor >= 2;
+                    m81 = osInfo.Version.Major >= 6 && osInfo.Version.Minor >= 3;
+                    m10 = osInfo.Version.Major >= 10;
                     break;
             }
 
@@ -119,7 +119,7 @@ namespace StatsDirect.UI
             int d = !DateTime.MinValue.Equals(ui.Expires) ? Math.Abs(DateTime.ParseExact(ui.Expires, "dd/MM/yyyy", CultureInfo.InvariantCulture).Subtract(DateTime.Now).Days) : 0;
             if (ui.Trial || d < 60)
             {
-                lblEmail.Text = ui.Name + "\r\n" + "YOUR LICENCE EXPIRES IN " + d.ToString() + " DAYS.\r\nTO ORDER, CLICK ON THE ABOVE LINK,\r\nTHEN DOUBLE CLICK HERE TO ENTER A NEW LICENCE KEY.";
+                lblEmail.Text = ui.Name + "\r\n" + "YOUR LICENCE EXPIRES IN " + d + " DAYS.\r\nTO ORDER, CLICK ON THE ABOVE LINK,\r\nTHEN DOUBLE CLICK HERE TO ENTER A NEW LICENCE KEY.";
                 lblEmail.Cursor = Cursors.Hand;
                 lblEmail.DoubleClick += lblEmail_DoubleClick;
             }

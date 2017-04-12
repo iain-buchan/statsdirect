@@ -53,7 +53,7 @@ namespace StatsDirect.Charting.Renderer
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
             List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
-            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
 
             if (IsAscii)
                 return PlotBoxWhiskerAscii(seriesToUse);
@@ -71,7 +71,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
 
             double p = (1.0 - bwOptions.Cco) / 2.0;
             if (p > 1.0 - p)
@@ -198,7 +198,7 @@ namespace StatsDirect.Charting.Renderer
                         DrawLineInChartCoordinates(black, minWhiskerL, yctr, boxL, yctr);
 
                         //  Draw outer marker
-                        bool shouldDrawOuterBracketL = !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterL || gatedInnerL));
+                        bool shouldDrawOuterBracketL = !(bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) && !(gatedOuterL || gatedInnerL);
                         DrawLineInChartCoordinates(black, minWhiskerL, yTop, minWhiskerL, yBottom);
                         if (shouldDrawOuterBracketL)
                         {
@@ -212,7 +212,7 @@ namespace StatsDirect.Charting.Renderer
                         {
                             for (int r = 0; r < s.Data.Length; r++)
                             {
-                                if (s.Data[r] < innerFenceL && (s.Data[r] >= outerFenceL || !(gatedOuterL)))
+                                if (s.Data[r] < innerFenceL && (s.Data[r] >= outerFenceL || !gatedOuterL))
                                     DrawMarkerInChartCoordinates(s.Data[r], yctr, 2 * outlierRadius, hollowCircleMarker);
                             }
                         }
@@ -295,7 +295,7 @@ namespace StatsDirect.Charting.Renderer
                         //  At least one inner outlier, and we're not using the outer fence.  The inner fence will have been drawn; we should not draw this as well.
                         // shouldDrawOuterFenceR = False
                         // End If
-                        bool shouldDrawOuterBracketR = shouldDrawOuterFenceR && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterR || gatedInnerR));
+                        bool shouldDrawOuterBracketR = shouldDrawOuterFenceR && !(bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) && !(gatedOuterR || gatedInnerR);
                         if (shouldDrawOuterFenceR)
                         {
                             DrawLineInChartCoordinates(black, maxWhiskerR, yTop, maxWhiskerR, yBottom);
@@ -311,7 +311,7 @@ namespace StatsDirect.Charting.Renderer
                         {
                             for (int r = 0; r < s.Data.Length; r++)
                             {
-                                if (s.Data[r] > innerFenceR && (s.Data[r] <= outerFenceR || !(gatedOuterR)))
+                                if (s.Data[r] > innerFenceR && (s.Data[r] <= outerFenceR || !gatedOuterR))
                                     DrawMarkerInChartCoordinates(s.Data[r], yctr, 2 * outlierRadius, hollowCircleMarker);
                             }
                         }
@@ -340,7 +340,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
 
             double P = (1.0 - bwOptions.Cco) / 2.0;
             if (P > 1.0 - P)
@@ -484,7 +484,7 @@ namespace StatsDirect.Charting.Renderer
                         //  Draw outer marker
                         const bool shouldDrawOuterFenceB = true;
                         // ReSharper disable RedundantLogicalConditionalExpressionOperand
-                        bool shouldDrawOuterBracketB = shouldDrawOuterFenceB && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterB || gatedInnerB));
+                        bool shouldDrawOuterBracketB = shouldDrawOuterFenceB && !(bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) && !(gatedOuterB || gatedInnerB);
                         // ReSharper restore RedundantLogicalConditionalExpressionOperand
                         if (shouldDrawOuterFenceB)
                         {
@@ -499,7 +499,7 @@ namespace StatsDirect.Charting.Renderer
                         //  Min outliers - below outer fence
                         if (gatedInnerB)
                             for (int r = 0; r < s.Data.Length; r++)
-                                if (s.Data[r] < innerFenceB && (s.Data[r] >= outerFenceB || !(gatedOuterB)))
+                                if (s.Data[r] < innerFenceB && (s.Data[r] >= outerFenceB || !gatedOuterB))
                                     DrawMarkerInCanvasCoordinates(xc, ToCanvasY(s.Data[r]), 2 * OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
                         if (gatedOuterB)
                             for (int r = 0; r < s.Data.Length; r++)
@@ -583,7 +583,7 @@ namespace StatsDirect.Charting.Renderer
                         // shouldDrawOuterFenceT = False
                         //  End If
                         // ReSharper disable RedundantLogicalConditionalExpressionOperand
-                        bool shouldDrawOuterBracketT = shouldDrawOuterFenceT && !((bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary)) && !((gatedOuterT || gatedInnerT));
+                        bool shouldDrawOuterBracketT = shouldDrawOuterFenceT && !(bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary) && !(gatedOuterT || gatedInnerT);
                         // ReSharper restore RedundantLogicalConditionalExpressionOperand
                         if (shouldDrawOuterFenceT)
                         {
@@ -598,7 +598,7 @@ namespace StatsDirect.Charting.Renderer
                         //  Max outliers
                         if (gatedInnerT)
                             for (int r = 0; r <= s.Data.Length - 1; r++)
-                                if (s.Data[r] > innerFenceT && (s.Data[r] <= outerFenceT || !(gatedOuterT)))
+                                if (s.Data[r] > innerFenceT && (s.Data[r] <= outerFenceT || !gatedOuterT))
                                     DrawMarkerInCanvasCoordinates(xc, ToCanvasY(s.Data[r]), 2 * OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
                         if (gatedOuterT)
                             for (int r = 0; r <= s.Data.Length - 1; r++)
@@ -620,7 +620,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            BoxWhiskerOptions bwOptions = ((BoxWhiskerOptions)(definition.ChartOptions));
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
 
             double P = (1.0 - bwOptions.Cco) / 2.0;
             if (P > 1.0 - P)
@@ -966,7 +966,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("method", method.ToString());
+                    throw new ArgumentOutOfRangeException(nameof(method), method.ToString());
             }
         }
 
@@ -983,7 +983,7 @@ namespace StatsDirect.Charting.Renderer
                 imdn = s.Data.Length - 1;
             if (imdn - Math.Floor(imdn) == 0.0)
                 return s.Data[Convert.ToInt32(imdn)];
-            return s.Data[((int)(Math.Floor(imdn)))] + (s.Data[((int)(Math.Floor(imdn))) + 1] - s.Data[((int)(Math.Floor(imdn)))]) * (imdn - Math.Floor(imdn));
+            return s.Data[(int)Math.Floor(imdn)] + (s.Data[(int)Math.Floor(imdn) + 1] - s.Data[(int)Math.Floor(imdn)]) * (imdn - Math.Floor(imdn));
         }
     }
 }

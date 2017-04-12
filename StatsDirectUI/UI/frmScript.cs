@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.IO;
 using StatsDirect.Templates;
 using System.Globalization;
+using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.UI
 {
@@ -439,13 +440,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public override Pane SelectedPane
-        {
-            get
-            {
-                return new Pane(Text, WindowInformation, 0);
-            }
-        }
+        public override Pane SelectedPane => new Pane(Text, WindowInformation, 0);
 
         public override bool SelectPane(Pane pane)
         {

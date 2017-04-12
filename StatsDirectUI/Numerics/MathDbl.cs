@@ -59,10 +59,10 @@ namespace StatsDirect.Numerics
                     sx = x[i];
                     sy = y[i];
                     sumx += sx;
-                    sxs += (sx * sx);
+                    sxs += sx * sx;
                     sumy += sy;
-                    sys += (sy * sy);
-                    sumxy += (sx * sy);
+                    sys += sy * sy;
+                    sumxy += sx * sy;
                 }
             }
             else
@@ -75,10 +75,10 @@ namespace StatsDirect.Numerics
                         sx = x[i];
                         sy = y[i];
                         sumx += sx;
-                        sxs += (sx * sx);
+                        sxs += sx * sx;
                         sumy += sy;
-                        sys += (sy * sy);
-                        sumxy += (sx * sy);
+                        sys += sy * sy;
+                        sumxy += sx * sy;
                     }
                 }
             }
@@ -86,9 +86,9 @@ namespace StatsDirect.Numerics
             {
                 return Constant.MISSING;
             }
-            double ssx = sxs - ((sumx * sumx) / nx);
-            double ssy = sys - ((sumy * sumy) / nx);
-            double xy = sumxy - (sumx * sumy / nx);
+            double ssx = sxs - sumx * sumx / nx;
+            double ssy = sys - sumy * sumy / nx;
+            double xy = sumxy - sumx * sumy / nx;
             double r = xy / Math.Sqrt(ssx * ssy);
             if (Math.Abs(r) >= 1.0)
             {
@@ -133,7 +133,7 @@ namespace StatsDirect.Numerics
             }
             if (iq - Math.Floor(iq) != 0)
             {
-                return r[((int)(Math.Floor(iq)))] + (r[((int)(Math.Floor(iq))) + 1] - r[((int)(Math.Floor(iq)))]) * (iq - Math.Floor(iq));
+                return r[(int)Math.Floor(iq)] + (r[(int)Math.Floor(iq) + 1] - r[(int)Math.Floor(iq)]) * (iq - Math.Floor(iq));
             }
             return 0;
         }
@@ -555,7 +555,7 @@ namespace StatsDirect.Numerics
                     //  Edgeworth series for n>50
                     double[] h = new double[16];
                     double dn = Convert.ToDouble(N);
-                    x = Convert.ToDouble(k - 1) / Math.Sqrt(((6.0 + dn * (5.0 - dn * (3.0 + 2.0 * dn)))) / (-18.0));
+                    x = Convert.ToDouble(k - 1) / Math.Sqrt((6.0 + dn * (5.0 - dn * (3.0 + 2.0 * dn))) / -18.0);
                     h[1] = x;
                     h[2] = x * x - 1.0;
                     for (i = 3; i <= 15; i++)
@@ -565,7 +565,7 @@ namespace StatsDirect.Numerics
                     double r = 1.0 / dn;
                     double sc1 = h[3] * (-0.09 + r * (0.045 + r * (-0.5325 + r * 0.506)));
                     double sc2 = h[5] * (0.036735 + r * (-0.036735 + r * 0.3214)) + h[7] * (0.00405 + r * (-0.023336 + r * 0.07787));
-                    double sc3 = (h[9] * (-0.0033061 - r * 0.0065166) + h[11] * (-0.0001215 + r * 0.0025927) + r * (h[13] * 0.00014878 + h[15] * 0.0000027338));
+                    double sc3 = h[9] * (-0.0033061 - r * 0.0065166) + h[11] * (-0.0001215 + r * 0.0025927) + r * (h[13] * 0.00014878 + h[15] * 0.0000027338);
                     double sc = r * (sc1 + r * (sc2 + r * sc3));
                     kendpReturn = 1.0 - PDF.alnorm(x) + sc * 0.398942 * Math.Exp(-0.5 * x * x);
                     if (kendpReturn < 0.0)
@@ -610,7 +610,7 @@ namespace StatsDirect.Numerics
             {
                 ic = ic + 1;
                 kc = kc + ic;
-                int jc = ((int)(Math.Floor((double)(kc + 1) / 2)));
+                int jc = (int)Math.Floor((double)(kc + 1) / 2);
                 int I1;
                 for (i = 1; i <= jc; i++)
                 {
@@ -681,7 +681,7 @@ namespace StatsDirect.Numerics
                 pu = 1.0 - ExFortran.prho(nx, ix, out ifault);
                 if (ifault == 0 & (pu < P | Math.Abs(pu - P) < 0.00000000000001))
                 {
-                    rhofrompReturn = 1.0 - (Convert.ToDouble(ix) / ((Convert.ToDouble(nx) * (Convert.ToDouble(nx) * Convert.ToDouble(nx) - 1.0)) / 6.0));
+                    rhofrompReturn = 1.0 - Convert.ToDouble(ix) / (Convert.ToDouble(nx) * (Convert.ToDouble(nx) * Convert.ToDouble(nx) - 1.0) / 6.0);
                     break;
                 }
                 if (ix < 3)
@@ -814,7 +814,7 @@ namespace StatsDirect.Numerics
                 {
                     if (z_in < im)
                     {
-                        if ((M * (-th) < N))
+                        if (M * -th < N)
                         {
                             ps = (N + (M - N) * hth) / (M + N);
                         }
@@ -825,7 +825,7 @@ namespace StatsDirect.Numerics
                     }
                     else
                     {
-                        if ((N * (-th) < M))
+                        if (N * -th < M)
                         {
                             ps = (N + (M - N) * hth) / (M + N);
                         }
@@ -879,9 +879,9 @@ namespace StatsDirect.Numerics
         public static void pone(double P0, double dpsi, double r, out double dp1, out int imposs)
         {
             double Q0 = 1.0 - P0;
-            double temp1 = 2 * Math.Pow(dpsi, 2.0) * Math.Pow(P0, 2.0) + 2.0 * dpsi * P0 * Q0 + Math.Pow((dpsi - 1.0), 2.0) * P0 * Q0 * Math.Pow(r, 2.0);
-            double temp2 = (dpsi - 1.0) * P0 * Q0 * r * Math.Sqrt(Math.Pow(r, 2.0) * Math.Pow((dpsi - 1.0), 2.0) + 4.0 * dpsi);
-            double temp3 = 2.0 * (Math.Pow((dpsi * P0 + Q0), 2.0) + Math.Pow(r, 2.0) * Math.Pow((dpsi - 1.0), 2.0) * P0 * Q0);
+            double temp1 = 2 * Math.Pow(dpsi, 2.0) * Math.Pow(P0, 2.0) + 2.0 * dpsi * P0 * Q0 + Math.Pow(dpsi - 1.0, 2.0) * P0 * Q0 * Math.Pow(r, 2.0);
+            double temp2 = (dpsi - 1.0) * P0 * Q0 * r * Math.Sqrt(Math.Pow(r, 2.0) * Math.Pow(dpsi - 1.0, 2.0) + 4.0 * dpsi);
+            double temp3 = 2.0 * (Math.Pow(dpsi * P0 + Q0, 2.0) + Math.Pow(r, 2.0) * Math.Pow(dpsi - 1.0, 2.0) * P0 * Q0);
             dp1 = (temp1 - temp2) / temp3;
             double Q1 = 1.0 - dp1;
             Q0 = 1.0 - P0;
@@ -946,7 +946,7 @@ namespace StatsDirect.Numerics
             for (k = 1; k <= 2; k++)
             {
                 double th;
-                if (((k == 1 & ia == 0 & id == 0) | (k == 2 & ib == 0 & ic == 0)))
+                if ((k == 1 & ia == 0 & id == 0) | (k == 2 & ib == 0 & ic == 0))
                 {
                     th = thb[k];
                     ps = 0.5;
@@ -969,7 +969,7 @@ namespace StatsDirect.Numerics
                         }
                         PP[1] = ps + hth;
                         PP[2] = ps - hth;
-                        f = Math.Pow(((th - thhat) / z), 2.0);
+                        f = Math.Pow((th - thhat) / z, 2.0);
                         f = f * (1.0 - 1.0 / (M + N));
                         f = PP[1] * (1 - PP[1]) / M + PP[2] * (1 - PP[2]) / N - f;
                         if (f < 0.0)
@@ -990,10 +990,10 @@ namespace StatsDirect.Numerics
         public static void binci(double r, double N, out double pil, out double piu, double cco, out string warn)
         {
 
-            double rp1l = (2.0 * N) - (2.0 * r) + 2.0;
+            double rp1l = 2.0 * N - 2.0 * r + 2.0;
             double rp2l = 2.0 * r;
-            double rp1u = (2.0 * r) + 2.0;
-            double rp2u = (2.0 * N) - (2.0 * r);
+            double rp1u = 2.0 * r + 2.0;
+            double rp2u = 2.0 * N - 2.0 * r;
             if (r == 0.0)
             {
                 pil = 0.0;
@@ -1004,7 +1004,7 @@ namespace StatsDirect.Numerics
                 if (fivl == Constant.MISSING)
                     pil = Constant.MISSING;
                 else
-                    pil = r / (r + ((N - r + 1.0) * fivl));
+                    pil = r / (r + (N - r + 1.0) * fivl);
             }
             if (r == N)
             {
@@ -1016,7 +1016,7 @@ namespace StatsDirect.Numerics
                 if (fivu == Constant.MISSING)
                     piu = Constant.MISSING;
                 else
-                    piu = (r + 1.0) / ((r + 1.0) + ((N - r) * (1.0 / fivu)));
+                    piu = (r + 1.0) / (r + 1.0 + (N - r) * (1.0 / fivu));
             }
             if (r == 0.0 || r == N)
                 warn = " [" + StatsDirect.Utilities.Formatting.XRound(100.0 * (cco + (1.0 - cco) / 2.0), 1) + "% one-sided CI]";
@@ -1059,7 +1059,7 @@ namespace StatsDirect.Numerics
         {
             double lastz = 0;
 
-            if ((fp == 0.0 && tp == 0.0) || (fp == column2total && tp == column1total))
+            if (fp == 0.0 && tp == 0.0 || fp == column2total && tp == column1total)
             {
                 thetal = 0.0;
                 thetau = double.PositiveInfinity;
@@ -1086,7 +1086,7 @@ namespace StatsDirect.Numerics
                 }
                 double P0 = x0 / n0;
                 double P1 = x1 / n1;
-                double uhat = (1.0 / (x1 + 0.5)) + (1.0 / (x0 + 0.5)) - (1.0 / (n0 + 0.5)) - (1.0 / (n1 + 0.5));
+                double uhat = 1.0 / (x1 + 0.5) + 1.0 / (x0 + 0.5) - 1.0 / (n0 + 0.5) - 1.0 / (n1 + 0.5);
                 double N = n0 + n1;
                 double logthetahat = Math.Log((x1 + 0.5) / (n1 + 0.5)) - Math.Log((x0 + 0.5) / (n0 + 0.5));
                 thetau = Math.Exp(logthetahat) * Math.Exp(zc * Math.Sqrt(uhat));
@@ -1118,7 +1118,7 @@ namespace StatsDirect.Numerics
                         {
                             za2 = -zc;
                         }
-                        theta2 = Math.Exp(Math.Log(theta0) + ((za2 - z0) / (z1 - z0)) * Math.Log(theta1 / theta0));
+                        theta2 = Math.Exp(Math.Log(theta0) + (za2 - z0) / (z1 - z0) * Math.Log(theta1 / theta0));
                         temptheta1 = theta1;
                         temptheta2 = theta2;
                         ztemp2 = lr_z(ref temptheta2, out a, out b, out c, ref N, ref n0, ref n1, ref x0, ref x1);
@@ -1199,7 +1199,7 @@ namespace StatsDirect.Numerics
                 return pest2;
             if (pest2 > 1.0 | pest2 < 0.0)
                 return pest1;
-            if ((pest1 * theta) > 1.0 | (pest1 * theta) < 0.0)
+            if (pest1 * theta > 1.0 | pest1 * theta < 0.0)
                 return pest2;
             return pest1;
         }
@@ -1221,9 +1221,9 @@ namespace StatsDirect.Numerics
             {
                 return Constant.MISSING;
             }
-            double utilde = (q0tilde / (n0 * p0tilde)) + (q1tilde / (n1 * p1tilde));
+            double utilde = q0tilde / (n0 * p0tilde) + q1tilde / (n1 * p1tilde);
             vtilde = 1.0 / utilde;
-            return (((x1) - (n1 * p1tilde)) / q1tilde) / Math.Sqrt(vtilde);
+            return (x1 - n1 * p1tilde) / q1tilde / Math.Sqrt(vtilde);
         }
 
 
@@ -1442,11 +1442,11 @@ namespace StatsDirect.Numerics
             while (true);
             double[] pecdf = new double[ii + 1];
             n += 1;
-            pecdf[0] = (10000.0 * (f[0] / Convert.ToDouble(n))) / 10000.0;
+            pecdf[0] = 10000.0 * (f[0] / Convert.ToDouble(n)) / 10000.0;
             for (i = 1; i <= ii; i++)
             {
                 // allow for rounding error
-                pecdf[i] = (10000.0 * (pecdf[i - 1] + f[i] / Convert.ToDouble(n))) / 10000.0;
+                pecdf[i] = 10000.0 * (pecdf[i - 1] + f[i] / Convert.ToDouble(n)) / 10000.0;
             }
             for (i = 0; i <= x.Length - 1; i++)
             {
@@ -1494,7 +1494,7 @@ namespace StatsDirect.Numerics
                     }
                     if (x[i] != Constant.MISSING)
                     {
-                        sd += Math.Pow((x[i] - mu), 2.0);
+                        sd += Math.Pow(x[i] - mu, 2.0);
                     }
                 }
                 sd /= Convert.ToDouble(nx - 1);

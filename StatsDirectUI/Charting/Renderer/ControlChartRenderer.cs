@@ -37,7 +37,7 @@ namespace StatsDirect.Charting.Renderer
             double ymean; double ysd;
             MathDbl.meansd(ydat, 0, ref rows, out ymean, out ysd);
 
-            ControlOptions cOptions = ((ControlOptions)(definition.ChartOptions));
+            ControlOptions cOptions = (ControlOptions)definition.ChartOptions;
             int kobs = cOptions.ObservationsToUse;
             if (cOptions.HasUserSpecifiedMeanAndSD)
             {
@@ -142,7 +142,7 @@ namespace StatsDirect.Charting.Renderer
             double ymean; double ysd;
             MathDbl.meansd(ydat, 0, ref rows, out ymean, out ysd);
 
-            ControlOptions cOptions = ((ControlOptions)(definition.ChartOptions));
+            ControlOptions cOptions = (ControlOptions)definition.ChartOptions;
             cOptions.UseDates = looksLikeDates;
             double oldymean = ymean;
             double oldysd = ysd;
@@ -197,7 +197,7 @@ namespace StatsDirect.Charting.Renderer
                 else
                 {
                     // restricted = false; 
-                    external = (oldymean != ymean || oldysd != ysd);
+                    external = oldymean != ymean || oldysd != ysd;
                 }
                 if (ysd != Constant.MISSING)
                 {

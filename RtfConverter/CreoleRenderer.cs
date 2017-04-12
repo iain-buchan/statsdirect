@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace RtfConverter
 {
     class CreoleRenderer : IChunkVisitor
     {
-        private StringBuilder sb;
+        private readonly StringBuilder sb;
         private AccumulatedFormat previousFormat;
         private ColourTable colourTable;
-        private bool suppressNextText = false;
+        private bool suppressNextText;
 
         public CreoleRenderer()
         {
@@ -57,19 +55,9 @@ namespace RtfConverter
                 else if (victim.IsTableCellSeparator)
                 {
                     if (victim.AccumulatedFormat.IsUnderlined)
-                    {
-                        if (victim.IsStart)
-                            sb.Append("<th>");
-                        else
-                            sb.Append("</th>");
-                    }
+                        sb.Append(victim.IsStart ? "<th>" : "</th>");
                     else
-                    {
-                        if (victim.IsStart)
-                            sb.Append("<td>");
-                        else
-                            sb.Append("</td>");
-                    }
+                        sb.Append(victim.IsStart ? "<td>" : "</td>");
                 }
                 else
                 {

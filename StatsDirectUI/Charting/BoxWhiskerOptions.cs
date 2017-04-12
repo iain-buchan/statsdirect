@@ -96,109 +96,31 @@ namespace StatsDirect.Charting
             } 
         } 
         
-        public override bool ShowBoxWhiskerOptions 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAxisLabelFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAxisTitleFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesBoxAxes 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesChartTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesColour 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        } 
-        
-        public override bool UsesOrientation 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesSeriesLabels 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesShowLegend 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        } 
-        
-        public override bool UsesTitleFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesXAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool ShowLegendIsRelevant 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        } 
-        
-        public override bool IsNaturalOrientation 
-        { 
-            get 
-            { 
-                return Orientation == ChartOrientation.Horizontal; 
-            } 
-        }
+        public override bool ShowBoxWhiskerOptions => true;
+
+        public override bool UsesAxisLabelFontDescriptor => true;
+
+        public override bool UsesAxisTitleFontDescriptor => true;
+
+        public override bool UsesBoxAxes => true;
+
+        public override bool UsesChartTitle => true;
+
+        public override bool UsesColour => false;
+
+        public override bool UsesOrientation => true;
+
+        public override bool UsesSeriesLabels => true;
+
+        public override bool UsesShowLegend => false;
+
+        public override bool UsesTitleFontDescriptor => true;
+
+        public override bool UsesXAxisTitle => true;
+
+        public override bool ShowLegendIsRelevant => false;
+
+        public override bool IsNaturalOrientation => Orientation == ChartOrientation.Horizontal;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

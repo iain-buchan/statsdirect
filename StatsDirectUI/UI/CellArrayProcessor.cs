@@ -21,6 +21,7 @@ namespace StatsDirect.UI
         /// <param name="isRefill"></param>
         /// <param name="titleWasInData"></param>
         /// <param name="originGroup"></param>
+        /// <param name="frameName"></param>
         /// <returns></returns>
         public static DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName)
         {
@@ -73,7 +74,7 @@ namespace StatsDirect.UI
                         frame = ProcessCellArrayNumericCodingTextToSomething(cellSelection, mode, originGroup);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("mode", mode.ToString(), "Unknown mode");
+                        throw new ArgumentOutOfRangeException(nameof(mode), mode.ToString(), "Unknown mode");
                 }
                 if (null != frame)
                     frame.Name = frameName;
@@ -382,7 +383,7 @@ namespace StatsDirect.UI
                 for (int i = 0; i < ccs.NonHiddenRowCount; i++)
                 {
                     string t = columnArray[i];
-                    string bufr = (null == t) ? string.Empty : t.Trim();
+                    string bufr = null == t ? string.Empty : t.Trim();
                     hold[rx++, c] = bufr;
                 }
                 // Fill in blanks for any rows that have been filtered out

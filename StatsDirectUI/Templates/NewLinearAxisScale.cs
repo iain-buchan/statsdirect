@@ -15,7 +15,7 @@ namespace StatsDirect.Templates
 
         public double Interval { get; set; }
 
-        public double FirstMajorTicValue { get { return MinimumScaleValue + Interval * IntervalsPerMajorTic; } }
+        public double FirstMajorTicValue => MinimumScaleValue + Interval * IntervalsPerMajorTic;
 
         public NewLinearAxisScale(double minimumDataValue, double maximumDataValue, double minimumScaleValue, double maximumScaleValue, double interval, int intervalsPerMajorTic, int phase = 0)
         {
@@ -38,7 +38,7 @@ namespace StatsDirect.Templates
         {
             List<Tic> tics = new List<Tic>();
             for (int i = 0; MinimumScaleValue + Interval * i <= MaximumScaleValue; i++)
-                tics.Add(new Tic { Value = MinimumScaleValue + Interval * i, TicType = (0 == i) || ((i - Phase) % IntervalsPerMajorTic == 0) ? TicType.Major : TicType.Minor }); // Note that the first tic is always a major so that users can always see the minimum value.
+                tics.Add(new Tic { Value = MinimumScaleValue + Interval * i, TicType = 0 == i || (i - Phase) % IntervalsPerMajorTic == 0 ? TicType.Major : TicType.Minor }); // Note that the first tic is always a major so that users can always see the minimum value.
             return tics;
         }
 

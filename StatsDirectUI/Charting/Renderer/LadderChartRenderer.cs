@@ -33,7 +33,7 @@ namespace StatsDirect.Charting.Renderer
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             // Get the plot title
-            LadderOptions lOptions = ((LadderOptions)(definition.ChartOptions));
+            LadderOptions lOptions = (LadderOptions)definition.ChartOptions;
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(lOptions);
             AssignMarkersToSeries(definition.YSeries, lOptions);
@@ -41,8 +41,8 @@ namespace StatsDirect.Charting.Renderer
             //  No need to calculate min/max values, as they've already been calculated as the series were added.
             //  We just need to set the neat scale.
             DrawAxesOrEnlargeCanvas(lOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = definition.YSeries }, new AxisDefinition(lOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), lOptions.ShouldBoxAxes, false);
-            double x1 = xAxisCanvas + (xExtCanvas * 0.25);
-            double x2 = xAxisCanvas + (xExtCanvas * 0.75);
+            double x1 = xAxisCanvas + xExtCanvas * 0.25;
+            double x2 = xAxisCanvas + xExtCanvas * 0.75;
 
             // Plot the points & join the lines
             DoubleSeries s0 = definition.YSeries[0].AsDoubleSeries;
@@ -60,7 +60,7 @@ namespace StatsDirect.Charting.Renderer
             }
             //  Lines
             MarkerType rungMarkerType = ChartPreferences.MarkerTypes[10];
-            if ((lOptions.MarkerTypes != null) && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
+            if (lOptions.MarkerTypes != null && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
                 rungMarkerType = lOptions.MarkerTypes[0];
 
             using (Pen rungPen = new Pen(Color.Black, rungMarkerType.Width))

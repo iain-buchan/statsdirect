@@ -99,7 +99,7 @@ namespace StatsDirect.Builtins
             }
             pmurc( nrx, ncx, x, iwk, 1, x, wk, ref ifault ); 
             int nn = nrx > ncx ? nrx : ncx; 
-            int nstk = ( ( int )( Math.Floor(1.4427 * Math.Log( Convert.ToDouble( nn ) ) + 1) ) ); 
+            int nstk = ( int )Math.Floor(1.4427 * Math.Log( Convert.ToDouble( nn ) ) + 1); 
             MXSRT2( x, nrx, ncx, nkey, iperm, wk, iwk, nn, nn + nstk ); 
             ix = 1; 
             int iy = 1; 
@@ -121,12 +121,12 @@ namespace StatsDirect.Builtins
             pmurc( nrx, ncx, x, iwk, 1, x, wk, ref ifault ); 
             int lind = 0; 
             i = 1; 
-            while ( ( i <= lir ) ) 
+            while ( i <= lir ) 
             { 
                 int icnt = 0; 
                 if ( iperm[ i ] < 0 ) 
                 { 
-                    while ( ( i <= lir ) ) 
+                    while ( i <= lir ) 
                     { 
                         if ( iperm[ i ] < 0 ) 
                         { 
@@ -142,7 +142,7 @@ namespace StatsDirect.Builtins
                 } 
                 else 
                 { 
-                    while ( ( i <= lir ) ) 
+                    while ( i <= lir ) 
                     { 
                         if ( iperm[ i ] > 0 ) 
                         { 
@@ -279,7 +279,7 @@ namespace StatsDirect.Builtins
                 else 
                 { 
                     k = i; 
-                    ij = ( ( int )( Math.Floor(i + ( j - i ) * r) ) ); 
+                    ij = ( int )Math.Floor(i + ( j - i ) * r); 
                     int iix = 1; 
                     int iiw = 1; 
                     for ( ii=1; ii <= nr1; ii++ ) 
@@ -377,7 +377,7 @@ namespace StatsDirect.Builtins
                         } 
                     } 
                     while ( true ); 
-                    if ( ( l - i ) <= ( j - k ) ) 
+                    if ( l - i <= j - k ) 
                     { 
                         istk[ m + ix2 ] = k; 
                         istk[ m + ix1 ] = j; 
@@ -392,7 +392,7 @@ namespace StatsDirect.Builtins
                         m = m + 1; 
                     } 
                 } 
-                if ( ( j - i ) < 11 ) 
+                if ( j - i < 11 ) 
                 { 
                     if ( i != jcolx ) 
                     { 
@@ -603,7 +603,7 @@ namespace StatsDirect.Builtins
                     int j = i; 
                     ipermu[ j ] = -ipermu[ j ]; 
                     int k = ipermu[ j ]; 
-                    while ( ( ipermu[ k ] <= 0 ) ) 
+                    while ( ipermu[ k ] <= 0 ) 
                     { 
                         double temp = xpermu[ ipxm1 + j ]; 
                         xpermu[ ipxm1 + j ] = xpermu[ ipxm1 + k ]; 
@@ -658,7 +658,7 @@ namespace StatsDirect.Builtins
                 { 
                     k = i; 
                     //        pick a central element (ic)
-                    int ij = i + ( j - i ) * ( ( int )(  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ Math.Floor(r) ) ); 
+                    int ij = i + ( j - i ) * ( int )Math.Floor(r); 
                     ic = iy[ ij ]; 
                     //        swap ic with first element if that is larger
                     if ( iy[ i ] > ic ) 
@@ -834,7 +834,7 @@ namespace StatsDirect.Builtins
                 { 
                     k = i; 
                     //        pick a central element (cp)
-                    int ij = i + ( j - i ) * ( ( int )( Math.Floor(r) ) ); 
+                    int ij = i + ( j - i ) * ( int )Math.Floor(r); 
                     cp = y[ ij ]; 
                     it = ipmu[ ij ]; 
                     //        swap cp with first element if that is larger
@@ -1075,7 +1075,7 @@ namespace StatsDirect.Builtins
             } 
             for ( int i=1; i <= n - 1; i++ ) 
             { 
-                for (int ii=( i + 1 ) + ldr * ( i - 1 ); ii <= n + ldr * ( i - 1 ); ii++ ) 
+                for (int ii=i + 1 + ldr * ( i - 1 ); ii <= n + ldr * ( i - 1 ); ii++ ) 
                 { 
                     r[ ii ] = 0.0; 
                 } 
@@ -1096,11 +1096,11 @@ namespace StatsDirect.Builtins
         {
             double xnorm; 
             
-            if ( ( n < 1 ) ) 
+            if ( n < 1 ) 
             { 
                 xnorm = 0.0; 
             } 
-            else if ( ( n == 1 ) ) 
+            else if ( n == 1 ) 
             { 
                 xnorm = Math.Abs( x[ ixi ] ); 
             } 
@@ -1115,12 +1115,12 @@ namespace StatsDirect.Builtins
                         double absxi = Math.Abs( x[ ix ] );
                         if ( scale < absxi ) 
                         { 
-                            ssq = 1.0 + ssq * Math.Pow( ( scale / absxi ), 2.0 ); 
+                            ssq = 1.0 + ssq * Math.Pow( scale / absxi, 2.0 ); 
                             scale = absxi; 
                         } 
                         else 
                         { 
-                            ssq = ssq + Math.Pow( ( absxi / scale ), 2.0 ); 
+                            ssq = ssq + Math.Pow( absxi / scale, 2.0 ); 
                         }
                     }
                 } 

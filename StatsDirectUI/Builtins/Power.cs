@@ -52,7 +52,7 @@ namespace StatsDirect.Builtins
         {
             if ( x < -1.0 || x > 1.0 || y <= 1.0 ) 
                 return Constant.MISSING; 
-            return fisher_z2( x, y ) - ( 3.0 * fisher_z2( x, y ) + x ) / ( 4.0 * y ) + x / ( 2.0 * ( y - 1.0 ) ) + 3.0 * x / ( 8.0 * Math.Pow( ( y - 1.0 ), 2.0 ) );
+            return fisher_z2( x, y ) - ( 3.0 * fisher_z2( x, y ) + x ) / ( 4.0 * y ) + x / ( 2.0 * ( y - 1.0 ) ) + 3.0 * x / ( 8.0 * Math.Pow( y - 1.0, 2.0 ) );
         }
 
 
@@ -81,8 +81,8 @@ namespace StatsDirect.Builtins
             double Q = 1.0 - P; 
             double Q1 = 1.0 - P1; 
             double Q0 = 1.0 - P0; 
-            double nprime = Math.Pow( ( zalpha * Math.Sqrt( ( 1.0 + 1.0 / M ) * P * Q ) + zbeta * Math.Sqrt( ( P0 * Q0 ) / M + ( P1 * Q1 ) ) ), 2.0 ) / Math.Pow( ( P0 - P1 ), 2.0 ); 
-            return ( nprime * Math.Pow( ( 1.0 + Math.Sqrt( 1.0 + 2.0 * ( M + 1.0 ) / ( nprime * M * Math.Abs( P0 - P1 ) ) ) ), 2.0 ) / 4.0 ) - N; 
+            double nprime = Math.Pow( zalpha * Math.Sqrt( ( 1.0 + 1.0 / M ) * P * Q ) + zbeta * Math.Sqrt( P0 * Q0 / M + P1 * Q1 ), 2.0 ) / Math.Pow( P0 - P1, 2.0 ); 
+            return nprime * Math.Pow( 1.0 + Math.Sqrt( 1.0 + 2.0 * ( M + 1.0 ) / ( nprime * M * Math.Abs( P0 - P1 ) ) ), 2.0 ) / 4.0 - N; 
         } 
         
         /// <summary>
@@ -236,12 +236,12 @@ namespace StatsDirect.Builtins
         public static double uvttpower( double sig, double dif, double n1, double n2, double sdev1, double sdev2 ) 
         {
             double alpha = sig / 2.0; 
-            double k = ( Math.Pow( sdev1, 2.0 ) ) / n1 + ( Math.Pow( sdev2, 2.0 ) ) / n2; 
-            double f = ( Math.Pow( sdev1, 4.0 ) ) / ( ( Math.Pow( k, 2.0 ) ) * ( Math.Pow( n1, 2.0 ) ) * ( n1 - 1.0 ) ) + ( Math.Pow( sdev2, 4.0 ) ) / ( ( Math.Pow( k, 2.0 ) ) * ( Math.Pow( n2, 2.0 ) ) * ( n2 - 1.0 ) ); 
+            double k = Math.Pow( sdev1, 2.0 ) / n1 + Math.Pow( sdev2, 2.0 ) / n2; 
+            double f = Math.Pow( sdev1, 4.0 ) / ( Math.Pow( k, 2.0 ) * Math.Pow( n1, 2.0 ) * ( n1 - 1.0 ) ) + Math.Pow( sdev2, 4.0 ) / ( Math.Pow( k, 2.0 ) * Math.Pow( n2, 2.0 ) * ( n2 - 1.0 ) ); 
             double df = 1.0 / f; 
             double tval = PDF.tfromp( alpha, df ); 
-            double denom = Math.Sqrt( ( Math.Pow( sdev1, 2.0 ) ) / n1 + ( Math.Pow( sdev2, 2.0 ) ) / n2 ); 
-            double term = tval - ( dif / denom ); 
+            double denom = Math.Sqrt( Math.Pow( sdev1, 2.0 ) / n1 + Math.Pow( sdev2, 2.0 ) / n2 ); 
+            double term = tval - dif / denom; 
             return PDF.tvalp( term, df ); 
         } 
         

@@ -8,8 +8,8 @@ namespace StatsDirect.Templates
     {
         public double MinimumDataValue { get; private set; }
         public double MaximumDataValue { get; private set; }
-        public double MinimumScaleValue { get { return Math.Pow(10, MinimumPower) * MinimumScaleTicMultiplier; } }
-        public double MaximumScaleValue { get { return Math.Pow(10, MaximumPower - 1) * MaximumScaleTicMultiplier; } }
+        public double MinimumScaleValue => Math.Pow(10, MinimumPower) * MinimumScaleTicMultiplier;
+        public double MaximumScaleValue => Math.Pow(10, MaximumPower - 1) * MaximumScaleTicMultiplier;
         private int MinimumPower { get; set; }
         private int MinimumScaleTicMultiplier { get; set; }
         private int MaximumPower { get; set; }

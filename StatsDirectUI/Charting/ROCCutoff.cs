@@ -8,12 +8,6 @@ namespace StatsDirect.Charting
         public double Weight;
         public string Title;
 
-        public string FillerToUse
-        {
-            get
-            {
-                return "ROCCutoff";
-            }
-        }
+        public string FillerToUse => "ROCCutoff";
     }
 }

@@ -27,6 +27,7 @@ using Color = System.Drawing.Color;
 using StatsDirect.R;
 using InvalidDataException = StatsDirect.Templates.InvalidDataException;
 using System.Globalization;
+using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.UI
 {
@@ -50,10 +51,6 @@ namespace StatsDirect.UI
         /// </summary>
         private const int MAX_RECENT_OPERATIONS = 10;
         /// <summary>
-        /// The presumed mean width in pixels of a character in a text box, for use when controlling the box's max length.
-        /// </summary>
-        private const int CHARWIDTH = 8;
-        /// <summary>
         /// True if a child window is presently being activated via a tab click - in which case we don't try to set the active tab when the window notification comes in
         /// </summary>
         private bool activatingViaTab /* = false */;
@@ -64,7 +61,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// A holder where we are activating a window via a tab.
         /// </summary>
-        Form mostRecentlySelectedWindow;
+        private Form mostRecentlySelectedWindow;
 
         /// <summary>
         /// If true, a grid selection is in progress
@@ -217,17 +214,14 @@ namespace StatsDirect.UI
 
             bool enabledViaGrid = true;
             object tagObject = ToTagObject(item);
-            if (null != tagObject)
+            if (tagObject is Dictionary<string, string>)
             {
-                if (tagObject is Dictionary<string, string>)
+                Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
+                string operationName;
+                if (tagDictionary.TryGetValue("operation", out operationName))
                 {
-                    Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
-                    string operationName;
-                    if (tagDictionary.TryGetValue("operation", out operationName))
-                    {
-                        Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
-                        enabledViaGrid = isGridVisible || !operation.RequiresGrid;
-                    }
+                    Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
+                    enabledViaGrid = isGridVisible || !operation.RequiresGrid;
                 }
             }
 
@@ -237,12 +231,9 @@ namespace StatsDirect.UI
 
         private static object ToTagObject(ToolStripItem item)
         {
-            if (null == item)
-                return null;
+            object o = item?.Tag;
 
-            object o = item.Tag;
-
-            if (null == o)
+            if (o == null)
                 return null;
 
             // Check for one of our specially formatted key-value strings
@@ -291,14 +282,11 @@ namespace StatsDirect.UI
                 tags.Add("operation", sdMenuItem.Operation);
                 // menuItem.BackColor = Color.PaleGreen;
             }
-            if (null != sdMenuItem.Help)
+            if (sdMenuItem.Help?.ChmId != null)
             {
-                if (null != sdMenuItem.Help.ChmId)
-                {
-                    // Prevent string injection into tags
-                    int chmId = int.Parse(sdMenuItem.Help.ChmId);
-                    tags.Add("help", chmId.ToString());
-                }
+                // Prevent string injection into tags
+                int chmId = int.Parse(sdMenuItem.Help.ChmId);
+                tags.Add("help", chmId.ToString());
             }
             menuItem.Tag = ToTagString(tags);
             menuItem.Click += OperationMenuHandler;
@@ -333,12 +321,12 @@ namespace StatsDirect.UI
             return sb.ToString();
         }
 
-        void menuItem_MouseLeave(object sender, EventArgs e)
+        private void menuItem_MouseLeave(object sender, EventArgs e)
         {
             lastSeenMenuItemTag = null;
         }
 
-        void menuItem_MouseEnter(object sender, EventArgs e)
+        private void menuItem_MouseEnter(object sender, EventArgs e)
         {
             lastSeenMenuItemTag = ToTagObject((ToolStripItem)sender);
         }
@@ -662,7 +650,7 @@ namespace StatsDirect.UI
                 SdApplication.SoleInstance.AddWindow(info);
 
                 // Update the display
-                closeToolStripMenuItem.Enabled = (tabWindows.TabPages.Count > 0);
+                closeToolStripMenuItem.Enabled = tabWindows.TabPages.Count > 0;
                 child.WindowState = FormWindowState.Maximized;
                 child.Show();
                 // Work around an unpleasant glitch in the framework that stops maximised windows showing their icons when first shown.
@@ -737,7 +725,7 @@ namespace StatsDirect.UI
         {
             if (tabWindows.TabPages.Contains(tabPage))
                 tabWindows.TabPages.Remove(tabPage);
-            closeToolStripMenuItem.Enabled = (tabWindows.TabPages.Count > 0);
+            closeToolStripMenuItem.Enabled = tabWindows.TabPages.Count > 0;
         }
 
         private void closeTabToolStripMenuItem_Click(object sender, EventArgs e)
@@ -745,10 +733,7 @@ namespace StatsDirect.UI
             try
             {
                 WindowInformation lastClickedTab = TabStripLastClickedTab();
-                if (null != lastClickedTab)
-                {
-                    lastClickedTab.Window.Close();
-                }
+                lastClickedTab?.Window.Close();
             }
             catch (Exception ex)
             {
@@ -809,8 +794,7 @@ namespace StatsDirect.UI
             try
             {
                 WindowInformation activeInfo = ActiveWindowInformation();
-                if (null != activeInfo)
-                    activeInfo.Window.SaveContents();
+                activeInfo?.Window.SaveContents();
             }
             catch (Exception ex)
             {
@@ -824,9 +808,7 @@ namespace StatsDirect.UI
         /// <returns>the active window's WindowInformation object, or null if there is no active window or the active window has no WindowInformation</returns>
         private WindowInformation ActiveWindowInformation()
         {
-            if (null == ActiveMdiChild)
-                return null;
-            return (WindowInformation)ActiveMdiChild.Tag;
+            return (WindowInformation) ActiveMdiChild?.Tag;
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -847,8 +829,7 @@ namespace StatsDirect.UI
                 {
                     e.Cancel = true;
                     foreach (Form child in MdiChildren)
-                        if (child is StatsDirectForm)
-                            ((StatsDirectForm)child).NoteNonClosure();
+                        (child as StatsDirectForm)?.NoteNonClosure();
                 }
                 else
                 {
@@ -877,7 +858,7 @@ namespace StatsDirect.UI
                 {
                     if (screen.Primary)
                     {
-                        const double inflation = 0.0 - ((1.0 - FRACTION_OF_PRIMARY) / 2.0);
+                        const double inflation = 0.0 - (1.0 - FRACTION_OF_PRIMARY) / 2.0;
                         Rectangle windowBounds = new Rectangle(screen.Bounds.Location, screen.Bounds.Size);
                         windowBounds.Inflate((int)(screen.Bounds.Width * inflation), (int)(screen.Bounds.Height * inflation));
                         Bounds = windowBounds;
@@ -1032,7 +1013,7 @@ namespace StatsDirect.UI
                 else
                 {
                     status = false;
-                    wasPivoted = (oldSelectGroupsByIdentifier != SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier);
+                    wasPivoted = oldSelectGroupsByIdentifier != SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
                 }
                 if (!wasPivoted)
                     ShowPanel(PanelType.Default, false);
@@ -1058,15 +1039,9 @@ namespace StatsDirect.UI
             inputtingData = false;
         }
 
-        public bool IsSelecting
-        {
-            get { return selectingData; }
-        }
+        public bool IsSelecting => selectingData;
 
-        public bool IsInputtingData
-        {
-            get { return inputtingData; }
-        }
+        public bool IsInputtingData => inputtingData;
 
         private void cmdCancel_Click(object sender, EventArgs e)
         {
@@ -1141,8 +1116,8 @@ namespace StatsDirect.UI
             bool atLeastOneNonCancel = false;
             foreach (Parameter parameter in parametersBeingCollected)
             {
-                atLeastOneCancel |= (null != parameter.CancelSkipsParameter);
-                atLeastOneNonCancel |= (null == parameter.CancelSkipsParameter);
+                atLeastOneCancel |= null != parameter.CancelSkipsParameter;
+                atLeastOneNonCancel |= null == parameter.CancelSkipsParameter;
             }
             // If all the parameters we're gathering are skipped if a cancel happens, skip - and don't close the operation
             if (atLeastOneCancel && !atLeastOneNonCancel)
@@ -1232,8 +1207,7 @@ namespace StatsDirect.UI
                 bool isTempFile = null != fileName && fileName.StartsWith("~");
                 // User wants to open the file - but which file type?
                 string extension = Path.GetExtension(path);
-                if (null != extension)
-                    extension = extension.ToLower(CultureInfo.InvariantCulture);
+                extension = extension?.ToLower(CultureInfo.InvariantCulture);
                 if (".xls".Equals(extension) || ".xlsx".Equals(extension))
                 {
                     CreateGrid(path, isTempFile, null);
@@ -1474,7 +1448,7 @@ namespace StatsDirect.UI
                         pnlTop.Height = pnlSelection.Height;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("panelType", panelType, "Unknown panel type to be shown");
+                        throw new ArgumentOutOfRangeException(nameof(panelType), panelType, "Unknown panel type to be shown");
                 }
             }
             finally
@@ -1508,7 +1482,7 @@ namespace StatsDirect.UI
                 pnlUser.Height = contentHeight;
             }
 
-            bool shouldScrollVertically = (constrainedHeight < contentHeight);
+            bool shouldScrollVertically = constrainedHeight < contentHeight;
             tlpOperations.AutoScroll = shouldScrollVertically;
             // The following is a workaround for the TableLayoutPanel apparently not following its own wishes for height, even when the preferred height is reported correctly.  No idea why!
             if (HasUserInputTable())
@@ -1613,7 +1587,7 @@ namespace StatsDirect.UI
             if (null == currentOperation && chkBatchMode.Checked)
                 return false;
             // Re-run the same operation if it's a repeated one (such as an instant function)
-            while ((null != currentOperation) && currentOperation.SuggestsSelf)
+            while (null != currentOperation && currentOperation.SuggestsSelf)
             {
                 currentOperation = DoOperation(currentOperation, knownParameters, false);
                 // If we're in batch mode and an operation failed or was cancelled, return indicating failure.  This should cause the calling loop to quit.
@@ -1842,8 +1816,8 @@ namespace StatsDirect.UI
             }
             IList<SuggestedOperation> availableSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters);
             bool suggestsOthers = availableSuggestedOperations.Count > 1
-                || (availableSuggestedOperations.Count == 1 && TemplateFactory.Operations.ContainsKey(availableSuggestedOperations[0].Name) && suggestingOperation != TemplateFactory.Operations[availableSuggestedOperations[0].Name]);
-            bool onlySuggestsFollowOns = (!operation.SuggestsSelf) && suggestingOperation == operation;
+                || availableSuggestedOperations.Count == 1 && TemplateFactory.Operations.ContainsKey(availableSuggestedOperations[0].Name) && suggestingOperation != TemplateFactory.Operations[availableSuggestedOperations[0].Name];
+            bool onlySuggestsFollowOns = !operation.SuggestsSelf && suggestingOperation == operation;
 
             if (SuggestionTime.BeforeOperation == suggestionTime)
             {
@@ -1953,7 +1927,7 @@ namespace StatsDirect.UI
                     ParametersStep pStep = (ParametersStep)firstStep;
                     foreach (Parameter p in pStep.Parameters)
                     {
-                        if (p.MustRequest || (null != inputParameters && (null == p.Name || !inputParameters.ContainsKey(p.Name))))
+                        if (p.MustRequest || null != inputParameters && (null == p.Name || !inputParameters.ContainsKey(p.Name)))
                         {
                             // The parameter will probably be requested, unless it will be defaulted.
                             // CI parameters can be defaulted
@@ -2045,10 +2019,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public bool IsOperationsPanelVisible
-        {
-            get { return pnlOperations.Visible; }
-        }
+        public bool IsOperationsPanelVisible => pnlOperations.Visible;
 
         private void optGroupsByColumn_CheckedChanged(object sender, EventArgs e)
         {
@@ -2062,10 +2033,7 @@ namespace StatsDirect.UI
             selectingData = false;
         }
 
-        internal bool SelectingData
-        {
-            get { return selectingData; }
-        }
+        internal bool SelectingData => selectingData;
 
         private void frmMain_HelpButtonClicked(object sender, CancelEventArgs e)
         {
@@ -2342,14 +2310,14 @@ namespace StatsDirect.UI
                         sb.AppendLine(parameterTitle);
                         foreach (Variable v in pair.Value.AsDataFrame.Variables)
                         {
-                            sb.AppendLine("   " + ((null == v || null == v.Title) ? "(unnamed)" : v.Title));
+                            sb.AppendLine("   " + (v?.Title ?? "(unnamed)"));
                         }
                     }
                 }
             }
             pnlVariables.Visible = shouldShow;
             string toolTipText = sb.ToString();
-            cmdVariables.Tag = (shouldShow ? toolTipText : null);
+            cmdVariables.Tag = shouldShow ? toolTipText : null;
             tipVariables.SetToolTip(cmdVariables, toolTipText);
         }
 
@@ -2649,7 +2617,7 @@ namespace StatsDirect.UI
             if (outputControlsAreUseful)
                 return true;
 
-            return !(c.Tag is Parameter && (c.Tag is SpecialParameter) && "report".Equals(((SpecialParameter)c.Tag).SpecialType));
+            return !(c.Tag is Parameter && c.Tag is SpecialParameter && "report".Equals(((SpecialParameter)c.Tag).SpecialType));
         }
 
         internal void SelectFirstUsefulControlIn(Control c)
@@ -2762,7 +2730,7 @@ namespace StatsDirect.UI
                                 if (null != validationResult)
                                     break;
                             }
-                            allValid &= (null == validationResult);
+                            allValid &= null == validationResult;
                             if (!allValid)
                                 SdApplication.SoleInstance.MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
                         }
@@ -2820,7 +2788,7 @@ namespace StatsDirect.UI
                                                                            doValidation);
                         if (null != invalidControlOrNull && null == firstInvalidControl)
                             firstInvalidControl = invalidControlOrNull;
-                        allValid &= (null == invalidControlOrNull);
+                        allValid &= null == invalidControlOrNull;
                     }
                 }
             }
@@ -2897,7 +2865,7 @@ namespace StatsDirect.UI
         [Serializable]
         private class SelectedOperationChangedException : NotAnErrorException
         {
-            public ParameterBag InputParameters { get; private set; }
+            public ParameterBag InputParameters { get; }
             public SelectedOperationChangedException(ParameterBag inputParameters)
             {
                 InputParameters = inputParameters;
@@ -2943,7 +2911,7 @@ namespace StatsDirect.UI
         {
             foreach (ToolStripItem candidate in toolStrip.Items)
             {
-                if (candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
+                if (candidate.Tag is string && ((string)candidate.Tag).StartsWith("#{") && ((string)candidate.Tag).Contains("help="))
                 {
                     candidate.MouseEnter += menuItem_MouseEnter;
                     candidate.MouseLeave += menuItem_MouseLeave;
@@ -2960,13 +2928,13 @@ namespace StatsDirect.UI
         {
             foreach (ToolStripItem candidate in toolStripDropDown.Items)
             {
-                if (candidate.Tag is string && ((string)(candidate.Tag)).StartsWith("#{") && ((string)(candidate.Tag)).Contains("help="))
+                if (candidate.Tag is string && ((string)candidate.Tag).StartsWith("#{") && ((string)candidate.Tag).Contains("help="))
                 {
                     candidate.MouseEnter += menuItem_MouseEnter;
                     candidate.MouseLeave += menuItem_MouseLeave;
                     // candidate.BackColor = Color.PaleGreen;
                 }
-                if (candidate is ToolStripMenuItem && null != ((ToolStripMenuItem)candidate).DropDown)
+                if ((candidate as ToolStripMenuItem)?.DropDown != null)
                 {
                     EnsureBuiltInMenuItemsCanShowHelp(((ToolStripMenuItem)candidate).DropDown);
                 }
@@ -3431,10 +3399,7 @@ namespace StatsDirect.UI
             try
             {
                 WindowInformation lastClickedTab = TabStripLastClickedTab();
-                if (null != lastClickedTab)
-                {
-                    lastClickedTab.Window.SaveContents();
-                }
+                lastClickedTab?.Window.SaveContents();
             }
             catch (Exception ex)
             {
@@ -3447,10 +3412,7 @@ namespace StatsDirect.UI
             try
             {
                 WindowInformation lastClickedTab = TabStripLastClickedTab();
-                if (null != lastClickedTab)
-                {
-                    lastClickedTab.Window.SaveAsContents();
-                }
+                lastClickedTab?.Window.SaveAsContents();
             }
             catch (Exception ex)
             {
@@ -3463,10 +3425,7 @@ namespace StatsDirect.UI
             try
             {
                 WindowInformation lastClickedTab = TabStripLastClickedTab();
-                if (null != lastClickedTab)
-                {
-                    lastClickedTab.Window.Print();
-                }
+                lastClickedTab?.Window.Print();
             }
             catch (Exception ex)
             {
@@ -3489,7 +3448,7 @@ namespace StatsDirect.UI
                             lastClickedTab.FriendlyName = newName;
 
                             // If it's a report, we might need to add it with its new name
-                            if (lastClickedTab.HasWindow && (lastClickedTab.Window is IReport))
+                            if (lastClickedTab.HasWindow && lastClickedTab.Window is IReport)
                             {
                                 // Force the update - the list only notices a name change when we remove and re-add.
                                 StatsDirectForm f = lastClickedTab.Window;
@@ -4027,18 +3986,15 @@ namespace StatsDirect.UI
             // If we still have a main form and menus (the user might have done strange things like close the window), re-enable them.
             if (null != mnuMain)
                 mnuMain.Enabled = true;
-            if (null != MdiChildren)
+            // Beware!  If the message is popping up that there's unsaved data, then MdiChildren may change behind the scenes.  Be cautious.
+            try
             {
-                // Beware!  If the message is popping up that there's unsaved data, then MdiChildren may change behind the scenes.  Be cautious.
-                try
-                {
-                    foreach (Form f in MdiChildren)
-                        f.Enabled = true;
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    // Do nothing; the world has changed behind the scenes.
-                }
+                foreach (Form f in MdiChildren)
+                    f.Enabled = true;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                // Do nothing; the world has changed behind the scenes.
             }
             if (null != puntedException)
             {
@@ -4258,8 +4214,7 @@ namespace StatsDirect.UI
             }
         }
 
-        internal ComboBox IntegratedConfidenceIntervalControl
-        { get { return cboConfidenceInterval; } }
+        internal ComboBox IntegratedConfidenceIntervalControl => cboConfidenceInterval;
 
         internal bool IntegratedConfidenceIntervalControlVisible
         {
@@ -4267,7 +4222,6 @@ namespace StatsDirect.UI
             set { pnlConfidenceInterval.Visible = value; }
         }
 
-        internal ContextMenuStrip InlineGridContextMenuStrip
-        { get { return contextMenuStrip; } }
+        internal ContextMenuStrip InlineGridContextMenuStrip => contextMenuStrip;
     }
 }

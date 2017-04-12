@@ -5,9 +5,6 @@ namespace StatsDirect.Builtins
     public class DistributionOptions : IFillable
     {
         public DistributionType SelectedTest { get; set; }
-        public string FillerToUse
-        {
-            get { return "Distribution"; }
-        }
+        public string FillerToUse => "Distribution";
     }
 }

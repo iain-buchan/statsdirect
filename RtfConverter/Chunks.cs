@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace RtfConverter
 {
     public class Chunks : Chunk, IList<Chunk>
     {
-        private IList<Chunk> chunks;
+        private readonly IList<Chunk> chunks;
         public override AccumulatedFormat AccumulatedFormat { get { throw new NotImplementedException(); } set { throw new NotImplementedException(); } }
 
         public Chunks()
@@ -29,21 +27,9 @@ namespace RtfConverter
             }
         }
 
-        public int Count
-        {
-            get
-            {
-                return chunks.Count;
-            }
-        }
+        public int Count => chunks.Count;
 
-        public bool IsReadOnly
-        {
-            get
-            {
-                return chunks.IsReadOnly;
-            }
-        }
+        public bool IsReadOnly => chunks.IsReadOnly;
 
         public override void Accept(IChunkVisitor visitor)
         {

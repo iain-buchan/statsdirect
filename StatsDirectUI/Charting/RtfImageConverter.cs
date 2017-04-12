@@ -164,7 +164,7 @@ namespace StatsDirect.Charting
         private static bool IsHex(string s)
         {
             foreach (char c in s)
-                if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')))
+                if (!(c >= '0' && c <= '9' || c >= 'A' && c <= 'F' || c >= 'a' && c <= 'f'))
                     return false;
             return true;
         }

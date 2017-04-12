@@ -53,69 +53,21 @@ namespace StatsDirect.Charting
             SeriesOptions.Add( rightHandOptions ); 
         } 
         
-        public override bool UsesAutoscale 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesBoxAxes 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesChartTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesSeriesLabels 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesYAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAxisTitleFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAxisLabelFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool ShowLegendIsRelevant 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        }
+        public override bool UsesAutoscale => true;
+
+        public override bool UsesBoxAxes => true;
+
+        public override bool UsesChartTitle => true;
+
+        public override bool UsesSeriesLabels => true;
+
+        public override bool UsesYAxisTitle => true;
+
+        public override bool UsesAxisTitleFontDescriptor => true;
+
+        public override bool UsesAxisLabelFontDescriptor => true;
+
+        public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

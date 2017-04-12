@@ -65,7 +65,7 @@ namespace StatsDirect.Charting.Renderer
         {
             const int MINIMUM_X_WHITESPACE = 30;
 
-            PyramidOptions pOptions = ((PyramidOptions)(definition.ChartOptions));
+            PyramidOptions pOptions = (PyramidOptions)definition.ChartOptions;
 
             DataFrame maleFrame = pOptions.MaleFrame;
             DoubleVariable males = maleFrame.Variables[0] as DoubleVariable;
@@ -123,7 +123,7 @@ namespace StatsDirect.Charting.Renderer
                 int i;
                 for (i = labels.Length - 1; i >= 0; i--)
                 {
-                    if ((labels.Data[i] != null) && labels.Data[i].Length > 0)
+                    if (labels.Data[i] != null && labels.Data[i].Length > 0)
                         break;
                 }
                 int lastrow = i;
@@ -189,8 +189,8 @@ namespace StatsDirect.Charting.Renderer
                     {
                         double yt = yAxisCanvas + (nmale - i) * ystep;
                         double yb = yAxisCanvas + (nmale - i - 1) * ystep;
-                        double xl = xAxisCanvas + xstep - (male[i] / ScaleMax) * xstep;
-                        double xr = xAxisCanvas + xstep + (female[i] / ScaleMax) * xstep;
+                        double xl = xAxisCanvas + xstep - male[i] / ScaleMax * xstep;
+                        double xr = xAxisCanvas + xstep + female[i] / ScaleMax * xstep;
                         if (mode == PyramidMode.Pairs)
                         {
                             //  Male/female
@@ -219,8 +219,8 @@ namespace StatsDirect.Charting.Renderer
                         if (mode == PyramidMode.Pairs)
                         {
                             DrawLineInCanvasCoordinates(blackPen, xc, yAxisCanvas, xAxisCanvas + xstep, yAxisCanvas + nmale * ystep);
-                            DrawStringInCanvasCoordinates("male", axisLabelFont, Brushes.Black, (xExtCanvas / 4) + xAxisCanvas, yAxisCanvas - 12, leftFormat);
-                            DrawStringInCanvasCoordinates("female", axisLabelFont, Brushes.Black, (xExtCanvas / 4) + (xExtCanvas / 2) + xAxisCanvas, yAxisCanvas - 12, leftFormat);
+                            DrawStringInCanvasCoordinates("male", axisLabelFont, Brushes.Black, xExtCanvas / 4 + xAxisCanvas, yAxisCanvas - 12, leftFormat);
+                            DrawStringInCanvasCoordinates("female", axisLabelFont, Brushes.Black, xExtCanvas / 4 + xExtCanvas / 2 + xAxisCanvas, yAxisCanvas - 12, leftFormat);
                         }
 
                         DrawStringInCanvasCoordinates("Scale maximum = " + ScaleMax, axisLabelFont, Brushes.Black, 40, yAxisCanvas - 40, leftFormat);

@@ -32,9 +32,6 @@ namespace RtfConverter
             visitor.Visit(this);
         }
 
-        public bool IsIrrelevant
-        {
-            get { return "\r\n".Equals(builder.ToString());  }
-        }
+        public bool IsIrrelevant => "\r\n".Equals(builder.ToString());
     }
 }

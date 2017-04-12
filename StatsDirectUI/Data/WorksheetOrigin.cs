@@ -30,13 +30,7 @@ namespace StatsDirect.Data
             //  Nothing else required
         }
 
-        public OriginType Type
-        {
-            get
-            {
-                return OriginType.Worksheet;
-            }
-        }
+        public OriginType Type => OriginType.Worksheet;
 
         [XmlElement("column")]
         public int Column { get; set; }

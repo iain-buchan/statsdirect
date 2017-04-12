@@ -34,61 +34,19 @@ namespace StatsDirect.Charting
             UseColour = useColour;
         }
 
-        public virtual bool UsesAxisLineThickness
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool UsesAxisLineThickness => true;
 
-        public virtual bool UsesColour
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool UsesColour => true;
 
-        public virtual bool UsesShowLegend
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool UsesShowLegend => true;
 
-        public virtual bool UsesXAxisOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool UsesXAxisOptions => true;
 
-        public virtual bool UsesXAxisTitle
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public virtual bool UsesXAxisTitle => false;
 
-        public virtual bool UsesYAxisOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool UsesYAxisOptions => true;
 
-        public virtual bool UsesYAxisTitle
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public virtual bool UsesYAxisTitle => false;
 
         public abstract void Accept(IChartOptionVisitor visitor);
 

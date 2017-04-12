@@ -21,7 +21,7 @@ namespace StatsDirect.UI
             originalImage = img;
             originalBytes = bytes;
             pictureBox1.Image = img;
-            scaleFactor = img.Width / ((double)img.Height);
+            scaleFactor = img.Width / (double)img.Height;
             updating = true; // Ensure the text boxes don't try to update each other
             txtWidth.Text = (img.Width / IMAGE_TO_EXPORT_SCALE).ToString();
             txtHeight.Text = (img.Height / IMAGE_TO_EXPORT_SCALE).ToString();

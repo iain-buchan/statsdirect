@@ -22,7 +22,7 @@ namespace StatsDirect.Charting
             int maxCharactersBeforeDecimalPoint = 1;
             double x = Math.Abs(axisScale.MaximumScaleValue);
             if (x > 0.0)
-                maxCharactersBeforeDecimalPoint += Math.Abs(((int)(Math.Floor(Math.Log10(x)))));
+                maxCharactersBeforeDecimalPoint += Math.Abs((int)Math.Floor(Math.Log10(x)));
 
             // Add space for a leading minus sign if required
             if (axisScale.MinimumScaleValue < 0)
@@ -58,7 +58,7 @@ namespace StatsDirect.Charting
             const string INVARIANT_DECP_CHAR = ".";
 
             // How many decimal places in the printed value?  Print to 10 and strip trailing zeros
-            string q = (value).ToString("F10", CultureInfo.InvariantCulture);
+            string q = value.ToString("F10", CultureInfo.InvariantCulture);
             int xp = q.IndexOf(INVARIANT_DECP_CHAR, StringComparison.Ordinal) + 1;
             int rightmostZero = q.Length;
             while (rightmostZero > 0 && q[rightmostZero - 1] == '0')

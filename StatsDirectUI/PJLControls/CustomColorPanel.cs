@@ -259,13 +259,13 @@ namespace StatsDirect.PJLControls
                     switch (zaxis)
                     {
                         case ZAxis.Blue:
-                            bUpdatePalette = (value.B != color.B);
+                            bUpdatePalette = value.B != color.B;
                             break;
                         case ZAxis.Red:
-                            bUpdatePalette = (value.R != color.R);
+                            bUpdatePalette = value.R != color.R;
                             break;
                         case ZAxis.Green:
-                            bUpdatePalette = (value.G != color.G);
+                            bUpdatePalette = value.G != color.G;
                             break;
                     }
 

@@ -17,10 +17,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// true iff the parameter defines a default.
         /// </summary>
-        public bool HasDefaultValue
-        {
-            get { return null != DefaultValueExpression; }
-        }
+        public bool HasDefaultValue => null != DefaultValueExpression;
 
         /// <summary>
         /// The default value for this parameter, or null for no default.

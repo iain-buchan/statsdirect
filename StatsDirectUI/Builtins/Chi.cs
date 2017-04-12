@@ -36,7 +36,7 @@ namespace StatsDirect.Builtins
             double s = b + d;
             double n = p + q;
             ParameterBag outputParameters = new ParameterBag();
-            if (!((fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && (p * q * r * s > 0))))
+            if (!(fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && p * q * r * s > 0))
             {
                 throw new InvalidDataException();
             }
@@ -75,7 +75,7 @@ namespace StatsDirect.Builtins
 
             // coefficients (see Agresti p 23-4)
             double p1 = Math.Sqrt(x2 / (x2 + n));
-            double c1 = ((a * d) - (b * c)) / Math.Sqrt(p * q * r * s);
+            double c1 = (a * d - b * c) / Math.Sqrt(p * q * r * s);
             outputParameters.AddOutput("pearson", host.RoundU(p1));
             outputParameters.AddOutput("vs", host.RoundU(c1));
 
@@ -179,7 +179,7 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> fisherList = new List<ParameterBag>();
             outputParameters.AddOutput("*fisher", fisherList);
-            if (!(doneExact))
+            if (!doneExact)
             {
                 if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
                 {
@@ -231,7 +231,7 @@ namespace StatsDirect.Builtins
             double a = 0;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            if (datFrame.VariableCount < ((z == Chi2ByNTrend.WithTrend) ? 3 : 2))
+            if (datFrame.VariableCount < (z == Chi2ByNTrend.WithTrend ? 3 : 2))
                 throw new InvalidDataException("Invalid data: Please fill in the same number of rows in each column without gaps");
             DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
@@ -305,7 +305,7 @@ namespace StatsDirect.Builtins
                 ParameterBag warnParameters = new ParameterBag();
                 warnList.Add(warnParameters);
                 warnParameters.AddOutput("num", n1);
-                warnParameters.AddOutput("den", (2 * rows));
+                warnParameters.AddOutput("den", 2 * rows);
             }
 
             double n2 = rows - 1;
@@ -323,7 +323,7 @@ namespace StatsDirect.Builtins
             {
                 c = x2;
                 double k8 = b / a;
-                double d = (k4 - Math.Pow((k1 + k2), 2.0) / t) / k8;
+                double d = (k4 - Math.Pow(k1 + k2, 2.0) / t) / k8;
                 if (d < 0)
                 {
                     d = 0;
@@ -549,11 +549,11 @@ namespace StatsDirect.Builtins
             }
 
             outputParameters.AddOutput("bd", bd);
-            outputParameters.AddOutput("df", (realk - 1));
+            outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(bd, Convert.ToDouble(realk - 1)));
 
             outputParameters.AddOutput("qc", qc);
-            outputParameters.AddOutput("df_cochran", (realk - 1));
+            outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, Convert.ToDouble(realk - 1)));
             outputParameters.AddOutput("tausq", tausq);
             Meta.IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
@@ -845,7 +845,7 @@ namespace StatsDirect.Builtins
             }
 
             double k8 = b / a;
-            double d = (k4 - Math.Pow((k1 + k2), 2.0) / t) / k8;
+            double d = (k4 - Math.Pow(k1 + k2, 2.0) / t) / k8;
             if (d < 0)
             {
                 d = 0;
@@ -1051,7 +1051,7 @@ namespace StatsDirect.Builtins
                     ef = rtot[r] * ctot[c] / gtot;
                     if (ef != 0.0)
                     {
-                        x2 += Math.Pow((Convert.ToDouble(x[r, c]) - ef), 2.0) / ef;
+                        x2 += Math.Pow(Convert.ToDouble(x[r, c]) - ef, 2.0) / ef;
                         if (x[r, c] != 0)
                         {
                             g2 += Convert.ToDouble(x[r, c]) * Math.Log(Convert.ToDouble(x[r, c]) / ef);
@@ -1060,16 +1060,16 @@ namespace StatsDirect.Builtins
                 }
                 if (ctot[c] != 0.0)
                 {
-                    dsrs = dsrs + (xi * xi) / ctot[c];
+                    dsrs = dsrs + xi * xi / ctot[c];
                 }
             }
 
             //  ANOVA style equality of variance test
-            double sxx = sumWtSqRow - ((sumWtRow * sumWtRow) / gtot);
-            x2eq = ((gtot - 1.0) / sxx) * (dsrs - ((sumWtRow * sumWtRow) / gtot));
+            double sxx = sumWtSqRow - sumWtRow * sumWtRow / gtot;
+            x2eq = (gtot - 1.0) / sxx * (dsrs - sumWtRow * sumWtRow / gtot);
 
             //  Chi-square for linear trend
-            double syy = sumWtSqCol - ((sumWtCol * sumWtCol) / gtot);
+            double syy = sumWtSqCol - sumWtCol * sumWtCol / gtot;
             double sxy = sumWeighted - sumWtCol * sumWtRow / gtot;
             x2trend = (gtot - 1.0) * (sxy * sxy) / (sxx * syy);
 
@@ -1215,7 +1215,7 @@ namespace StatsDirect.Builtins
                     do
                     {
 
-                        nlm = ((int)(Math.Floor(Convert.ToDouble(ia * id) / Convert.ToDouble(ie) + 0.5)));
+                        nlm = (int)Math.Floor(Convert.ToDouble(ia * id) / Convert.ToDouble(ie) + 0.5);
 
                         int iap = ia + 1;
                         int idp = id + 1;
@@ -1252,7 +1252,7 @@ namespace StatsDirect.Builtins
                                 x *= Convert.ToDouble(j) / Convert.ToDouble(nlm * (ii + nlm));
                                 sumprb += x;
 
-                                if ((r <= sumprb))
+                                if (r <= sumprb)
                                 {
                                     done1 = true;
                                     break;
@@ -1279,7 +1279,7 @@ namespace StatsDirect.Builtins
                                 y *= Convert.ToDouble(j) / Convert.ToDouble((id - nll) * (ia - nll));
                                 sumprb += y;
 
-                                if ((r <= sumprb))
+                                if (r <= sumprb)
                                 {
                                     nlm = nll;
                                     done2 = true;

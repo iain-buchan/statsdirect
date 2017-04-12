@@ -66,61 +66,19 @@ namespace StatsDirect.Charting
             SeriesOptions.Add(cisod);
         }
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesSeriesLabels
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesSeriesLabels => true;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool UsesAxisTitleFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisTitleFontDescriptor => true;
 
-        public override bool UsesYAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesYAxisTitle => true;
 
-        public override bool ShowSurvivalOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ShowSurvivalOptions => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return Series.Count > 1;
-            }
-        }
+        public override bool ShowLegendIsRelevant => Series.Count > 1;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

@@ -19,69 +19,21 @@ namespace StatsDirect.Charting
             QMax = qmax;
         }
 
-        public double MaximumDataValue
-        {
-            get
-            {
-                return QMax;
-            }
-        }
+        public double MaximumDataValue => QMax;
 
-        public double MaximumScaleValue
-        {
-            get
-            {
-                return TlhAxis.VisibleRange.Max;
-            }
-        }
+        public double MaximumScaleValue => TlhAxis.VisibleRange.Max;
 
-        public double MinimumDataValue
-        {
-            get
-            {
-                return QMin;
-            }
-        }
+        public double MinimumDataValue => QMin;
 
-        public double MinimumScaleValue
-        {
-            get
-            {
-                return TlhAxis.VisibleRange.Min;
-            }
-        }
+        public double MinimumScaleValue => TlhAxis.VisibleRange.Min;
 
-        public int IntervalsPerMajorTic
-        {
-            get
-            {
-                return 1;
-            }
-        }
+        public int IntervalsPerMajorTic => 1;
 
-        public int Phase
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int Phase => 0;
 
-        public double Interval
-        {
-            get
-            {
-                return (double)(TlhAxis.Labels[1].Item1 - TlhAxis.Labels[0].Item1);
-            }
-        }
+        public double Interval => (double)(TlhAxis.Labels[1].Item1 - TlhAxis.Labels[0].Item1);
 
-        public double FirstMajorTicValue
-        {
-            get
-            {
-                return (double)TlhAxis.Labels[0].Item1;
-            }
-        }
+        public double FirstMajorTicValue => (double)TlhAxis.Labels[0].Item1;
 
         public IList<Tic> Tics()
         {

@@ -35,6 +35,6 @@ namespace StatsDirect.UI
             Close();
         }
 
-        public bool UserThinksStatsDirect2IsInstalled { get { return userThinksStatsDirect2IsInstalled; } }
+        public bool UserThinksStatsDirect2IsInstalled => userThinksStatsDirect2IsInstalled;
     }
 }

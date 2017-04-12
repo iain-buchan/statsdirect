@@ -10,20 +10,11 @@ namespace StatsDirect.UI
         private DeleteShiftDirection deleteShiftDirection;
         private bool isEntire;
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
-        public DeleteShiftDirection DeleteShiftDirection
-        {
-            get { return deleteShiftDirection; }
-        }
+        public DeleteShiftDirection DeleteShiftDirection => deleteShiftDirection;
 
-        public bool IsEntire
-        {
-            get { return isEntire; }
-        }
+        public bool IsEntire => isEntire;
 
         public frmDeleteSpecial()
         {

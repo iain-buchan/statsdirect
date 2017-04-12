@@ -61,7 +61,7 @@ namespace StatsDirect.UI
             DataFrame outputFrame = new DataFrame();
             for (int c = 0; c < data.VariableCount; c++)
             {
-                StringVariable v = data.Variables[c]as StringVariable;
+                StringVariable v = (StringVariable)data.Variables[c];
                 DoubleVariable outputVariable = new DoubleVariable(v.Length, v.Title);
                 outputFrame.Variables.Add(outputVariable);
                 for (int r = 0; r < v.Length; r++)
@@ -83,7 +83,7 @@ namespace StatsDirect.UI
             int nextValue = 1;
             for (int c = 0; c < data.VariableCount; c++)
             {
-                StringVariable v = data.Variables[c]as StringVariable;
+                StringVariable v = (StringVariable)data.Variables[c];
                 // get text codes and assign number codes
                 foreach (string tmp in v.Data)
                     MaybeAssignCode(tmp, ref nextValue);
@@ -94,7 +94,7 @@ namespace StatsDirect.UI
 
         private void MaybeAssignCode(string tmp, ref int nextValue)
         {
-            if ((!Formatting.ASTERISK.Equals(tmp)) && !string.IsNullOrEmpty(tmp))
+            if (!Formatting.ASTERISK.Equals(tmp) && !string.IsNullOrEmpty(tmp))
                 if (!textsToNumbers.ContainsKey(tmp))
                     textsToNumbers.Add(tmp, nextValue++);
         }

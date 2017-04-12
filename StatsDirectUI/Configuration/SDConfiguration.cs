@@ -13,25 +13,13 @@ namespace StatsDirect.Configuration
         public const string PERSISTENT_VALUE_FILE_NAME = "session.ser";
         private const string HELP_FILE_NAME = "statsdirect.chm";
 
-        public static string HelpFilePath
-        {
-            get { return Path.Combine(InstallationDirectory, HELP_FILE_NAME); }
-        }
+        public static string HelpFilePath => Path.Combine(InstallationDirectory, HELP_FILE_NAME);
 
-        public static string TemplatePath
-        {
-            get { return Path.Combine(InstallationDirectory, Settings.Default.TemplateDirectory); }
-        }
+        public static string TemplatePath => Path.Combine(InstallationDirectory, Settings.Default.TemplateDirectory);
 
-        public static string MyStatsDirectFolder
-        {
-            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), STATSDIRECT_FOLDER_NAME); }
-        }
+        public static string MyStatsDirectFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), STATSDIRECT_FOLDER_NAME);
 
-        public static string MyStatsDirectRFolder
-        {
-            get { return Path.Combine(MyStatsDirectFolder, R_FOLDER_NAME); }
-        }
+        public static string MyStatsDirectRFolder => Path.Combine(MyStatsDirectFolder, R_FOLDER_NAME);
 
         public static string MyTestFilePath
         {

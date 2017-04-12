@@ -11,12 +11,6 @@ namespace StatsDirect.Builtins
         public int[] Counts { get; set; }
         public DoubleVariable Data { get; set; }
 
-        public string FillerToUse
-        {
-            get
-            {
-                return "Categorise";
-            }
-        }
+        public string FillerToUse => "Categorise";
     }
 }

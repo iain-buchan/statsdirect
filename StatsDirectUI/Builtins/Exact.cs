@@ -254,7 +254,7 @@ namespace StatsDirect.Builtins
                 {
                     rowParameters = new ParameterBag();
                     rowList.Add(rowParameters);
-                    rowParameters.AddOutput("a", (j - 1));
+                    rowParameters.AddOutput("a", j - 1);
                     rowParameters.AddOutput("lower", Formatting.pr15(f1[j]));
                     rowParameters.AddOutput("ind_p", Formatting.pr15(h1[j]));
                     rowParameters.AddOutput("upper", Formatting.pr15(g1[j]));
@@ -382,7 +382,7 @@ namespace StatsDirect.Builtins
             {
                 throw new InvalidDataException();
             }
-            double x2 = ((Math.Abs(bb - bc)) * (Math.Abs(bb - bc))) / (bb + bc);
+            double x2 = Math.Abs(bb - bc) * Math.Abs(bb - bc) / (bb + bc);
             outputParameters.AddOutput("chi", x2);
             outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
 
@@ -419,7 +419,7 @@ namespace StatsDirect.Builtins
             }
             if (s > 0.0)
             {
-                ul = ((r + 1.0) * ulf) / s;
+                ul = (r + 1.0) * ulf / s;
             }
             else
             {
@@ -444,7 +444,7 @@ namespace StatsDirect.Builtins
                     Utilities.Utilities.Swap(ref ll, ref ul);
                 }
             }
-            outputParameters.AddOutput("pc", (gamma * 100));
+            outputParameters.AddOutput("pc", gamma * 100);
             string llx = ll == Constant.MISSING ? Formatting.INFRESNEG : host.RoundU(ll);
             outputParameters.AddOutput("from", llx);
             string ulx = ul == Constant.MISSING ? Formatting.INFRES : host.RoundU(ul);

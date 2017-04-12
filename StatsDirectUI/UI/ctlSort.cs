@@ -76,7 +76,7 @@ namespace StatsDirect.UI
         {
             // Ignore any new incomplete row at the end of the grid while creating the array and iterating.  ASSUME: New row is always at the end.
             DataGridViewRow candidateNewRow = gridKeys.Rows[gridKeys.Rows.Count - 1];
-            int newRowOffset = (null == candidateNewRow.Cells[1].Value || null == candidateNewRow.Cells[2].Value) ? -1 : 0;
+            int newRowOffset = null == candidateNewRow.Cells[1].Value || null == candidateNewRow.Cells[2].Value ? -1 : 0;
             List<SortKey> keys = new List<SortKey>();
             for (int i = 0; i < gridKeys.Rows.Count + newRowOffset; i++)
             {
@@ -124,7 +124,7 @@ namespace StatsDirect.UI
         private void gridKeys_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             gridKeys.BeginEdit(false);
-            if (null != gridKeys.EditingControl && (gridKeys.EditingControl is DataGridViewComboBoxEditingControl))
+            if (null != gridKeys.EditingControl && gridKeys.EditingControl is DataGridViewComboBoxEditingControl)
             {
                 DataGridViewComboBoxEditingControl editingControl = (DataGridViewComboBoxEditingControl)gridKeys.EditingControl;
                 if (editingControl.SelectedIndex == -1)
@@ -199,10 +199,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private PropertyDescriptor DisplayProp
-        {
-            get { return displayProp ?? (displayProp = ListManager.GetItemProperties().Find(DisplayMember, true)); }
-        }
+        private PropertyDescriptor DisplayProp => displayProp ?? (displayProp = ListManager.GetItemProperties().Find(DisplayMember, true));
 
         protected override object GetFormattedValue(object value, int rowIndex, ref DataGridViewCellStyle cellStyle, TypeConverter valueTypeConverter, TypeConverter formattedValueTypeConverter, DataGridViewDataErrorContexts context)
         {
@@ -234,21 +231,9 @@ namespace StatsDirect.UI
             _sortKeys = keys;
         }
 
-        public override string DisplayText
-        {
-            get
-            {
-                return "Sort";
-            }
-        }
+        public override string DisplayText => "Sort";
 
-        protected override CommandRangeUndoFlags UndoFlags
-        {
-            get
-            {
-                return CommandRangeUndoFlags.Formats | CommandRangeUndoFlags.Values;
-            }
-        }
+        protected override CommandRangeUndoFlags UndoFlags => CommandRangeUndoFlags.Formats | CommandRangeUndoFlags.Values;
 
         protected override bool Execute()
         {

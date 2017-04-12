@@ -39,10 +39,10 @@ namespace StatsDirect.UI
             }
             set
             {
-                if (markerShape != value && value > 0 && ((int)value) <= cboMarkerShape.Items.Count)
+                if (markerShape != value && value > 0 && (int)value <= cboMarkerShape.Items.Count)
                 {
                     markerShape = value;
-                    cboMarkerShape.SelectedIndex = ((int)value) - 1;
+                    cboMarkerShape.SelectedIndex = (int)value - 1;
                     OnMarkerShapeChanged(EventArgs.Empty);
                 }
             }

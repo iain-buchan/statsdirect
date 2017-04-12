@@ -43,15 +43,9 @@ namespace StatsDirect.R
         private int revision;
         private bool numericVersionsAreSet;
 
-        public string BinPath
-        {
-            get { return Path.Combine(InstallPath, "bin", IsX64 ? "x64" : "i386"); }
-        }
+        public string BinPath => Path.Combine(InstallPath, "bin", IsX64 ? "x64" : "i386");
 
-        public string GuiPath
-        {
-            get { return Path.Combine(BinPath, "Rgui.exe"); }
-        }
+        public string GuiPath => Path.Combine(BinPath, "Rgui.exe");
 
         private void SetNumericVersions()
         {

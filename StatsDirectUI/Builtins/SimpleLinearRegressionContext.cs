@@ -90,20 +90,20 @@ namespace StatsDirect.Builtins
                 double x = xx[n];
                 double y = yy[n];
                 SumX += x;
-                sxs += (x * x);
+                sxs += x * x;
                 sumy += y;
-                sys += (y * y);
-                sumxy += (x * y);
+                sys += y * y;
+                sumxy += x * y;
             }
-            SSX = sxs - (SumX * SumX) / NX;
-            SSY = sys - (sumy * sumy) / NX;
+            SSX = sxs - SumX * SumX / NX;
+            SSY = sys - sumy * sumy / NX;
             SDX = Math.Sqrt(SSX / (NX - 1));
-            double xy = sumxy - (SumX * sumy / NX);
+            double xy = sumxy - SumX * sumy / NX;
             Slope = xy / SSX;
-            YIntercept = (sumy / NX) - Slope * (SumX / NX);
+            YIntercept = sumy / NX - Slope * (SumX / NX);
             R = xy / Math.Sqrt(SSX * SSY);
             IsPerfectCorrelation = Math.Abs(R) >= 1;
-            SSREG = (xy * xy) / SSX;
+            SSREG = xy * xy / SSX;
             double ssres = SSY - SSREG;
             MS = ssres / (NX - 2);
             SeEst = MS > 0.0 ? Math.Sqrt(MS) : Constant.MISSING;

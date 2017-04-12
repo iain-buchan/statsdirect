@@ -22,13 +22,7 @@ namespace StatsDirect.Charting
             //  Do nothing; this is only here because we also have a custom constructor
         }
 
-        public int Points
-        {
-            get
-            {
-                return Data.Length;
-            }
-        }
+        public int Points => Data.Length;
 
         public double MinX
         {
@@ -103,9 +97,9 @@ namespace StatsDirect.Charting
                 }
 
                 // Calculate Ys
-                min.EnsureYIndicesInclude(pt.YCount, Double.MaxValue);
-                minGreaterThanZero.EnsureYIndicesInclude(pt.YCount, Double.MaxValue);
-                max.EnsureYIndicesInclude(pt.YCount, Double.MinValue);
+                min.EnsureYIndicesInclude(pt.YCount, double.MaxValue);
+                minGreaterThanZero.EnsureYIndicesInclude(pt.YCount, double.MaxValue);
+                max.EnsureYIndicesInclude(pt.YCount, double.MinValue);
                 for (int yIndex = 0; yIndex < pt.YCount; yIndex++)
                 {
                     double y = pt.get_Y(yIndex);
@@ -119,12 +113,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        public override MultiDoubleSeries AsMultiDoubleSeries
-        {
-            get
-            {
-                return this;
-            }
-        }
+        public override MultiDoubleSeries AsMultiDoubleSeries => this;
     }
 }

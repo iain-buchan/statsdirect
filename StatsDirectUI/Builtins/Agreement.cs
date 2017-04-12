@@ -86,7 +86,7 @@ namespace StatsDirect.Builtins
             {
                 //  Work out which group number is the reference.  This is a bit ugly as the parameter is a boolean array based on what was passed in - which in this case is an alpha-sorted list of the group names.
                 string[] groupNames = ratersVariable.SortedCategoryNames;
-                bool[] standardArray = ((bool[])(parameters["reference"].Data));
+                bool[] standardArray = (bool[])parameters["reference"].Data;
                 string referenceName = null;
                 for (int finder = 0; finder <= groupNames.Length; finder++)
                 {
@@ -157,7 +157,7 @@ namespace StatsDirect.Builtins
                 {
                     categoryId = categoriesVariable.Data[row];
                 }
-                if (!((measurement == Constant.MISSING || raterId == Constant.MISSING || objectId == Constant.MISSING || categoryId == Constant.MISSING)))
+                if (!(measurement == Constant.MISSING || raterId == Constant.MISSING || objectId == Constant.MISSING || categoryId == Constant.MISSING))
                 {
                     if (data[Convert.ToInt32(objectId) + 1, Convert.ToInt32(raterId) + 1, Convert.ToInt32(categoryId) + 1] != Constant.MISSING)
                     {
@@ -309,7 +309,7 @@ namespace StatsDirect.Builtins
                             int m;
                             for (m = 1; m <= c; m++)
                             {
-                                d[ij, kl] = d[ij, kl] + Math.Pow((data[i, j, m] - data[k, l, m]), 2.0);
+                                d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
                             }
                             d[ij, kl] = Math.Pow(d[ij, kl], 0.5);
                             d[kl, ij] = d[ij, kl];
@@ -432,7 +432,7 @@ namespace StatsDirect.Builtins
             double fac = n * b * (b - 1) / 2.0;
             double con = 1.0 / (fac * n);
             var = var * con * con / (n - 1);
-            gam = (Math.Pow(con, 3.0) * (t1 - t2) / (n - 1)) / Math.Sqrt(Math.Pow(var, 3.0));
+            gam = Math.Pow(con, 3.0) * (t1 - t2) / (n - 1) / Math.Sqrt(Math.Pow(var, 3.0));
             edel = con * edel;
             delta = zero;
             for (ix = 2; ix <= b; ix++)
@@ -447,10 +447,10 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            delta = delta / (fac);
+            delta = delta / fac;
             double t = (delta - edel) / Math.Sqrt(var);
             p = Pgamt(t, gam);
-            r = 1.0 - (delta / edel);
+            r = 1.0 - delta / edel;
         }
 
 
@@ -608,7 +608,7 @@ namespace StatsDirect.Builtins
             var = c22;
             gam = c33 / Math.Sqrt(Math.Pow(var, 3.0));
             double t = (delta - edel) / Math.Sqrt(var);
-            rho = 1.0 - (delta / edel);
+            rho = 1.0 - delta / edel;
 
             prob = Pgamt(t, gam);
         }
@@ -654,7 +654,7 @@ namespace StatsDirect.Builtins
                             int m;
                             for (m = 1; m <= kr; m++)
                             {
-                                d[ij, kl] = d[ij, kl] + Math.Pow((data[i, j, m] - data[k, l, m]), 2.0);
+                                d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
                             }
                             d[ij, kl] = Math.Pow(d[ij, kl], 0.5);
                             d[kl, ij] = d[ij, kl];
@@ -897,12 +897,12 @@ namespace StatsDirect.Builtins
                                 {
                                     for (int j2 = 1; j2 <= j1 - 1; j2++)
                                     {
-                                        ad[k] += Math.Pow((Math.Abs(data[i1, j1, k] - data[i2, j2, k])), v);
+                                        ad[k] += Math.Pow(Math.Abs(data[i1, j1, k] - data[i2, j2, k]), v);
                                     }
                                 }
                             }
                         }
-                        ad[k] = Math.Pow(ad[k], (1.0 / v));
+                        ad[k] = Math.Pow(ad[k], 1.0 / v);
                     }
                     for (int i = 1; i <= kg; i++)
                     {
@@ -992,7 +992,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            data[i, j, k] = (rks[i] - ym) * Math.Pow(Math.Abs(rks[i] - ym), (h - 1));
+                            data[i, j, k] = (rks[i] - ym) * Math.Pow(Math.Abs(rks[i] - ym), h - 1);
                         }
                     }
                 }
@@ -1043,7 +1043,7 @@ namespace StatsDirect.Builtins
                             d[ij, kl] = 0.0;
                             for (m = 1; m <= kr; m++)
                             {
-                                d[ij, kl] = d[ij, kl] + Math.Pow((data[i, j, m] - data[k, l, m]), 2.0);
+                                d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
                             }
                             d[ij, kl] = Math.Pow(d[ij, kl], y);
                             d[kl, ij] = d[ij, kl];
@@ -1114,7 +1114,7 @@ namespace StatsDirect.Builtins
                                 d[ij, kl] = 0.0;
                                 for (m = 1; m <= kr; m++)
                                 {
-                                    d[ij, kl] = d[ij, kl] + Math.Pow((data[i, j, m] - data[k, l, m]), 2.0);
+                                    d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
                                 }
                                 d[ij, kl] = Math.Pow(d[ij, kl], y);
                                 d[kl, ij] = d[ij, kl];

@@ -13,7 +13,6 @@ using System.Drawing.Imaging;
 using StatsDirect.Utilities;
 using DevExpress.XtraRichEdit.Services;
 using System.Reflection;
-using System.ComponentModel;
 
 namespace StatsDirect.UI
 {
@@ -462,21 +461,9 @@ namespace StatsDirect.UI
             });
         }
 
-        public override IList<Pane> AvailablePanes
-        {
-            get
-            {
-                return new List<Pane> {((IForm) this).SelectedPane};
-            }
-        }
+        public override IList<Pane> AvailablePanes => new List<Pane> {((IForm) this).SelectedPane};
 
-        public override Pane SelectedPane
-        {
-            get
-            {
-                return new Pane(Text, WindowInformation, 0);
-            }
-        }
+        public override Pane SelectedPane => new Pane(Text, WindowInformation, 0);
 
         public override bool SelectPane(Pane pane)
         {
@@ -556,15 +543,13 @@ namespace StatsDirect.UI
         private void MergeToolStrip()
         {
             IToolStripHost host = (IToolStripHost)ParentForm;
-            if (null != host)
-                host.AppendToolStrip(localToolStrip);
+            host?.AppendToolStrip(localToolStrip);
         }
 
         private void UnmergeToolStrip()
         {
             IToolStripHost host = (IToolStripHost)ParentForm;
-            if (null != host)
-                host.RemoveToolStrip(localToolStrip);
+            host?.RemoveToolStrip(localToolStrip);
         }
 
         internal override void EditCut()
@@ -632,10 +617,7 @@ namespace StatsDirect.UI
                 return null;
 
             string trimmedRtf = rtfFromPict.Substring(0, rtfFromPict.IndexOf("}", StringComparison.Ordinal));
-            if (0 == trimmedRtf.Length)
-                return null;
-
-            return RtfImageConverter.ParseRtfToImage(trimmedRtf, out rawBytes);
+            return 0 == trimmedRtf.Length ? null : RtfImageConverter.ParseRtfToImage(trimmedRtf, out rawBytes);
         }
 
         private void EditToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -756,19 +738,12 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool IsSelectionReplayable
-        {
-            get
-            {
-                return null != GetFreezeDriedData();
-            }
-        }
+        private bool IsSelectionReplayable => null != GetFreezeDriedData();
 
         private void richEditControl1_PopupMenuShowing(object sender, PopupMenuShowingEventArgs e)
         {
             DoOrSwallow(() =>
                 {
-                    DevExpress.Utils.Menu.DXMenuItemCollection coll = e.Menu.Items;
                     foreach (DevExpress.Utils.Menu.DXMenuItem candidate in e.Menu.Items)
                         if ("Copy".Equals(candidate.Caption))
                             ClearEventAndSet(candidate, "Click", new EventHandler(ContextMenuCopy));
@@ -1027,10 +1002,10 @@ namespace StatsDirect.UI
             try
             {
                 table.TableLayout = TableLayoutType.Autofit;
-                table.ForEachCell(((cell, rowIndex, cellIndex) =>
+                table.ForEachCell((cell, rowIndex, cellIndex) =>
                 {
                     cell.PreferredWidthType = WidthType.Auto;
-                }));
+                });
             }
             finally
             {

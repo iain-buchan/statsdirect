@@ -25,9 +25,9 @@ namespace StatsDirect.Charting
         {
             DataFrame f = new DataFrame();
             double maxRow = 0;
-            if ((MaleFrame != null) && MaleFrame.VariableCount > 0)
+            if (MaleFrame != null && MaleFrame.VariableCount > 0)
                 f.Variables.Add(MaleFrame.Variables[0]);
-            if ((FemaleFrame != null) && FemaleFrame.VariableCount > 0)
+            if (FemaleFrame != null && FemaleFrame.VariableCount > 0)
                 f.Variables.Add(FemaleFrame.Variables[0]);
 
             //  A pyramid plot has one marker for male and an optional second for female.
@@ -69,53 +69,17 @@ namespace StatsDirect.Charting
             ScaleMaximum = axisScale.MaximumScaleValue;
         }
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesShowLegend
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool UsesShowLegend => false;
 
-        public override bool UsesAxisLineThickness
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool UsesAxisLineThickness => false;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool ShowPyramidOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ShowPyramidOptions => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

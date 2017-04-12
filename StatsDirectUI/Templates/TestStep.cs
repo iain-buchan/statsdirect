@@ -84,18 +84,12 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The steps that will be run if the condition evaluates to true.
         /// </summary>
-        public IList<Step> TrueSteps
-        {
-            get { return trueSteps; }
-        }
+        public IList<Step> TrueSteps => trueSteps;
 
         /// <summary>
         /// The steps that will be run if the condition evaluates to false.
         /// </summary>
-        public IList<Step> FalseSteps
-        {
-            get { return falseSteps; }
-        }
+        public IList<Step> FalseSteps => falseSteps;
 
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {

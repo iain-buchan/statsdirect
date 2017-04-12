@@ -13,10 +13,7 @@ namespace StatsDirect.UI
         private readonly double weight;
         private readonly string titleSuffix;
 
-        public Charting.ROCSeriesRecord CurrentRecord
-        {
-            get { return currentRecord; }
-        }
+        public Charting.ROCSeriesRecord CurrentRecord => currentRecord;
 
         public ctlROCCutoff(Charting.ROCSeriesRecord seriesRecord, double weight, string titleSuffix)
         {

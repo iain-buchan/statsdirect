@@ -42,7 +42,7 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="host"></param>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            ROCOptions rOptions = ((ROCOptions)(definition.ChartOptions));
+            ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
             double GAMMA = rOptions.GAMMA;
             if (GAMMA <= 0)
                 return null;
@@ -88,7 +88,7 @@ namespace StatsDirect.Charting.Renderer
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
             double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
             double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendBottom = legendTop - (definition.XSeries.Count * legendSpacing);
+            double legendBottom = legendTop - definition.XSeries.Count * legendSpacing;
             if (legendBottom < LOWEST_ALLOWED_LEGEND)
             {
                 double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
@@ -123,7 +123,7 @@ namespace StatsDirect.Charting.Renderer
             offx = xAxisCanvas;
             offy = yAxisCanvas;
 
-            bool hideopt = !(rOptions.ShowOptimumCutOff);
+            bool hideopt = !rOptions.ShowOptimumCutOff;
             ComparisonValue showopt = rOptions.Showopts;
             ParameterBag results = new ParameterBag();
             IList<ParameterBag> allResults = new List<ParameterBag>();
@@ -138,8 +138,8 @@ namespace StatsDirect.Charting.Renderer
                     weight = 1.0;
 
                 // Draw the legend for each series
-                DrawMarkerInCanvasCoordinates(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - (cs * legendSpacing) - markerMidlineOffset, LEGEND_MARKER_SIZE, definition.YSeries[cs].AsDoubleSeries);
-                DrawStringLegendL(rOptions.SeriesTitles[cs], xAxisCanvas + 9 + LEGEND_MARKER_SIZE, legendTop - (cs * legendSpacing));
+                DrawMarkerInCanvasCoordinates(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - cs * legendSpacing - markerMidlineOffset, LEGEND_MARKER_SIZE, definition.YSeries[cs].AsDoubleSeries);
+                DrawStringLegendL(rOptions.SeriesTitles[cs], xAxisCanvas + 9 + LEGEND_MARKER_SIZE, legendTop - cs * legendSpacing);
 
                 int a;
                 int b;
@@ -375,7 +375,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         ptlng = thisData.d / Convert.ToDouble(thisData.d + thisData.c);
                         temp1 = ptlng * 100.0;
-                        temp2 = Convert.ToInt32(ptlng * 100.0) - Convert.ToInt32((Convert.ToDouble(thisData.b + thisData.d) / N) * 100.0);
+                        temp2 = Convert.ToInt32(ptlng * 100.0) - Convert.ToInt32(Convert.ToDouble(thisData.b + thisData.d) / N * 100.0);
                     }
                     else
                     {
@@ -409,7 +409,7 @@ namespace StatsDirect.Charting.Renderer
                     double ptlnd;
                     if (thisData.d + thisData.c > 0)
                     {
-                        ptlnd = 1.0 - (thisData.d / Convert.ToDouble(thisData.d + thisData.c));
+                        ptlnd = 1.0 - thisData.d / Convert.ToDouble(thisData.d + thisData.c);
                         temp1 = ptlnd * 100.0;
                         temp2 = Convert.ToInt32(ptlnd * 100.0) - Convert.ToInt32(prevel * 100.0);
                     }
@@ -514,10 +514,10 @@ namespace StatsDirect.Charting.Renderer
             double s10 = 0.0;
             double s01 = 0.0;
             for (int i = 0; i < x.Length; i++)
-                s10 += Math.Pow((v10[i] - auc), 2.0);
+                s10 += Math.Pow(v10[i] - auc, 2.0);
             s10 /= x.Length - 1;
             for (int j = 0; j < y.Length; j++)
-                s01 += Math.Pow((v01[j] - auc), 2.0);
+                s01 += Math.Pow(v01[j] - auc, 2.0);
             s01 /= y.Length - 1;
             double var = s10 / x.Length + s01 / y.Length;
             return var < 0.0 ? Constant.MISSING : Math.Sqrt(var);
@@ -527,7 +527,7 @@ namespace StatsDirect.Charting.Renderer
         {
             if (y == x)
                 return 0.5;
-            return (y < x) ? 1.0 : 0.0;
+            return y < x ? 1.0 : 0.0;
         }
 
         ///  <summary>

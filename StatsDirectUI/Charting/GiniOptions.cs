@@ -11,37 +11,13 @@ namespace StatsDirect.Charting
             
         } 
         
-        public override bool UsesChartTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesXAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesYAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool ShowLegendIsRelevant 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        }
+        public override bool UsesChartTitle => true;
+
+        public override bool UsesXAxisTitle => true;
+
+        public override bool UsesYAxisTitle => true;
+
+        public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

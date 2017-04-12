@@ -40,8 +40,8 @@ namespace StatsDirect.Charting.Renderer
                 float size2 = labelFont.Size * 2;
                 for (int i = 1; i <= igroups; i++)
                 {
-                    DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * i), 6, ((MarkerShape)(i)), false, p);
-                    DrawStringLegendL(cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * i));
+                    DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - size2 * i, 6, (MarkerShape)i, false, p);
+                    DrawStringLegendL(cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label, 24, yAxisCanvas + yExtCanvas - 10 - size2 * i);
                 }
 
                 // plot points
@@ -162,15 +162,15 @@ namespace StatsDirect.Charting.Renderer
                     {
                         using (Pen legendPen = GetLinePen(ChartPreferences.MarkerTypes[(k - 1) % 9], true))
                         {
-                            DrawLineInCanvasCoordinates(legendPen, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
-                            DrawLineInCanvasCoordinates(legendPen, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
+                            DrawLineInCanvasCoordinates(legendPen, 10, yAxisCanvas + yExtCanvas - 18 - size2 * k, 20, yAxisCanvas + yExtCanvas - 18 - size2 * k);
+                            DrawLineInCanvasCoordinates(legendPen, 20, yAxisCanvas + yExtCanvas - 18 - size2 * k, 20, yAxisCanvas + yExtCanvas - 28 - size2 * k);
                         }
                     }
                     else
                     {
-                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
                     }
-                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
+                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - size2 * k);
                 }
             }
             //  Legend
@@ -179,19 +179,19 @@ namespace StatsDirect.Charting.Renderer
                 for (int k = 1; k <= istrata; k++)
                 {
                     string vq = "Stratum " + k;
-                    if (!(use_marker))
+                    if (!use_marker)
                     {
                         using (Pen legendPen = GetLinePen(ChartPreferences.MarkerTypes[(k - 1) % 9], true))
                         {
-                            DrawLineInCanvasCoordinates(legendPen, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
-                            DrawLineInCanvasCoordinates(legendPen, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
+                            DrawLineInCanvasCoordinates(legendPen, 10, yAxisCanvas + yExtCanvas - 18 - size2 * k, 20, yAxisCanvas + yExtCanvas - 18 - size2 * k);
+                            DrawLineInCanvasCoordinates(legendPen, 20, yAxisCanvas + yExtCanvas - 18 - size2 * k, 20, yAxisCanvas + yExtCanvas - 28 - size2 * k);
                         }
                     }
                     else
                     {
-                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
                     }
-                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
+                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - size2 * k);
                 }
             }
 
@@ -222,7 +222,7 @@ namespace StatsDirect.Charting.Renderer
 
             for (int i = 1; i <= iobs; i++)
             {
-                if (i > 1 && (grouped ? (z[i].Id != z[i - 1].Id) : (z[i].Stratum != z[i - 1].Stratum)))
+                if (i > 1 && (grouped ? z[i].Id != z[i - 1].Id : z[i].Stratum != z[i - 1].Stratum))
                 {
                     igp = igp + 1;
                     ix1 = ix0;
@@ -423,7 +423,7 @@ namespace StatsDirect.Charting.Renderer
             double P0;
             double cit;
             MathDbl.civ(nx - P, out cit, gamma, out P0);
-            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
             double[] px = new double[P + 1];
             px[1] = 1.0;
@@ -619,7 +619,7 @@ namespace StatsDirect.Charting.Renderer
                 for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
-                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow((calcx - xm), 2.0) / s1);
+                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcx - xm, 2.0) / s1);
                     double calcy = a + b * calcx;
                     double cly = calcy + cl;
                     if (model == 1)
@@ -639,7 +639,7 @@ namespace StatsDirect.Charting.Renderer
                 for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                 {
                     double originalX = InverseTransformX(calcx);
-                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow((calcx - xm), 2.0) / s1);
+                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcx - xm, 2.0) / s1);
                     double calcy = a + b * calcx;
                     double cly = calcy - cl;
                     if (model == 1)
@@ -713,8 +713,8 @@ namespace StatsDirect.Charting.Renderer
                     if (bnam[g].Length > 0)
                     {
                         int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
-                        DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, yAxisCanvas + yExtCanvas - LEGEND_MARKER_Y_OFFSET - (size2 * g), LEGEND_MARKER_SIZE, ChartPreferences.MarkerTypes[mkr]); //  TODO: Broken?
-                        DrawStringLegendL(bnam[g], LEGEND_TEXT_X, yAxisCanvas + yExtCanvas - 10 - (size2 * g));
+                        DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, yAxisCanvas + yExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * g, LEGEND_MARKER_SIZE, ChartPreferences.MarkerTypes[mkr]); //  TODO: Broken?
+                        DrawStringLegendL(bnam[g], LEGEND_TEXT_X, yAxisCanvas + yExtCanvas - 10 - size2 * g);
                     }
                 }
             }
@@ -769,7 +769,7 @@ namespace StatsDirect.Charting.Renderer
                         DrawMarkerSeriesInCanvasCoordinates(xys, 6, t.MarkerShape, t.IsMarkerFilled, p, p, false, true);
                     }
                     x1 = ToCanvasX(minx);
-                    double calcy = (a[g] + b[g] * minx);
+                    double calcy = a[g] + b[g] * minx;
                     if (calcy < miny)
                     {
                         calcy = miny;
@@ -784,18 +784,18 @@ namespace StatsDirect.Charting.Renderer
                     }
                     y1 = ToCanvasY(calcy);
                     double x2 = ToCanvasX(maxx);
-                    calcy = (a[g] + b[g] * maxx);
+                    calcy = a[g] + b[g] * maxx;
                     if (calcy < miny)
                     {
                         calcy = miny;
                         if (b[g] != 0.0)
-                            x2 = ToCanvasX(((calcy - a[g]) / b[g]));
+                            x2 = ToCanvasX((calcy - a[g]) / b[g]);
                     }
                     else if (calcy > maxy)
                     {
                         calcy = maxy;
                         if (b[g] != 0.0)
-                            x2 = ToCanvasX(((calcy - a[g]) / b[g]));
+                            x2 = ToCanvasX((calcy - a[g]) / b[g]);
                     }
                     DrawLineInCanvasCoordinates(p, x1, y1, x2, ToCanvasY(calcy));
                 }
@@ -990,7 +990,7 @@ namespace StatsDirect.Charting.Renderer
                     pool = rmh;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("xform", xform, "Unexpected transform: only Log, None, Z known");
+                    throw new ArgumentOutOfRangeException(nameof(xform), xform, "Unexpected transform: only Log, None, Z known");
             }
 
             ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinY, 0, DataMaxY, true);
@@ -1197,7 +1197,7 @@ namespace StatsDirect.Charting.Renderer
 
             if (cco <= 0.0)
                 cco = 0.95;
-            double cit = PDF.gauinv(1.0 - ((1.0 - cco) / 2.0));
+            double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
 
             plot_method = host.MetaPlotMethod;
 
@@ -1214,7 +1214,7 @@ namespace StatsDirect.Charting.Renderer
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING || cu[r] <= 0.0 || cl[r] <= 0.0)
                                     y[r] = Constant.MISSING;
                                 else
-                                    y[r] = ((Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0) / cit;
+                                    y[r] = (Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0 / cit;
                             }
                             break;
                         case Transformation.Z:
@@ -1223,7 +1223,7 @@ namespace StatsDirect.Charting.Renderer
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING)
                                     y[r] = Constant.MISSING;
                                 else
-                                    y[r] = ((MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0) / cit;
+                                    y[r] = (MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0 / cit;
                             }
                             break;
                         case Transformation.None:
@@ -1232,7 +1232,7 @@ namespace StatsDirect.Charting.Renderer
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING)
                                     y[r] = Constant.MISSING;
                                 else
-                                    y[r] = ((cu[r] - cl[r]) / 2.0) / cit;
+                                    y[r] = (cu[r] - cl[r]) / 2.0 / cit;
                             }
                             break;
                     }
@@ -1249,7 +1249,7 @@ namespace StatsDirect.Charting.Renderer
                                 if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING || cu[r] <= 0.0 || cl[r] <= 0.0)
                                     y[r] = Constant.MISSING;
                                 else
-                                    y[r] = ((Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0) / cit;
+                                    y[r] = (Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0 / cit;
                                 if (y[r] != 0.0 & y[r] != Constant.MISSING)
                                     y[r] = 1.0 / y[r];
                                 else
@@ -1262,7 +1262,7 @@ namespace StatsDirect.Charting.Renderer
                                 if (cu[r] == Constant.MISSING | cl[r] == Constant.MISSING)
                                     y[r] = Constant.MISSING;
                                 else
-                                    y[r] = ((MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0) / cit;
+                                    y[r] = (MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0 / cit;
                                 if (y[r] != 0.0 & y[r] != Constant.MISSING)
                                     y[r] = 1.0 / y[r];
                                 else
@@ -1275,7 +1275,7 @@ namespace StatsDirect.Charting.Renderer
                                 if (cu[r] == Constant.MISSING | cl[r] == Constant.MISSING)
                                     y[r] = Constant.MISSING;
                                 else
-                                    y[r] = ((cu[r] - cl[r]) / 2.0) / cit;
+                                    y[r] = (cu[r] - cl[r]) / 2.0 / cit;
                                 if (y[r] != 0.0 & y[r] != Constant.MISSING)
                                     y[r] = 1.0 / y[r];
                                 else
@@ -1396,17 +1396,17 @@ namespace StatsDirect.Charting.Renderer
                     string vq = glab[k];
                     if (marker)
                     {
-                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - (size2 * k), 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
+                        DrawMarkerInCanvasCoordinates(12, yAxisCanvas + yExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
                     }
                     else
                     {
                         using (Pen p = GetMarkerPen(ChartPreferences.MarkerTypes[(k - 1) % 9]))
                         {
-                            DrawLineInCanvasCoordinates(p, 10, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k));
-                            DrawLineInCanvasCoordinates(p, 20, yAxisCanvas + yExtCanvas - 18 - (size2 * k), 20, yAxisCanvas + yExtCanvas - 28 - (size2 * k));
+                            DrawLineInCanvasCoordinates(p, 10, yAxisCanvas + yExtCanvas - 18 - size2 * k, 20, yAxisCanvas + yExtCanvas - 18 - size2 * k);
+                            DrawLineInCanvasCoordinates(p, 20, yAxisCanvas + yExtCanvas - 18 - size2 * k, 20, yAxisCanvas + yExtCanvas - 28 - size2 * k);
                         }
                     }
-                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - (size2 * k));
+                    DrawStringLegendL(vq, 24, yAxisCanvas + yExtCanvas - 10 - size2 * k);
                 }
             }
             for (int k = 1; k <= groups; k++)
@@ -1418,24 +1418,24 @@ namespace StatsDirect.Charting.Renderer
                     switch (plotMode)
                     {
                         case 1:
-                            x1 = (axisScales.X.MinimumScaleValue);
-                            y1 = (1.0);
+                            x1 = axisScales.X.MinimumScaleValue;
+                            y1 = 1.0;
                             break;
                         case 2:
-                            x1 = (axisScales.X.MinimumScaleValue);
-                            y1 = (0);
+                            x1 = axisScales.X.MinimumScaleValue;
+                            y1 = 0;
                             break;
                         case 3:
-                            x1 = (x[1, k]);
-                            y1 = (y[1, k]);
+                            x1 = x[1, k];
+                            y1 = y[1, k];
                             break;
                         case 4:
-                            x1 = (x[1, k]);
-                            y1 = (y[1, k]);
+                            x1 = x[1, k];
+                            y1 = y[1, k];
                             break;
                         case 5:
-                            x1 = (x[1, k]);
-                            y1 = (y[1, k]);
+                            x1 = x[1, k];
+                            y1 = y[1, k];
                             break;
                         default:
                             throw new Exception("Unknown plot mode");
@@ -1602,7 +1602,7 @@ namespace StatsDirect.Charting.Renderer
 
                         // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                         // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                        double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gw[i] / max_gw))) * 0.7;
+                        double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gw[i] / max_gw)) * 0.7;
                         DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
 
                         // CI line
@@ -1797,7 +1797,7 @@ namespace StatsDirect.Charting.Renderer
                             xr = ToCanvasX(odru[i]);
                         // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                         // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                        double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gw[i] / max_gw))) * 0.7;
+                        double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gw[i] / max_gw)) * 0.7;
                         DrawMarkerInCanvasCoordinates(ToCanvasX(odr[i]), yc, blobSize / 2, studyMarkerType);
 
                         // CI line
@@ -2252,12 +2252,12 @@ namespace StatsDirect.Charting.Renderer
                         {
                             // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                             // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                            double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gn[i] / max_gn))) * 0.7;
+                            double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gn[i] / max_gn)) * 0.7;
                             DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
                             // CI line
                             DrawLineInCanvasCoordinates(linePen, xl, yc, xr, yc);
                             // Arrow ends if not plottable
-                            if ((odrl[i] <= 0 && xform == Transformation.Log) || odrl[i] == Constant.MISSING)
+                            if (odrl[i] <= 0 && xform == Transformation.Log || odrl[i] == Constant.MISSING)
                             {
                                 DrawLineInCanvasCoordinates(linePen, xl + y2, yc + y2, xl, yc);
                                 DrawLineInCanvasCoordinates(linePen, xl, yc, xl + y2, yc - y2);
@@ -2334,7 +2334,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         private static bool include_table(double[,] o, int i)
         {
-            return !((o[i, 1] == 0.0 && o[i, 2] == 0.0) || (o[i, 3] == 0.0 && o[i, 4] == 0.0));
+            return !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
         }
     }
 }

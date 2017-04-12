@@ -39,10 +39,7 @@ namespace StatsDirect.Templates
         private Operation operation;
 
         [XmlIgnore]
-        public Operation Operation
-        {
-            get { return operation; }
-        }
+        public Operation Operation => operation;
 
         [XmlAttribute(AttributeName = "name")]
         public string Name
@@ -83,10 +80,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public virtual bool RequiresGrid
-        {
-            get { return false; }
-        }
+        public virtual bool RequiresGrid => false;
 
         public abstract InputDuringStep RequiresInputGiven(ParameterBag parameters);
 

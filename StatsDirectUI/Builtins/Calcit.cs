@@ -31,7 +31,7 @@ namespace StatsDirect.Builtins
         {
             const string typeName = "Temp1";
             const string methodName = "DoIt";
-            bool allDoubles = passedVariableTypes.Aggregate(true, (okSoFar, dt) => okSoFar && (dt == DataType.Double));
+            bool allDoubles = passedVariableTypes.Aggregate(true, (okSoFar, dt) => okSoFar && dt == DataType.Double);
             compiledForVariants = assumeVariants || !allDoubles;
             DataType retval;
             string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out retval);

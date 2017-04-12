@@ -37,7 +37,7 @@ namespace StatsDirect.R
                     sb.Append("."); // A second dot otherwise we run the danger of a name of the form .2way, which is illegal.
                 foreach (char ch in lowerName)
                 {
-                    if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_')
+                    if (ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9' || ch == '.' || ch == '_')
                         sb.Append(ch);
                     else
                         sb.Append('.');
@@ -114,7 +114,7 @@ namespace StatsDirect.R
                     sb.AppendLine("\t)");
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("frameTypePreference", frameTypePreference, "Only Long or Wide known when converting StatsDirect frame to R frame");
+                    throw new ArgumentOutOfRangeException(nameof(frameTypePreference), frameTypePreference, "Only Long or Wide known when converting StatsDirect frame to R frame");
             }
         }
 

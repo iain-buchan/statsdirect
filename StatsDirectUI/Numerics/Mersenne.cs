@@ -121,15 +121,9 @@ namespace StatsDirect.Numerics
 		/// by instances of this class are less than or equal to this value. This
 		/// value is <c>0x7fffffff</c> (<c>2,147,483,647</c>).
 		/// </summary>
-		public static int MaxRandomInt
-		{
-			get
-			{
-				return 0x7fffffff;
-			}
-		}
+		public static int MaxRandomInt => 0x7fffffff;
 
-		#endregion Properties
+	    #endregion Properties
 
 		#region Member Functions ------------------------------------------------
 
@@ -169,7 +163,7 @@ namespace StatsDirect.Numerics
 				minValue = tmp;
 			}
 
-			return (int)( Math.Floor((maxValue-minValue+1)*genrand_real1() + minValue) );
+			return (int)Math.Floor((maxValue-minValue+1)*genrand_real1() + minValue);
 		}
 
 		/// <summary>
@@ -335,10 +329,10 @@ namespace StatsDirect.Numerics
 			y = mt[mti++];
 
 			// Tempering
-			y ^= (y >> 11);
+			y ^= y >> 11;
 			y ^= (y << 7) & 0x9d2c5680U;
 			y ^= (y << 15) & 0xefc60000U;
-			y ^= (y >> 18);
+			y ^= y >> 18;
 
 			return y;
 		}

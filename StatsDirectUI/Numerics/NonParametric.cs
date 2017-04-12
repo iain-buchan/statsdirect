@@ -110,7 +110,7 @@ namespace StatsDirect.Numerics
                 return 1.0;
 
             int nn = Math.Min(n1, n2);
-            int nwrk = nn + nn * (nn + 1) * nsum - ((int)(Math.Floor(nn * (nn + 1) * (2 * nn + 1) / 3.0))) + 1;
+            int nwrk = nn + nn * (nn + 1) * nsum - (int)Math.Floor(nn * (nn + 1) * (2 * nn + 1) / 3.0) + 1;
             double[] wrk = new double[nwrk + 1];
             for (int i = 0; i <= space; i++)
                 wrk[i + 1] = 1.0;
@@ -142,7 +142,7 @@ namespace StatsDirect.Numerics
             }
             else
             {
-                int ir1 = (nsum * (nsum + 1) - high) - m2 * (m2 + 1);
+                int ir1 = nsum * (nsum + 1) - high - m2 * (m2 + 1);
                 return 1.0 - wrk[ranks[l2 + m1 + 1] + ranks[l1 + m1 + 1] - iv + ir1];
             }
         }

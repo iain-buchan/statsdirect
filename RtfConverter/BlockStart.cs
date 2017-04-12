@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace RtfConverter
+﻿namespace RtfConverter
 {
     public class BlockStart : Chunk
     {
         public override AccumulatedFormat AccumulatedFormat { get; set; }
 
-        public string Name { get; private set; }
+        public string Name { get; }
 
         public BlockStart(string name)
         {

@@ -7,8 +7,9 @@ namespace StatsDirect.Templates
     {
         public double MinimumDataValue { get; private set; }
         public double MaximumDataValue { get; private set; }
-        public double MinimumScaleValue { get { return Math.Pow(2, MinimumPower); } }
-        public double MaximumScaleValue { get { return Math.Pow(2, MaximumPower); } }
+        public double MinimumScaleValue => Math.Pow(2, MinimumPower);
+        public double MaximumScaleValue => Math.Pow(2, MaximumPower);
+
         /// The number of intervals between tics (one less than the number of tics).  20 intervals = 21 tics - one extra at the end.
         private int MinimumPower { get; set; }
         private int MaximumPower { get; set; }

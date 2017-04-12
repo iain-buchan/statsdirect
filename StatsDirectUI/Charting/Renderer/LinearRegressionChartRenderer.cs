@@ -35,7 +35,7 @@ namespace StatsDirect.Charting.Renderer
         {
             const int MARKER_SIZE = 6;
 
-            LinearRegressionOptions lrOptions = ((LinearRegressionOptions)(definition.ChartOptions));
+            LinearRegressionOptions lrOptions = (LinearRegressionOptions)definition.ChartOptions;
             double slope = lrOptions.Slope;
             double intercept = lrOptions.Intercept;
             bool fullWidth = lrOptions.FullWidth;
@@ -168,10 +168,10 @@ namespace StatsDirect.Charting.Renderer
                     {
                         double calcy = slope * calcx + yIntercept;
                         double sey = Math.Sqrt(ms * (1.0 + 1.0 / nx + Math.Pow(calcx - sumx / nx, 2.0) / ssx));
-                        double pcon = calcy + (sey * pert);
+                        double pcon = calcy + sey * pert;
                         double x1P = calcx;
                         double y1P = pcon;
-                        double ncon = calcy - (sey * pert);
+                        double ncon = calcy - sey * pert;
                         double x1N = calcx;
                         double y1N = ncon;
                         if (first)
@@ -204,10 +204,10 @@ namespace StatsDirect.Charting.Renderer
                     {
                         double calcy = slope * calcx + yIntercept;
                         double sey = Math.Sqrt(ms * (1.0 / nx + Math.Pow(calcx - sumx / nx, 2.0) / ssx));
-                        double pcon = calcy + (sey * pert);
+                        double pcon = calcy + sey * pert;
                         double x1P = calcx;
                         double y1P = pcon;
-                        double ncon = calcy - (sey * pert);
+                        double ncon = calcy - sey * pert;
                         double x1N = calcx;
                         double y1N = ncon;
                         if (first)
@@ -229,7 +229,7 @@ namespace StatsDirect.Charting.Renderer
                     for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
                     {
                         double calcy = slope * calcx + yIntercept;
-                        double sey = Math.Sqrt(ms * ((1.0 / nx + Math.Pow((calcx - (sumx / nx)), 2.0) / ssx)));
+                        double sey = Math.Sqrt(ms * (1.0 / nx + Math.Pow(calcx - sumx / nx, 2.0) / ssx));
                         double pcon = calcy + sey;
                         double x1P = calcx;
                         double y1P = pcon;

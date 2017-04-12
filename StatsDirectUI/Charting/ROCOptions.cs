@@ -63,61 +63,19 @@ namespace StatsDirect.Charting
             showLegendIsRelevant = seriesToUse.Count > 2; //  2 series per ROC series
         }
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesSeriesLabels
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesSeriesLabels => true;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool UsesAxisTitleFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisTitleFontDescriptor => true;
 
-        public override bool ShowRocOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ShowRocOptions => true;
 
-        public override bool UsesLegendFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesLegendFontDescriptor => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return showLegendIsRelevant;
-            }
-        }
+        public override bool ShowLegendIsRelevant => showLegendIsRelevant;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

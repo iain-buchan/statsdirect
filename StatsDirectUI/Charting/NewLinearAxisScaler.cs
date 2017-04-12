@@ -53,8 +53,8 @@ namespace StatsDirect.Charting
             if (x == 0.0)
                 return 0;
 
-            int ipow = ((int)(Math.Floor(Math.Log10(Math.Abs(x))))) + 1;
-            double sc = x / (Math.Pow(10.0, ipow));
+            int ipow = (int)Math.Floor(Math.Log10(Math.Abs(x))) + 1;
+            double sc = x / Math.Pow(10.0, ipow);
             if (sc == 1.0)
                 return 1;
             else

@@ -16,7 +16,7 @@ namespace StatsDirect.Charting
             ys = new List<double>(1);
         }
 
-        public int YCount { get { return ys.Count; } }
+        public int YCount => ys.Count;
 
         public void set_Y(int index, double value)
         {

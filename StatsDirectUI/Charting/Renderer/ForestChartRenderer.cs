@@ -66,8 +66,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            bool shouldDrawLine = DataMinX <= 0 || (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue);
-            double lineX = (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue) ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            bool shouldDrawLine = DataMinX <= 0 || null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue;
+            double lineX = null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
             if (shouldDrawLine)
             {
                 if (DataMaxX < lineX)
@@ -153,8 +153,8 @@ namespace StatsDirect.Charting.Renderer
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
             // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
-            bool shouldDrawLine = DataMinX <= 0 || (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue);
-            double lineX = (null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue) ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            bool shouldDrawLine = DataMinX <= 0 || null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue;
+            double lineX = null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
             if (shouldDrawLine)
             {
                 if (DataMaxX < lineX)
@@ -225,7 +225,7 @@ namespace StatsDirect.Charting.Renderer
                         {
                             // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                             // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                            double blobSize = (5 + Math.Abs(yt - yb) * (Math.Sqrt(gn[i] / max_gn))) * 0.7;
+                            double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gn[i] / max_gn)) * 0.7;
                             DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
 
                             // CI line

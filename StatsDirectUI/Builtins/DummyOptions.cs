@@ -20,22 +20,9 @@ namespace StatsDirect.Builtins
         /// </summary>
         public bool TreatAsContinuous { get; set; }
 
-        public static string FillerToUse
-        {
-            get
-            {
-                return "Dummy";
-            }
-        }
+        public static string FillerToUse => "Dummy";
 
         // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
+        string IFillable.FillerToUse => FillerToUse;
     }
 }

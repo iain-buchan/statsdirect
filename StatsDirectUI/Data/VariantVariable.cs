@@ -39,17 +39,11 @@ namespace StatsDirect.Data
             //  Nothing else required
         }
 
-        public override int Length
-        {
-            get
-            {
-                return (Data == null) ? 0 : Data.Length;
-            }
-        }
+        public override int Length => Data == null ? 0 : Data.Length;
 
         public override void EnsureLength(int minimumLength)
         {
-            if ((Data == null))
+            if (Data == null)
             {
                 Data = new object[minimumLength];
             }
@@ -67,7 +61,7 @@ namespace StatsDirect.Data
         public override void EnsureLength(int minimumLength, bool useMissing)
         {
             int currentLength;
-            if ((Data == null))
+            if (Data == null)
             {
                 currentLength = 0;
                 Data = new object[minimumLength];
@@ -89,7 +83,7 @@ namespace StatsDirect.Data
 
         public override void TruncateDataToLength(int maximumLength)
         {
-            if ((Data.Length > maximumLength))
+            if (Data.Length > maximumLength)
             {
                 object[] transTemp2 = new object[maximumLength];
                 Array.Copy(Data, transTemp2, maximumLength);
@@ -135,13 +129,7 @@ namespace StatsDirect.Data
             Data = (victim as VariantVariable).Data;
         }
 
-        protected override bool HasData
-        {
-            get
-            {
-                return Data != null;
-            }
-        }
+        protected override bool HasData => Data != null;
 
         public override void Accept(IVariableVisitor visitor)
         {

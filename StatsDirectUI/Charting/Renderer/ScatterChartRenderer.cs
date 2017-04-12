@@ -39,11 +39,11 @@ namespace StatsDirect.Charting.Renderer
             const int LEGEND_MARKER_Y_OFFSET = 22;
             const int LEGEND_TEXT_X = 24;
 
-            ScatterXYOptions sOptions = ((ScatterXYOptions)(definition.ChartOptions));
+            ScatterXYOptions sOptions = (ScatterXYOptions)definition.ChartOptions;
             bool shouldDrawMarkers = sOptions.PlotMarkers;
             bool joinMarkersWithLines = sOptions.JoinMarkersWithLines;
 
-            if (!(IsAscii))
+            if (!IsAscii)
             {
                 // Plot a metafile version
                 StartVectorPlot();
@@ -76,8 +76,8 @@ namespace StatsDirect.Charting.Renderer
                     {
                         if (s.Title.Length > 0)
                         {
-                            DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, yAxisCanvas + yExtCanvas - LEGEND_MARKER_Y_OFFSET - (size2 * i), LEGEND_MARKER_SIZE, definition.YSeries[i - 1].AsDoubleSeries);
-                            DrawStringLegendL(s.Title, LEGEND_TEXT_X, yAxisCanvas + yExtCanvas - 10 - (size2 * i));
+                            DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, yAxisCanvas + yExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * i, LEGEND_MARKER_SIZE, definition.YSeries[i - 1].AsDoubleSeries);
+                            DrawStringLegendL(s.Title, LEGEND_TEXT_X, yAxisCanvas + yExtCanvas - 10 - size2 * i);
                         }
                         i += 1;
                     }

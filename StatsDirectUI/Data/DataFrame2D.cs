@@ -61,13 +61,7 @@ namespace StatsDirect.Data
             }
         }
 
-        public int VariableCount
-        {
-            get
-            {
-                return _variables.Count;
-            }
-        }
+        public int VariableCount => _variables.Count;
 
         public int VariableCountTheOtherWay
         {

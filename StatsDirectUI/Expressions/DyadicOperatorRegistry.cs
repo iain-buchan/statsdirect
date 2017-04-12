@@ -9,10 +9,7 @@ namespace StatsDirect.Expressions
 
         private static DyadicOperatorRegistry soleInstance;
 
-        public static DyadicOperatorRegistry SoleInstance
-        {
-            get { return soleInstance ?? (soleInstance = new DyadicOperatorRegistry()); }
-        }
+        public static DyadicOperatorRegistry SoleInstance => soleInstance ?? (soleInstance = new DyadicOperatorRegistry());
 
         private DyadicOperatorRegistry()
         {

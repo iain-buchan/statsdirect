@@ -90,7 +90,7 @@ namespace StatsDirect.UI
                 {
                     // Second possibility: Get the excel paths and look for the xla in the startup path
                     var startpath = excelObject.GetType().InvokeMember("StartupPath", BindingFlags.GetProperty, null, excelObject, null);
-                    isInstalled |= (File.Exists(Path.Combine((string) startpath, Sdxlam)));
+                    isInstalled |= File.Exists(Path.Combine((string) startpath, Sdxlam));
                 }
 
                 //Clean up: Close Excel

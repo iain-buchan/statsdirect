@@ -15,10 +15,7 @@ namespace StatsDirect.UI
             this.chartDefinition = chartDefinition;
         }
 
-        public Charting.ChartDefinition ChartDefinition
-        {
-            get { return chartDefinition; }
-        }
+        public Charting.ChartDefinition ChartDefinition => chartDefinition;
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {

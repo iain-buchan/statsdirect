@@ -43,10 +43,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// true iff the parameter defines a default.
         /// </summary>
-        public bool HasDefaultValue
-        {
-            get { return null != DefaultValueExpression; }
-        }
+        public bool HasDefaultValue => null != DefaultValueExpression;
 
         /// <summary>
         /// If true, the CI parameter can use the standard input area below the buttons.
@@ -57,7 +54,7 @@ namespace StatsDirect.Templates
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

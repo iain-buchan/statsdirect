@@ -33,10 +33,7 @@ namespace StatsDirect.Charting
         // TODO: Marker stacks are an abomination for histograms and should be removed forthwith.
         private static Stack<MarkerType[]> markerTypeStack;
 
-        public static bool DefaultRequestScaleLimits
-        {
-            get { return false; }
-        }
+        public static bool DefaultRequestScaleLimits => false;
 
         public static bool DefaultBoxAxes
         {
@@ -80,10 +77,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string DefaultSeriesLabelFont
-        {
-            get { return DefaultAxisLabelFont; }
-        }
+        public static string DefaultSeriesLabelFont => DefaultAxisLabelFont;
 
         public static string DefaultAxisTitleFont
         {
@@ -193,14 +187,14 @@ namespace StatsDirect.Charting
                 {
                     string[] parameterStrings = markerStrings[i].Split(';');
                     //  Shape
-                    MarkerShape shape = ((MarkerShape)(int.Parse(parameterStrings[0])));
+                    MarkerShape shape = (MarkerShape)int.Parse(parameterStrings[0]);
                     //  Colour
                     string[] colourValues = parameterStrings[1].Split(',');
                     Color col = Color.FromArgb(255, int.Parse(colourValues[0]), int.Parse(colourValues[1]), int.Parse(colourValues[2]));
                     //  Width
                     float width = float.Parse(parameterStrings[2]);
                     //  Style
-                    System.Drawing.Drawing2D.DashStyle style = ((System.Drawing.Drawing2D.DashStyle)(int.Parse(parameterStrings[3])));
+                    System.Drawing.Drawing2D.DashStyle style = (System.Drawing.Drawing2D.DashStyle)int.Parse(parameterStrings[3]);
                     //  Filled (1 = yes, missing or 0 = no)
                     bool isFilled = false;
                     if (parameterStrings.Length > 4)
@@ -416,7 +410,7 @@ namespace StatsDirect.Charting
                 default:
                     throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit.ToString());
             }
-            return f.FontFamily.Name + ";" + (Convert.ToInt32(f.Style)) + ";" + emSize;
+            return f.FontFamily.Name + ";" + Convert.ToInt32(f.Style) + ";" + emSize;
         }
 
         /// <summary>
@@ -430,7 +424,7 @@ namespace StatsDirect.Charting
             if (fontStrings.Length != 3)
                 return null;
             string familyName = fontStrings[0];
-            FontStyle style = ((FontStyle)(Parsing.Cint_Txt(fontStrings[1])));
+            FontStyle style = (FontStyle)Parsing.Cint_Txt(fontStrings[1]);
             float emSize = float.Parse(fontStrings[2]);
             float pixelSize = emSize * PIXELS_PER_POINT;
             try

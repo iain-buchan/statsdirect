@@ -14,20 +14,8 @@ namespace StatsDirect.Charting
             Data = new string[ dataLength ]; 
         } 
         
-        public int Length 
-        { 
-            get 
-            { 
-                return Data.Length; 
-            } 
-        } 
-        
-        public override StringSeries AsStringSeries 
-        { 
-            get 
-            { 
-                return this; 
-            } 
-        } 
+        public int Length => Data.Length;
+
+        public override StringSeries AsStringSeries => this;
     } 
 } 

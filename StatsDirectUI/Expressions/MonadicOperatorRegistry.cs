@@ -9,10 +9,7 @@ namespace StatsDirect.Expressions
 
         private static MonadicOperatorRegistry soleInstance;
 
-        public static MonadicOperatorRegistry SoleInstance
-        {
-            get { return soleInstance ?? (soleInstance = new MonadicOperatorRegistry()); }
-        }
+        public static MonadicOperatorRegistry SoleInstance => soleInstance ?? (soleInstance = new MonadicOperatorRegistry());
 
         private MonadicOperatorRegistry()
         {

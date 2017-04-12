@@ -47,7 +47,7 @@ namespace StatsDirect.Numerics
                 Seed( Base.DefaultSeed() ); 
             } 
             
-            int n = ( ( int )( Math.Floor(nin + 0.5) ) ); 
+            int n = ( int )Math.Floor(nin + 0.5); 
             if ( n != nin ) 
             { 
                 genBinomReturn = double.NaN; 
@@ -91,7 +91,7 @@ namespace StatsDirect.Numerics
                     return GenBinomFin( ix, n ); 
                 }
                 double ffm = np + P; 
-                M = ( ( int )(Math.Floor(ffm) ) ); 
+                M = ( int )Math.Floor(ffm); 
                 FM = M; 
                 NPQ = np * Q; 
                 P1 =  Math.Floor(2.195 * Math.Sqrt( NPQ ) - 4.6 * Q) + 0.5; 
@@ -124,7 +124,7 @@ namespace StatsDirect.Numerics
                 //  triangular region
                 if ( u <= P1 ) 
                 { 
-                    ix = ( ( int )(Math.Floor(XM - P1 * v + u) ) ); 
+                    ix = ( int )Math.Floor(XM - P1 * v + u); 
                     break;
                 } 
                 //  parallelogram region
@@ -137,14 +137,14 @@ namespace StatsDirect.Numerics
                     { 
                         backup = true; 
                     } 
-                    ix = ( ( int )(Math.Floor(x) ) ); 
+                    ix = ( int )Math.Floor(x); 
                 } 
                 else 
                 { 
                     if ( u > P3 ) 
                     { 
                         //  right tail
-                        ix = ( ( int )(Math.Floor(XR - Math.Log( v ) / XLR) ) ); 
+                        ix = ( int )Math.Floor(XR - Math.Log( v ) / XLR); 
                         if ( ix > n )
                         { 
                             backup = true; 
@@ -154,7 +154,7 @@ namespace StatsDirect.Numerics
                     else 
                     { 
                         //  left tail
-                        ix = ( ( int )( Math.Floor(XL + Math.Log( v ) / XLL) ) ); 
+                        ix = ( int )Math.Floor(XL + Math.Log( v ) / XLL); 
                         if ( ix < 0 )
                         { 
                             backup = true; 
@@ -193,7 +193,7 @@ namespace StatsDirect.Numerics
                     else 
                     { 
                         //  squeezing using upper and lower bounds on log(f(x))
-                        double amaxp = ( k / NPQ ) * ( ( k * ( k / 3.0 + 0.625 ) + 0.1666666666666 ) / NPQ + 0.5 ); 
+                        double amaxp = k / NPQ * ( ( k * ( k / 3.0 + 0.625 ) + 0.1666666666666 ) / NPQ + 0.5 ); 
                         double ynorm = -k * k / ( 2.0 * NPQ ); 
                         double alv = Math.Log( v ); 
                         if ( alv < ynorm - amaxp )
@@ -255,7 +255,7 @@ namespace StatsDirect.Numerics
                     } 
                     u -= f; 
                     ix++; 
-                    f *= ( g / ix - r ); 
+                    f *= g / ix - r; 
                 } 
                 while ( true ); 
             } 

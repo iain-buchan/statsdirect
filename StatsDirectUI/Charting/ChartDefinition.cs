@@ -96,13 +96,7 @@ namespace StatsDirect.Charting
             CheckYSeriesData(newSeries.AsDoubleSeries);
         }
 
-        public bool HasScaleParameters
-        {
-            get
-            {
-                return scaleParameters != null;
-            }
-        }
+        public bool HasScaleParameters => scaleParameters != null;
 
         public ScaleParameters ScaleParameters
         {
@@ -150,12 +144,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        public string FillerToUse
-        {
-            get
-            {
-                return "ChartOptions";
-            }
-        }
+        public string FillerToUse => "ChartOptions";
     }
 }

@@ -183,7 +183,7 @@ namespace StatsDirect.TemplateProcessing
         {
             string searchSuffix = string.Empty;
             if (null != templateName)
-                searchSuffix = ((0 == templateName.Length) ? templateName : " " + templateName) + "/";
+                searchSuffix = (0 == templateName.Length ? templateName : " " + templateName) + "/";
 
             int startOfTemplate = template.IndexOf("/bs" + searchSuffix, StringComparison.Ordinal);
             if (startOfTemplate >= 0)

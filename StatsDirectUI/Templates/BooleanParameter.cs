@@ -27,10 +27,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// true iff the parameter defines a default.
         /// </summary>
-        public bool HasDefaultValue
-        {
-            get { return null != defaultValue; }
-        }
+        public bool HasDefaultValue => null != defaultValue;
 
         [XmlElement(ElementName = "default-value")]
         public Expression DefaultValueExpression
@@ -41,7 +38,7 @@ namespace StatsDirect.Templates
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

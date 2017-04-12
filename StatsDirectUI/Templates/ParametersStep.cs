@@ -51,10 +51,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The parameters that will be requested before the operation steps are processed, in the order in which they will be requested.
         /// </summary>
-        public IList<Parameter> Parameters
-        {
-            get { return parameters; }
-        }
+        public IList<Parameter> Parameters => parameters;
 
         /// <summary>
         /// 

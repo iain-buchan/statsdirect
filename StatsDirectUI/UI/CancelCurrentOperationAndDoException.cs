@@ -16,14 +16,8 @@ namespace StatsDirect.UI
             this.inputParameters = inputParameters;
         }
 
-        public Operation Operation
-        {
-            get { return operation; }
-        }
+        public Operation Operation => operation;
 
-        public ParameterBag InputParameters
-        {
-            get { return inputParameters; }
-        }
+        public ParameterBag InputParameters => inputParameters;
     }
 }

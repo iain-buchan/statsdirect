@@ -289,27 +289,27 @@ namespace StatsDirect.Builtins
                         {
                             siga = siga + cnt * (cnt - 1) / 2.0;
                             sigat1 = sigat1 + Convert.ToDouble(cnt * (cnt - 1));
-                            sigat2 = sigat2 + Convert.ToDouble((cnt * (cnt - 1) * (cnt - 2)));
-                            sigat3 = sigat3 + Convert.ToDouble((cnt * (cnt - 1) * ((2 * cnt) + 5)));
+                            sigat2 = sigat2 + Convert.ToDouble(cnt * (cnt - 1) * (cnt - 2));
+                            sigat3 = sigat3 + Convert.ToDouble(cnt * (cnt - 1) * (2 * cnt + 5));
                         }
                         cnt = ytie + 1;
                         if (cnt > 1)
                         {
                             sigb = sigb + cnt * (cnt - 1) / 2.0;
                             sigbt1 = sigbt1 + Convert.ToDouble(cnt * (cnt - 1));
-                            sigbt2 = sigbt2 + Convert.ToDouble((cnt * (cnt - 1) * (cnt - 2)));
-                            sigbt3 = sigbt3 + Convert.ToDouble((cnt * (cnt - 1) * ((2 * cnt) + 5)));
+                            sigbt2 = sigbt2 + Convert.ToDouble(cnt * (cnt - 1) * (cnt - 2));
+                            sigbt3 = sigbt3 + Convert.ToDouble(cnt * (cnt - 1) * (2 * cnt + 5));
                         }
                     }
                     host.FinishProgress();
                     s = p - q;
                     double xn = Convert.ToDouble(nx);
-                    hn = (xn * (xn - 1.0)) / 2.0;
-                    double tievar1 = ((xn * (xn - 1.0) * ((2.0 * xn) + 5.0)) - sigat3 - sigbt3) / 18.0;
-                    double tievar2 = (sigat2 * sigbt2) / ((9.0 * xn) * (xn - 1.0) * (xn - 2.0));
-                    double tievar3 = (sigat1 * sigbt1) / (2.0 * xn * (xn - 1.0));
+                    hn = xn * (xn - 1.0) / 2.0;
+                    double tievar1 = (xn * (xn - 1.0) * (2.0 * xn + 5.0) - sigat3 - sigbt3) / 18.0;
+                    double tievar2 = sigat2 * sigbt2 / (9.0 * xn * (xn - 1.0) * (xn - 2.0));
+                    double tievar3 = sigat1 * sigbt1 / (2.0 * xn * (xn - 1.0));
                     double tievar = tievar1 + tievar2 + tievar3;
-                    double kendvar = xn * (xn - 1.0) * ((2.0 * xn) + 5.0) / 18.0;
+                    double kendvar = xn * (xn - 1.0) * (2.0 * xn + 5.0) / 18.0;
                     if (siga != 0 || sigb != 0)
                         varf = tievar;
                     else
@@ -395,7 +395,7 @@ namespace StatsDirect.Builtins
             int cols = frame.VariableCount;
             double[][] ARR2 = new double[cols][];
             for (int c = 0; c < cols; c++)
-                ARR2[c] = ((DoubleVariable)(frame.Variables[c])).Data;
+                ARR2[c] = ((DoubleVariable)frame.Variables[c]).Data;
 
             double[] av = new double[rows + 1];
             double[] mxd = new double[rows + 1];
@@ -464,7 +464,7 @@ namespace StatsDirect.Builtins
             }
             double meanvr = sumvr / rx;
             double mean = tot / rx;
-            double ss = totsq - ((tot * tot) / rx);
+            double ss = totsq - tot * tot / rx;
             double sd = Math.Sqrt(ss / (rx - 1));
             double z = PDF.gauinv(1 - (1 - GAMMA) / 2);
             // create temp variable for copying values 
@@ -494,8 +494,8 @@ namespace StatsDirect.Builtins
             double wssd = Math.Sqrt(meanvr);
             double rep = Math.Sqrt(2) * z * wssd;
             MathDbl.civ(0, out cit, GAMMA, out P0);
-            double lla = mean - (cit * sd);
-            double ula = mean + (cit * sd);
+            double lla = mean - cit * sd;
+            double ula = mean + cit * sd;
             for (int r = 0; r < rows; r++)
             {
                 long nx = 0;
@@ -512,7 +512,7 @@ namespace StatsDirect.Builtins
                 }
                 sqtot += sq;
                 if (nx != 0)
-                    sum2tot += (sum * sum) / nx;
+                    sum2tot += sum * sum / nx;
                 ntot += nx;
                 sumtot += sum;
             }
@@ -523,7 +523,7 @@ namespace StatsDirect.Builtins
                     tlist += ", ";
                 tlist += frame.Variables[c].Title;
             }
-            double cc = (sumtot * sumtot) / ntot;
+            double cc = sumtot * sumtot / ntot;
             double sstot = sqtot - cc;
             double ssgroup = sum2tot - cc;
             double M = cols;
@@ -705,8 +705,7 @@ namespace StatsDirect.Builtins
                     oneWayFrame.Variables.Add(oneWayVariable);
                 }
 
-                ParameterBag oneWayParameters = new ParameterBag();
-                oneWayParameters.Add("data", new FilledParameter(FilledParameterDirection.Input, oneWayFrame));
+                ParameterBag oneWayParameters = new ParameterBag {{"data", new FilledParameter(FilledParameterDirection.Input, oneWayFrame)}};
                 ParameterBag oneWayResult = RptOneWay(host, oneWayParameters);
                 oneWayResult.AddOutput("variableName", v.Title);
                 aList.Add(oneWayResult);
@@ -754,8 +753,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag twoWayParameters = new ParameterBag();
-                twoWayParameters.Add("data", new FilledParameter(FilledParameterDirection.Input, twoWayFrame));
+                ParameterBag twoWayParameters = new ParameterBag {{"data", new FilledParameter(FilledParameterDirection.Input, twoWayFrame)}};
                 ParameterBag twoWayResult = RptTwoWay(host, twoWayParameters);
                 twoWayResult.AddOutput("variableName", v.Title);
                 aList.Add(twoWayResult);
@@ -787,7 +785,7 @@ namespace StatsDirect.Builtins
                         break;
                     }
                 }
-                if (!(skip))
+                if (!skip)
                 {
                     nr++;
                     for (int d = 0; d < frame.VariableCount; d++)
@@ -1069,7 +1067,7 @@ namespace StatsDirect.Builtins
             XTwoHier(frame, y, ctr, nobs, ivar, ref ngp, ref gbar, ref sgbar, ref gm, ref ss, ref idf, ref f, ref fp, out fault);
 
             ParameterBag outputParameters = new ParameterBag();
-            if (!(fault))
+            if (!fault)
             {
                 outputParameters.AddOutput("tlist", tlist);
 
@@ -1091,7 +1089,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("f_1", f[1]);
                 outputParameters.AddOutput("p_1", fp[1]);
 
-                double xx = (ss[1] / Convert.ToDouble(idf[1]) / (ss[2] / Convert.ToDouble(idf[2])));
+                double xx = ss[1] / Convert.ToDouble(idf[1]) / (ss[2] / Convert.ToDouble(idf[2]));
                 outputParameters.AddOutput("f_2", xx);
                 outputParameters.AddOutput("p_2", PDF.fvalp(xx, Convert.ToDouble(idf[1]), Convert.ToDouble(idf[2])));
 
@@ -1113,7 +1111,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
-            int[] variables = ((int[])(parameters["variables"].Data));
+            int[] variables = (int[])parameters["variables"].Data;
             int z_va = variables[0];
             int z_vb = variables[1];
             int comparisons = parameters["comparisons"].AsInt32;
@@ -1124,7 +1122,7 @@ namespace StatsDirect.Builtins
                 comparisons = 1;
 
             double means = carrier.Mean[z_va] - carrier.Mean[z_vb];
-            double se = Math.Sqrt(carrier.Msx * ((1.0 / carrier.Tnx[z_vb]) + (1.0 / carrier.Tnx[z_va])));
+            double se = Math.Sqrt(carrier.Msx * (1.0 / carrier.Tnx[z_vb] + 1.0 / carrier.Tnx[z_va]));
             double tav = means / se;
             double cit;
             double P0;
@@ -1137,15 +1135,15 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("std_err", se);
             outputParameters.AddOutput("groups", frame.VariableCount);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1 - P0), 1));
-            outputParameters.AddOutput("from", means - (cit * se));
-            outputParameters.AddOutput("to", means + (cit * se));
+            outputParameters.AddOutput("from", means - cit * se);
+            outputParameters.AddOutput("to", means + cit * se);
             outputParameters.AddOutput("t", tav);
             outputParameters.AddOutput("df", carrier.Dferr);
             double P = PDF.tvalp(Math.Abs(tav), Convert.ToDouble(carrier.Dferr));
             if (P > 1.0 - P)
                 P = 1.0 - P;
             outputParameters.AddOutput("p", P * 2.0);
-            string qx = comparisons + " comparison" + ((comparisons == 1) ? string.Empty : "s");
+            string qx = comparisons + " comparison" + (comparisons == 1 ? string.Empty : "s");
             outputParameters.AddOutput("comp", qx);
             outputParameters.AddOutput("bonf", 0.05 / comparisons);
             return outputParameters;
@@ -1163,7 +1161,7 @@ namespace StatsDirect.Builtins
             int k = frame.VariableCount - 1;
             int kn = k + 1;
             double[] lam = new double[k + 1]; //  1-based
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1]; //  1-based
+            Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
             bool nSame = true;
             int ntot = 0;
@@ -1216,9 +1214,9 @@ namespace StatsDirect.Builtins
                     hold[ctr] = new Contraster { Delta = delta, Lab1 = frame.Variables[i].Title, Lab2 = frame.Variables[j].Title, Mean1 = mean[i], Mean2 = mean[j] };
                     double t;
                     if (nSame)
-                        t = (1.0 / Math.Sqrt(tnx[0])) * pse;
+                        t = 1.0 / Math.Sqrt(tnx[0]) * pse;
                     else
-                        t = Math.Sqrt((mserr / 2.0) * (1.0 / tnx[j] + 1.0 / tnx[i]));
+                        t = Math.Sqrt(mserr / 2.0 * (1.0 / tnx[j] + 1.0 / tnx[i]));
                     // The Shaffer-Holm statistic p 18 Hsu
                     hold[ctr].Absdelta = Math.Abs(delta / t);
                     // Lci = delta - d * pse * Sqr(1# / tnx(j) + 1# / tnx(i))
@@ -1262,7 +1260,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("uci", hold[i].Ul);
                 differencesParameters.AddOutput("t", hold[i].Absdelta);
                 string pp = host.pval(hold[i].P);
-                if (!(halted) && hold[i].P >= dalpha)
+                if (!halted && hold[i].P >= dalpha)
                 {
                     pp += " {stop}";
                     halted = true;
@@ -1284,7 +1282,7 @@ namespace StatsDirect.Builtins
             double msx = carrier.Msx;
 
             int kn = frame.VariableCount;
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1]; //  1-based
+            Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
             int totn = 0;
             for (int N = 0; N <= kn - 1; N++)
@@ -1352,7 +1350,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("uci", hold[i].Ul);
                 differencesParameters.AddOutput("t", hold[i].Absdelta);
                 string PP = host.pval(hold[i].P);
-                if (!(halted) & hold[i].P >= palpha)
+                if (!halted & hold[i].P >= palpha)
                 {
                     PP = PP + " {stop}";
                     halted = true;
@@ -1408,7 +1406,7 @@ namespace StatsDirect.Builtins
                 outputList.Add(output);
                 output.AddOutput("cf1", pair.Key);
                 output.AddOutput("mean", host.RoundU(pair.Value.Mean));
-                output.AddOutput("sigs", (pair.Value.Significant.Count == 0) ? "none" : string.Join(", ", pair.Value.Significant.ToArray()));
+                output.AddOutput("sigs", pair.Value.Significant.Count == 0 ? "none" : string.Join(", ", pair.Value.Significant.ToArray()));
             }
             return outputList;
         }
@@ -1424,7 +1422,7 @@ namespace StatsDirect.Builtins
             double dferr = carrier.Dferr;
 
             int kn = frame.VariableCount;
-            Contraster[] hold = new Contraster[kn * ((int)(Math.Floor((kn - 1) / 2.0 + 0.5))) + 1]; //  1-based
+            Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
             double palpha = 1.0 - gamma;
             if (palpha <= 0 | palpha >= 1)
@@ -1511,7 +1509,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("gps", hold[i].Gps);
                 differencesParameters.AddOutput("t", hold[i].Q);
                 string PP = host.pval(hold[i].P);
-                if (!(halted) & hold[i].P >= palpha)
+                if (!halted & hold[i].P >= palpha)
                 {
                     PP = PP + " {stop}";
                     halted = true;
@@ -1528,7 +1526,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
-            int[] indexvariable = ((int[])(parameters["indexvariable"].Data));
+            int[] indexvariable = (int[])parameters["indexvariable"].Data;
             int ic = indexvariable[0];
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
             int[] tnx = carrier.Tnx;
@@ -1699,7 +1697,7 @@ namespace StatsDirect.Builtins
                 tnx[d] = nx;
                 sums[d] = sum;
                 means[d] = sum / nx;
-                sum2[d] = (sum * sum) / nx;
+                sum2[d] = sum * sum / nx;
                 sum2tot += sum2[d];
                 ntot += nx;
                 sumtot += sum;
@@ -1723,7 +1721,7 @@ namespace StatsDirect.Builtins
             sbar = sbar / svi;
             double M = svi * Math.Log(sbar) - lns;
             long bdf = frame.VariableCount - 1;
-            double C = 1.0 + (1.0 / (3.0 * bdf)) * (svii - (1.0 / svi));
+            double C = 1.0 + 1.0 / (3.0 * bdf) * (svii - 1.0 / svi);
             double x2 = M / C;
             double[] sumMdnDiffs = new double[frame.VariableCount]; //  Force to zeroes
             double[] sum2MdnDiffs = new double[frame.VariableCount]; //  Force to zeroes
@@ -1750,7 +1748,7 @@ namespace StatsDirect.Builtins
                 }
                 sumMdnDiffs[d] = sumMdnDiff;
                 sumMdnDiffTot += sumMdnDiff;
-                double sum2MdnDiff = (sumMdnDiff * sumMdnDiff) / tnx[d];
+                double sum2MdnDiff = sumMdnDiff * sumMdnDiff / tnx[d];
                 sum2MdnDiffs[d] = sum2MdnDiff;
                 sum2MdnDiffTot += sum2MdnDiff;
                 variances[d] = sqMeanDiffTot / (tnx[d] - 1.0);
@@ -1772,12 +1770,12 @@ namespace StatsDirect.Builtins
             for (int d = 0; d < frame.VariableCount; d++)
             {
                 double fa = ws[d] * (means[d] - xBar) * (means[d] - xBar);
-                double something = 1.0 - (tnx[d] / variances[d]) / wTot;
+                double something = 1.0 - tnx[d] / variances[d] / wTot;
                 double fc = something * something / (tnx[d] - 1.0);
                 faTotal += fa;
                 fcTotal += fc;
             }
-            double cc = (sumMdnDiffTot * sumMdnDiffTot) / ntot;
+            double cc = sumMdnDiffTot * sumMdnDiffTot / ntot;
             double sstot = sqMdnDiffTot - cc;
             double ssgroup = sum2MdnDiffTot - cc;
             long dfGroup = frame.VariableCount - 1;
@@ -1802,8 +1800,8 @@ namespace StatsDirect.Builtins
             // Welch
             double groups = frame.VariableCount;
             double fb = 2 * (groups - 2.0) / (groups * groups - 1.0);
-            double fWelch = (faTotal / (groups - 1.0)) / (1.0 + fb * fcTotal);
-            double dfdWelch = ((groups * groups) - 1) / (3.0 * fcTotal);
+            double fWelch = faTotal / (groups - 1.0) / (1.0 + fb * fcTotal);
+            double dfdWelch = (groups * groups - 1) / (3.0 * fcTotal);
             double pWelch = PDF.fvalp(fWelch, dfGroup, dfdWelch);
             outputParameters.AddOutput("fWelch", fWelch);
             outputParameters.AddOutput("dfnWelch", dfGroup);
@@ -1820,9 +1818,9 @@ namespace StatsDirect.Builtins
             {
                 DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
                 int ctr = parameters["ctr"].AsInt32;
-                int[] ngp = ((int[])(parameters["ngp"].Data));
-                double[] gbar = ((double[])(parameters["gbar"].Data));
-                double[] sgbar = ((double[])(parameters["sgbar"].Data));
+                int[] ngp = (int[])parameters["ngp"].Data;
+                double[] gbar = (double[])parameters["gbar"].Data;
+                double[] sgbar = (double[])parameters["sgbar"].Data;
                 double gm = parameters["gm"].AsDouble;
 
                 ParameterBag outputParameters = new ParameterBag();
@@ -1849,8 +1847,8 @@ namespace StatsDirect.Builtins
                     {
                         ParameterBag subGroupParameters = new ParameterBag();
                         ii += 1;
-                        subGroupParameters.AddOutput("sggrp", (j + 1));
-                        subGroupParameters.AddOutput("sgsub_grp", (i + 1));
+                        subGroupParameters.AddOutput("sggrp", j + 1);
+                        subGroupParameters.AddOutput("sgsub_grp", i + 1);
                         subGroupParameters.AddOutput("sgtitle", frame.Variables[j][i].Title);
                         subGroupParameters.AddOutput("sgmean", sgbar[ii]);
                         subGroupList.Add(subGroupParameters);
@@ -2108,9 +2106,9 @@ namespace StatsDirect.Builtins
             {
                 dif = x1d[j] - x1p[j];
                 difsum1 = difsum1 + dif;
-                difss1 = difss1 + (dif * dif);
+                difss1 = difss1 + dif * dif;
                 sumsum1 = sumsum1 + x1d[j] + x1p[j];
-                sumss1 = sumss1 + ((x1d[j] + x1p[j]) * (x1d[j] + x1p[j]));
+                sumss1 = sumss1 + (x1d[j] + x1p[j]) * (x1d[j] + x1p[j]);
                 dsum = dsum + x1d[j];
                 psum = psum + x1p[j];
             }
@@ -2126,16 +2124,16 @@ namespace StatsDirect.Builtins
             {
                 dif = x2d[j] - x2p[j];
                 difsum2 = difsum2 + dif;
-                difss2 = difss2 + (dif * dif);
+                difss2 = difss2 + dif * dif;
                 tdsum = tdsum - dif;
-                tdsum2 = tdsum2 + (dif * dif);
+                tdsum2 = tdsum2 + dif * dif;
                 sumsum2 = sumsum2 + x2d[j] + x2p[j];
-                sumss2 = sumss2 + ((x2d[j] + x2p[j]) * (x2d[j] + x2p[j]));
+                sumss2 = sumss2 + (x2d[j] + x2p[j]) * (x2d[j] + x2p[j]);
                 dsum = dsum + x2d[j];
                 psum = psum + x2p[j];
             }
             double totdifbar = tdsum / (ng1 + ng2);
-            double totdifvar = (tdsum2 - (tdsum * tdsum / (ng1 + ng2))) / Convert.ToDouble(ng1 + ng2 - 1);
+            double totdifvar = (tdsum2 - tdsum * tdsum / (ng1 + ng2)) / Convert.ToDouble(ng1 + ng2 - 1);
             double difbar2 = difsum2 / Convert.ToDouble(ng2);
             double sumbar2 = sumsum2 / Convert.ToDouble(ng2);
             double dbar2 = dsum / Convert.ToDouble(ng2);
@@ -2160,10 +2158,10 @@ namespace StatsDirect.Builtins
                 P = 1.0 - P;
             }
             outputParameters.AddOutput("relative_p", P * 2.0);
-            double var1 = (difss1 - (difsum1 * difsum1 / Convert.ToDouble(ng1)));
-            double var2 = (difss2 - (difsum2 * difsum2 / Convert.ToDouble(ng2)));
+            double var1 = difss1 - difsum1 * difsum1 / Convert.ToDouble(ng1);
+            double var2 = difss2 - difsum2 * difsum2 / Convert.ToDouble(ng2);
             double var = (var1 + var2) / Convert.ToDouble(ng1 + ng2 - 2L);
-            se = Math.Sqrt(var * ((1.0 / Convert.ToDouble(ng2)) + (1.0 / Convert.ToDouble(ng1))));
+            se = Math.Sqrt(var * (1.0 / Convert.ToDouble(ng2) + 1.0 / Convert.ToDouble(ng1)));
             df = ng1 + ng2 - 2L;
             t = (difbar1 - difbar2) / se;
             double mag = (difbar1 - difbar2) / 2.0;
@@ -2173,8 +2171,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("treatment_se", se);
             outputParameters.AddOutput("treatment_mag", mag);
             outputParameters.AddOutput("treatment_pc", 100 * GAMMA);
-            outputParameters.AddOutput("treatment_from", mag - (crit * se / 2.0));
-            outputParameters.AddOutput("treatment_to", mag + (crit * se / 2.0));
+            outputParameters.AddOutput("treatment_from", mag - crit * se / 2.0);
+            outputParameters.AddOutput("treatment_to", mag + crit * se / 2.0);
             outputParameters.AddOutput("treatment_t", t);
             outputParameters.AddOutput("treatment_df", df);
             P = PDF.tvalp(Math.Abs(t), df);
@@ -2194,10 +2192,10 @@ namespace StatsDirect.Builtins
                 P = 1.0 - P;
             }
             outputParameters.AddOutput("period_p", host.pval(P * 2.0));
-            var1 = (sumss1 - (sumsum1 * sumsum1 / Convert.ToDouble(ng1)));
-            var2 = (sumss2 - (sumsum2 * sumsum2 / Convert.ToDouble(ng2)));
+            var1 = sumss1 - sumsum1 * sumsum1 / Convert.ToDouble(ng1);
+            var2 = sumss2 - sumsum2 * sumsum2 / Convert.ToDouble(ng2);
             var = (var1 + var2) / Convert.ToDouble(ng1 + ng2 - 2L);
-            se = Math.Sqrt(var * ((1.0 / Convert.ToDouble(ng2)) + (1.0 / Convert.ToDouble(ng1))));
+            se = Math.Sqrt(var * (1.0 / Convert.ToDouble(ng2) + 1.0 / Convert.ToDouble(ng1)));
             t = (sumbar1 - sumbar2) / se;
             outputParameters.AddOutput("tpi_sum", sumbar1 - sumbar2);
             outputParameters.AddOutput("tpi_se", se);
@@ -2219,9 +2217,9 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("dfres") && parameters.ContainsKey("msres") && parameters.ContainsKey("mean") && parameters.ContainsKey("tnx"))
             {
                 carrier.Dferr = parameters["dfres"].AsInt32;
-                carrier.Mean = ((double[])(parameters["mean"].Data));
+                carrier.Mean = (double[])parameters["mean"].Data;
                 carrier.Msx = parameters["msres"].AsDouble;
-                carrier.Tnx = ((int[])(parameters["tnx"].Data));
+                carrier.Tnx = (int[])parameters["tnx"].Data;
             }
             else
             {

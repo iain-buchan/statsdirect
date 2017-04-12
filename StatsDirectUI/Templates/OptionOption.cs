@@ -30,10 +30,7 @@ namespace StatsDirect.Templates
             return (bool)o;
         }
 
-        public bool HasAvailableIf
-        {
-            get { return null != AvailableIfExpression; }
-        }
+        public bool HasAvailableIf => null != AvailableIfExpression;
 
         public override string ToString()
         {

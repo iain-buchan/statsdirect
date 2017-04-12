@@ -38,10 +38,7 @@ namespace StatsDirect.Templates
         public Expression LabelAsExpression { get; set; }
 
         [XmlIgnore]
-        public bool HasLabelAs
-        {
-            get { return null != LabelAsExpression && null != LabelAsExpression.Body; }
-        }
+        public bool HasLabelAs => null != LabelAsExpression && null != LabelAsExpression.Body;
 
         public string LabelAs(ITemplateProcessor processor, ParameterBag parameters, int zeroBasedVariableNumber)
         {
@@ -54,7 +51,7 @@ namespace StatsDirect.Templates
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

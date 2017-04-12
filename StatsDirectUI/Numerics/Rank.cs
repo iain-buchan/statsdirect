@@ -63,9 +63,9 @@ namespace StatsDirect.Numerics
                     {//               store rank of tied data points
                         double p;
                         if (ntie % 2 == 0)
-                            p = nxlt + (ntie / 2) + 0.5;
+                            p = nxlt + ntie / 2 + 0.5;
                         else
-                            p = nxlt + ((ntie + 1) / 2);
+                            p = nxlt + (ntie + 1) / 2;
                         for (j = i; j <= upperBound; j++)
                             if (r[j] == -1.0)
                                 r[j] = p;
@@ -217,17 +217,17 @@ namespace StatsDirect.Numerics
                 return 1.0;
 
             ifault = 0;
-            if ((ix < 0))
+            if (ix < 0)
                 return 1.0;
 
-            if ((ix > Math.Floor((double)n * (n * n - 1) / 3.0)))
+            if (ix > Math.Floor((double)n * (n * n - 1) / 3.0))
                 return 0.0;
 
             int js = ix;
-            if ((js != 2 * Math.Floor(js / 2.0)))
+            if (js != 2 * Math.Floor(js / 2.0))
                 js += 1;
 
-            if ((n <= 10))
+            if (n <= 10)
             {
                 //  Exact evaluation for 10 or fewer pairs of observations
                 int[] l = new int[11];
@@ -237,7 +237,7 @@ namespace StatsDirect.Numerics
                     nfac *= i;
                     l[i] = i;
                 }
-                if ((js == Math.Floor((double)n * (n * n - 1) / 3.0)))
+                if (js == Math.Floor((double)n * (n * n - 1) / 3.0))
                     return 1.0 / Convert.ToDouble(nfac);
 
                 int ifr = 0;
@@ -246,7 +246,7 @@ namespace StatsDirect.Numerics
                     int ise = 0;
                     for (int i = 1; i <= n; i++)
                         ise += (i - l[i]) * (i - l[i]);
-                    if ((js < ise))
+                    if (js < ise)
                         ifr++;
                     int n1 = n;
                     do
@@ -256,10 +256,10 @@ namespace StatsDirect.Numerics
                         for (int i = 1; i <= nn; i++)
                             l[i] = l[i + 1];
                         l[n1] = mt;
-                        if ((l[n1] != n1 || n1 == 2))
+                        if (l[n1] != n1 || n1 == 2)
                             break;
                         n1--;
-                        if ((m == nfac))
+                        if (m == nfac)
                             break;
                     }
                     while (true);
@@ -274,9 +274,9 @@ namespace StatsDirect.Numerics
                 double y = x * x;
                 double u = x * b * (0.2274 + b * (0.2531 + 0.1745 * b) + y * (-0.0758 + b * (0.1033 + 0.3932 * b) - y * b * (0.0879 + 0.0151 * b - y * (0.0072 - 0.0831 * b + y * b * (0.0131 - 0.00046 * y)))));
                 double prhoReturn = u / Math.Exp(y / 2.0) + 1.0 - PDF.alnorm(x);
-                if ((prhoReturn < 0.0))
+                if (prhoReturn < 0.0)
                     return 0.0;
-                if ((prhoReturn > 1.0))
+                if (prhoReturn > 1.0)
                     return 1.0;
                 return prhoReturn;
             }
@@ -286,13 +286,13 @@ namespace StatsDirect.Numerics
         {
             ifault = 0;
             double p;
-            if ((d < Constant.DBL_MIN))
+            if (d < Constant.DBL_MIN)
             {
                 return 1.0;
             }
             int m = Math.Min(n1, n2);
             int n = Math.Max(n1, n2);
-            if ((m * n <= 10000))
+            if (m * n <= 10000)
             {
                 double[] u = new double[n + 2];
                 double x = Convert.ToDouble(m * n) * d - 0.5;
@@ -300,7 +300,7 @@ namespace StatsDirect.Numerics
                 for (int j = 1; j <= n; j++)
                 {
                     u[j + 1] = 1.0;
-                    if ((Convert.ToDouble(m * j) > x))
+                    if (Convert.ToDouble(m * j) > x)
                     {
                         u[j + 1] = 0.0;
                     }
@@ -309,14 +309,14 @@ namespace StatsDirect.Numerics
                 {
                     double w = Convert.ToDouble(i) / Convert.ToDouble(i + n);
                     u[1] = w * u[1];
-                    if ((Convert.ToDouble(n * i) > x))
+                    if (Convert.ToDouble(n * i) > x)
                     {
                         u[1] = 0.0;
                     }
                     for (int j = 1; j <= n; j++)
                     {
                         u[j + 1] = u[j] + u[j + 1] * w;
-                        if ((Convert.ToDouble(Math.Abs(n * i - m * j)) > x))
+                        if (Convert.ToDouble(Math.Abs(n * i - m * j)) > x)
                         {
                             u[j + 1] = 0.0;
                         }
@@ -327,10 +327,10 @@ namespace StatsDirect.Numerics
                 p = Math.Min(1.0, p);
                 p = Math.Max(0.0, p);
             }
-            else if ((m < Math.Floor((double)n / 10) && m < 80))
+            else if (m < Math.Floor((double)n / 10) && m < 80)
             {
                 double z = d;
-                if ((m != 1))
+                if (m != 1)
                 {
                     z = z - 0.5 / Convert.ToDouble(n);
                 }
@@ -342,7 +342,7 @@ namespace StatsDirect.Numerics
             {
                 double z = Math.Sqrt(Convert.ToDouble(m * n) / Convert.ToDouble(m + n)) * d + 0.5 / Math.Sqrt(Convert.ToDouble(n));
                 double a = -2.0 * z * z;
-                if ((-a < Constant.DBL_MIN))
+                if (-a < Constant.DBL_MIN)
                 {
                     return 1.0;
                 }
@@ -353,12 +353,12 @@ namespace StatsDirect.Numerics
                 for (int j = 1; j <= 500; j++)
                 {
                     double xj = Convert.ToDouble(j);
-                    if ((xj < sr))
+                    if (xj < sr)
                     {
                         double term = fac * Math.Exp(a * xj * xj);
                         p = p + term;
                         double aterm = Math.Abs(term);
-                        if ((aterm < eps1 * p))
+                        if (aterm < eps1 * p)
                         {
                             p = Math.Min(1.0, p);
                             return p;
@@ -381,19 +381,19 @@ namespace StatsDirect.Numerics
         private static double kspx(int n, double d)
         {
             double p;
-            if ((d < Constant.DBL_MIN))
+            if (d < Constant.DBL_MIN)
             {
                 p = 1.0;
             }
-            else if (((1.0 - d) < Constant.DBL_MIN))
+            else if (1.0 - d < Constant.DBL_MIN)
             {
                 p = 0.0;
             }
-            else if ((n == 1))
+            else if (n == 1)
             {
                 p = 1.0 - d;
             }
-            else if ((n <= 100))
+            else if (n <= 100)
             {
                 double xn = Convert.ToDouble(n);
                 double vj = 1.0 / xn;
@@ -401,7 +401,7 @@ namespace StatsDirect.Numerics
                 double z = 1.0 - d;
                 double v2 = z;
                 double y = xn * z;
-                int lim1 = ((int)(Math.Floor((1.0 - Constant.EPSILON) * y)));
+                int lim1 = (int)Math.Floor((1.0 - Constant.EPSILON) * y);
                 p = 0.0;
                 double cc = 1.0;
                 for (int j = 1; j <= lim1; j++)
@@ -417,7 +417,7 @@ namespace StatsDirect.Numerics
             else
             {
                 double a = -2.0 * (Convert.ToDouble(n) + 2.0) * d * d;
-                p = (a < Math.Log(Constant.DBL_MIN)) ? 0.0 : Math.Exp(a);
+                p = a < Math.Log(Constant.DBL_MIN) ? 0.0 : Math.Exp(a);
             }
             return Math.Min(p, 1.0);
         }
@@ -617,14 +617,14 @@ namespace StatsDirect.Numerics
         public static void bino(int n, double p, int k, out double term, out double plo, out double phi, out int ifault)
         {
             term = Constant.MISSING;
-            if ((p < 0.0 || p > 1.0))
+            if (p < 0.0 || p > 1.0)
             {
                 ifault = 1;
                 plo = Constant.MISSING;
                 phi = Constant.MISSING;
                 return;
             }
-            if ((n < k))
+            if (n < k)
             {
                 ifault = 2;
                 plo = Constant.MISSING;
@@ -641,16 +641,16 @@ namespace StatsDirect.Numerics
             {
                 double xi = Convert.ToDouble(i);
                 term = PDF.alogam(xn1) - PDF.alogam(xi + 1.0) - PDF.alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if ((term > sml))
+                if (term > sml)
                 {
                     plo = plo + Math.Exp(term);
                 }
             }
-            if ((term > sml))
+            if (term > sml)
             {
                 term = Math.Exp(term);
             }
-            if ((term < 0.0))
+            if (term < 0.0)
             {
                 term = 0.0;
             }

@@ -14,7 +14,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            ErrorBarOptions eOptions = ((ErrorBarOptions)(definition.ChartOptions));
+            ErrorBarOptions eOptions = (ErrorBarOptions)definition.ChartOptions;
 
             // Setup the Min & Max Values
             DataMinX = double.MaxValue;
@@ -66,7 +66,7 @@ namespace StatsDirect.Charting.Renderer
         /// <returns></returns>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            ErrorBarOptions eOptions = ((ErrorBarOptions)(definition.ChartOptions));
+            ErrorBarOptions eOptions = (ErrorBarOptions)definition.ChartOptions;
             bool shouldCheckForOffsets = eOptions.ShouldCheckForOffsets;
             int seriesCount = eOptions.Series.Count;
 
@@ -109,7 +109,7 @@ namespace StatsDirect.Charting.Renderer
             if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
             {
                 //  Dim markerMidlineOffset As Double = (legendFontHeight - LEGEND_MARKER_SIZE) / 2
-                double legendBottom = legendTop - (seriesCount * legendSpacing);
+                double legendBottom = legendTop - seriesCount * legendSpacing;
                 if (legendBottom < LOWEST_ALLOWED_LEGEND)
                 {
                     double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
@@ -226,7 +226,7 @@ namespace StatsDirect.Charting.Renderer
                 //  Legend
                 if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
                 {
-                    double legendY = legendTop - (seriesIndex * legendSpacing);
+                    double legendY = legendTop - seriesIndex * legendSpacing;
                     DrawMarkerInCanvasCoordinates(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendY - legendFontHeight / 2.0, LEGEND_MARKER_SIZE, eOptions.MarkerTypes[seriesIndex]);
                     DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], xAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
                 }

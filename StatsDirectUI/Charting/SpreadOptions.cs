@@ -27,93 +27,27 @@ namespace StatsDirect.Charting
             SeriesOptions.Add(soleOptions);
         }
 
-        public override bool UsesAutoscale
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAutoscale => true;
 
-        public override bool UsesBoxAxes
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesBoxAxes => true;
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesSeriesLabels
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesSeriesLabels => true;
 
-        public override bool UsesXAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesXAxisTitle => true;
 
-        public override bool UsesYAxisTitle
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool UsesYAxisTitle => false;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool UsesAxisTitleFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisTitleFontDescriptor => true;
 
-        public override bool UsesOrientation
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesOrientation => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool ShowLegendIsRelevant => false;
 
-        public override bool IsNaturalOrientation
-        {
-            get
-            {
-                return Orientation == ChartOrientation.Horizontal;
-            }
-        }
+        public override bool IsNaturalOrientation => Orientation == ChartOrientation.Horizontal;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

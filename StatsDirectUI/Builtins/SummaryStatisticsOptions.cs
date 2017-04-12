@@ -6,20 +6,6 @@ namespace StatsDirect.Builtins
     {
         public string Text;
 
-        public static string FillerToUse
-        {
-            get
-            {
-                return "SummaryStatistics";
-            }
-        } // interface properties implemented by FillerToUse
-        string IFillable.FillerToUse
-        {
-            get
-            {
-                return FillerToUse;
-            }
-        }
-
+        string IFillable.FillerToUse => "SummaryStatistics";
     }
 }

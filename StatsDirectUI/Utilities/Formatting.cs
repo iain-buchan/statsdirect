@@ -19,10 +19,7 @@ namespace StatsDirect.Utilities
 
         private static string decimalSeparator;
 
-        public static string DecimalSeparator
-        {
-            get { return decimalSeparator ?? (decimalSeparator = (5.5D).ToString().Substring(1, 1)); }
-        }
+        public static string DecimalSeparator => decimalSeparator ?? (decimalSeparator = 5.5D.ToString().Substring(1, 1));
 
         public static string XRound(double amount, int places)
         {
@@ -30,11 +27,11 @@ namespace StatsDirect.Utilities
             {
                 if (Constant.MISSING == amount || -Constant.MISSING == amount)
                     return ASTERISK;
-                if (Double.IsPositiveInfinity(amount))
+                if (double.IsPositiveInfinity(amount))
                     return INFRES;
-                if (Double.IsNegativeInfinity(amount))
+                if (double.IsNegativeInfinity(amount))
                     return INFRESNEG;
-                if (Double.IsNaN(amount))
+                if (double.IsNaN(amount))
                     return ASTERISK;
             }
             catch
@@ -52,11 +49,11 @@ namespace StatsDirect.Utilities
             {
                 if (Constant.MISSING == amount || -Constant.MISSING == amount)
                     return ASTERISK;
-                if (Double.IsPositiveInfinity(amount))
+                if (double.IsPositiveInfinity(amount))
                     return INFRES;
-                if (Double.IsNegativeInfinity(amount))
+                if (double.IsNegativeInfinity(amount))
                     return INFRESNEG;
-                if (Double.IsNaN(amount))
+                if (double.IsNaN(amount))
                     return ASTERISK;
             }
             catch
@@ -79,11 +76,11 @@ namespace StatsDirect.Utilities
                 }
                 if (Constant.MISSING == x || -Constant.MISSING == x)
                     return ASTERISK;
-                if (Double.IsPositiveInfinity(x))
+                if (double.IsPositiveInfinity(x))
                     return INFRES;
-                if (Double.IsNegativeInfinity(x))
+                if (double.IsNegativeInfinity(x))
                     return INFRESNEG;
-                if (Double.IsNaN(x))
+                if (double.IsNaN(x))
                     return ASTERISK;
             }
             catch
@@ -107,11 +104,11 @@ namespace StatsDirect.Utilities
         {
             if (Constant.MISSING == x || -Constant.MISSING == x)
                 return ASTERISK;
-            if (Double.IsPositiveInfinity(x))
+            if (double.IsPositiveInfinity(x))
                 return INFRES;
-            if (Double.IsNegativeInfinity(x))
+            if (double.IsNegativeInfinity(x))
                 return INFRESNEG;
-            if (Double.IsNaN(x))
+            if (double.IsNaN(x))
                 return ASTERISK;
             try
             {
@@ -168,7 +165,7 @@ namespace StatsDirect.Utilities
                 pwr_o = "< 0.01%";
             else
                 pwr_o = "= " + XRound(pwr * 100.0, 2) + "%";
-            return "(for " + XRound(100 * (p0), 1) + "% significance) " + pwr_o;
+            return "(for " + XRound(100 * p0, 1) + "% significance) " + pwr_o;
         }
 
         /// <summary>
@@ -182,7 +179,7 @@ namespace StatsDirect.Utilities
             if (Math.Abs(x) > Math.Log(double.MaxValue))
                 return Constant.MISSING;
             double z = Math.Exp(x);
-            if (z > double.MaxValue || z < Constant.SPREAL)
+            if (/* z > double.MaxValue - always true - || */ z < Constant.SPREAL)
                 return Constant.MISSING;
             return z;
         }
@@ -231,9 +228,9 @@ namespace StatsDirect.Utilities
 
         public static string RoundUp(double x)
         {
-            if (x < 0)
-                return ((int)x).ToString();
-            return (((int)x) + 1).ToString();
+            return x < 0
+                ? ((int)x).ToString()
+                : ((int)x + 1).ToString();
         }
 
         public static string pr15(double Q)
@@ -260,8 +257,8 @@ namespace StatsDirect.Utilities
 
         public static string ToExcelColumnName(int zeroBasedColumnNumber)
         {
-            int pos2 = zeroBasedColumnNumber < 26 + 26 * 26 ? -1 : ((zeroBasedColumnNumber - (26 + 26 * 26)) / (26 * 26)) % 26;
-            int pos1 = zeroBasedColumnNumber < 26 ? -1 : ((zeroBasedColumnNumber - 26) / 26) % 26;
+            int pos2 = zeroBasedColumnNumber < 26 + 26 * 26 ? -1 : (zeroBasedColumnNumber - (26 + 26 * 26)) / (26 * 26) % 26;
+            int pos1 = zeroBasedColumnNumber < 26 ? -1 : (zeroBasedColumnNumber - 26) / 26 % 26;
             int pos0 = zeroBasedColumnNumber % 26;
 
             StringBuilder sb = new StringBuilder();

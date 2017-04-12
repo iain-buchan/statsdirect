@@ -216,10 +216,10 @@ namespace StatsDirect.Builtins
             double ir1 = a / pt1;
             double ir2 = b / pt2;
             double ird = ir1 - ir2;
-            double xmh = ((a - (m * pt1) / pt) * (a - (m * pt1) / pt)) / ((m * pt1 * pt2) / (pt * pt));
+            double xmh = (a - m * pt1 / pt) * (a - m * pt1 / pt) / (m * pt1 * pt2 / (pt * pt));
             double pxmh = PDF.chivalp(xmh, 1.0);
 
-            double p = 1.0 - ((1.0 - gamma) / 2.0);
+            double p = 1.0 - (1.0 - gamma) / 2.0;
             double z = PDF.gauinv(p, out fault);
 
             if (xmh == 0)
@@ -229,8 +229,8 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                ird1 = ird - z * Math.Sqrt((ird * ird) / xmh);
-                ird2 = ird + z * Math.Sqrt((ird * ird) / xmh);
+                ird1 = ird - z * Math.Sqrt(ird * ird / xmh);
+                ird2 = ird + z * Math.Sqrt(ird * ird / xmh);
             }
 
             if (a == 0.0)
@@ -240,7 +240,7 @@ namespace StatsDirect.Builtins
             else
             {
                 f = PDF.ffromp(2.0 * a, 2.0 * (b + 1), 1.0 - p);
-                irr1 = (pt2 / pt1) * (a / (b + 1.0)) * (1.0 / f);
+                irr1 = pt2 / pt1 * (a / (b + 1.0)) * (1.0 / f);
             }
             if (b == 0.0)
             {
@@ -249,9 +249,9 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                irr0 = (a / pt1) / (b / pt2);
+                irr0 = a / pt1 / (b / pt2);
                 f = PDF.ffromp(2.0 * b, 2.0 * (a + 1), 1.0 - p);
-                irr2 = (pt2 / pt1) * ((a + 1.0) / b) * f;
+                irr2 = pt2 / pt1 * ((a + 1.0) / b) * f;
             }
 
             if (opt)
@@ -262,7 +262,7 @@ namespace StatsDirect.Builtins
                 tabl[1].M1 = b + a;
                 tabl[1].N1 = pt1;
                 tabl[1].N0 = pt2;
-                tabl[1].Informative = (a * pt1 != 0) || (b * pt2 != 0);
+                tabl[1].Informative = a * pt1 != 0 || b * pt2 != 0;
                 bool useLogScale = false;
                 int ierr;
                 new ExactBB().Exact22K(host, 1, 3, tabl, gamma, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
@@ -488,7 +488,7 @@ namespace StatsDirect.Builtins
 
             double odr = ExactBB.OddsRatio(a, b, c, d);
 
-            double p = 1.0 - ((1.0 - gamma) / 2.0);
+            double p = 1.0 - (1.0 - gamma) / 2.0;
             int fault;
             double zp = PDF.gauinv(p, out fault);
             if (fault != 0)
@@ -506,8 +506,8 @@ namespace StatsDirect.Builtins
                 {
                     pe = (a + c) / n;
                 }
-                par = (pe * (odr - 1.0)) / (1.0 + (pe * (odr - 1.0)));
-                double varPar = ((b * m2) / (d * m1)) * ((b * m2) / (d * m1)) * (a / (b * m1) + c / (d * m2));
+                par = pe * (odr - 1.0) / (1.0 + pe * (odr - 1.0));
+                double varPar = b * m2 / (d * m1) * (b * m2 / (d * m1)) * (a / (b * m1) + c / (d * m2));
                 parLl = par - zp * Math.Sqrt(varPar);
                 parUl = par + zp * Math.Sqrt(varPar);
             }
@@ -639,14 +639,14 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("aa", a);
             outputParameters.AddOutput("bb", b);
-            outputParameters.AddOutput("ab", (a + b));
+            outputParameters.AddOutput("ab", a + b);
 
             outputParameters.AddOutput("cc", c);
             outputParameters.AddOutput("dd", d);
-            outputParameters.AddOutput("cd", (c + d));
+            outputParameters.AddOutput("cd", c + d);
 
-            outputParameters.AddOutput("ac", (a + c));
-            outputParameters.AddOutput("bd", (b + d));
+            outputParameters.AddOutput("ac", a + c);
+            outputParameters.AddOutput("bd", b + d);
             outputParameters.AddOutput("tot", n);
 
             // CI level
@@ -721,7 +721,7 @@ namespace StatsDirect.Builtins
             {
                 ptlng = d / (d + c);
                 temp1 = ptlng * 100.0;
-                temp2 = Convert.ToInt64(ptlng * 100.0) - Convert.ToInt64(((b + d) / n) * 100.0);
+                temp2 = Convert.ToInt64(ptlng * 100.0) - Convert.ToInt64((b + d) / n * 100.0);
             }
             else
             {
@@ -753,7 +753,7 @@ namespace StatsDirect.Builtins
             double ptlnd;
             if (d + c > 0.0)
             {
-                ptlnd = 1.0 - (d / (d + c));
+                ptlnd = 1.0 - d / (d + c);
                 temp1 = ptlnd * 100.0;
                 temp2 = Convert.ToInt64(ptlnd * 100.0) - Convert.ToInt64(prevel * 100.0);
             }
@@ -766,7 +766,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("likely_despite", ptlnd);
             // Clopper-Pearson CI
             MathDbl.binci(d, d + c, out pil, out piu, cco, out warn);
-            outputParameters.AddOutput("likely_despite_from", (Math.Min(1.0 - pil, 1.0 - piu)));
+            outputParameters.AddOutput("likely_despite_from", Math.Min(1.0 - pil, 1.0 - piu));
             outputParameters.AddOutput("likely_despite_to", host.RoundU(Math.Max(1.0 - pil, 1.0 - piu)) + warn);
             // as percentage
             outputParameters.AddOutput("likely_despite_pc", Formatting.XRound(temp1, 2));
@@ -851,7 +851,7 @@ namespace StatsDirect.Builtins
             double thetau;
             double thetal;
             double lrpos;
-            double zc = 1.0 - ((1.0 - cco) / 2.0);
+            double zc = 1.0 - (1.0 - cco) / 2.0;
             // fault = 0; 
             zc = PDF.gauinv(zc);
             if (b + d > 0.0 && a + c > 0.0 && b > 0.0 && ptld > 0.0)
@@ -890,7 +890,7 @@ namespace StatsDirect.Builtins
             int fault;
 
             if (b * c > 0.0 && a * d > 0.0)
-                eor = (a * d) / (b * c);
+                eor = a * d / (b * c);
             else
                 eor = Constant.MISSING;
             outputParameters.AddOutput("odr", eor);
@@ -921,10 +921,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
 
-            outputParameters.AddOutput("population", (pd * 10000));
+            outputParameters.AddOutput("population", pd * 10000);
 
-            double pp = (pf * (1 - pd)) / (pf + pd * (pt - pf));
-            double pn = ((1.0 - pt) * pd) / (1.0 - pf - pd * (pt - pf));
+            double pp = pf * (1 - pd) / (pf + pd * (pt - pf));
+            double pn = (1.0 - pt) * pd / (1.0 - pf - pd * (pt - pf));
 
             outputParameters.AddOutput("sensitive", pt * 100);
             outputParameters.AddOutput("positive", pp);
@@ -985,7 +985,7 @@ namespace StatsDirect.Builtins
                 case 2:
                     for (int i = 0; i < g; i++)
                         for (int j = 0; j < g; j++)
-                            w[i, j] = 1 - Math.Pow((Convert.ToDouble(i - j) / Convert.ToDouble(g - 1)), 2.0);
+                            w[i, j] = 1 - Math.Pow(Convert.ToDouble(i - j) / Convert.ToDouble(g - 1), 2.0);
                     break;
                 case 1:
                     for (int i = 0; i < g; i++)
@@ -1171,7 +1171,7 @@ namespace StatsDirect.Builtins
             double zl = parameters["z1"].AsDouble;
             if (zl <= 0.0 || zl >= 1.0)
                 zl = 0.95;
-            double zc = 1.0 - ((1.0 - zl) / 2.0);
+            double zc = 1.0 - (1.0 - zl) / 2.0;
             int fault;
             zc = PDF.gauinv(zc, out fault);
 
@@ -1192,7 +1192,7 @@ namespace StatsDirect.Builtins
                 if (c2[i] <= 0.0)
                     li = Constant.MISSING;
                 else
-                    li = (c1[i] / c1Tot) / (c2[i] / c2Tot);
+                    li = c1[i] / c1Tot / (c2[i] / c2Tot);
 
                 rowParameters.AddOutput("likely", li);
 
@@ -1246,7 +1246,7 @@ namespace StatsDirect.Builtins
             if (zl <= 0.0 || zl >= 1.0)
                 zl = 0.95;
 
-            double zc = 1.0 - ((1.0 - zl) / 2.0);
+            double zc = 1.0 - (1.0 - zl) / 2.0;
             int ifault;
             zc = PDF.gauinv(zc, out ifault);
             if (xc > nc)
@@ -1494,22 +1494,22 @@ namespace StatsDirect.Builtins
                 // <--
 
                 // NNT_odds ratio
-                d = ((1.0 - brr) * brr * (1.0 - oor));
+                d = (1.0 - brr) * brr * (1.0 - oor);
                 if (d != 0.0)
                 {
-                    nnt = (1.0 - (brr * (1.0 - oor))) / d;
+                    nnt = (1.0 - brr * (1.0 - oor)) / d;
                 }
                 else { nnt = double.PositiveInfinity; }
-                d = ((1.0 - brr) * brr * (1.0 - llf));
+                d = (1.0 - brr) * brr * (1.0 - llf);
                 if (d != 0.0)
                 {
-                    nnl = (1.0 - (brr * (1.0 - llf))) / d;
+                    nnl = (1.0 - brr * (1.0 - llf)) / d;
                 }
                 else { nnl = double.PositiveInfinity; }
-                d = ((1.0 - brr) * brr * (1.0 - ulf));
+                d = (1.0 - brr) * brr * (1.0 - ulf);
                 if (d != 0.0)
                 {
-                    nnu = (1.0 - (brr * (1.0 - ulf))) / d;
+                    nnu = (1.0 - brr * (1.0 - ulf)) / d;
                 }
                 else { nnu = double.PositiveInfinity; }
                 // Jan 02 change to benefit/harm notation
@@ -1557,14 +1557,14 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException("Relative risk can not be calculated for these data.");
             }
 
-            double rr = (a / (a + c)) / (b / (b + d));
-            double p = 1.0 - ((1.0 - gamma) / 2.0);
+            double rr = a / (a + c) / (b / (b + d));
+            double p = 1.0 - (1.0 - gamma) / 2.0;
             double zp = PDF.gauinv(p, out fault);
 
             double p1 = a / n1;
             double p2 = b / n2;
             double dif = p1 - p2;
-            MathDbl.uppci(Convert.ToInt32(a), Convert.ToInt32(n1), Convert.ToInt32(b), Convert.ToInt32(n2), out difLl, out difUl, zp, (100.0 * (1.0 - gamma)));
+            MathDbl.uppci(Convert.ToInt32(a), Convert.ToInt32(n1), Convert.ToInt32(b), Convert.ToInt32(n2), out difLl, out difUl, zp, 100.0 * (1.0 - gamma));
 
             bool dofish = true;
             double power = Power.fishpower(1.0 - gamma, a, b, n1, n2, ref dofish);
@@ -1581,8 +1581,8 @@ namespace StatsDirect.Builtins
                 {
                     pe = (a + c) / n;
                 }
-                par = (pe * (rr - 1.0)) / (1.0 + (pe * (rr - 1.0)));
-                double varPar = ((b * n) / (Math.Pow(m1, 3.0) * Math.Pow(n2, 3.0))) * (a * d * (n - b) + b * b * c);
+                par = pe * (rr - 1.0) / (1.0 + pe * (rr - 1.0));
+                double varPar = b * n / (Math.Pow(m1, 3.0) * Math.Pow(n2, 3.0)) * (a * d * (n - b) + b * b * c);
                 parLl = par - zp * Math.Sqrt(varPar);
                 parUl = par + zp * Math.Sqrt(varPar);
             }
@@ -1873,7 +1873,7 @@ namespace StatsDirect.Builtins
 
             // Wilson approximate mid-P
             double t1 = 2.0 * r + cit * cit;
-            double t2 = cit * Math.Sqrt(cit * cit + 4.0 * r * (1.0 - (r / n)));
+            double t2 = cit * Math.Sqrt(cit * cit + 4.0 * r * (1.0 - r / n));
             double t3 = 2.0 * (n + cit * cit);
             pil = (t1 - t2) / t3;
             piu = (t1 + t2) / t3;
@@ -1986,7 +1986,7 @@ namespace StatsDirect.Builtins
                 exact2Parameters.AddOutput("mp", mp);
             }
 
-            double sepest = Math.Sqrt(p * (1 - p) * ((1 / n1) + (1 / n2)));
+            double sepest = Math.Sqrt(p * (1 - p) * (1 / n1 + 1 / n2));
             if (sepest == 0)
             {
                 sepest = Constant.MISSING;
@@ -1994,7 +1994,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                z = ((p1 - p2) / sepest);
+                z = (p1 - p2) / sepest;
             }
 
             outputParameters.AddOutput("se", sepest);

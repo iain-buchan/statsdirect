@@ -28,7 +28,7 @@ namespace Layout.Formatters
 
                     if (ScoreAxis(f) >= bestScore)
                     {
-                        Tuple<IEnumerable<string>, string> labels = f.FormatStyle.FormalLabels(f.Labels.Select(x => (decimal)x.Item1));
+                        Tuple<IEnumerable<string>, string> labels = f.FormatStyle.FormalLabels(f.Labels.Select(x => x.Item1));
                         f.Labels = f.Labels.Select(x => x.Item1).Zip(labels.Item1, (a, b) => new Tuple<decimal, string>(a, b)).ToList();
                         f.AxisTitleExtension = labels.Item2;
                         f.Legibility = LegibilityScore(f, options);

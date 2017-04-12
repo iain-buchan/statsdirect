@@ -74,7 +74,7 @@ namespace StatsDirect.UI
                 FailAndHighlight(txtMinimumMidpoint);
                 optionsAreOk = false;
             }
-            double minimum = minimumBinMidpoint - (midpointInterval / 2.0);
+            double minimum = minimumBinMidpoint - midpointInterval / 2.0;
             double maximum = minimum + bins * midpointInterval;
             double[] edges = HistogramBinChooser.Linspace(minimum, maximum, bins);
             int actualRows;

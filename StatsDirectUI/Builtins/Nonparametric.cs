@@ -26,7 +26,7 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="x">Input 1-dimensional 1-based array of values.</param>
         ///  <param name="lx">Number of values in x</param>
-        ///  <param name="L">Input 1-based array containing lengths of columns</param>
+        ///  <param name="l">Input 1-based array containing lengths of columns</param>
         ///  <param name="cols">Number of columns in L</param>
         ///  <param name="h"></param>
         ///  <param name="ha"></param>
@@ -34,10 +34,10 @@ namespace StatsDirect.Builtins
         ///  <param name="w1">Output 1-based ranked array (x, ranked)</param>
         ///  <param name="fault">0: Success. 1: At least 2 columns required. 2: Negative column length.3: column lengths don't add up to lx.</param>
         ///  <remarks></remarks>
-        private static void x_kwt(double[] x, int lx, int[] L, int cols, out double h, ref double ha, ref double t, ref double[] w1, out int fault)
+        private static void XKwt(double[] x, int lx, int[] l, int cols, out double h, ref double ha, ref double t, ref double[] w1, out int fault)
         {
-            XPreprocessKwt(x, lx, L, cols, ref t, ref w1, out fault);
-            XRunKwt(w1, lx, L, cols, out h, ref ha, t);
+            XPreprocessKwt(x, lx, l, cols, ref t, ref w1, out fault);
+            XRunKwt(w1, lx, l, cols, out h, ref ha, t);
         }
 
 
@@ -46,13 +46,13 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="w1">Input 1-dimensional 1-based array of ranks.</param>
         ///  <param name="lx">Number of values in x</param>
-        ///  <param name="L">Input 1-based array containing lengths of columns</param>
+        ///  <param name="l">Input 1-based array containing lengths of columns</param>
         ///  <param name="cols">Number of columns in L</param>
         ///  <param name="h"></param>
         ///  <param name="ha">h, adjusted for ties</param>
         ///  <param name="t">Input correction factor from Rank</param>
         ///  <remarks></remarks>
-        private static void XRunKwt(double[] w1, int lx, int[] L, int cols, out double h, ref double ha, double t)
+        private static void XRunKwt(double[] w1, int lx, int[] l, int cols, out double h, ref double ha, double t)
         {
 
 
@@ -62,19 +62,19 @@ namespace StatsDirect.Builtins
                 int l1 = 1;
                 if (i != 1)
                 {
-                    int I1 = i - 1;
-                    for (int j = 1; j <= I1; j++)
+                    int i1 = i - 1;
+                    for (int j = 1; j <= i1; j++)
                     {
-                        l1 = l1 + L[j];
+                        l1 = l1 + l[j];
                     }
                 }
-                int l2 = l1 + L[i] - 1;
+                int l2 = l1 + l[i] - 1;
                 double rj = 0.0;
                 for (int j = l1; j <= l2; j++)
                 {
                     rj += w1[j];
                 }
-                rj = rj * rj / Convert.ToDouble(L[i]);
+                rj = rj * rj / Convert.ToDouble(l[i]);
                 rs += rj;
             }
 
@@ -83,12 +83,12 @@ namespace StatsDirect.Builtins
 
             if (t != 0.0)
             {
-                double S2 = 1.0 - 12.0 * t / (xn * xn * xn - xn);
-                if (S2 <= 0.0)
+                double s2 = 1.0 - 12.0 * t / (xn * xn * xn - xn);
+                if (s2 <= 0.0)
                 {
                     ha = Constant.MISSING;
                 }
-                else { ha = h / S2; }
+                else { ha = h / s2; }
             }
         }
 
@@ -98,13 +98,13 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="x">Input 1-dimensional 1-based array of values.</param>
         ///  <param name="lx">Number of values in x</param>
-        ///  <param name="L">Input 1-based array containing lengths of columns</param>
+        ///  <param name="l">Input 1-based array containing lengths of columns</param>
         ///  <param name="cols">Number of columns in L</param>
         ///  <param name="t"></param>
         ///  <param name="w1">Output 1-based ranked array (x, ranked)</param>
         ///  <param name="fault">0: Success. 1: At least 2 columns required. 2: Negative column length.3: column lengths don't add up to lx. 4: Unknown.</param>
         ///  <remarks></remarks>
-        private static void XPreprocessKwt(double[] x, int lx, int[] L, int cols, ref double t, ref double[] w1, out int fault)
+        private static void XPreprocessKwt(double[] x, int lx, int[] l, int cols, ref double t, ref double[] w1, out int fault)
         {
             int i;
 
@@ -117,11 +117,11 @@ namespace StatsDirect.Builtins
             int lsum = 0;
             for (i = 1; i <= cols; i++)
             {
-                if (L[i] <= 0)
+                if (l[i] <= 0)
                 {
                     return;
                 }
-                lsum += L[i];
+                lsum += l[i];
             }
 
             fault = 3;
@@ -153,10 +153,10 @@ namespace StatsDirect.Builtins
 
         }
 
-        public static void XQci(double qc, int rx, double[] r, ref double xq, double GAMMA, out double ll, out double ul, ref double cover, bool conservative, ref bool cap_upper, ref bool cap_lower, out int fault)
+        public static void XQci(double qc, int rx, double[] r, ref double xq, double gamma, out double ll, out double ul, ref double cover, bool conservative, ref bool capUpper, ref bool capLower, out int fault)
         {
-            double ll_plox; double ul_plox;
-            double ul_id = 0; double ll_id = 0;
+            double llPlox; double ulPlox;
+            double ulId = 0; double llId = 0;
 
             // get 100*qc'th quantile from sorted vector r
             double iq = qc * (rx + 1);
@@ -174,9 +174,9 @@ namespace StatsDirect.Builtins
             }
             if (iq - Math.Floor(iq) != 0)
             {
-                xq = r[((int)(Math.Floor(iq)))] + (r[((int)(Math.Floor(iq))) + 1] - r[((int)(Math.Floor(iq)))]) * (iq - Math.Floor(iq));
+                xq = r[(int)Math.Floor(iq)] + (r[(int)Math.Floor(iq) + 1] - r[(int)Math.Floor(iq)]) * (iq - Math.Floor(iq));
             }
-            double z = Math.Abs(PDF.gauinv((1.0 - GAMMA) / 2.0, out fault));
+            double z = Math.Abs(PDF.gauinv((1.0 - gamma) / 2.0, out fault));
             if (fault != 0)
             {
                 ll = Constant.MISSING;
@@ -184,39 +184,39 @@ namespace StatsDirect.Builtins
                 return;
             }
             double rxs = Convert.ToDouble(rx);
-            cap_lower = false;
-            cap_upper = false;
+            capLower = false;
+            capUpper = false;
             if (rx > 200)
             {
-                ll_id = rxs * qc - z * Math.Sqrt(rxs * qc * (1 - qc));
-                ul_id = rxs * qc + z * Math.Sqrt(rxs * qc * (1 - qc));
-                if (ll_id < 1.0)
+                llId = rxs * qc - z * Math.Sqrt(rxs * qc * (1 - qc));
+                ulId = rxs * qc + z * Math.Sqrt(rxs * qc * (1 - qc));
+                if (llId < 1.0)
                 {
-                    ll_id = 0.0;
-                    cap_lower = true;
+                    llId = 0.0;
+                    capLower = true;
                 }
-                if (ul_id + 1 > rxs)
+                if (ulId + 1 > rxs)
                 {
-                    ul_id = rxs - 1;
-                    cap_upper = true;
+                    ulId = rxs - 1;
+                    capUpper = true;
                 }
-                ll = r[((int)(Math.Floor(ll_id))) + 1];
-                ul = r[((int)(Math.Floor(ul_id))) + 1];
-                double scrap_term;
-                double scrap_phi;
-                ExFortran.bino(rx, qc, Convert.ToInt32(ul_id - 1.0), out scrap_term, out ul_plox, out scrap_phi, out fault);
-                ExFortran.bino(rx, qc, Convert.ToInt32(ll_id - 1.0), out scrap_term, out ll_plox, out scrap_phi, out fault);
-                cover = (ul_plox - ll_plox) * 100.0;
+                ll = r[(int)Math.Floor(llId) + 1];
+                ul = r[(int)Math.Floor(ulId) + 1];
+                double scrapTerm;
+                double scrapPhi;
+                ExFortran.bino(rx, qc, Convert.ToInt32(ulId - 1.0), out scrapTerm, out ulPlox, out scrapPhi, out fault);
+                ExFortran.bino(rx, qc, Convert.ToInt32(llId - 1.0), out scrapTerm, out llPlox, out scrapPhi, out fault);
+                cover = (ulPlox - llPlox) * 100.0;
             }
             else
             {
                 double[] plox = new double[rx + 1 /* VB to C# conversion */ ];
-                int Q;
-                for (Q = 0; Q <= rx; Q++)
+                int q;
+                for (q = 0; q <= rx; q++)
                 {
-                    double scrap_term;
-                    double scrap_phi;
-                    ExFortran.bino(rx, qc, Q, out scrap_term, out plox[Q], out scrap_phi, out fault);
+                    double scrapTerm;
+                    double scrapPhi;
+                    ExFortran.bino(rx, qc, q, out scrapTerm, out plox[q], out scrapPhi, out fault);
                     if (fault != 0)
                     {
                         ll = Constant.MISSING;
@@ -224,79 +224,79 @@ namespace StatsDirect.Builtins
                         return;
                     }
                 }
-                double ll_cut;
-                double ul_cut;
-                double ll_min;
-                double ul_min;
+                double llCut;
+                double ulCut;
+                double llMin;
+                double ulMin;
                 if (conservative)
                 {
-                    ul_min = 99;
-                    ll_min = 99;
-                    ul_plox = 0.0;
-                    ll_plox = 0.0;
-                    ul_cut = 1.0 - (1.0 - GAMMA) / 2.0;
-                    ll_cut = (1.0 - GAMMA) / 2.0;
-                    ul_id = 0.0;
-                    ll_id = 0.0;
-                    for (Q = 0; Q <= rx; Q++)
+                    ulMin = 99;
+                    llMin = 99;
+                    ulPlox = 0.0;
+                    llPlox = 0.0;
+                    ulCut = 1.0 - (1.0 - gamma) / 2.0;
+                    llCut = (1.0 - gamma) / 2.0;
+                    ulId = 0.0;
+                    llId = 0.0;
+                    for (q = 0; q <= rx; q++)
                     {
-                        if (Math.Abs(plox[Q] - ul_cut) < ul_min & plox[Q] >= ul_cut)
+                        if (Math.Abs(plox[q] - ulCut) < ulMin & plox[q] >= ulCut)
                         {
-                            ul_min = Math.Abs(plox[Q] - ul_cut);
-                            ul_plox = plox[Q];
-                            ul_id = Convert.ToDouble(Q);
+                            ulMin = Math.Abs(plox[q] - ulCut);
+                            ulPlox = plox[q];
+                            ulId = Convert.ToDouble(q);
                         }
-                        if (Math.Abs(plox[Q] - ll_cut) < ll_min & plox[Q] <= ll_cut)
+                        if (Math.Abs(plox[q] - llCut) < llMin & plox[q] <= llCut)
                         {
-                            ll_min = Math.Abs(plox[Q] - ll_cut);
-                            ll_plox = plox[Q];
-                            ll_id = Convert.ToDouble(Q);
+                            llMin = Math.Abs(plox[q] - llCut);
+                            llPlox = plox[q];
+                            llId = Convert.ToDouble(q);
                         }
                     }
                 }
                 else
                 {
-                    ul_min = 99;
-                    ll_min = 99;
-                    ul_plox = 0.0;
-                    ll_plox = 0.0;
-                    ul_cut = 1.0 - (1.0 - GAMMA) / 2.0;
-                    ll_cut = (1.0 - GAMMA) / 2.0;
-                    for (Q = 0; Q <= rx; Q++)
+                    ulMin = 99;
+                    llMin = 99;
+                    ulPlox = 0.0;
+                    llPlox = 0.0;
+                    ulCut = 1.0 - (1.0 - gamma) / 2.0;
+                    llCut = (1.0 - gamma) / 2.0;
+                    for (q = 0; q <= rx; q++)
                     {
-                        if (Math.Abs(plox[Q] - ul_cut) < ul_min)
+                        if (Math.Abs(plox[q] - ulCut) < ulMin)
                         {
-                            ul_min = Math.Abs(plox[Q] - ul_cut);
-                            ul_plox = plox[Q];
-                            ul_id = Convert.ToDouble(Q);
+                            ulMin = Math.Abs(plox[q] - ulCut);
+                            ulPlox = plox[q];
+                            ulId = Convert.ToDouble(q);
                         }
-                        if (Math.Abs(plox[Q] - ll_cut) < ll_min)
+                        if (Math.Abs(plox[q] - llCut) < llMin)
                         {
-                            ll_min = Math.Abs(plox[Q] - ll_cut);
-                            ll_plox = plox[Q];
-                            ll_id = Convert.ToDouble(Q);
+                            llMin = Math.Abs(plox[q] - llCut);
+                            llPlox = plox[q];
+                            llId = Convert.ToDouble(q);
                         }
                     }
                 }
-                if (ll_id < 1.0)
+                if (llId < 1.0)
                 {
-                    ll_id = 0.0;
-                    cap_lower = true;
-                    double scrap_term;
-                    double scrap_phi;
-                    ExFortran.bino(rx, qc, Convert.ToInt32(ll_id), out scrap_term, out ll_plox, out scrap_phi, out fault);
+                    llId = 0.0;
+                    capLower = true;
+                    double scrapTerm;
+                    double scrapPhi;
+                    ExFortran.bino(rx, qc, Convert.ToInt32(llId), out scrapTerm, out llPlox, out scrapPhi, out fault);
                 }
-                if (ul_id + 1.0 > rxs)
+                if (ulId + 1.0 > rxs)
                 {
-                    ul_id = rxs - 1.0;
-                    cap_upper = true;
-                    double scrap_term;
-                    double scrap_phi;
-                    ExFortran.bino(rx, qc, Convert.ToInt32(ul_id), out scrap_term, out ul_plox, out scrap_phi, out fault);
+                    ulId = rxs - 1.0;
+                    capUpper = true;
+                    double scrapTerm;
+                    double scrapPhi;
+                    ExFortran.bino(rx, qc, Convert.ToInt32(ulId), out scrapTerm, out ulPlox, out scrapPhi, out fault);
                 }
-                ll = r[((int)(Math.Floor(ll_id))) + 1];
-                ul = r[((int)(Math.Floor(ul_id))) + 1];
-                cover = (ul_plox - ll_plox) * 100.0;
+                ll = r[(int)Math.Floor(llId) + 1];
+                ul = r[(int)Math.Floor(ulId) + 1];
+                cover = (ulPlox - llPlox) * 100.0;
             }
             if (fault != 0)
             {
@@ -306,35 +306,35 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_kstwo(double[] d1, int n1, double[] d2, int n2, out double D, out double DP, out double dn)
+        private static void XKstwo(double[] d1, int n1, double[] d2, int n2, out double d, out double dp, out double dn)
         {
             Array.Sort(d1, 1, n1);
             Array.Sort(d2, 1, n2);
             double en1 = Convert.ToDouble(n1);
             double en2 = Convert.ToDouble(n2);
-            int J1 = 1;
+            int j1 = 1;
             int j2 = 1;
-            double f1n = 0.0;
-            double f2n = 0.0;
-            DP = 0.0;
+            double f1N = 0.0;
+            double f2N = 0.0;
+            dp = 0.0;
             dn = 0.0;
-            while (J1 <= n1 & j2 <= n2)
+            while (j1 <= n1 & j2 <= n2)
             {
                 double dt;
-                if (d1[J1] < d2[j2])
+                if (d1[j1] < d2[j2])
                 {
-                    f1n = Convert.ToDouble(J1) / en1;
-                    dt = f1n - f2n;
-                    if (dt > DP)
+                    f1N = Convert.ToDouble(j1) / en1;
+                    dt = f1N - f2N;
+                    if (dt > dp)
                     {
-                        DP = dt;
+                        dp = dt;
                     }
-                    J1 = J1 + 1;
+                    j1 = j1 + 1;
                 }
-                else if (d1[J1] > d2[j2])
+                else if (d1[j1] > d2[j2])
                 {
-                    f2n = Convert.ToDouble(j2) / en2;
-                    dt = f2n - f1n;
+                    f2N = Convert.ToDouble(j2) / en2;
+                    dt = f2N - f1N;
                     if (dt > dn)
                     {
                         dn = dt;
@@ -343,16 +343,16 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    f1n = Convert.ToDouble(J1) / en1;
-                    J1 = J1 + 1;
-                    f2n = Convert.ToDouble(j2) / en2;
+                    f1N = Convert.ToDouble(j1) / en1;
+                    j1 = j1 + 1;
+                    f2N = Convert.ToDouble(j2) / en2;
                     j2 = j2 + 1;
-                    while (J1 <= n1)
+                    while (j1 <= n1)
                     {
-                        if (d1[J1] == d1[J1 - 1])
+                        if (d1[j1] == d1[j1 - 1])
                         {
-                            f1n = Convert.ToDouble(J1) / en1;
-                            J1 = J1 + 1;
+                            f1N = Convert.ToDouble(j1) / en1;
+                            j1 = j1 + 1;
                         }
                         else
                         {
@@ -363,7 +363,7 @@ namespace StatsDirect.Builtins
                     {
                         if (d2[j2] == d2[j2 - 1])
                         {
-                            f2n = Convert.ToDouble(j2) / en2;
+                            f2N = Convert.ToDouble(j2) / en2;
                             j2 = j2 + 1;
                         }
                         else
@@ -371,38 +371,38 @@ namespace StatsDirect.Builtins
                             break;
                         }
                     }
-                    dt = f1n - f2n;
-                    if (dt > DP)
+                    dt = f1N - f2N;
+                    if (dt > dp)
                     {
-                        DP = dt;
+                        dp = dt;
                     }
-                    dt = f2n - f1n;
+                    dt = f2N - f1N;
                     if (dt > dn)
                     {
                         dn = dt;
                     }
                 }
             }
-            DP = Math.Max(0, DP);
+            dp = Math.Max(0, dp);
             dn = Math.Max(0, dn);
-            D = Math.Max(DP, dn);
+            d = Math.Max(dp, dn);
         }
 
 
-        private static void x_dokend(ITemplateHost host, ref double cit, ref int nx, ref double[] x, ref double[] y, ref int nxx, out double P, out double Q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
+        private static void XDokend(ITemplateHost host, ref double cit, ref int nx, ref double[] x, ref double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
         {
             double sigbt3 = 0; double sigbt2 = 0; double sigbt1 = 0;
             int ytvn = 0; double sigat3 = 0; double sigat2 = 0; double sigat1 = 0;
             int xtvn = 0;
 
-            double[] xtv = new double[nx + 1 ];
-            double[] ytv = new double[nx + 1 ];
-            double[] C = new double[nx + 1 ];
+            double[] xtv = new double[nx + 1];
+            double[] ytv = new double[nx + 1];
+            double[] c = new double[nx + 1];
             fault = true;
             siga = 0;
             sigb = 0;
-            P = 0.0;
-            Q = 0.0;
+            p = 0.0;
+            q = 0.0;
             if (nx >= 2)
             {
                 nxx = nx;
@@ -416,7 +416,7 @@ namespace StatsDirect.Builtins
                     gd = nxx - 1.0;
                 }
                 host.StartProgress("Calculating Kendall", true);
-                int N;
+                int n;
                 int pn;
                 for (pn = 1; pn <= nxx - 1; pn++)
                 {
@@ -424,79 +424,79 @@ namespace StatsDirect.Builtins
                         throw new TemplateOperationCancelledException();
                     int xtie = 0;
                     int ytie = 0;
-                    for (N = pn + 1; N <= nxx; N++)
+                    for (n = pn + 1; n <= nxx; n++)
                     {
-                        if ((x[pn] > x[N] & y[pn] > y[N]) | (x[pn] < x[N] & y[pn] < y[N]))
+                        if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
                         {
-                            P = P + 1;
+                            p = p + 1;
                         }
-                        if ((x[pn] > x[N] & y[pn] < y[N]) | (x[pn] < x[N] & y[pn] > y[N]))
+                        if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
                         {
-                            Q = Q + 1;
+                            q = q + 1;
                         }
-                        if (x[pn] == x[N])
+                        if (x[pn] == x[n])
                         {
                             xtie = xtie + 1;
                         }
-                        if (y[pn] == y[N])
+                        if (y[pn] == y[n])
                         {
                             ytie = ytie + 1;
                         }
                     }
                     int count = xtie + 1;
-                    bool OK;
+                    bool ok;
                     if (count > 1)
                     {
-                        OK = true;
-                        for (N = 1; N <= xtvn; N++)
+                        ok = true;
+                        for (n = 1; n <= xtvn; n++)
                         {
-                            if (x[pn] == xtv[N])
+                            if (x[pn] == xtv[n])
                             {
-                                OK = false;
+                                ok = false;
                                 break;
                             }
                         }
-                        if (OK)
+                        if (ok)
                         {
                             xtvn = xtvn + 1;
                             xtv[xtvn] = x[pn];
                             siga = siga + count * (count - 1) / 2.0;
                             sigat1 = sigat1 + Convert.ToDouble(count) * Convert.ToDouble(count - 1);
-                            sigat2 = sigat2 + (Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2));
-                            sigat3 = sigat3 + (Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble((2 * count) + 5));
+                            sigat2 = sigat2 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2);
+                            sigat3 = sigat3 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(2 * count + 5);
                         }
                     }
                     count = ytie + 1;
                     if (count > 1)
                     {
-                        OK = true;
-                        for (N = 1; N <= ytvn; N++)
+                        ok = true;
+                        for (n = 1; n <= ytvn; n++)
                         {
-                            if (y[pn] == ytv[N])
+                            if (y[pn] == ytv[n])
                             {
-                                OK = false;
+                                ok = false;
                                 break;
                             }
                         }
-                        if (OK)
+                        if (ok)
                         {
                             ytvn = ytvn + 1;
                             ytv[ytvn] = y[pn];
                             sigb = sigb + Convert.ToDouble(count) * Convert.ToDouble(count - 1) / 2.0;
                             sigbt1 = sigbt1 + Convert.ToDouble(count) * Convert.ToDouble(count - 1);
-                            sigbt2 = sigbt2 + (Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2));
-                            sigbt3 = sigbt3 + (Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble((2 * count) + 5));
+                            sigbt2 = sigbt2 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2);
+                            sigbt3 = sigbt3 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(2 * count + 5);
                         }
                     }
                 }
-                s = P - Q;
+                s = p - q;
                 double xn = Convert.ToDouble(nx);
                 hn = xn * (xn - 1.0) / 2.0;
-                double tievar1 = ((xn * (xn - 1.0) * ((2.0 * xn) + 5.0)) - sigat3 - sigbt3) / 18.0;
-                double tievar2 = (sigat2 * sigbt2) / ((9.0 * xn) * (xn - 1.0) * (xn - 2.0));
-                double tievar3 = (sigat1 * sigbt1) / (2.0 * xn * (xn - 1.0));
+                double tievar1 = (xn * (xn - 1.0) * (2.0 * xn + 5.0) - sigat3 - sigbt3) / 18.0;
+                double tievar2 = sigat2 * sigbt2 / (9.0 * xn * (xn - 1.0) * (xn - 2.0));
+                double tievar3 = sigat1 * sigbt1 / (2.0 * xn * (xn - 1.0));
                 double tievar = tievar1 + tievar2 + tievar3;
-                double kendvar = xn * (xn - 1.0) * ((2.0 * xn) + 5.0) / 18.0;
+                double kendvar = xn * (xn - 1.0) * (2.0 * xn + 5.0) / 18.0;
                 varf = siga != 0 | sigb != 0 ? tievar : kendvar;
                 tau = s / Math.Sqrt((hn - siga) * (hn - sigb));
                 if (cit > 0.0)
@@ -509,23 +509,23 @@ namespace StatsDirect.Builtins
                     {
                         if (host.UpdateProgress(dnx + Convert.ToDouble(pn) / gd))
                             throw new TemplateOperationCancelledException();
-                        for (N = 1; N <= nxx; N++)
+                        for (n = 1; n <= nxx; n++)
                         {
-                            if (pn != N)
+                            if (pn != n)
                             {
-                                if ((x[pn] > x[N] & y[pn] > y[N]) | (x[pn] < x[N] & y[pn] < y[N]))
+                                if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
                                 {
-                                    C[pn] = C[pn] + 1;
+                                    c[pn] = c[pn] + 1;
                                 }
-                                if ((x[pn] > x[N] & y[pn] < y[N]) | (x[pn] < x[N] & y[pn] > y[N]))
+                                if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
                                 {
-                                    C[pn] = C[pn] - 1;
+                                    c[pn] = c[pn] - 1;
                                 }
                             }
                         }
-                        cix = cix + (C[pn] - cbar) * (C[pn] - cbar);
+                        cix = cix + (c[pn] - cbar) * (c[pn] - cbar);
                     }
-                    double vr = (2.0 / (dnx * (dnx - 1.0))) * ((2.0 * (dnx - 2.0) / (dnx * (dnx - 1.0) * (dnx - 1.0))) * cix + 1.0 - tau * tau);
+                    double vr = 2.0 / (dnx * (dnx - 1.0)) * (2.0 * (dnx - 2.0) / (dnx * (dnx - 1.0) * (dnx - 1.0)) * cix + 1.0 - tau * tau);
                     ll = tau - cit * Math.Sqrt(vr);
                     if (ll < -1.0)
                     {
@@ -548,26 +548,26 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_invu(int n2, int n1, double GAMMA, ref double lev, ref int k, out bool fault)
+        private static void XInvu(int n2, int n1, double gamma, ref double lev, ref int k, out bool fault)
         {
             double pcum = 0;
             double total = 0;
-            int Q;
+            int q;
 
-            double alphat = (1 - GAMMA) / 2;
-            if ((n1 > 30 & n2 > 30) | (n1 > 100 | n2 > 100))
+            double alphat = (1 - gamma) / 2;
+            if ((n1 > 30 & n2 > 30) | n1 > 100 | n2 > 100)
             {
-                double n1s = Convert.ToDouble(n1);
-                double n2s = Convert.ToDouble(n2);
+                double n1S = Convert.ToDouble(n1);
+                double n2S = Convert.ToDouble(n2);
                 int ifault;
-                double transTemp0 = (PDF.gauinv(alphat, out ifault) * Math.Sqrt((n1s * n2s * (n1s + n2s)) / 12.0));
-                k = Convert.ToInt32((n1s * (n1s + n2s + 1.0)) / 2.0) + ((int)(Math.Floor(transTemp0)));
-                k = k - Convert.ToInt32(n1s * ((n1s + 1.0) / 2.0));
+                double transTemp0 = PDF.gauinv(alphat, out ifault) * Math.Sqrt(n1S * n2S * (n1S + n2S) / 12.0);
+                k = Convert.ToInt32(n1S * (n1S + n2S + 1.0) / 2.0) + (int)Math.Floor(transTemp0);
+                k = k - Convert.ToInt32(n1S * ((n1S + 1.0) / 2.0));
                 lev = alphat;
             }
             int min = n2 < n1 ? n2 : n1;
             int lfr = n2 * n1 + 1;
-            int lwrk = 1 + min + ((int)(Math.Floor((double)(n2 * n1) / 2)));
+            int lwrk = 1 + min + (int)Math.Floor((double)(n2 * n1) / 2);
             if (lfr > 200000 | lwrk > 100000)
             {
                 //  make do with the approximate k above
@@ -577,40 +577,40 @@ namespace StatsDirect.Builtins
             double[] frqncy = new double[lfr + 1 /* VB to C# conversion */];
             double[] work = new double[lwrk + 1 /* VB to C# conversion */];
             XUdist(n2, n1, ref frqncy, ref lfr, ref work, ref lwrk, out fault);
-            for (Q = 1; Q <= lfr; Q++)
+            for (q = 1; q <= lfr; q++)
             {
-                total = total + frqncy[Q];
+                total = total + frqncy[q];
             }
             double unitd = 1.0 / total;
-            for (Q = 0; Q <= lfr; Q++)
+            for (q = 0; q <= lfr; q++)
             {
-                pcum = pcum + unitd * frqncy[Q + 1];
+                pcum = pcum + unitd * frqncy[q + 1];
                 if (pcum > alphat)
                 {
                     break;
                 }
             }
-            lev = pcum - (unitd * frqncy[Q + 1]);
-            k = Q;
+            lev = pcum - unitd * frqncy[q + 1];
+            k = q;
         }
 
 
-        private static void XUdist(int M, int N, ref double[] frqncy, ref int lfr, ref double[] work, ref int lwrk, out bool fault)
+        private static void XUdist(int m, int n, ref double[] frqncy, ref int lfr, ref double[] work, ref int lwrk, out bool fault)
         {
             fault = true;
             try
             {
-                int min = Math.Min(M, N);
+                int min = Math.Min(m, n);
                 if (min < 1)
                 {
                     return;
                 }
-                int mn1 = M * N + 1;
+                int mn1 = m * n + 1;
                 if (lfr < mn1)
                 {
                     return;
                 }
-                int max = Math.Max(M, N);
+                int max = Math.Max(m, n);
                 int n1 = max + 1;
                 int i;
                 for (i = 1; i <= n1; i++)
@@ -632,16 +632,16 @@ namespace StatsDirect.Builtins
                     frqncy[i] = 0;
                 }
                 work[1] = 0;
-                int z_in = max;
+                int zIn = max;
                 for (i = 2; i <= min; i++)
                 {
                     work[i] = 0;
-                    z_in = z_in + max;
-                    n1 = z_in + 2;
-                    double L = 1 + z_in / 2;
+                    zIn = zIn + max;
+                    n1 = zIn + 2;
+                    double l = 1 + zIn / 2;
                     int k = i;
                     int j;
-                    for (j = 1; j <= ((int)(Math.Floor(L))); j++)
+                    for (j = 1; j <= (int)Math.Floor(l); j++)
                     {
                         k = k + 1;
                         n1 = n1 - 1;
@@ -667,20 +667,20 @@ namespace StatsDirect.Builtins
         ///  <param name="n1"></param>
         ///  <param name="n2"></param>
         ///  <param name="iv"></param>
-        ///  <param name="P"></param>
+        ///  <param name="p"></param>
         ///  <remarks>
         ///      NEUMANN, N. - SOME PROCEDURES FOR CALCULATING THE
         ///                    DISTRIBUTIONS OF ELEMENTARY NONPARAMETRIC
         ///                    STATISTICS.
         ///      STAT. SOFTWARE NEWSLETTER, VOL. 14, NO 3., 1988
         /// </remarks>
-        private static void XMwupNtLtp(int n1, int n2, int iv, out double P)
+        private static void XMwupNtLtp(int n1, int n2, int iv, out double p)
         {
             int j;
             int i;
             int m2; int m1;
 
-            double[] wrk = new double[n1 * (((int)(Math.Floor((double)n2 / 2))) + 1)];
+            double[] wrk = new double[n1 * ((int)Math.Floor((double)n2 / 2) + 1)];
             if (n1 < n2)
             {
                 m1 = n1;
@@ -698,9 +698,9 @@ namespace StatsDirect.Builtins
             {
                 binom = binom * Convert.ToDouble(m2 + i) / Convert.ToDouble(i);
                 int upper;
-                if ((i * m2 + 1) < lim)
+                if (i * m2 + 1 < lim)
                 {
-                    upper = (i * m2 + 1);
+                    upper = i * m2 + 1;
                 }
                 else { upper = lim; }
                 int lower = i + m2 + 1;
@@ -718,20 +718,20 @@ namespace StatsDirect.Builtins
             {
                 wrk[j] = wrk[j - 1] + wrk[j] / binom;
             }
-            P = wrk[iv + 1];
-            if (P > 1)
+            p = wrk[iv + 1];
+            if (p > 1)
             {
-                P = 1;
+                p = 1;
             }
-            if (P < 0)
+            if (p < 0)
             {
-                P = 0;
+                p = 0;
             }
         }
 
         private static double XMwupNt(int n1, int n2, double u)
         {
-            double P = 0;
+            double p = 0;
             bool fault;
 
             if (n1 < 1 || n2 < 1)
@@ -746,18 +746,18 @@ namespace StatsDirect.Builtins
             {
                 fault = false;
                 int nm = n1 * n2;
-                int iv = ((int)(Math.Floor(u)));
-                if ((2 * iv) <= nm)
+                int iv = (int)Math.Floor(u);
+                if (2 * iv <= nm)
                 {
-                    XMwupNtLtp(n1, n2, iv, out P);
+                    XMwupNtLtp(n1, n2, iv, out p);
                 }
                 else
                 {
                     iv = nm - iv;
-                    XMwupNtLtp(n1, n2, iv, out P);
+                    XMwupNtLtp(n1, n2, iv, out p);
                 }
             }
-            return fault ? Constant.MISSING : P;
+            return fault ? Constant.MISSING : p;
         }
 
         /// <summary>
@@ -783,18 +783,13 @@ namespace StatsDirect.Builtins
             int nm = 2 * n1 * n2;
             int iv = Convert.ToInt32(2.0 * u);
             if (2 * iv <= nm)
-            {
                 return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n1, n2, iRanks, iv);
-            }
-            else
-            {
-                iv = nm - iv;
-                return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, iRanks, iv);
-            }
+            iv = nm - iv;
+            return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, iRanks, iv);
         }
 
 
-        private static ParameterBag x_mwcon(ITemplateHost host, ref double[] x, int k, int n1, int n2)
+        private static ParameterBag XMwcon(ITemplateHost host, double[] x, int k, int n1, int n2)
         {
             double median = 0; double kl = 0;
             int occurrences;
@@ -802,9 +797,9 @@ namespace StatsDirect.Builtins
             int midl; int midu;
             ParameterBag outputParameters = new ParameterBag();
 
-            if (k > Int32.MaxValue || k == -99)
+            if (k == -99)
             {
-                host.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney"); // , ACTIVE_HELP_ID
+                host.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney");
                 outputParameters.AddOutput("median", Formatting.ASTERISK);
                 outputParameters.AddOutput("from", Formatting.ASTERISK);
                 outputParameters.AddOutput("to", Formatting.ASTERISK);
@@ -813,12 +808,12 @@ namespace StatsDirect.Builtins
             int limit = n1 * n2;
             if (limit % 2 == 0)
             {
-                midu = ((int)(Math.Floor((double)limit / 2))) + 1;
-                midl = ((int)(Math.Floor((double)limit / 2)));
+                midu = (int)Math.Floor((double)limit / 2) + 1;
+                midl = (int)Math.Floor((double)limit / 2);
             }
             else
             {
-                midu = ((int)(Math.Floor((double)(limit + 1) / 2)));
+                midu = (int)Math.Floor((double)(limit + 1) / 2);
                 midl = midu;
             }
             host.StartProgress("Calculating Confidence Interval", true);
@@ -837,29 +832,23 @@ namespace StatsDirect.Builtins
             int scaler = 100000;
             do
             {
-                if (bigx * Convert.ToDouble(scaler) < Convert.ToDouble(Int32.MaxValue) / 10.0)
-                {
+                if (bigx * scaler < int.MaxValue / 10.0)
                     break;
-                }
                 scaler = Convert.ToInt32(scaler / 10);
             }
             while (true);
             for (j = 1; j <= n1; j++)
-            {
                 xx[j] = Convert.ToInt32(x[j] * scaler);
-            }
             for (j = 1; j <= n2; j++)
-            {
                 yy[j] = Convert.ToInt32(x[n1 + j] * scaler);
-            }
             bool domed = true;
             bool dokl = true;
             int goal = midu + k;
-            int C = xx[1] - yy[n2] - 1;
+            int c = xx[1] - yy[n2] - 1;
             int i = 0;
             while (i < midu)
             {
-                C = ExFortran.findnext(out occurrences, C, xx, n1, yy, n2);
+                c = ExFortran.findnext(out occurrences, c, xx, n1, yy, n2);
                 i = i + occurrences;
                 if (host.UpdateProgress(i / (double)goal))
                 {
@@ -873,7 +862,7 @@ namespace StatsDirect.Builtins
                     if (dokl)
                     {
                         dokl = false;
-                        kl = C / (double)scaler;
+                        kl = c / (double)scaler;
                     }
                 }
                 if (i >= midl)
@@ -881,36 +870,23 @@ namespace StatsDirect.Builtins
                     if (domed)
                     {
                         domed = false;
-                        median = C / (double)scaler;
+                        median = c / (double)scaler;
                     }
                 }
             }
             if (midu != midl)
-            {
-                if (domed)
-                {
-                    median = C / (double)scaler;
-                }
-                else
-                {
-                    median = (median + C / (double)scaler) / 2;
-                }
-            }
+                median = domed ? c / (double)scaler : (median + c / (double)scaler) / 2;
             for (j = 1; j <= n1; j++)
-            {
                 xx[j] = -xx[j];
-            }
             for (j = 1; j <= n2; j++)
-            {
                 yy[j] = -yy[j];
-            }
             Array.Sort(xx, 1, n1);
             Array.Sort(yy, 1, n2);
-            C = xx[1] - yy[n2] - 1;
+            c = xx[1] - yy[n2] - 1;
             i = 0;
             while (i < k)
             {
-                C = ExFortran.findnext(out occurrences, C, xx, n1, yy, n2);
+                c = ExFortran.findnext(out occurrences, c, xx, n1, yy, n2);
                 i = i + occurrences;
                 if (host.UpdateProgress((midu + i) / (double)goal))
                 {
@@ -920,7 +896,7 @@ namespace StatsDirect.Builtins
                     return outputParameters;
                 }
             }
-            double ku = -C / (double)scaler;
+            double ku = -c / (double)scaler;
             host.FinishProgress();
             outputParameters.AddOutput("median", host.RoundU(median));
             outputParameters.AddOutput("from", host.RoundU(kl));
@@ -931,7 +907,7 @@ namespace StatsDirect.Builtins
 
         private static double XXmdn(double[] x, int nx, int n1, int n2)
         {
-            int N; int j;
+            int n; int j;
             double[] ax;
 
             if (n2 == 1)
@@ -941,7 +917,7 @@ namespace StatsDirect.Builtins
                 {
                     ax[j] = x[j];
                 }
-                N = n1;
+                n = n1;
             }
             else
             {
@@ -950,15 +926,15 @@ namespace StatsDirect.Builtins
                 {
                     ax[j - n1] = x[j];
                 }
-                N = n2;
+                n = n2;
             }
-            if (N >= 2)
+            if (n >= 2)
             {
-                Array.Sort(ax, 1, N);
-                double mdn = 0.5 * (N + 1);
+                Array.Sort(ax, 1, n);
+                double mdn = 0.5 * (n + 1);
                 double median;
                 if (mdn - Math.Floor(mdn) != 0)
-                    median = ((ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0);
+                    median = (ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0;
                 else
                     median = ax[Convert.ToInt32(mdn)];
                 return median;
@@ -977,7 +953,7 @@ namespace StatsDirect.Builtins
             for (int j = 0; j < frame.VariableCount; j++)
             {
                 int chuck = 0;
-                DoubleVariable v = frame.Variables[j]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable)frame.Variables[j];
                 for (int k = 0; k < v.Length; k++)
                 {
                     if (v.Data[k] != Constant.MISSING)
@@ -1006,7 +982,7 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("scores") && null != parameters["scores"].Data)
             {
                 DataFrame scoreFrame = parameters["scores"].AsDataFrame;
-                DoubleVariable scoreVariable = scoreFrame.Variables[0]as DoubleVariable;
+                DoubleVariable scoreVariable = (DoubleVariable)scoreFrame.Variables[0];
                 for (int j = 0; j < Math.Min(frame.VariableCount, scoreVariable.Length); j++)
                     score[j] = scoreVariable.Data[j];
             }
@@ -1025,7 +1001,7 @@ namespace StatsDirect.Builtins
             }
             varz -= ez * ez;
             double et = Convert.ToDouble(n) / 2.0 * Convert.ToDouble(n + 1) * ez;
-            double vart = (Convert.ToDouble(n) * Convert.ToDouble(n) * Convert.ToDouble(n + 1)) / 12.0 * varz;
+            double vart = Convert.ToDouble(n) * Convert.ToDouble(n) * Convert.ToDouble(n + 1) / 12.0 * varz;
             double stat = (st - et) / Math.Sqrt(vart);
 
             ParameterBag outputParameters = new ParameterBag();
@@ -1045,28 +1021,28 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("et", et);
             outputParameters.AddOutput("vart", vart);
             outputParameters.AddOutput("z", stat);
-            double P = 1.0 - PDF.alnorm(Math.Abs(stat));
-            if (P > 1.0 - P)
+            double p = 1.0 - PDF.alnorm(Math.Abs(stat));
+            if (p > 1.0 - p)
             {
-                P = 1.0 - P;
+                p = 1.0 - p;
             }
-            outputParameters.AddOutput("p_1", P);
-            outputParameters.AddOutput("p_2", P * 2.0);
+            outputParameters.AddOutput("p_1", p);
+            outputParameters.AddOutput("p_2", p * 2.0);
             if (tie != 0)
             {
                 ParameterBag tiesParameters = new ParameterBag();
                 IList<ParameterBag> tiesList = new List<ParameterBag>();
                 tiesList.Add(tiesParameters);
                 outputParameters.AddOutput("*ties", tiesList);
-                vart = vart * (1.0 - ((tie * 12.0) / (Convert.ToDouble(n) * ((Convert.ToDouble(n) * Convert.ToDouble(n)) - 1.0))));
+                vart = vart * (1.0 - tie * 12.0 / (Convert.ToDouble(n) * (Convert.ToDouble(n) * Convert.ToDouble(n) - 1.0)));
                 stat = (st - et) / Math.Sqrt(vart);
                 tiesParameters.AddOutput("varttie", vart);
                 tiesParameters.AddOutput("ztie", stat);
-                P = 1.0 - PDF.alnorm(Math.Abs(stat));
-                if (P > 1.0 - P)
-                    P = 1.0 - P;
-                tiesParameters.AddOutput("p_1tie", P);
-                tiesParameters.AddOutput("p_2tie", P * 2.0);
+                p = 1.0 - PDF.alnorm(Math.Abs(stat));
+                if (p > 1.0 - p)
+                    p = 1.0 - p;
+                tiesParameters.AddOutput("p_1tie", p);
+                tiesParameters.AddOutput("p_2tie", p * 2.0);
             }
             else
             {
@@ -1078,28 +1054,28 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptDiversity(ITemplateHost host, ParameterBag parameters)
         {
-            double cit; double P0;
+            double cit; double p0;
             double bias = 0; double biasx = 0;
             double thetase = 0; double thetasex = 0;
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            double GAMMA = parameters["gamma"].AsDouble;
+            double gamma = parameters["gamma"].AsDouble;
             int boots = parameters["boots"].AsInt32;
-            int boots_divisor = Math.Max(1, boots / 1000);
-            if (GAMMA <= 0)
+            int bootsDivisor = Math.Max(1, boots / 1000);
+            if (gamma <= 0)
             {
                 throw new TemplateOperationCancelledException();
             }
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out cit, gamma, out p0);
             MersenneTwister rnd = new MersenneTwister(); //  Self-seeded
-            double[] r = new double[frame.MaxRows + 1 ];
+            double[] r = new double[frame.MaxRows + 1];
 
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> varList = new List<ParameterBag>();
             outputParameters.AddOutput("*var", varList);
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
-                DoubleVariable v = frame.Variables[k]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable)frame.Variables[k];
                 host.StartProgress("Bootstrapping diversity indices for " + v.Title, true);
 
                 int rx = 0;
@@ -1146,8 +1122,8 @@ namespace StatsDirect.Builtins
                     sumnp2 = sumnp2 + Math.Pow(np, 2.0);
                     sumnp3 = sumnp3 + Math.Pow(np, 3.0);
                 }
-                double simvars = (4.0 * sumn * (sumn - 1.0) * (sumn - 2.0) * sumnp3 + 2.0 * sumn * (sumn - 1.0) * sumnp2 - 2.0 * sumn * (sumn - 1.0) * (2.0 * sumn - 3.0) * Math.Pow(sumnp2, 2.0)) / (Math.Pow((sumn * (sumn - 1.0)), 2.0));
-                double simvar = (sumnp3 - (Math.Pow(sumnp2, 2.0))) / (0.25 * sumn);
+                double simvars = (4.0 * sumn * (sumn - 1.0) * (sumn - 2.0) * sumnp3 + 2.0 * sumn * (sumn - 1.0) * sumnp2 - 2.0 * sumn * (sumn - 1.0) * (2.0 * sumn - 3.0) * Math.Pow(sumnp2, 2.0)) / Math.Pow(sumn * (sumn - 1.0), 2.0);
+                double simvar = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
                 double simcl;
                 double simcu;
                 double simse;
@@ -1163,8 +1139,8 @@ namespace StatsDirect.Builtins
                     simcl = simpson - cit * simse;
                     simcu = simpson + cit * simse;
                 }
-                double shanvars = (sumnlognsq - (Math.Pow(sumnlogn, 2.0) / sumn)) / Math.Pow(sumn, 2.0) + Convert.ToDouble(rx - 1) / (2.0 * Math.Pow(sumn, 2.0));
-                double shanvar = (sumnlognsq - (Math.Pow(sumnlogn, 2.0) / sumn)) / Math.Pow(sumn, 2.0);
+                double shanvars = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0) + Convert.ToDouble(rx - 1) / (2.0 * Math.Pow(sumn, 2.0));
+                double shanvar = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
                 double shancl;
                 double shancu;
                 double shanse;
@@ -1183,18 +1159,18 @@ namespace StatsDirect.Builtins
                 int gtot = Convert.ToInt32(sumn);
 
                 double sumnm1 = sumn - 1.0;
-                double[] rb = new double[rx + 1 ];
-                int[] cx = new int[rx + 1 ];
-                double[] simpsonb = new double[boots + 1 ];
-                double[] shannonb = new double[boots + 1 ];
-                double[] simpsonbz = new double[boots + 1 ];
-                double[] shannonbz = new double[boots + 1 ];
+                double[] rb = new double[rx + 1];
+                int[] cx = new int[rx + 1];
+                double[] simpsonb = new double[boots + 1];
+                double[] shannonb = new double[boots + 1];
+                double[] simpsonbz = new double[boots + 1];
+                double[] shannonbz = new double[boots + 1];
                 // get resample boots times
                 double theta = 0.0;
                 double thetax = 0.0;
                 int ctr = 0;
                 int ctrx = 0;
-                bool OK = true;
+                bool ok = true;
                 bool studentfault = false;
                 // work out cut-offs for scaling pick points
                 cx[1] = Convert.ToInt32(r[1]);
@@ -1246,7 +1222,7 @@ namespace StatsDirect.Builtins
                     }
                     simpsonb[i] = 1.0 - sumnx / (sumn * (sumn - 1.0));
                     shannonb[i] = (sumn * Math.Log(sumn) - sumnlogn) / sumn;
-                    double xse = (sumnp3 - (Math.Pow(sumnp2, 2.0))) / (0.25 * sumn);
+                    double xse = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
                     if (xse > 0.0)
                     {
                         // simpsonbz(i) = Abs((simpsonb(i) - simpson) / Sqr(xse))
@@ -1256,7 +1232,7 @@ namespace StatsDirect.Builtins
                     {
                         studentfault = true;
                     }
-                    xse = (sumnlognsq - (Math.Pow(sumnlogn, 2.0) / sumn)) / Math.Pow(sumn, 2.0);
+                    xse = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
                     if (xse > 0.0)
                     {
                         // shannonbz(i) = Abs((shannonb(i) - shannon) / Sqr(xse))
@@ -1276,11 +1252,11 @@ namespace StatsDirect.Builtins
                     {
                         ctrx = ctrx + 1;
                     }
-                    if (i % boots_divisor == 0)
+                    if (i % bootsDivisor == 0)
                     {
                         if (host.UpdateProgress(i / (double)boots))
                         {
-                            OK = false;
+                            ok = false;
                             break;
                         }
                     }
@@ -1293,7 +1269,7 @@ namespace StatsDirect.Builtins
                 double bltx;
                 double but;
                 double butx;
-                if (OK)
+                if (ok)
                 {
                     //  get bias and bootstrap variance
                     theta = theta / Convert.ToDouble(boots);
@@ -1302,11 +1278,11 @@ namespace StatsDirect.Builtins
                     double thetasqx = 0.0;
                     for (int i = 1; i <= boots; i++)
                     {
-                        thetasq = thetasq + Math.Pow((simpsonb[i] - theta), 2.0);
-                        thetasqx = thetasqx + Math.Pow((shannonb[i] - thetax), 2.0);
+                        thetasq = thetasq + Math.Pow(simpsonb[i] - theta, 2.0);
+                        thetasqx = thetasqx + Math.Pow(shannonb[i] - thetax, 2.0);
                     }
-                    thetase = Math.Sqrt((1.0 / Convert.ToDouble(boots - 1)) * thetasq);
-                    thetasex = Math.Sqrt((1.0 / Convert.ToDouble(boots - 1)) * thetasqx);
+                    thetase = Math.Sqrt(1.0 / Convert.ToDouble(boots - 1) * thetasq);
+                    thetasex = Math.Sqrt(1.0 / Convert.ToDouble(boots - 1) * thetasqx);
                     bias = simpson - theta;
                     biasx = shannon - thetax;
                     //  sort boostrap arrays
@@ -1314,7 +1290,7 @@ namespace StatsDirect.Builtins
                     Array.Sort(shannonb, 1, boots);
                     Array.Sort(simpsonbz, 1, boots);
                     Array.Sort(shannonbz, 1, boots);
-                    double alpha = 1.0 - GAMMA;
+                    double alpha = 1.0 - gamma;
                     // ------------------------------------------
                     // 'percentile
                     // q = alpha / 2#
@@ -1327,14 +1303,14 @@ namespace StatsDirect.Builtins
                     // ------------------------------------------
                     // normal
                     double citt;
-                    MathDbl.civ(boots - 1, out citt, GAMMA, out P0);
+                    MathDbl.civ(boots - 1, out citt, gamma, out p0);
                     nbcl = simpson - citt * thetase;
                     nbcu = simpson + citt * thetase;
                     nbclx = shannon - citt * thetasex;
                     nbcux = shannon + citt * thetasex;
                     // bootstrap-t
-                    double Q = alpha / 2.0;
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * Q) + 1;
+                    double q = alpha / 2.0;
+                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * q) + 1;
                     if (studentfault || simse == Constant.MISSING)
                     {
                         but = Constant.MISSING;
@@ -1351,7 +1327,7 @@ namespace StatsDirect.Builtins
                     {
                         butx = shannon - shannonbz[pick] * shanse;
                     }
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - Q)) + 1;
+                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - q)) + 1;
                     if (studentfault || simse == Constant.MISSING)
                     {
                         blt = Constant.MISSING;
@@ -1527,7 +1503,7 @@ namespace StatsDirect.Builtins
                 double a = Convert.ToDouble(singletons);
                 double b = Convert.ToDouble(doubletons);
                 int stotal = rx + Convert.ToInt32(Math.Pow(a, 2.0) / (2.0 * b));
-                double stotalvar = b * (Math.Pow(((a / b) / 4.0), 4.0) + Math.Pow((a / b), 3.0) + Math.Pow((a / b / 2.0), 2.0));
+                double stotalvar = b * (Math.Pow(a / b / 4.0, 4.0) + Math.Pow(a / b, 3.0) + Math.Pow(a / b / 2.0, 2.0));
                 int stotalcl;
                 int stotalcu;
                 if (stotalvar < 0.0)
@@ -1556,7 +1532,7 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("s", rx);
                 varParameters.AddOutput("stotal", stotal);
                 varParameters.AddOutput("se-largeSample", Base.SafeSqrt(stotalvar));
-                varParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 2));
+                varParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
                 varParameters.AddOutput("from-largeSample", stotalcl == -1 ? Formatting.ASTERISK : stotalcl.ToString());
                 varParameters.AddOutput("to-largeSample", stotalcu == -1 ? Formatting.ASTERISK : stotalcu.ToString());
 
@@ -1602,9 +1578,9 @@ namespace StatsDirect.Builtins
                 return new ParameterBag();
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
-            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
-            double[] x = new double[v0.Length + v1.Length + 1 ];
+            DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
+            DoubleVariable v1 = (DoubleVariable)frame.Variables[1];
+            double[] x = new double[v0.Length + v1.Length + 1];
 
             int n = 0;
             for (int i = 0; i < v0.Length; i++)
@@ -1647,34 +1623,34 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("u", u);
             outputParameters.AddOutput("u_prime", uprime);
 
-            if (!(fault))
+            if (!fault)
             {
                 string adj = xf > 0 ? " (adjusted for ties)" : string.Empty;
-                double n1d = n1;
+                double n1D = n1;
                 double nd = n;
-                double dimlim = n1d + n1d * (n1d + 1.0) * nd - (n1d * (n1d + 1.0) * (2.0 * n1d + 1.0)) / 3.0 + 1.0;
-                double P;
+                double dimlim = n1D + n1D * (n1D + 1.0) * nd - n1D * (n1D + 1.0) * (2.0 * n1D + 1.0) / 3.0 + 1.0;
+                double p;
                 double pl;
-                if ((n1 > 100 && n2 > 100) || (xf != 0 && dimlim > 1000000) || (xf == 0 && n1 * (((int)(Math.Floor((double)n2 / 2))) + 1) > 1000000))
+                if (n1 > 100 && n2 > 100 || xf != 0 && dimlim > 1000000 || xf == 0 && n1 * ((int)Math.Floor((double)n2 / 2) + 1) > 1000000)
                 {
                     outputParameters.AddOutput("stats", "Normalised statistic = " + host.RoundU(z) + adj);
                     pl = PDF.alnorm(z);
                     if (pl > 1.0 - pl)
-                        P = 1.0 - pl;
+                        p = 1.0 - pl;
                     else
-                        P = pl;
+                        p = pl;
                     outputParameters.AddOutput("p_l", pl);
                     outputParameters.AddOutput("p_u", 1.0 - pl);
-                    outputParameters.AddOutput("p_2", P * 2.0);
+                    outputParameters.AddOutput("p_2", p * 2.0);
                 }
                 else
                 {
                     outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
                     pl = xf == 0 ? XMwupNt(n1, n2, u) : XMwupTi(n1, n2, ranks, u);
-                    P = pl > 1.0 - pl ? 1.0 - pl : pl;
+                    p = pl > 1.0 - pl ? 1.0 - pl : pl;
                     outputParameters.AddOutput("p_l", pl);
                     outputParameters.AddOutput("p_u", 1.0 - pl);
-                    outputParameters.AddOutput("p_2", P * 2.0);
+                    outputParameters.AddOutput("p_2", p * 2.0);
                 }
 
                 outputParameters.AddOutput("pc0", Formatting.XRound(gamma * 100, 1));
@@ -1696,8 +1672,8 @@ namespace StatsDirect.Builtins
                     bool approx;
                     double lev = 0;
                     int k = 0;
-                    x_invu(n2, n1, gamma, ref lev, ref k, out approx);
-                    ParameterBag confParameters = x_mwcon(host, ref x, k, n1, n2);
+                    XInvu(n2, n1, gamma, ref lev, ref k, out approx);
+                    ParameterBag confParameters = XMwcon(host, x, k, n1, n2);
                     confParameters.AddOutput("pc", Formatting.XRound((1 - lev * 2) * 100, 1));
                     if (approx)
                         confParameters.AddOutput("k", k + " (approx) ");
@@ -1724,9 +1700,9 @@ namespace StatsDirect.Builtins
         /// <param name="m"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        private static double theta_tzmin(bool upper, double tzpre, double ypre, double lp, double ln, double z, double t, int m, int n)
+        private static double ThetaTzmin(bool upper, double tzpre, double ypre, double lp, double ln, double z, double t, int m, int n)
         {
-            const double prec = Double.Epsilon * 10;
+            const double prec = double.Epsilon * 10;
             double y = 0;
             int i;
             for (i = 1; i <= 100; i++)
@@ -1773,9 +1749,9 @@ namespace StatsDirect.Builtins
 
             if (t == 0)
                 return 0;
-            
+
             if (t < 0 || t > 1)
-                return Double.NaN;
+                return double.NaN;
 
             const double y0 = 0;
             double tz0 = ThetaTzfn(false, y0, z, t, m, n);
@@ -1783,12 +1759,12 @@ namespace StatsDirect.Builtins
             double tz1 = ThetaTzfn(false, y1, z, t, m, n);
             const double y2 = 0.5;
             double tz2 = ThetaTzfn(false, y2, z, t, m, n);
-            double lp = tz1 < 0 ? Double.NaN : y1;
-            double ln = tz0 > 0 ? Double.NaN : y0;
-            if (Double.IsNaN(lp) || Double.IsNaN(ln))
-                return Double.NaN;
+            double lp = tz1 < 0 ? double.NaN : y1;
+            double ln = tz0 > 0 ? double.NaN : y0;
+            if (double.IsNaN(lp) || double.IsNaN(ln))
+                return double.NaN;
             else
-                return theta_tzmin(false, tz2, y2, lp, ln, z, t, m, n);
+                return ThetaTzmin(false, tz2, y2, lp, ln, z, t, m, n);
         }
 
         /// <summary>
@@ -1809,9 +1785,9 @@ namespace StatsDirect.Builtins
 
             if (t == 1)
                 return 1;
-            
+
             if (t < 0 || t > 1)
-                return Double.NaN;
+                return double.NaN;
 
             const double y0 = 0;
             double tz0 = ThetaTzfn(true, y0, z, t, m, n);
@@ -1819,25 +1795,24 @@ namespace StatsDirect.Builtins
             double tz1 = ThetaTzfn(true, y1, z, t, m, n);
             const double y2 = 0.5;
             double tz2 = ThetaTzfn(true, y2, z, t, m, n);
-            double lp = tz1 < 0 ? Double.NaN : y1;
-            double ln = tz0 > 0 ? Double.NaN : y0;
-            if (Double.IsNaN(lp) || Double.IsNaN(ln))
-                return Double.NaN;
-            else
-                return theta_tzmin(true, tz2, y2, lp, ln, z, t, m, n);
+            double lp = tz1 < 0 ? double.NaN : y1;
+            double ln = tz0 > 0 ? double.NaN : y0;
+            if (double.IsNaN(lp) || double.IsNaN(ln))
+                return double.NaN;
+            return ThetaTzmin(true, tz2, y2, lp, ln, z, t, m, n);
         }
 
         public static ParameterBag RptSpearman(ITemplateHost host, ParameterBag parameters)
         {
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0)
+            double gamma = parameters["gamma"].AsDouble;
+            if (gamma <= 0)
                 throw new Exception("Gamma must be greater than zero");
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
-            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
-            double[] prk = new double[v0.Length + 1 ];
-            double[] prk1 = new double[v0.Length + 1 ];
+            DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
+            DoubleVariable v1 = (DoubleVariable)frame.Variables[1];
+            double[] prk = new double[v0.Length + 1];
+            double[] prk1 = new double[v0.Length + 1];
             int nx = 0;
             for (int n = 0; n < v0.Length; n++)
             {
@@ -1851,8 +1826,8 @@ namespace StatsDirect.Builtins
             if (nx < 2)
                 return new ParameterBag();
 
-            double[] rka = new double[nx + 1 ];
-            double[] rkb = new double[nx + 1 ];
+            double[] rka = new double[nx + 1];
+            double[] rkb = new double[nx + 1];
 
             double xf;
             ExFortran.Rank(prk, rka, 1, nx, 1, out xf);
@@ -1866,15 +1841,15 @@ namespace StatsDirect.Builtins
             double srksqb = 0;
             for (int n = 1; n <= nx; n++)
             {
-                srkd2 += ((rka[n] - rkb[n]) * (rka[n] - rkb[n]));
+                srkd2 += (rka[n] - rkb[n]) * (rka[n] - rkb[n]);
                 srksq += rka[n] * rkb[n];
                 srksqa += rka[n] * rka[n];
                 srksqb += rkb[n] * rkb[n];
             }
-            double corr = nx * Math.Pow(((nx + 1.0) / 2.0), 2.0);
+            double corr = nx * Math.Pow((nx + 1.0) / 2.0, 2.0);
             double sr = (srksq - corr) / (Math.Sqrt(srksqa - corr) * Math.Sqrt(srksqb - corr));
             int ifault;
-            double cit = PDF.gauinv(GAMMA + ((1 - GAMMA) / 2), out ifault);
+            double cit = PDF.gauinv(gamma + (1 - gamma) / 2, out ifault);
             int nnx = nx;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("sample_1", v0.Title);
@@ -1898,11 +1873,11 @@ namespace StatsDirect.Builtins
                 ciList.Add(ciParameters);
                 outputParameters.AddOutput("*ci", ciList);
                 double fz = 0.5 * Math.Log((1.0 + sr) / (1.0 - sr));
-                double fz1 = fz - (cit / Math.Sqrt(nx - 3.0));
-                double fz2 = fz + (cit / Math.Sqrt(nx - 3.0));
+                double fz1 = fz - cit / Math.Sqrt(nx - 3.0);
+                double fz2 = fz + cit / Math.Sqrt(nx - 3.0);
                 double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
                 double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
-                ciParameters.AddOutput("pc", (100 * GAMMA));
+                ciParameters.AddOutput("pc", 100 * gamma);
                 ciParameters.AddOutput("from", con1);
                 ciParameters.AddOutput("to", con2);
             }
@@ -1921,7 +1896,7 @@ namespace StatsDirect.Builtins
                 resultsList.Add(resultsParameters);
                 outputParameters.AddOutput("*results", resultsList);
                 double nxs = nnx;
-                double dix = ((1.0 - sr) * (nxs * ((nxs * nxs) - 1.0))) / 6.0;
+                double dix = (1.0 - sr) * (nxs * (nxs * nxs - 1.0)) / 6.0;
                 outputParameters.AddOutput("ix", dix);
                 double qix = nxs * (nxs * nxs - 1.0) / 3.0;
                 int fault;
@@ -1930,7 +1905,7 @@ namespace StatsDirect.Builtins
                     pl = MathDbl.bigprho(Convert.ToInt64(nxs), dix, out fault);
                 else
                     pl = ExFortran.prho(Convert.ToInt32(nxs), Convert.ToInt32(dix), out fault);
-                double P = pl > 1.0 - pl ? 1.0 - pl : pl;
+                double p = pl > 1.0 - pl ? 1.0 - pl : pl;
 
                 if (fault != 0)
                 {
@@ -1947,7 +1922,7 @@ namespace StatsDirect.Builtins
                     resultsParameters.AddOutput("*results", results2List);
                     if (hasTies)
                     {
-                        double p2Approximate = PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - (sr * sr)), nx - 2);
+                        double p2Approximate = PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - sr * sr), nx - 2);
                         results2Parameters.AddOutput("p_u", Constant.MISSING);
                         results2Parameters.AddOutput("p_l", Constant.MISSING);
                         results2Parameters.AddOutput("p_2", p2Approximate);
@@ -1956,7 +1931,7 @@ namespace StatsDirect.Builtins
                     {
                         results2Parameters.AddOutput("p_u", 1.0 - pl);
                         results2Parameters.AddOutput("p_l", pl);
-                        results2Parameters.AddOutput("p_2", P * 2.0);
+                        results2Parameters.AddOutput("p_2", p * 2.0);
                     }
                 }
             }
@@ -1965,39 +1940,39 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptNpRegression(ITemplateHost host, ParameterBag parameters)
         {
-            double Intercept = 0;
+            double intercept = 0;
             double uci; double lci; double mdn = 0;
             int i;
             int ix; int ifault; int index = 0;
             double pu;
-            double ptau; double tau_ul = 0; double tau_ll = 0;
-            double tau = 0; double varf = 0; double sigb; double siga; double hn = 0; double s = 0; double Q;
-            double P; int nxx = 0; double ymdn = 0; double xmdn = 0;
+            double ptau; double tauUl = 0; double tauLl = 0;
+            double tau = 0; double varf = 0; double sigb; double siga; double hn = 0; double s = 0; double q;
+            double p; int nxx = 0; double ymdn = 0; double xmdn = 0;
             string taulab;
             bool fault;
 
 
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0.0)
-                GAMMA = 0.95;
-            double cit = PDF.gauinv(1.0 - (1.0 - GAMMA) / 2.0, out ifault);
+            double gamma = parameters["gamma"].AsDouble;
+            if (gamma <= 0.0)
+                gamma = 0.95;
+            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out ifault);
 
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
-            DoubleVariable v0 = outcomeFrame.Variables[0]as DoubleVariable;
+            DoubleVariable v0 = (DoubleVariable)outcomeFrame.Variables[0];
             int rows = v0.Length;
             string ytitle = v0.Title;
 
             // If index <> 2 Then
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
-            DoubleVariable v1 = predictorFrame.Variables[0]as DoubleVariable;
+            DoubleVariable v1 = (DoubleVariable)predictorFrame.Variables[0];
 
             string xtitle = v1.Title;
             // Else
             // Exit Function
             // End If
 
-            double[] x = new double[rows + 1 ];
-            double[] y = new double[rows + 1 ];
+            double[] x = new double[rows + 1];
+            double[] y = new double[rows + 1];
             int ctr = 0;
             for (i = 1; i <= rows; i++)
             {
@@ -2028,7 +2003,7 @@ namespace StatsDirect.Builtins
             }
 
             // get x and y medians in order to calculate intercepts later
-            double[] axo = new double[rows + 1 ];
+            double[] axo = new double[rows + 1];
             double[] ayo = new double[rows + 1];
             for (i = 1; i <= rows; i++)
             {
@@ -2039,33 +2014,21 @@ namespace StatsDirect.Builtins
             Array.Sort(ayo, 1, rows);
             double imdn = 0.5 * (rows + 1);
             if (imdn < 1)
-            {
                 imdn = 1;
-            }
             if (imdn > rows)
-            {
                 imdn = rows;
-            }
-            int fiximdn = ((int)(Math.Floor(imdn)));
+            int fiximdn = (int)Math.Floor(imdn);
             if (imdn - Math.Floor(imdn) == 0)
-            {
                 xmdn = axo[fiximdn];
-            }
             if (imdn - Math.Floor(imdn) != 0)
-            {
                 xmdn = axo[fiximdn] + (axo[fiximdn + 1] - axo[fiximdn]) * (imdn - Math.Floor(imdn));
-            }
             if (imdn - Math.Floor(imdn) == 0)
-            {
                 ymdn = ayo[fiximdn];
-            }
             if (imdn - Math.Floor(imdn) != 0)
-            {
                 ymdn = ayo[fiximdn] + (ayo[fiximdn + 1] - ayo[fiximdn]) * (imdn - Math.Floor(imdn));
-            }
 
             // rank correlation
-            x_dokend(host, ref cit, ref rows, ref x, ref y, ref nxx, out P, out Q, ref s, ref hn, out siga, out sigb, ref varf, ref tau, ref tau_ll, ref tau_ul, out fault);
+            XDokend(host, ref cit, ref rows, ref x, ref y, ref nxx, out p, out q, ref s, ref hn, out siga, out sigb, ref varf, ref tau, ref tauLl, ref tauUl, out fault);
             if (fault)
             {
                 tau = Constant.MISSING;
@@ -2074,42 +2037,27 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                if (siga != 0 | sigb != 0)
-                {
-                    taulab = "tau b";
-                }
-                else
-                {
-                    taulab = "tau";
-                }
-                double kz;
-                if (s < 0)
-                {
-                    kz = (s + 1.0) / Math.Sqrt(varf);
-                }
-                else
-                {
-                    kz = (s - 1.0) / Math.Sqrt(varf);
-                }
+                taulab = 0 != siga || 0 != sigb
+                    ? "tau b"
+                    : "tau";
+                double kz = s < 0
+                    ? (s + 1.0) / Math.Sqrt(varf)
+                    : (s - 1.0) / Math.Sqrt(varf);
                 double pl = PDF.alnorm(kz);
-                if (pl < 1.0 - pl)
-                {
-                    ptau = pl * 2.0;
-                }
-                else { ptau = (1.0 - pl) * 2.0; }
+                ptau = pl < 1.0 - pl
+                    ? pl * 2.0
+                    : (1.0 - pl) * 2.0;
             }
 
             // regression
-            P = (1.0 - GAMMA) / 2.0;
-            if (P < 0 | P > 1)
-            {
-                P = 0.025;
-            }
-            MathDbl.taufromp(P, out pu, out ix, ref rows, out ifault);
+            p = (1.0 - gamma) / 2.0;
+            if (p < 0 || p > 1)
+                p = 0.025;
+            MathDbl.taufromp(p, out pu, out ix, ref rows, out ifault);
             int cnt = Convert.ToInt32(rows * (rows - 1) / 2);
             if (cnt < 2000000)
             {
-                double[] pws = new double[cnt + 1 ];
+                double[] pws = new double[cnt + 1];
                 if (ifault == 0)
                 {
                     cnt = 0;
@@ -2120,38 +2068,28 @@ namespace StatsDirect.Builtins
                         {
                             if (x[i] != x[j])
                             {
-                                cnt = cnt + 1;
+                                cnt++;
                                 if (x[i] != Constant.MISSING & y[j] != Constant.MISSING)
-                                {
                                     pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
-                                }
                             }
                         }
                     }
                     Array.Sort(pws, 1, cnt);
-                    int ri = ((int)(Math.Floor(0.5 * (cnt - ix))));
-                    int SI = Convert.ToInt32(0.5 * (cnt + ix));
+                    int ri = (int)Math.Floor(0.5 * (cnt - ix));
+                    int si = Convert.ToInt32(0.5 * (cnt + ix));
                     imdn = 0.5 * (cnt + 1);
-                    fiximdn = ((int)(Math.Floor(imdn)));
+                    fiximdn = (int)Math.Floor(imdn);
                     if (imdn < 1)
-                    {
                         imdn = 1;
-                    }
                     if (imdn > cnt)
-                    {
                         imdn = cnt;
-                    }
                     if (imdn - Math.Floor(imdn) == 0)
-                    {
                         mdn = pws[fiximdn];
-                    }
                     if (imdn - Math.Floor(imdn) != 0)
-                    {
                         mdn = pws[fiximdn] + (pws[fiximdn + 1] - pws[fiximdn]) * (imdn - Math.Floor(imdn));
-                    }
                     lci = pws[ri];
-                    uci = pws[SI];
-                    Intercept = ymdn - mdn * xmdn;
+                    uci = pws[si];
+                    intercept = ymdn - mdn * xmdn;
                 }
                 else
                 {
@@ -2185,11 +2123,11 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> resultsList = new List<ParameterBag>();
                 resultsList.Add(resultsParameters);
                 outputParameters.AddOutput("*results", resultsList);
-                resultsParameters.AddOutput("pc", (100 * GAMMA));
+                resultsParameters.AddOutput("pc", 100 * gamma);
                 resultsParameters.AddOutput("mdn", mdn);
                 resultsParameters.AddOutput("from", lci);
                 resultsParameters.AddOutput("to", uci);
-                resultsParameters.AddOutput("intercept", Intercept);
+                resultsParameters.AddOutput("intercept", intercept);
             }
 
             outputParameters.AddOutput("taulab", taulab);
@@ -2198,7 +2136,7 @@ namespace StatsDirect.Builtins
 
             //  Cache a few values for the chart
             outputParameters.AddOutput("mdnValue", mdn);
-            outputParameters.AddOutput("interceptValue", Intercept);
+            outputParameters.AddOutput("interceptValue", intercept);
 
             return outputParameters;
         }
@@ -2210,7 +2148,7 @@ namespace StatsDirect.Builtins
                 throw new Exception("Gamma must be greater than zero");
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
+            DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
             double[] x = new double[v0.Length + 1];
             double[] y = new double[v0.Length + 1];
 
@@ -2234,10 +2172,10 @@ namespace StatsDirect.Builtins
             else
             {
                 int cnt = 0;
-                DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
+                DoubleVariable v1 = (DoubleVariable)frame.Variables[1];
                 for (n = 0; n < v0.Length; n++)
                 {
-                    if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
+                    if (v0.Data[n] != Constant.MISSING && v1.Data[n] != Constant.MISSING)
                     {
                         ++cnt;
                         y[cnt] = v1.Data[n];
@@ -2276,13 +2214,9 @@ namespace StatsDirect.Builtins
             string adj = xf != 0 ? " (adjusted for ties)" : string.Empty;
 
             if (ned != 0)
-            {
                 outputParameters.AddOutput("stats", "Normalised statistic " + adj + "= " + host.RoundU(ned));
-            }
             else
-            {
                 outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
-            }
 
             outputParameters.AddOutput("p_l", pl);
             outputParameters.AddOutput("p_u", pu);
@@ -2301,7 +2235,7 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> confList = new List<ParameterBag>();
                 double lev;
                 int k;
-                XSRK(n, gamma, out k, out lev);
+                Xsrk(n, gamma, out k, out lev);
                 ParameterBag confParameters = XSrcon(host, n, k, x, y);
 
                 if (lev != -99)
@@ -2335,12 +2269,11 @@ namespace StatsDirect.Builtins
         /// <param name="pLower"></param>
         /// <param name="pUpper"></param>
         /// <param name="p2"></param>
-        /// <param name="fault"></param>
         private static void XWilcoxonSignedRanks(double[] x, double[] y, int n, out double w, out int nonzero, out double ned, out double xf, out double pLower, out double pUpper, out double p2)
         {
 
             if (n < 1)
-                throw new ArgumentException("At least one pair of values required", "n");
+                throw new ArgumentException("At least one pair of values required", nameof(n));
 
             //count the number of non-zero differences and record their signs and absolute values
             nonzero = 0;
@@ -2482,7 +2415,7 @@ namespace StatsDirect.Builtins
         private static double XWilcoxonSignedRankLowerTailProbability(int[] rank, int score, int n)
         {
 
-            int iwork = n * (n / 2) + (n / 2) + 100;
+            int iwork = n * (n / 2) + n / 2 + 100;
             double[] prob = new double[iwork + 1];
             for (int i = 1; i <= score + 1; i++)
                 prob[i] = 1.0;
@@ -2495,7 +2428,7 @@ namespace StatsDirect.Builtins
                 int shift = rank[j];
                 if (shift >= score + 1)
                 {
-                    prob[score + 1] = prob[score + 1] / (Math.Pow(2, (n - j + 1)));
+                    prob[score + 1] = prob[score + 1] / Math.Pow(2, n - j + 1);
                     break;
                 }
                 upper += shift;
@@ -2517,17 +2450,17 @@ namespace StatsDirect.Builtins
             return p;
         }
 
-        private static void XSRK(int sizei, double gamma, out int k, out double lev)
+        private static void Xsrk(int sizei, double gamma, out int k, out double lev)
         {
             double alpha = (1 - gamma) / 2;
             if (sizei < 4)
                 k = -99;
             else if (sizei >= 4 && sizei < 200)
-                k = wsr_inv(alpha, sizei);
+                k = WilcoxonSignedRankInverse(alpha, sizei);
             else
             {
                 double s = Convert.ToDouble(sizei);
-                k = Convert.ToInt32(Math.Floor(((s * (s + 1)) / 4) + (PDF.gauinv(alpha) * Math.Sqrt((s * (s + 1) * ((2 * s) + 1)) / 24)))) + 1;
+                k = Convert.ToInt32(Math.Floor(s * (s + 1) / 4 + PDF.gauinv(alpha) * Math.Sqrt(s * (s + 1) * (2 * s + 1) / 24))) + 1;
             }
             if (k == -99)
             {
@@ -2536,15 +2469,13 @@ namespace StatsDirect.Builtins
             }
             if (sizei > 1000)
             {
-                lev = 1.0 - (alpha * 2.0);
+                lev = 1.0 - alpha * 2.0;
                 return;
             }
-            double p = wsr_p(k - 1, sizei);
+            double p = WilcoxonSignedRankP(k - 1, sizei);
             if (p > 0.5)
-            {
                 p = 1.0 - p;
-            }
-            lev = 1.0 - (p * 2.0);
+            lev = 1.0 - p * 2.0;
         }
 
         /// <summary>
@@ -2553,28 +2484,30 @@ namespace StatsDirect.Builtins
         /// <param name="x"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        private static double wsr_p(double x, int n)
+        private static double WilcoxonSignedRankP(double x, int n)
         {
             if (n <= 0)
-                return Double.NaN;
+                return double.NaN;
             x = Math.Floor(x + 1e-7);
-            if (x < 0.0) return 0.0;
-            if (x >= n * (n + 1) / 2.0) return 1.0;
+            if (x < 0.0)
+                return 0.0;
+            if (x >= n * (n + 1) / 2.0)
+                return 1.0;
 
-            double[] w = new double[((n * (n + 1) / 2) / 2) + 1];
+            double[] w = new double[n * (n + 1) / 2 / 2 + 1];
 
             double f = Math.Exp(-n * Math.Log(2.0));
             double p = 0;
-            if (x <= (n * (n + 1) / 4.0))
+            if (x <= n * (n + 1) / 4.0)
             {
                 for (int i = 0; i <= x; i++)
-                    p += wsr_enum(i, n, ref w) * f;
+                    p += WsrEnum(i, n, ref w) * f;
             }
             else
             {
                 x = n * (n + 1) / 2.0 - x;
                 for (int i = 0; i < x; i++)
-                    p += wsr_enum(i, n, ref w) * f;
+                    p += WsrEnum(i, n, ref w) * f;
             }
 
             return p;
@@ -2586,7 +2519,7 @@ namespace StatsDirect.Builtins
         /// <param name="x"></param>
         /// <param name="n"></param>
         /// <returns></returns>
-        private static int wsr_inv(double x, int n)
+        private static int WilcoxonSignedRankInverse(double x, int n)
         {
             if (n <= 0)
                 return -99;
@@ -2595,17 +2528,17 @@ namespace StatsDirect.Builtins
             if (x >= 1)
                 return n * (n + 1) / 2;
 
-            double[] w = new double[((n * (n + 1) / 2) / 2) + 1];
+            double[] w = new double[n * (n + 1) / 2 / 2 + 1];
 
             double f = Math.Exp(-n * Math.Log(2.0));
             double p = 0;
             int q = 0;
             if (x <= 0.5)
             {
-                x = x - 10 * Double.Epsilon;
-                for (; ; )
+                x = x - 10 * double.Epsilon;
+                for (;;)
                 {
-                    p += wsr_enum(q, n, ref w) * f;
+                    p += WsrEnum(q, n, ref w) * f;
                     if (p >= x)
                         break;
                     q++;
@@ -2613,10 +2546,10 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                x = 1 - x + 10 * Double.Epsilon;
-                for (; ; )
+                x = 1 - x + 10 * double.Epsilon;
+                for (;;)
                 {
-                    p += wsr_enum(q, n, ref w) * f;
+                    p += WsrEnum(q, n, ref w) * f;
                     if (p > x)
                     {
                         q = n * (n + 1) / 2 - q;
@@ -2636,10 +2569,10 @@ namespace StatsDirect.Builtins
         /// <param name="n"></param>
         /// <param name="w"></param>
         /// <returns></returns>
-        private static double wsr_enum(int k, int n, ref double[] w)
+        private static double WsrEnum(int k, int n, ref double[] w)
         {
             int u = n * (n + 1) / 2;
-            int c = (u / 2);
+            int c = u / 2;
 
             if (k < 0 || k > u) return 0;
             if (k > c) k = u - k;
@@ -2662,15 +2595,9 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag XSrcon(ITemplateHost host, int size, int k, double[] x, double[] y)
         {
-            double median = 0; double kl = 0;
-            int occurences;
-            int midl;
-            int midu;
-            int j;
-
             ParameterBag outputParameters = new ParameterBag();
-            int limit = Convert.ToInt32(size * (size + 1) / 2);
-            if (limit > int.MaxValue || k > int.MaxValue)
+            long limit = size * (size + 1) / 2;
+            if (limit > int.MaxValue)
             {
                 host.Error("Sample is too large for exact confidence interval calculation.", "Signed Ranks");
                 outputParameters.AddOutput("from", Formatting.ASTERISK);
@@ -2680,7 +2607,7 @@ namespace StatsDirect.Builtins
             }
             host.StartProgress("Calculating Confidence Interval", true);
             double bigx = x[1];
-            for (j = 1; j <= size; j++)
+            for (int j = 1; j <= size; j++)
             {
                 if (x[j] > bigx)
                     bigx = x[j];
@@ -2697,20 +2624,21 @@ namespace StatsDirect.Builtins
             }
             while (true);
 
-            long[] xx = new long[size + 1 ];
-            for (j = 1; j <= size; j++)
+            long[] xx = new long[size + 1];
+            for (int j = 1; j <= size; j++)
             {
                 xx[j] = Convert.ToInt64((x[j] - y[j]) * scaler);
             }
             Array.Sort(xx, 1, size);
+            int midu, midl;
             if (limit % 2 == 0)
             {
                 midu = Convert.ToInt32(Math.Floor((double)limit / 2) + 1);
-                midl = ((int)(Math.Floor((double)limit / 2)));
+                midl = (int)Math.Floor((double)limit / 2);
             }
             else
             {
-                midu = ((int)(Math.Floor((double)(limit + 1) / 2)));
+                midu = (int)Math.Floor((double)(limit + 1) / 2);
                 midl = midu;
             }
             bool domed = true;
@@ -2718,10 +2646,13 @@ namespace StatsDirect.Builtins
             int goal = midu + k;
             long c = 2 * xx[1] - 1;
             int i = 0;
+            double median = 0;
+            double kl = 0;
             while (i < midu)
             {
+                int occurences;
                 c = ExFortran.pairnext(out occurences, c, xx, size);
-                i = i + occurences;
+                i += occurences;
                 if (host.UpdateProgress(i / (double)goal))
                 {
                     outputParameters.AddOutput("from", Formatting.ASTERISK);
@@ -2749,25 +2680,20 @@ namespace StatsDirect.Builtins
             if (midu != midl)
             {
                 if (domed)
-                {
                     median = c / scaler / 2.0;
-                }
                 else
-                {
                     median = (median + c / scaler / 2.0) / 2.0;
-                }
             }
-            for (j = 1; j <= size; j++)
-            {
+            for (int j = 1; j <= size; j++)
                 xx[j] = -xx[j];
-            }
             Array.Sort(xx, 1, size);
             c = 2 * xx[1] - 1;
             i = 0;
             while (i < k)
             {
+                int occurences;
                 c = ExFortran.pairnext(out occurences, c, xx, size);
-                i = i + occurences;
+                i += occurences;
                 if (host.UpdateProgress((midu + i) / (double)goal))
                 {
                     outputParameters.AddOutput("from", Formatting.ASTERISK);
@@ -2787,15 +2713,15 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptSmirnov(ITemplateHost host, ParameterBag parameters)
         {
             int n1 = 0; int n2 = 0; int ifault;
-            double D; double dn; double DP;
+            double d; double dn; double dp;
 
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
-            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
+            DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
+            DoubleVariable v1 = (DoubleVariable)frame.Variables[1];
 
-            double[] d1 = new double[v0.Length + 1 ];
-            double[] d2 = new double[v1.Length + 1 ];
+            double[] d1 = new double[v0.Length + 1];
+            double[] d2 = new double[v1.Length + 1];
             foreach (double v in v0.Data)
             {
                 if (v != Constant.MISSING)
@@ -2815,52 +2741,52 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("x", v0.Title);
             outputParameters.AddOutput("y", v1.Title);
-            x_kstwo(d1, n1, d2, n2, out D, out DP, out dn);
-            outputParameters.AddOutput("d", D);
-            double P = ExFortran.ksp2(n1, n2, ref D, out ifault);
+            XKstwo(d1, n1, d2, n2, out d, out dp, out dn);
+            outputParameters.AddOutput("d", d);
+            double p = ExFortran.ksp2(n1, n2, ref d, out ifault);
             if (ifault != 0)
             {
-                P = Constant.MISSING;
+                p = Constant.MISSING;
             }
-            outputParameters.AddOutput("p", P);
+            outputParameters.AddOutput("p", p);
             outputParameters.AddOutput("sample_1", v0.Title);
             outputParameters.AddOutput("sample_2", v1.Title);
-            outputParameters.AddOutput("d_l", DP);
-            P = ExFortran.ksp2(n1, n2, ref DP, out ifault) / 2.0;
+            outputParameters.AddOutput("d_l", dp);
+            p = ExFortran.ksp2(n1, n2, ref dp, out ifault) / 2.0;
             if (ifault != 0)
             {
-                P = Constant.MISSING;
+                p = Constant.MISSING;
             }
-            outputParameters.AddOutput("p_l", host.pval_half(P));
+            outputParameters.AddOutput("p_l", host.pval_half(p));
             outputParameters.AddOutput("d_r", dn);
-            P = ExFortran.ksp2(n1, n2, ref dn, out ifault) / 2.0;
+            p = ExFortran.ksp2(n1, n2, ref dn, out ifault) / 2.0;
             if (ifault != 0)
             {
-                P = Constant.MISSING;
+                p = Constant.MISSING;
             }
-            outputParameters.AddOutput("p_r", host.pval_half(P));
+            outputParameters.AddOutput("p_r", host.pval_half(p));
 
             return outputParameters;
         }
 
         public static ParameterBag RptQuantile(ITemplateHost host, ParameterBag parameters)
         {
-            bool do_conservative = parameters["conservative-ci"].AsBoolean;
-            double GAMMA = parameters["gamma"].AsDouble;
+            bool doConservative = parameters["conservative-ci"].AsBoolean;
+            double gamma = parameters["gamma"].AsDouble;
             double qc = parameters["quantile"].AsDouble;
             if (qc >= 1 || qc <= 0)
                 qc = 0.5;
 
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            double[] r = new double[frame.MaxRows + 1 ];
+            double[] r = new double[frame.MaxRows + 1];
 
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> variableList = new List<ParameterBag>();
             outputParameters.AddOutput("*variable", variableList);
             for (int k = 0; k < frame.VariableCount; k++)
             {
-                DoubleVariable v = frame.Variables[k]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable)frame.Variables[k];
                 int rx = 0;
                 foreach (double val in v.Data)
                 {
@@ -2872,23 +2798,23 @@ namespace StatsDirect.Builtins
                 }
                 Array.Sort(r, 1, rx);
 
-                bool cap_lower = false; bool cap_upper = false;
+                bool capLower = false; bool capUpper = false;
                 double cover = 0; double ul; double ll; double xq = 0;
                 int fault;
-                XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, ref cover, do_conservative, ref cap_upper, ref cap_lower, out fault);
+                XQci(qc, rx, r, ref xq, gamma, out ll, out ul, ref cover, doConservative, ref capUpper, ref capLower, out fault);
 
                 ParameterBag variableParameters = new ParameterBag();
                 variableParameters.AddOutput("sample", v.Title);
                 variableParameters.AddOutput("size", rx);
                 variableParameters.AddOutput("quantile_name", qc == 0.5 ? "median" : qc.ToString());
                 variableParameters.AddOutput("value", xq);
-                variableParameters.AddOutput("pc", (GAMMA * 100));
-                variableParameters.AddOutput("type", do_conservative ? "(conservative)" : "(non-conservative)");
-                string x = cap_lower ? "* " : string.Empty;
+                variableParameters.AddOutput("pc", gamma * 100);
+                variableParameters.AddOutput("type", doConservative ? "(conservative)" : "(non-conservative)");
+                string x = capLower ? "* " : string.Empty;
                 variableParameters.AddOutput("from", x + host.RoundU(ll));
-                x = cap_upper ? "* " : string.Empty;
+                x = capUpper ? "* " : string.Empty;
                 variableParameters.AddOutput("to", x + host.RoundU(ul));
-                x = cap_lower || cap_upper ? "  (* limit capped at min/max)" : string.Empty;
+                x = capLower || capUpper ? "  (* limit capped at min/max)" : string.Empty;
                 variableParameters.AddOutput("exact", host.RoundU(cover) + "%" + x);
                 variableList.Add(variableParameters);
             }
@@ -2899,54 +2825,50 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptKendall(ITemplateHost host, ParameterBag parameters)
         {
-            int ifault; int nxx = 0; int N;
+            int ifault; int nxx = 0; int n;
             double ps;
-            double gam; double tau_ul = 0; double tau_ll = 0; double tau = 0;
-            double varf = 0; double sigb; double siga; double hn = 0; double s = 0; double Q; double P;
+            double gam; double tauUl = 0; double tauLl = 0; double tau = 0;
+            double varf = 0; double sigb; double siga; double hn = 0; double s = 0; double q; double p;
             bool fault;
 
-            double GAMMA = parameters["gamma"].AsDouble;
-            if (GAMMA <= 0.0)
-            {
-                GAMMA = 0.95;
-            }
-            double cit = PDF.gauinv(1.0 - (1.0 - GAMMA) / 2.0, out ifault);
+            double gamma = parameters["gamma"].AsDouble;
+            if (gamma <= 0.0)
+                gamma = 0.95;
+            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out ifault);
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
-            DoubleVariable v1 = frame.Variables[1]as DoubleVariable;
+            DoubleVariable v0 = (DoubleVariable)frame.Variables[0];
+            DoubleVariable v1 = (DoubleVariable)frame.Variables[1];
             int rx = v0.Length;
-            double[] x = new double[rx + 1 ];
-            double[] y = new double[rx + 1 ];
+            double[] x = new double[rx + 1];
+            double[] y = new double[rx + 1];
             int nx = 0;
-            for (N = 0; N <= rx - 1; N++)
+            for (n = 0; n <= rx - 1; n++)
             {
-                if (v0.Data[N] != Constant.MISSING & v1.Data[N] != Constant.MISSING)
+                if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
                 {
                     nx = nx + 1;
-                    x[nx] = v0.Data[N];
-                    y[nx] = v1.Data[N];
+                    x[nx] = v0.Data[n];
+                    y[nx] = v1.Data[n];
                 }
             }
-            x_dokend(host, ref cit, ref nx, ref x, ref y, ref nxx, out P, out Q, ref s, ref hn, out siga, out sigb, ref varf, ref tau, ref tau_ll, ref tau_ul, out fault);
+            XDokend(host, ref cit, ref nx, ref x, ref y, ref nxx, out p, out q, ref s, ref hn, out siga, out sigb, ref varf, ref tau, ref tauLl, ref tauUl, out fault);
 
             if (fault)
-            {
                 throw new TemplateOperationCancelledException();
-            }
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("sample_1", v0.Title);
             outputParameters.AddOutput("sample_2", v1.Title);
             outputParameters.AddOutput("obs", nxx);
-            outputParameters.AddOutput("con", P);
-            outputParameters.AddOutput("dis", Q);
+            outputParameters.AddOutput("con", p);
+            outputParameters.AddOutput("dis", q);
             outputParameters.AddOutput("tie", Convert.ToInt64(siga + sigb));
             outputParameters.AddOutput("s", s);
             outputParameters.AddOutput("ses", Math.Sqrt(varf));
-            if (P + Q > 0)
+            if (p + q > 0)
             {
-                gam = (P - Q) / (P + Q);
+                gam = (p - q) / (p + q);
             }
             else { gam = Constant.MISSING; }
             outputParameters.AddOutput("gam", gam);
@@ -2960,9 +2882,9 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("tb", "tau");
             }
             outputParameters.AddOutput("tau", tau);
-            outputParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 1));
-            outputParameters.AddOutput("ll", tau_ll);
-            outputParameters.AddOutput("ul", tau_ul);
+            outputParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 1));
+            outputParameters.AddOutput("ll", tauLl);
+            outputParameters.AddOutput("ul", tauUl);
 
             if (siga != 0 | sigb != 0)
             {
@@ -3051,24 +2973,24 @@ namespace StatsDirect.Builtins
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            int boots_divisor = Math.Max(1, iterations / 1000);
+            int bootsDivisor = Math.Max(1, iterations / 1000);
 
             host.StartProgress("Simulating exact P", true);
 
             double[,] x;
-            int N;
+            int n;
             int treatments;
             bool allAreBinary;
             bool numbersAreSmall;
-            PreprocessFriedman(frame, out x, out N, out treatments, out allAreBinary, out numbersAreSmall);
+            PreprocessFriedman(frame, out x, out n, out treatments, out allAreBinary, out numbersAreSmall);
 
-            double A2 = 0;
-            double B2 = 0;
+            double a2 = 0;
+            double b2 = 0;
             double t1 = 0;
             double t2 = 0;
             double nd = 0;
-            double[] w2 = new double[treatments + 1 ];
-            CalcFriedman(x, w2, N, treatments, ref A2, ref B2, ref t1, ref t2, ref nd);
+            double[] w2 = new double[treatments + 1];
+            CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
             double actualT = allAreBinary ? t1 : t2;
 
             int q = 0;
@@ -3076,13 +2998,13 @@ namespace StatsDirect.Builtins
             int iteration;
             for (iteration = 1; iteration <= iterations; iteration++)
             {
-                if (iteration % boots_divisor == 0)
+                if (iteration % bootsDivisor == 0)
                 {
                     if (host.UpdateProgress(iteration / (double)iterations))
                         break;
                 }
-                ShuffleValuesWithinRows(x, rnd, treatments, N);
-                CalcFriedman(x, w2, N, treatments, ref A2, ref B2, ref t1, ref t2, ref nd);
+                ShuffleValuesWithinRows(x, rnd, treatments, n);
+                CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
                 double t = allAreBinary ? t1 : t2;
                 if (t >= actualT)
                     q += 1;
@@ -3113,7 +3035,6 @@ namespace StatsDirect.Builtins
         ///  <param name="rnd">The random number generator from which to take values</param>
         /// <param name="cols"></param>
         /// <param name="rows"></param>
-        /// <remarks></remarks>
         public static void ShuffleValuesWithinRows(double[,] x, MersenneTwister rnd, int cols, int rows)
         {
             for (int row = 1; row <= rows; row++)
@@ -3137,7 +3058,6 @@ namespace StatsDirect.Builtins
         ///  <param name="rnd">The random number generator from which to take values</param>
         /// <param name="lowerBound"></param>
         /// <param name="upperBound"></param>
-        /// <remarks></remarks>
         public static void ShuffleValuesWithinArray(double[] x, MersenneTwister rnd, int lowerBound, int upperBound)
         {
             for (int i = lowerBound; i <= upperBound; i++)
@@ -3155,58 +3075,58 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
 
             double[] w2;
-            int N;
-            double A2 = 0;
-            double B2 = 0;
+            int n;
+            double a2 = 0;
+            double b2 = 0;
             double t1 = 0;
             double t2 = 0;
             double nd = 0;
             bool allAreBinary;
             bool numbersAreSmall;
-            CalcFriedman(frame, out w2, out N, ref A2, ref B2, ref t1, ref t2, ref nd, out allAreBinary, out numbersAreSmall);
+            CalcFriedman(frame, out w2, out n, ref a2, ref b2, ref t1, ref t2, ref nd, out allAreBinary, out numbersAreSmall);
 
             string tlist = string.Empty; string rlist = string.Empty;
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d <= frame.VariableCount - 1; d++)
             {
-                if (D == 0)
+                if (d == 0)
                 {
-                    tlist = frame.Variables[D].Title;
-                    rlist = Formatting.XRound(w2[D + 1] / nd, 2);
+                    tlist = frame.Variables[d].Title;
+                    rlist = Formatting.XRound(w2[d + 1] / nd, 2);
                 }
                 else
                 {
-                    tlist = tlist + ", " + frame.Variables[D].Title;
-                    rlist = rlist + ", " + Formatting.XRound(w2[D + 1] / nd, 2);
+                    tlist = tlist + ", " + frame.Variables[d].Title;
+                    rlist = rlist + ", " + Formatting.XRound(w2[d + 1] / nd, 2);
                 }
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", tlist);
             outputParameters.AddOutput("rlist", rlist);
 
-            outputParameters.AddOutput("a2", A2);
-            outputParameters.AddOutput("nb", N);
+            outputParameters.AddOutput("a2", a2);
+            outputParameters.AddOutput("nb", n);
             outputParameters.AddOutput("t1", t1);
-            outputParameters.AddOutput("df", (frame.VariableCount - 1));
+            outputParameters.AddOutput("df", frame.VariableCount - 1);
 
             outputParameters.AddOutput("t2", t2);
 
-            int df = (N - 1) * (frame.VariableCount - 1);
+            int df = (n - 1) * (frame.VariableCount - 1);
             double dfn = frame.VariableCount - 1;
             double dfd = df;
-            double P;
+            double p;
             if (allAreBinary)
             {
-                P = PDF.chivalp(t1, dfn);
+                p = PDF.chivalp(t1, dfn);
                 outputParameters.AddOutput("testName", "Cochran");
             }
             else
             {
-                P = PDF.fvalp(t2, dfn, dfd);
+                p = PDF.fvalp(t2, dfn, dfd);
                 outputParameters.AddOutput("testName", "Friedman");
             }
-            outputParameters.AddOutput("p", P);
+            outputParameters.AddOutput("p", p);
 
-            if (P <= 0.05)
+            if (p <= 0.05)
             {
                 ParameterBag messageParameters = new ParameterBag();
                 messageParameters.AddOutput("msg", "At least one of your sample populations tends to yield larger observations than at least one other sample population.");
@@ -3220,7 +3140,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*message", null);
             }
 
-            if (P <= 0.05)
+            if (p <= 0.05)
             {
                 ParameterBag warnParameters = new ParameterBag();
                 warnParameters.AddOutput("warning", "Numbers are small: use simulated exact probability instead.");
@@ -3235,15 +3155,15 @@ namespace StatsDirect.Builtins
 
             //  Cache values for possible further calculation
             outputParameters.Add("w2", new FilledParameter(FilledParameterDirection.Input, w2));
-            outputParameters.Add("N", new FilledParameter(FilledParameterDirection.Input, N));
-            outputParameters.Add("A2", new FilledParameter(FilledParameterDirection.Input, A2));
-            outputParameters.Add("B2", new FilledParameter(FilledParameterDirection.Input, B2));
+            outputParameters.Add("N", new FilledParameter(FilledParameterDirection.Input, n));
+            outputParameters.Add("A2", new FilledParameter(FilledParameterDirection.Input, a2));
+            outputParameters.Add("B2", new FilledParameter(FilledParameterDirection.Input, b2));
 
             return outputParameters;
         }
 
 
-        private static void PreprocessFriedman(DataFrame frame, out double[,] x, out int N, out int treatments, out bool allAreBinary, out bool numbersAreSmall)
+        private static void PreprocessFriedman(DataFrame frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall)
         {
             x = new double[frame.VariableCount + 1, frame.Variables[0].Length + 1];
             allAreBinary = true;
@@ -3252,33 +3172,27 @@ namespace StatsDirect.Builtins
             for (int j = 0; j <= frame.Variables[0].Length - 1; j++)
             {
                 bool skip = false;
-                for (int D = 0; D <= frame.VariableCount - 1; D++)
+                for (int d = 0; d <= frame.VariableCount - 1; d++)
                 {
-                    if ((frame.Variables[D] as DoubleVariable).Data[j] == Constant.MISSING)
-                    {
+                    if (((DoubleVariable)frame.Variables[d]).Data[j] == Constant.MISSING)
                         skip = true;
-                    }
                 }
-                if (!(skip))
+                if (!skip)
                 {
                     qty = qty + 1;
-                    for (int D = 0; D <= frame.VariableCount - 1; D++)
+                    for (int d = 0; d <= frame.VariableCount - 1; d++)
                     {
-                        double dat = (frame.Variables[D] as DoubleVariable).Data[j];
-                        x[D + 1, qty] = dat;
-                        if ((dat > 0))
-                        {
+                        double dat = ((DoubleVariable)frame.Variables[d]).Data[j];
+                        x[d + 1, qty] = dat;
+                        if (dat > 0)
                             positiveCellCount += 1;
-                        }
-                        if (allAreBinary && !((dat == 1.0 || dat == 0.0)))
-                        {
+                        if (allAreBinary && !(dat == 1.0 || dat == 0.0))
                             allAreBinary = false;
-                        }
                     }
                 }
             }
 
-            N = qty;
+            n = qty;
             treatments = frame.VariableCount;
             numbersAreSmall = positiveCellCount < 25;
         }
@@ -3289,22 +3203,21 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="frame"></param>
         ///  <param name="w2"></param>
-        ///  <param name="N"></param>
-        ///  <param name="A2"></param>
-        ///  <param name="B2"></param>
+        ///  <param name="n"></param>
+        ///  <param name="a2"></param>
+        ///  <param name="b2"></param>
         /// <param name="t1"></param>
         /// <param name="t2"></param>
         /// <param name="nd"></param>
         /// <param name="allAreBinary"></param>
         /// <param name="numbersAreSmall"></param>
-        /// <remarks></remarks>
-        private static void CalcFriedman(DataFrame frame, out double[] w2, out int N, ref double A2, ref double B2, ref double t1, ref double t2, ref double nd, out bool allAreBinary, out bool numbersAreSmall)
+        private static void CalcFriedman(DataFrame frame, out double[] w2, out int n, ref double a2, ref double b2, ref double t1, ref double t2, ref double nd, out bool allAreBinary, out bool numbersAreSmall)
         {
             double[,] x;
             int treatments;
-            PreprocessFriedman(frame, out x, out N, out treatments, out allAreBinary, out numbersAreSmall);
-            w2 = new double[treatments + 1 ];
-            CalcFriedman(x, w2, N, treatments, ref A2, ref B2, ref t1, ref t2, ref nd);
+            PreprocessFriedman(frame, out x, out n, out treatments, out allAreBinary, out numbersAreSmall);
+            w2 = new double[treatments + 1];
+            CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
         }
 
 
@@ -3313,63 +3226,63 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="x"></param>
         ///  <param name="w2">Values will be set.  Must already be defained and of length treatments.</param>
-        ///  <param name="N"></param>
+        ///  <param name="n"></param>
         ///  <param name="treatments"></param>
-        ///  <param name="A2"></param>
-        ///  <param name="B2"></param>
+        ///  <param name="a2"></param>
+        ///  <param name="b2"></param>
         ///  <param name="t1"></param>
         ///  <param name="t2"></param>
         ///  <param name="nd"></param>
         ///  <remarks></remarks>
-        private static void CalcFriedman(double[,] x, double[] w2, int N, int treatments, ref double A2, ref double B2, ref double t1, ref double t2, ref double nd)
+        private static void CalcFriedman(double[,] x, double[] w2, int n, int treatments, ref double a2, ref double b2, ref double t1, ref double t2, ref double nd)
         {
-            double[] w1 = new double[treatments + 1 ];
+            double[] w1 = new double[treatments + 1];
 
-            if (N > 1)
+            if (n > 1)
             {
-                double[] x1d = new double[treatments + 1 ];
+                double[] x1D = new double[treatments + 1];
                 for (int col = 1; col <= treatments; col++)
                 {
-                    x1d[col] = x[col, 1];
+                    x1D[col] = x[col, 1];
                 }
                 double xf;
-                ExFortran.Rank(x1d, w2, 1, treatments, 0, out xf);
-                A2 = 0;
+                ExFortran.Rank(x1D, w2, 1, treatments, 0, out xf);
+                a2 = 0;
                 for (int g = 1; g <= treatments; g++)
                 {
-                    A2 += w2[g] * w2[g];
+                    a2 += w2[g] * w2[g];
                 }
 
-                if (N != 1)
+                if (n != 1)
                 {
-                    for (int j = 2; j <= N; j++)
+                    for (int j = 2; j <= n; j++)
                     {
                         for (int col = 1; col <= treatments; col++)
                         {
-                            x1d[col] = x[col, j];
+                            x1D[col] = x[col, j];
                         }
-                        ExFortran.Rank(x1d, w1, 1, treatments, 0, out xf);
+                        ExFortran.Rank(x1D, w1, 1, treatments, 0, out xf);
                         for (int g = 1; g <= treatments; g++)
                         {
                             w2[g] += w1[g];
-                            A2 += w1[g] * w1[g];
+                            a2 += w1[g] * w1[g];
                         }
                     }
                 }
 
-                B2 = 0;
+                b2 = 0;
                 for (int g = 1; g <= treatments; g++)
                 {
-                    B2 += w2[g] * w2[g];
+                    b2 += w2[g] * w2[g];
                 }
 
-                nd = Convert.ToDouble(N);
+                nd = Convert.ToDouble(n);
                 double kd = Convert.ToDouble(treatments);
-                B2 = B2 / nd;
+                b2 = b2 / nd;
                 //  Conover P 370
-                double C1 = ((nd * kd * (kd + 1.0) * (kd + 1.0)) / 4.0);
-                t2 = (nd - 1.0) * (B2 - C1) / (A2 - B2);
-                t1 = ((kd - 1.0) * (B2 * nd - nd * C1)) / (A2 - C1);
+                double c1 = nd * kd * (kd + 1.0) * (kd + 1.0) / 4.0;
+                t2 = (nd - 1.0) * (b2 - c1) / (a2 - b2);
+                t1 = (kd - 1.0) * (b2 * nd - nd * c1) / (a2 - c1);
             }
         }
 
@@ -3380,15 +3293,15 @@ namespace StatsDirect.Builtins
             double confidence = parameters["confidence"].AsDouble;
 
             double[] w2;
-            int N;
-            double A2 = 0;
-            double B2 = 0;
+            int n;
+            double a2 = 0;
+            double b2 = 0;
             if (parameters.ContainsKey("w2") && parameters.ContainsKey("N") && parameters.ContainsKey("A2") && parameters.ContainsKey("B2"))
             {
-                w2 = ((double[])(parameters["w2"].Data));
-                N = parameters["N"].AsInt32;
-                A2 = parameters["A2"].AsDouble;
-                B2 = parameters["B2"].AsDouble;
+                w2 = (double[])parameters["w2"].Data;
+                n = parameters["N"].AsInt32;
+                a2 = parameters["A2"].AsDouble;
+                b2 = parameters["B2"].AsDouble;
             }
             else
             {
@@ -3398,22 +3311,18 @@ namespace StatsDirect.Builtins
                 double nd = 0;
                 bool allAreBinary;
                 bool numbersAreSmall;
-                CalcFriedman(frame, out w2, out N, ref A2, ref B2, ref t1, ref t2, ref nd, out allAreBinary, out numbersAreSmall);
+                CalcFriedman(frame, out w2, out n, ref a2, ref b2, ref t1, ref t2, ref nd, out allAreBinary, out numbersAreSmall);
             }
 
-            double dfq = (N - 1) * (frame.VariableCount - 1);
-            double P = confidence;
-            if (P == 0)
-            {
-                P = 0.05;
-            }
-            if (P > 1.0 - P)
-            {
-                P = 1.0 - P;
-            }
-            P = P / 2.0;
-            double tval = PDF.tfromp(P, dfq);
-            double tcriq = Math.Pow(Math.Abs(2 * N * (A2 - B2) / (dfq)), 0.5);
+            double dfq = (n - 1) * (frame.VariableCount - 1);
+            double p = confidence;
+            if (p == 0)
+                p = 0.05;
+            if (p > 1.0 - p)
+                p = 1.0 - p;
+            p = p / 2.0;
+            double tval = PDF.tfromp(p, dfq);
+            double tcriq = Math.Pow(Math.Abs(2 * n * (a2 - b2) / dfq), 0.5);
             double tcrit = tcriq * tval;
 
             ParameterBag outputParameters = new ParameterBag();
@@ -3430,12 +3339,12 @@ namespace StatsDirect.Builtins
                     pairParameters.AddOutput("compare", frame.Variables[g - 1].Title + " vs. " + frame.Variables[j - 1].Title);
                     pairParameters.AddOutput("diff", Math.Abs(stata) > tcrit ? "significant" : "not significant");
                     pairParameters.AddOutput("val", "|" + host.RoundU(stata) + "| > " + host.RoundU(tcrit));
-                    P = PDF.tvalp(Math.Abs(stata / tcriq), dfq);
-                    if (P > 1.0 - P)
+                    p = PDF.tvalp(Math.Abs(stata / tcriq), dfq);
+                    if (p > 1.0 - p)
                     {
-                        P = 1.0 - P;
+                        p = 1.0 - p;
                     }
-                    pairParameters.AddOutput("p", host.pval(2.0 * P));
+                    pairParameters.AddOutput("p", host.pval(2.0 * p));
                     pairList.Add(pairParameters);
                 }
             }
@@ -3453,14 +3362,14 @@ namespace StatsDirect.Builtins
             {
                 prelx = prelx + v.Length;
             }
-            double[] x = new double[prelx + 1 ];
-            int[] L = new int[frame.VariableCount + 1 ];
+            double[] x = new double[prelx + 1];
+            int[] l = new int[frame.VariableCount + 1];
 
             int qty = 0;
-            for (int D = 0; D < frame.VariableCount; D++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
                 int cnt = 0;
-                DoubleVariable v = frame.Variables[D]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable)frame.Variables[d];
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3470,25 +3379,25 @@ namespace StatsDirect.Builtins
                         x[qty] = val;
                     }
                 }
-                L[D + 1] = cnt;
+                l[d + 1] = cnt;
             }
             int lx = qty;
 
-            double[] w1 = new double[lx + 1 ];
+            double[] w1 = new double[lx + 1];
             double h;
             double ha = 0;
             double t = 0;
             int ifault;
-            x_kwt(x, lx, L, frame.VariableCount, out h, ref ha, ref t, ref w1, out ifault);
+            XKwt(x, lx, l, frame.VariableCount, out h, ref ha, ref t, ref w1, out ifault);
 
             string tlist = string.Empty;
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d <= frame.VariableCount - 1; d++)
             {
-                if (D > 0)
+                if (d > 0)
                 {
                     tlist = tlist + ", ";
                 }
-                tlist = tlist + frame.Variables[D].Title;
+                tlist = tlist + frame.Variables[d].Title;
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -3501,8 +3410,8 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("*fault", ifault != 0 ? OneOutputElement() : null);
             outputParameters.AddOutput("t", h);
-            double P = h == Constant.MISSING ? Constant.MISSING : PDF.chivalp(h, Convert.ToDouble(df));
-            outputParameters.AddOutput("p", P);
+            double p = h == Constant.MISSING ? Constant.MISSING : PDF.chivalp(h, Convert.ToDouble(df));
+            outputParameters.AddOutput("p", p);
 
             if (t != 0)
             {
@@ -3510,15 +3419,15 @@ namespace StatsDirect.Builtins
                 List<ParameterBag> tiesList = new List<ParameterBag> { tiesParameters };
                 outputParameters.AddOutput("*ties", tiesList);
                 tiesParameters.AddOutput("t_ties", ha);
-                P = ha == Constant.MISSING ? Constant.MISSING : PDF.chivalp(ha, Convert.ToDouble(df));
-                tiesParameters.AddOutput("p_ties", P);
+                p = ha == Constant.MISSING ? Constant.MISSING : PDF.chivalp(ha, Convert.ToDouble(df));
+                tiesParameters.AddOutput("p_ties", p);
             }
             else
             {
                 outputParameters.AddOutput("*ties", null);
             }
 
-            if (P <= 0.05)
+            if (p <= 0.05)
             {
 
                 ParameterBag messageParameters = new ParameterBag();
@@ -3548,17 +3457,15 @@ namespace StatsDirect.Builtins
 
             int prelx = 0;
             foreach (Variable v in frame.Variables)
-            {
-                prelx = prelx + v.Length;
-            }
-            double[] x = new double[prelx + 1 ];
-            int[] l = new int[frame.VariableCount + 1 ];
+                prelx += v.Length;
+            double[] x = new double[prelx + 1];
+            int[] l = new int[frame.VariableCount + 1];
 
             int qty = 0;
-            for (int D = 0; D <= frame.VariableCount - 1; D++)
+            for (int d = 0; d <= frame.VariableCount - 1; d++)
             {
                 int cnt = 0;
-                DoubleVariable v = frame.Variables[D]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable)frame.Variables[d];
                 foreach (double val in v.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3568,11 +3475,11 @@ namespace StatsDirect.Builtins
                         x[qty] = val;
                     }
                 }
-                l[D + 1] = cnt;
+                l[d + 1] = cnt;
             }
             int lx = qty;
 
-            double[] w1 = new double[lx + 1 ];
+            double[] w1 = new double[lx + 1];
             double t = 0;
             int ifault;
             int cols = frame.VariableCount;
@@ -3636,12 +3543,12 @@ namespace StatsDirect.Builtins
             int k = frame.VariableCount;
 
             // Steel-Dwass-Critchlow-Fligner method
-            double P = confidence;
-            if (P == 0)
+            double p = confidence;
+            if (p == 0)
             {
-                P = 0.95;
+                p = 0.95;
             }
-            double qval = PDF.quantsr(P, Convert.ToDouble(k), 1000000.0);
+            double qval = PDF.quantsr(p, Convert.ToDouble(k), 1000000.0);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("q", qval);
@@ -3655,11 +3562,11 @@ namespace StatsDirect.Builtins
                     int i0 = i - 1;
                     int j0 = j - 1;
                     int kn = frame.Variables[i0].Length + frame.Variables[j0].Length;
-                    x = new double[kn + 1 ];
-                    ri = new double[kn + 1 ];
+                    x = new double[kn + 1];
+                    ri = new double[kn + 1];
 
                     int ki = 0;
-                    foreach (double val in (frame.Variables[i0] as DoubleVariable).Data)
+                    foreach (double val in ((DoubleVariable)frame.Variables[i0]).Data)
                     {
                         if (val != Constant.MISSING)
                         {
@@ -3669,7 +3576,7 @@ namespace StatsDirect.Builtins
                     }
 
                     int kj = 0;
-                    foreach (double val in (frame.Variables[j0] as DoubleVariable).Data)
+                    foreach (double val in ((DoubleVariable)frame.Variables[j0]).Data)
                     {
                         if (val != Constant.MISSING)
                         {
@@ -3684,13 +3591,13 @@ namespace StatsDirect.Builtins
 
                     double sr1 = 0.0;
                     double sr2 = 0.0;
-                    for (int N = 1; N <= ki; N++)
+                    for (int n = 1; n <= ki; n++)
                     {
-                        sr1 = sr1 + ri[N];
+                        sr1 = sr1 + ri[n];
                     }
-                    for (int N = ki + 1; N <= ki + kj; N++)
+                    for (int n = ki + 1; n <= ki + kj; n++)
                     {
-                        sr2 = sr2 + ri[N];
+                        sr2 = sr2 + ri[n];
                     }
                     double njj;
                     double nii;
@@ -3708,16 +3615,16 @@ namespace StatsDirect.Builtins
                         njj = Convert.ToDouble(ki);
                     }
 
-                    double v = (nii * njj) / 24.0;
-                    v = v * (nii + njj + 1.0 - (ct / ((nii + njj) * (nii + njj - 1.0))));
-                    double wx = (wij - (nii * (nii + njj + 1)) / 2.0) / Math.Sqrt(v);
+                    double v = nii * njj / 24.0;
+                    v = v * (nii + njj + 1.0 - ct / ((nii + njj) * (nii + njj - 1.0)));
+                    double wx = (wij - nii * (nii + njj + 1) / 2.0) / Math.Sqrt(v);
 
                     ParameterBag variableParameters = new ParameterBag();
                     variableParameters.AddOutput("compare", frame.Variables[i0].Title + " vs. " + frame.Variables[j0].Title);
                     variableParameters.AddOutput("diff", Math.Abs(wx) > qval ? "significant" : "not significant");
                     variableParameters.AddOutput("val", "|" + host.RoundU(wx) + "| > " + host.RoundU(qval));
-                    P = 1.0 - PDF.probsr(Math.Abs(wx), Convert.ToDouble(k), 1000000.0);
-                    variableParameters.AddOutput("p", P);
+                    p = 1.0 - PDF.probsr(Math.Abs(wx), Convert.ToDouble(k), 1000000.0);
+                    variableParameters.AddOutput("p", p);
                     variableList.Add(variableParameters);
                 }
             }
@@ -3730,13 +3637,13 @@ namespace StatsDirect.Builtins
                 prelx = prelx + varbl.Length;
             }
             x = new double[prelx + 1];
-            int[] L = new int[frame.VariableCount + 1];
+            int[] l = new int[frame.VariableCount + 1];
 
             int qty = 0;
-            for (int D = 0; D < frame.VariableCount; D++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
                 int cnt = 0;
-                DoubleVariable varbl = frame.Variables[D]as DoubleVariable;
+                DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
                 foreach (double val in varbl.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3746,7 +3653,7 @@ namespace StatsDirect.Builtins
                         x[qty] = val;
                     }
                 }
-                L[D + 1] = cnt;
+                l[d + 1] = cnt;
             }
             int lx = qty;
 
@@ -3755,60 +3662,54 @@ namespace StatsDirect.Builtins
             double ha = 0;
             double t = 0;
             int ifault;
-            x_kwt(x, lx, L, frame.VariableCount, out h, ref ha, ref t, ref w1, out ifault);
+            XKwt(x, lx, l, frame.VariableCount, out h, ref ha, ref t, ref w1, out ifault);
             //  End copy from rpt_kruskal
 
             // Conover-Iman method
-            P = confidence;
-            if (P == 0)
-            {
-                P = 0.05;
-            }
-            if (P > 1.0 - P)
-            {
-                P = 1.0 - P;
-            }
-            P = P / 2.0;
+            p = confidence;
+            if (p == 0)
+                p = 0.05;
+            if (p > 1.0 - p)
+                p = 1.0 - p;
+            p = p / 2.0;
             double df = lx - frame.VariableCount;
-            double tval = PDF.tfromp(P, df);
+            double tval = PDF.tfromp(p, df);
             outputParameters.AddOutput("df", Formatting.XRound(df, 0));
             outputParameters.AddOutput("t", tval);
 
             // get rank sums for each group
-            ri = new double[k + 1 ];
+            ri = new double[k + 1];
             qty = 0;
-            for (int D = 1; D <= k; D++)
+            for (int d = 1; d <= k; d++)
             {
-                for (int N = 1; N <= L[D]; N++)
+                for (int n = 1; n <= l[d]; n++)
                 {
-                    qty = qty + 1;
-                    ri[D] = ri[D] + w1[qty];
+                    qty++;
+                    ri[d] = ri[d] + w1[qty];
                 }
             }
 
             // get inequalities (Fisher LSD on ranks) for each pair
-            double S2 = Convert.ToDouble(lx) * (Convert.ToDouble(lx) + 1) / 12;
-            double s2x = (S2 * (Convert.ToDouble(lx) - 1.0 - h)) / Convert.ToDouble(lx - frame.VariableCount);
+            double s2 = lx * (lx + 1) / 12.0;
+            double s2X = s2 * (Convert.ToDouble(lx) - 1.0 - h) / Convert.ToDouble(lx - frame.VariableCount);
 
             IList<ParameterBag> inequalityList = new List<ParameterBag>();
-            for (int i = 1; i <= frame.VariableCount - 1; i++)
+            for (int i = 1; i < frame.VariableCount; i++)
             {
                 for (int j = i + 1; j <= k; j++)
                 {
-                    double stata = Math.Abs(ri[i] / L[i] - ri[j] / L[j]);
-                    double statq = Math.Sqrt(s2x) * Math.Sqrt((1.0 / L[i]) + (1.0 / L[j]));
+                    double stata = Math.Abs(ri[i] / l[i] - ri[j] / l[j]);
+                    double statq = Math.Sqrt(s2X) * Math.Sqrt(1.0 / l[i] + 1.0 / l[j]);
                     double statb = tval * statq;
 
                     ParameterBag inequalityParameters = new ParameterBag();
                     inequalityParameters.AddOutput("compare", frame.Variables[i - 1].Title + " and " + frame.Variables[j - 1].Title);
                     inequalityParameters.AddOutput("diff", stata > statb ? "significant" : "not significant");
                     inequalityParameters.AddOutput("val", host.RoundU(stata) + " > " + host.RoundU(statb));
-                    P = PDF.tvalp(Math.Abs(stata / statq), df);
-                    if (P > 1.0 - P)
-                    {
-                        P = 1.0 - P;
-                    }
-                    inequalityParameters.AddOutput("p", 2.0 * P);
+                    p = PDF.tvalp(Math.Abs(stata / statq), df);
+                    if (p > 1.0 - p)
+                        p = 1.0 - p;
+                    inequalityParameters.AddOutput("p", 2.0 * p);
                     inequalityList.Add(inequalityParameters);
                 }
             }
@@ -3820,29 +3721,28 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptSqRank(ITemplateHost host, ParameterBag parameters)
         {
             double ru = 0;
-            double P;
-            double sj2n;
+            double p;
+            double sj2N;
             double r4;
             double sbar;
             double t;
-            int N;
+            int n;
             int cnt;
-            int D;
-
+            int d;
 
             DataFrame frame = parameters["data"].AsDataFrame;
 
             double confidence = parameters["confidence"].AsDouble;
 
             double[] mean = new double[frame.VariableCount];
-            int[] L = new int[frame.VariableCount];
+            int[] l = new int[frame.VariableCount];
             double[] sj = new double[frame.VariableCount];
             int nx = 0;
-            for (D = 0; D < frame.VariableCount; D++)
+            for (d = 0; d < frame.VariableCount; d++)
             {
                 cnt = 0;
                 double sum = 0;
-                DoubleVariable varbl = frame.Variables[D]as DoubleVariable;
+                DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
                 foreach (double val in varbl.Data)
                 {
                     if (val != Constant.MISSING)
@@ -3852,22 +3752,22 @@ namespace StatsDirect.Builtins
                         sum = sum + val;
                     }
                 }
-                L[D] = cnt;
-                mean[D] = sum / Convert.ToDouble(cnt);
+                l[d] = cnt;
+                mean[d] = sum / Convert.ToDouble(cnt);
             }
-            double[] x = new double[nx + 1 ];
-            double[] r = new double[nx + 1 ];
+            double[] x = new double[nx + 1];
+            double[] r = new double[nx + 1];
 
             int qty = 0;
-            for (D = 0; D <= frame.VariableCount - 1; D++)
+            for (d = 0; d <= frame.VariableCount - 1; d++)
             {
-                DoubleVariable varbl = frame.Variables[D]as DoubleVariable;
+                DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
                 foreach (double val in varbl.Data)
                 {
                     if (val != Constant.MISSING)
                     {
                         qty = qty + 1;
-                        x[qty] = Math.Abs(val - mean[D]);
+                        x[qty] = Math.Abs(val - mean[d]);
                     }
                 }
             }
@@ -3880,46 +3780,42 @@ namespace StatsDirect.Builtins
                 cnt = 0;
                 sbar = 0;
                 r4 = 0;
-                sj2n = 0;
-                for (D = 0; D < frame.VariableCount; D++)
+                sj2N = 0;
+                for (d = 0; d < frame.VariableCount; d++)
                 {
-                    for (N = 1; N <= L[D]; N++)
+                    for (n = 1; n <= l[d]; n++)
                     {
                         cnt = cnt + 1;
-                        sj[D] = sj[D] + r[cnt] * r[cnt];
+                        sj[d] = sj[d] + r[cnt] * r[cnt];
                         r4 = r4 + Math.Pow(r[cnt], 4.0);
                     }
-                    sbar = sbar + sj[D];
-                    sj2n = sj2n + (sj[D] * sj[D]) / Convert.ToDouble(L[D]);
+                    sbar = sbar + sj[d];
+                    sj2N = sj2N + sj[d] * sj[d] / l[d];
                 }
                 sbar = sbar / nx;
-                double d2 = (1.0 / Convert.ToDouble(nx - 1)) * (r4 - Convert.ToDouble(nx) * sbar * sbar);
-                double t2 = (1.0 / d2) * (sj2n - Convert.ToDouble(nx) * sbar * sbar);
+                double d2 = 1.0 / (nx - 1) * (r4 - nx * sbar * sbar);
+                double t2 = 1.0 / d2 * (sj2N - nx * sbar * sbar);
                 double x2 = t2;
                 int df = frame.VariableCount - 1;
 
                 outputParameters.AddOutput("x2", x2);
                 outputParameters.AddOutput("df", df);
-                P = PDF.chivalp(x2, Convert.ToDouble(df));
-                outputParameters.AddOutput("p", P);
+                p = PDF.chivalp(x2, Convert.ToDouble(df));
+                outputParameters.AddOutput("p", p);
 
-                if (P < confidence)
+                if (p < confidence)
                 {
                     IList<ParameterBag> pairwiseList = new List<ParameterBag>();
                     ParameterBag pairwiseParameters = new ParameterBag();
                     pairwiseList.Add(pairwiseParameters);
-                    P = confidence;
-                    if (P == 0)
-                    {
-                        P = 0.05;
-                    }
-                    if (P > 1 - P)
-                    {
-                        P = 1 - P;
-                    }
-                    P = P / 2;
+                    p = confidence;
+                    if (p == 0)
+                        p = 0.05;
+                    if (p > 1 - p)
+                        p = 1 - p;
+                    p = p / 2;
                     df = nx - frame.VariableCount;
-                    double tval = PDF.tfromp(P, Convert.ToDouble(df));
+                    double tval = PDF.tfromp(p, Convert.ToDouble(df));
                     pairwiseParameters.AddOutput("df", df);
                     pairwiseParameters.AddOutput("t", tval);
                     IList<ParameterBag> pairList = new List<ParameterBag>();
@@ -3930,8 +3826,8 @@ namespace StatsDirect.Builtins
                         int j;
                         for (j = i + 1; j <= frame.VariableCount - 1; j++)
                         {
-                            double stata = Math.Abs(sj[i] / Convert.ToDouble(L[i]) - sj[j] / Convert.ToDouble(L[j]));
-                            double statq = Math.Sqrt(d2 * ((Convert.ToDouble(nx) - 1.0 - t2) / Convert.ToDouble(nx - frame.VariableCount))) * Math.Sqrt(1.0 / Convert.ToDouble(L[i]) + 1.0 / Convert.ToDouble(L[j]));
+                            double stata = Math.Abs(sj[i] / Convert.ToDouble(l[i]) - sj[j] / Convert.ToDouble(l[j]));
+                            double statq = Math.Sqrt(d2 * ((Convert.ToDouble(nx) - 1.0 - t2) / Convert.ToDouble(nx - frame.VariableCount))) * Math.Sqrt(1.0 / Convert.ToDouble(l[i]) + 1.0 / Convert.ToDouble(l[j]));
                             double statb = tval * statq;
                             ParameterBag pairParameters = new ParameterBag();
                             pairList.Add(pairParameters);
@@ -3941,12 +3837,12 @@ namespace StatsDirect.Builtins
                                                          ? "VARIANCES SEEM DIFFERENT"
                                                          : "variances not different");
                             pairParameters.AddOutput("val", host.RoundU(stata) + ", " + host.RoundU(statb));
-                            P = PDF.tvalp(Math.Abs(stata / statq), Convert.ToDouble(df));
-                            if (P > 1.0 - P)
+                            p = PDF.tvalp(Math.Abs(stata / statq), Convert.ToDouble(df));
+                            if (p > 1.0 - p)
                             {
-                                P = 1.0 - P;
+                                p = 1.0 - p;
                             }
-                            pairParameters.AddOutput("p_pair", 2.0 * P);
+                            pairParameters.AddOutput("p_pair", 2.0 * p);
                         }
                     }
                     outputParameters.AddOutput("*pairwise", pairwiseList);
@@ -3961,34 +3857,30 @@ namespace StatsDirect.Builtins
                 cnt = 0;
                 sbar = 0;
                 r4 = 0;
-                sj2n = 0;
-                for (D = 0; D <= frame.VariableCount - 1; D++)
+                sj2N = 0;
+                for (d = 0; d <= frame.VariableCount - 1; d++)
                 {
-                    for (N = 1; N <= L[D]; N++)
+                    for (n = 1; n <= l[d]; n++)
                     {
                         cnt = cnt + 1;
-                        sj[D] = sj[D] + r[cnt] * r[cnt];
+                        sj[d] = sj[d] + r[cnt] * r[cnt];
                         r4 = r4 + Math.Pow(r[cnt], 4.0);
                     }
-                    sbar = sbar + sj[D];
-                    if (D == 0)
-                    {
-                        ru = sj[D];
-                    }
-                    sj2n = sj2n + (sj[D] * sj[D]) / Convert.ToDouble(L[D]);
+                    sbar = sbar + sj[d];
+                    if (d == 0)
+                        ru = sj[d];
+                    sj2N += sj[d] * sj[d] / l[d];
                 }
-                sbar = sbar / Convert.ToDouble(nx);
-                int nm = L[0] * L[1];
-                double t1 = (ru - Convert.ToDouble(L[0]) * sbar) / Math.Sqrt((Convert.ToDouble(nm) / Convert.ToDouble(nx * (nx - 1))) * r4 - nm / (nx - 1.0) * sbar * sbar);
+                sbar = sbar / nx;
+                int nm = l[0] * l[1];
+                double t1 = (ru - Convert.ToDouble(l[0]) * sbar) / Math.Sqrt(Convert.ToDouble(nm) / Convert.ToDouble(nx * (nx - 1)) * r4 - nm / (nx - 1.0) * sbar * sbar);
                 double z = t1;
                 outputParameters.AddOutput("z", z);
-                P = 1.0 - PDF.alnorm(Math.Abs(z));
-                if (P > 1 - P)
-                {
-                    P = 1 - P;
-                }
-                outputParameters.AddOutput("p2", P * 2);
-                outputParameters.AddOutput("p1", P);
+                p = 1.0 - PDF.alnorm(Math.Abs(z));
+                if (p > 1 - p)
+                    p = 1 - p;
+                outputParameters.AddOutput("p2", p * 2);
+                outputParameters.AddOutput("p1", p);
             }
             return outputParameters;
         }
@@ -3998,21 +3890,21 @@ namespace StatsDirect.Builtins
         {
             double sumsqdev = 0;
             double bgini2 = 0; double bgini3 = 0; double bcal = 0; double bcau = 0;
-            double thetase = 0; double cit; double P0;
+            double thetase = 0; double cit; double p0;
             double bias = 0;
 
             DataFrame frame = parameters["data"].AsDataFrame;
-            double GAMMA = parameters["gamma"].AsDouble;
+            double gamma = parameters["gamma"].AsDouble;
             int boots = parameters["boots"].AsInt32;
-            int boots_divisor = Math.Max(1, boots / 1000);
-            if (GAMMA <= 0)
+            int bootsDivisor = Math.Max(1, boots / 1000);
+            if (gamma <= 0)
                 throw new TemplateOperationCancelledException();
 
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out cit, gamma, out p0);
 
             MersenneTwister rng = new MersenneTwister(); //  Seeds itself
 
-            double[] r = new double[frame.MaxRows + 1 ];
+            double[] r = new double[frame.MaxRows + 1];
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> outputList = new List<ParameterBag>();
@@ -4020,7 +3912,7 @@ namespace StatsDirect.Builtins
             int rx = 0;
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
-                DoubleVariable v = frame.Variables[k]as DoubleVariable;
+                DoubleVariable v = (DoubleVariable)frame.Variables[k];
                 host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
                 rx = 0;
                 double vtot = 0.0;
@@ -4050,12 +3942,12 @@ namespace StatsDirect.Builtins
                 double drxm1 = Convert.ToDouble(rx - 1);
                 double cv = Math.Sqrt(sumsqdev / drxm1) / vmean;
 
-                double[] rb = new double[rx + 1 ];
-                double[] ginib = new double[boots + 1 ];
+                double[] rb = new double[rx + 1];
+                double[] ginib = new double[boots + 1];
                 // get resample boots times
                 double theta = 0.0;
                 int ctr = 0;
-                bool OK = true;
+                bool ok = true;
                 int pick;
                 for (int i = 1; i <= boots; i++)
                 {
@@ -4079,36 +3971,36 @@ namespace StatsDirect.Builtins
                     {
                         ctr = ctr + 1;
                     }
-                    if (i % boots_divisor == 0)
+                    if (i % bootsDivisor == 0)
                     {
                         if (host.UpdateProgress(i / (double)boots))
                         {
-                            OK = false;
+                            ok = false;
                             break;
                         }
                     }
                 }
                 double bl;
                 double bu;
-                if (OK)
+                if (ok)
                 {
                     // get bias and bootstrap variance
                     theta = theta / Convert.ToDouble(boots);
                     double thetasq = 0.0;
                     for (int i = 1; i <= boots; i++)
                     {
-                        thetasq = thetasq + Math.Pow((ginib[i] - theta), 2.0);
+                        thetasq = thetasq + Math.Pow(ginib[i] - theta, 2.0);
                     }
-                    thetase = Base.SafeSqrt((1.0 / Convert.ToDouble(boots - 1)) * thetasq);
+                    thetase = Base.SafeSqrt(1.0 / (boots - 1) * thetasq);
                     bias = gini - theta;
                     // sort bootstraps
                     Array.Sort(ginib, 1, boots);
-                    double Q = 1.0 - GAMMA > GAMMA ? 1.0 - GAMMA : GAMMA;
-                    Q = (1.0 - Q) / 2.0;
+                    double q = 1.0 - gamma > gamma ? 1.0 - gamma : gamma;
+                    q = (1.0 - q) / 2.0;
                     // percentile
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * Q) + 1;
+                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * q) + 1;
                     bl = ginib[pick];
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - Q)) + 1;
+                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - q)) + 1;
                     bu = ginib[pick];
                     // BC
                     int ifault;
@@ -4141,17 +4033,17 @@ namespace StatsDirect.Builtins
                                 sumy = sumy + Convert.ToDouble(2 * j - rx - 1) * r[j];
                             }
                         }
-                        bgini2 = bgini2 + Math.Pow((sumy / (Convert.ToDouble(rx - 1) * sumx) - bgini), 2.0);
-                        bgini3 = bgini3 + Math.Pow((sumy / (Convert.ToDouble(rx - 1) * sumx) - bgini), 3.0);
+                        bgini2 = bgini2 + Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 2.0);
+                        bgini3 = bgini3 + Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 3.0);
                     }
                     double accel = bgini3 / (6.0 * Math.Pow(bgini2, 1.5));
                     double z0 = ctr / (double)boots;
                     z0 = PDF.gauinv(z0, out ifault);
-                    double P1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
-                    double P2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * P1) + 1;
+                    double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
+                    double p2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
+                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p1) + 1;
                     bcal = ginib[pick];
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * P2) + 1;
+                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p2) + 1;
                     bcau = ginib[pick];
                 }
                 else
@@ -4179,7 +4071,7 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("se", thetase);
 
                 varParameters.AddOutput("gini", gini);
-                varParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 2));
+                varParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
                 varParameters.AddOutput("from", bl);
                 varParameters.AddOutput("to", bu);
                 varParameters.AddOutput("BCafrom", bcal);

@@ -134,7 +134,7 @@ namespace StatsDirect.Numerics
                 ValidData = 0;
             else
             {
-                double nsumv = (nvSum != Constant.MISSING) ? nvSum : nnx / sumv;
+                double nsumv = nvSum != Constant.MISSING ? nvSum : nnx / sumv;
                 for (int i = start; i < ValidData + start; i++)
                 {
                     SumOfWeights += v[i];
@@ -235,9 +235,9 @@ namespace StatsDirect.Numerics
                     for (int i = 1; i <= ValidData; i++)
                     {
                         double xd = xo[i] - Mean;
-                        m2 += (Math.Pow(xd, 2.0)) * w[i];
-                        m3 += (Math.Pow(xd, 3.0)) * w[i];
-                        m4 += (Math.Pow(xd, 4.0)) * w[i];
+                        m2 += Math.Pow(xd, 2.0) * w[i];
+                        m3 += Math.Pow(xd, 3.0) * w[i];
+                        m4 += Math.Pow(xd, 4.0) * w[i];
                         if (m4 > 1.0E+300)
                         {
                             toobig = true;
@@ -255,8 +255,8 @@ namespace StatsDirect.Numerics
                         m3 = m3 / nnx;
                         m4 = m4 / nnx;
                         // Numerically consistent with R but not Stata
-                        Skewness = m3 * Math.Pow(m2, (-1.5));
-                        Kurtosis = m4 * Math.Pow(m2, (-2.0));
+                        Skewness = m3 * Math.Pow(m2, -1.5);
+                        Kurtosis = m4 * Math.Pow(m2, -2.0);
                     }
                 }
                 else
@@ -339,7 +339,7 @@ namespace StatsDirect.Numerics
                 index = Math.Floor(centile * (n + 1));
                 double h = centile * (n + 1) - index;
                 int bottom = index < 1 ? 1 : Convert.ToInt32(index);
-                int top = (index + 1 > n) ? n : Convert.ToInt32(index) + 1;
+                int top = index + 1 > n ? n : Convert.ToInt32(index) + 1;
                 return (1.0 - h) * x[bottom].Data + h * x[top].Data;
             }
 

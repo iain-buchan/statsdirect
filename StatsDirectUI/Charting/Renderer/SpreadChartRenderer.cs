@@ -26,7 +26,7 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
+            SpreadOptions sOptions = (SpreadOptions)definition.ChartOptions;
             if (sOptions.Orientation == ChartOrientation.Horizontal)
             {
                 return PlotSpreadHorizontal();
@@ -46,7 +46,7 @@ namespace StatsDirect.Charting.Renderer
 
         private ParameterBag PlotSpreadHorizontal()
         {
-            SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
+            SpreadOptions sOptions = (SpreadOptions)definition.ChartOptions;
             List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
             ScaleHeight(seriesToUse.Count);
@@ -66,7 +66,7 @@ namespace StatsDirect.Charting.Renderer
             //  Work out what markers to use
             MarkerType mt = ChartPreferences.MarkerTypes[10]; // Default
             double diam = mt.MarkerSize;
-            if ((sOptions.MarkerTypes != null) && sOptions.MarkerTypes.Count > 0)
+            if (sOptions.MarkerTypes != null && sOptions.MarkerTypes.Count > 0)
             {
                 diam = sOptions.MarkerTypes[0].MarkerSize;
                 mt = sOptions.MarkerTypes[0];
@@ -101,7 +101,7 @@ namespace StatsDirect.Charting.Renderer
                 else
                     scl = 1.0;
                 // #1316: Plot labels are plotted top-down, data was plotted bottom-up.  Reverse the data so that the first series is at the top to match the labels.
-                double yctr = ToCanvasY((seriesToUse.Count - c) - 0.5);
+                double yctr = ToCanvasY(seriesToUse.Count - c - 0.5);
 
                 r = 0;
                 while (r < s.Points)
@@ -115,11 +115,11 @@ namespace StatsDirect.Charting.Renderer
                     }
                     // Plot r1-r markers
                     int count = r1 - r;
-                    double y1 = yctr - scl * ((count * diam) + diam);
+                    double y1 = yctr - scl * (count * diam + diam);
                     double lasty1 = 0;
                     for (int i = 1; i <= count; i++)
                     {
-                        y1 += (inc * scl);
+                        y1 += inc * scl;
                         if (Math.Abs(lasty1 - y1) > 2)
                         {
                             DrawMarkerInCanvasCoordinates(ToCanvasX(v1), y1, mt.MarkerSize, mt);
@@ -135,7 +135,7 @@ namespace StatsDirect.Charting.Renderer
 
         private ParameterBag PlotSpreadVertical()
         {
-            SpreadOptions sOptions = ((SpreadOptions)(definition.ChartOptions));
+            SpreadOptions sOptions = (SpreadOptions)definition.ChartOptions;
             List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
             ScaleWidth(seriesToUse.Count);
@@ -155,7 +155,7 @@ namespace StatsDirect.Charting.Renderer
             //  Work out what markers to use
             MarkerType mt = ChartPreferences.MarkerTypes[10]; //  Default
             double diam = mt.MarkerSize;
-            if ((sOptions.MarkerTypes != null) && sOptions.MarkerTypes.Count > 0)
+            if (sOptions.MarkerTypes != null && sOptions.MarkerTypes.Count > 0)
             {
                 diam = sOptions.MarkerTypes[0].MarkerSize;
                 mt = sOptions.MarkerTypes[0];
@@ -203,11 +203,11 @@ namespace StatsDirect.Charting.Renderer
                     }
                     // Plot r1 - r markers
                     int count = r1 - r;
-                    double x1 = xctr - scl * ((count * diam) + diam);
+                    double x1 = xctr - scl * (count * diam + diam);
                     double lastx1 = 0;
                     for (int i = 1; i <= count; i++)
                     {
-                        x1 += (inc * scl);
+                        x1 += inc * scl;
                         if (Math.Abs(lastx1 - x1) > 2)
                         {
                             DrawMarkerInCanvasCoordinates(x1, ToCanvasY(v1), mt.MarkerSize, mt);

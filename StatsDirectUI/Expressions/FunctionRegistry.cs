@@ -9,10 +9,7 @@ namespace StatsDirect.Expressions
 
         private static FunctionRegistry soleInstance;
 
-        public static FunctionRegistry SoleInstance
-        {
-            get { return soleInstance ?? (soleInstance = new FunctionRegistry()); }
-        }
+        public static FunctionRegistry SoleInstance => soleInstance ?? (soleInstance = new FunctionRegistry());
 
         private FunctionRegistry()
         {

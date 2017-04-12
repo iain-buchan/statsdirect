@@ -54,9 +54,9 @@ namespace StatsDirect.UI
 
             // Pane
             bool bothNull = null == Pane && null == rhs.Pane;
-            if ((!bothNull) && null == Pane || null == rhs.Pane)
+            if (!bothNull && null == Pane || null == rhs.Pane)
                 return false;
-            if ((!bothNull) && !Pane.Equals(rhs.Pane))
+            if (!bothNull && !Pane.Equals(rhs.Pane))
                 return false;
 
             // WritePosition
@@ -65,7 +65,7 @@ namespace StatsDirect.UI
 
         public override int GetHashCode()
         {
-            return Pane.GetHashCode() ^ ((int)WritePosition);
+            return Pane.GetHashCode() ^ (int)WritePosition;
         }
 
         public object CopyAndStripForRedo(bool shouldKeepData)

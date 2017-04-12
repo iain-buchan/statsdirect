@@ -31,7 +31,7 @@ namespace StatsDirect.Data
             }
             set
             {
-                Origin = ((IOrigin)(value));
+                Origin = (IOrigin)value;
             }
         }
 

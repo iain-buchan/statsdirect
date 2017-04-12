@@ -32,7 +32,7 @@ namespace StatsDirect.UI
 
         protected StatsDirectForm()
         {
-            id = "StatsDirectForm:" + (nextId++).ToString();
+            id = "StatsDirectForm:" + nextId++.ToString();
             // Add this in the StatsDirectForm constructor so that it's earlier in the call chain than the subclass' close, and can therefore set variables before the subclass does anything.
             Closing += StatsDirectForm_Closing;
         }
@@ -54,15 +54,9 @@ namespace StatsDirect.UI
         /// <returns>true if the content was saved, false if not</returns>
         internal /* abstract */ virtual bool SaveAsContents() { throw new NotSupportedException(); }
 
-        internal bool Dirty
-        {
-            get { return dirty; }
-        }
+        internal bool Dirty => dirty;
 
-        internal bool SafeToClose
-        {
-            get { return dirtyButSafeToClose || !dirty; }
-        }
+        internal bool SafeToClose => dirtyButSafeToClose || !dirty;
 
         /// <summary>
         /// Return true if the form is allowed to close, false if it is not
@@ -159,10 +153,7 @@ namespace StatsDirect.UI
 
         internal /* abstract */ virtual void Print() { throw new NotSupportedException(); }
 
-        internal WindowInformation WindowInformation
-        {
-            get { return (WindowInformation)Tag; }
-        }
+        internal WindowInformation WindowInformation => (WindowInformation)Tag;
 
         /// <summary>
         /// Ensure anything related to batch mode is removed from this window.  Subclasses may override as necessary but should ensure they call base.ClearBatchMode(); the default is to do nothing.

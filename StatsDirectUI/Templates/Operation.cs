@@ -68,10 +68,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public IList<CustomValidator> CustomValidators
-        {
-            get { return customValidators; }
-        }
+        public IList<CustomValidator> CustomValidators => customValidators;
 
         [XmlArray(ElementName = "preconditions"),
         XmlArrayItem(ElementName = "precondition", Type = typeof(Precondition))]
@@ -92,10 +89,7 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public IList<Precondition> Preconditions
-        {
-            get { return preconditions; }
-        }
+        public IList<Precondition> Preconditions => preconditions;
 
         [XmlArray(ElementName = "suggested-operations"),
         XmlArrayItem(ElementName="suggested-operation", Type=typeof(SuggestedOperation))]
@@ -136,19 +130,13 @@ namespace StatsDirect.Templates
         /// The operation names where at least one must be performed before this operation becomes useful.
         /// </summary>
         [XmlIgnore]
-        public IList<string> PrerequisiteOperationNames
-        {
-            get { return prerequisiteOperationNames; }
-        }
+        public IList<string> PrerequisiteOperationNames => prerequisiteOperationNames;
 
         /// <summary>
         /// The suggested operation names that might be useful to perform after this operation.
         /// </summary>
         [XmlIgnore]
-        public IList<SuggestedOperation> SuggestedOperations
-        {
-            get { return suggestedOperations; }
-        }
+        public IList<SuggestedOperation> SuggestedOperations => suggestedOperations;
 
         // Remember to change TestStep::TrueStepsForXml and TestStep::FalseStepsForXml if you change this list
         [XmlArray(ElementName = "steps"),
@@ -180,10 +168,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The steps that will be executed after all the parameters have been input, in the order in which they will be executed.
         /// </summary>
-        public IList<Step> Steps
-        {
-            get { return steps; }
-        }
+        public IList<Step> Steps => steps;
 
         private static string[] ListToStringArray(IList<string> names)
         {
@@ -226,10 +211,7 @@ namespace StatsDirect.Templates
             }
         }
 
-        public bool HasPrerequisites
-        {
-            get { return null != prerequisiteOperationNames && prerequisiteOperationNames.Count > 0; }
-        }
+        public bool HasPrerequisites => null != prerequisiteOperationNames && prerequisiteOperationNames.Count > 0;
 
         /// <summary>
         /// Returns true if there is at least one step of the requested type and nothing between step and that typed step will ever ask for input.

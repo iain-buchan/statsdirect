@@ -38,10 +38,7 @@ namespace StatsDirect.Data
         ///  <remarks></remarks>
         public DateTime[] Data { get; set; }
 
-        public override int Length
-        {
-            get { return (Data == null) ? 0 : Data.Length; }
-        }
+        public override int Length => Data == null ? 0 : Data.Length;
 
         public override void EnsureLength(int minimumLength)
         {
@@ -90,7 +87,7 @@ namespace StatsDirect.Data
 
         public override void TruncateDataToLength(int maximumLength)
         {
-            if ((Data.Length > maximumLength))
+            if (Data.Length > maximumLength)
             {
                 DateTime[] temp = new DateTime[maximumLength];
                 Array.Copy(Data, temp, Math.Min(Data.Length, temp.Length));
@@ -134,13 +131,7 @@ namespace StatsDirect.Data
             return Data[i];
         }
 
-        protected override bool HasData
-        {
-            get
-            {
-                return Data != null;
-            }
-        }
+        protected override bool HasData => Data != null;
 
         public override void Accept(IVariableVisitor visitor)
         {

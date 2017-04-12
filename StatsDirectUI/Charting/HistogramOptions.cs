@@ -66,28 +66,13 @@ namespace StatsDirect.Charting
         [field: NonSerialized]
         public event EventHandler ScaleChanged;
 
-        public override bool UsesShowLegend
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool UsesShowLegend => false;
 
-        public override bool UsesXAxisOptions
-        {
-            get { return false; }
-        }
+        public override bool UsesXAxisOptions => false;
 
-        public override bool ShowHistogramOptions
-        {
-            get { return true; }
-        }
+        public override bool ShowHistogramOptions => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get { return HistoSeriesOptions.Count > 1; }
-        }
+        public override bool ShowLegendIsRelevant => HistoSeriesOptions.Count > 1;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

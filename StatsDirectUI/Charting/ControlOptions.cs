@@ -33,93 +33,27 @@ namespace StatsDirect.Charting
             UpperWarningLimit = Constant.MISSING; 
         } 
         
-        public override bool ShowControlOptions 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAutoscale 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesBoxAxes 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesChartTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesXAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesYAxisTitle 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAxisLabelFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesAxisTitleFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override bool UsesLegendFontDescriptor 
-        { 
-            get 
-            { 
-                return true; 
-            } 
-        } 
-        
-        public override string LegendFontLabel 
-        { 
-            get 
-            { 
-                return "Control Label"; 
-            } 
-        } 
-        
-        public override bool ShowLegendIsRelevant 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        }
+        public override bool ShowControlOptions => true;
+
+        public override bool UsesAutoscale => true;
+
+        public override bool UsesBoxAxes => true;
+
+        public override bool UsesChartTitle => true;
+
+        public override bool UsesXAxisTitle => true;
+
+        public override bool UsesYAxisTitle => true;
+
+        public override bool UsesAxisLabelFontDescriptor => true;
+
+        public override bool UsesAxisTitleFontDescriptor => true;
+
+        public override bool UsesLegendFontDescriptor => true;
+
+        public override string LegendFontLabel => "Control Label";
+
+        public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

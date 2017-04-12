@@ -40,7 +40,7 @@ namespace StatsDirect.Charting
                 int shiftedScore;
                 ILinearAxisScale shiftedAxisScale = ShiftMinMax(qmin, qmax, unshiftedAxisScale, out shiftedScore);
                 NeatnessComparison neater = CompareNeatness(bestScaleSoFar, shiftedAxisScale);
-                if (neater == NeatnessComparison.Second || (neater == NeatnessComparison.Equal && shiftedScore < bestScoreSoFar))
+                if (neater == NeatnessComparison.Second || neater == NeatnessComparison.Equal && shiftedScore < bestScoreSoFar)
                 {
                     bestScoreSoFar = shiftedScore;
                     bestScaleSoFar = shiftedAxisScale;
@@ -105,8 +105,8 @@ namespace StatsDirect.Charting
             if (x == 0.0)
                 return 0;
 
-            int ipow = ((int)(Math.Floor(Math.Log10(Math.Abs(x))))) + 1;
-            double sc = x / (Math.Pow(10.0, ipow));
+            int ipow = (int)Math.Floor(Math.Log10(Math.Abs(x))) + 1;
+            double sc = x / Math.Pow(10.0, ipow);
             if (sc == 1.0)
                 return 1;
             else
@@ -209,8 +209,8 @@ namespace StatsDirect.Charting
         /// </summary>
         private static int ScoreIntervalLook(double interval)
         {
-            int ipow = ((int)(Math.Floor(Math.Log10(Math.Abs(interval))))) + 1;
-            double scaled = interval / (Math.Pow(10.0, ipow));
+            int ipow = (int)Math.Floor(Math.Log10(Math.Abs(interval))) + 1;
+            double scaled = interval / Math.Pow(10.0, ipow);
             // PJC: Many of the inputs have tiny calculation errors; ignore these in the scoring
             scaled = Math.Round(scaled, 10);
             if (scaled == 0.0 || scaled == 1.0)
@@ -272,7 +272,7 @@ namespace StatsDirect.Charting
                 if (double.IsInfinity(ar))
                     return new LinearAxisScale(0, 0, 0, 0, 1, 1);
 
-                while (!((ar - zstep * 0.05) <= zmin))
+                while (!(ar - zstep * 0.05 <= zmin))
                     ar -= zstep;
                 znmin = ar;
                 znmax = znmin + zstep * (divisions + 0.04);
@@ -299,10 +299,10 @@ namespace StatsDirect.Charting
                 if (znm + zstep * (divisions + 0.04) < zmax)
                     break;
                 znmin = znm;
-                znm = znmin * Math.Pow(10.0, (maxB - i));
+                znm = znmin * Math.Pow(10.0, maxB - i);
                 if (znm < 0.0)
                     znm = znm - 1.0;
-                znm = Math.Floor(znm) / Math.Pow(10.0, (maxB - i));
+                znm = Math.Floor(znm) / Math.Pow(10.0, maxB - i);
             }
             return new LinearAxisScale(minimumDataValue, maximumDataValue, znmin, znmin + zstep * divisions, divisions, 1);
         }

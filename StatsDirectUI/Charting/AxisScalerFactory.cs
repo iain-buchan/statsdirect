@@ -20,7 +20,7 @@ namespace StatsDirect.Charting
                     return new LogNaturalAxisScaler();
                 case ScaleType.NotSet:
                 default:
-                    throw new ArgumentOutOfRangeException("scaleType", scaleType, "AxisScalerFactory doesn't know how to create an AxisScaler for this scale type");
+                    throw new ArgumentOutOfRangeException(nameof(scaleType), scaleType, "AxisScalerFactory doesn't know how to create an AxisScaler for this scale type");
             }
         }
     }

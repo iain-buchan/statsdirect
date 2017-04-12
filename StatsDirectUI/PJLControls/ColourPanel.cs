@@ -106,13 +106,7 @@ namespace StatsDirect.PJLControls
         /// <summary>
         /// Gets the selected color.
         /// </summary>
-        public Color Color
-        {
-            get
-            {
-                return color;
-            }
-        }
+        public Color Color => color;
     }
 
     /// <summary>
@@ -229,10 +223,7 @@ namespace StatsDirect.PJLControls
             public Rectangle ColorPosition;
             public readonly bool IsCustomWell;
 
-            public Color Color
-            {
-                get { return color; }
-            }
+            public Color Color => color;
 
             public void ForceColor(Color c)
             {
@@ -414,7 +405,7 @@ namespace StatsDirect.PJLControls
                         foreach (KnownColor k in knownColors)
                         {
                             Color c = Color.FromKnownColor(k);
-                            if (!c.IsSystemColor && (c.A > 0))
+                            if (!c.IsSystemColor && c.A > 0)
                             {
                                 nColors++;
                             }
@@ -424,7 +415,7 @@ namespace StatsDirect.PJLControls
                         foreach (KnownColor k in knownColors)
                         {
                             Color c = Color.FromKnownColor(k);
-                            if (c.IsSystemColor && (c.A > 0))
+                            if (c.IsSystemColor && c.A > 0)
                             {
                                 nColors++;
                             }
@@ -444,7 +435,7 @@ namespace StatsDirect.PJLControls
                         {
                             Color c = Color.FromKnownColor(k);
 
-                            if (!c.IsSystemColor && (c.A > 0))
+                            if (!c.IsSystemColor && c.A > 0)
                             {
                                 colorWells[index] = new ColorWellInfo(c, index, false);
                                 index++;
@@ -456,7 +447,7 @@ namespace StatsDirect.PJLControls
                         {
                             Color c = Color.FromKnownColor(k);
 
-                            if (c.IsSystemColor && (c.A > 0))
+                            if (c.IsSystemColor && c.A > 0)
                             {
                                 colorWells[index] = new ColorWellInfo(c, index, false);
                                 index++;
@@ -789,7 +780,7 @@ namespace StatsDirect.PJLControls
 
             // Invalidation causes an OnMouseMove event - filter it out so it doesn't
             // interfere with keyboard control
-            if (ClientRectangle.Contains(mousePosition) && (lastMousePosition != mousePosition))
+            if (ClientRectangle.Contains(mousePosition) && lastMousePosition != mousePosition)
             {
                 lastMousePosition = mousePosition;
 
@@ -878,7 +869,7 @@ namespace StatsDirect.PJLControls
             int numColors = colorWells.Length;
 
             int r = index / columns;
-            int c = index - (r * columns);
+            int c = index - r * columns;
 
             int nextIndex;
 
@@ -922,7 +913,7 @@ namespace StatsDirect.PJLControls
             int numColors = colorWells.Length;
 
             int r = index / columns;
-            int c = index - (r * columns);
+            int c = index - r * columns;
 
             int nextIndex;
 
@@ -973,7 +964,7 @@ namespace StatsDirect.PJLControls
             if (!Enabled)
                 return;
 
-            int index = IndexFromColorWell((null != currentColor) ? (currentColor) : (pickColor));
+            int index = IndexFromColorWell(null != currentColor ? currentColor : pickColor);
 
             switch (e.KeyCode)
             {
@@ -1003,7 +994,7 @@ namespace StatsDirect.PJLControls
                     }
                     break;
                 case Keys.Right:
-                    if (index < 0 || index > (colorWells.Length - 1))
+                    if (index < 0 || index > colorWells.Length - 1)
                     {
                         // start at the first color
                         ChangeColor(colorWells[0]);
@@ -1068,7 +1059,7 @@ namespace StatsDirect.PJLControls
                 int w = preferredWidth - borderSize.Width * 2;
                 int remw = w % scaledColorWellSize.Width;
                 columns = w / scaledColorWellSize.Width;
-                rows = colorWells.Length / columns + ((colorWells.Length % columns != 0) ? 1 : 0);
+                rows = colorWells.Length / columns + (colorWells.Length % columns != 0 ? 1 : 0);
                 int h = rows * scaledColorWellSize.Height + borderSize.Height * 2;
 
                 if (remw != 0 || h != Size.Height)
@@ -1095,7 +1086,7 @@ namespace StatsDirect.PJLControls
                 columns = preferred;
                 int w = preferred * scaledColorWellSize.Width + borderSize.Width * 2;
 
-                rows = colorWells.Length / columns + ((colorWells.Length % columns != 0) ? 1 : 0);
+                rows = colorWells.Length / columns + (colorWells.Length % columns != 0 ? 1 : 0);
                 int h = rows * scaledColorWellSize.Height + borderSize.Height * 2;
 
                 ClientSize = new Size(w, h);
@@ -1251,7 +1242,7 @@ namespace StatsDirect.PJLControls
             }
             set
             {
-                if (((pickColor != null) && (pickColor.Color != value)) || (pickColor == null))
+                if (pickColor != null && pickColor.Color != value || pickColor == null)
                 {
                     UpdatePickColor(value);
 
@@ -1415,7 +1406,7 @@ namespace StatsDirect.PJLControls
 
                     string msg = string.Format("The color well size must be at least {0}.", min);
 
-                    throw new ArgumentOutOfRangeException("value", value, msg);
+                    throw new ArgumentOutOfRangeException(nameof(value), value, msg);
                 }
             }
         }
@@ -1590,7 +1581,7 @@ namespace StatsDirect.PJLControls
         /// <returns></returns>
         internal static bool ShouldSerializeCustomColors(Color[] customColors)
         {
-            bool bShouldSerialize = (customColors.Length != 32);
+            bool bShouldSerialize = customColors.Length != 32;
 
             if (!bShouldSerialize)
             {

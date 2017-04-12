@@ -1,6 +1,6 @@
 ﻿namespace StatsDirect.UI
 {
-    class MajorMinorPoint
+    internal class MajorMinorPoint
     {
         public int Major { get; set; }
         public int Minor { get; set; }
@@ -28,7 +28,7 @@
 
         public override string ToString()
         {
-            return IsValid ? (Major.ToString() + "." + Minor.ToString() + "." + Point.ToString()) : "(invalid)";
+            return IsValid ? Major.ToString() + "." + Minor.ToString() + "." + Point.ToString() : "(invalid)";
         }
 
         public static bool operator <(MajorMinorPoint lhs, MajorMinorPoint rhs)

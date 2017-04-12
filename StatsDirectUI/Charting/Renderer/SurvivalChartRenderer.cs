@@ -14,7 +14,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            SurvivalOptions sOptions = ((SurvivalOptions)(definition.ChartOptions));
+            SurvivalOptions sOptions = (SurvivalOptions)definition.ChartOptions;
 
             // Setup the Min & Max Values
             DataMinX = double.MaxValue;
@@ -71,7 +71,7 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            SurvivalOptions sOptions = ((SurvivalOptions)(definition.ChartOptions));
+            SurvivalOptions sOptions = (SurvivalOptions)definition.ChartOptions;
 
             // Setup the Min & Max Values
             DataMinX = double.MaxValue;
@@ -131,7 +131,7 @@ namespace StatsDirect.Charting.Renderer
             double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
             double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
             double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendBottom = legendTop - (sOptions.Series.Count * legendSpacing);
+            double legendBottom = legendTop - sOptions.Series.Count * legendSpacing;
             double xtra = 0;
 #if LEGEND_AT_BOTTOM
             if (sOptions.ShowLegend && legendBottom < LOWEST_ALLOWED_LEGEND)
@@ -186,7 +186,7 @@ namespace StatsDirect.Charting.Renderer
                             double markerY = legendTop - (c * legendSpacing) - markerMidlineOffset;
 #else
                             double markerX = 9 + LEGEND_MARKER_SIZE / 2.0;
-                            double markerY = yAxisCanvas + yExtCanvas - 10 - (c * legendSpacing) - markerMidlineOffset;
+                            double markerY = yAxisCanvas + yExtCanvas - 10 - c * legendSpacing - markerMidlineOffset;
 #endif
                             if (use_marker)
                             {
@@ -198,7 +198,7 @@ namespace StatsDirect.Charting.Renderer
                                 DrawLineInCanvasCoordinates(p, markerX - cornerOffset, markerY - cornerOffset, markerX + cornerOffset, markerY - cornerOffset);
                                 DrawLineInCanvasCoordinates(p, markerX + cornerOffset, markerY - cornerOffset, markerX + cornerOffset, markerY + cornerOffset);
                             }
-                            DrawStringLegendL(MakeTitle(sOptions.SeriesTitles[c], null), markerX + (LEGEND_MARKER_SIZE * 1.5), markerY + markerMidlineOffset);
+                            DrawStringLegendL(MakeTitle(sOptions.SeriesTitles[c], null), markerX + LEGEND_MARKER_SIZE * 1.5, markerY + markerMidlineOffset);
                         }
                     }
 

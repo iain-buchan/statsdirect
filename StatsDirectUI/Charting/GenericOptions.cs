@@ -36,64 +36,25 @@ namespace StatsDirect.Charting
                 TitleFontDescriptor = ChartPreferences.DefaultTitleFont;
         }
 
-        public virtual bool UsesChartTitle
-        {
-            get { return false; }
-        }
+        public virtual bool UsesChartTitle => false;
 
-        public virtual bool UsesAutoscale
-        {
-            get { return false; }
-        }
+        public virtual bool UsesAutoscale => false;
 
-        public virtual bool UsesBoxAxes
-        {
-            get { return false; }
-        }
+        public virtual bool UsesBoxAxes => false;
 
-        public virtual bool UsesSeriesLabels
-        {
-            get { return false; }
-        }
+        public virtual bool UsesSeriesLabels => false;
 
-        public virtual bool UsesAxisLabelFontDescriptor
-        {
-            get { return false; }
-        }
+        public virtual bool UsesAxisLabelFontDescriptor => false;
 
-        public virtual string AxisLabelFontLabel
-        {
-            get
-            {
-                return "Axis Label";
-            }
-        }
+        public virtual string AxisLabelFontLabel => "Axis Label";
 
-        public virtual bool UsesAxisTitleFontDescriptor
-        {
-            get { return false; }
-        }
+        public virtual bool UsesAxisTitleFontDescriptor => false;
 
-        public virtual bool UsesLegendFontDescriptor
-        {
-            get { return false; }
-        }
+        public virtual bool UsesLegendFontDescriptor => false;
 
-        public virtual string LegendFontLabel
-        {
-            get
-            {
-                return "Legend";
-            }
-        }
+        public virtual string LegendFontLabel => "Legend";
 
-        public virtual string OrientationLabel
-        {
-            get
-            {
-                return "Orientation";
-            }
-        }
+        public virtual string OrientationLabel => "Orientation";
 
         ///  <summary>
         ///  True if the chart can only be drawn in one orientation or if the orientation matches its preferred orientation.
@@ -102,119 +63,77 @@ namespace StatsDirect.Charting
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public virtual bool IsNaturalOrientation
-        {
-            get { return true; }
-        }
+        public virtual bool IsNaturalOrientation => true;
 
-        public virtual bool UsesTitleFontDescriptor
-        {
-            get { return true; }
-        }
+        public virtual bool UsesTitleFontDescriptor => true;
 
-        public virtual bool UsesOrientation
-        {
-            get { return false; }
-        }
+        public virtual bool UsesOrientation => false;
 
         ///  <summary>
         ///  Should the extra items for the bar chart be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowBarOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowBarOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the box+whisker chart be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowBoxWhiskerOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowBoxWhiskerOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the control chart be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowControlOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowControlOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the scatter plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowErrorBarOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowErrorBarOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the forest plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowForestOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowForestOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the histogram plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowHistogramOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowHistogramOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the normal plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowNormalOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowNormalOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the pyramid plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowPyramidOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowPyramidOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the ROC plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowRocOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowRocOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the scatter plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowScatterXYOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowScatterXYOptions => false;
 
         ///  <summary>
         ///  Should the extra items for the scatter plot be shown?
         ///  </summary>
         ///  <returns>True if the extra options should be shown, False if not.</returns>
-        public virtual bool ShowSurvivalOptions
-        {
-            get { return false; }
-        }
+        public virtual bool ShowSurvivalOptions => false;
 
         public override ChartOptions Clone()
         {

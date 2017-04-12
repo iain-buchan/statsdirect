@@ -90,13 +90,13 @@ namespace StatsDirect.Charting
                 //  Middle-right: Vertical text needs fiddling, otherwise we're OK.
                 if (direction == LabelDirection.Up)
                 {
-                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat = (StringFormat)txtFormat.Clone();
                     txtFormat.LineAlignment = StringAlignment.Far;
                     txtFormat.Alignment = StringAlignment.Center;
                 }
                 else if (direction == LabelDirection.Down)
                 {
-                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat = (StringFormat)txtFormat.Clone();
                     txtFormat.LineAlignment = StringAlignment.Near;
                     txtFormat.Alignment = StringAlignment.Center;
                 }
@@ -106,13 +106,13 @@ namespace StatsDirect.Charting
                 //  Top-centre: Anything other than across needs fiddling.
                 if (direction == LabelDirection.Down || direction == LabelDirection.SlopeDown)
                 {
-                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat = (StringFormat)txtFormat.Clone();
                     txtFormat.LineAlignment = StringAlignment.Center;
                     txtFormat.Alignment = StringAlignment.Near;
                 }
                 else if (direction == LabelDirection.SlopeUp || direction == LabelDirection.Up)
                 {
-                    txtFormat = ((StringFormat)(txtFormat.Clone()));
+                    txtFormat = (StringFormat)txtFormat.Clone();
                     txtFormat.LineAlignment = StringAlignment.Center;
                     txtFormat.Alignment = StringAlignment.Far;
                 }
@@ -372,7 +372,7 @@ namespace StatsDirect.Charting
                     DrawDiamond(p, x, y, size2, isFilled);
                     break;
                 default:
-                    throw new ArgumentException("Don't know how to draw style's shape", "shape");
+                    throw new ArgumentException("Don't know how to draw style's shape", nameof(shape));
             }
         }
 

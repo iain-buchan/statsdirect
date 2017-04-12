@@ -25,58 +25,37 @@ namespace StatsDirect.UI
         /// <summary>
         /// The total number of cells included in this area (minimum 0)
         /// </summary>
-        public int Cells
-        {
-            get { return Columns * Rows; }
-        }
+        public int Cells => Columns * Rows;
 
         /// <summary>
         /// The total number of columns incuded in this area (minimum 0)
         /// </summary>
-        public int Columns
-        {
-            get { return Math.Max(right - left + 1, 0); }
-        }
+        public int Columns => Math.Max(right - left + 1, 0);
 
         /// <summary>
         /// The total number of rows incuded in this area (minimum 0)
         /// </summary>
-        public int Rows
-        {
-            get { return Math.Max(bottom - top + 1, 0); }
-        }
+        public int Rows => Math.Max(bottom - top + 1, 0);
 
         /// <summary>
         /// The lowest-numbered row included in the area (minimum 0)
         /// </summary>
-        public int Top
-        {
-            get { return top; }
-        }
+        public int Top => top;
 
         /// <summary>
         /// The lowest-numbered column included in the area (minimum 0)
         /// </summary>
-        public int Left
-        {
-            get { return left; }
-        }
+        public int Left => left;
 
         /// <summary>
         /// The highest-numbered row included in the area (minimum 0)
         /// </summary>
-        public int Bottom
-        {
-            get { return bottom; }
-        }
+        public int Bottom => bottom;
 
         /// <summary>
         /// The highest-numbered column included in the area (minimum 0)
         /// </summary>
-        public int Right
-        {
-            get { return right; }
-        }
+        public int Right => right;
 
         /// <summary>
         /// Obtain a 0-indexed array of [row,column] objects for the 0-indexed cells specified.

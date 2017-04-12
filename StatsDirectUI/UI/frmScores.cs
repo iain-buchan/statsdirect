@@ -29,10 +29,7 @@ namespace StatsDirect.UI
             Close();
         }
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
         private void SetFormFromOptions()
         {

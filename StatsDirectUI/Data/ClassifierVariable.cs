@@ -32,13 +32,7 @@ namespace StatsDirect.Data
         [XmlIgnore]
         public IList<Group> Groups { get; set; }
 
-        public int GroupCount
-        {
-            get
-            {
-                return Groups.Count;
-            }
-        }
+        public int GroupCount => Groups.Count;
 
         public void EnsureGroups(int minimumSize)
         {
@@ -91,13 +85,7 @@ namespace StatsDirect.Data
             }
         }
 
-        protected override bool HasData
-        {
-            get
-            {
-                return base.HasData && Groups != null;
-            }
-        }
+        protected override bool HasData => base.HasData && Groups != null;
 
         public Group GroupWithId(double id)
         {

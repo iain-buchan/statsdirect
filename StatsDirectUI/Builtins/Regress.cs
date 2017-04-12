@@ -78,7 +78,7 @@ namespace StatsDirect.Builtins
         {
             // If there's already a cached context, assume it is from a previous operation with the same values and use it.
             if (parameters.ContainsKey("context"))
-                return ((SimpleLinearRegressionContext)(parameters["context"].Data));
+                return (SimpleLinearRegressionContext)parameters["context"].Data;
 
             // Create a new context holding these X and Y variables
             DataFrame fy = parameters["y"].AsDataFrame;
@@ -92,7 +92,7 @@ namespace StatsDirect.Builtins
         private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag parameters)
         {
             if (parameters.ContainsKey("context"))
-                return ((MultipleLinearRegressionContext)(parameters["context"].Data));
+                return (MultipleLinearRegressionContext)parameters["context"].Data;
             throw new Exception("Expected to find a context parameter and didn't");
         }
 
@@ -183,8 +183,8 @@ namespace StatsDirect.Builtins
                 double SEB = context.SeEst / (context.SDX * Math.Sqrt(context.NX - 1));
                 seParameters.AddOutput("slope_err", SEB);
                 seParameters.AddOutput("se_pc", Formatting.XRound(100 * (1.0 - context.P0), 2));
-                seParameters.AddOutput("se_from", context.Slope - (context.CIT * SEB));
-                seParameters.AddOutput("se_to", context.Slope + (context.CIT * SEB));
+                seParameters.AddOutput("se_from", context.Slope - context.CIT * SEB);
+                seParameters.AddOutput("se_to", context.Slope + context.CIT * SEB);
                 seParameters.AddOutput("se_r", context.R);
                 seParameters.AddOutput("se_r2", context.R * context.R);
                 if (context.NX > 3)
@@ -193,12 +193,12 @@ namespace StatsDirect.Builtins
                     seParameters.AddOutput("*ci", ciList);
                     ParameterBag ciParameters = new ParameterBag();
                     ciList.Add(ciParameters);
-                    double GAMMA = 1.0 - (context.P0 / 2.0);
+                    double GAMMA = 1.0 - context.P0 / 2.0;
                     int fault;
                     double rcit = PDF.gauinv(GAMMA, out fault);
                     double fz = 0.5 * Math.Log((1.0 + context.R) / (1.0 - context.R));
-                    double fz1 = fz - (rcit / Math.Sqrt(Convert.ToDouble(context.NX - 3)));
-                    double fz2 = fz + (rcit / Math.Sqrt(Convert.ToDouble(context.NX - 3)));
+                    double fz1 = fz - rcit / Math.Sqrt(Convert.ToDouble(context.NX - 3));
+                    double fz2 = fz + rcit / Math.Sqrt(Convert.ToDouble(context.NX - 3));
                     double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
                     double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
                     ciParameters.AddOutput("ci_pc", Formatting.XRound(100 * (1.0 - context.P0), 1));
@@ -207,7 +207,7 @@ namespace StatsDirect.Builtins
                     // double af = 1; 
                     int df = context.NX - 2;
                     double r = context.R;
-                    double st = r * Math.Sqrt(Math.Abs(Convert.ToDouble(df) / (1.0 - (r * r))));
+                    double st = r * Math.Sqrt(Math.Abs(Convert.ToDouble(df) / (1.0 - r * r)));
                     ciParameters.AddOutput("df", df);
                     ciParameters.AddOutput("tdf", st);
                     double P = PDF.tvalp(Math.Abs(st), Convert.ToDouble(df));
@@ -357,10 +357,10 @@ namespace StatsDirect.Builtins
             double REGGAMMA = parameters["reggamma"].AsDouble;
             context.CalcRcia(REGGAMMA);
             double XA = parameters["xa"].AsDouble;
-            double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+            double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow(XA - context.SumX / Convert.ToDouble(nx), 2.0) / context.SSX));
             double ya = context.Slope * XA + context.YIntercept;
-            double pcon = ya + (sey * context.PERT);
-            double ncon = ya - (sey * context.PERT);
+            double pcon = ya + sey * context.PERT;
+            double ncon = ya - sey * context.PERT;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("var_x", vx.Title + " = " + host.RoundU(XA));
             outputParameters.AddOutput("var_y", vy.Title + " = " + host.RoundU(ya));
@@ -368,9 +368,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pci", Formatting.XRound(100 * (1.0 - context.P0), 1));
             outputParameters.AddOutput("fromi", ncon);
             outputParameters.AddOutput("toi", pcon);
-            double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow((XA - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX)));
-            pcon = ya + (spred * context.PERT);
-            ncon = ya - (spred * context.PERT);
+            double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / Convert.ToDouble(nx) + Math.Pow(XA - context.SumX / Convert.ToDouble(nx), 2.0) / context.SSX)));
+            pcon = ya + spred * context.PERT;
+            ncon = ya - spred * context.PERT;
             outputParameters.AddOutput("s_pred", spred);
             outputParameters.AddOutput("pcp", Formatting.XRound(100 * (1.0 - context.P0), 1));
             outputParameters.AddOutput("fromp", ncon);
@@ -408,10 +408,10 @@ namespace StatsDirect.Builtins
 
             for (int j = 0; j < nx; j++)
             {
-                double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow((vy.Data[j] - (context.SumX / Convert.ToDouble(nx))), 2.0) / context.SSX));
+                double sey = Math.Sqrt(context.MS * (1.0 / Convert.ToDouble(nx) + Math.Pow(vy.Data[j] - context.SumX / Convert.ToDouble(nx), 2.0) / context.SSX));
                 double ya = context.Slope * vx.Data[j] + context.YIntercept;
-                double pcon = ya + (sey * context.PERT);
-                double ncon = ya - (sey * context.PERT);
+                double pcon = ya + sey * context.PERT;
+                double ncon = ya - sey * context.PERT;
                 reg.SetData(j, ya);
                 uci.SetData(j, pcon);
                 lci.SetData(j, ncon);
@@ -482,7 +482,7 @@ namespace StatsDirect.Builtins
                         iskip = true;
                     }
                 }
-                if (!(iskip))
+                if (!iskip)
                 {
                     inx = inx + 1;
                     for (i = 1; i <= N; i++)
@@ -498,7 +498,7 @@ namespace StatsDirect.Builtins
             x_pscore1_corr(N, nx, x, v, irv, revx);
             for (i = 1; i <= N; i++)
             {
-                if (!(revx[i]))
+                if (!revx[i])
                 {
                     signrev = true;
                     break;
@@ -510,7 +510,7 @@ namespace StatsDirect.Builtins
                 {
                     for (i = 1; i <= N; i++)
                     {
-                        if (!(revx[i]))
+                        if (!revx[i])
                         {
                             for (j = 1; j <= nx; j++)
                             {
@@ -1001,7 +1001,7 @@ namespace StatsDirect.Builtins
                 er[i] = yd[i] - s;
             }
             bss = 0.0;
-            for (i = 1; i <= (P - incep); i++)
+            for (i = 1; i <= P - incep; i++)
             {
                 s = 0.0;
                 j = incep + i;
@@ -1118,7 +1118,7 @@ namespace StatsDirect.Builtins
                     }
                     else { z = " "; }
                     z = z + host.RoundU(bd[j]);
-                    if (j > 1 || !(DoC))
+                    if (j > 1 || !DoC)
                     {
                         z = z + " " + context.Titles[j];
                     }
@@ -1184,12 +1184,12 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= nx; i++)
                 {
                     wt = 1.0 / (sig[i] * sig[i]);
-                    ctss = ctss + (yd[i] * wt) * (yd[i] * wt);
-                    bss = bss + (yfit[i]) * (yfit[i]);
+                    ctss = ctss + yd[i] * wt * (yd[i] * wt);
+                    bss = bss + yfit[i] * yfit[i];
                 }
             }
             double rss = ctss - bss;
-            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
             for (i = 1; i <= P; i++)
             {
@@ -1244,12 +1244,12 @@ namespace StatsDirect.Builtins
                     }
                 }
                 double P0 = 1 - ci;
-                double GAMMA = 1.0 - (P0 / 2.0);
+                double GAMMA = 1.0 - P0 / 2.0;
                 int ifault;
                 double rcit = PDF.gauinv(GAMMA, out ifault);
                 double fz = 0.5 * Math.Log((1.0 + r) / (1.0 - r));
-                double fz1 = fz - (rcit / Math.Sqrt(Convert.ToDouble(context.N - 3)));
-                double fz2 = fz + (rcit / Math.Sqrt(Convert.ToDouble(context.N - 3)));
+                double fz1 = fz - rcit / Math.Sqrt(Convert.ToDouble(context.N - 3));
+                double fz2 = fz + rcit / Math.Sqrt(Convert.ToDouble(context.N - 3));
                 double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
                 double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
                 extra = "  [" + Formatting.XRound(100 * (1.0 - P0), 1) + "%CI = " + host.RoundU(con1) + " to " + host.RoundU(con2) + "]";
@@ -1260,7 +1260,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("r", host.RoundU(r) + extra);
             outputParameters.AddOutput("r2", host.RoundU(r2 * 100) + "%");
-            r2 = 1.0 - (rss / Convert.ToDouble(context.N - context.P)) / (context.SSY / Convert.ToDouble(context.N - 1));
+            r2 = 1.0 - rss / Convert.ToDouble(context.N - context.P) / (context.SSY / Convert.ToDouble(context.N - 1));
             if (r2 < 0.0)
             {
                 r2 = 0.0;
@@ -1315,11 +1315,11 @@ namespace StatsDirect.Builtins
             }
             string msg = lsqmean ? "  (least squares mean)" : string.Empty;
             outputParameters.AddOutput("y", context.outcomeTitle + " = " + host.RoundU(newy) + msg);
-            double rdf = Convert.ToDouble((context.N - 1) - (context.P - 1));
+            double rdf = Convert.ToDouble(context.N - 1 - (context.P - 1));
             double rss = context.SSY - context.SSREG;
             double rms = rss / rdf;
             Regress1.x_ciyp(newx, context.H, context.P, rms, cit, out cl, out pl);
-            outputParameters.AddOutput("ci_pc", (Formatting.XRound(100 * (1.0 - P0), 1)));
+            outputParameters.AddOutput("ci_pc", Formatting.XRound(100 * (1.0 - P0), 1));
             outputParameters.AddOutput("ci_from", host.RoundU(newy - cl));
             outputParameters.AddOutput("ci_to", host.RoundU(newy + cl));
             outputParameters.AddOutput("pred_pc", Formatting.XRound(100 * (1.0 - P0), 1));
@@ -1345,7 +1345,7 @@ namespace StatsDirect.Builtins
 
             for (i = 1; i <= context.P; i++)
             {
-                if (i > 1 | !(context.DoC))
+                if (i > 1 | !context.DoC)
                 {
                     int k = context.DoC ? i - 1 : i;
                     r = new double[context.N + 1];
@@ -1417,7 +1417,7 @@ namespace StatsDirect.Builtins
                     break;
                 }
             }
-            if (!(used_svd))
+            if (!used_svd)
             {
                 double[] vif2 = new double[context.P + 1 ];
                 string[] ti = new string[context.P + 1 ];
@@ -1444,7 +1444,7 @@ namespace StatsDirect.Builtins
                 double meanv = sumv / Convert.ToDouble(iv);
                 // bubble sort
                 bool bsorted = false;
-                while (!(bsorted))
+                while (!bsorted)
                 {
                     bsorted = true;
                     for (i = context.P - 1; i >= 1; i--)
@@ -1571,7 +1571,7 @@ namespace StatsDirect.Builtins
 
             // Check if we need to save the data
             double alpha = 1.0 - ci;
-            double hicrit = Math.Min((3 * Convert.ToDouble(context.P)) / Convert.ToDouble(context.N), 0.99);
+            double hicrit = Math.Min(3 * Convert.ToDouble(context.P) / Convert.ToDouble(context.N), 0.99);
             double srcrit = PDF.tfromp(alpha / 2.0, Convert.ToDouble(context.N - context.P));
             double jackcrit = PDF.tfromp(alpha / 2.0, Convert.ToDouble(context.N - context.P - 1));
             double cdcrit = PDF.ffromp(Convert.ToDouble(context.N - context.P), Convert.ToDouble(context.P), alpha);
@@ -1610,12 +1610,12 @@ namespace StatsDirect.Builtins
                 else
                 {
                     double varer = (1.0 - hi[i]) / wt;
-                    double SI = Math.Sqrt((wt * (context.N - context.P) * rms - Math.Pow((wt * context.R[i]), 2.0) / (1.0 - hi[i])) / (rdf - 1.0));
+                    double SI = Math.Sqrt((wt * (context.N - context.P) * rms - Math.Pow(wt * context.R[i], 2.0) / (1.0 - hi[i])) / (rdf - 1.0));
                     //  jackknife (SAS calls it rstudent) - see Kleinbaum
-                    rstudent[i] = (wt * context.R[i]) / (SI * Math.Sqrt(1.0 - hi[i]));
+                    rstudent[i] = wt * context.R[i] / (SI * Math.Sqrt(1.0 - hi[i]));
                     //  studentised residual, standardised residual is er(i)/sqr(rms)
-                    rstd[i] = context.R[i] / (Math.Sqrt(rms * varer));
-                    cd[i] = (rstd[i] * rstd[i] * (hi[i] / (1.0 - hi[i]))) / Convert.ToDouble(context.P);
+                    rstd[i] = context.R[i] / Math.Sqrt(rms * varer);
+                    cd[i] = rstd[i] * rstd[i] * (hi[i] / (1.0 - hi[i])) / Convert.ToDouble(context.P);
                     dff[i] = Math.Sqrt(hi[i] / (1.0 - hi[i])) * rstudent[i];
                 }
             }
@@ -1718,15 +1718,15 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptMultipleLinearRegressionBestSubset(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
-            bool[] selectedPredictors = ((bool[])(parameters["selectedPredictors"].Data));
+            bool[] selectedPredictors = (bool[])parameters["selectedPredictors"].Data;
             bool shouldUseMaximumF = "maximumF".Equals(parameters["selector"].AsString);
             int errcode = 0;
 
             int forced = 0; int C; int kept = 0; int[] keep = null;
             double maxf = 0; double maxr2 = 0;
 
-            double rmsorig = (context.SSY - context.SSREG) / Convert.ToDouble((context.N - 1) - (context.P - 1));
-            double mincp = ((context.SSY - context.SSREG) / rmsorig) - Convert.ToDouble(context.N - 2 * (context.P + 1));
+            double rmsorig = (context.SSY - context.SSREG) / Convert.ToDouble(context.N - 1 - (context.P - 1));
+            double mincp = (context.SSY - context.SSREG) / rmsorig - Convert.ToDouble(context.N - 2 * (context.P + 1));
             int iq = 0;
             if (context.DoC)
             {
@@ -1794,13 +1794,13 @@ namespace StatsDirect.Builtins
                         x_glin(context, context.Y, context.S, tryx, out context.SE, out context.B, out context.VIF, ref context.SSREG, ref context.SSY, out context.H, out context.R, out yfit, ref context.DoC, ref context.N, ref j, ref errcode);
                         if (errcode == 0)
                         {
-                            double rdf = Convert.ToDouble((context.N - 1) - (j - 1));
+                            double rdf = Convert.ToDouble(context.N - 1 - (j - 1));
                             double bdf = j > 1 ? Convert.ToDouble(j - 1) : Convert.ToDouble(j);
                             double bms = context.SSREG / bdf;
                             double rms = (context.SSY - context.SSREG) / rdf;
                             double f = bms / rms;
                             double r2 = context.SSREG / context.SSY;
-                            double cp = ((context.SSY - context.SSREG) / rmsorig) - Convert.ToDouble(context.N - 2 * (j + 1));
+                            double cp = (context.SSY - context.SSREG) / rmsorig - Convert.ToDouble(context.N - 2 * (j + 1));
                             bool isBetter = shouldUseMaximumF ? f > maxf : cp <= mincp;
                             if (isBetter)
                             {
@@ -2033,16 +2033,16 @@ namespace StatsDirect.Builtins
                     totvar = totvar + qv[j];
                 }
             }
-            double talpha = (Convert.ToDouble(k) / Convert.ToDouble(k - 1)) * (1.0 - (totvar / qv[0]));
+            double talpha = Convert.ToDouble(k) / Convert.ToDouble(k - 1) * (1.0 - totvar / qv[0]);
             // Stata technical bulletin 56: SG 144
-            double f = PDF.ffromp(Convert.ToDouble(k - 1) * Convert.ToDouble(N - 1), Convert.ToDouble(N - 1), (1.0 - cco));
+            double f = PDF.ffromp(Convert.ToDouble(k - 1) * Convert.ToDouble(N - 1), Convert.ToDouble(N - 1), 1.0 - cco);
             if (f == Constant.MISSING)
             {
                 cl = Constant.MISSING;
             }
             else
             {
-                cl = 1.0 - ((1.0 - talpha) * f);
+                cl = 1.0 - (1.0 - talpha) * f;
                 if (cl < 0.0 | cl > talpha)
                 {
                     cl = 0.0;
@@ -2084,7 +2084,7 @@ namespace StatsDirect.Builtins
                 }
                 if (k > 2)
                 {
-                    alpha = (Convert.ToDouble(k - 1) / Convert.ToDouble(k - 2)) * (1.0 - (totvar / qv[0]));
+                    alpha = Convert.ToDouble(k - 1) / Convert.ToDouble(k - 2) * (1.0 - totvar / qv[0]);
                 }
                 else
                 {
@@ -2118,14 +2118,14 @@ namespace StatsDirect.Builtins
             double rbar = rtot / Convert.ToDouble(ctr);
             talpha = Convert.ToDouble(k) * rbar / (1.0 + Convert.ToDouble(k - 1) * rbar);
             // Stata technical bulletin 56: SG 144
-            f = PDF.ffromp(Convert.ToDouble(k - 1) * Convert.ToDouble(N - 1), Convert.ToDouble(N - 1), (1.0 - cco));
+            f = PDF.ffromp(Convert.ToDouble(k - 1) * Convert.ToDouble(N - 1), Convert.ToDouble(N - 1), 1.0 - cco);
             if (f == Constant.MISSING)
             {
                 cl = Constant.MISSING;
             }
             else
             {
-                cl = 1.0 - ((1.0 - talpha) * f);
+                cl = 1.0 - (1.0 - talpha) * f;
                 if (cl < 0.0 | cl > talpha)
                 {
                     cl = 0.0;
@@ -2460,7 +2460,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[,] xtxi = context.H;
             double[] bd = context.B;
             double rss = context.SSY - context.SSREG;
@@ -2479,7 +2479,7 @@ namespace StatsDirect.Builtins
             double newy = 0;
             for (int N = 1; N <= P; N++)
             {
-                newy = newy + (newx[N] * bd[N]);
+                newy = newy + newx[N] * bd[N];
             }
             double GAMMA = parameters["gamma"].AsDouble;
             double P0; double cit;
@@ -2497,7 +2497,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("y_lab", context.Titles[0]);
             outputParameters.AddOutput("y_res", host.RoundU(newy));
-            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
             double cl; double pl;
             Regress1.x_ciyp(newx, xtxi, P, rms, cit, out cl, out pl);
@@ -2512,7 +2512,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionPlot(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2543,10 +2543,10 @@ namespace StatsDirect.Builtins
                     title = string.Empty;
                     break;
                 case 1:
-                    title = (Formatting.XRound((1.0 - P0) * 100, 1) + "% CI for the regression estimate");
+                    title = Formatting.XRound((1.0 - P0) * 100, 1) + "% CI for the regression estimate";
                     break;
                 case 2:
-                    title = (Formatting.XRound((1.0 - P0) * 100, 1) + "% Prediction Interval");
+                    title = Formatting.XRound((1.0 - P0) * 100, 1) + "% Prediction Interval";
                     break;
             }
 
@@ -2556,7 +2556,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptAreaUnderCurve(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] bd = context.B;
             int nx = context.N;
             int P = context.P;
@@ -2622,7 +2622,7 @@ namespace StatsDirect.Builtins
             double ss = 0.0;
             for (int i = 1; i <= nx - 1; i++)
             {
-                ss += (((y[i] + y[i - 1]) / 2.0) * Math.Abs(x[i] - x[i - 1]));
+                ss += (y[i] + y[i - 1]) / 2.0 * Math.Abs(x[i] - x[i - 1]);
             }
             return ss;
         }
@@ -2630,14 +2630,14 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionConfidence(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int nx = context.N;
             int P = context.P;
             double[,] xtxi = context.H;
             double[] yfit = context.FV;
             double[,] x = context.X;
             double rss = context.SSY - context.SSREG;
-            double rdf = Convert.ToDouble((nx - 1) - (P - 1));
+            double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
             double GAMMA = parameters["gamma"].AsDouble;
             double cit; double P0;
@@ -2681,7 +2681,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionBackInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] bd = context.B;
             int nx = context.N;
             int P = context.P;
@@ -3016,7 +3016,7 @@ namespace StatsDirect.Builtins
 
             beta = new double[p + 1];
             se_beta = new double[records + 1];
-            covariance = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
+            covariance = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
             fit = new double[records + 1];
             residual = new double[records + 1];
             leverage = new double[records + 1];
@@ -3251,7 +3251,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
 
             double[] t = context.T;
             double[] y = context.Y;
@@ -3287,15 +3287,15 @@ namespace StatsDirect.Builtins
                 // Pearson
                 PP[i] = fvl[i] / t[i];
                 ww[i] = weight ? wt[i] : 1.0;
-                pxi[i] = (PP[i] != 0.0) ? ((y[i] - t[i] * PP[i]) * Math.Sqrt(ww[i])) / Math.Sqrt(t[i] * PP[i] * (1.0 - PP[i])) : Constant.MISSING;
-                xis[i] = (1.0 - hi[i] > 0.0 && pxi[i] != Constant.MISSING) ? pxi[i] / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
+                pxi[i] = PP[i] != 0.0 ? (y[i] - t[i] * PP[i]) * Math.Sqrt(ww[i]) / Math.Sqrt(t[i] * PP[i] * (1.0 - PP[i])) : Constant.MISSING;
+                xis[i] = 1.0 - hi[i] > 0.0 && pxi[i] != Constant.MISSING ? pxi[i] / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
 
                 // Delta beta et al.  IEB July 2009
                 if (PP[i] * (1.0 - PP[i]) != 0.0)
                 {
-                    double xi = ((y[i] - t[i] * PP[i]) * Math.Sqrt(ww[i])) / Math.Sqrt(t[i] * PP[i] * (1.0 - PP[i]));
-                    c[i] = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
-                    cbar[i] = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
+                    double xi = (y[i] - t[i] * PP[i]) * Math.Sqrt(ww[i]) / Math.Sqrt(t[i] * PP[i] * (1.0 - PP[i]));
+                    c[i] = Math.Pow(xi, 2.0) * hi[i] / Math.Pow(1.0 - hi[i], 2.0);
+                    cbar[i] = Math.Pow(xi, 2.0) * hi[i] / (1.0 - hi[i]);
                     d[i] = Math.Pow(dr[i], 2.0) + cbar[i];
                     dc[i] = cbar[i] / hi[i];
                 }
@@ -3435,7 +3435,7 @@ namespace StatsDirect.Builtins
                     string x1 = qlbli(labels, i, DoC);
                     string x2 = qlbli(labels, j, DoC);
                     covarParameters.AddOutput("lab", x1 + " vs. " + x2);
-                    covarParameters.AddOutput("cov", host.RoundU(covariance[((int)(Math.Floor((double)j * (j - 1) / 2 + i)))]));
+                    covarParameters.AddOutput("cov", host.RoundU(covariance[(int)Math.Floor((double)j * (j - 1) / 2 + i)]));
                 }
             }
             return outputParameters;
@@ -3562,7 +3562,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag PlotLogisticRegressionDiagnostics(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fv = context.FV;
@@ -3601,9 +3601,9 @@ namespace StatsDirect.Builtins
                 double dc;
                 if (PP * (1.0 - PP) != 0.0)
                 {
-                    double xi = ((y[i] - t[i] * PP) * Math.Sqrt(ww)) / Math.Sqrt(t[i] * PP * (1.0 - PP));
-                    c = (Math.Pow(xi, 2.0) * hi[i]) / Math.Pow((1.0 - hi[i]), 2.0);
-                    cbar = (Math.Pow(xi, 2.0) * hi[i]) / (1.0 - hi[i]);
+                    double xi = (y[i] - t[i] * PP) * Math.Sqrt(ww) / Math.Sqrt(t[i] * PP * (1.0 - PP));
+                    c = Math.Pow(xi, 2.0) * hi[i] / Math.Pow(1.0 - hi[i], 2.0);
+                    cbar = Math.Pow(xi, 2.0) * hi[i] / (1.0 - hi[i]);
                     d = Math.Pow(dr[i], 2.0) + cbar;
                     dc = cbar / hi[i];
                 }
@@ -3676,7 +3676,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
@@ -3708,7 +3708,7 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= N; i++)
                 {
                     double ww = Weight ? wt[i] : 1.0;
-                    x2 = x2 + (Math.Pow(((y[i] - fvl[i]) * Math.Sqrt(ww)), 2.0)) / Math.Max(fvl[i], Constant.EPSNEG);
+                    x2 = x2 + Math.Pow((y[i] - fvl[i]) * Math.Sqrt(ww), 2.0) / Math.Max(fvl[i], Constant.EPSNEG);
                 }
                 ll = x_loglik_p(Weight, N, wt, y, fvl);
             }
@@ -3836,7 +3836,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] b = context.B;
             double[] se = context.SE;
             int P = context.P;
@@ -3873,7 +3873,7 @@ namespace StatsDirect.Builtins
                     double ww = weight ? wt[i] : 1;
                     if (PP != 0.0)
                     {
-                        x2 = x2 + (Math.Pow(((y[i] - t[i] * PP) * Math.Sqrt(ww)), 2.0)) / (t[i] * PP * (1.0 - PP));
+                        x2 = x2 + Math.Pow((y[i] - t[i] * PP) * Math.Sqrt(ww), 2.0) / (t[i] * PP * (1.0 - PP));
                     }
                     ntot += Convert.ToInt32(t[i]);
                 }
@@ -4016,7 +4016,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionIrr(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[,] x = context.X;
             double[] b = context.B;
             double[] se = context.SE;
@@ -4127,7 +4127,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag OpPoissonRegressionIrrMakeDichotomousCovariates(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[,] x = context.X;
             int p = context.P;
             int nx = context.N;
@@ -4174,7 +4174,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionModelSelection(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             bool mean = context.DoC;
             int n = context.N;
             string[] labels = context.Labels;
@@ -4203,7 +4203,7 @@ namespace StatsDirect.Builtins
 
             double[] b = new double[p + 1];
             double[] se = new double[n + 1];
-            double[] cov = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
+            double[] cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
             double[] fv = new double[n + 1];
             double[] dr = new double[n + 1];
             double[] h = new double[n + 1];
@@ -4243,7 +4243,7 @@ namespace StatsDirect.Builtins
                     // Lower AIC values are better - the value represents the information *lost* if this model is chosen.
                     selectX[candidate] = true;
                     Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
-                    if (host.UpdateProgress((++regressionsRun) / estimatedRegressionsToRun))
+                    if (host.UpdateProgress(++regressionsRun / estimatedRegressionsToRun))
                     {
                         abandon = true;
                         break;
@@ -4265,7 +4265,7 @@ namespace StatsDirect.Builtins
                 selectX[bestPredictorIndexSoFar] = true;
                 Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
                 LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
-                if (host.UpdateProgress((++regressionsRun) / estimatedRegressionsToRun))
+                if (host.UpdateProgress(++regressionsRun / estimatedRegressionsToRun))
                     break;
 
                 // Go round again, remembering the predictor we've chosen this time
@@ -4288,13 +4288,13 @@ namespace StatsDirect.Builtins
             }
 
             string tx = "logit ";
-            tx += (label[0].Length > 0) ? label[0] : "Y";
+            tx += label[0].Length > 0 ? label[0] : "Y";
             tx += " = ";
             int significantCoefficients = 0;
             int totalCoefficients = 0;
             for (int j = 1; j <= p; j++)
             {
-                bool isIntercept = mean && (j == 1);
+                bool isIntercept = mean && j == 1;
                 // Only process this part of the model if it is selected
                 if (!isIntercept)
                 {
@@ -4303,7 +4303,7 @@ namespace StatsDirect.Builtins
                         continue;
                 }
 
-                if ((!isIntercept) && b[j] >= 0.0)
+                if (!isIntercept && b[j] >= 0.0)
                     tx += "+";
                 tx += host.RoundU(b[j]);
                 bool isSignificant;
@@ -4361,7 +4361,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionClassification(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int N = context.N;
             double[] fvl = context.FV;
             double[] t = context.T;
@@ -4407,7 +4407,7 @@ namespace StatsDirect.Builtins
             else
                 ppv = Constant.MISSING;
             outputParameters.AddOutput("+ve", Formatting.XRound(ppv, 2));
-            if ((tn + fn) > 0)
+            if (tn + fn > 0)
                 nnv = 100.0 * (1.0 - d / (d + c));
             else
                 nnv = Constant.MISSING;
@@ -4417,7 +4417,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * (1.0 - zl), 2));
             if (tp + fn > 0 && fp + tn > 0 && fp > 0 && tp > 0)
             {
-                lrpos = (a / (a + c)) / (b / (b + d));
+                lrpos = a / (a + c) / (b / (b + d));
                 x_lrci(b, a, b + d, a + c, zc, out thetal, out thetau);
             }
             else
@@ -4431,7 +4431,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to+", host.RoundU(thetau));
             if (tp + fn > 0 && fp + tn > 0 && tn > 0 && fn > 0)
             {
-                lrneg = (c / (a + c)) / (d / (d + b));
+                lrneg = c / (a + c) / (d / (d + b));
                 x_lrci(d, c, b + d, a + c, zc, out thetal, out thetau);
             }
             else
@@ -4475,7 +4475,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionBootstrap(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] se;
             double[] b = context.B;
             double[] t = context.T;
@@ -4544,7 +4544,7 @@ namespace StatsDirect.Builtins
                         if (pick <= pivot)
                         {
                             rndt[k]++;
-                            if (rng.NextDouble() <= (Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k])))
+                            if (rng.NextDouble() <= Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k]))
                                 rndy[k]++;
                             break;
                         }
@@ -4571,7 +4571,7 @@ namespace StatsDirect.Builtins
                 }
                 b = new double[p + 1];
                 se = new double[n + 1];
-                cov = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
+                cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
                 fv = new double[n + 1];
                 dr = new double[n + 1];
                 h = new double[n + 1];
@@ -4654,7 +4654,7 @@ namespace StatsDirect.Builtins
             //  recalculate full model
             b = new double[p + 1];
             se = new double[n + 1];
-            cov = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
+            cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
             fv = new double[n + 1 ];
             dr = new double[n + 1 ];
             h = new double[n + 1];
@@ -4669,7 +4669,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionPrediction(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] b = context.B;
             int P = context.P;
             string[] labels = context.Labels;
@@ -4708,7 +4708,7 @@ namespace StatsDirect.Builtins
             double newy = 0.0;
             for (i = 1; i <= P; i++)
             {
-                newy = newy + (newx[i] * b[i]);
+                newy = newy + newx[i] * b[i];
             }
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out cit, GAMMA, out P0);
@@ -4741,7 +4741,7 @@ namespace StatsDirect.Builtins
                         jj = i;
                         ii = j;
                     }
-                    s = s + covariance[((int)(Math.Floor((double)jj * (jj - 1) / 2 + ii)))] * newx[i];
+                    s = s + covariance[(int)Math.Floor((double)jj * (jj - 1) / 2 + ii)] * newx[i];
                 }
                 sey = sey + s * newx[j];
             }
@@ -4763,7 +4763,7 @@ namespace StatsDirect.Builtins
                 ucl = Constant.MISSING;
             }
             outputParameters.AddOutput("y", "Response proportion = " + host.RoundU(newy) + msg);
-            outputParameters.AddOutput("pc", (Formatting.XRound(100 * (1.0 - P0), 1)));
+            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 1));
             outputParameters.AddOutput("from", host.RoundU(lcl));
             outputParameters.AddOutput("to", host.RoundU(ucl));
             return outputParameters;
@@ -4786,7 +4786,7 @@ namespace StatsDirect.Builtins
             {
                 n1 = n1 + 0.5;
             }
-            double uhat = (1.0 / (x1 + 0.5)) + (1.0 / (x0 + 0.5)) - (1.0 / (n0 + 0.5)) - (1.0 / (n1 + 0.5));
+            double uhat = 1.0 / (x1 + 0.5) + 1.0 / (x0 + 0.5) - 1.0 / (n0 + 0.5) - 1.0 / (n1 + 0.5);
             double N = n0 + n1;
             double logthetahat = Math.Log((x1 + 0.5) / (n1 + 0.5)) - Math.Log((x0 + 0.5) / (n0 + 0.5));
             thetau = Math.Exp(logthetahat) * Math.Exp(zc * Math.Sqrt(uhat));
@@ -4817,7 +4817,7 @@ namespace StatsDirect.Builtins
                     {
                         za2 = -zc;
                     }
-                    theta2 = Math.Exp(Math.Log(theta0) + ((za2 - z0) / (z1 - z0)) * Math.Log(theta1 / theta0));
+                    theta2 = Math.Exp(Math.Log(theta0) + (za2 - z0) / (z1 - z0) * Math.Log(theta1 / theta0));
                     temptheta1 = theta1;
                     temptheta2 = theta2;
                     ztemp2 = x_lrz(temptheta2, out a, out b, out c, N, n0, n1, x0, x1);
@@ -4854,7 +4854,7 @@ namespace StatsDirect.Builtins
                 return pest2;
             if (pest2 > 1.0 || pest2 < 0.0)
                 return pest1;
-            if ((pest1 * theta) > 1.0 || (pest1 * theta) < 0.0)
+            if (pest1 * theta > 1.0 || pest1 * theta < 0.0)
                 return pest2;
             return pest1;
         }
@@ -4870,9 +4870,9 @@ namespace StatsDirect.Builtins
             double p1tilde = p0tilde * thetahat;
             double q0tilde = 1.0 - p0tilde;
             double q1tilde = 1.0 - p1tilde;
-            double utilde = (q0tilde / (n0 * p0tilde)) + (q1tilde / (n1 * p1tilde));
+            double utilde = q0tilde / (n0 * p0tilde) + q1tilde / (n1 * p1tilde);
             double vtilde = 1.0 / utilde;
-            return (((x1) - (n1 * p1tilde)) / q1tilde) / Math.Sqrt(vtilde);
+            return (x1 - n1 * p1tilde) / q1tilde / Math.Sqrt(vtilde);
         }
 
 
@@ -5165,7 +5165,7 @@ namespace StatsDirect.Builtins
                 selectX[j] = true;
             beta = new double[p + 1];
             se_beta = new double[records + 1];
-            covariance = new double[((int)(Math.Floor((double)p * (p + 1) / 2))) + 1];
+            covariance = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
             fit = new double[records + 1 ];
             residual = new double[records + 1];
             leverage = new double[records + 1];
@@ -5339,7 +5339,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;
@@ -5424,7 +5424,7 @@ namespace StatsDirect.Builtins
                 pearsonList.Add(pearsonParameters);
                 pearsonParameters.AddOutput("idx", i.ToString());
                 ww = Weight ? wt[i] : 1;
-                double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0)) / fvl[i];
+                double xi = fvl[i] == 0.0 ? Constant.MISSING : Math.Pow(y[i] - fvl[i], 2.0) / fvl[i];
                 pearsonParameters.AddOutput("res", host.RoundU(xi));
                 pearsonParameters.AddOutput("lev", host.RoundU(hi[i]));
                 // IEB July 2009
@@ -5436,7 +5436,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    xi = ((y[i] - fvl[i]) * Math.Sqrt(ww)) / Math.Sqrt(fvl[i]);
+                    xi = (y[i] - fvl[i]) * Math.Sqrt(ww) / Math.Sqrt(fvl[i]);
                     if (1.0 - hi[i] > 0.0)
                     {
                         xis = xi / Math.Sqrt(1.0 - hi[i]);
@@ -5457,7 +5457,7 @@ namespace StatsDirect.Builtins
                     string x1 = qlbli(labels, i, DoC);
                     string x2 = qlbli(labels, j, DoC);
                     covarParameters.AddOutput("lab", x1 + " vs. " + x2);
-                    covarParameters.AddOutput("cov", host.RoundU(covariance[(((int)(Math.Floor((double)j * (j - 1) / 2 + i))))]));
+                    covarParameters.AddOutput("cov", host.RoundU(covariance[(int)Math.Floor((double)j * (j - 1) / 2 + i)]));
                 }
             }
             return outputParameters;
@@ -5466,7 +5466,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag GridPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;
@@ -5533,7 +5533,7 @@ namespace StatsDirect.Builtins
                         devianceResidualVariable.SetData(i - 1, dr[i]);
                     }
                     ww = Weight ? wt[i] : 1.0;
-                    double xi = fvl[i] == 0.0 ? Constant.MISSING : (Math.Pow((y[i] - fvl[i]), 2.0)) / fvl[i];
+                    double xi = fvl[i] == 0.0 ? Constant.MISSING : Math.Pow(y[i] - fvl[i], 2.0) / fvl[i];
                     if (pearsonResidual)
                     { // Pearson chi-square residuals
 
@@ -5547,7 +5547,7 @@ namespace StatsDirect.Builtins
                     if (stdPearsonResidual)
                     { // Standardised Pearson residual
 
-                        xi = ((y[i] - fvl[i]) * Math.Sqrt(ww)) / Math.Sqrt(fvl[i]);
+                        xi = (y[i] - fvl[i]) * Math.Sqrt(ww) / Math.Sqrt(fvl[i]);
                         double xis = 1.0 - hi[i] > 0.0 ? xi / Math.Sqrt(1.0 - hi[i]) : Constant.MISSING;
                         stdPearsonResidualVariable.SetData(i - 1, xis);
                     }
@@ -5596,7 +5596,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionResiduals(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int nx = context.N;
             double[] yfit = context.FV;
             double[] dr = context.R;
@@ -6010,7 +6010,7 @@ namespace StatsDirect.Builtins
             {
                 if (s[i] > 0.0)
                 {
-                    if ((s[i] - r[i]) < 0.0)
+                    if (s[i] - r[i] < 0.0)
                     {
                         ifault = 1;
                         return;
@@ -6060,13 +6060,13 @@ namespace StatsDirect.Builtins
                 PP = (P[i] - C) / (1.0 - C);
                 if (PP <= 0.0)
                 {
-                    PP = ((0.5 / s[i]) - C) / (1.0 - C);
+                    PP = (0.5 / s[i] - C) / (1.0 - C);
                 }
                 else
                 {
                     if (PP >= 1.0)
                     {
-                        PP = (((r[i] - 0.5) / s[i]) - C) / (1.0 - C);
+                        PP = ((r[i] - 0.5) / s[i] - C) / (1.0 - C);
                     }
                 }
                 int ifa;
@@ -6174,14 +6174,14 @@ namespace StatsDirect.Builtins
                     swy = swy + s[i] * w[i] * Y2[i];
                     swyy = swyy + s[i] * w[i] * Y2[i] * Y2[i];
                 }
-                s1l = swxx - (swx * swx) / swl;
-                s2l = swxy - (swx * swy) / swl;
-                s3l = swyy - (swy * swy) / swl;
+                s1l = swxx - swx * swx / swl;
+                s2l = swxy - swx * swy / swl;
+                s3l = swyy - swy * swy / swl;
                 if (C > 0)
                 {
-                    s4l = swtt - (swt * swt) / swl + Convert.ToDouble(nc) * (1.0 - C) / C;
-                    s5 = swty - (swt * swy) / swl + Convert.ToDouble(nc) * (C1 - C) / C;
-                    s6l = swxt - (swx * swt) / swl;
+                    s4l = swtt - swt * swt / swl + Convert.ToDouble(nc) * (1.0 - C) / C;
+                    s5 = swty - swt * swy / swl + Convert.ToDouble(nc) * (C1 - C) / C;
+                    s6l = swxt - swx * swt / swl;
                     double s7 = s6l * s6l;
                     dell = s1l * s4l - s7;
                 }
@@ -6200,7 +6200,7 @@ namespace StatsDirect.Builtins
                     b = (s4l * s2l - s6l * s5) / dell;
                     dc = (1.0 - C) * (s5 * s1l - s6l * s2l) / dell;
                 }
-                a = ym - b * XM - (dc * TM) / (1.0 - C);
+                a = ym - b * XM - dc * TM / (1.0 - C);
                 //  ***  CALCULATE NEW EXPECTED PROBITS (STORE in T TEMPORARILY) AND
                 //  ***  ADD CHANGE in NATURAL MORTALITY TO ESTIMATE. COMPARE NEW EXPECTED
                 //  ***  PROBITS WITH OLD AND IF CHANGE > 1D-9 RETURN TO BEGINING OF
@@ -6351,7 +6351,7 @@ namespace StatsDirect.Builtins
                 //  ***  RECORD in ICL AND PRINT WHICH CONFIDENCE LIMITS ARE BEING
                 //  ***  CALCULATED AND PUT THE NORMAL DEVIATE FOR THOSE LIMITS in T.
                 ifa = 0;
-                double t = PDF.gauinv(ici + ((1.0 - ici) / 2.0), out ifa);
+                double t = PDF.gauinv(ici + (1.0 - ici) / 2.0, out ifa);
                 int het = 1;
                 double vx = pdose - XM;
                 varb = 1.0 / S1;
@@ -6392,7 +6392,7 @@ namespace StatsDirect.Builtins
                     double pf3 = gi / sw + varb * vx * vx;
                     if (het == 2)
                     {
-                        pf3 = (gi * C) / (sw * i) + varb * vx * vx;
+                        pf3 = gi * C / (sw * i) + varb * vx * vx;
                     }
                     if (C2 > 0.0)
                     {
@@ -6478,7 +6478,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag PlotProbit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int Model = context.M;
             double[] x = context.X1;
             double[] y = context.H1;
@@ -6491,12 +6491,12 @@ namespace StatsDirect.Builtins
             bool clog = context.DoC;
             if (context.ARG[13] < 0.05)
             {
-                t = PDF.tfromp(ici + ((1.0 - ici) / 2.0), context.ARG[14]);
+                t = PDF.tfromp(ici + (1.0 - ici) / 2.0, context.ARG[14]);
             }
             else
             {
                 int ifa;
-                t = PDF.gauinv(ici + ((1.0 - ici) / 2.0), out ifa);
+                t = PDF.gauinv(ici + (1.0 - ici) / 2.0, out ifa);
             }
 
             string YAxisTitle = context.Labels[2] + " / " + context.Labels[1];
@@ -6511,7 +6511,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitInterpolateX(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int Model = context.M;
             double a = context.ARG[1];
             double b = context.ARG[2];
@@ -6562,7 +6562,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitInterpolateY(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int Model = context.M;
             double a = context.ARG[1];
             double b = context.ARG[2];
@@ -6603,7 +6603,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitMore(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = ((MultipleLinearRegressionContext)(parameters["context"].Data));
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int Model = context.M;
             double a = context.ARG[1];
             double b = context.ARG[2];

@@ -11,9 +11,9 @@ namespace Layout
     /// </remarks>
     class ExtendedAxisLabeler : AxisLabeler
     {
-        private static readonly List<decimal> Q = new List<decimal>() { 1m, 5m, 2m, 2.5m, 4m, 3m };
+        private static readonly List<decimal> Q = new List<decimal> { 1m, 5m, 2m, 2.5m, 4m, 3m };
         private static readonly int qCount = Q.Count;
-        private static readonly List<double> w = new List<double>() { 0.25, 0.2, 0.5, 0.05 };
+        private static readonly List<double> w = new List<double> { 0.25, 0.2, 0.5, 0.05 };
         private static readonly List<Format> formats;
 
         QuantitativeFormatter formatter;
@@ -78,7 +78,7 @@ namespace Layout
             decimal eps = 1e-10m;
             double n = qCount;
             double i = Q.IndexOf(q) + 1; // Assume 1-based index for scoring
-            double v = (FlooredMod(lmin, lstep) < eps && lmin <= 0 && lmax >= 0) ? 1 : 0;
+            double v = FlooredMod(lmin, lstep) < eps && lmin <= 0 && lmax >= 0 ? 1 : 0;
             return 1 - i / n - j + v;
         }
 
@@ -92,7 +92,7 @@ namespace Layout
 
         protected double Coverage(decimal dmin, decimal dmax, decimal lmin, decimal lmax)
         {
-            return 1 - 0.5 * (double)(((dmax - lmax) * (dmax - lmax) + (dmin - lmin) * (dmin - lmin)) / ((0.1m * (dmax - dmin)) * (0.1m * (dmax - dmin))));
+            return 1 - 0.5 * (double)(((dmax - lmax) * (dmax - lmax) + (dmin - lmin) * (dmin - lmin)) / (0.1m * (dmax - dmin) * 0.1m * (dmax - dmin)));
         }
 
         protected double MaxCoverage(decimal dataRange, decimal span)
@@ -100,25 +100,19 @@ namespace Layout
             if (span > dataRange)
             {
                 decimal half = (span - dataRange) / 2;
-                return 1 - 0.5 * (double)((half * half + half * half) / ((0.1m * dataRange) * (0.1m * dataRange)));
+                return 1 - 0.5 * (double)((half * half + half * half) / (0.1m * dataRange * 0.1m * dataRange));
             }
-            else
-            {
-                return 1;
-            }
+            return 1;
         }
 
         protected double Density(double r, double rt)
         {
-            return (2 - Math.Max(r / rt, rt / r));
+            return 2 - Math.Max(r / rt, rt / r);
         }
 
         protected double MaxDensity(double r, double rt)
         {
-            if (r >= rt)
-                return 2 - r / rt;
-            else
-                return 1;
+            return r >= rt ? 2 - r / rt : 1;
         }
 
         private static double Weight(double simplicity, double coverage, double density, double legibility)
@@ -128,7 +122,7 @@ namespace Layout
 
         public override Axis generate(Options options, double density)
         {
-            double space = (options.Direction == AxisDirection.Horizontal ? options.Screen.Width : options.Screen.Height);
+            double space = options.Direction == AxisDirection.Horizontal ? options.Screen.Width : options.Screen.Height;
 
             decimal dmax = (decimal)options.DataRange.Max;
             decimal dmin = (decimal)options.DataRange.Min;

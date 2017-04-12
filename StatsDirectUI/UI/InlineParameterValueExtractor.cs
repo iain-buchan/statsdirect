@@ -6,7 +6,6 @@ using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -379,7 +378,7 @@ namespace StatsDirect.UI
                 bool[] selected = new bool[cbo.Items.Count - offset];
                 if (cbo.SelectedIndex >= offset)
                     selected[cbo.SelectedIndex - offset] = true;
-                if ((!p.IncludeNoneEntry) || cbo.SelectedIndex > 0)
+                if (!p.IncludeNoneEntry || cbo.SelectedIndex > 0)
                     OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, selected);
             }
         }
@@ -414,7 +413,7 @@ namespace StatsDirect.UI
                                 break;
                             }
                         }
-                        FailedValidationControl = ((null != optionParameter.CancelSkipsParameter) || atLeastOneChecked || !DoValidation) ? null : optionPanel.Controls[0];
+                        FailedValidationControl = null != optionParameter.CancelSkipsParameter || atLeastOneChecked || !DoValidation ? null : optionPanel.Controls[0];
                     }
                     break;
                 default:
@@ -438,8 +437,7 @@ namespace StatsDirect.UI
             string[] data = new string[gridEditGrid.Rows.Count];
             for (int i = 0; i < gridEditGrid.Rows.Count; i++)
                 data[i] = (string)gridEditGrid.Rows[i].Cells[1].Value;
-            StringVariable newValues = new StringVariable(data);
-            newValues.Title = parameter.ValueVariable;
+            StringVariable newValues = new StringVariable(data, parameter.ValueVariable);
             DataFrame oldFrame = Context[parameter.Source].AsDataFrame;
             DataFrame newFrame = new DataFrame();
             foreach (Variable v in oldFrame.Variables)
@@ -534,7 +532,7 @@ namespace StatsDirect.UI
                         txtTr.Text = Formatting.XUnrounded(tr);
                         txtBl.Text = Formatting.XUnrounded(bl);
                         txtBr.Text = Formatting.XUnrounded(br);
-                        lblStratum.Text = "Stratum " + (failedStratum + 1) + " of " + (var1Data.Count / 2);
+                        lblStratum.Text = "Stratum " + (failedStratum + 1) + " of " + var1Data.Count / 2;
                         lblStratum.Tag = failedStratum + 1;
                         cmdPrevious.Enabled = failedStratum > 0;
                         cmdNext.Enabled = true;

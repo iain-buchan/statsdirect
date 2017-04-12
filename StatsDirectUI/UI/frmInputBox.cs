@@ -21,15 +21,9 @@ namespace StatsDirect.UI
             Close();
         }
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
-        public string Value
-        {
-            get { return txtInput.Text; }
-        }
+        public string Value => txtInput.Text;
 
         private void cmdOk_Click(object sender, EventArgs e)
         {

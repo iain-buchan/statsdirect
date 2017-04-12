@@ -252,17 +252,17 @@ namespace StatsDirect.UI
                 double df = CdblTxt(txtDf.Text);
                 if ((selectedTest == DistributionType.Rho || selectedTest == DistributionType.Kendall) && txtPdf.Text.Length > 0)
                 {
-                    bool bewareOfDf = (Constant.MISSING == df || df < int.MinValue || df > int.MaxValue);
+                    bool bewareOfDf = Constant.MISSING == df || df < int.MinValue || df > int.MaxValue;
 
                     int n;
                     if (selectedTest == DistributionType.Rho)
                     {
-                        n = ((int)(Math.Floor(df)));
+                        n = (int)Math.Floor(df);
                         double rh = CdblTxt(txtPdf.Text);
                         if (bewareOfDf || n < 4 || rh < 0.0 || rh > 1.0)
                             txtDf2.Text = Formatting.ERRR;
                         else
-                            txtDf2.Text = Convert.ToInt32(((1.0 - rh) * (n * (Math.Pow(n, 2) - 1))) / 6).ToString();
+                            txtDf2.Text = Convert.ToInt32((1.0 - rh) * (n * (Math.Pow(n, 2) - 1)) / 6).ToString();
                         PFromX();
                     }
                     else // Kendall
@@ -463,7 +463,7 @@ namespace StatsDirect.UI
                 rh = CdblTxt(txtPdf.Text);
                 if (nx >= 4 & rh <= 1)
                 {
-                    ix = Convert.ToInt32(((1.0 - rh) * (nx * (nx * nx - 1))) / 6);
+                    ix = Convert.ToInt32((1.0 - rh) * (nx * (nx * nx - 1)) / 6);
                     txtDf2.Text = ix.ToString();
                 }
                 else
@@ -471,8 +471,8 @@ namespace StatsDirect.UI
             }
             else
             {
-                ix = ((int)(CdblTxt(txtDf2.Text)));
-                rh = 1.0 - ix / ((nx * (nx * nx - 1)) / 6.0);
+                ix = (int)CdblTxt(txtDf2.Text);
+                rh = 1.0 - ix / (nx * (nx * nx - 1) / 6.0);
                 Xval15Into(txtPdf, rh);
             }
             double pu = 0;

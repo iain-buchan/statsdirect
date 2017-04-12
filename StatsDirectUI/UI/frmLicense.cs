@@ -23,16 +23,10 @@ namespace StatsDirect.UI
                     return;
 
                 txtEmail.Text = ui.Name.Trim();
-                string company = ui.Company;
-                if (ui.Name.EndsWith("~~" + ui.Name.Substring(0, 1)))
-                    company = company.Substring(0, company.Length - 3);
             }
         }
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
         private void frmLicense_Load(object sender, EventArgs e)
         {
@@ -106,7 +100,7 @@ namespace StatsDirect.UI
             if (e.KeyCode != Keys.Return)
                 return;
 
-            if (string.IsNullOrEmpty(ui.Expires) || (ui.Expires.Length > 1 && txtKey.Text.Length > 1))
+            if (string.IsNullOrEmpty(ui.Expires) || ui.Expires.Length > 1 && txtKey.Text.Length > 1)
             {
                 e.Handled = true;
                 cmdOK.PerformClick();

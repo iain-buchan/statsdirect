@@ -34,8 +34,7 @@ namespace StatsDirect.UI
             new ClipboardManglingCommandManager(workbookView.ActiveWorkbookSet);
             SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
             LockWorkbookAnd(() => {
-                if (null != workbookView.ActiveWorkbook)
-                    workbookView.ActiveWorkbook.Close();
+                workbookView.ActiveWorkbook?.Close();
                 string fontString = Properties.Settings.Default.DefaultWorkbookFont;
                 if (null != fontString)
                 {
@@ -162,10 +161,7 @@ namespace StatsDirect.UI
             });
         }
 
-        bool IGrid.Dirty
-        {
-            get { return dirty; }
-        }
+        bool IGrid.Dirty => dirty;
 
         object[,] IGrid.GetValues(int top, int left, int bottom, int right)
         {
@@ -221,7 +217,7 @@ namespace StatsDirect.UI
                 {
                     string sheetName = worksheetOrigin.WorksheetName;
                     IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
-                    bool succeeded = (null != worksheet);
+                    bool succeeded = null != worksheet;
                     if (!succeeded)
                         throw new Exception("Cannot refill variable as the worksheet \"" + worksheetOrigin.WorksheetName + "\" in workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
                     workbookView.ActiveSheet = worksheet;
@@ -352,7 +348,7 @@ namespace StatsDirect.UI
                         firstColumnOfData = firstFreeColumn;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("writePosition", writePosition, "Unknown write position");
+                        throw new ArgumentOutOfRangeException(nameof(writePosition), writePosition, "Unknown write position");
                 }
 
                 IRange range = worksheet.Range[0, firstColumnOfData, usedRange.Row + usedRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
@@ -764,6 +760,7 @@ namespace StatsDirect.UI
         /// <param name="mightBeBatching">If true, we might be selecting data in a batch.  If batching, GetCellEqual should remember where its data came from and should re-select if such memory is present.  If not batching, GetCellEqual should clear memory and not pre-select.</param>
         /// <param name="userCancelled">If true, the user cancelled the selection</param>
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
+        /// <param name="originGroup"></param>
         /// <returns></returns>
         public DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
@@ -811,7 +808,7 @@ namespace StatsDirect.UI
             {
                 string buf = (string)val;
                 double dval;
-                if (Double.TryParse(buf, out dval))
+                if (double.TryParse(buf, out dval))
                     return dval;
                 string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);
                 if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
@@ -915,7 +912,7 @@ namespace StatsDirect.UI
                 }
 
                 // If we get here, the returned value is a single cell.  It may still be hidden.
-                nonHiddenRowCount = (workbookView.ActiveWorksheet.Cells[firstRow, column].EntireRow.Hidden) ? 0 : 1;
+                nonHiddenRowCount = workbookView.ActiveWorksheet.Cells[firstRow, column].EntireRow.Hidden ? 0 : 1;
                 return new[,] { { val } };
             }
             finally
@@ -1024,8 +1021,8 @@ namespace StatsDirect.UI
         string IGetCells.GetColumnTitle(int col)
         {
             const int A = 65;
-            int prefixValue = (col / 26) - 1;
-            int suffixValue = (col % 26);
+            int prefixValue = col / 26 - 1;
+            int suffixValue = col % 26;
             if (prefixValue < 0)
                 return new string(new[] { (char)(suffixValue + A) });
             return new string(new[] { (char)(prefixValue + A), (char)(suffixValue + A) });
@@ -1060,8 +1057,6 @@ namespace StatsDirect.UI
         /// <summary>
         /// At present, this checks for bold, underline, or quotes.
         /// </summary>
-        /// <param name="workbookPath"></param>
-        /// <param name="worksheetName"></param>
         /// <param name="columnIndex"></param>
         /// <param name="rowIndex"></param>
         /// <returns></returns>
@@ -1073,7 +1068,7 @@ namespace StatsDirect.UI
             {
                 IWorksheet worksheet = workbookView.ActiveWorksheet;
                 IRange cell = worksheet.Range[rowIndex, columnIndex];
-                if (cell.Font.Bold || (cell.Font.Underline != UnderlineStyle.None))
+                if (cell.Font.Bold || cell.Font.Underline != UnderlineStyle.None)
                     return true;
                 object oV = cell.Value;
                 if (null == oV)
@@ -1102,7 +1097,7 @@ namespace StatsDirect.UI
                 // Existing pane, selected by name.  If the name doesn't exist any more, return false.
                 string sheetName = (string)pane.Tag;
                 IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
-                succeeded = (null != worksheet);
+                succeeded = null != worksheet;
                 workbookView.ActiveSheet = worksheet;
             }
             workbookView.ActiveWorkbookSet.ReleaseLock();
@@ -2066,35 +2061,20 @@ namespace StatsDirect.UI
                 this.wrappedExecute = wrappedExecute;
             }
 
-            public override string DisplayText
-            {
-                get
-                {
-                    // Text displayed in Undo menu. 
-                    return displayText;
-                }
-            }
+            public override string DisplayText => displayText;
 
-            protected override CommandRangeUndoFlags UndoFlags
-            {
-                get
-                {
-                    // Save everything!
-                    return
-                        CommandRangeUndoFlags.AutoFilters
-                        | CommandRangeUndoFlags.ColumnInfo
-                        | CommandRangeUndoFlags.Comments
-                        | CommandRangeUndoFlags.FormatBorders
-                        | CommandRangeUndoFlags.FormatConditions
-                        | CommandRangeUndoFlags.Formats
-                        | CommandRangeUndoFlags.FormulaFixups
-                        | CommandRangeUndoFlags.Hyperlinks
-                        | CommandRangeUndoFlags.MergeState
-                        | CommandRangeUndoFlags.RowInfo
-                        | CommandRangeUndoFlags.Validation
-                        | CommandRangeUndoFlags.Values;
-                }
-            }
+            protected override CommandRangeUndoFlags UndoFlags => CommandRangeUndoFlags.AutoFilters
+                                                                  | CommandRangeUndoFlags.ColumnInfo
+                                                                  | CommandRangeUndoFlags.Comments
+                                                                  | CommandRangeUndoFlags.FormatBorders
+                                                                  | CommandRangeUndoFlags.FormatConditions
+                                                                  | CommandRangeUndoFlags.Formats
+                                                                  | CommandRangeUndoFlags.FormulaFixups
+                                                                  | CommandRangeUndoFlags.Hyperlinks
+                                                                  | CommandRangeUndoFlags.MergeState
+                                                                  | CommandRangeUndoFlags.RowInfo
+                                                                  | CommandRangeUndoFlags.Validation
+                                                                  | CommandRangeUndoFlags.Values;
 
             protected override bool Execute()
             {

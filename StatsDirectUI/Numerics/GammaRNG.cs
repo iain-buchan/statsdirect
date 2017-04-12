@@ -4,7 +4,7 @@ namespace StatsDirect.Numerics
     {
 
         private const double SQRT32 = 5.656854;
-        private const double EXP_M1 = ((double)(0.36787944117144232159M)); //  EXP(-1) = 1/E
+        private const double EXP_M1 = (double)0.36787944117144232159M; //  EXP(-1) = 1/E
 
         private const double Q1 = 0.04166669;
         private const double Q2 = 0.02083148;
@@ -51,7 +51,7 @@ namespace StatsDirect.Numerics
             const double fb = 2.0;
             double r1 = GenGamma(a1f, fb);
             double r2 = GenGamma(a2f, fb);
-            return double.IsNaN(r1) || double.IsNaN(r2) ? double.NaN : (dfd * r1) / (dfn * r2);
+            return double.IsNaN(r1) || double.IsNaN(r2) ? double.NaN : dfd * r1 / (dfn * r2);
         }
 
 
@@ -67,17 +67,17 @@ namespace StatsDirect.Numerics
                 Seed(Base.DefaultSeed(), null);
             }
 
-            if ((a < 1.0))
+            if (a < 1.0)
             { //  GS algorithm for parameters a < 1
 
                 e = 1.0 + EXP_M1 * a;
                 do
                 {
                     double P = e * RNG.NextDoubleX();
-                    if ((P >= 1.0))
+                    if (P >= 1.0)
                     {
                         x = -System.Math.Log((e - P) / a);
-                        if ((RNGEXP.GenExp() >= (1.0 - a) * System.Math.Log(x)))
+                        if (RNGEXP.GenExp() >= (1.0 - a) * System.Math.Log(x))
                         {
                             break;
                         }
@@ -85,7 +85,7 @@ namespace StatsDirect.Numerics
                     else
                     {
                         x = System.Math.Exp(System.Math.Log(P) / a);
-                        if ((RNGEXP.GenExp() >= x))
+                        if (RNGEXP.GenExp() >= x)
                         {
                             break;
                         }
@@ -194,7 +194,7 @@ namespace StatsDirect.Numerics
                     t = B + SI * e;
                 }
                 // Step  9:  rejection if t < tau(1) = -0.71874483771719
-                if ((t >= -0.71874483771719))
+                if (t >= -0.71874483771719)
                 {
                     // Step 10:  calculation of v and quotient
                     v = t / (S + S);

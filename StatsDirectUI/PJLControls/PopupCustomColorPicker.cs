@@ -13,10 +13,7 @@ namespace StatsDirect.PJLControls
             InitializeComponent();
         }
 
-        public bool UserCancelled
-        {
-            get { return userCancelled; }
-        }
+        public bool UserCancelled => userCancelled;
 
         public Color CustomColor
         {

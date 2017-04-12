@@ -10,10 +10,10 @@ namespace StatsDirect.UI
     [Serializable]
     public class Pane : IStripForRedo
     {
-        public string Name { get; private set; }
+        public string Name { get; }
         [NonSerialized]
-        private WindowInformation windowInformation; // Can't be converted to an auto-property, as NonSerialized can only apply to fields.
-        public object Tag { get; private set; }
+        private readonly WindowInformation windowInformation; // Can't be converted to an auto-property, as NonSerialized can only apply to fields.
+        public object Tag { get; }
 
         internal Pane(string name, WindowInformation info, object tag)
         {
@@ -22,10 +22,7 @@ namespace StatsDirect.UI
             Tag = tag;
         }
 
-        public WindowInformation WindowInformation
-        {
-            get { return windowInformation; }
-        }
+        public WindowInformation WindowInformation => windowInformation;
 
         public override string ToString()
         {
@@ -42,16 +39,16 @@ namespace StatsDirect.UI
 
             // Name
             bool bothNull = null == Name && null == rhs.Name;
-            if ((!bothNull) && null == Name || null == rhs.Name)
+            if (!bothNull && null == Name || null == rhs.Name)
                 return false;
-            if ((!bothNull) && !Name.Equals(rhs.Name))
+            if (!bothNull && !Name.Equals(rhs.Name))
                 return false;
 
             // Window information
             bothNull = null == WindowInformation && null == rhs.WindowInformation;
-            if ((!bothNull) && null == WindowInformation || null == rhs.WindowInformation)
+            if (!bothNull && null == WindowInformation || null == rhs.WindowInformation)
                 return false;
-            if ((!bothNull) && !WindowInformation.Equals(rhs.WindowInformation))
+            if (!bothNull && !WindowInformation.Equals(rhs.WindowInformation))
                 return false;
 
             // Tag

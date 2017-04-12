@@ -15,13 +15,7 @@ namespace StatsDirect.Charting
             
         } 
         
-        public override bool ShowLegendIsRelevant 
-        { 
-            get 
-            { 
-                return false; 
-            } 
-        }
+        public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

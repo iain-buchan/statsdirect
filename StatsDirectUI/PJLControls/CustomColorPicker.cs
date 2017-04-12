@@ -365,7 +365,7 @@ namespace StatsDirect.PJLControls
 
         private void trackBarRedReleased()
         {
-            if ((zaxis == ZAxis.Red) && !bContinuousScrollZAxis)
+            if (zaxis == ZAxis.Red && !bContinuousScrollZAxis)
             {
                 MakeRedPalette();
                 pictureBox.Refresh();
@@ -399,7 +399,7 @@ namespace StatsDirect.PJLControls
 
             Application.DoEvents(); // Force redisplay
 
-            if ((zaxis == ZAxis.Red) && bContinuousScrollZAxis)
+            if (zaxis == ZAxis.Red && bContinuousScrollZAxis)
             {
                 MakeRedPalette();
             }

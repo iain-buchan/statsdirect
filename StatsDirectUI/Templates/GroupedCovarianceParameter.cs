@@ -5,17 +5,11 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class GroupedCovarianceParameter: Parameter
     {
-        public override bool RequiresGrid
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool RequiresGrid => true;
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

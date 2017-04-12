@@ -130,7 +130,7 @@ namespace StatsDirect.Numerics
                         break;
                     } 
                 } 
-                while ( ( r + alpha * System.Math.Log( alpha / ( b + w ) ) < t ) ); 
+                while ( r + alpha * System.Math.Log( alpha / ( b + w ) ) < t ); 
                 
                 if ( aa != a ) 
                 { 

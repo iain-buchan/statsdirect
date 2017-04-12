@@ -72,10 +72,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// true iff the parameter defines the exact number of rows that must be selected with this operation.
         /// </summary>
-        public bool HasLength
-        {
-            get { return null != length; }
-        }
+        public bool HasLength => null != length;
 
         /// <summary>
         /// The exact number of rows that must be selected with this operation, or null for any number.
@@ -168,17 +165,11 @@ namespace StatsDirect.Templates
             set { shouldSquare = value; }
         }
 
-        public override bool RequiresGrid
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool RequiresGrid => true;
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return (MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name)) ? InputDuringStep.Always : InputDuringStep.Never;
+            return MustRequest || null != Name && null != parameters && !parameters.ContainsKey(Name) ? InputDuringStep.Always : InputDuringStep.Never;
         }
 
         public override void Accept(IParameterVisitor visitor)

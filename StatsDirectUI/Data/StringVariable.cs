@@ -51,13 +51,7 @@ namespace StatsDirect.Data
             Data[index] = value;
         }
 
-        public override int Length
-        {
-            get
-            {
-                return (Data == null) ? 0 : Data.Length;
-            }
-        }
+        public override int Length => Data == null ? 0 : Data.Length;
 
         public override void EnsureLength(int minimumLength)
         {
@@ -76,7 +70,7 @@ namespace StatsDirect.Data
 
         public override void EnsureLength(int minimumLength, bool useMissing)
         {
-            int currentLength = (null == Data) ? 0 : Data.Length;
+            int currentLength = null == Data ? 0 : Data.Length;
             EnsureLength(minimumLength);
             if (useMissing)
             {
@@ -131,13 +125,7 @@ namespace StatsDirect.Data
             Data = (victim as StringVariable).Data;
         }
 
-        protected override bool HasData
-        {
-            get
-            {
-                return Data != null;
-            }
-        }
+        protected override bool HasData => Data != null;
 
         public override void Accept(IVariableVisitor visitor)
         {

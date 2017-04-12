@@ -54,13 +54,7 @@ namespace StatsDirect.Data
             }
         }
 
-        public int VariableCount
-        {
-            get
-            {
-                return Variables.Count;
-            }
-        }
+        public int VariableCount => Variables.Count;
 
         public void EnsureVariables(int MinimumSize)
         {
@@ -102,7 +96,7 @@ namespace StatsDirect.Data
         {
             for (int c = 0; c < Variables.Count; c++)
             {
-                DoubleVariable v = ((DoubleVariable)(Variables[c]));
+                DoubleVariable v = (DoubleVariable)Variables[c];
                 for (int r = 0; r < v.Length; r++)
                     target[r, c] = v.Data[r];
             }
@@ -134,7 +128,7 @@ namespace StatsDirect.Data
         {
             DataFrame copy = new DataFrame { Name = Name };
             foreach (Variable v in Variables)
-                copy.Variables.Add(((Variable)(v.CopyAndStripForRedo(shouldKeepData))));
+                copy.Variables.Add((Variable)v.CopyAndStripForRedo(shouldKeepData));
             return copy;
         }
 

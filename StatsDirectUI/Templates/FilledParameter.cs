@@ -22,16 +22,10 @@ namespace StatsDirect.Templates
         }
 
         [XmlIgnore]
-        public bool HasData
-        {
-            get { return null != Data; }
-        }
+        public bool HasData => null != Data;
 
         [XmlIgnore]
-        public bool IsInputParameter
-        {
-            get { return FilledParameterDirection.Input == Direction; }
-        }
+        public bool IsInputParameter => FilledParameterDirection.Input == Direction;
 
         [XmlIgnore]
         public object Data { get; set; }
@@ -40,130 +34,67 @@ namespace StatsDirect.Templates
         public FilledParameterDirection Direction { get; set; }
 
         [XmlIgnore]
-        public bool AsBoolean
-        {
-            get { return (bool)Data; }
-        }
+        public bool AsBoolean => (bool)Data;
 
         [XmlIgnore]
-        public ChartOptions AsChartOptions
-        {
-            get { return (ChartOptions)Data; }
-        }
+        public ChartOptions AsChartOptions => (ChartOptions)Data;
 
         [XmlIgnore]
-        public DataFrame AsDataFrame
-        {
-            get { return (DataFrame)Data; }
-        }
+        public DataFrame AsDataFrame => (DataFrame)Data;
 
         [XmlIgnore]
-        public DataFrame2D AsDataFrame2D
-        {
-            get { return (DataFrame2D)Data; }
-        }
+        public DataFrame2D AsDataFrame2D => (DataFrame2D)Data;
 
         [XmlIgnore]
-        public DateTime AsDate
-        {
-            get { return (DateTime)Data; }
-        }
+        public DateTime AsDate => (DateTime)Data;
 
         [XmlIgnore]
-        public double AsDouble
-        {
-            get { return (double)Data; }
-        }
+        public double AsDouble => (double)Data;
 
         [XmlIgnore]
-        public int AsInt32
-        {
-            get { return (int)Data; }
-        }
+        public int AsInt32 => (int)Data;
 
         [XmlIgnore]
-        public Pane AsPane
-        {
-            get { return (Pane)Data; }
-        }
+        public Pane AsPane => (Pane)Data;
 
         [XmlIgnore]
-        public PaneAndPosition AsPaneAndPosition
-        {
-            get { return (PaneAndPosition)Data; }
-        }
+        public PaneAndPosition AsPaneAndPosition => (PaneAndPosition)Data;
 
         [XmlIgnore]
-        public ParameterBag AsParameterBag
-        {
-            get { return (ParameterBag)Data; }
-        }
+        public ParameterBag AsParameterBag => (ParameterBag)Data;
 
         [XmlIgnore]
-        public IList<ParameterBag> AsParameterBagList
-        {
-            get { return (IList<ParameterBag>)Data; }
-        }
+        public IList<ParameterBag> AsParameterBagList => (IList<ParameterBag>)Data;
 
         [XmlIgnore]
-        public ScaleParameters AsScaleParameters
-        {
-            get { return (ScaleParameters)Data; }
-        }
+        public ScaleParameters AsScaleParameters => (ScaleParameters)Data;
 
         [XmlIgnore]
-        public string AsString
-        {
-            get { return (string)Data; }
-        }
+        public string AsString => (string)Data;
 
         [XmlIgnore]
-        public IList<string> AsStringList
-        {
-            get { return (IList<string>)Data; }
-        }
+        public IList<string> AsStringList => (IList<string>)Data;
 
         [XmlIgnore]
-        public bool IsBoolean
-        {
-            get { return Data is bool; }
-        }
+        public bool IsBoolean => Data is bool;
 
         [XmlIgnore]
-        public bool IsDataFrame
-        {
-            get { return Data is DataFrame; }
-        }
+        public bool IsDataFrame => Data is DataFrame;
 
         [XmlIgnore]
-        public bool IsDouble
-        {
-            get { return Data is double; }
-        }
+        public bool IsDouble => Data is double;
 
         [XmlIgnore]
-        public bool IsInt32
-        {
-            get { return Data is int; }
-        }
+        public bool IsInt32 => Data is int;
 
         [XmlIgnore]
-        public bool IsParameterBag
-        {
-            get { return Data is ParameterBag; }
-        }
+        public bool IsParameterBag => Data is ParameterBag;
 
         [XmlIgnore]
-        public bool IsParameterBagList
-        {
-            get { return Data is IList<ParameterBag>; }
-        }
+        public bool IsParameterBagList => Data is IList<ParameterBag>;
 
         [XmlIgnore]
-        public bool IsString
-        {
-            get { return Data is string; }
-        }
+        public bool IsString => Data is string;
 
         internal FilledParameter CopyAndStripForRedo(bool shouldKeepData)
         {

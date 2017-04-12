@@ -8,6 +8,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using StatsDirect.Charting;
+using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.Builtins
 {
@@ -508,29 +509,31 @@ namespace StatsDirect.Builtins
             string sumTitle = isWeighted ? "Sum of weights" : "Sum";
             string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Interquartile range", "Minimum", "Range", "User defined centiles", null };
 
-            Dictionary<SummaryType, bool> shouldOutput = new Dictionary<SummaryType, bool>();
-            shouldOutput[SummaryType.ValidData] = parameters["report-valid-data"].AsBoolean;
-            shouldOutput[SummaryType.MissingData] = parameters["report-missing-data"].AsBoolean;
-            shouldOutput[SummaryType.Sum] = parameters["report-sum"].AsBoolean;
-            shouldOutput[SummaryType.Mean] = parameters["report-mean"].AsBoolean;
-            shouldOutput[SummaryType.Variance] = parameters["report-variance"].AsBoolean;
-            shouldOutput[SummaryType.Sd] = parameters["report-sd"].AsBoolean;
-            shouldOutput[SummaryType.VarianceCoefficient] = parameters["report-variance-coeff"].AsBoolean;
-            shouldOutput[SummaryType.Sem] = parameters["report-sem"].AsBoolean;
-            shouldOutput[SummaryType.MeanUcl] = parameters["report-u95cl"].AsBoolean;
-            shouldOutput[SummaryType.MeanLcl] = parameters["report-l95cl"].AsBoolean;
-            shouldOutput[SummaryType.GeometricMean] = parameters["report-geometric-mean"].AsBoolean;
-            shouldOutput[SummaryType.Skewness] = parameters["report-skewness"].AsBoolean;
-            shouldOutput[SummaryType.Kurtosis] = parameters["report-kurtosis"].AsBoolean;
-            shouldOutput[SummaryType.Maximum] = parameters["report-maximum"].AsBoolean;
-            shouldOutput[SummaryType.UpperQuartile] = parameters["report-uq"].AsBoolean;
-            shouldOutput[SummaryType.Median] = parameters["report-median"].AsBoolean;
-            shouldOutput[SummaryType.LowerQuartile] = parameters["report-lq"].AsBoolean;
-            shouldOutput[SummaryType.InterquartileRange] = parameters["report-iqr"].AsBoolean;
-            shouldOutput[SummaryType.Minimum] = parameters["report-minimum"].AsBoolean;
-            shouldOutput[SummaryType.Range] = parameters["report-range"].AsBoolean;
-            shouldOutput[SummaryType.Udc1] = parameters["report-udc"].AsBoolean;
-            shouldOutput[SummaryType.Udc2] = parameters["report-udc"].AsBoolean;
+            Dictionary<SummaryType, bool> shouldOutput = new Dictionary<SummaryType, bool>
+            {
+                [SummaryType.ValidData] = parameters["report-valid-data"].AsBoolean,
+                [SummaryType.MissingData] = parameters["report-missing-data"].AsBoolean,
+                [SummaryType.Sum] = parameters["report-sum"].AsBoolean,
+                [SummaryType.Mean] = parameters["report-mean"].AsBoolean,
+                [SummaryType.Variance] = parameters["report-variance"].AsBoolean,
+                [SummaryType.Sd] = parameters["report-sd"].AsBoolean,
+                [SummaryType.VarianceCoefficient] = parameters["report-variance-coeff"].AsBoolean,
+                [SummaryType.Sem] = parameters["report-sem"].AsBoolean,
+                [SummaryType.MeanUcl] = parameters["report-u95cl"].AsBoolean,
+                [SummaryType.MeanLcl] = parameters["report-l95cl"].AsBoolean,
+                [SummaryType.GeometricMean] = parameters["report-geometric-mean"].AsBoolean,
+                [SummaryType.Skewness] = parameters["report-skewness"].AsBoolean,
+                [SummaryType.Kurtosis] = parameters["report-kurtosis"].AsBoolean,
+                [SummaryType.Maximum] = parameters["report-maximum"].AsBoolean,
+                [SummaryType.UpperQuartile] = parameters["report-uq"].AsBoolean,
+                [SummaryType.Median] = parameters["report-median"].AsBoolean,
+                [SummaryType.LowerQuartile] = parameters["report-lq"].AsBoolean,
+                [SummaryType.InterquartileRange] = parameters["report-iqr"].AsBoolean,
+                [SummaryType.Minimum] = parameters["report-minimum"].AsBoolean,
+                [SummaryType.Range] = parameters["report-range"].AsBoolean,
+                [SummaryType.Udc1] = parameters["report-udc"].AsBoolean,
+                [SummaryType.Udc2] = parameters["report-udc"].AsBoolean
+            };
 
             double centxl = parameters["report-udca"].AsDouble * 100.0;
             double centxu = parameters["report-udcb"].AsDouble * 100.0;
@@ -658,7 +661,7 @@ namespace StatsDirect.Builtins
                 ao = transTemp0;
                 Array.Sort(ao);
                 //  The -1 is because ao is 0-based
-                double imdn = (0.5 * (reali + 1)) - 1;
+                double imdn = 0.5 * (reali + 1) - 1;
                 if (imdn < 0)
                     imdn = 0;
                 if (imdn > reali - 1)
@@ -761,7 +764,7 @@ namespace StatsDirect.Builtins
                     res = sx.UserCentileL;
                     break;
                 default:
-                    throw new ArgumentException("Unknown option", "summaryType");
+                    throw new ArgumentException("Unknown option", nameof(summaryType));
             }
             return res;
         }
@@ -869,7 +872,7 @@ namespace StatsDirect.Builtins
                             res = host.RoundU(sx[i].UserCentileL);
                             break;
                         default:
-                            throw new ArgumentException("Unknown opt", "opt");
+                            throw new ArgumentException("Unknown opt", nameof(opt));
                     }
 
                     if ((i + 1) % 3 == 0 && cols > 3)
@@ -1093,7 +1096,7 @@ namespace StatsDirect.Builtins
             {
                 List<MultiDoubleSeries> errorSeries = new List<MultiDoubleSeries>(groups.Count);
                 string[] seriesTitles = new string[groups.Count];
-                double cit = PDF.gauinv((1.0 - (1.0 - ci) / 2.0));
+                double cit = PDF.gauinv(1.0 - (1.0 - ci) / 2.0);
                 for (int groupIndex = 0; groupIndex < groups.Count; groupIndex++)
                 {
                     TimeSeriesSummaryStore group = groups[groupIndex];
@@ -1146,7 +1149,7 @@ namespace StatsDirect.Builtins
                 double dfNumerator = Math.Pow(Math.Sqrt(groups[0].DfNumerator) + Math.Sqrt(groups[1].DfNumerator), 2);
                 double dfDenominator = groups[0].DfDenominator + groups[1].DfDenominator;
                 double df = dfNumerator / dfDenominator;
-                double gamma = 1.0 - ((1.0 - ci) / 2.0);
+                double gamma = 1.0 - (1.0 - ci) / 2.0;
                 double criticalT = Math.Abs(PDF.tfromp(gamma, df));
                 double aucDifference = groups[0].AucMean - groups[1].AucMean;
                 double se = Math.Sqrt(groups[0].VarAucMean + groups[1].VarAucMean);
@@ -1253,9 +1256,9 @@ namespace StatsDirect.Builtins
                 SortedSubjectIds = new SortedSet<double>();
             }
 
-            public int N { get { return SortedSubjectIds.Count; } }
+            public int N => SortedSubjectIds.Count;
 
-            public double AucSd { get { return VarAucMean == Constant.MISSING ? Constant.MISSING : Math.Sqrt(VarAucMean); } }
+            public double AucSd => VarAucMean == Constant.MISSING ? Constant.MISSING : Math.Sqrt(VarAucMean);
 
             internal void NoteRowPass1(double time, double observation, double subjectId)
             {
@@ -1335,7 +1338,7 @@ namespace StatsDirect.Builtins
                             if (observation != Constant.MISSING)
                                 summary.Variance += (observation - summary.Mean) * (observation - summary.Mean);
                         }
-                        summary.Variance /= (summary.N - 1); // Sample variance
+                        summary.Variance /= summary.N - 1; // Sample variance
                     }
                     summary.Sd = summary.Variance == Constant.MISSING ? Constant.MISSING : Math.Sqrt(summary.Variance);
                     summary.Se = summary.Sd == Constant.MISSING ? Constant.MISSING : summary.Sd / Math.Sqrt(summary.N);
@@ -1347,7 +1350,7 @@ namespace StatsDirect.Builtins
                     summary.VarTWeighted = summary.Weight * summary.Weight * summary.Variance / summary.N;
                     summary.DfDenominator = Math.Pow(summary.Weight, 4) * Math.Pow(summary.Sd, 4) / (summary.N * summary.N * (summary.N - 1));
                     for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
-                        AreasUnderCurve[timeIndex, subjectIndex] = (summary.Weight == Constant.MISSING || Observations[timeIndex, subjectIndex] == Constant.MISSING) ? Constant.MISSING : summary.Weight * Observations[timeIndex, subjectIndex];
+                        AreasUnderCurve[timeIndex, subjectIndex] = summary.Weight == Constant.MISSING || Observations[timeIndex, subjectIndex] == Constant.MISSING ? Constant.MISSING : summary.Weight * Observations[timeIndex, subjectIndex];
 
                     if (!isBootstrap)
                     {
@@ -1410,7 +1413,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                AucMean = (AucN == 0 || AucSum == Constant.MISSING) ? Constant.MISSING : AucSum / AucN;
+                AucMean = AucN == 0 || AucSum == Constant.MISSING ? Constant.MISSING : AucSum / AucN;
                 VarAucMean = 0;
                 DfDenominator = 0;
                 foreach (TimeSummary ts in TimeToSummaryMap.Values)
@@ -1423,7 +1426,7 @@ namespace StatsDirect.Builtins
                 {
                     DfNumerator = VarAucMean * VarAucMean;
                     Df = DfNumerator / DfDenominator;
-                    double gamma = 1.0 - ((1.0 - ci) / 2.0);
+                    double gamma = 1.0 - (1.0 - ci) / 2.0;
                     CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
                     double td = Se * CriticalT;
                     tLclAucBar = AucMean - td;

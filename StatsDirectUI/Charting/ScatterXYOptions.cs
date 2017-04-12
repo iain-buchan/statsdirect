@@ -40,77 +40,23 @@ namespace StatsDirect.Charting
             showLegendIsRelevant = xSeries.Count > 1;
         }
 
-        public override bool UsesChartTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesChartTitle => true;
 
-        public override bool UsesXAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesXAxisTitle => true;
 
-        public override bool UsesYAxisTitle
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesYAxisTitle => true;
 
-        public override bool UsesAutoscale
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAutoscale => true;
 
-        public override bool UsesAxisLabelFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisLabelFontDescriptor => true;
 
-        public override bool UsesAxisTitleFontDescriptor
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesAxisTitleFontDescriptor => true;
 
-        public override bool UsesSeriesLabels
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool UsesSeriesLabels => true;
 
-        public override bool ShowScatterXYOptions
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool ShowScatterXYOptions => true;
 
-        public override bool ShowLegendIsRelevant
-        {
-            get
-            {
-                return showLegendIsRelevant;
-            }
-        }
+        public override bool ShowLegendIsRelevant => showLegendIsRelevant;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

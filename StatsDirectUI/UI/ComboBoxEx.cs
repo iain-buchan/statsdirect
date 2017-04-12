@@ -81,7 +81,7 @@ namespace StatsDirect.UI
                     bool found = false;
                     for (int probe = 0; probe < Items.Count; probe++)
                     {
-                        if (!(Items[probe] is ComboBoxExItem && (!(((ComboBoxExItem)Items[probe]).Enabled))))
+                        if (!(Items[probe] is ComboBoxExItem && !((ComboBoxExItem)Items[probe]).Enabled))
                         {
                             SelectedIndex = probe;
                             found = true;
