@@ -5,10 +5,10 @@ using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class LinearRegressionChartRenderer: AbstractChartRenderer, IChartRenderer
+    class LinearRegressionChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public LinearRegressionChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base (cd, canvasFactory)
+            : base(cd, canvasFactory)
         {
         }
 
@@ -73,7 +73,10 @@ namespace StatsDirect.Charting.Renderer
             for (double calcx = fullWidth ? axisScales.X.MinimumScaleValue : axisScales.X.MinimumDataValue; calcx <= (fullWidth ? axisScales.X.MaximumScaleValue : axisScales.X.MaximumDataValue); calcx += xstep)
             {
                 double calcy = slope * calcx + intercept;
-                if (calcx >= axisScales.X.MinimumScaleValue && calcy >= axisScales.Y.MinimumScaleValue && calcx <= axisScales.X.MaximumScaleValue && calcy <= axisScales.Y.MaximumScaleValue)
+                if (calcx >= axisScales.X.MinimumScaleValue && calcy >= axisScales.Y.MinimumScaleValue
+                    && calcx <= axisScales.X.MaximumScaleValue && calcy <= axisScales.Y.MaximumScaleValue
+                    && oldx >= axisScales.X.MinimumScaleValue && oldy >= axisScales.Y.MinimumScaleValue
+                    && oldx <= axisScales.X.MaximumScaleValue && oldy <= axisScales.Y.MaximumScaleValue)
                     DrawLineInChartCoordinates(grGreen, calcx, calcy, oldx, oldy);
                 oldx = calcx;
                 oldy = calcy;
