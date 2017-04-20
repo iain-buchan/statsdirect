@@ -217,8 +217,7 @@ namespace StatsDirect.UI
             if (tagObject is Dictionary<string, string>)
             {
                 Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
-                string operationName;
-                if (tagDictionary.TryGetValue("operation", out operationName))
+                if (tagDictionary.TryGetValue("operation", out string operationName))
                 {
                     Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
                     enabledViaGrid = isGridVisible || !operation.RequiresGrid;
@@ -375,13 +374,11 @@ namespace StatsDirect.UI
             if (!(tagObject is Dictionary<string, string>))
                 return;
             Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
-            string operationName;
-            if (!tags.TryGetValue("operation", out operationName))
-                return;
-            Operation operation;
-            if (!TemplateFactory.Operations.TryGetValue(operationName, out operation))
-                return;
-            DoOperationWithPossibleBatching(operation);
+                if (!tags.TryGetValue("operation", out string operationName))
+                    return;
+                if (!TemplateFactory.Operations.TryGetValue(operationName, out Operation operation))
+                    return;
+                DoOperationWithPossibleBatching(operation);
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
@@ -1237,8 +1234,7 @@ namespace StatsDirect.UI
         {
             while (true)
             {
-                string sd2Path;
-                bool sd2ExistsAndSupportsConversion = FindStatsDirect2(out sd2Path);
+                bool sd2ExistsAndSupportsConversion = FindStatsDirect2(out string sd2Path);
                 if (sd2ExistsAndSupportsConversion)
                     return ConvertSdwAndOpen(path, sd2Path);
 
@@ -2065,17 +2061,14 @@ namespace StatsDirect.UI
             if (lastSeenMenuItemTag is Dictionary<string, string>)
             {
                 Dictionary<string, string> tags = (Dictionary<string, string>)lastSeenMenuItemTag;
-                string menuTopic;
-                if (tags.TryGetValue("help", out menuTopic))
+                if (tags.TryGetValue("help", out string menuTopic))
                 {
                     SdApplication.SoleInstance.ShowHelp(this, menuTopic);
                     return;
                 }
-                string operationName;
-                if (tags.TryGetValue("operation", out operationName))
+                if (tags.TryGetValue("operation", out string operationName))
                 {
-                    Operation operation;
-                    if (TemplateFactory.Operations.TryGetValue(operationName, out operation))
+                    if (TemplateFactory.Operations.TryGetValue(operationName, out Operation operation))
                     {
                         if (null != operation.HelpContext)
                         {
@@ -2332,8 +2325,7 @@ namespace StatsDirect.UI
                 {
                     foreach (string operationName in context[OPERATION_MEMORY_NAME].AsStringList)
                     {
-                        Operation op;
-                        if (TemplateFactory.Operations.TryGetValue(operationName, out op))
+                        if (TemplateFactory.Operations.TryGetValue(operationName, out Operation op))
                         {
                             if (!ops.Contains(op))
                                 ops.Add(op);
@@ -2989,8 +2981,7 @@ namespace StatsDirect.UI
             if (!(tagObject is Dictionary<string, string>))
                 return;
             Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
-            string fileName;
-            if (!tagDictionary.TryGetValue("path", out fileName))
+            if (!tagDictionary.TryGetValue("path", out string fileName))
                 return;
             if (null == fileName)
                 return;
@@ -3051,8 +3042,7 @@ namespace StatsDirect.UI
                 if (!(tagObject is Dictionary<string, string>))
                     return;
                 Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
-                string commandLine;
-                if (!tagDictionary.TryGetValue("cmd", out commandLine))
+                if (!tagDictionary.TryGetValue("cmd", out string commandLine))
                     return;
                 if (null == commandLine)
                     return;

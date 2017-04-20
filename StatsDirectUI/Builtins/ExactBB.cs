@@ -1112,10 +1112,10 @@ namespace StatsDirect.Builtins
         /// <param name="ierr"></param>
         private void Converge(double approx, out double root, out int ierr)
         {
-            double x0; double x1; double f0; double f1 = 0;
+            double f1 = 0;
 
             if (double.IsInfinity(approx)) approx=1.0;
-            BracketRoot(approx, out x0, out x1, out f0, ref f1, out ierr);
+            BracketRoot(approx, out double x0, out double x1, out double f0, ref f1, out ierr);
             if (ierr != 0)
             {
                 root = Constant.MISSING;
@@ -1394,11 +1394,7 @@ namespace StatsDirect.Builtins
                     tabl[1].N0 = b + d;
                     tabl[1].Informative = a * d != 0 || b * c != 0;
                     bool useLogScale = false;
-                    double ulm;
-                    int ierr;
-                    double llm;
-                    double p1M; double p2M; double p1F; double p2F;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out int ierr);
                 }
                 else
                 {

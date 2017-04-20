@@ -225,8 +225,7 @@ namespace StatsDirect.UI
                         if (windowName.StartsWith("Data "))
                         {
                             string windowNumberAsString = windowName.Substring(5).Trim();
-                            int windowNumber;
-                            if (int.TryParse(windowNumberAsString, out windowNumber))
+                            if (int.TryParse(windowNumberAsString, out int windowNumber))
                             {
                                 if (windowNumber == candidateNumber)
                                 {
@@ -268,8 +267,7 @@ namespace StatsDirect.UI
                     if (Path.HasExtension(windowName))
                         windowName = Path.GetFileNameWithoutExtension(windowName);
                     string windowNumberAsString = windowName.Substring(7).Trim();
-                    int windowNumber;
-                    if (int.TryParse(windowNumberAsString, out windowNumber))
+                    if (int.TryParse(windowNumberAsString, out int windowNumber))
                     {
                         if (windowNumber == candidateNumber)
                         {
@@ -304,8 +302,7 @@ namespace StatsDirect.UI
                         if (windowName.StartsWith("Script "))
                         {
                             string windowNumberAsString = windowName.Substring(7).Trim();
-                            int windowNumber;
-                            if (int.TryParse(windowNumberAsString, out windowNumber))
+                            if (int.TryParse(windowNumberAsString, out int windowNumber))
                             {
                                 if (windowNumber == candidateNumber)
                                 {
@@ -1283,8 +1280,7 @@ namespace StatsDirect.UI
             {
                 if (null == variable.Origin)
                     continue;
-                List<Variable> variablesByThisGroup;
-                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out variablesByThisGroup))
+                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out List<Variable> variablesByThisGroup))
                 {
                     variablesByThisGroup = new List<Variable>();
                     variablesByOriginGroup.Add(variable.Origin.OriginGroup, variablesByThisGroup);

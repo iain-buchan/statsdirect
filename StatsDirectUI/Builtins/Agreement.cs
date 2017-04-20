@@ -12,15 +12,10 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptUniversalAgreement(ITemplateHost host, ParameterBag parameters)
         {
-            int n;
-            int b;
-            int c;
-            double[, ,] data;
-            bool standard;
             int nobs = 0;
             string title = null;
             string refIdent = null;
-            GatherUniversalAgreementData(host, parameters, out n, out b, out c, out data, out standard, ref nobs, ref title, ref refIdent);
+            GatherUniversalAgreementData(host, parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref nobs, ref title, ref refIdent);
 
             double delta;
             double edel;
@@ -583,10 +578,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                double cum1;
-                double cum2;
-                double cum3;
-                AgreeStdCalc(kn, kr, d, data, sj1, sj2, sj3, uj, out cum1, out cum2, out cum3, out delta);
+                AgreeStdCalc(kn, kr, d, data, sj1, sj2, sj3, uj, out double cum1, out double cum2, out double cum3, out delta);
 
                 del[i] = delta;
                 c1[i] = cum1;
@@ -737,35 +729,26 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptUniversalAgreementSimulateExactP(ITemplateHost host, ParameterBag parameters)
         {
-            int n;
-            int b;
-            int c;
-            double[, ,] data;
-            bool standard;
             int nobs = 0;
             string title = null;
             string refIdent = null;
-            GatherUniversalAgreementData(host, parameters, out n, out b, out c, out data, out standard, ref nobs, ref title, ref refIdent);
+            GatherUniversalAgreementData(host, parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref nobs, ref title, ref refIdent);
 
-            double delta, edel, var, gam, r, t, prob;
+            double prob;
 
-            Agree(n, b, c, data, out delta, out edel, out var, out gam, out r, out t);
+            Agree(n, b, c, data, out double delta, out double edel, out double var, out double gam, out double r, out double t);
             prob = Pgamt(t, gam);
 
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
             int seed = parameters["seed"].AsInt32;
 
-            int ir;
-            int mpd;
-            Rmrbp(host, 1.0, n, b, c, 0, 0, 0, data, 0, seed, iterations, out ir, out mpd);
+            Rmrbp(host, 1.0, n, b, c, 0, 0, 0, data, 0, seed, iterations, out int ir, out int mpd);
             ParameterBag outputParameters = new ParameterBag();
             double p = Convert.ToDouble(ir) / Convert.ToDouble(mpd);
             outputParameters.AddOutput("p", p);
             //  CI
-            double ll; double ul;
-            string warn;
-            MathDbl.binci(Convert.ToDouble(ir), Convert.ToDouble(mpd), out ll, out ul, ci, out warn);
+            MathDbl.binci(Convert.ToDouble(ir), Convert.ToDouble(mpd), out double ll, out double ul, ci, out string warn);
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
             outputParameters.AddOutput("ll", ll);
             outputParameters.AddOutput("ul", host.RoundU(ul) + warn);

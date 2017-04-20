@@ -33,8 +33,7 @@ namespace StatsDirect.Builtins
             const string methodName = "DoIt";
             bool allDoubles = passedVariableTypes.Aggregate(true, (okSoFar, dt) => okSoFar && dt == DataType.Double);
             compiledForVariants = assumeVariants || !allDoubles;
-            DataType retval;
-            string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out retval);
+            string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out DataType retval);
 
             // By now, cSharpExpression will either be safe (every character has been through the parser) or an exception will have been thrown.  Therefore, it's reasonable to throw the expression at the compiler.
             StringBuilder functionBuilder = new StringBuilder();

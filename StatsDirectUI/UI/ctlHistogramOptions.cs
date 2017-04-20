@@ -56,20 +56,17 @@ namespace StatsDirect.UI
             options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
 
             HistogramSeriesOptions seriesOptions = options.HistoSeriesOptions[currentSeriesIndex];
-            int bins;
-            if (!int.TryParse(txtBins.Text, out bins))
+            if (!int.TryParse(txtBins.Text, out int bins))
             {
                 FailAndHighlight(txtBins);
                 optionsAreOk = false;
             }
-            double midpointInterval;
-            if (!double.TryParse(txtMidpointInterval.Text, out midpointInterval))
+            if (!double.TryParse(txtMidpointInterval.Text, out double midpointInterval))
             {
                 FailAndHighlight(txtMidpointInterval);
                 optionsAreOk = false;
             }
-            double minimumBinMidpoint;
-            if (!double.TryParse(txtMinimumMidpoint.Text, out minimumBinMidpoint))
+            if (!double.TryParse(txtMinimumMidpoint.Text, out double minimumBinMidpoint))
             {
                 FailAndHighlight(txtMinimumMidpoint);
                 optionsAreOk = false;
@@ -77,8 +74,7 @@ namespace StatsDirect.UI
             double minimum = minimumBinMidpoint - midpointInterval / 2.0;
             double maximum = minimum + bins * midpointInterval;
             double[] edges = HistogramBinChooser.Linspace(minimum, maximum, bins);
-            int actualRows;
-            double[] sortedData = HistogramSeriesOptions.ExtractNonMissingDataAndSort(definition.YSeries[currentSeriesIndex], out actualRows);
+            double[] sortedData = HistogramSeriesOptions.ExtractNonMissingDataAndSort(definition.YSeries[currentSeriesIndex], out int actualRows);
             Array.Sort(sortedData, 0, actualRows);
             int[] counts = HistogramBinChooser.SortedHist(sortedData, actualRows, edges);
             seriesOptions.BinsDescriptor = new BinsDescriptor { Edges = edges, Counts = counts };
@@ -143,14 +139,11 @@ namespace StatsDirect.UI
         /// </summary>
         private void ListBins()
         {
-            int mp;
-            if (!int.TryParse(txtBins.Text, out mp))
+            if (!int.TryParse(txtBins.Text, out int mp))
                 FailAndHighlight(txtBins);
-            double zInt;
-            if (!double.TryParse(txtMidpointInterval.Text, out zInt))
+            if (!double.TryParse(txtMidpointInterval.Text, out double zInt))
                 FailAndHighlight(txtMidpointInterval);
-            double zMin;
-            if (!double.TryParse(txtMinimumMidpoint.Text, out zMin))
+            if (!double.TryParse(txtMinimumMidpoint.Text, out double zMin))
                 FailAndHighlight(txtMinimumMidpoint);
             lstBinValues.Items.Clear();
             for (int i = 0; i < mp; i++)
@@ -316,8 +309,7 @@ namespace StatsDirect.UI
 
         private static BinChoiceMethod ToBinChoiceMethod(string displayString)
         {
-            BinChoiceMethod binChoiceMethod;
-            if (Enum.TryParse(displayString, out binChoiceMethod))
+            if (Enum.TryParse(displayString, out BinChoiceMethod binChoiceMethod))
                 return binChoiceMethod;
             if ("Shimazaki-Shinomoto".Equals(displayString))
                 return BinChoiceMethod.Shimazaki;

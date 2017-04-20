@@ -18,8 +18,7 @@ namespace StatsDirect.Templates
 
         public Builtin Builtin(string name)
         {
-            Builtin builtin;
-            if (!builtins.TryGetValue(name, out builtin))
+            if (!builtins.TryGetValue(name, out Builtin builtin))
                 throw new Exception("No built-in operation named '" + name + "' exists in the function registry.");
             return builtin;
         }

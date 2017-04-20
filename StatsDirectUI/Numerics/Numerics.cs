@@ -242,8 +242,7 @@ namespace StatsDirect.Numerics
         /// </remarks>
         public static double gauinv(double p)
         {
-            int ifault;
-            return gauinv(p, out ifault);
+            return gauinv(p, out int ifault);
         }
 
         /// <summary>
@@ -851,10 +850,9 @@ namespace StatsDirect.Numerics
         /// </summary>
         public static double ffromp(double dfd, double dfn, double p)
         {
-            int ifault;
             double a = dfd / 2.0;
             double b = dfn / 2.0;
-            double ret = xinbta(a, b, p, out ifault);
+            double ret = xinbta(a, b, p, out int ifault);
             if (ifault != 0)
                 ret = double.NaN;
             else
@@ -867,8 +865,7 @@ namespace StatsDirect.Numerics
         /// </summary>
         public static double fvalp(double f, double dfn, double dfd)
         {
-            int fault;
-            double ret = betain(dfd / (dfd + dfn * f), dfd / 2.0, dfn / 2.0, out fault);
+            double ret = betain(dfd / (dfd + dfn * f), dfd / 2.0, dfn / 2.0, out int fault);
             if (fault != 0)
                 ret = double.NaN;
             return ret;
@@ -895,8 +892,7 @@ namespace StatsDirect.Numerics
         /// </summary>
         public static double tfromp2(double p, double df)
         {
-            int ifault;
-            double ret = finvt(p, df, out ifault);
+            double ret = finvt(p, df, out int ifault);
             if (ifault != 0)
                 ret = double.NaN;
             return ret;
@@ -987,8 +983,7 @@ namespace StatsDirect.Numerics
         /// </summary>
         public static double chivalp(double x, double df)
         {
-            int ifault;
-            double ret = 1.0 - gammad(x / 2.0, df / 2.0, out ifault);
+            double ret = 1.0 - gammad(x / 2.0, df / 2.0, out int ifault);
             if (ifault != 0)
                 ret = double.NaN;
             return ret;
@@ -2598,8 +2593,7 @@ namespace StatsDirect.Numerics
             double retval = 0.0;
             if (df > dlarg)
             {
-                int it;
-                retval = wprob(q, rr, cc, out it);
+                retval = wprob(q, rr, cc, out int it);
                 if (1 == it)
                     ir[1] = 1;
                 return retval;
@@ -2670,8 +2664,7 @@ namespace StatsDirect.Numerics
                         }
 
                         // call wprob to find integral of range portion 
-                        int it;
-                        double wprb = wprob(qsqz, rr, cc, out it);
+                        double wprb = wprob(qsqz, rr, cc, out int it);
                         if (1 == it)
                         {
                             ir[1] = 1;
@@ -3007,8 +3000,7 @@ namespace StatsDirect.Numerics
             // b=lower integration limit
             // u=upper integration limit
             // -------------------------
-            int ifault;
-            double b = Math.Sqrt(0.50 * ppchi2(pbot, dnu, out ifault));
+            double b = Math.Sqrt(0.50 * ppchi2(pbot, dnu, out int ifault));
             double u = sup >= 0.0 ? sup : Math.Sqrt(0.50 * ppchi2(pup, dnu, out ifault));
             double wid = u - b;
             double hwid = 0.50 * wid;

@@ -14,7 +14,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptChi2By2(ITemplateHost host, ParameterBag parameters)
         {
             double eor = 0;
-            int fault;
 
             double cco = parameters["cco"].AsDouble;
             string studyType = parameters["study_type"].AsString;
@@ -24,7 +23,7 @@ namespace StatsDirect.Builtins
 
             if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
 
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
@@ -135,17 +134,8 @@ namespace StatsDirect.Builtins
                 //tabl[1].N0 = b + d;
                 //tabl[1].Informative = (a * d != 0) | (b * c != 0);
                 //bool useLogScale = false;
-                int ierr;
-                double llm;
-                double ulf;
-                double ulm;
-                double llf;
-                double p2m;
-                double p1m;
-                double p2f;
-                double p1f;
                 //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-                ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
+                ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
                 if (ierr != 0)
                 //{
                     // eor = Constant.MISSING; 
@@ -361,23 +351,11 @@ namespace StatsDirect.Builtins
             double llf = 0;
             double ulf = 0;
             double eor = 0;
-            double dsul;
-            double dsll;
-            double dsx2;
-            double dsor;
             double bd = 0;
             double qc = 0;
-            double sk;
-            double x2;
-            double ul;
-            double ll;
-            double rmh;
-            double isq; double tausq = 0;
-            double llisq;
-            double ulisq;
+            double tausq = 0;
             int r;
-            int realk; int i; int ierr;
-
+            int i;
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
             DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
@@ -421,10 +399,9 @@ namespace StatsDirect.Builtins
             }
 
             bool plotForest = parameters["plot_forest"].AsBoolean;
-            int fault;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
 
-            Meta.Mantel(host, false, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out dsor, out dsx2, out dsll, out dsul, ref cced, ref tausq, out ierr);
+            Meta.Mantel(host, false, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
             if (ierr != 0)
                 return null;
 
@@ -556,7 +533,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, Convert.ToDouble(realk - 1)));
             outputParameters.AddOutput("tausq", tausq);
-            Meta.IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
+            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
@@ -645,7 +622,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptChiWoolf(ITemplateHost host, ParameterBag parameters)
         {
             int rc;
-            bool ierr;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
@@ -660,8 +636,7 @@ namespace StatsDirect.Builtins
             if (cco <= 0.0 | cco >= 1.0)
                 cco = 0.95;
 
-            int fault;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
 
@@ -681,7 +656,7 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out ierr);
+            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out bool ierr);
         }
 
         public static ParameterBag RptChi2ByNWithTrendSimulateExactP(ITemplateHost host, ParameterBag parameters)
@@ -719,10 +694,8 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            int r;
-            int actualIterations;
             int ierror = 0;
-            Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, out r, out actualIterations, seed, ref ierror);
+            Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, out int r, out int actualIterations, seed, ref ierror);
 
             ParameterBag outputParameters = new ParameterBag();
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
@@ -730,9 +703,7 @@ namespace StatsDirect.Builtins
                 double p = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
                 outputParameters.AddOutput("p", host.pval(p));
                 //  CI
-                double ll; double ul;
-                string warn;
-                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
+                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out double ll, out double ul, ci, out string warn);
                 outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
                 outputParameters.AddOutput("ll", ll);
                 outputParameters.AddOutput("ul", host.RoundU(ul) + warn);

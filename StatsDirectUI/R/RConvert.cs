@@ -20,7 +20,7 @@ namespace StatsDirect.R
 
         public static void ToRName(StringBuilder sb, string rawVariableName)
         {
-            string[] reservedWords = new string[] { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
+            string[] reservedWords = new[] { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
             List<string> rw = new List<string>(reservedWords);
             string lowerName = rawVariableName.ToLower(CultureInfo.InvariantCulture);
             if (rw.Contains(lowerName))

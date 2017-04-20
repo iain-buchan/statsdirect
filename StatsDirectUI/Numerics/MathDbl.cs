@@ -959,8 +959,7 @@ namespace StatsDirect.Numerics
                     int iter;
                     for (iter = 1; iter <= 40; iter++)
                     {
-                        double hth;
-                        z_profile(ia, im, ib, z_in, ic, id, M, N, u, v, a, b, C, D, thhat, psihat, th, out ps, th1, th2, k, f, out hth, z, ref fault);
+                        z_profile(ia, im, ib, z_in, ic, id, M, N, u, v, a, b, C, D, thhat, psihat, th, out ps, th1, th2, k, f, out double hth, z, ref fault);
                         if (fault)
                         {
                             xl = Constant.MISSING;
@@ -1097,19 +1096,11 @@ namespace StatsDirect.Numerics
                     double za2 = zc;
                     double temptheta1 = i == 1 ? thetau : thetal;
                     double temptheta2 = 0.9 * temptheta1;
-                    double c;
-                    double a;
-                    double b;
-                    double ztemp1 = lr_z(ref temptheta1, out a, out b, out c, ref N, ref n0, ref n1, ref x0, ref x1);
+                    double ztemp1 = lr_z(ref temptheta1, out double a, out double b, out double c, ref N, ref n0, ref n1, ref x0, ref x1);
                     double diff1 = Math.Abs(za2 - Math.Abs(ztemp1));
                     double ztemp2 = lr_z(ref temptheta2, out a, out b, out c, ref N, ref n0, ref n1, ref x0, ref x1);
                     double diff2 = Math.Abs(za2 - Math.Abs(ztemp2));
-                    double zcritical;
-                    double z0;
-                    double z1;
-                    double theta0;
-                    double theta1;
-                    lr_diff(diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical);
+                    lr_diff(diff1, diff2, out double theta1, out double theta0, temptheta1, temptheta2, out double z1, out double z0, ztemp1, ztemp2, out double zcritical);
                     int cnt = 0;
                     double theta2;
                     do
@@ -1540,8 +1531,7 @@ namespace StatsDirect.Numerics
                         {
                             qp = 0.9999999999999;
                         }
-                        int fault;
-                        double qz = Math.Abs(PDF.gauinv(qp, out fault));
+                        double qz = Math.Abs(PDF.gauinv(qp, out int fault));
                         if (qp < 0.5)
                         {
                             qz = -qz;

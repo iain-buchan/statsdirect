@@ -17,9 +17,8 @@ namespace StatsDirect.Builtins
         { 
             
             
-            double dif = Math.Abs( fisher_zmean( r0, N ) - fisher_zmean( r1, N ) ); 
-            int ifault; 
-            double zsig = PDF.gauinv( 1.0 - alpha / 2.0, out ifault ); 
+            double dif = Math.Abs( fisher_zmean( r0, N ) - fisher_zmean( r1, N ) );
+            double zsig = PDF.gauinv(1.0 - alpha / 2.0, out int ifault);
             if ( ifault != 0 ) 
                 return Constant.MISSING; 
             double var = Math.Sqrt( N - 1.0 ); 
@@ -69,9 +68,8 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         private static double fisherss( double BETA, double alpha, double P1, double P0, double N, double M ) 
         {
-            int fault; 
-            
-            double zalpha = -PDF.gauinv( alpha / 2.0, out fault ); 
+
+            double zalpha = -PDF.gauinv(alpha / 2.0, out int fault);
             if ( fault != 0 )
                 return Constant.MISSING; 
             double zbeta = -PDF.gauinv( BETA, out fault ); 
@@ -161,18 +159,17 @@ namespace StatsDirect.Builtins
         
         public static double fishpower( double alpha, double a, double b, double n1, double n2, ref bool dofish ) 
         {
-            int fault; 
-            
+
             //  power for Fisher exact test or continuity corrected chi-squaure test
             //  n = number of experimental subjects
             //  m = controls per experimental subject
-            if ( n1 == 0 || n2 == 0 ) 
+            if (n1 == 0 || n2 == 0)
                 return Constant.MISSING;
             double P0 = b / n2; 
             double P1 = a / n1; 
             double M = n2 / n1; 
             double N = n1;
-            double zalpha = -PDF.gauinv( alpha / 2.0, out fault ); 
+            double zalpha = -PDF.gauinv( alpha / 2.0, out int fault ); 
             if ( fault != 0 ) 
                 return Constant.MISSING; 
             double pbar = ( P1 + M * P0 ) / ( M + 1.0 ); 

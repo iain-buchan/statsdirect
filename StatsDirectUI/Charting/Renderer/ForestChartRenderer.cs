@@ -16,7 +16,7 @@ namespace StatsDirect.Charting.Renderer
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             ForestOptions fOptions = (ForestOptions)definition.ChartOptions;
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
             double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
             double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
@@ -91,7 +91,7 @@ namespace StatsDirect.Charting.Renderer
             MarkerType studyMarkerType = fOptions.MarkerTypes[0];
             MarkerType pooledMarkerType = fOptions.MarkerTypes[1];
 
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis, fOptions.gn, fOptions.pg }, 0, fOptions.k, 0);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis, fOptions.gn, fOptions.pg }, 0, fOptions.k, 0);
             double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
             double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];

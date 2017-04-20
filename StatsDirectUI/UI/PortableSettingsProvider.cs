@@ -67,8 +67,7 @@ namespace StatsDirect.UI
             // Iterate through the settings to be retrieved
             foreach (SettingsProperty setting in props)
             {
-                bool usingDefault;
-                string sv = GetValue(setting, out usingDefault);
+                string sv = GetValue(setting, out bool usingDefault);
                 SettingsPropertyValue value = new SettingsPropertyValue(setting) {IsDirty = false, SerializedValue = sv};
                 values.Add(value);
             }

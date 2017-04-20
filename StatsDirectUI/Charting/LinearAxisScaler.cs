@@ -8,7 +8,7 @@ namespace StatsDirect.Charting
     public class LinearAxisScaler: IAxisScaler
     {
         // Numbers of divisions to try in Q_Axis, in preference order
-        private static readonly int[] DIVISIONS_TO_TRY = new int[] { 20, 15, 25, 16, 24 };
+        private static readonly int[] DIVISIONS_TO_TRY = new[] { 20, 15, 25, 16, 24 };
         // Scalers to try in ShiftMinMax, in preference order.
         private static readonly double[] AXIS_SCALERS = { 1.0, 0.5, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 0.7, 0.9, 0.15, 0.25, 0.75, 0.05 };
 
@@ -37,8 +37,7 @@ namespace StatsDirect.Charting
             foreach (int candidateDivisions in DIVISIONS_TO_TRY)
             {
                 LinearAxisScale unshiftedAxisScale = Axis(qmin, qmax, candidateDivisions);
-                int shiftedScore;
-                ILinearAxisScale shiftedAxisScale = ShiftMinMax(qmin, qmax, unshiftedAxisScale, out shiftedScore);
+                ILinearAxisScale shiftedAxisScale = ShiftMinMax(qmin, qmax, unshiftedAxisScale, out int shiftedScore);
                 NeatnessComparison neater = CompareNeatness(bestScaleSoFar, shiftedAxisScale);
                 if (neater == NeatnessComparison.Second || neater == NeatnessComparison.Equal && shiftedScore < bestScoreSoFar)
                 {

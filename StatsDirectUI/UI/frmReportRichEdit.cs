@@ -426,8 +426,7 @@ namespace StatsDirect.UI
         internal override void ShowHelp()
         {
             string helpString = GetHiddenTextEnclosedBy("help");
-            int helpId;
-            if (int.TryParse(helpString, out helpId))
+            if (int.TryParse(helpString, out int helpId))
             {
                 SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow, helpId.ToString(CultureInfo.InvariantCulture));
             }
@@ -561,8 +560,7 @@ namespace StatsDirect.UI
         {
             if (IsImageSelected)
             {
-                byte[] bytes;
-                Image img = GetSelectedImage(out bytes);
+                Image img = GetSelectedImage(out byte[] bytes);
                 if (null != bytes)
                 {
                     Metafile mf = (Metafile)img;
@@ -590,8 +588,7 @@ namespace StatsDirect.UI
 
         private void ExportSelectedImage()
         {
-            byte[] bytes;
-            Image img = GetSelectedImage(out bytes);
+            Image img = GetSelectedImage(out byte[] bytes);
             if (null != bytes)
             {
                 using (frmExportGraphic f = new frmExportGraphic(img, bytes))

@@ -16,8 +16,7 @@ namespace StatsDirect.UI
             if (path.Length > IpcListener.MAXIMUM_PATH_LENGTH / 6 - 20)
                 return false;
 
-            bool wasCreated;
-            using (Semaphore semaphore = new Semaphore(1, 1, IpcListener.WAIT_SEMAPHORE_NAME, out wasCreated))
+            using (Semaphore semaphore = new Semaphore(1, 1, IpcListener.WAIT_SEMAPHORE_NAME, out bool wasCreated))
             {
                 // If the semaphore was created new, there can't be another process at the far end.
                 if (wasCreated)

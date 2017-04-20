@@ -321,15 +321,13 @@ namespace StatsDirect.UI
         private static void CheckLicense()
         {
             UserInfo machineUi = License.GetUserInfo(true);
-            bool scrap;
-            bool machineOk = License.Check(machineUi, out scrap);
+            bool machineOk = License.Check(machineUi, out bool scrap);
             if (machineOk)
                 return;
             while (true)
             {
                 UserInfo userUi = License.GetUserInfo(false);
-                bool userIsPartiallyComplete;
-                bool userOk = License.Check(userUi, out userIsPartiallyComplete);
+                bool userOk = License.Check(userUi, out bool userIsPartiallyComplete);
                 if (userOk)
                     return;
 

@@ -22,8 +22,7 @@ namespace StatsDirect.Builtins
 
             private int CompareTo(Catvar other)
             {
-                double mti, oti;
-                if (double.TryParse(Title, out mti) && double.TryParse(other.Title, out oti))
+                if (double.TryParse(Title, out double mti) && double.TryParse(other.Title, out double oti))
                 {
                     if (mti < oti)
                         return -1;
@@ -79,7 +78,7 @@ namespace StatsDirect.Builtins
 
             double currentval = startval;
             DoubleVariable v = new DoubleVariable(rows, title);
-            Calcit c = new Calcit(formula, new DataType[] { DataType.Double }, false);
+            Calcit c = new Calcit(formula, new[] { DataType.Double }, false);
             DataFrame outputFrame = new DataFrame(v);
             double[] x = new double[1];
             for (int i = 0; i < rows; i++)
@@ -99,7 +98,7 @@ namespace StatsDirect.Builtins
             string[] splitConversion = conversion.Split('|');
             string formula = splitConversion[0];
             string outputUnits = splitConversion[1];
-            Calcit c = new Calcit(formula, new DataType[] { DataType.Double }, false);
+            Calcit c = new Calcit(formula, new[] { DataType.Double }, false);
             double[] x = new double[1];
 
             DataFrame dataFrame = parameters["data"].AsDataFrame;
@@ -233,8 +232,7 @@ namespace StatsDirect.Builtins
 
         public static bool IsMissing(string value, double userNumber, string userText)
         {
-            double x;
-            if (double.TryParse(value, out x))
+            if (double.TryParse(value, out double x))
             {
                 // It's a double.  If it's MISSING, it's missing.
                 if (x == Constant.MISSING)
@@ -731,8 +729,7 @@ namespace StatsDirect.Builtins
                     continue;
                 }
 
-                double lambda, mu, sigma;
-                uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i], out lambda, out mu, out sigma);
+                uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i], out double lambda, out double mu, out double sigma);
                 correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode, measure [i], lambda, mu, sigma);
                 if (includeCentiles)
                     centile[i] = Constant.MISSING == correctedZ[i] ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
@@ -1131,7 +1128,7 @@ namespace StatsDirect.Builtins
                 default:
                     throw new Exception("Unknown operation");
             }
-            Calcit searcher = new Calcit(searchExpression, new DataType[] { inputType }, true);
+            Calcit searcher = new Calcit(searchExpression, new[] { inputType }, true);
             if (searcher.OutputType != DataType.Boolean)
                 throw new Exception("Please specify a valid search expression");
 
@@ -1144,7 +1141,7 @@ namespace StatsDirect.Builtins
 
             Calcit replacer = null;
             if (replacingWithExpression)
-                replacer = new Calcit(replaceExpression, new DataType[] { inputType }, true);
+                replacer = new Calcit(replaceExpression, new[] { inputType }, true);
 
             DataFrame outputFrame = new DataFrame();
             bool[] rowsToDelete = new bool[inputFrame.MaxRows];
@@ -1260,8 +1257,7 @@ namespace StatsDirect.Builtins
             outputFrame.Variables.Add(outputVariable);
             if (method == 4)
             {
-                int ierr;
-                MathDbl.ecdf(inputVariable.Data, outputVariable.Data, out ierr);
+                MathDbl.ecdf(inputVariable.Data, outputVariable.Data, out int ierr);
                 if (ierr == 1)
                     throw new ArgumentException("Must have at least 3 data values to calculate empirical CDF");
             }
@@ -1539,8 +1535,7 @@ namespace StatsDirect.Builtins
                 }
             }
             double[] r = new double[nx + 1];
-            double xf;
-            ExFortran.Rank(prk, r, 1, nx, 0, out xf);
+            ExFortran.Rank(prk, r, 1, nx, 0, out double xf);
             if (method == 3)
             {
                 if (rows > 2500)
@@ -1798,10 +1793,7 @@ namespace StatsDirect.Builtins
                             p = 0.025;
                         }
                         int nx = rows;
-                        int ix;
-                        int fault;
-                        double pu;
-                        MathDbl.taufromp(p, out pu, out ix, ref nx, out fault);
+                        MathDbl.taufromp(p, out double pu, out int ix, ref nx, out int fault);
                         double[] pws = new double[cnt + 1];
                         if (fault == 0)
                         {
@@ -2038,8 +2030,7 @@ namespace StatsDirect.Builtins
                 }
             }
             double[] r = new double[nx + 1];
-            double tie;
-            ExFortran.Rank(prk, r, 1, nx, q, out tie);
+            ExFortran.Rank(prk, r, 1, nx, q, out double tie);
             string title = "Rank: " + inputVariable.Title + (q < 2 ? string.Empty : " [tie correction = " + tie.ToString() + "]");
             DataFrame outputFrame = new DataFrame();
             DoubleVariable outputVariable = new DoubleVariable(rows, title);
@@ -2418,8 +2409,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            int fault;
-                            double zed = PDF.gauinv(prop, out fault);
+                            double zed = PDF.gauinv(prop, out int fault);
                             if (fault == 0)
                             {
                                 a[n] = 5 + zed;
@@ -2485,8 +2475,7 @@ namespace StatsDirect.Builtins
             if (index == 6)
             {
                 double[] fn = new double[inputData.Length];
-                int err;
-                MathDbl.ecdf(inputData, fn, out err);
+                MathDbl.ecdf(inputData, fn, out int err);
                 if (err == 0)
                 {
                     return WrapDoubleVariable(fn, "ECDF: " + inputVariable.Title);
@@ -2496,8 +2485,7 @@ namespace StatsDirect.Builtins
             if (index == 7)
             {
                 double[] fn = new double[inputData.Length];
-                int err;
-                MathDbl.zscore(inputData, ref fn, false, out err);
+                MathDbl.zscore(inputData, ref fn, false, out int err);
                 if (err == 0)
                 {
                     return WrapDoubleVariable(fn, "Z: " + inputVariable.Title);
@@ -2507,8 +2495,7 @@ namespace StatsDirect.Builtins
             if (index == 8)
             {
                 double[] fn = new double[inputData.Length];
-                int err;
-                MathDbl.zscore(inputData, ref fn, true, out err);
+                MathDbl.zscore(inputData, ref fn, true, out int err);
                 if (err == 0)
                     return WrapDoubleVariable(fn, "Z score (ECDF): " + inputVariable.Title);
                 throw new ArgumentException("Insufficient data");
@@ -2704,8 +2691,7 @@ namespace StatsDirect.Builtins
                 for (int sourceIndex = 0; sourceIndex < differenceArray.Length; sourceIndex++)
                 {
                     int value = differenceArray[sourceIndex];
-                    RespondersCountAndRowIndex rcari;
-                    if (countMap.TryGetValue(value, out rcari))
+                    if (countMap.TryGetValue(value, out RespondersCountAndRowIndex rcari))
                     {
                         rcari.Count++;
                     }
@@ -2764,8 +2750,7 @@ namespace StatsDirect.Builtins
                 // Categories - one row per combination of category and covariate pattern
                 DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
                 ClassifierVariable categoriesVariable = categoriesFrame.Variables[0] as ClassifierVariable;
-                int[] differenceArray;
-                int nextDifferentValue = ClassifyObjects(categoriesFrame, out differenceArray);
+                int nextDifferentValue = ClassifyObjects(categoriesFrame, out int[] differenceArray);
                 if (null != covariatesOrNull)
                     nextDifferentValue = ClassifyObjects(differenceArray, covariatesOrNull, nextDifferentValue);
 
@@ -2776,8 +2761,7 @@ namespace StatsDirect.Builtins
                 for (int sourceIndex = 0; sourceIndex < differenceArray.Length; sourceIndex++)
                 {
                     int value = differenceArray[sourceIndex];
-                    CountAndRowIndex cari;
-                    if (countMap.TryGetValue(value, out cari))
+                    if (countMap.TryGetValue(value, out CountAndRowIndex cari))
                         cari.Count++;
                     else
                     {
@@ -2864,11 +2848,9 @@ namespace StatsDirect.Builtins
                 case "responders-nonresps-covariates":
                     {
                         DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0] as DoubleVariable;
-                        int yesses;
-                        yesPerGroup = ToIntArray(respondersVariable.Data, out yesses);
+                        yesPerGroup = ToIntArray(respondersVariable.Data, out int yesses);
                         DoubleVariable nonrespsVariable = parameters["nonresps"].AsDataFrame.Variables[0] as DoubleVariable;
-                        int noes;
-                        noPerGroup = ToIntArray(nonrespsVariable.Data, out noes);
+                        noPerGroup = ToIntArray(nonrespsVariable.Data, out int noes);
                         totalOutputRows = yesses + noes;
                         labelsOrNull = null;
                         covariatesOrNull = parameters["covariates"].AsDataFrame;
@@ -2878,8 +2860,7 @@ namespace StatsDirect.Builtins
                 case "responders-totals-covariates":
                     {
                         DoubleVariable respondersVariable = parameters["responders"].AsDataFrame.Variables[0] as DoubleVariable;
-                        int scrap;
-                        yesPerGroup = ToIntArray(respondersVariable.Data, out scrap);
+                        yesPerGroup = ToIntArray(respondersVariable.Data, out int scrap);
                         DoubleVariable totalsVariable = parameters["totals"].AsDataFrame.Variables[0] as DoubleVariable;
                         int[] totalsPerGroup = ToIntArray(totalsVariable.Data, out totalOutputRows);
                         noPerGroup = new int[yesPerGroup.Length];
@@ -3052,8 +3033,8 @@ namespace StatsDirect.Builtins
                 {
                     int differenceValue = differenceArray[i];
                     IntAndSomething<T> probe = new IntAndSomething<T> { i = differenceValue, t = i < testArray.Length ? testArray[i] : default(T) };
-                    int target; // Holds the value we'll use
-                    if (differenceMapper.TryGetValue(probe, out target))
+                    // Holds the value we'll use
+                    if (differenceMapper.TryGetValue(probe, out int target))
                     {
                         // We've seen this value before; use the existing mapping
                     }
@@ -3136,8 +3117,7 @@ namespace StatsDirect.Builtins
                     if (Formatting.MISSINGLABEL.Equals(group.Label))
                         continue;
 
-                    int[] countsByVariable;
-                    if (!countsByLabelAndVariable.TryGetValue(group.Label, out countsByVariable))
+                    if (!countsByLabelAndVariable.TryGetValue(group.Label, out int[] countsByVariable))
                     {
                         countsByVariable = new int[rawValuesFrame.Variables.Count];
                         countsByLabelAndVariable.Add(group.Label, countsByVariable);
@@ -3189,9 +3169,7 @@ namespace StatsDirect.Builtins
 
                 //  If both are numeric, compare numerically; else, compare as text
                 bool lower;
-                double numericX;
-                double numericY;
-                if (double.TryParse(x, out numericX) && double.TryParse(y, out numericY))
+                if (double.TryParse(x, out double numericX) && double.TryParse(y, out double numericY))
                     lower = numericX <= numericY;
                 else
                     lower = string.CompareOrdinal(x, y) < 0;

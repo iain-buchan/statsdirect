@@ -42,8 +42,7 @@ namespace StatsDirect.Templates
 
         public void SetOutput(string key, object value)
         {
-            FilledParameter fp;
-            if (TryGetValue(key, out fp))
+            if (TryGetValue(key, out FilledParameter fp))
             {
                 fp.Data = value;
             }
@@ -56,8 +55,7 @@ namespace StatsDirect.Templates
         public void AddInput(string key, object value)
         {
             // If there's a default value that we're overwriting with a proper input value, get rid of the default.
-            FilledParameter candidate;
-            if (TryGetValue(key, out candidate))
+            if (TryGetValue(key, out FilledParameter candidate))
                 if (candidate.Direction == FilledParameterDirection.Default)
                     Remove(key);
             filledParameters.Add(key, new FilledParameter(FilledParameterDirection.Input, value));

@@ -10,10 +10,9 @@ namespace StatsDirect.Builtins
         public static void X_Comat(out double xc, out double XR, ref double[,] x, ref int nx, ref int idx, ref int idy)
         {
             int i;
-            double co = 0; double avx; double avy; double SDX; double sdy;
-
-            x_avsd(x, nx, idx, out avx, out SDX);
-            x_avsd(x, nx, idy, out avy, out sdy);
+            double co = 0;
+            x_avsd(x, nx, idx, out double avx, out double SDX);
+            x_avsd(x, nx, idy, out double avy, out double sdy);
             for (i = 1; i <= nx; i++)
             {
                 co = co + (x[idx, i] - avx) * (x[idy, i] - avy);
@@ -600,8 +599,7 @@ namespace StatsDirect.Builtins
 
             for (iobs = 1; iobs <= nobs; iobs++)
             {
-                int igo;
-                checkobs(ido, x, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out igo, ref ifault);
+                checkobs(ido, x, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
                 if (igo == 3)
                 {
                     return;
@@ -917,8 +915,7 @@ namespace StatsDirect.Builtins
 
             for (iobs = 1; iobs <= nobs; iobs++)
             {
-                int igo;
-                checkobs1(ido, x, ldx, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out igo, ref ifault);
+                checkobs1(ido, x, ldx, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
                 if (igo == 3)
                 {
                     return;
@@ -1613,9 +1610,9 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         public static void rcovarb(int ncoef, double[,] r, double s2, double[,] covb, ref int ifault)
         {
-            int i, j, k, irank;
+            int i, j, k;
 
-            mxinv2(ncoef, r, null, false, false, true, covb, out irank, ref ifault);
+            mxinv2(ncoef, r, null, false, false, true, covb, out int irank, ref ifault);
 
             if (ifault != 0)
             {
@@ -2617,8 +2614,7 @@ namespace StatsDirect.Builtins
             // get starting values for linear predictor (eta) and fitted values (fvl)
             X_Poisson_Starting_Values(records, y, fits, eta, weight, observations);
             // iteratively re-weighted least squares by SVD
-            int iter;
-            X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+            X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out int iter, tmp, ref err_level, ref dropped, ref err_msg);
             // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
             if (dropped.Length > 0)
             {
@@ -2818,8 +2814,7 @@ namespace StatsDirect.Builtins
             X_Logistic_Starting_Values(records, y_r, y_t, fit, eta, weight, observations);
 
             // iteratively re-weighted least squares by SVD
-            int iter;
-            X_Iterative_Weighted_Least_Squares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
+            X_Iterative_Weighted_Least_Squares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out int iter, tmp, ref err_level, ref dropped, ref err_msg);
             // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
             if (dropped.Length > 0)
             {
@@ -3668,8 +3663,7 @@ namespace StatsDirect.Builtins
             X_SVD_Bidiagonal_Reduction(n, a, m, sv, work, ncolb, b);
             X_SVD_P_Prime(n, a, m);
             int ncolp = n;
-            int ierr = 0;
-            X_SVD_of_Bidiagonal(n, sv, work, ncolb, b, ncolp, a, m, out ierr);
+            X_SVD_of_Bidiagonal(n, sv, work, ncolb, b, ncolp, a, m, out int ierr);
             if (ierr != 0)
             {
                 err_level = 2;
@@ -3762,9 +3756,7 @@ namespace StatsDirect.Builtins
             int i0 = n;
             while (i0 > 1 && iter <= maxit)
             {
-                bool force;
-                int split_row;
-                X_SVD_Test_Bidiagonal_Split(i0, diag, super_diag, out force, out split_row);
+                X_SVD_Test_Bidiagonal_Split(i0, diag, super_diag, out bool force, out int split_row);
                 i3 = split_row + 1;
                 double ctemp;
                 double stemp;
@@ -3845,9 +3837,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     double ekm2 = i0 > i3 + 1 ? super_diag[i0 - 2] : 0.0;
-                    double cs;
-                    double sn;
-                    X_SVD_QR_Shift_Parameters(diag[i3], super_diag[i3], diag[i0 - 1], diag[i0], ekm2, super_diag[i0 - 1], out cs, out sn);
+                    X_SVD_QR_Shift_Parameters(diag[i3], super_diag[i3], diag[i0 - 1], diag[i0], ekm2, super_diag[i0 - 1], out double cs, out double sn);
                     X_SVD_QR_Rotate(i3, i0, diag, super_diag, cs, sn, wantb, wrk0, wrk1, wantz, wrk2, wrk3);
                     if (wantb)
                     {
@@ -4429,9 +4419,7 @@ namespace StatsDirect.Builtins
                 int i = n - 1;
                 double temp = super_diag[i];
                 super_diag[i] = 0;
-                double cs;
-                double sn;
-                X_SVD_Rotation_Angle(ref diag[i], ref temp, out cs, out sn);
+                X_SVD_Rotation_Angle(ref diag[i], ref temp, out double cs, out double sn);
                 if (do_cs)
                 {
                     c[i] = cs;

@@ -101,16 +101,7 @@ namespace StatsDirect.Charting.Renderer
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        double centre;
-                        double boxL;
-                        double boxR;
-                        double innerFenceL;
-                        double innerFenceR;
-                        double outerFenceL;
-                        double outerFenceR;
-                        double otherMark;
-                        bool centreIsMedian;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out centre, out boxL, out boxR, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
 
                         // Plot graphic
                         // #1316: Plot labels are plotted top-down, data was plotted bottom-up.  Reverse the data so that the first series is at the top to match the labels.
@@ -376,16 +367,7 @@ namespace StatsDirect.Charting.Renderer
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        double centre;
-                        double boxB;
-                        double boxT;
-                        double innerFenceB;
-                        double innerFenceT;
-                        double outerFenceB;
-                        double outerFenceT;
-                        double otherMark;
-                        bool centreIsMedian;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, out centre, out boxB, out boxT, out innerFenceB, out innerFenceT, bwOptions.UseInnerFence, out outerFenceB, out outerFenceT, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
 
                         // Plot graphic
                         double xctr = (c + 0.5) / divx * xExtCanvas;
@@ -653,12 +635,7 @@ namespace StatsDirect.Charting.Renderer
             for (int c = 0; c < seriesToUse.Count; c++)
             {
                 DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                double mdn = 0; double Q1 = 0; double Q3 = 0;
-                double innerFenceL = 0; double innerFenceR = 0;
-                double outerFenceL = 0; double outerFenceR = 0;
-                double otherMark = 0;
-                bool centreIsMedian = false;
-                PlotBoxWhiskerCalc(s, bwOptions.Method, P, out mdn, out Q1, out Q3, out innerFenceL, out innerFenceR, bwOptions.UseInnerFence, out outerFenceL, out outerFenceR, bwOptions.UseOuterFence, out otherMark, out centreIsMedian);
+                PlotBoxWhiskerCalc(s, bwOptions.Method, P, out double mdn, out double Q1, out double Q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
 
                 bool gatedl;
                 int xl;

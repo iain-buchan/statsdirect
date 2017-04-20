@@ -151,17 +151,12 @@ namespace StatsDirect.Numerics
             //  -----------------------------------------------
             //  obtain upper and lower bounds on critical value
             //  -----------------------------------------------
-            double dhigh;
-            double dlow;
-            bdmca2(k, cc, nu, dnu, out dhigh, out dlow, dinfnu);
+            bdmca2(k, cc, nu, dnu, out double dhigh, out double dlow, dinfnu);
 
             //  ------------------------------------------------------------
             //  compute critical value d by the modified regula falsi method
             //  ------------------------------------------------------------
-            int iflag;
-            int iter;
-            double w;
-            mrgfls(PDF.gha1, k, PDF.glv, cc, dhigh, dlow, out w, dnu, -1.0, dstop, eps, itmax, out iflag, out iter, out ifault, dinfnu, a, b, c);
+            mrgfls(PDF.gha1, k, PDF.glv, cc, dhigh, dlow, out double w, dnu, -1.0, dstop, eps, itmax, out int iflag, out int iter, out ifault, dinfnu, a, b, c);
             d = w;
         }
 
@@ -226,15 +221,10 @@ namespace StatsDirect.Numerics
             //  find critical value
 
             //  obtain upper and lower bounds on critical value
-            double dhigh;
-            double dlow;
-            bdmcc2(k, cc, nu, dnu, out dhigh, out dlow, dinfnu);
+            bdmcc2(k, cc, nu, dnu, out double dhigh, out double dlow, dinfnu);
 
             //  compute critical value d by the modified regula falsi method
-            double w;
-            int iflag;
-            int iter;
-            mrgfls(PDF.ghc1, k, PDF.glv, cc, dhigh, dlow, out w, dnu, -1.0, dstop, eps, itmax, out iflag, out iter, out ifault, dinfnu, a, b, c);
+            mrgfls(PDF.ghc1, k, PDF.glv, cc, dhigh, dlow, out double w, dnu, -1.0, dstop, eps, itmax, out int iflag, out int iter, out ifault, dinfnu, a, b, c);
             d = w;
         }
 
@@ -258,8 +248,7 @@ namespace StatsDirect.Numerics
                 //  infinite d.f. (normal) case
                 //  ---------------------------
                 double cumu = 0.5 + 0.5 * cc;
-                int ifault;
-                dlall = PDF.gauinv(cumu, out ifault);
+                dlall = PDF.gauinv(cumu, out int ifault);
                 //  ------------------------------------------------------------
                 //  obtain upper bound by sidak's and mixture inequalities
                 //  by sidak's inequality, the 0 correlation (independent) case
@@ -421,8 +410,7 @@ namespace StatsDirect.Numerics
                 //  infinite d.f. (normal) case
                 //  ---------------------------
                 double cumu = 0.5 + 0.5 * cc;
-                int ifault;
-                dlall = PDF.gauinv(cumu, out ifault);
+                dlall = PDF.gauinv(cumu, out int ifault);
                 //  ------------------------------------------------------
                 //  obtain upper bound by sidak's and mixture inequalities
                 //  ------------------------------------------------------

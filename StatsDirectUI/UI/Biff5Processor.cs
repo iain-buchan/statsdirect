@@ -107,16 +107,16 @@ namespace StatsDirect.UI
         {
             // Find Excel.exe and assume excelcnv.exe is in the same directory.
             // Excel.exe can be located by getting its CLSID from the version-independent registry entry HKCR\Excel.Application\CLSID and then looking up that CLSID in HKCR\CLSID\<CLSID>
-            string excelClsId = GetStringValueOrNull(Registry.ClassesRoot, new string[] { "Excel.Application", "CLSID" }, null);
+            string excelClsId = GetStringValueOrNull(Registry.ClassesRoot, new[] { "Excel.Application", "CLSID" }, null);
             if (null == excelClsId)
             {
                 // Excel not installed, registry not readable, or similar awkwardness.  Give up.
                 return null;
             }
 
-            string localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new string[] { "CLSID", excelClsId, "LocalServer" }, null);
+            string localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new[] { "CLSID", excelClsId, "LocalServer" }, null);
             if (null == localServerCommandLine)
-                localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new string[] { "CLSID", excelClsId, "LocalServer32" }, null);
+                localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new[] { "CLSID", excelClsId, "LocalServer32" }, null);
             if (null == localServerCommandLine)
             {
                 // Excel not installed, registry not readable, or similar awkwardness.  Give up.

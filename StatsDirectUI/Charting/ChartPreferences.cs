@@ -384,11 +384,9 @@ namespace StatsDirect.Charting
                 string[] fontStrings = descriptor.Split(';');
                 if (fontStrings.Length != 3)
                     return false;
-                int scrapInt;
-                if (!int.TryParse(fontStrings[1], out scrapInt))
+                if (!int.TryParse(fontStrings[1], out int scrapInt))
                     return false;
-                float scrapFloat;
-                return float.TryParse(fontStrings[2], out scrapFloat);
+                return float.TryParse(fontStrings[2], out float scrapFloat);
             }
             catch (Exception)
             {

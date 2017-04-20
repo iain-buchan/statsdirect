@@ -172,8 +172,7 @@ namespace StatsDirect.TemplateProcessing
             if (isRedo)
             {
                 string possibleParameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty);
-                FilledParameter fp;
-                if (parameters.TryGetValue(possibleParameterName, out fp))
+                if (parameters.TryGetValue(possibleParameterName, out FilledParameter fp))
                 {
                     if (null != fp && fp.HasData)
                         return fp.AsChartOptions;
@@ -190,8 +189,7 @@ namespace StatsDirect.TemplateProcessing
             if (isRedo)
             {
                 string possibleParameterName = STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty);
-                FilledParameter fp;
-                if (parameters.TryGetValue(possibleParameterName, out fp))
+                if (parameters.TryGetValue(possibleParameterName, out FilledParameter fp))
                 {
                     if (null != fp && fp.HasData)
                         return fp.AsScaleParameters;
@@ -242,8 +240,7 @@ namespace StatsDirect.TemplateProcessing
                 definition.ChartOptions.YAxisTitle = yAxisTitle;
 
             // Plot to metafile if ascii, text otherwise
-            string rtf;
-            ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, definition, out rtf);
+            ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, definition, out string rtf);
             results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
             SaveChartDefinition(step, results, definition);
             return results;
@@ -416,8 +413,7 @@ namespace StatsDirect.TemplateProcessing
                     // Union parms with filledParameters before we pass in, so that this has access to earlier parameters in the same series
                     ParameterBag parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
 
-                    Step frameStep;
-                    if (step.Operation.ShouldRequestTargetAfter(step, typeof(OutputFrameStep), out frameStep) == HasInput.NoAndTypeFound)
+                    if (step.Operation.ShouldRequestTargetAfter(step, typeof(OutputFrameStep), out Step frameStep) == HasInput.NoAndTypeFound)
                     {
                         RelativePosition rp = null == frameStep ? RelativePosition.AfterSelection : ((OutputFrameStep)frameStep).DefaultPlacement;
                         string missingIndicator = null == frameStep ? Formatting.ASTERISK : ((OutputFrameStep)frameStep).MissingIndicator;
@@ -513,8 +509,7 @@ namespace StatsDirect.TemplateProcessing
 
         private void TryToRecallSavedParameterFromBag(ParameterBag savedParameters, ParameterBag filledParameters, string name)
         {
-            FilledParameter savedParameter;
-            if (savedParameters.TryGetValue(name, out savedParameter))
+            if (savedParameters.TryGetValue(name, out FilledParameter savedParameter))
             {
                 // #1289: In rare cases, operations overwrite input parameters with outputs and the outputs get saved to session.ser. To allow us to use old (arguably corrupt) session files rather than insist everyone deletes them, filter out problematic values.
                 if (savedParameter.IsInputParameter)
@@ -549,8 +544,7 @@ namespace StatsDirect.TemplateProcessing
                             foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
                             {
                                 // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                                FilledParameter filledParameterToSave;
-                                if (!parameterBag.TryGetValue(opt.Name, out filledParameterToSave))
+                                if (!parameterBag.TryGetValue(opt.Name, out FilledParameter filledParameterToSave))
                                     continue;
 
                                 if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
@@ -564,8 +558,7 @@ namespace StatsDirect.TemplateProcessing
                         else
                         {
                             // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                            FilledParameter filledParameterToSave;
-                            if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
+                            if (!parameterBag.TryGetValue(parameter.Name, out FilledParameter filledParameterToSave))
                                 return;
 
                             if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
@@ -580,8 +573,7 @@ namespace StatsDirect.TemplateProcessing
                 case ParameterLifetime.SessionForAllOperations:
                     {
                         // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                        FilledParameter filledParameterToSave;
-                        if (!parameterBag.TryGetValue(parameter.Name, out filledParameterToSave))
+                        if (!parameterBag.TryGetValue(parameter.Name, out FilledParameter filledParameterToSave))
                             return;
 
                         ParameterBag savedParameterBag = host.SessionParametersAcrossOperations;
@@ -649,17 +641,13 @@ namespace StatsDirect.TemplateProcessing
                 IScriptEngine scriptEngine = host.GetScriptEngine(expression.Language);
                 return scriptEngine.Run(expression.Language, expression.Body.Substring(1), ScriptType.Expression, host, parameters, null, null);
             }
-            int candidateInt;
-            if (Int32.TryParse(expression.Body, out candidateInt))
+            if (Int32.TryParse(expression.Body, out int candidateInt))
                 return candidateInt;
-            double candidateDouble;
-            if (double.TryParse(expression.Body, NumberStyles.Float, CultureInfo.InvariantCulture, out candidateDouble))
+            if (double.TryParse(expression.Body, NumberStyles.Float, CultureInfo.InvariantCulture, out double candidateDouble))
                 return candidateDouble;
-            bool candidateBoolean;
-            if (bool.TryParse(expression.Body, out candidateBoolean))
+            if (bool.TryParse(expression.Body, out bool candidateBoolean))
                 return candidateBoolean;
-            DateTime candidateDateTime;
-            if (DateTime.TryParse(expression.Body, out candidateDateTime))
+            if (DateTime.TryParse(expression.Body, out DateTime candidateDateTime))
                 return candidateDateTime;
             return expression.Body;
         }
@@ -855,8 +843,7 @@ namespace StatsDirect.TemplateProcessing
                                 }
                                 if (ng > 2 && ng < Math.Min(data.Length - 2, 12))
                                 {
-                                    bool wasCancelled;
-                                    bool sortOutData = host.GetBoolean("The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?", "Regression Predictor Scan", false, 140766, out wasCancelled);
+                                    bool sortOutData = host.GetBoolean("The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?", "Regression Predictor Scan", false, 140766, out bool wasCancelled);
                                     if (wasCancelled || sortOutData)
                                         throw new TemplateOperationCancelledException();
                                 }

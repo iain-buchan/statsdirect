@@ -120,8 +120,7 @@ namespace StatsDirect.Builtins
             if (null != xx)
                 NX = xx.Length;
             DF = NX - 2;
-            double cit; double P0;
-            MathDbl.civ(DF, out cit, regressionGamma, out P0);
+            MathDbl.civ(DF, out double cit, regressionGamma, out double P0);
             PERT = cit;
             CIT = cit;
             this.P0 = P0;

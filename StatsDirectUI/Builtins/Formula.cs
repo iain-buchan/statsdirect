@@ -222,8 +222,7 @@ namespace StatsDirect.Builtins
 
             double dif = Math.Abs(Power.fisher_z1(r0) - Power.fisher_z1(r1));
             double xsig = a / 2.0;
-            int flt;
-            double zsig = PDF.gauinv(1.0 - xsig, out flt);
+            double zsig = PDF.gauinv(1.0 - xsig, out int flt);
             double zpow = 0;
             if (flt == 0)
                 zpow = PDF.gauinv(P, out flt);
@@ -810,7 +809,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptSizeMatchCase(ITemplateHost host, ParameterBag parameters)
         {
             double sigmar = 0; double FM = 0; double N = 0;
-            int fault;
 
             double power = parameters["p"].AsDouble;
             double alpha = parameters["a"].AsDouble;
@@ -819,7 +817,7 @@ namespace StatsDirect.Builtins
             double P0 = parameters["p0"].AsDouble;
             double ps = parameters["ps"].AsDouble;
             double M = parameters["m"].AsDouble;
-            ssize(ref alpha, ref BETA, ref ph, ref P0, ref M, ref ps, ref N, ref FM, ref sigmar, out fault);
+            ssize(ref alpha, ref BETA, ref ph, ref P0, ref M, ref ps, ref N, ref FM, ref sigmar, out int fault);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("corr", ph);
@@ -942,16 +940,13 @@ namespace StatsDirect.Builtins
 
         private static double zcvalue(double alph)
         {
-            int fault;
-            return -PDF.gauinv(alph, out fault);
+            return -PDF.gauinv(alph, out int fault);
         }
 
 
         private static void ssize(ref double salpha, ref double SBeta, ref double sr, ref double sp0, ref double M, ref double xspsi, ref double N, ref double FM, ref double sigmar, out int er)
         {
-            int imposs;
             double n1 = 0;
-            double P1;
             double nm = 0;
 
             double[] t = new double[1000 + 1];
@@ -968,7 +963,7 @@ namespace StatsDirect.Builtins
                 N = 0.0;
                 return;
             }
-            MathDbl.pone(P0, dpsi, r, out P1, out imposs);
+            MathDbl.pone(P0, dpsi, r, out double P1, out int imposs);
             if (imposs == 1)
             {
                 er = 1;
@@ -1051,7 +1046,6 @@ namespace StatsDirect.Builtins
         {
             double N;
             double xn = 0;
-            int flt;
             const string caption = "Comparision of means for paired or single sample t test";
 
             double P = parameters["p"].AsDouble;
@@ -1076,7 +1070,7 @@ namespace StatsDirect.Builtins
             }
             double b = 1.0 - P;
             double M = 1.0;
-            x_tsample(a, b, k, M, 1, ref xn, out flt);
+            x_tsample(a, b, k, M, 1, ref xn, out int flt);
             if (xn < Convert.ToDouble(Int32.MaxValue))
             {
                 N = Math.Floor(xn) + 1.0;
@@ -1112,8 +1106,7 @@ namespace StatsDirect.Builtins
             {
                 cco = 0.95;
             }
-            int fault;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
             if (fault == 0)
             {
                 double xza = cit;
@@ -1141,7 +1134,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptSizeUnPaired(ITemplateHost host, ParameterBag parameters)
         {
             double N; double xn = 0;
-            int fault;
             const string caption = "Comparision of means for unpaired two sample t test";
 
             double P = parameters["p"].AsDouble;
@@ -1170,7 +1162,7 @@ namespace StatsDirect.Builtins
             {
                 M = 1;
             }
-            x_tsample(a, b, k, M, 2, ref xn, out fault);
+            x_tsample(a, b, k, M, 2, ref xn, out int fault);
             if (xn < Convert.ToDouble(Int32.MaxValue))
             {
                 N = Math.Floor(xn) + 1L;

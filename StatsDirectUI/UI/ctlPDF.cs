@@ -434,9 +434,8 @@ namespace StatsDirect.UI
 
         private void PFromNonCentralT()
         {
-            int flt;
             double p = ExFortran.pnct(CdblTxt(txtPdf.Text), Parsing.Cint_Txt(txtDf.Text),
-                                      CdblTxt(txtDf2.Text), out flt);
+                          CdblTxt(txtDf2.Text), out int flt);
             if (flt != 0)
             {
                 txtUp.Text = Formatting.ERRR;
@@ -777,19 +776,15 @@ namespace StatsDirect.UI
 
         private void NonCentralTFromP(double P)
         {
-            int flt;
-            double x = ExFortran.tnct(CdblTxt(txtLp.Text), Parsing.Cint_Txt(txtDf.Text), CdblTxt(txtDf2.Text), out flt);
+            double x = ExFortran.tnct(CdblTxt(txtLp.Text), Parsing.Cint_Txt(txtDf.Text), CdblTxt(txtDf2.Text), out int flt);
             Xval15Into(txtPdf, x, flt != 0);
             lastCalculationAsString = "non-central t(P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ", delta " + txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
         private void RhoFromP(double P)
         {
-            double pu;
-            int ix;
-            int fault;
             int nx = Parsing.Cint_Txt(txtDf.Text);
-            double rh = MathDbl.rhofromp(P, out pu, out ix, nx, out fault);
+            double rh = MathDbl.rhofromp(P, out double pu, out int ix, nx, out int fault);
             if (fault == 0)
             {
                 txtDf2.Text = ix.ToString();
@@ -803,11 +798,8 @@ namespace StatsDirect.UI
 
         private void KendallFromP(double P)
         {
-            double pu;
-            int ix;
-            int fault;
             int nx = Parsing.Cint_Txt(txtDf.Text);
-            double tau = MathDbl.taufromp(P, out pu, out ix, ref nx, out fault);
+            double tau = MathDbl.taufromp(P, out double pu, out int ix, ref nx, out int fault);
             if (fault == 0)
             {
                 txtDf2.Text = ix.ToString();
@@ -828,8 +820,7 @@ namespace StatsDirect.UI
 
         private void ChiSqFromP(double P)
         {
-            int fault;
-            double x = PDF.ppchi2(CdblTxt(txtLp.Text), CdblTxt(txtDf.Text), out fault);
+            double x = PDF.ppchi2(CdblTxt(txtLp.Text), CdblTxt(txtDf.Text), out int fault);
             Xval15Into(txtPdf, x, fault != 0);
             lastCalculationAsString = "chi-sq(upper P " + pval15(P, true) + ", df " + txtDf.Text.Trim() + ") = " +
                                       txtPdf.Text.Trim();
@@ -852,8 +843,7 @@ namespace StatsDirect.UI
 
         private void ZFromP(double P)
         {
-            int fault;
-            double x = PDF.gauinv(CdblTxt(txtLp.Text), out fault);
+            double x = PDF.gauinv(CdblTxt(txtLp.Text), out int fault);
             Xval15Into(txtPdf, x, fault != 0);
             lastCalculationAsString = "z(upper P " + pval15(P, true) + ") = " + txtPdf.Text.Trim();
         }

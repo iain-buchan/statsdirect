@@ -129,8 +129,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                double scratch;
-                return double.TryParse(cboMarkerLineAt.Text, out scratch);
+                return double.TryParse(cboMarkerLineAt.Text, out double scratch);
             }
         }
 

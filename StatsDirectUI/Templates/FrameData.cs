@@ -83,8 +83,7 @@ namespace StatsDirect.Templates
                 {
                     for (int column = 0; column < Math.Min(l.Count, columns); column++)
                     {
-                        double value;
-                        if (!double.TryParse(l[column], NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+                        if (!double.TryParse(l[column], NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
                             value = Constant.MISSING;
                         (outputFrame.Variables[column] as DoubleVariable).Data[outputRow] = value;
                     }

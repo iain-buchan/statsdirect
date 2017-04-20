@@ -41,8 +41,7 @@ namespace StatsDirect.Charting
         /// <remarks></remarks>
         public BinsDescriptor Calculate(Series series, int binsFromUser, bool calculateBinCount, BinChoiceMethod binChoiceMethod)
         {
-            int actualRows;
-            double[] nonMissingData = ExtractNonMissingDataAndSort(series, out actualRows);
+            double[] nonMissingData = ExtractNonMissingDataAndSort(series, out int actualRows);
 
             if (calculateBinCount || binsFromUser <= 1)
                 return HistogramBinChooser.ChooseBins(nonMissingData, actualRows, binChoiceMethod);

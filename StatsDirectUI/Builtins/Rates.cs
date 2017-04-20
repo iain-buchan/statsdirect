@@ -65,7 +65,7 @@ namespace StatsDirect.Builtins
             DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
             int rawRows = ratesVariable.Length;
 
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { ratesVariable.Data, timesVariable.Data }, 0, rawRows, 1);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { ratesVariable.Data, timesVariable.Data }, 0, rawRows, 1);
             double[] asm = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] spop = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
 
@@ -82,8 +82,7 @@ namespace StatsDirect.Builtins
             if (etot <= 0)
                 throw new InvalidDataException();
 
-            bool hasUserSuppliedLabels;
-            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out hasUserSuppliedLabels);
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
 
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
@@ -103,16 +102,13 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("total", etot);
 
-            int fault;
-            PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
             if (fault == 0)
             {
                 outputParameters.AddOutput("ratio", dead / etot);
                 outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt32(dead / etot * 100), 0));
 
-                double xu;
-                double xl;
-                poisson_ci(1.0 - cco, dead, 1.0, out xl, out xu);
+                poisson_ci(1.0 - cco, dead, 1.0, out double xl, out double xu);
 
                 if (xl != Constant.MISSING)
                     xl = xl / etot;
@@ -124,10 +120,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt32(100 * xl), 0));
                 outputParameters.AddOutput("to100", Convert.ToInt32(100 * xu));
 
-                double term;
-                double plo;
-                double phi;
-                ExFortran.poisson(etot, Convert.ToInt32(dead), out phi, out plo, out term, out fault);
+                ExFortran.poisson(etot, Convert.ToInt32(dead), out double phi, out double plo, out double term, out fault);
                 if (fault != 0)
                     phi = Constant.MISSING;
 
@@ -155,7 +148,7 @@ namespace StatsDirect.Builtins
             int rawRows = idxnVariable.Length;
 
 
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { idxnVariable.Data, timesVariable.Data, refnVariable.Data }, 0, rawRows, 1);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { idxnVariable.Data, timesVariable.Data, refnVariable.Data }, 0, rawRows, 1);
             double[] idxy = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] idxn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
             double[] refn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
@@ -176,8 +169,7 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= rows; i++)
                 refntot += refn[i];
 
-            bool hasUserSuppliedLabels;
-            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out hasUserSuppliedLabels);
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
@@ -294,15 +286,14 @@ namespace StatsDirect.Builtins
             DataFrame refFrame = parameters["ref"].AsDataFrame;
             DoubleVariable refVariable = refFrame.Variables[0]as DoubleVariable;
 
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { aVariable.Data, pt1Variable.Data, bVariable.Data, pt2Variable.Data, refVariable.Data }, 0, rawRows, 1);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { aVariable.Data, pt1Variable.Data, bVariable.Data, pt2Variable.Data, refVariable.Data }, 0, rawRows, 1);
             double[] a = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] pt1 = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
             double[] b = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             double[] pt2 = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
             double[] refIdent = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[4];
 
-            bool hasUserSuppliedLabels;
-            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out hasUserSuppliedLabels);
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 2);

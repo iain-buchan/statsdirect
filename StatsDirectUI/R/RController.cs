@@ -25,7 +25,7 @@ namespace StatsDirect.R
         /// </summary>
         public static List<RVersion> CheckR()
         {
-            string[] rLocations = new string[] { @"Software\R-core\R", @"Software\R-core\R64" };
+            string[] rLocations = new[] { @"Software\R-core\R", @"Software\R-core\R64" };
             List<RVersion> installedVersions = new List<RVersion>();
             try
             {
@@ -197,9 +197,8 @@ namespace StatsDirect.R
                 }
                 // The next name in the list might be non-numeric (it's the name of the next bag level at index 0 of this bag) or numeric (it's the index of a bag at this level).  Find the bag, creating as necessary.
                 int nextPos = rhs.IndexOf('$');
-                int bagIndex;
                 ParameterBag subBag;
-                if (nextPos < 0 || !int.TryParse(rhs.Substring(0, nextPos), out bagIndex))
+                if (nextPos < 0 || !int.TryParse(rhs.Substring(0, nextPos), out int bagIndex))
                 {
                     // No $: Next is a leaf; we need to put the leaf into index 0
                     // $ but non-numeric: Next is a branch; we need to put the leaf into index 0
@@ -225,8 +224,7 @@ namespace StatsDirect.R
             ParameterBag outputParameters = new ParameterBag();
             foreach (KeyValuePair<string, object> pair in dictionary)
             {
-                string leafName;
-                ParameterBag thisBag = GetBag(pair.Key, outputParameters, out leafName);
+                ParameterBag thisBag = GetBag(pair.Key, outputParameters, out string leafName);
                 if (pair.Value is TitleAndValue)
                 {
                     TitleAndValue tv = (TitleAndValue)pair.Value;

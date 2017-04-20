@@ -31,8 +31,7 @@ namespace StatsDirect.UI
 
         private void txtWidth_TextChanged(object sender, EventArgs e)
         {
-            int width;
-            if (chkKeepAspectRatio.Checked && int.TryParse(txtWidth.Text, out width) && !updating)
+            if (chkKeepAspectRatio.Checked && int.TryParse(txtWidth.Text, out int width) && !updating)
             {
                 int newHeight = Convert.ToInt32(width / scaleFactor);
                 updating = true;
@@ -43,8 +42,7 @@ namespace StatsDirect.UI
 
         private void txtHeight_TextChanged(object sender, EventArgs e)
         {
-            int height;
-            if (chkKeepAspectRatio.Checked && int.TryParse(txtHeight.Text, out height) && !updating)
+            if (chkKeepAspectRatio.Checked && int.TryParse(txtHeight.Text, out int height) && !updating)
             {
                 int newWidth = Convert.ToInt32(height * scaleFactor);
                 updating = true;

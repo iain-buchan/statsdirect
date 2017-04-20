@@ -25,9 +25,7 @@ namespace StatsDirect.Builtins
 
                 //  If both titles are numeric, compare numerically; else, compare as text
                 bool lower;
-                double numericX;
-                double numericY;
-                if (double.TryParse(x.Label, out numericX) && double.TryParse(y.Label, out numericY))
+                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
                 {
                     lower = numericX <= numericY;
                 }
@@ -57,9 +55,7 @@ namespace StatsDirect.Builtins
 
                 //  If both titles are numeric, compare numerically; else, compare as text
                 bool lower;
-                double numericX;
-                double numericY;
-                if (double.TryParse(x.Label, out numericX) && double.TryParse(y.Label, out numericY))
+                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
                 {
                     lower = numericX <= numericY;
                 }
@@ -1052,8 +1048,7 @@ namespace StatsDirect.Builtins
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
                     options.MarkerTypes[marker] = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
-                string rtf;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
+                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
                 groupParameters.AddOutput("chart", rtf);
             }
 
@@ -1075,8 +1070,7 @@ namespace StatsDirect.Builtins
                     ShouldScaleZ = true
                 };
                 cd.ChartOptions = options;
-                string rtf;
-                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
+                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
                 outputParameters.AddOutput("aucNormalChart", rtf);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
@@ -1130,8 +1124,7 @@ namespace StatsDirect.Builtins
                 };
                 options.SetMarkers();
                 cd.ChartOptions = options;
-                string rtf;
-                RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
+                RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
                 outputParameters.AddOutput("meanAucChart", rtf);
             }
 
@@ -1474,7 +1467,7 @@ namespace StatsDirect.Builtins
 
             private SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
             {
-                DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { y, x }, 0, length, 0);
+                DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { y, x }, 0, length, 0);
                 SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
                 context.CalculateLeastSquaresMethod();
                 return context;

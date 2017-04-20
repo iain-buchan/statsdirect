@@ -34,8 +34,7 @@ namespace StatsDirect.Charting.Renderer
             }
             rows = ctr;
 
-            double ymean; double ysd;
-            MathDbl.meansd(ydat, 0, ref rows, out ymean, out ysd);
+            MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
 
             ControlOptions cOptions = (ControlOptions)definition.ChartOptions;
             int kobs = cOptions.ObservationsToUse;
@@ -139,8 +138,7 @@ namespace StatsDirect.Charting.Renderer
             }
             rows = ctr;
 
-            double ymean; double ysd;
-            MathDbl.meansd(ydat, 0, ref rows, out ymean, out ysd);
+            MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
 
             ControlOptions cOptions = (ControlOptions)definition.ChartOptions;
             cOptions.UseDates = looksLikeDates;

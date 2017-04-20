@@ -67,8 +67,7 @@ namespace StatsDirect.UI
                 for (int r = 0; r < v.Length; r++)
                 {
                     string tmp = v.Data[r];
-                    int value;
-                    if (textsToNumbers.TryGetValue(tmp, out value))
+                    if (textsToNumbers.TryGetValue(tmp, out int value))
                         outputVariable.Data[r] = value;
                     else
                         outputVariable.Data[r] = Constant.MISSING;

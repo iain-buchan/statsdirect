@@ -55,8 +55,7 @@ namespace StatsDirect.Expressions
 
         public DyadicOperatorDefinition DefinitionFor(DyadicOperator op)
         {
-            DyadicOperatorDefinition definition;
-            definitions.TryGetValue(op, out definition);
+            definitions.TryGetValue(op, out DyadicOperatorDefinition definition);
             return definition;
         }
     }

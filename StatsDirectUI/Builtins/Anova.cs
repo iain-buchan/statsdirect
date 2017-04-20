@@ -380,7 +380,6 @@ namespace StatsDirect.Builtins
         {
             long ntot = 0;
             double sum;
-            double cit; double P0;
             double sumvr = 0;
             double totsq = 0;
             double tot = 0;
@@ -493,7 +492,7 @@ namespace StatsDirect.Builtins
             xxm = transTemp5;
             double wssd = Math.Sqrt(meanvr);
             double rep = Math.Sqrt(2) * z * wssd;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
             double lla = mean - cit * sd;
             double ula = mean + cit * sd;
             for (int r = 0; r < rows; r++)
@@ -580,8 +579,7 @@ namespace StatsDirect.Builtins
             double[] pvalues = new double[rx];
             for (int r = 0; r < rx; r++)
             {
-                int fault;
-                pvalues[r] = PDF.ppchi2(P, df, out fault);
+                pvalues[r] = PDF.ppchi2(P, df, out int fault);
                 P = P + p_inc;
             }
             Array.Sort(xxm);
@@ -801,19 +799,7 @@ namespace StatsDirect.Builtins
             else
                 wrn = string.Empty;
 
-            double[] mean;
-            double sscol;
-            double sstot;
-            int dfres;
-            int dfrow;
-            int dfcol;
-            int dftot;
-            int fault;
-            double ssres;
-            double ssrow;
-            double scrap;
-            int iscrap;
-            XTwoWay(y, out mean, nr, nc, 1, out ssrow, out sscol, out scrap, out sstot, out ssres, out dfrow, out dfcol, out iscrap, out dftot, out dfres, out fault);
+            XTwoWay(y, out double[] mean, nr, nc, 1, out double ssrow, out double sscol, out double scrap, out double sstot, out double ssres, out int dfrow, out int dfcol, out int iscrap, out int dftot, out int dfres, out int fault);
 
             if (fault != 0)
                 throw new Exception("Invalid calculation");
@@ -917,19 +903,7 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables[d] = new DoubleVariable(null, title);
             }
 
-            double[] mean;
-            int dfcol;
-            int dfrow;
-            int dfint;
-            int dftot;
-            int fault;
-            int dfres;
-            double ssres;
-            double sstot;
-            double ssint;
-            double sscol;
-            double ssrow;
-            XTwoWay(y, out mean, nr, nc, nm, out ssrow, out sscol, out ssint, out sstot, out ssres, out dfrow, out dfcol, out dfint, out dftot, out dfres, out fault);
+            XTwoWay(y, out double[] mean, nr, nc, nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault);
 
             string tlist = string.Empty;
             for (int d = 0; d < nc; d++)
@@ -1056,7 +1030,6 @@ namespace StatsDirect.Builtins
                 tlist += ")";
             }
 
-            bool fault;
             double[] ss = new double[5 + 1];
             int[] idf = new int[5 + 1];
             double[] f = new double[3 + 1];
@@ -1064,7 +1037,7 @@ namespace StatsDirect.Builtins
             int[] ngp = null;
             double[] gbar = null;
             double gm = 0;
-            XTwoHier(frame, y, ctr, nobs, ivar, ref ngp, ref gbar, ref sgbar, ref gm, ref ss, ref idf, ref f, ref fp, out fault);
+            XTwoHier(frame, y, ctr, nobs, ivar, ref ngp, ref gbar, ref sgbar, ref gm, ref ss, ref idf, ref f, ref fp, out bool fault);
 
             ParameterBag outputParameters = new ParameterBag();
             if (!fault)
@@ -1124,9 +1097,7 @@ namespace StatsDirect.Builtins
             double means = carrier.Mean[z_va] - carrier.Mean[z_vb];
             double se = Math.Sqrt(carrier.Msx * (1.0 / carrier.Tnx[z_vb] + 1.0 / carrier.Tnx[z_va]));
             double tav = means / se;
-            double cit;
-            double P0;
-            MathDbl.civ(carrier.Dferr, out cit, GAMMA, out P0);
+            MathDbl.civ(carrier.Dferr, out double cit, GAMMA, out double P0);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("var_a", frame.Variables[z_va].Title);
@@ -1184,9 +1155,7 @@ namespace StatsDirect.Builtins
                 dalpha = 0.05;
             double cc = 1.0 - dalpha;
 
-            int ifault;
-            double d;
-            ExFortran.dmca(k, lam, nu, cc, out d, out ifault);
+            ExFortran.dmca(k, lam, nu, cc, out double d, out int ifault);
             double q = PDF.quantsr(cc, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
             if (q == Constant.MISSING)
             {
@@ -1378,14 +1347,12 @@ namespace StatsDirect.Builtins
             {
                 Contraster contraster = contrasters[i];
                 // Ensure there's always an entry for each label - do this both ways round so that we get labels early enough
-                SignificantContrasts contrast1;
-                if (!contrasts.TryGetValue(contraster.Lab1, out contrast1))
+                if (!contrasts.TryGetValue(contraster.Lab1, out SignificantContrasts contrast1))
                 {
                     contrast1 = new SignificantContrasts { Mean = contraster.Mean1 };
                     contrasts.Add(contraster.Lab1, contrast1);
                 }
-                SignificantContrasts contrast2;
-                if (!contrasts.TryGetValue(contraster.Lab2, out contrast2))
+                if (!contrasts.TryGetValue(contraster.Lab2, out SignificantContrasts contrast2))
                 {
                     contrast2 = new SignificantContrasts { Mean = contraster.Mean2 };
                     contrasts.Add(contraster.Lab2, contrast2);
@@ -1564,9 +1531,7 @@ namespace StatsDirect.Builtins
 
             double cc = 1.0 - dalpha;
 
-            int ifault;
-            double d;
-            ExFortran.dmcc(k, lam, nu, cc, out d, out ifault);
+            ExFortran.dmcc(k, lam, nu, cc, out double d, out int ifault);
             if (ifault != 0)
             {
                 host.Error("Fault in calculation", "Dunnett Contrasts");
@@ -1598,8 +1563,7 @@ namespace StatsDirect.Builtins
                     hold[ctr].Ll = lci;
                     double uci = delta + d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]));
                     hold[ctr].Ul = uci;
-                    double px;
-                    ExFortran.ppd2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
+                    ExFortran.ppd2(k, lam, nu, out double px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
                     px = 1.0 - Math.Abs(px);
                     hold[ctr].P = px;
                 }

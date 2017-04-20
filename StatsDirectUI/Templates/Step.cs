@@ -151,8 +151,7 @@ namespace StatsDirect.Templates
                 }
                 else if (candidate.IsOrContains(stepToFind))
                 {
-                    Step scrap;
-                    HasInput nestedHasInput = candidate.ShouldRequestTargetAfter(stepToFind, stepType, found, out scrap);
+                    HasInput nestedHasInput = candidate.ShouldRequestTargetAfter(stepToFind, stepType, found, out Step scrap);
                     if (nestedHasInput == HasInput.Yes)
                     {
                         stepFound = null;

@@ -20,10 +20,8 @@ namespace StatsDirect.Builtins
         {
             public int Compare(Namevar x, Namevar y)
             {
-                double nx;
-                double ny;
 
-                if (double.TryParse(x.Ti, out nx) && double.TryParse(y.Ti, out ny))
+                if (double.TryParse(x.Ti, out double nx) && double.TryParse(y.Ti, out double ny))
                     return nx.CompareTo(ny);
                 return String.CompareOrdinal(x.Ti, y.Ti);
             }
@@ -99,9 +97,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("exp_a", e1);
             if (fault != 0)
             {
-                double ptwo;
-                double zPone;
-                Fisherp(a, b, c, d, out zPone, out ptwo, out fault);
+                Fisherp(a, b, c, d, out double zPone, out double ptwo, out fault);
                 outputParameters.AddOutput("tail_1", string.Empty);
                 if (fault != 0)
                 {
@@ -970,29 +966,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                double k;
-                double sek;
-                double sekci;
-                double kcil;
-                double kciu;
-                double kw;
-                double sekw;
-                double sekwci;
-                double kwcil;
-                double kwciu;
-                double po;
-                double pe;
-                double pow;
-                double pew;
-                double spe;
-                double spi;
-                double gama;
-                double segama;
-                double gamacil;
-                double gamaciu;
-                double pegama;
-                bool ierror;
-                Kappa(host, o, w, g, out k, out sek, out sekci, out kcil, out kciu, out kw, out sekw, out sekwci, out kwcil, out kwciu, out po, out pe, out pow, out pew, cit, out spe, out spi, out gama, out segama, out gamacil, out gamaciu, out pegama, out ierror);
+                Kappa(host, o, w, g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror);
                 if (!ierror)
                 {
                     outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
@@ -1060,11 +1034,7 @@ namespace StatsDirect.Builtins
 
                     if (g == 2)
                     {
-                        double ka;
-                        double lwr;
-                        double upr;
-                        int fault;
-                        XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out ka, out lwr, out upr, out fault);
+                        XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out double ka, out double lwr, out double upr, out int fault);
                         if (fault == 0)
                         {
                             ICollection<ParameterBag> deciList = new List<ParameterBag>();
@@ -1086,10 +1056,7 @@ namespace StatsDirect.Builtins
                     }
 
                     // Maxwell's test
-                    double x2;
-                    double x2M;
-                    int dfm;
-                    Maxwell(o, g, out x2, out x2M, out dfm);
+                    Maxwell(o, g, out double x2, out double x2M, out int dfm);
                     if (x2 == Constant.MISSING)
                     {
                         outputParameters.AddOutput("x2", x2);
@@ -1155,14 +1122,7 @@ namespace StatsDirect.Builtins
                 {
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses
                     int n = frame.Variables[0].Length; // subjects
-                    double k;
-                    double mbar;
-                    double mbarh;
-                    double pbar;
-                    double minm;
-                    double maxm;
-                    double medm;
-                    KappaHat(frame, catz[0], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
+                    KappaHat(frame, catz[0], out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm);
                     double sek = 1.0 / ((mbar - 1.0) * Math.Sqrt(Convert.ToDouble(n) * mbarh)) * Math.Sqrt(2.0 * (mbarh - 1.0) + (mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar)) / (mbar * pbar * (1.0 - pbar)));
                     double z;
                     if (sek != 0.0)
@@ -1203,11 +1163,7 @@ namespace StatsDirect.Builtins
                     double medm = 0;
                     for (int i = 0; i < cats; i++)
                     {
-                        double k;
-                        double mbar;
-                        double mbarh;
-                        double pbar;
-                        KappaHat(frame, catz[i], out k, out mbar, out mbarh, out pbar, out minm, out maxm, out medm);
+                        KappaHat(frame, catz[i], out double k, out double mbar, out double mbarh, out double pbar, out minm, out maxm, out medm);
                         double qbar = 1.0 - pbar;
                         kj[i] = k;
                         sej[i] = Math.Sqrt(2.0 / (Convert.ToDouble(n) * mx * (mx - 1.0)));
@@ -1297,12 +1253,7 @@ namespace StatsDirect.Builtins
                     for (int row = 0; row < data.Length; row++)
                         agreeData[row + 1, rater + 1, 1] = data[row] + 1;
                 }
-                double delta;
-                double edel;
-                double var;
-                double gam;
-                double r;
-                Agreement.Agree(frame.Variables[0].Length, raters, 1, agreeData, out delta, out edel, out var, out gam, out r, out p);
+                Agreement.Agree(frame.Variables[0].Length, raters, 1, agreeData, out double delta, out double edel, out double var, out double gam, out double r, out p);
                 outputParameters.AddOutput("kw", r);
                 outputParameters.AddOutput("pw", p);
 
@@ -1322,14 +1273,12 @@ namespace StatsDirect.Builtins
             if (cco > 0)
             {
                 double p = (1.0 - cco) / 2.0;
-                int ifault;
-                cit = PDF.gauinv(1.0 - p, out ifault);
+                cit = PDF.gauinv(1.0 - p, out int ifault);
             }
             else
             {
                 cco = 0.95;
-                int ifault;
-                cit = PDF.gauinv(0.975, out ifault);
+                cit = PDF.gauinv(0.975, out int ifault);
             }
 
             bool alreadyCrosstabbed = parameters.ContainsKey("responsesCrosstab");
@@ -1515,18 +1464,14 @@ namespace StatsDirect.Builtins
                 //  Kappa
                 double exactP = Convert.ToDouble(exactR) / Convert.ToDouble(exactIter);
                 outputParameters.AddOutput("p", host.pval(exactP));
-                double ll; double ul;
-                string warn;
-                MathDbl.binci(Convert.ToDouble(exactR), Convert.ToDouble(exactIter), out ll, out ul, cco, out warn);
+                MathDbl.binci(Convert.ToDouble(exactR), Convert.ToDouble(exactIter), out double ll, out double ul, cco, out string warn);
                 outputParameters.AddOutput("ll", host.RoundU(ll));
                 outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
 
                 //  Weighted kappa
                 double exactPw = Convert.ToDouble(exactRw) / Convert.ToDouble(exactIterW);
                 outputParameters.AddOutput("pw", host.pval(exactPw));
-                double llw; double ulw;
-                string warnw;
-                MathDbl.binci(Convert.ToDouble(exactRw), Convert.ToDouble(exactIterW), out llw, out ulw, cco, out warnw);
+                MathDbl.binci(Convert.ToDouble(exactRw), Convert.ToDouble(exactIterW), out double llw, out double ulw, cco, out string warnw);
                 outputParameters.AddOutput("llw", host.RoundU(llw));
                 outputParameters.AddOutput("ulw", host.RoundU(ulw) + warnw);
 
@@ -1632,8 +1577,7 @@ namespace StatsDirect.Builtins
                 double pew = 0;
                 double spe = 0;
                 double spi = 0;
-                bool wasError;
-                Kappa(host, o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out wasError);
+                Kappa(host, o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
                 if (!wasError)
                 {
                     if (sek != 0.0)
@@ -1760,17 +1704,13 @@ namespace StatsDirect.Builtins
                 p[n + 1] = expectedData[n] / expectedTotal;
             }
 
-            int r;
-            int actualIterations;
-            ResampleX2Gf(host, xn, p, observed.Length, x2, out r, iterations, seed, out actualIterations);
+            ResampleX2Gf(host, xn, p, observed.Length, x2, out int r, iterations, seed, out int actualIterations);
 
             ParameterBag outputParameters = new ParameterBag();
             double exactP = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
             outputParameters.AddOutput("p", host.pval(exactP));
             //  CI
-            double ll; double ul;
-            string warn;
-            MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out ll, out ul, ci, out warn);
+            MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out double ll, out double ul, ci, out string warn);
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
             outputParameters.AddOutput("ll", host.RoundU(ll));
             outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
@@ -1874,7 +1814,7 @@ namespace StatsDirect.Builtins
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
             DoubleVariable expected = expectedFrame.Variables[0]as DoubleVariable;
 
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { observed.Data, expected.Data }, 0, observed.Length, 0);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { observed.Data, expected.Data }, 0, observed.Length, 0);
             //  Observed data is grouped frequencies.
             double[] observedData = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             //  Expected data may be probabilities or counts; we'll scale them later.
@@ -2347,8 +2287,7 @@ namespace StatsDirect.Builtins
                     columnsParameters.AddOutput("*chirxc", chirxcList);
                     if (tot > 0.0)
                     {
-                        double[,] w;
-                        MathDbl.transpose_cr_rc(xt, out w);
+                        MathDbl.transpose_cr_rc(xt, out double[,] w);
                         bool doExact = parameters["doExact"].AsBoolean;
                         bool doMonteCarlo = parameters["doMonteCarlo"].AsBoolean;
                         bool pc = parameters["show_pc"].AsBoolean;
@@ -2427,29 +2366,19 @@ namespace StatsDirect.Builtins
                 colScore[i] = sOptions.Values1[i - 1];
              */
             // <---
-            int ierr;
-            double x21;
-            double df1;
-            double p1;
-            Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 3, out x21, out df1, out p1, out ierr);
+            Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 3, out double x21, out double df1, out double p1, out int ierr);
             if (ierr != 0)
             {
                 x21 = Constant.MISSING;
                 p1 = Constant.MISSING;
             }
-            double x22;
-            double df2;
-            double p2;
-            Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 2, out x22, out df2, out p2, out ierr);
+            Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 2, out double x22, out double df2, out double p2, out ierr);
             if (ierr != 0)
             {
                 x22 = Constant.MISSING;
                 p2 = Constant.MISSING;
             }
-            double x23;
-            double df3;
-            double p3;
-            Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 1, out x23, out df3, out p3, out ierr);
+            Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 1, out double x23, out double df3, out double p3, out ierr);
             if (ierr != 0)
             {
                 x23 = Constant.MISSING;
@@ -2491,9 +2420,8 @@ namespace StatsDirect.Builtins
         {
             double dsul = 0; double dsll = 0;
             double dsx2 = 0; double dsrr = 0; double qc = 0; double sk = 0; double x2Rmh = 0; double ul = 0; double ll = 0; double rmh = 0; double cit;
-            double isq; double llisq; double ulisq; double tausq = 0;
+            double tausq = 0;
             int i;
-            int realk; int ierr;
             int fault;
             if (cco > 0)
             {
@@ -2537,7 +2465,7 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.RelativeRiskMA(host, k, out realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out ierr);
+            Meta.RelativeRiskMA(host, k, out int realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException();
 
@@ -2586,7 +2514,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
             outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
             outputParameters.AddOutput("tausq", host.RoundU(tausq));
-            Meta.IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
+            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
@@ -2644,12 +2572,10 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
         {
-            int ierr;
             double ul; double ll; double p; double c1;
             double p2 = 0; double p1 = 0;
             double vt = 0;
             double gtot = 0;
-            int fault;
 
             double[,] ex = new double[rows + 1, cols + 1];
             double[,] cx = new double[rows + 1, cols + 1];
@@ -2663,7 +2589,7 @@ namespace StatsDirect.Builtins
             {
                 cco = 0.95;
             }
-            double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0, out int fault);
 
             for (int r = 1; r <= rows; r++)
             {
@@ -3129,7 +3055,7 @@ namespace StatsDirect.Builtins
             {
                 double emin = 1.0;
                 double percnt = 80.0;
-                Rcexact(rows, cols, o, 0.0, percnt, emin, ref p1, ref p2, out ierr);
+                Rcexact(rows, cols, o, 0.0, percnt, emin, ref p1, ref p2, out int ierr);
                 if (ierr != 0)
                 {
                     //  try hybrid approximation
@@ -3163,13 +3089,8 @@ namespace StatsDirect.Builtins
             if (doMonteCarlo)
             {
                 int ierrormc = 0;
-                int rx2 = 0;
-                int rx2Eq = 0;
-                int rx2Trend = 0;
-                int rg2 = 0;
-                int actualIterations = 0;
 
-                Chi.ChiRCResample(host, o,  rowScore, colScore, rows, cols, iterations, x2, out rx2, x2Eq, out rx2Eq, x2Trend, out rx2Trend, g2, out rg2, out actualIterations, seed, ref ierrormc);
+                Chi.ChiRCResample(host, o, rowScore, colScore, rows, cols, iterations, x2, out int rx2, x2Eq, out int rx2Eq, x2Trend, out int rx2Trend, g2, out int rg2, out int actualIterations, seed, ref ierrormc);
                 pmcx2 = Chi.MCResultString(host, ierrormc, rx2, actualIterations, seed, mcci);
                 pmcx2eq = Chi.MCResultString(host, ierrormc, rx2Eq, actualIterations, seed, mcci);
                 pmcx2trend = Chi.MCResultString(host, ierrormc, rx2Trend, actualIterations, seed, mcci);
@@ -3306,25 +3227,19 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag TabMh(ITemplateHost host, double cco, int zcats, double[, ,] zt, Namevar[] zcat)
         {
-            double p2M; double p1M;
-            double p2F; double p1F; double llm; double ulm; double llf; double ulf; double eor = 0; double tausq = 0;
-            double dsul; double dsll; double dsx2; double dsor; double bd = 0; double qc = 0; double sk;
-            double x2; double ul; double ll; double rmh; double cit;
-            double isq; double llisq; double ulisq;
+            double tausq = 0;
+            double bd = 0; double qc = 0; double cit;
             int i;
-            int realk; int ierr;
 
             if (cco > 0)
             {
                 double p = (1.0 - cco) / 2.0;
-                int ifault;
-                cit = PDF.gauinv(1.0 - p, out ifault);
+                cit = PDF.gauinv(1.0 - p, out int ifault);
             }
             else
             {
                 cco = 0.95;
-                int ifault;
-                cit = PDF.gauinv(0.975, out ifault);
+                cit = PDF.gauinv(0.975, out int ifault);
             }
             int k = zcats;
             string[] title = new string[k + 1 ];
@@ -3357,7 +3272,7 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.Mantel(host, true, k, out realk, o, out rmh, out ll, out ul, out x2, out sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out dsor, out dsx2, out dsll, out dsul, ref cced, ref tausq, out ierr);
+            Meta.Mantel(host, true, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -3379,7 +3294,7 @@ namespace StatsDirect.Builtins
                 tbl[i].Informative = o[i, 1] * o[i, 4] != 0.0 || o[i, 2] * o[i, 3] != 0.0;
             }
             bool useLogScale = false;
-            new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+            new ExactBB().Exact22K(host, k, 1, tbl, cco, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out ierr);
             if (ierr != 0)
             {
                 eor = Constant.MISSING;
@@ -3490,7 +3405,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", (realk - 1).ToString());
             outputParameters.AddOutput("xp_cochran", host.pval(PDF.chivalp(qc, Convert.ToDouble(realk - 1))));
             outputParameters.AddOutput("tausq", host.RoundU(tausq));
-            Meta.IsquareNcc(host, qc, realk, cco, cit, out isq, out llisq, out ulisq);
+            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", Formatting.XRound(isq, 1));
             outputParameters.AddOutput("pc1", Formatting.XRound(cco * 100, 1));
             outputParameters.AddOutput("llisq", Formatting.XRound(llisq, 1));
@@ -7035,8 +6950,7 @@ namespace StatsDirect.Builtins
             }
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
-            bool ierr;
-            return Woolf(host, o, k, showIntermediates, cit, cco, out ierr);
+            return Woolf(host, o, k, showIntermediates, cit, cco, out bool ierr);
         }
 
 

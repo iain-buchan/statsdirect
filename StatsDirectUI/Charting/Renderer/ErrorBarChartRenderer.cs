@@ -152,8 +152,7 @@ namespace StatsDirect.Charting.Renderer
                             while (true)
                             {
                                 int roughX = (int)Math.Round(ToCanvasX(safePoint.X));
-                                List<MultiDoublePoint> barsAtRoughX;
-                                if (!alreadyUsed.TryGetValue(roughX, out barsAtRoughX))
+                                if (!alreadyUsed.TryGetValue(roughX, out List<MultiDoublePoint> barsAtRoughX))
                                 {
                                     // this one's the first point at this X; known safe.  Record it and move on.
                                     alreadyUsed.Add(roughX, new List<MultiDoublePoint> { safePoint });

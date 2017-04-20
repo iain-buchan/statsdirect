@@ -29,7 +29,7 @@ namespace StatsDirect.Charting
             int[] minorTicMultipliers;
             if (candidateDivisions <= 5)
             {
-                minorTicMultipliers = new int[] { 2, 5 };
+                minorTicMultipliers = new[] { 2, 5 };
                 foreach (int candidateScaleTicMultiplier in minorTicMultipliers)
                     if (Math.Pow(10, minPower) * candidateScaleTicMultiplier <= qmin)
                         minimumScaleTicMultiplier = candidateScaleTicMultiplier;

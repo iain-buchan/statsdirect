@@ -420,9 +420,7 @@ namespace StatsDirect.Charting.Renderer
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
-            double P0;
-            double cit;
-            MathDbl.civ(nx - P, out cit, gamma, out P0);
+            MathDbl.civ(nx - P, out double cit, gamma, out double P0);
             double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
             double[] px = new double[P + 1];
@@ -932,12 +930,8 @@ namespace StatsDirect.Charting.Renderer
 
         internal void Plot_Bias_MA(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
-            string ytxt = null;
-            double[] y;
-            string title;
-            bool reverse; bool use_ci = false;
-            int plotMethod;
-            get_ma_ordinate(host, out y, yy, yw, cl, cu, ref cco, rows, out title, out ytxt, xtxt, out plotMethod, xform, out reverse, ref use_ci);
+            bool use_ci = false;
+            get_ma_ordinate(host, out double[] y, yy, yw, cl, cu, ref cco, rows, out string title, out string ytxt, xtxt, out int plotMethod, xform, out bool reverse, ref use_ci);
 
             double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;

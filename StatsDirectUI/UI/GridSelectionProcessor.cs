@@ -145,16 +145,14 @@ namespace StatsDirect.UI
                 int originGroup = processor.NextOriginGroup();
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
-                    bool userCancelled;
-                    bool wasPivoted;
                     DataFrame2D frame = Gidx3(frame2dParameter.MinimumColumns(processor, parameters),
-                        frame2dParameter.MaximumColumns(processor, parameters),
-                        0,
-                        frame2dParameter.SubPrompt(processor, parameters),
-                        frame2dParameter.DataAcquisitionMode,
-                        out userCancelled,
-                        out wasPivoted,
-                        originGroup);
+frame2dParameter.MaximumColumns(processor, parameters),
+0,
+frame2dParameter.SubPrompt(processor, parameters),
+frame2dParameter.DataAcquisitionMode,
+out bool userCancelled,
+out bool wasPivoted,
+originGroup);
                     if (userCancelled)
                         throw new TemplateOperationCancelledException();
                     if (wasPivoted)
@@ -166,8 +164,7 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode2D.GroupThenBlock:
                         {
                             DataFrame2D frame = new DataFrame2D();
-                            bool userCancelled;
-                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out userCancelled);
+                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out bool userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -180,8 +177,7 @@ namespace StatsDirect.UI
                             for (int g = 0; g < groups; g++)
                             {
                                 ClearSelection();
-                                bool wasPivoted;
-                                DataFrame subFrame = grid.GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 90, "Select subgroups for group " + (g + 1), parameter.CancelSkipsParameter, true, false, out userCancelled, out wasPivoted, originGroup);
+                                DataFrame subFrame = grid.GetCellArray(0, DataAcquisitionMode.NumericReplaceMissing, 1, 90, "Select subgroups for group " + (g + 1), parameter.CancelSkipsParameter, true, false, out userCancelled, out bool wasPivoted, originGroup);
                                 if (userCancelled)
                                     throw new TemplateOperationCancelledException();
                                 if (wasPivoted)
@@ -216,8 +212,7 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode2D.BlockThenGroup:
                         {
                             DataFrame2D frame = new DataFrame2D();
-                            bool userCancelled;
-                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out userCancelled);
+                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out bool userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -234,8 +229,7 @@ namespace StatsDirect.UI
                             {
                                 frame.Name += " (";
                                 ClearSelection();
-                                bool wasPivoted;
-                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt, parameter.CancelSkipsParameter, true, DataAcquisitionWidth.Wide, false, out userCancelled, out wasPivoted, originGroup);
+                                DataFrame repeatFrame = GetCellEqual(rows, DataAcquisitionMode.NumericReplaceMissing, GroupIdentifierMode.GroupIdentifier, 2, 200, "Select subject (row) by treatment (column) data for repeat " + rpt, parameter.CancelSkipsParameter, true, DataAcquisitionWidth.Wide, false, out userCancelled, out bool wasPivoted, originGroup);
                                 // No frame was returned, either because the user cancelled or because of an error.  Distinguish the two cases!
                                 if (userCancelled)
                                 {
@@ -374,9 +368,7 @@ namespace StatsDirect.UI
                         MinY = double.MaxValue,
                         MaxY = double.MinValue
                     };
-                    bool cancelled;
-                    bool wasPivoted;
-                    DataFrame predictorsFrame = grid.GetCellArray(0, DataAcquisitionMode.NumericSkipMissing, 2, 200, "Select data for PREDICTOR (x axis) SERIES", null, true, false, out cancelled, out wasPivoted, 0);
+                    DataFrame predictorsFrame = grid.GetCellArray(0, DataAcquisitionMode.NumericSkipMissing, 2, 200, "Select data for PREDICTOR (x axis) SERIES", null, true, false, out bool cancelled, out bool wasPivoted, 0);
                     if (cancelled)
                         break;
                     if (wasPivoted)
@@ -1155,8 +1147,7 @@ namespace StatsDirect.UI
             {
                 // call for group ID
                 ClearSelection();
-                bool cancelled;
-                DataFrame groupIdentifiers = grid.GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, "Select GROUP/SERIES IDENTIFIERS", null, true, false, out cancelled, out wasPivoted, 0);
+                DataFrame groupIdentifiers = grid.GetCellArray(0, DataAcquisitionMode.CategoryCombineAllColumns, 1, 10, "Select GROUP/SERIES IDENTIFIERS", null, true, false, out bool cancelled, out wasPivoted, 0);
                 if (cancelled)
                     break;
                 if (wasPivoted)

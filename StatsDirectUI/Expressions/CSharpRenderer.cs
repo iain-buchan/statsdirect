@@ -56,8 +56,7 @@ namespace StatsDirect.Expressions
 
         public void Visit(BooleanConstantNode node)
         {
-            string cSharpValue;
-            if (parserConstants.TryGetValue(node.Constant, out cSharpValue))
+            if (parserConstants.TryGetValue(node.Constant, out string cSharpValue))
             {
                 activeBuilder.Append(cSharpValue);
                 return;
@@ -73,8 +72,7 @@ namespace StatsDirect.Expressions
 
         public void Visit(DoubleConstantNode node)
         {
-            string cSharpValue;
-            if (parserConstants.TryGetValue(node.Constant, out cSharpValue))
+            if (parserConstants.TryGetValue(node.Constant, out string cSharpValue))
             {
                 activeBuilder.Append(cSharpValue);
                 return;
@@ -96,9 +94,7 @@ namespace StatsDirect.Expressions
 
         private string RenderWithPossibleTypePromotion(INode node, DataType typeAfterPromotion)
         {
-            string prePromote;
-            string postPromote;
-            if (GetTypePromotionStrings(node.DataType(passedVariableTypes), typeAfterPromotion, out prePromote, out postPromote))
+            if (GetTypePromotionStrings(node.DataType(passedVariableTypes), typeAfterPromotion, out string prePromote, out string postPromote))
                 return prePromote + RenderInNewContext(node) + postPromote;
             else
                 return RenderInNewContext(node);

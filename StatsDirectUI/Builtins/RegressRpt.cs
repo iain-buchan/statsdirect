@@ -108,8 +108,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptGroupedCovariance(ITemplateHost host, ParameterBag parameters)
         {
             double gtxx = 0; double gtxy = 0; double gtyy = 0; double grandn = 0; double grandx = 0; double grandsqx = 0; double grandsqy = 0;
-            double tsy = 0; double tsx = 0; double cit; double p0;
-            double grandcpr = 0;
+            double tsy = 0; double tsx = 0; double grandcpr = 0;
             double grandbit = 0;
             double residssq = 0; double t;
             double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
@@ -188,8 +187,7 @@ namespace StatsDirect.Builtins
             }
             // mean xmean as basline mean x for later corrected y means
             double mx0 = grandx / grandn;
-            bool cancelled;
-            mx0 = host.GetDouble("Enter basline mean for predictors (default is the overall mean of predictor values)", "Covariance Analysis", mx0, out cancelled);
+            mx0 = host.GetDouble("Enter basline mean for predictors (default is the overall mean of predictor values)", "Covariance Analysis", mx0, out bool cancelled);
             if (cancelled)
                 throw new TemplateOperationCancelledException();
 
@@ -221,7 +219,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("com", Q);
             outputParameters.AddOutput("diff", q2);
             int degf = Convert.ToInt32(grandn - 2 * k);
-            MathDbl.civ(degf, out cit, gamma, out p0);
+            MathDbl.civ(degf, out double cit, gamma, out double p0);
             IList<ParameterBag> slopeList = new List<ParameterBag>();
             outputParameters.AddOutput("*slope", slopeList);
             for (int g = 1; g <= k - 1; g++)
@@ -356,9 +354,7 @@ namespace StatsDirect.Builtins
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0)
                 throw new TemplateOperationCancelledException();
-            double cit;
-            double P0;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
 
             // bool OK = false; 
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;
@@ -447,16 +443,12 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= rows; i++)
                 z_dum[i, 1] = 1.0;
 
-            int iter;
-            int ifault;
-            double devx;
-            clogit(rows, 1, strata, z_dum, rows, isz_dum, 1, ic, isi, out devx, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
+            clogit(rows, 1, strata, z_dum, rows, isz_dum, 1, ic, isi, out double devx, b, se, sc, cov, NCA, nct, tol, maxit, out int iter, out int ifault);
 
             for (int i = 1; i <= cols; i++)
                 isz[i] = i;
 
-            double dev;
-            clogit(rows, cols, strata, z, rows, isz, cols, ic, isi, out dev, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
+            clogit(rows, cols, strata, z, rows, isz, cols, ic, isi, out double dev, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
 
             double lrx2 = Math.Abs(devx - dev);
 

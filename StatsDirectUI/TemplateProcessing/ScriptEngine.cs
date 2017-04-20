@@ -86,8 +86,7 @@ namespace StatsDirect.TemplateProcessing
             host.StartProgress("Running R script", false);
             try
             {
-                string codeForEmit;
-                Process p = RController.RunScriptAndQuit(host, modifiedCode, out codeForEmit);
+                Process p = RController.RunScriptAndQuit(host, modifiedCode, out string codeForEmit);
                 while (true)
                 {
                     bool exited = p.WaitForExit(50);

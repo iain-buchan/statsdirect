@@ -458,7 +458,7 @@ namespace StatsDirect.Charting
                     string.IsNullOrWhiteSpace(ydat.Title)
                         ? "Series " + (sIndex + 1).ToString()
                         : ydat.Title;
-                DoubleArraysAndBooleans noMissings = Numerics.Utilities.RemoveMissingRows(new double[][] { xdat.Data, ydat.Data, ydatl.Data, ydatu.Data }, 0, xdat.Length, 0);
+                DoubleArraysAndBooleans noMissings = Numerics.Utilities.RemoveMissingRows(new[] { xdat.Data, ydat.Data, ydatl.Data, ydatu.Data }, 0, xdat.Length, 0);
                 MultiDoublePoint[] data = new MultiDoublePoint[noMissings.ArraysWithMissingRowsRemoved[0].Length];
                 for (int i = 0; i < noMissings.ArraysWithMissingRowsRemoved[0].Length; i++)
                 {
@@ -539,9 +539,7 @@ namespace StatsDirect.Charting
             }
             rows = ctr;
 
-            double ymean;
-            double ysd;
-            MathDbl.meansd(ydat, 0, ref rows, out ymean, out ysd);
+            MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
 
             controlOptions.UseDates = looksLikeDates;
             controlOptions.ObservationsToUse = rows;

@@ -42,9 +42,7 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode.CategoryCombineAllColumns:
                     case DataAcquisitionMode.Text:
                         {
-                            int topRow;
-                            string[,] hold;
-                            if (!PreprocessCellArrayGroupsOrText(cellSelection, rowLengthHint, isRefill, titleWasInData, out topRow, out hold))
+                            if (!PreprocessCellArrayGroupsOrText(cellSelection, rowLengthHint, isRefill, titleWasInData, out int topRow, out string[,] hold))
                                 return null;
 
                             if (DataAcquisitionMode.CategoryReplaceMissing == mode)
@@ -151,8 +149,7 @@ namespace StatsDirect.UI
                             continue;
 
                         // Enumerate categories and put results in variable
-                        Group probe;
-                        if (!groupsByLabel.TryGetValue(pattern, out probe))
+                        if (!groupsByLabel.TryGetValue(pattern, out Group probe))
                         {
                             // New group
                             probe = new Group(pattern, nextGroupNumber++);
@@ -220,8 +217,7 @@ namespace StatsDirect.UI
                                 break;
                             }
                             int pattern = (int)v;
-                            Group probe;
-                            if (!groupsByLabel.TryGetValue(pattern, out probe))
+                            if (!groupsByLabel.TryGetValue(pattern, out Group probe))
                             {
                                 // New group
                                 probe = new Group(pattern.ToString(), nextGroupNumber++);

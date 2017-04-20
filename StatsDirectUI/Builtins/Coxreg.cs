@@ -913,15 +913,13 @@ namespace StatsDirect.Builtins
             int iq;
             int irank; int j; int kk; int k;
             int iter; int J1;
-            double alglo;
             double div;
             double xcen;
             double xfix; double xfrq; double xlt; double xpar; double xrt; double xx;
             double zdot;
-            bool change;
 
             //   NEWTON-RAPHSON ITERATIONS
-            double[] smd = new double[1 + 1 ];
+            double[] smd = new double[1 + 1];
             for (int i = 1; i <= ncoef; i++)
             {
                 xmean[i] = 0.0;
@@ -1096,7 +1094,7 @@ namespace StatsDirect.Builtins
                 }
             }
             icncd = icnn;
-            coxhess(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 1, ihess, out alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out change, Zero, ref ifault);
+            coxhess(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 1, ihess, out double alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out bool change, Zero, ref ifault);
             if (ifault != 0)
             {
                 return;
@@ -1559,14 +1557,7 @@ namespace StatsDirect.Builtins
                             smu = 0.0;
                             igr = igrp[k];
                         }
-                        double xfix;
-                        double xcen;
-                        double xpar;
-                        double xlt;
-                        double xfrq;
-                        double xrt;
-                        int nrmiss;
-                        coxvars(x, (k - 1) * nCol, irt, 0, IFRQ, ifix, 0, icen, out xrt, out xlt, out xfrq, out xfix, out xpar, out xcen, out nrmiss);
+                        coxvars(x, (k - 1) * nCol, irt, 0, IFRQ, ifix, 0, icen, out double xrt, out double xlt, out double xfrq, out double xfix, out double xpar, out double xcen, out int nrmiss);
                         if (xfrq >= 0.0)
                         {
                             int icnn = Convert.ToInt32(xcen);
@@ -2849,8 +2840,7 @@ namespace StatsDirect.Builtins
                 xp[i] = z[i].Time;
             }
 
-            double xf;
-            ExFortran.Rank(xp, xr, 1, ictr, 1, out xf);
+            ExFortran.Rank(xp, xr, 1, ictr, 1, out double xf);
             yp[0] = Constant.MISSING; //  Ensure charts don't have bogus (0,0) points
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
@@ -2908,9 +2898,7 @@ namespace StatsDirect.Builtins
             ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].Data;
 
             double GAMMA = parameters["gamma"].AsDouble;
-            double cit;
-            double P0;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", Formatting.XRound(100 * GAMMA, 2));
             outputParameters.AddOutput("pc2", Formatting.XRound(100 * GAMMA, 2));

@@ -28,8 +28,7 @@ namespace StatsDirect.Numerics
             }
             double v1 = RNG.NextDoubleX();
             v1 = System.Math.Floor(BIG * v1) + RNG.NextDoubleX();
-            int ifault;
-            double x = PDF.gauinv(v1 / BIG, out ifault);
+            double x = PDF.gauinv(v1 / BIG, out int ifault);
             return ifault != 0 ? double.NaN : x * sd + mean;
         }
 

@@ -46,9 +46,7 @@ namespace StatsDirect.Charting.Renderer
             double GAMMA = rOptions.GAMMA;
             if (GAMMA <= 0)
                 return null;
-            double cit;
-            double P0;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
 
             //  Assume data passed as series - X is positive, Y is negative.
 
@@ -258,13 +256,7 @@ namespace StatsDirect.Charting.Renderer
                     double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1];
                     Array.Copy(thisData.pdata, 0, mwx, 1, thisData.pdata.Length);
                     Array.Copy(thisData.adata, 0, mwx, 1 + thisData.pdata.Length, thisData.adata.Length);
-                    bool fault;
-                    double u;
-                    double zScrap;
-                    double xfScrap;
-                    double r1Scrap;
-                    double[] mwrScrap;
-                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, out mwrScrap, out u, out zScrap, out xfScrap, out r1Scrap, out fault);
+                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, out double[] mwrScrap, out double u, out double zScrap, out double xfScrap, out double r1Scrap, out bool fault);
                     double theta;
                     double ll;
                     double ul;
@@ -296,7 +288,6 @@ namespace StatsDirect.Charting.Renderer
                         }
                     }
                     // end of Wilcoxon estimate
-                    string warn;
                     thisResults.AddOutput("ti", rOptions.SeriesTitles[cs]);
                     thisResults.AddOutput("auc", host.RoundU(thisData.auc));
                     thisResults.AddOutput("theta", host.RoundU(theta));
@@ -314,7 +305,7 @@ namespace StatsDirect.Charting.Renderer
                     thisResults.AddOutput("c", thisData.c.ToString(CultureInfo.InvariantCulture));
                     thisResults.AddOutput("d", thisData.d.ToString(CultureInfo.InvariantCulture));
                     // sensitivity CI
-                    MathDbl.binci(Convert.ToDouble(thisData.a), Convert.ToDouble(thisData.a + thisData.c), out ll, out ul, GAMMA, out warn);
+                    MathDbl.binci(Convert.ToDouble(thisData.a), Convert.ToDouble(thisData.a + thisData.c), out ll, out ul, GAMMA, out string warn);
                     thisResults.AddOutput("senspc", Formatting.XRound(100.0 * (1.0 - P0), 2));
                     thisResults.AddOutput("sens", host.RoundU(thisData.sens));
                     thisResults.AddOutput("sensll", host.RoundU(ll));
@@ -348,8 +339,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     thisResults.AddOutput("likely", host.RoundU(ptld));
                     // Clopper-Pearson CI
-                    double pil; double piu;
-                    MathDbl.binci(thisData.a, thisData.a + thisData.b, out pil, out piu, GAMMA, out warn);
+                    MathDbl.binci(thisData.a, thisData.a + thisData.b, out double pil, out double piu, GAMMA, out warn);
                     thisResults.AddOutput("likely_from", host.RoundU(pil));
                     thisResults.AddOutput("likely_to", host.RoundU(piu) + warn);
                     // as percentage

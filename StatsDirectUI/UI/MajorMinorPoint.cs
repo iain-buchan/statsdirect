@@ -13,11 +13,8 @@
 
         public MajorMinorPoint(string s)
         {
-            int major;
-            int minor;
-            int point;
             string[] parts = s.Split('.');
-            if (parts.Length >= 3 && int.TryParse(parts[0], out major) && int.TryParse(parts[1], out minor) && int.TryParse(parts[2], out point))
+            if (parts.Length >= 3 && int.TryParse(parts[0], out int major) && int.TryParse(parts[1], out int minor) && int.TryParse(parts[2], out int point))
             {
                 Major = major;
                 Minor = minor;

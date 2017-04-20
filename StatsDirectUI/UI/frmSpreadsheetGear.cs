@@ -255,8 +255,7 @@ namespace StatsDirect.UI
             int probeBottom = Math.Min(probeTop + PROBE_ROWS - 1, lastUsedRow);
             while (probeTop <= probeBottom)
             {
-                int nonHiddenRowCount;
-                object[,] probe = GetCellObjects(cellColumnSelection.ColumnIndex, probeTop, probeBottom, out nonHiddenRowCount);
+                object[,] probe = GetCellObjects(cellColumnSelection.ColumnIndex, probeTop, probeBottom, out int nonHiddenRowCount);
                 for (int offset = 0; offset < nonHiddenRowCount; offset++)
                 {
                     object value = probe[offset, 0];
@@ -729,8 +728,7 @@ namespace StatsDirect.UI
                 BackColor = SystemColors.Info;
                 try
                 {
-                    bool wasPivoted;
-                    if (!SdApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted))
+                    if (!SdApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out bool wasPivoted))
                     {
                         // The user either cancelled or pivoted
                         return new CellSelectionResult { UserCancelled = !wasPivoted, WasPivoted = wasPivoted };
@@ -807,8 +805,7 @@ namespace StatsDirect.UI
             if (val is string)
             {
                 string buf = (string)val;
-                double dval;
-                if (double.TryParse(buf, out dval))
+                if (double.TryParse(buf, out double dval))
                     return dval;
                 string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);
                 if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
@@ -839,8 +836,7 @@ namespace StatsDirect.UI
                 return DateTime.FromOADate((int)val);
             if (val is string)
             {
-                DateTime dt;
-                return DateTime.TryParse((string)val, out dt) ? dt : DateTime.MinValue;
+                return DateTime.TryParse((string)val, out DateTime dt) ? dt : DateTime.MinValue;
             }
             return DateTime.MinValue;
         }
@@ -2129,9 +2125,7 @@ namespace StatsDirect.UI
 
         private void ExportSelectionToR()
         {
-            bool userCancelled;
-            bool wasPivoted;
-            DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out userCancelled, out wasPivoted, 0);
+            DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out bool userCancelled, out bool wasPivoted, 0);
             if (userCancelled)
                 return;
             StringBuilder sb = new StringBuilder();

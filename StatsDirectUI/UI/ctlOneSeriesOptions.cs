@@ -133,8 +133,7 @@ namespace StatsDirect.UI
                 markerType.MarkerColor = markerColorPanel.Color;
                 markerType.LineColor = lineColorPanel.Color;
                 markerType.IsMarkerFilled = chkFillMarker.Checked;
-                double markerSize;
-                double.TryParse(cboMarkerSize.Text, out markerSize);
+                double.TryParse(cboMarkerSize.Text, out double markerSize);
                 markerType.MarkerSize = markerSize;
                 markerType.MarkerShape = markerShaper.MarkerShape;
                 markerType.LineDashStyle = dashStyler.DashStyle;

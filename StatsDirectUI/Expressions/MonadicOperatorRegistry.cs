@@ -31,8 +31,7 @@ namespace StatsDirect.Expressions
 
         public MonadicOperatorDefinition DefinitionFor(MonadicOperator op)
         {
-            MonadicOperatorDefinition definition;
-            definitions.TryGetValue(op, out definition);
+            definitions.TryGetValue(op, out MonadicOperatorDefinition definition);
             return definition;
         }
     }

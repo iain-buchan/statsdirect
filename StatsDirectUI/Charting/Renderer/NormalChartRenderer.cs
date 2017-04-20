@@ -21,8 +21,7 @@ namespace StatsDirect.Charting.Renderer
             int rows = xs0.Points;
 
             double[] x = new double[rows];
-            double xf;
-            ExFortran.Rank(xs0.Data, x, 0, rows, 0, out xf);
+            ExFortran.Rank(xs0.Data, x, 0, rows, 0, out double xf);
 
             if (method == NormalOptions.ScoreMethod.ExpectedNormalOrder)
                 if (rows > 4000)
@@ -99,8 +98,7 @@ namespace StatsDirect.Charting.Renderer
             double sdy = Math.Sqrt(vary);
 
             double[] x = new double[rows];
-            double scrap;
-            ExFortran.Rank(y, x, 0, rows, 0, out scrap);
+            ExFortran.Rank(y, x, 0, rows, 0, out double scrap);
 
             if (method == NormalOptions.ScoreMethod.ExpectedNormalOrder)
                 if (rows > 4000)
@@ -134,8 +132,7 @@ namespace StatsDirect.Charting.Renderer
                     case NormalOptions.ScoreMethod.VanDerWaerden:
                         {
                             //  van der Waerden, Conover P 396
-                            int ifault;
-                            x[j] = PDF.gauinv(x[j] / (nn + 1.0), out ifault);
+                            x[j] = PDF.gauinv(x[j] / (nn + 1.0), out int ifault);
                             if (ifault != 0)
                                 x[j] = Constant.MISSING;
                             break;
@@ -143,8 +140,7 @@ namespace StatsDirect.Charting.Renderer
                     case NormalOptions.ScoreMethod.Blom:
                         {
                             //  Blom - Altman p143
-                            int ifault;
-                            x[j] = PDF.gauinv(x[j] / (nn + 1.0), out ifault);
+                            x[j] = PDF.gauinv(x[j] / (nn + 1.0), out int ifault);
                             if (ifault != 0)
                                 x[j] = Constant.MISSING;
                             break;

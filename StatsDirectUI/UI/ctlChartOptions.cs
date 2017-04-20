@@ -136,8 +136,7 @@ namespace StatsDirect.UI
         {
             BarOptions barOptions = (BarOptions)options;
             ctlBarOptions.FillOptionsFromForm();
-            double maxBarWidth;
-            if (double.TryParse(txtBarBarWidthPercent.Text, out maxBarWidth))
+            if (double.TryParse(txtBarBarWidthPercent.Text, out double maxBarWidth))
             {
                 barOptions.MaxBarWidth = maxBarWidth / 100.0;
             }
@@ -203,8 +202,7 @@ namespace StatsDirect.UI
         private void FillForestOptionsFromForm()
         {
             ForestOptions forestOptions = (ForestOptions)options;
-            int effectSizeAndIntervalDecimalPlaces;
-            int.TryParse(cboForestDecimalPlaces.Text, out effectSizeAndIntervalDecimalPlaces);
+            int.TryParse(cboForestDecimalPlaces.Text, out int effectSizeAndIntervalDecimalPlaces);
             forestOptions.EffectSizeAndIntervalDecimalPlaces = effectSizeAndIntervalDecimalPlaces;
             forestOptions.MarkCentres = chkForestMarkCentres.Checked;
         }

@@ -85,7 +85,7 @@ namespace StatsDirect.Builtins
             DoubleVariable vy = fy.Variables[0]as DoubleVariable;
             DataFrame fx = parameters["x"].AsDataFrame;
             DoubleVariable vx = fx.Variables[0]as DoubleVariable;
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vy.Data, vx.Data }, 0, vy.Length, 0);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { vy.Data, vx.Data }, 0, vy.Length, 0);
             return new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
         }
 
@@ -194,8 +194,7 @@ namespace StatsDirect.Builtins
                     ParameterBag ciParameters = new ParameterBag();
                     ciList.Add(ciParameters);
                     double GAMMA = 1.0 - context.P0 / 2.0;
-                    int fault;
-                    double rcit = PDF.gauinv(GAMMA, out fault);
+                    double rcit = PDF.gauinv(GAMMA, out int fault);
                     double fz = 0.5 * Math.Log((1.0 + context.R) / (1.0 - context.R));
                     double fz1 = fz - rcit / Math.Sqrt(Convert.ToDouble(context.NX - 3));
                     double fz2 = fz + rcit / Math.Sqrt(Convert.ToDouble(context.NX - 3));
@@ -288,13 +287,11 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("residualsVsPredictor", ChartRendererFactory.PlotXYAndReturnRtf(z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, 0, false));
 
-            double xf;
-            ExFortran.Rank(r, z, 0, nx, 0, out xf);
+            ExFortran.Rank(r, z, 0, nx, 0, out double xf);
             for (int j = 0; j <= nx - 1; j++)
             {
                 //  van der Waerden normal scores, Conover P 396
-                int ifault;
-                z[j] = PDF.gauinv(z[j] / (Convert.ToDouble(nx) + 1.0), out ifault);
+                z[j] = PDF.gauinv(z[j] / (Convert.ToDouble(nx) + 1.0), out int ifault);
                 if (ifault != 0)
                 {
                     z[j] = Constant.MISSING;
@@ -425,26 +422,14 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             bool correctForReversal = parameters["correctForReversal"].AsBoolean;
-            double[,] x;
-            double[,] xc;
-            double[,] xr;
-            double[,] v;
-            int N;
-            int nx;
-            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 1, out N, out nx, correctForReversal);
+            return CalcPrincipal(host, frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, 1, out int N, out int nx, correctForReversal);
         }
 
         public static ParameterBag RptPrincipalComponentsRegressionCovariance(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             bool correctForReversal = parameters["correctForReversal"].AsBoolean;
-            double[,] x;
-            double[,] xc;
-            double[,] xr;
-            double[,] v;
-            int N;
-            int nx;
-            return CalcPrincipal(host, frame, out x, out xc, out xr, out v, 2, out N, out nx, correctForReversal);
+            return CalcPrincipal(host, frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, 2, out int N, out int nx, correctForReversal);
         }
 
         ///  <summary>
@@ -465,7 +450,7 @@ namespace StatsDirect.Builtins
         {
             int j; int i;
             int ifault = 0;
-            double[,] u; double[] w; double cum = 0; double dsum = 0;
+            double cum = 0; double dsum = 0;
 
             N = frame.VariableCount;
             nx = frame.Variables[0].Length;
@@ -492,7 +477,7 @@ namespace StatsDirect.Builtins
             nx = inx;
 
             // first do the pca to check for scale reversal like Stata alpha command without the asis subcommand
-            x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault);
+            x_principal(N, ref nx, ref x, out xc, out xr, out double[,] u, out double[] w, out v, ref irv, ref ifault);
             bool signrev = false;
             string revlab = string.Empty;
             x_pscore1_corr(N, nx, x, v, irv, revx);
@@ -1202,7 +1187,6 @@ namespace StatsDirect.Builtins
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double ci = parameters["ci"].AsDouble;
-            double dw;
             string extra;
 
             double rdf = Convert.ToDouble(context.N - context.P);
@@ -1245,8 +1229,7 @@ namespace StatsDirect.Builtins
                 }
                 double P0 = 1 - ci;
                 double GAMMA = 1.0 - P0 / 2.0;
-                int ifault;
-                double rcit = PDF.gauinv(GAMMA, out ifault);
+                double rcit = PDF.gauinv(GAMMA, out int ifault);
                 double fz = 0.5 * Math.Log((1.0 + r) / (1.0 - r));
                 double fz1 = fz - rcit / Math.Sqrt(Convert.ToDouble(context.N - 3));
                 double fz2 = fz + rcit / Math.Sqrt(Convert.ToDouble(context.N - 3));
@@ -1266,7 +1249,7 @@ namespace StatsDirect.Builtins
                 r2 = 0.0;
             }
             outputParameters.AddOutput("ra2", host.RoundU(r2 * 100) + "%");
-            Regress1.x_dwsd(context.R, context.N, out dw);
+            Regress1.x_dwsd(context.R, context.N, out double dw);
             outputParameters.AddOutput("dw", host.RoundU(dw));
             return outputParameters;
         }
@@ -1278,10 +1261,8 @@ namespace StatsDirect.Builtins
             DataFrame candidatePredictors = parameters["candidatePredictors"].AsDataFrame;
 
             int iq; int i;
-            double P0; double cit;
-            double cl; double pl;
 
-            double[] newx = new double[context.P + 1 ];
+            double[] newx = new double[context.P + 1];
             bool lsqmean = true;
             if (context.DoC)
             {
@@ -1304,7 +1285,7 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= context.P; i++)
                 newy += newx[i] * context.B[i];
 
-            MathDbl.civ(context.N - context.P, out cit, GAMMA, out P0);
+            MathDbl.civ(context.N - context.P, out double cit, GAMMA, out double P0);
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> xList = new List<ParameterBag>();
             outputParameters.AddOutput("*x", xList);
@@ -1318,7 +1299,7 @@ namespace StatsDirect.Builtins
             double rdf = Convert.ToDouble(context.N - 1 - (context.P - 1));
             double rss = context.SSY - context.SSREG;
             double rms = rss / rdf;
-            Regress1.x_ciyp(newx, context.H, context.P, rms, cit, out cl, out pl);
+            Regress1.x_ciyp(newx, context.H, context.P, rms, cit, out double cl, out double pl);
             outputParameters.AddOutput("ci_pc", Formatting.XRound(100 * (1.0 - P0), 1));
             outputParameters.AddOutput("ci_from", host.RoundU(newy - cl));
             outputParameters.AddOutput("ci_to", host.RoundU(newy + cl));
@@ -1358,13 +1339,11 @@ namespace StatsDirect.Builtins
                 }
             }
             r = new double[context.N + 1 ];
-            double xf;
-            ExFortran.Rank(context.R, r, 1, context.N, 0, out xf);
+            ExFortran.Rank(context.R, r, 1, context.N, 0, out double xf);
             for (j = 1; j <= context.N; j++)
             {
                 // van der Waerden normal scores, Conover P 396
-                int ifault;
-                r[j] = PDF.gauinv(r[j] / (Convert.ToDouble(context.N) + 1.0), out ifault);
+                r[j] = PDF.gauinv(r[j] / (Convert.ToDouble(context.N) + 1.0), out int ifault);
                 if (ifault != 0)
                 {
                     r[j] = Constant.MISSING;
@@ -1379,11 +1358,10 @@ namespace StatsDirect.Builtins
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             int i; int iq = 0;
-            double cit; double P0;
 
             double GAMMA = parameters["ci"].AsDouble;
             int df = context.N - context.P;
-            MathDbl.civ(df, out cit, GAMMA, out P0);
+            MathDbl.civ(df, out double cit, GAMMA, out double P0);
             if (context.DoC)
             {
                 iq = 1;
@@ -2025,8 +2003,7 @@ namespace StatsDirect.Builtins
             }
             for (int j = 0; j <= k; j++)
             {
-                double av;
-                Regress1.x_avsd(x, N, j, out av, out qv[j]);
+                Regress1.x_avsd(x, N, j, out double av, out qv[j]);
                 qv[j] = qv[j] * qv[j];
                 if (j > 0)
                 {
@@ -2073,8 +2050,7 @@ namespace StatsDirect.Builtins
                     if (j != L)
                     {
                         qv[j] = 0.0;
-                        double av;
-                        Regress1.x_avsd(x, N, j, out av, out qv[j]);
+                        Regress1.x_avsd(x, N, j, out double av, out qv[j]);
                         qv[j] = qv[j] * qv[j];
                         if (j > 0)
                         {
@@ -2285,7 +2261,7 @@ namespace StatsDirect.Builtins
                 model = Parsing.Cint_Txt(parameters["model"].AsString);
 
             int nx = vY.Length;
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new double[][] { vY.Data, vX.Data }, 0, nx, 0);
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { vY.Data, vX.Data }, 0, nx, 0);
             SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
             ParameterBag outputParameters = new ParameterBag();
             switch (model)
@@ -2482,8 +2458,7 @@ namespace StatsDirect.Builtins
                 newy = newy + newx[N] * bd[N];
             }
             double GAMMA = parameters["gamma"].AsDouble;
-            double P0; double cit;
-            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            MathDbl.civ(nx - P, out double cit, GAMMA, out double P0);
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> tableList = new List<ParameterBag>();
             outputParameters.AddOutput("*table", tableList);
@@ -2499,8 +2474,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("y_res", host.RoundU(newy));
             double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
-            double cl; double pl;
-            Regress1.x_ciyp(newx, xtxi, P, rms, cit, out cl, out pl);
+            Regress1.x_ciyp(newx, xtxi, P, rms, cit, out double cl, out double pl);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 1));
             outputParameters.AddOutput("from_conf", host.RoundU(newy - cl));
             outputParameters.AddOutput("to_conf", host.RoundU(newy + cl));
@@ -2533,8 +2507,7 @@ namespace StatsDirect.Builtins
             DataFrame fX = parameters["x"].AsDataFrame;
             DoubleVariable vX = fX.Variables[0]as DoubleVariable;
             double GAMMA = parameters["gamma"].AsDouble;
-            double P0; double cit;
-            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            MathDbl.civ(nx - P, out double cit, GAMMA, out double P0);
             string title = string.Empty;
             // Select the title
             switch (mode)
@@ -2640,8 +2613,7 @@ namespace StatsDirect.Builtins
             double rdf = Convert.ToDouble(nx - 1 - (P - 1));
             double rms = rss / rdf;
             double GAMMA = parameters["gamma"].AsDouble;
-            double cit; double P0;
-            MathDbl.civ(nx - P, out cit, GAMMA, out P0);
+            MathDbl.civ(nx - P, out double cit, GAMMA, out double P0);
             DoubleVariable vYFit = new DoubleVariable(nx, "Fitted Y");
             DoubleVariable vsey = new DoubleVariable(nx, "SE of Y fit");
             DoubleVariable vcl = new DoubleVariable(nx, Formatting.XRound(100.0 * (1.0 - P0), 1) + "% Conf Limit");
@@ -2920,9 +2892,8 @@ namespace StatsDirect.Builtins
             //  At this point, tt, tr, tw and pt contain valid data from row 1 to row newrows inclusive
 
             bool use_weights = false; int rank = 0; int df = 0;
-            double deviance; double devx; double llx;
+            double devx; double llx;
             const int maxit = 200;
-            int fault;
             int records = newrows;
             int[] rxi = new int[1 + 1];
             int predictors = predictorsFrame.VariableCount;
@@ -2996,7 +2967,7 @@ namespace StatsDirect.Builtins
             double[] offset = new double[records + 1 ];
             string dropped = string.Empty;
             string err_msg = string.Empty;
-            Regress1.X_Logistic_Regression(false, false, ref use_weights, records, x2, 1, select_x, 1, y, t, wt, out deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
+            Regress1.X_Logistic_Regression(false, false, ref use_weights, records, x2, 1, select_x, 1, y, t, wt, out double deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out int fault, ref dropped, ref err_msg);
             int idfx = df;
             if (mean == false)
             {
@@ -3080,10 +3051,8 @@ namespace StatsDirect.Builtins
                     : Formatting.ASTERISK);
 
             //IEB Dec 14 change from reporting coefficients to reporting odds ratios
-            double cit;
-            double p0;
             double gamma = parameters["gamma"].AsDouble;
-            MathDbl.civ(0, out cit, gamma, out p0);
+            MathDbl.civ(0, out double cit, gamma, out double p0);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - p0), 2));
             int iq = 0;
             if (mean)
@@ -4025,8 +3994,7 @@ namespace StatsDirect.Builtins
             string[] labels = context.Labels;
             bool DoC = context.DoC;
             double GAMMA = parameters["gamma"].AsDouble;
-            double cit; double P0;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
             ParameterBag outputParameters = new ParameterBag();
 
             //  Whole study
@@ -4208,15 +4176,13 @@ namespace StatsDirect.Builtins
             double[] dr = new double[n + 1];
             double[] h = new double[n + 1];
             double[] offst = new double[n + 1];
-            double dev;
             int df = 0;
             int rank = 0;
             bool iweight = true;
-            int fault;
             dropped = string.Empty;
             err_msg = string.Empty;
             host.StartProgress("Checking significance with all predictors", false);
-            Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
+            Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out double dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref err_msg);
             LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, err_msg, selectX);
             host.FinishProgress();
 
@@ -4306,8 +4272,7 @@ namespace StatsDirect.Builtins
                 if (!isIntercept && b[j] >= 0.0)
                     tx += "+";
                 tx += host.RoundU(b[j]);
-                bool isSignificant;
-                tx += SignificanceString(b, se, out isSignificant, j);
+                tx += SignificanceString(b, se, out bool isSignificant, j);
                 if (isSignificant)
                     significantCoefficients++;
                 totalCoefficients++;
@@ -4367,9 +4332,8 @@ namespace StatsDirect.Builtins
             double[] t = context.T;
             double[] y = context.Y;
 
-            double zc; double zl;
             double sns; double spe; double ppv; double nnv; double lrpos; double thetal; double thetau; double lrneg;
-            int tp; int fn; int fp; int tn; int i;
+            int i;
 
             ParameterBag outputParameters = new ParameterBag();
             double co = parameters["cutoff"].AsDouble;
@@ -4377,8 +4341,8 @@ namespace StatsDirect.Builtins
                 co = 0.5;
 
             double gamma = parameters["gamma"].AsDouble;
-            MathDbl.civ(0, out zc, gamma, out zl);
-            x_lclass(t, fvl, y, N, out tp, out fp, out fn, out tn, co);
+            MathDbl.civ(0, out double zc, gamma, out double zl);
+            x_lclass(t, fvl, y, N, out int tp, out int fp, out int fn, out int tn, co);
             outputParameters.AddOutput("tp", tp.ToString());
             outputParameters.AddOutput("fp", fp.ToString());
             outputParameters.AddOutput("totc", (tp + fp).ToString());
@@ -4499,12 +4463,12 @@ namespace StatsDirect.Builtins
 
             int j; int i;
             int iq = 0;
-            double cit; double P0; double[] offst;
+            double[] offst;
             string dropped = string.Empty;
             string err_msg = string.Empty;
 
             double GAMMA = parameters["gamma"].AsDouble;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
             bool[] isx = new bool[p + 1];
             double[] ob = new double[p + 1];
             for (j = 1; j <= p; j++)
@@ -4577,10 +4541,9 @@ namespace StatsDirect.Builtins
                 h = new double[n + 1];
                 offst = new double[n + 1 ];
                 bool iweight = true;
-                int fault;
                 dropped = string.Empty;
                 err_msg = string.Empty;
-                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref err_msg);
+                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref err_msg);
                 if (fault == 0)
                 {
                     booted++;
@@ -4617,8 +4580,7 @@ namespace StatsDirect.Builtins
                 }
                 Array.Sort(qq, 1, booted);
                 double z0 = ctr / (double)booted;
-                int ifault;
-                z0 = PDF.gauinv(z0, out ifault);
+                z0 = PDF.gauinv(z0, out int ifault);
                 double P1 = PDF.alnorm(2.0 * z0 - cit);
                 double P2 = PDF.alnorm(2.0 * z0 + cit);
                 ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * P1) + 1];
@@ -4661,8 +4623,7 @@ namespace StatsDirect.Builtins
             offst = new double[n + 1 ];
             dropped = string.Empty;
             err_msg = string.Empty;
-            int scrapFault;
-            Regress1.X_Logistic_Regression(mean, false, ref use_weights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out scrapFault, ref dropped, ref err_msg);
+            Regress1.X_Logistic_Regression(mean, false, ref use_weights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int scrapFault, ref dropped, ref err_msg);
             return outputParameters;
         }
 
@@ -4677,7 +4638,6 @@ namespace StatsDirect.Builtins
             bool DoC = context.DoC;
 
             int iq; int i; int j;
-            double P0; double cit;
             double lcl; double ucl;
 
 
@@ -4711,7 +4671,7 @@ namespace StatsDirect.Builtins
                 newy = newy + newx[i] * b[i];
             }
             double GAMMA = parameters["gamma"].AsDouble;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
             List<ParameterBag> predictorsList = new List<ParameterBag>();
             outputParameters.AddOutput("*predictors", predictorsList);
             for (i = 1; i <= P - iq; i++)
@@ -4796,19 +4756,11 @@ namespace StatsDirect.Builtins
                 double za2 = zc;
                 double temptheta1 = i == 1 ? thetau : thetal;
                 double temptheta2 = 0.9 * temptheta1;
-                double a;
-                double b;
-                double c;
-                double ztemp1 = x_lrz(temptheta1, out a, out b, out c, N, n0, n1, x0, x1);
+                double ztemp1 = x_lrz(temptheta1, out double a, out double b, out double c, N, n0, n1, x0, x1);
                 double diff1 = Math.Abs(za2 - Math.Abs(ztemp1));
                 double ztemp2 = x_lrz(temptheta2, out a, out b, out c, N, n0, n1, x0, x1);
                 double diff2 = Math.Abs(za2 - Math.Abs(ztemp2));
-                double theta1;
-                double theta0;
-                double z1;
-                double z0;
-                double zcritical;
-                x_lrdiff(diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical);
+                x_lrdiff(diff1, diff2, out double theta1, out double theta0, temptheta1, temptheta2, out double z1, out double z0, ztemp1, ztemp2, out double zcritical);
                 int cnt = 0;
                 double theta2;
                 do
@@ -5105,7 +5057,6 @@ namespace StatsDirect.Builtins
             const int maxit = 200;
             int rank = 0; int df = 0;
             double deviance = 0; double devx; double llx;
-            int fault;
             int records = rows;
             int[] rxi = new int[1 + 1 ];
             int predictors = prd;
@@ -5147,7 +5098,7 @@ namespace StatsDirect.Builtins
             }
             string dropped = string.Empty;
             string err_msg = string.Empty;
-            Regress1.X_Poisson_Regression(false, use_offset, ref weighted, records, x2, 1, selectX, 1, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out fault, ref dropped, ref err_msg);
+            Regress1.X_Poisson_Regression(false, use_offset, ref weighted, records, x2, 1, selectX, 1, y, t, weight, ref deviance, ref df, beta, ref rank, se_beta, covariance, tol, maxit, fit, residual, leverage, offset, out int fault, ref dropped, ref err_msg);
             int idfx = df;
             if (!mean)
             {
@@ -5213,8 +5164,7 @@ namespace StatsDirect.Builtins
             }
 
             double GAMMA = parameters["gamma"].AsDouble;
-            double cit; double P0;
-            MathDbl.civ(0, out cit, GAMMA, out P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double P0);
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));
 
             outputParameters.AddOutput("dev", host.RoundU(deviance));
@@ -5714,7 +5664,7 @@ namespace StatsDirect.Builtins
 
             int ifa = 0;
             int laps = 0;
-            int nc = 0; int nrc = 0; int icount = 0; int ifault; int ifault2 = 0;
+            int nc = 0; int nrc = 0; int icount = 0; int ifault2 = 0;
             double t; double seh = 0; double se = 0;
             double a = 0; double b = 0; double varb = 0; double sw = 0; double S1 = 0; double S2 = 0; double s3 = 0; double cse = 0; double cseh = 0;
             double I1 = 0; double XM = 0;
@@ -5782,7 +5732,7 @@ namespace StatsDirect.Builtins
             double[] x = new double[k + 1];
             x_sortbydose(d, s, r, k);
             double c = 0;
-            x_probits(model, k, ref C1, ref c, ref nc, nrc, clog, qld, d, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out ifault);
+            x_probits(model, k, ref C1, ref c, ref nc, nrc, clog, qld, d, s, r, P, w, y, pob, x, ref a, ref b, ref laps, ref S1, ref S2, ref s3, ref s4, ref s6, ref del, ref TM, ref XM, ref ym, ref sw, ref icount, out int ifault);
             if (ifault == 0)
                 x_qdcl(model, k, out C2, ici, clog, qld, ref dose50, ref doseq, a, b, ref nohetllm, ref nohetulm, ref hetllm, ref hetulm, ref nohetllq, ref nohetulq, ref hetllq, ref hetulq, ref c, out se, ref cse, out seh, ref cseh, ref I1, ref S1, ref S2, ref s3, s4, s6, del, TM, XM, sw, out varb, icount, out ifault2);
             outputParameters.AddOutput("title", model == ProbitModel.Probit ? "probit sigmoid curve" : "logit sigmoid curve");
@@ -6069,8 +6019,7 @@ namespace StatsDirect.Builtins
                         PP = ((r[i] - 0.5) / s[i] - C) / (1.0 - C);
                     }
                 }
-                int ifa;
-                double z = model == ProbitModel.Probit ? PDF.gauinv(PP, out ifa) : 0.5 * Math.Log(PP / (1.0 - PP));
+                double z = model == ProbitModel.Probit ? PDF.gauinv(PP, out int ifa) : 0.5 * Math.Log(PP / (1.0 - PP));
                 pob[i] = z;
                 sumxz = sumxz + z * x[i];
                 sumx = sumx + x[i];
@@ -6495,8 +6444,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                int ifa;
-                t = PDF.gauinv(ici + (1.0 - ici) / 2.0, out ifa);
+                t = PDF.gauinv(ici + (1.0 - ici) / 2.0, out int ifa);
             }
 
             string YAxisTitle = context.Labels[2] + " / " + context.Labels[1];
@@ -6583,8 +6531,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("mort", C2 > 0 ? "Not considering natural mortality." : string.Empty);
             if (Model == 1)
             {
-                int ifa;
-                qdose = PDF.gauinv(yval, out ifa);
+                qdose = PDF.gauinv(yval, out int ifa);
             }
             else
             {

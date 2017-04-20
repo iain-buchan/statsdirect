@@ -80,8 +80,7 @@ namespace StatsDirect.Builtins
             {
                 gamma = 0.95;
             }
-            int fault;
-            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out fault);
+            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out int fault);
             double[] gpid = new double[1 + 1];
             string[] glab = new string[1 + 1];
             int r;
@@ -266,8 +265,7 @@ namespace StatsDirect.Builtins
                 int[] cen = new int[gnx[lap] + 1 ];
                 int[] allcens = new int[gnx[lap] + 1 ];
                 double[] alltime = new double[gnx[lap] + 2 ];
-                int nx;
-                Plprep(ref arr2, ref cdat1, ref stime, ref dead, ref nat, ref cen, ref gnx, out nx, ref lap, out nt, ref allcens, ref alltime);
+                Plprep(ref arr2, ref cdat1, ref stime, ref dead, ref nat, ref cen, ref gnx, out int nx, ref lap, out nt, ref allcens, ref alltime);
 
                 if (gid.Length == 0)
                 {
@@ -827,7 +825,6 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptWeiLachin(ITemplateHost host, ParameterBag parameters)
         {
-            int ifault;
             int gid2 = 0; int j;
             int[,] s;
             double[,] x;
@@ -943,7 +940,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*outer", outerList);
             ParameterBag outerParameters = new ParameterBag();
             outerList.Add(outerParameters);
-            XWl(host, outerParameters, nr, rows, n, g, s, x, 1, out ifault);
+            XWl(host, outerParameters, nr, rows, n, g, s, x, 1, out int ifault);
             if (ifault == 0)
             {
                 outerParameters = new ParameterBag();
@@ -960,7 +957,7 @@ namespace StatsDirect.Builtins
 
         private static void XWl(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
         {
-            int ifail; int nullty = 0; int j2; int i; int k2; int k1; int ipoint; int r;
+            int nullty = 0; int j2; int i; int k2; int k1; int ipoint; int r;
             int j; int k;
             double q = 0;
             string tx;
@@ -1127,7 +1124,7 @@ namespace StatsDirect.Builtins
             //   COMPUTE INVERSE OF COVARIANCE MATRIX AND WEI-LACHIN
             //   MULTIVARIATE STATISTICS CHIOMB (FOR OMNIBUS TEST) AND
             //   NRSTOC (FOR TEST OF STOCHASTIC ORDERING)  (SEE EQN 7)
-            Syminv(ref sigma, ref nr, ref nn, ref siginv, ref nullty, out ifail);
+            Syminv(ref sigma, ref nr, ref nn, ref siginv, ref nullty, out int ifail);
             double chiomb = 0.0;
             double tsum = 0.0;
             double sigsum = 0.0;
@@ -1287,8 +1284,7 @@ namespace StatsDirect.Builtins
         private static void Plsave(DataFrame resultsFrame, ref double[,] stime, ref int[] nat, ref int[,] dead, ref double[,] s, ref double[,] h, ref double[] vs, ref double[] vh, ref int nx, ref int lap, ref double gamma, ref int lc, ref int[] allcens, ref double[] alltime)
         {
             double p = (1.0 - gamma) / 2;
-            int ifault;
-            double cit = PDF.gauinv(1.0 - p, out ifault);
+            double cit = PDF.gauinv(1.0 - p, out int ifault);
             int r = 0;
             double sumn = 0.0;
             double sumd = 0.0;
@@ -1486,8 +1482,7 @@ namespace StatsDirect.Builtins
                 throw new ArgumentException("gamma must be >= 0");
 
             double p = (1.0 - gamma) / 2.0;
-            int iifault;
-            cit = PDF.gauinv(1.0 - p, out iifault);
+            cit = PDF.gauinv(1.0 - p, out int iifault);
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
@@ -1670,8 +1665,7 @@ namespace StatsDirect.Builtins
                 {
                     for (j = 1; j <= groups; j++)
                     {
-                        bool wasCancelled;
-                        score[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out wasCancelled);
+                        score[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out bool wasCancelled);
                         if (wasCancelled)
                             throw new TemplateOperationCancelledException();
                     }
@@ -1697,8 +1691,7 @@ namespace StatsDirect.Builtins
             // string lifetab = "Life table"; 
             double gamma = parameters["gamma"].AsDouble;
             double p0 = (1.0 - gamma) / 2.0;
-            int ifault;
-            double cit = PDF.gauinv(1.0 - p0, out ifault);
+            double cit = PDF.gauinv(1.0 - p0, out int ifault);
 
             DataFrame intervalsFrame = parameters["intervals"].AsDataFrame;
             DoubleVariable intervalsVariable = intervalsFrame.Variables[0]as DoubleVariable;
@@ -2268,19 +2261,17 @@ namespace StatsDirect.Builtins
             double llf = 0; double ulf = 0; double hr = 0; double x2T = 0;
             int ne = 0;
             double wt = 0;
-            double cit = 0; double gamma;
-            string gid = null;
+            double cit = 0; string gid = null;
             string zx = null;
             ExactBB.Rec2X2[] tbl = null;
-            bool ifault;
 
-            double[] score = new double[0 + 1 ];
+            double[] score = new double[0 + 1];
             double[] gpid = new double[1 + 1];
             string[] glab = new string[1 + 1];
             string[] slab = new string[1 + 1];
             double[,] arr2 = null;
             ColumnData[] cdat1 = null;
-            Petoprep(host, parameters, ref nt, out gamma, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out ifault, ref arr2, ref cdat1);
+            Petoprep(host, parameters, ref nt, out double gamma, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out bool ifault, ref arr2, ref cdat1);
             if (ifault)
                 throw new TemplateOperationCancelledException();
 
@@ -2530,8 +2521,7 @@ namespace StatsDirect.Builtins
                     {
                         // exact test
                         bool useLogScale = false;
-                        int ierr;
-                        new ExactBB().Exact22K(host, ne, 4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                        new ExactBB().Exact22K(host, ne, 4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
                         if (ierr != 0)
                         {
                             hr = Constant.MISSING;

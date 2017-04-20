@@ -27,7 +27,7 @@ namespace StatsDirect.UI
             string searchExpression = txtExpression.Text.Trim();
             if (0 == searchExpression.Length)
                 return txtExpression;
-            DataType[] oneDouble = new DataType[] { DataType.Double };
+            DataType[] oneDouble = new[] { DataType.Double };
             Calcit finder = new Calcit(searchExpression, oneDouble, false);
             string replaceExpression = txtReplace.Text.Trim();
             if (0 == replaceExpression.Length)

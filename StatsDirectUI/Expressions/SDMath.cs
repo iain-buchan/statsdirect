@@ -145,8 +145,7 @@ namespace StatsDirect.Expressions
 
         public static double Iz(double arg)
         {
-            int ifault;
-            double term = PDF.gauinv(1.0 - arg, out ifault);
+            double term = PDF.gauinv(1.0 - arg, out int ifault);
             if (ifault != 0)
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, "gauinv returned fault");
             return term;
@@ -196,11 +195,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double Poissonp(double mean, double k)
         {
-            double phi;
-            double plo;
-            double term;
-            int fault;
-            ExFortran.poisson(mean, (int)Math.Floor(k), out phi, out plo, out term, out fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
             return fault != 0 ? Constant.MISSING : term;
         }
 
@@ -212,22 +207,13 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double PoissonTail(double mean, double k)
         {
-            double phi;
-            double plo;
-            double term;
-            int fault;
-            ExFortran.poisson(mean, (int)Math.Floor(k), out phi, out plo, out term, out fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
             return fault != 0 ? Constant.MISSING : phi;
         }
 
         public static double InvPoissonTail(double mean, double p)
         {
-            double phi;
-            double plo;
-            double term;
-            int fault;
-            int nl;
-            ExFortran.poissonNl(1, p, mean, out term, out phi, out plo, out nl, out fault);
+            ExFortran.poissonNl(1, p, mean, out double term, out double phi, out double plo, out int nl, out int fault);
             return fault != 0 ? Constant.MISSING : nl;
         }
 
@@ -240,11 +226,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double Binomial(double n, double r, double p)
         {
-            int fault;
-            double dterm;
-            double dplo;
-            double dphi;
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out dterm, out dplo, out dphi, out fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
             return fault != 0 ? Constant.MISSING : dplo;
         }
 
@@ -257,11 +239,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double Binomialp(double n, double r, double p)
         {
-            int fault;
-            double dterm;
-            double dplo;
-            double dphi;
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out dterm, out dplo, out dphi, out fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
             return fault != 0 ? Constant.MISSING : dterm;
         }
 
@@ -274,11 +252,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double BinomialTail(double n, double r, double p)
         {
-            int fault;
-            double dterm;
-            double dplo;
-            double dphi;
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out dterm, out dplo, out dphi, out fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
             return fault != 0 ? Constant.MISSING : dphi;
         }
 
@@ -289,8 +263,7 @@ namespace StatsDirect.Expressions
 
         public static double InvChi2Tail(double df, double p)
         {
-            int fault;
-            double result = PDF.ppchi2(p, df, out fault);
+            double result = PDF.ppchi2(p, df, out int fault);
             return fault != 0 ? Constant.MISSING : result;
         }
 
@@ -320,8 +293,7 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            int ifault;
-            double term = PDF.gauinv(p, out ifault);
+            double term = PDF.gauinv(p, out int ifault);
             if (ifault != 0)
                 return Constant.MISSING;
             return term;
@@ -334,8 +306,7 @@ namespace StatsDirect.Expressions
                 p = PDF.tvalp(q, df);
             else
             {
-                int fault;
-                p = ExFortran.pnct(q, (int)Math.Floor(df), ncp, out fault);
+                p = ExFortran.pnct(q, (int)Math.Floor(df), ncp, out int fault);
                 if (fault != 0)
                     return Constant.MISSING;
             }
@@ -352,8 +323,7 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            int fault;
-            double q = ExFortran.tnct(p, (int)Math.Floor(df), ncp, out fault);
+            double q = ExFortran.tnct(p, (int)Math.Floor(df), ncp, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             return q;
@@ -361,11 +331,7 @@ namespace StatsDirect.Expressions
 
         public static double Dpois(double k, double mean, bool logP)
         {
-            double phi;
-            double plo;
-            double term;
-            int fault;
-            ExFortran.poisson(mean, (int)Math.Floor(k), out phi, out plo, out term, out fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             if (logP)
@@ -375,11 +341,7 @@ namespace StatsDirect.Expressions
 
         public static double Ppois(double k, double mean, bool lowerTail, bool logP)
         {
-            double phi;
-            double plo;
-            double term;
-            int fault;
-            ExFortran.poisson(mean, (int)Math.Floor(k), out phi, out plo, out term, out fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             double p = lowerTail ? plo : phi;
@@ -394,12 +356,7 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            double phi;
-            double plo;
-            double term;
-            int fault;
-            int nl;
-            ExFortran.poissonNl(1, p, mean, out term, out phi, out plo, out nl, out fault);
+            ExFortran.poissonNl(1, p, mean, out double term, out double phi, out double plo, out int nl, out int fault);
             return fault != 0 ? Constant.MISSING : nl;
         }
 
@@ -407,11 +364,7 @@ namespace StatsDirect.Expressions
         {
             if (logP)
                 p = Math.Exp(p);
-            int fault;
-            double dterm;
-            double dplo;
-            double dphi;
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out dterm, out dplo, out dphi, out fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             double pOut = lowerTail ? dplo : dphi;
@@ -424,11 +377,7 @@ namespace StatsDirect.Expressions
         {
             if (logP)
                 p = Math.Exp(p);
-            int fault;
-            double dterm;
-            double dplo;
-            double dphi;
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out dterm, out dplo, out dphi, out fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             if (logP)
@@ -452,8 +401,7 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            int fault;
-            double result = PDF.ppchi2(p, df, out fault);
+            double result = PDF.ppchi2(p, df, out int fault);
             return fault != 0 ? Constant.MISSING : result;
         }
 

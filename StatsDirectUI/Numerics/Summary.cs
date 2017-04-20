@@ -371,8 +371,7 @@ namespace StatsDirect.Numerics
                 v[i - 1] = wt[k, i];
             }
             CentileType = 1;
-            VarAndWeight[] xsrt;
-            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, nvSum, out xsrt);
+            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, nvSum, out VarAndWeight[] xsrt);
         }
 
         public bool FullSummaryFromXSort(double[] x, out double[] xSorted, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
@@ -384,8 +383,7 @@ namespace StatsDirect.Numerics
             for (i = 1; i <= rows; i++)
                 v[i] = 1.0;
             CentileType = centileDef;
-            VarAndWeight[] xs;
-            bool fullSummaryFromXSortReturn = FullSummary(x, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
+            bool fullSummaryFromXSortReturn = FullSummary(x, v, 1, rows, userCL, userCentL, userCentU, Constant.MISSING, out VarAndWeight[] xs);
             xSorted = new double[rows + 1];
             for (i = 1; i <= rows; i++)
                 xSorted[i] = xs[i].Data;
@@ -399,8 +397,7 @@ namespace StatsDirect.Numerics
             for (int i = 0; i < rows; i++)
                 v[i] = 1.0;
             CentileType = CentileDef;
-            VarAndWeight[] xs;
-            return FullSummary(x, v, 0, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out xs);
+            return FullSummary(x, v, 0, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out VarAndWeight[] xs);
         }
 
         public bool FullSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
@@ -414,8 +411,7 @@ namespace StatsDirect.Numerics
                 v[i - 1] = 1.0;
             }
             CentileType = centileDef;
-            VarAndWeight[] xs;
-            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, Constant.MISSING, out xs);
+            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, Constant.MISSING, out VarAndWeight[] xs);
         }
 
     }

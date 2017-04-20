@@ -97,30 +97,25 @@ namespace StatsDirect.Charting
                     if (s.StartsWith("wmetafile"))
                     {
                         imageFormat = ImageFormat.Emf;
-                        int wmetafileVersion;
-                        int.TryParse(s.Substring(9), out wmetafileVersion);
+                        int.TryParse(s.Substring(9), out int wmetafileVersion);
                     }
                     else if (s.StartsWith("pngblip"))
                         imageFormat = ImageFormat.Png;
                     else if (s.StartsWith("picwgoal"))
                     {
-                        int wGoal;
-                        int.TryParse(s.Substring(8), out wGoal);
+                        int.TryParse(s.Substring(8), out int wGoal);
                     }
                     else if (s.StartsWith("pichgoal"))
                     {
-                        int hGoal;
-                        int.TryParse(s.Substring(8), out hGoal);
+                        int.TryParse(s.Substring(8), out int hGoal);
                     }
                     else if (s.StartsWith("picw"))
                     {
-                        int w;
-                        int.TryParse(s.Substring(4), out w);
+                        int.TryParse(s.Substring(4), out int w);
                     }
                     else if (s.StartsWith("pich"))
                     {
-                        int h;
-                        int.TryParse(s.Substring(4), out h);
+                        int.TryParse(s.Substring(4), out int h);
                     }
                     else if (s.StartsWith("emfblip"))
                     {

@@ -80,10 +80,7 @@ namespace StatsDirect.Builtins
             r = acr;
             outputParameters.AddOutput("ci", Formatting.XRound(cco * 100, 2));
 
-            double piu;
-            string warn;
-            double pil;
-            MathDbl.binci(r, n, out pil, out piu, cco, out warn);
+            MathDbl.binci(r, n, out double pil, out double piu, cco, out string warn);
 
             outputParameters.AddOutput("lower", pil);
             outputParameters.AddOutput("prop", r / n);
@@ -182,9 +179,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*row", rowList);
             if (fault != 0)
             {
-                double ptwo;
-                double zP1;
-                Tables.Fisherp(a, b, c, d, out zP1, out ptwo, out fault);
+                Tables.Fisherp(a, b, c, d, out double zP1, out double ptwo, out fault);
                 outputParameters.AddOutput("tail_1", string.Empty);
                 if (fault != 0)
                 {
@@ -320,7 +315,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptChiWoolf(ITemplateHost host, ParameterBag parameters)
         {
             int rc;
-            bool ierr;
 
             DataFrame datFrame = parameters["dat"].AsDataFrame;
             DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
@@ -334,8 +328,7 @@ namespace StatsDirect.Builtins
             {
                 cco = 0.95;
             }
-            int fault;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
 
@@ -355,7 +348,7 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out ierr);
+            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out bool ierr);
         }
 
 
@@ -489,17 +482,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_a2", c);
             outputParameters.AddOutput("tab_b2", d);
 
-            int ierr;
-            double p2m;
-            double p1m;
-            double p2f;
-            double p1f;
-            double llm;
-            double ulm;
-            double llf;
-            double ulf;
             double eor = 0;
-            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out llf, out ulf, out llm, out ulm, out p1f, out p2f, out p1m, out p2m, out ierr);
+            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
             double odr = ExactBB.OddsRatio(a, b, c, d);
             outputParameters.AddOutput("odds", odr);
 
@@ -538,9 +522,7 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
 
-            double xu;
-            double xl;
-            Rates.poisson_ci(alpha, revents, tar, out xl, out xu);
+            Rates.poisson_ci(alpha, revents, tar, out double xl, out double xu);
             outputParameters.AddOutput("from", xl);
             outputParameters.AddOutput("to", xu);
             return outputParameters;

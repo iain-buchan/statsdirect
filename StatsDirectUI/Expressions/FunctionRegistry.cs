@@ -228,8 +228,7 @@ namespace StatsDirect.Expressions
 
         public FunctionDefinition FunctionNamed(string name)
         {
-            FunctionDefinition functionDefinition;
-            functionDefinitions.TryGetValue(name, out functionDefinition);
+            functionDefinitions.TryGetValue(name, out FunctionDefinition functionDefinition);
             return functionDefinition;
         }
     }
