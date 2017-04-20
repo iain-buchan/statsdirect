@@ -1,9 +1,10 @@
-﻿using StatsDirect.UI.Properties;
-using System;
-using System.Drawing;
+﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Text;
+using StatsDirect.UI.Properties;
 using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting
@@ -194,7 +195,7 @@ namespace StatsDirect.Charting
                     //  Width
                     float width = float.Parse(parameterStrings[2]);
                     //  Style
-                    System.Drawing.Drawing2D.DashStyle style = (System.Drawing.Drawing2D.DashStyle)int.Parse(parameterStrings[3]);
+                    DashStyle style = (DashStyle)int.Parse(parameterStrings[3]);
                     //  Filled (1 = yes, missing or 0 = no)
                     bool isFilled = false;
                     if (parameterStrings.Length > 4)
@@ -219,7 +220,7 @@ namespace StatsDirect.Charting
                 sharedMarkerTypes[10].MarkerColor = Color.Black;
                 sharedMarkerTypes[10].LineColor = Color.Black;
                 sharedMarkerTypes[10].Width = 1;
-                sharedMarkerTypes[10].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                sharedMarkerTypes[10].LineDashStyle = DashStyle.Dash;
                 sharedMarkerTypes[10].IsMarkerFilled = false;
                 sharedMarkerTypes[10].MarkerSize = 6;
             }
@@ -285,58 +286,58 @@ namespace StatsDirect.Charting
             sharedMarkerTypes[0].MarkerShape = MarkerShape.Circle;
             sharedMarkerTypes[0].MarkerColor = Color.FromArgb(64, 105, 156);
             sharedMarkerTypes[0].LineColor = Color.FromArgb(64, 105, 156);
-            sharedMarkerTypes[0].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            sharedMarkerTypes[0].LineDashStyle = DashStyle.Solid;
 
             sharedMarkerTypes[1].MarkerShape = MarkerShape.Square;
             sharedMarkerTypes[1].MarkerColor = Color.FromArgb(158, 65, 62);
             sharedMarkerTypes[1].LineColor = Color.FromArgb(158, 65, 62);
-            sharedMarkerTypes[1].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[1].LineDashStyle = DashStyle.Dash;
 
             sharedMarkerTypes[2].MarkerShape = MarkerShape.Triangle;
             sharedMarkerTypes[2].MarkerColor = Color.FromArgb(127, 154, 72);
             sharedMarkerTypes[2].LineColor = Color.FromArgb(127, 154, 72);
-            sharedMarkerTypes[2].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+            sharedMarkerTypes[2].LineDashStyle = DashStyle.Dot;
 
             sharedMarkerTypes[3].MarkerShape = MarkerShape.Plus;
             sharedMarkerTypes[3].MarkerColor = Color.FromArgb(105, 81, 133);
             sharedMarkerTypes[3].LineColor = Color.FromArgb(105, 81, 133);
-            sharedMarkerTypes[3].LineDashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
+            sharedMarkerTypes[3].LineDashStyle = DashStyle.DashDot;
 
             sharedMarkerTypes[4].MarkerShape = MarkerShape.Cross;
             sharedMarkerTypes[4].MarkerColor = Color.FromArgb(60, 141, 163);
             sharedMarkerTypes[4].LineColor = Color.FromArgb(60, 141, 163);
-            sharedMarkerTypes[4].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            sharedMarkerTypes[4].LineDashStyle = DashStyle.Solid;
 
             sharedMarkerTypes[5].MarkerShape = MarkerShape.CircleLine;
             sharedMarkerTypes[5].MarkerColor = Color.FromArgb(204, 123, 56);
             sharedMarkerTypes[5].LineColor = Color.FromArgb(204, 123, 56);
-            sharedMarkerTypes[5].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[5].LineDashStyle = DashStyle.Dash;
 
             sharedMarkerTypes[6].MarkerShape = MarkerShape.SquareLine;
             sharedMarkerTypes[6].MarkerColor = Color.FromArgb(79, 129, 189);
             sharedMarkerTypes[6].LineColor = Color.FromArgb(79, 129, 189);
-            sharedMarkerTypes[6].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+            sharedMarkerTypes[6].LineDashStyle = DashStyle.Dot;
 
             sharedMarkerTypes[7].MarkerShape = MarkerShape.SquareCross;
             sharedMarkerTypes[7].MarkerColor = Color.FromArgb(192, 80, 77);
             sharedMarkerTypes[7].LineColor = Color.FromArgb(192, 80, 77);
-            sharedMarkerTypes[7].LineDashStyle = System.Drawing.Drawing2D.DashStyle.DashDot;
+            sharedMarkerTypes[7].LineDashStyle = DashStyle.DashDot;
 
             sharedMarkerTypes[8].MarkerShape = MarkerShape.Circle;
             sharedMarkerTypes[8].MarkerColor = Color.FromArgb(155, 187, 89);
             sharedMarkerTypes[8].LineColor = Color.FromArgb(155, 187, 89);
-            sharedMarkerTypes[8].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            sharedMarkerTypes[8].LineDashStyle = DashStyle.Solid;
 
             sharedMarkerTypes[9].MarkerShape = MarkerShape.Square;
             sharedMarkerTypes[9].MarkerColor = Color.FromArgb(128, 100, 162);
             sharedMarkerTypes[9].LineColor = Color.FromArgb(128, 100, 162);
-            sharedMarkerTypes[9].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[9].LineDashStyle = DashStyle.Dash;
 
             // fixed style
             sharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
             sharedMarkerTypes[10].MarkerColor = Color.Black;
             sharedMarkerTypes[10].LineColor = Color.Black;
-            sharedMarkerTypes[10].LineDashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            sharedMarkerTypes[10].LineDashStyle = DashStyle.Dash;
 
             foreach (MarkerType mt in sharedMarkerTypes)
             {
@@ -406,7 +407,7 @@ namespace StatsDirect.Charting
                     emSize = f.Size;
                     break;
                 default:
-                    throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit.ToString());
+                    throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit);
             }
             return f.FontFamily.Name + ";" + Convert.ToInt32(f.Style) + ";" + emSize;
         }

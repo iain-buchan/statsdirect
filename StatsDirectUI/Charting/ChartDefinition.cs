@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 

@@ -1,6 +1,6 @@
-﻿using StatsDirect.Numerics;
+﻿using System.Drawing;
+using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -33,20 +33,20 @@ namespace StatsDirect.Charting.Renderer
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             // Get the plot title
-            LadderOptions lOptions = (LadderOptions)definition.ChartOptions;
+            LadderOptions lOptions = (LadderOptions)Definition.ChartOptions;
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(lOptions);
-            AssignMarkersToSeries(definition.YSeries, lOptions);
+            AssignMarkersToSeries(Definition.YSeries, lOptions);
 
             //  No need to calculate min/max values, as they've already been calculated as the series were added.
             //  We just need to set the neat scale.
-            DrawAxesOrEnlargeCanvas(lOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = definition.YSeries }, new AxisDefinition(lOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), lOptions.ShouldBoxAxes, false);
-            double x1 = xAxisCanvas + xExtCanvas * 0.25;
-            double x2 = xAxisCanvas + xExtCanvas * 0.75;
+            DrawAxesOrEnlargeCanvas(lOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = Definition.YSeries }, new AxisDefinition(lOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), lOptions.ShouldBoxAxes, false);
+            double x1 = XAxisCanvas + XExtCanvas * 0.25;
+            double x2 = XAxisCanvas + XExtCanvas * 0.75;
 
             // Plot the points & join the lines
-            DoubleSeries s0 = definition.YSeries[0].AsDoubleSeries;
-            DoubleSeries s1 = definition.YSeries[1].AsDoubleSeries;
+            DoubleSeries s0 = Definition.YSeries[0].AsDoubleSeries;
+            DoubleSeries s1 = Definition.YSeries[1].AsDoubleSeries;
             //  Points
             for (int r = 0; r <= s0.Points - 1; r++)
             {

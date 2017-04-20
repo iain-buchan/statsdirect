@@ -45,7 +45,7 @@ namespace StatsDirect.UI
             txt2p.Tag = TouchedValue.P2;
         }
 
-        private void Calc_Click(Object sender, EventArgs e)
+        private void Calc_Click(object sender, EventArgs e)
         {
             Calculate();
         }
@@ -122,7 +122,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void BtnLclClick(Object sender, EventArgs e)
+        private void BtnLclClick(object sender, EventArgs e)
         {
             try
             {
@@ -141,7 +141,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void BtnUclClick(Object sender, EventArgs e)
+        private void BtnUclClick(object sender, EventArgs e)
         {
             try
             {

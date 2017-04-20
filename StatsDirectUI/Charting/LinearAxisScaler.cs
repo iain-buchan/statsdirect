@@ -1,14 +1,13 @@
 using System;
-
-using StatsDirect.Templates;
 using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {
     public class LinearAxisScaler: IAxisScaler
     {
         // Numbers of divisions to try in Q_Axis, in preference order
-        private static readonly int[] DIVISIONS_TO_TRY = new[] { 20, 15, 25, 16, 24 };
+        private static readonly int[] DIVISIONS_TO_TRY = { 20, 15, 25, 16, 24 };
         // Scalers to try in ShiftMinMax, in preference order.
         private static readonly double[] AXIS_SCALERS = { 1.0, 0.5, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 0.7, 0.9, 0.15, 0.25, 0.75, 0.05 };
 
@@ -108,8 +107,7 @@ namespace StatsDirect.Charting
             double sc = x / Math.Pow(10.0, ipow);
             if (sc == 1.0)
                 return 1;
-            else
-                return sc.ToString().Length - 2;
+            return sc.ToString().Length - 2;
         }
 
         ///  <summary>
@@ -144,37 +142,34 @@ namespace StatsDirect.Charting
                             minimumScaleValue = nzmin;
                             break;
                     }
-                    else
-                    {
-                        // The data values don't fit within the axis values.  If the problem is at the minimum end, there's not much
-                        // we can do; if at the maximum end, we might be able to extend the axis by adding another major interval.
-                        if (qmin < nzmin)
-                            continue;
+                    // The data values don't fit within the axis values.  If the problem is at the minimum end, there's not much
+                    // we can do; if at the maximum end, we might be able to extend the axis by adding another major interval.
+                    if (qmin < nzmin)
+                        continue;
 
-                        if (div % 5 == 0)
+                    if (div % 5 == 0)
+                    {
+                        if (div < 25)
                         {
-                            if (div < 25)
+                            nzmax = nzmin + zint * (div + 5);
+                            if (CheckCoverage(qmin, qmax, nzmin, nzmax))
                             {
-                                nzmax = nzmin + zint * (div + 5);
-                                if (CheckCoverage(qmin, qmax, nzmin, nzmax))
-                                {
-                                    minimumScaleValue = nzmin;
-                                    div += 5;
-                                    break;
-                                }
+                                minimumScaleValue = nzmin;
+                                div += 5;
+                                break;
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (div < 24)
                         {
-                            if (div < 24)
+                            nzmax = nzmin + zint * (div + 4);
+                            if (CheckCoverage(qmin, qmax, nzmin, nzmax))
                             {
-                                nzmax = nzmin + zint * (div + 4);
-                                if (CheckCoverage(qmin, qmax, nzmin, nzmax))
-                                {
-                                    minimumScaleValue = nzmin;
-                                    div += 4;
-                                    break;
-                                }
+                                minimumScaleValue = nzmin;
+                                div += 4;
+                                break;
                             }
                         }
                     }
@@ -310,8 +305,7 @@ namespace StatsDirect.Charting
         {
             if (divisions > 0)
                 return Axis(qmin, qmax, divisions);
-            else
-                return new LinearAxisScale(qmin, qmax, qmin, qmax, 1, 1);
+            return new LinearAxisScale(qmin, qmax, qmin, qmax, 1, 1);
         }
     }
 }

@@ -1,12 +1,14 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using StatsDirect.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Layout;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -27,43 +29,43 @@ namespace StatsDirect.Charting.Renderer
         protected double DataMinGreaterThanZeroY { get; set; }
         protected double DataMaxY { get; set; }
 
-        protected ChartDefinition definition { get; set; }
+        protected ChartDefinition Definition { get; set; }
 
         private IStatsDirectCanvas statsDirectCanvas;
 
-        protected Font axisLabelFont { get; private set; }
-        protected Font axisTitleFont { get; private set; }
-        protected float axisLineThickness { get; private set; }
-        protected Pen axisPen { get; private set; }
+        protected Font AxisLabelFont { get; private set; }
+        protected Font AxisTitleFont { get; private set; }
+        protected float AxisLineThickness { get; private set; }
+        protected Pen AxisPen { get; private set; }
         private Brush axisBrush;
         private const double AXIS_LITTLE_TICK = 4;
         protected const double AXIS_BIG_TICK = 7;
-        protected Font titleFont { get; private set; }
-        protected Font legendFont { get; private set; }
-        protected bool boxAxes { get; private set; } = ChartPreferences.DefaultBoxAxes;
+        protected Font TitleFont { get; private set; }
+        protected Font LegendFont { get; private set; }
+        protected bool BoxAxes { get; } = ChartPreferences.DefaultBoxAxes;
 
-        protected Font labelFont { get; private set; }
+        protected Font LabelFont { get; private set; }
 
         private bool isXAxisReversed;
         private bool isYAxisReversed;
         /// <summary>
         /// The X-position in canvas co-ordinates of the left-hand end of the chart's X-axis
         /// </summary>
-        protected double xAxisCanvas { get; set; }
+        protected double XAxisCanvas { get; set; }
         /// <summary>
         /// The length in canvas co-ordinates of the chart's X-axis
         /// </summary>
-        protected double xExtCanvas { get; set; }
+        protected double XExtCanvas { get; set; }
         /// <summary>
         /// The Y-position in canvas co-ordinates of the bottom of the chart's Y-axis
         /// </summary>
-        protected double yAxisCanvas { get; set; }
-        protected double yExtCanvas { get; set; }
+        protected double YAxisCanvas { get; set; }
+        protected double YExtCanvas { get; set; }
 
-        protected double divx { get; set; }
-        protected double offx { get; set; }
-        protected double divy { get; set; }
-        protected double offy { get; set; }
+        protected double DivX { get; set; }
+        protected double OffX { get; set; }
+        protected double DivY { get; set; }
+        protected double OffY { get; set; }
 
         private const int DEFAULT_METAFILE_HEIGHT = 800;
         private const int DEFAULT_METAFILE_WIDTH = 1132;
@@ -73,7 +75,7 @@ namespace StatsDirect.Charting.Renderer
         protected int imageWidth = DEFAULT_METAFILE_WIDTH;
         protected const int LABEL_TO_AXIS_LABEL_GAP = 15;
 
-        protected string[] shTx { get; set; }
+        protected string[] ShTx { get; set; }
 
         protected const int ASCII_Ytxt = 3;
         protected const int ASCII_XTxt = 15;
@@ -92,7 +94,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinY = double.MaxValue;
             DataMaxY = -double.MaxValue;
 
-            this.definition = definition;
+            Definition = definition;
             this.canvasFactory = canvasFactory;
             if (definition == null)
                 return;
@@ -109,7 +111,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Note and return the global minimum and maximum values.
         ///  </summary>
         /// <param name="seriesToUse"></param>
-        protected static Layout.Range GetMinMaxSort(List<Series> seriesToUse)
+        protected static Range GetMinMaxSort(List<Series> seriesToUse)
         {
             double min = double.MaxValue;
             double max = double.MinValue;
@@ -121,7 +123,7 @@ namespace StatsDirect.Charting.Renderer
                 if (s.Data[s.Data.Length - 1] > max)
                     max = s.Data[s.Data.Length - 1];
             }
-            return new Layout.Range(min, max);
+            return new Range(min, max);
         }
 
         ///  <summary>
@@ -144,7 +146,7 @@ namespace StatsDirect.Charting.Renderer
                     throw new Exception("Cannot find the fonts that StatsDirect uses for charting. If Calibri is not installed on your system, you can download it from https://www.microsoft.com/typography/fonts/font.aspx?FMID=1710");
             }
 
-            axisPen = new Pen(grAxis, 1);
+            AxisPen = new Pen(GrAxis, 1);
             axisBrush = new SolidBrush(Color.Black);
 
             statsDirectCanvas = CreateCanvas(imageWidth, imageHeight);
@@ -160,20 +162,20 @@ namespace StatsDirect.Charting.Renderer
         protected void DefaultAxes(double extraHeightRequiredAtBottom = 0, double extraWidthRequiredAtLeft = 0, double extraWidthRequiredAtRight = 0)
         {
             //  xaxis also needs to be reset in routines with legends
-            xAxisCanvas = DEFAULT_X_GAP + extraWidthRequiredAtLeft;
-            yAxisCanvas = DEFAULT_Y_GAP + extraHeightRequiredAtBottom;
-            xExtCanvas = imageWidth - xAxisCanvas - extraWidthRequiredAtRight - DEFAULT_X_GAP;
-            yExtCanvas = imageHeight - yAxisCanvas - DEFAULT_Y_GAP;
+            XAxisCanvas = DEFAULT_X_GAP + extraWidthRequiredAtLeft;
+            YAxisCanvas = DEFAULT_Y_GAP + extraHeightRequiredAtBottom;
+            XExtCanvas = imageWidth - XAxisCanvas - extraWidthRequiredAtRight - DEFAULT_X_GAP;
+            YExtCanvas = imageHeight - YAxisCanvas - DEFAULT_Y_GAP;
         }
 
         private bool ReconstituteFonts()
         {
-            axisLabelFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultAxisLabelFont);
-            axisTitleFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultAxisTitleFont);
-            labelFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLabelFont);
-            legendFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLegendFont);
-            titleFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultTitleFont);
-            return null != axisLabelFont && null != axisTitleFont && null != labelFont && null != legendFont && null != titleFont;
+            AxisLabelFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultAxisLabelFont);
+            AxisTitleFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultAxisTitleFont);
+            LabelFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLabelFont);
+            LegendFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLegendFont);
+            TitleFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultTitleFont);
+            return null != AxisLabelFont && null != AxisTitleFont && null != LabelFont && null != LegendFont && null != TitleFont;
         }
 
         ///  <summary>
@@ -184,10 +186,10 @@ namespace StatsDirect.Charting.Renderer
         {
             //  Series are kept in case of redoing a preview.  TODO: Is this appropriate?  Isn't a new renderer used each time?
 
-            if (null != axisPen)
+            if (null != AxisPen)
             {
-                axisPen.Dispose();
-                axisPen = null;
+                AxisPen.Dispose();
+                AxisPen = null;
             }
             if (null != axisBrush)
             {
@@ -215,7 +217,7 @@ namespace StatsDirect.Charting.Renderer
             using (StringFormat txtFormat = new StringFormat())
             {
                 txtFormat.Alignment = StringAlignment.Center;
-                statsDirectCanvas.DrawString(title, titleFont, Brushes.Black, xExtCanvas / 2 + xAxisCanvas, yAxisCanvas + yExtCanvas + 60 - titleFont.Height * 0.25F, txtFormat);
+                statsDirectCanvas.DrawString(title, TitleFont, Brushes.Black, XExtCanvas / 2 + XAxisCanvas, YAxisCanvas + YExtCanvas + 60 - TitleFont.Height * 0.25F, txtFormat);
             }
         }
 
@@ -229,8 +231,8 @@ namespace StatsDirect.Charting.Renderer
         {
             // If the title would not fit on the current canvas, return false
             bool titleHasText = !string.IsNullOrEmpty(title);
-            double topOfXAxisTitle = yAxisCanvas - gapForAxisLabels - LABEL_TO_AXIS_LABEL_GAP;
-            double bottomOfXAxisTitle = topOfXAxisTitle - (titleHasText ? axisTitleFont.Height / 2 : 0);
+            double topOfXAxisTitle = YAxisCanvas - gapForAxisLabels - LABEL_TO_AXIS_LABEL_GAP;
+            double bottomOfXAxisTitle = topOfXAxisTitle - (titleHasText ? AxisTitleFont.Height / 2 : 0);
             double middleOfXAxisTitle = (bottomOfXAxisTitle + topOfXAxisTitle) / 2.0;
             if (bottomOfXAxisTitle < 0)
                 return false;
@@ -240,7 +242,7 @@ namespace StatsDirect.Charting.Renderer
                 using (StringFormat txtFormat = new StringFormat())
                 {
                     txtFormat.Alignment = StringAlignment.Center;
-                    statsDirectCanvas.DrawString(title, axisTitleFont, Brushes.Black, xExtCanvas / 2 + xAxisCanvas, middleOfXAxisTitle, txtFormat);
+                    statsDirectCanvas.DrawString(title, AxisTitleFont, Brushes.Black, XExtCanvas / 2 + XAxisCanvas, middleOfXAxisTitle, txtFormat);
                 }
             }
             return true;
@@ -250,8 +252,8 @@ namespace StatsDirect.Charting.Renderer
         {
             // If the title would not fit on the current canvas, return false
             bool titleHasText = !string.IsNullOrEmpty(title);
-            double rightOfYAxisTitle = xAxisCanvas - AXIS_BIG_TICK - axisLabelWidth - LABEL_TO_AXIS_LABEL_GAP;
-            double leftOfYAxisTitle = rightOfYAxisTitle - (titleHasText ? axisTitleFont.Height : 0);
+            double rightOfYAxisTitle = XAxisCanvas - AXIS_BIG_TICK - axisLabelWidth - LABEL_TO_AXIS_LABEL_GAP;
+            double leftOfYAxisTitle = rightOfYAxisTitle - (titleHasText ? AxisTitleFont.Height : 0);
             if (leftOfYAxisTitle < 0)
                 return false;
 
@@ -261,7 +263,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     txtFormat.Alignment = StringAlignment.Center;
                     txtFormat.LineAlignment = StringAlignment.Far;
-                    statsDirectCanvas.DrawStringAtAngle(title, axisTitleFont, Brushes.Black, rightOfYAxisTitle, yExtCanvas / 2.0 + yAxisCanvas, txtFormat, LabelDirection.Up);
+                    statsDirectCanvas.DrawStringAtAngle(title, AxisTitleFont, Brushes.Black, rightOfYAxisTitle, YExtCanvas / 2.0 + YAxisCanvas, txtFormat, LabelDirection.Up);
                 }
             }
             return true;
@@ -309,24 +311,24 @@ namespace StatsDirect.Charting.Renderer
             {
                 // Draw the axes
                 if ((x.Mode & AxisMode.Line) == AxisMode.Line)
-                    AxisDrawline(xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas);
+                    AxisDrawline(XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas);
 
                 if ((y.Mode & AxisMode.Line) == AxisMode.Line)
-                    AxisDrawline(xAxisCanvas, yAxisCanvas + yExtCanvas, xAxisCanvas, yAxisCanvas);
+                    AxisDrawline(XAxisCanvas, YAxisCanvas + YExtCanvas, XAxisCanvas, YAxisCanvas);
 
                 if (shouldBoxAxes)
                 {
                     if ((x.Mode & AxisMode.Line) == AxisMode.Line)
-                        AxisDrawline(xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas, xAxisCanvas, yAxisCanvas + yExtCanvas);
+                        AxisDrawline(XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas, XAxisCanvas, YAxisCanvas + YExtCanvas);
                     if ((y.Mode & AxisMode.Line) == AxisMode.Line)
-                        AxisDrawline(xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas);
+                        AxisDrawline(XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas);
                 }
             }
             else
             { //  Is Ascii
                 // Draw the Title
                 int s = 40 - title.Length / 2;
-                WriteAsciiYX(shTx.GetUpperBound(0), s, title);
+                WriteAsciiYX(ShTx.GetUpperBound(0), s, title);
             }
 
             AxisScaleAndSize xAss;
@@ -338,8 +340,8 @@ namespace StatsDirect.Charting.Renderer
                 case AxisMode.None:
                     //  Do nothing
                     xAss = new AxisScaleAndSize();
-                    divx = 1;
-                    offx = xAxisCanvas;
+                    DivX = 1;
+                    OffX = XAxisCanvas;
                     break;
                 case AxisMode.ReverseScale:
                 case AxisMode.Scale:
@@ -351,14 +353,14 @@ namespace StatsDirect.Charting.Renderer
                     if (null != x.Series)
                     {
                         xAss = DrawXSeries(x.Series.Select(s => s.Title).ToList());
-                        divx = x.Series.Count;
-                        offx = xAxisCanvas;
+                        DivX = x.Series.Count;
+                        OffX = XAxisCanvas;
                     }
                     else if (null != x.Labels)
                     {
                         xAss = DrawXSeries(x.Labels);
-                        divx = x.Labels.Count;
-                        offx = xAxisCanvas;
+                        DivX = x.Labels.Count;
+                        OffX = XAxisCanvas;
                     }
                     else
                         xAss = new AxisScaleAndSize();
@@ -374,8 +376,8 @@ namespace StatsDirect.Charting.Renderer
                 case AxisMode.None:
                     //  Do nothing
                     yAss = new AxisScaleAndSize();
-                    divy = 1;
-                    offy = yAxisCanvas;
+                    DivY = 1;
+                    OffY = YAxisCanvas;
                     break;
                 case AxisMode.ReverseScale:
                 case AxisMode.Scale:
@@ -386,14 +388,14 @@ namespace StatsDirect.Charting.Renderer
                     if (null != y.Series)
                     {
                         yAss = DrawYSeries(y.Series.Select(s => s.Title).ToList());
-                        divy = y.Series.Count;
-                        offy = yAxisCanvas;
+                        DivY = y.Series.Count;
+                        OffY = YAxisCanvas;
                     }
                     else if (null != y.Labels)
                     {
                         yAss = DrawYSeries(y.Labels);
-                        divy = y.Labels.Count;
-                        offy = yAxisCanvas;
+                        DivY = y.Labels.Count;
+                        OffY = YAxisCanvas;
                     }
                     else
                         yAss = new AxisScaleAndSize();
@@ -406,7 +408,7 @@ namespace StatsDirect.Charting.Renderer
 
             if (IsAscii)
             {
-                int tics = null != yAss.AxisScale ? yAss.AxisScale.Tics().Count : 1;
+                int tics = yAss.AxisScale?.Tics().Count ?? 1;
                 SetStandardAsciiScaling(tics, axisScales);
             }
             else
@@ -446,8 +448,8 @@ namespace StatsDirect.Charting.Renderer
 
             DataMinX = xAxisScale.MinimumDataValue;
             DataMaxX = xAxisScale.MaximumDataValue;
-            divx = Transform(xAxisScale.MaximumScaleValue, scaleType) - Transform(xAxisScale.MinimumScaleValue, scaleType);
-            offx = -(Transform(xAxisScale.MinimumScaleValue, scaleType) / divx * xExtCanvas) + xAxisCanvas;
+            DivX = Transform(xAxisScale.MaximumScaleValue, scaleType) - Transform(xAxisScale.MinimumScaleValue, scaleType);
+            OffX = -(Transform(xAxisScale.MinimumScaleValue, scaleType) / DivX * XExtCanvas) + XAxisCanvas;
             // set a string mask that will fit OK
             string msk = AxisMaskOrFromDefinition(xAxisScale, false, useCalculatedScalesEvenWithDefinition);
 
@@ -456,14 +458,14 @@ namespace StatsDirect.Charting.Renderer
             {
                 LabelDirection direction = LabelDirection.Across;
                 bool hasGridLines = false;
-                System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                if (HasScaleParameters && definition.ScaleParameters.X != null)
+                DashStyle gridLineDashStyle = DashStyle.Solid;
+                if (HasScaleParameters && Definition.ScaleParameters.X != null)
                 {
-                    direction = definition.ScaleParameters.X.LabelDirection;
-                    hasGridLines = definition.ScaleParameters.X.HasGridLines;
-                    gridLineDashStyle = definition.ScaleParameters.X.GridLineDashStyle;
+                    direction = Definition.ScaleParameters.X.LabelDirection;
+                    hasGridLines = Definition.ScaleParameters.X.HasGridLines;
+                    gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
                 }
-                using (Pen gridLinePen = new Pen(axisPen.Color, 1))
+                using (Pen gridLinePen = new Pen(AxisPen.Color, 1))
                 {
                     gridLinePen.DashStyle = gridLineDashStyle;
                     foreach (Tic tic in xAxisScale.Tics())
@@ -472,24 +474,24 @@ namespace StatsDirect.Charting.Renderer
                         switch (tic.TicType)
                         {
                             case TicType.Minor:
-                                AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
+                                AxisDrawline(x1, YAxisCanvas - AXIS_LITTLE_TICK, x1, YAxisCanvas);
                                 if (hasGridLines && !drawLabels)
-                                    statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    statsDirectCanvas.DrawLine(gridLinePen, x1, YAxisCanvas, x1, YAxisCanvas + YExtCanvas);
                                 break;
                             case TicType.Major:
                                 //  Major tic - may or may not be labelled
                                 if (drawLabels)
                                 {
                                     string lab = tic.Value.ToString(msk);
-                                    labelHeight = Math.Max(AxisDrawStringAtAngleCT(lab, x1, yAxisCanvas - AXIS_BIG_TICK, direction).Height, Convert.ToSingle(labelHeight));
-                                    AxisDrawline(x1, yAxisCanvas - AXIS_BIG_TICK, x1, yAxisCanvas);
+                                    labelHeight = Math.Max(AxisDrawStringAtAngleCT(lab, x1, YAxisCanvas - AXIS_BIG_TICK, direction).Height, Convert.ToSingle(labelHeight));
+                                    AxisDrawline(x1, YAxisCanvas - AXIS_BIG_TICK, x1, YAxisCanvas);
                                 }
                                 else
                                 {
-                                    AxisDrawline(x1, yAxisCanvas - AXIS_LITTLE_TICK, x1, yAxisCanvas);
+                                    AxisDrawline(x1, YAxisCanvas - AXIS_LITTLE_TICK, x1, YAxisCanvas);
                                 }
                                 if (hasGridLines)
-                                    statsDirectCanvas.DrawLine(gridLinePen, x1, yAxisCanvas, x1, yAxisCanvas + yExtCanvas);
+                                    statsDirectCanvas.DrawLine(gridLinePen, x1, YAxisCanvas, x1, YAxisCanvas + YExtCanvas);
                                 break;
                         }
                     }
@@ -499,7 +501,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 //  ASCII - always linear for now.  TODO: Log
                 ILinearAxisScale linearAxisScale = (ILinearAxisScale)xAxisScale;
-                shTx[ASCII_Ytxt - 1] = string.Empty.PadLeft(13) + "/" + new string('-', 61);
+                ShTx[ASCII_Ytxt - 1] = string.Empty.PadLeft(13) + "/" + new string('-', 61);
                 int intervals = xAxisScale.Tics().Count - 1;
                 for (int x = 0; x <= intervals; x++)
                 {
@@ -524,11 +526,11 @@ namespace StatsDirect.Charting.Renderer
 
         private IAxisScale Q_AxisOrFromDefinition(double qmin, double qMinGreaterThanZero, double qmax, bool isY, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
-            if (definition != null && definition.HasScaleParameters && !useCalculatedScalesEvenWithDefinition)
+            if (Definition != null && Definition.HasScaleParameters && !useCalculatedScalesEvenWithDefinition)
             {
                 //  Use the values in our scale parameters
-                AxisScaleParameters asp = isY ? definition.ScaleParameters.Y : definition.ScaleParameters.X;
-                if (null != asp && null != asp.AxisScale)
+                AxisScaleParameters asp = isY ? Definition.ScaleParameters.Y : Definition.ScaleParameters.X;
+                if (asp?.AxisScale != null)
                     return asp.AxisScale;
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
@@ -537,11 +539,11 @@ namespace StatsDirect.Charting.Renderer
 
         private string AxisMaskOrFromDefinition(IAxisScale axisScale, /* double stepp, double znmin, int nstep, int sp, */ bool isY, /* ScaleType scaleType, */ bool UseCalculatedScalesEvenWithDefinition)
         {
-            if (definition != null && definition.HasScaleParameters && !UseCalculatedScalesEvenWithDefinition)
+            if (Definition != null && Definition.HasScaleParameters && !UseCalculatedScalesEvenWithDefinition)
             {
                 //  Use the values in our scale parameters
-                AxisScaleParameters asp = isY ? definition.ScaleParameters.Y : definition.ScaleParameters.X;
-                if (null != asp && null != asp.Mask)
+                AxisScaleParameters asp = isY ? Definition.ScaleParameters.Y : Definition.ScaleParameters.X;
+                if (asp?.Mask != null)
                     return asp.Mask;
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
@@ -563,25 +565,25 @@ namespace StatsDirect.Charting.Renderer
             IAxisScale yAxisScale = Q_AxisOrFromDefinition(DataMinY, DataMinGreaterThanZeroY, DataMaxY, true, scaleType, useCalculatedScalesEvenWithDefinition);
             DataMinY = yAxisScale.MinimumDataValue;
             DataMaxY = yAxisScale.MaximumDataValue;
-            divy = Transform(yAxisScale.MaximumScaleValue, scaleType) - Transform(yAxisScale.MinimumScaleValue, scaleType);
-            offy = -(Transform(yAxisScale.MinimumScaleValue, scaleType) / divy * yExtCanvas) + yAxisCanvas;
+            DivY = Transform(yAxisScale.MaximumScaleValue, scaleType) - Transform(yAxisScale.MinimumScaleValue, scaleType);
+            OffY = -(Transform(yAxisScale.MinimumScaleValue, scaleType) / DivY * YExtCanvas) + YAxisCanvas;
 
             // set a string mask that will fit OK
             string msk = AxisMaskOrFromDefinition(yAxisScale, true, useCalculatedScalesEvenWithDefinition);
             LabelDirection direction = LabelDirection.Across;
             bool hasGridLines = false;
-            System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-            if (HasScaleParameters && definition.ScaleParameters.Y != null)
+            DashStyle gridLineDashStyle = DashStyle.Solid;
+            if (HasScaleParameters && Definition.ScaleParameters.Y != null)
             {
-                direction = definition.ScaleParameters.Y.LabelDirection;
-                hasGridLines = definition.ScaleParameters.Y.HasGridLines;
-                gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
+                direction = Definition.ScaleParameters.Y.LabelDirection;
+                hasGridLines = Definition.ScaleParameters.Y.HasGridLines;
+                gridLineDashStyle = Definition.ScaleParameters.Y.GridLineDashStyle;
             }
 
             double maxLabelWidth = 0;
             if (!IsAscii)
             {
-                using (Pen gridLinePen = new Pen(axisPen.Color, 1))
+                using (Pen gridLinePen = new Pen(AxisPen.Color, 1))
                 {
                     gridLinePen.DashStyle = gridLineDashStyle;
                     foreach (Tic tic in yAxisScale.Tics())
@@ -590,24 +592,24 @@ namespace StatsDirect.Charting.Renderer
                         switch (tic.TicType)
                         {
                             case TicType.Minor:
-                                AxisDrawline(xAxisCanvas - AXIS_LITTLE_TICK, y1, xAxisCanvas, y1);
+                                AxisDrawline(XAxisCanvas - AXIS_LITTLE_TICK, y1, XAxisCanvas, y1);
                                 if (hasGridLines && !drawLabels)
-                                    statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
+                                    statsDirectCanvas.DrawLine(gridLinePen, XAxisCanvas, y1, XAxisCanvas + XExtCanvas, y1);
                                 break;
                             case TicType.Major:
                                 //  Major tic - may or may not be labelled
                                 if (drawLabels)
                                 {
                                     string lab = tic.Value.ToString(msk);
-                                    maxLabelWidth = Math.Max(Convert.ToSingle(maxLabelWidth), AxisDrawStringAtAngleRM(lab, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
-                                    AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, y1, xAxisCanvas, y1);
+                                    maxLabelWidth = Math.Max(Convert.ToSingle(maxLabelWidth), AxisDrawStringAtAngleRM(lab, XAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction).Width);
+                                    AxisDrawline(XAxisCanvas - AXIS_BIG_TICK, y1, XAxisCanvas, y1);
                                 }
                                 else
                                 {
-                                    AxisDrawline(xAxisCanvas - AXIS_LITTLE_TICK, y1, xAxisCanvas, y1);
+                                    AxisDrawline(XAxisCanvas - AXIS_LITTLE_TICK, y1, XAxisCanvas, y1);
                                 }
                                 if (hasGridLines)
-                                    statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, y1, xAxisCanvas + xExtCanvas, y1);
+                                    statsDirectCanvas.DrawLine(gridLinePen, XAxisCanvas, y1, XAxisCanvas + XExtCanvas, y1);
                                 break;
                             default:
                                 throw new NotImplementedException("Unknown tic type in DrawYScale");
@@ -657,25 +659,25 @@ namespace StatsDirect.Charting.Renderer
                     txtFormat.LineAlignment = StringAlignment.Center;
                     LabelDirection direction = LabelDirection.Across;
                     bool hasGridLines = false;
-                    System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                    if (HasScaleParameters && definition.ScaleParameters.Y != null)
+                    DashStyle gridLineDashStyle = DashStyle.Solid;
+                    if (HasScaleParameters && Definition.ScaleParameters.Y != null)
                     {
-                        direction = definition.ScaleParameters.Y.LabelDirection;
-                        hasGridLines = definition.ScaleParameters.Y.HasGridLines;
-                        gridLineDashStyle = definition.ScaleParameters.Y.GridLineDashStyle;
+                        direction = Definition.ScaleParameters.Y.LabelDirection;
+                        hasGridLines = Definition.ScaleParameters.Y.HasGridLines;
+                        gridLineDashStyle = Definition.ScaleParameters.Y.GridLineDashStyle;
                     }
-                    using (Pen gridLinePen = new Pen(axisPen.Color, 1))
+                    using (Pen gridLinePen = new Pen(AxisPen.Color, 1))
                     {
                         gridLinePen.DashStyle = gridLineDashStyle;
                         double count = labels.Count;
                         for (int y = 0; y < labels.Count; y++)
                         {
-                            double yctr = yAxisCanvas + yExtCanvas - (y + 0.5) / count * yExtCanvas;
-                            double ytic = yAxisCanvas + yExtCanvas - y / count * yExtCanvas;
-                            maxLabelWidth = Math.Max(maxLabelWidth, statsDirectCanvas.DrawStringAtAngle(labels[y], axisLabelFont, axisBrush, xAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_TICK), yctr, txtFormat, direction).Width);
-                            AxisDrawline(xAxisCanvas - AXIS_BIG_TICK, ytic, xAxisCanvas, ytic);
+                            double yctr = YAxisCanvas + YExtCanvas - (y + 0.5) / count * YExtCanvas;
+                            double ytic = YAxisCanvas + YExtCanvas - y / count * YExtCanvas;
+                            maxLabelWidth = Math.Max(maxLabelWidth, statsDirectCanvas.DrawStringAtAngle(labels[y], AxisLabelFont, axisBrush, XAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_TICK), yctr, txtFormat, direction).Width);
+                            AxisDrawline(XAxisCanvas - AXIS_BIG_TICK, ytic, XAxisCanvas, ytic);
                             if (hasGridLines)
-                                statsDirectCanvas.DrawLine(gridLinePen, xAxisCanvas, ytic, xAxisCanvas + xExtCanvas, ytic);
+                                statsDirectCanvas.DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
                         }
                     }
                 }
@@ -685,14 +687,14 @@ namespace StatsDirect.Charting.Renderer
                 //  ASCII
                 for (int y = 0; y < labels.Count; y++)
                 {
-                    int Y2 = 3 + y * 2;
-                    int L = labels[y].Length;
-                    int q = 13 - L;
-                    if (L >= 13)
+                    int y2 = 3 + y * 2;
+                    int l = labels[y].Length;
+                    int q = 13 - l;
+                    if (l >= 13)
                         q = 1;
-                    WriteAsciiYX(Y2, q, labels[y].Substring(0, Math.Min(L, 13)));
-                    WriteAsciiYX(Y2, 14, "|");
-                    WriteAsciiYX(Y2 + 1, 14, "+");
+                    WriteAsciiYX(y2, q, labels[y].Substring(0, Math.Min(l, 13)));
+                    WriteAsciiYX(y2, 14, "|");
+                    WriteAsciiYX(y2 + 1, 14, "+");
                 }
             }
 
@@ -713,25 +715,25 @@ namespace StatsDirect.Charting.Renderer
                     txtFormat.LineAlignment = StringAlignment.Near;
                     LabelDirection direction = LabelDirection.Across;
                     bool hasGridLines = false;
-                    System.Drawing.Drawing2D.DashStyle gridLineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
-                    if (HasScaleParameters && definition.ScaleParameters.X != null)
+                    DashStyle gridLineDashStyle = DashStyle.Solid;
+                    if (HasScaleParameters && Definition.ScaleParameters.X != null)
                     {
-                        direction = definition.ScaleParameters.X.LabelDirection;
-                        hasGridLines = definition.ScaleParameters.X.HasGridLines;
-                        gridLineDashStyle = definition.ScaleParameters.X.GridLineDashStyle;
+                        direction = Definition.ScaleParameters.X.LabelDirection;
+                        hasGridLines = Definition.ScaleParameters.X.HasGridLines;
+                        gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
                     }
-                    using (Pen gridLinePen = new Pen(axisPen.Color, 1))
+                    using (Pen gridLinePen = new Pen(AxisPen.Color, 1))
                     {
                         gridLinePen.DashStyle = gridLineDashStyle;
                         double count = labels.Count;
                         for (int x = 0; x < labels.Count; x++)
                         {
-                            double xctr = xAxisCanvas + (x + 0.5) / count * xExtCanvas;
-                            double xtic = xAxisCanvas + (x + 1.0) / count * xExtCanvas;
-                            maxHeight = Math.Max(maxHeight, statsDirectCanvas.DrawStringAtAngle(labels[x], axisLabelFont, axisBrush, xctr, yAxisCanvas - AXIS_BIG_TICK, txtFormat, direction).Height);
-                            AxisDrawline(xtic, yAxisCanvas - AXIS_BIG_TICK, xtic, yAxisCanvas);
+                            double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
+                            double xtic = XAxisCanvas + (x + 1.0) / count * XExtCanvas;
+                            maxHeight = Math.Max(maxHeight, statsDirectCanvas.DrawStringAtAngle(labels[x], AxisLabelFont, axisBrush, xctr, YAxisCanvas - AXIS_BIG_TICK, txtFormat, direction).Height);
+                            AxisDrawline(xtic, YAxisCanvas - AXIS_BIG_TICK, xtic, YAxisCanvas);
                             if (hasGridLines)
-                                statsDirectCanvas.DrawLine(gridLinePen, xtic, yAxisCanvas, xtic, yAxisCanvas + yExtCanvas);
+                                statsDirectCanvas.DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
                         }
                     }
                 }
@@ -741,7 +743,7 @@ namespace StatsDirect.Charting.Renderer
 
         protected void AxisDrawline(double x1, double y1, double x2, double y2)
         {
-            statsDirectCanvas.DrawLine(axisPen, x1, y1, x2, y2);
+            statsDirectCanvas.DrawLine(AxisPen, x1, y1, x2, y2);
         }
 
         /// <summary>
@@ -758,7 +760,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 alignTxt.Alignment = StringAlignment.Far;
                 alignTxt.LineAlignment = StringAlignment.Center;
-                return statsDirectCanvas.DrawStringAtAngle(txt, axisLabelFont, axisBrush, x1, y1, alignTxt, direction);
+                return statsDirectCanvas.DrawStringAtAngle(txt, AxisLabelFont, axisBrush, x1, y1, alignTxt, direction);
             }
         }
 
@@ -775,7 +777,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 alignTxt.Alignment = StringAlignment.Center;
                 alignTxt.LineAlignment = StringAlignment.Near;
-                return statsDirectCanvas.DrawStringAtAngle(txt, axisLabelFont, axisBrush, x1, y1, alignTxt, direction);
+                return statsDirectCanvas.DrawStringAtAngle(txt, AxisLabelFont, axisBrush, x1, y1, alignTxt, direction);
             }
         }
 
@@ -790,7 +792,7 @@ namespace StatsDirect.Charting.Renderer
             using (StringFormat alignTxt = new StringFormat())
             {
                 alignTxt.Alignment = StringAlignment.Center;
-                statsDirectCanvas.DrawString(txt, axisLabelFont, axisBrush, x1, y1, alignTxt);
+                statsDirectCanvas.DrawString(txt, AxisLabelFont, axisBrush, x1, y1, alignTxt);
             }
         }
 
@@ -812,7 +814,7 @@ namespace StatsDirect.Charting.Renderer
             using (StringFormat alignTxt = new StringFormat())
             {
                 alignTxt.Alignment = alignment;
-                statsDirectCanvas.DrawString(txt, legendFont, axisBrush, x, y, alignTxt);
+                statsDirectCanvas.DrawString(txt, LegendFont, axisBrush, x, y, alignTxt);
             }
         }
 
@@ -825,7 +827,7 @@ namespace StatsDirect.Charting.Renderer
             using (StringFormat alignTxt = new StringFormat())
             {
                 alignTxt.Alignment = alignment;
-                statsDirectCanvas.DrawString(txt, labelFont, axisBrush, x, y, alignTxt);
+                statsDirectCanvas.DrawString(txt, LabelFont, axisBrush, x, y, alignTxt);
             }
         }
 
@@ -835,17 +837,21 @@ namespace StatsDirect.Charting.Renderer
             {
                 alignTxt.Alignment = alignment;
                 alignTxt.LineAlignment = lineAlignment;
-                statsDirectCanvas.DrawString(txt, labelFont, axisBrush, x, y, alignTxt);
+                statsDirectCanvas.DrawString(txt, LabelFont, axisBrush, x, y, alignTxt);
             }
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawMarkerInCanvasCoordinates(double x, double y, double size, DoubleSeries series)
         {
             statsDirectCanvas.DrawMarker(x, y, size, series.MarkerDetails.MarkerShape, series.MarkerDetails.IsMarkerFilled, series.MarkerDetails.MarkerPen);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawMarkerInCanvasCoordinates(double x, double y, double size, MarkerType mType)
         {
             using (Pen p = GetMarkerPen(mType))
@@ -865,7 +871,9 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Draw the set of markers whose centre device co-ordinates are in xys.
         ///  </summary>
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawMarkerSeriesInCanvasCoordinates(PointF[] xys, double size, MarkerShape shape, bool isFilled, Pen markerPen, Pen linePen, bool joinMarkersWithLines, bool drawMarkers)
         {
             // sort by x, then by y
@@ -904,12 +912,12 @@ namespace StatsDirect.Charting.Renderer
 
         protected void SetStandardAsciiScaling(int yDivisions, AxisScales axisScales)
         {
-            divx = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
-            offx = SafeToInt32(-(axisScales.X.MinimumScaleValue / divx * 60) + 15);
+            DivX = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
+            OffX = SafeToInt32(-(axisScales.X.MinimumScaleValue / DivX * 60) + 15);
             if (null != axisScales.Y)
             {
-                divy = axisScales.Y.MaximumScaleValue - axisScales.Y.MinimumScaleValue;
-                offy = SafeToInt32(-(axisScales.Y.MinimumScaleValue / divy * yDivisions) + ASCII_Ytxt);
+                DivY = axisScales.Y.MaximumScaleValue - axisScales.Y.MinimumScaleValue;
+                OffY = SafeToInt32(-(axisScales.Y.MinimumScaleValue / DivY * yDivisions) + ASCII_Ytxt);
             }
         }
 
@@ -935,7 +943,7 @@ namespace StatsDirect.Charting.Renderer
                 case ScaleType.LogNatural:
                     return chartValue > 0 ? (float)(Math.Log(chartValue) / LOG2) : 0;
                 default:
-                    return (Single)chartValue;
+                    return (float)chartValue;
             }
         }
 
@@ -955,21 +963,21 @@ namespace StatsDirect.Charting.Renderer
         protected double ToCanvasWidth(double chartX)
         {
             ScaleType scaleType = ScaleType.Linear;
-            if (HasScaleParameters && definition.ScaleParameters.X != null)
-                scaleType = definition.ScaleParameters.X.ScaleType;
+            if (HasScaleParameters && Definition.ScaleParameters.X != null)
+                scaleType = Definition.ScaleParameters.X.ScaleType;
             return ToCanvasWidth(chartX, scaleType);
         }
 
         protected double ToCanvasWidth(double chartX, ScaleType scaleType)
         {
-            return Transform(chartX, scaleType) / divx * xExtCanvas;
+            return Transform(chartX, scaleType) / DivX * XExtCanvas;
         }
 
         protected double ToCanvasX(double chartX)
         {
             ScaleType scaleType = ScaleType.Linear;
-            if (HasScaleParameters && definition.ScaleParameters.X != null)
-                scaleType = definition.ScaleParameters.X.ScaleType;
+            if (HasScaleParameters && Definition.ScaleParameters.X != null)
+                scaleType = Definition.ScaleParameters.X.ScaleType;
             return ToCanvasX(chartX, scaleType);
         }
 
@@ -977,50 +985,50 @@ namespace StatsDirect.Charting.Renderer
         {
             double width = ToCanvasWidth(chartX, scaleType);
             if (isXAxisReversed)
-                return xExtCanvas + xAxisCanvas + xAxisCanvas - (offx + width);
-            return offx + width;
+                return XExtCanvas + XAxisCanvas + XAxisCanvas - (OffX + width);
+            return OffX + width;
         }
 
         protected double FromCanvasWidth(double canvasWidth)
         {
             ScaleType scaleType = ScaleType.Linear;
-            if (HasScaleParameters && definition.ScaleParameters.X != null)
-                scaleType = definition.ScaleParameters.X.ScaleType;
+            if (HasScaleParameters && Definition.ScaleParameters.X != null)
+                scaleType = Definition.ScaleParameters.X.ScaleType;
             return FromCanvasWidth(canvasWidth, scaleType);
         }
 
         protected double FromCanvasWidth(double canvasWidth, ScaleType scaleType)
         {
-            double rawChartWidth = canvasWidth * divx / xExtCanvas;
+            double rawChartWidth = canvasWidth * DivX / XExtCanvas;
             return InverseTransform(rawChartWidth, scaleType);
         }
 
         protected double InverseTransformX(double canvasX)
         {
-            if (!HasScaleParameters || definition.ScaleParameters.X == null)
+            if (!HasScaleParameters || Definition.ScaleParameters.X == null)
                 return canvasX;
-            return InverseTransform(canvasX, definition.ScaleParameters.X.ScaleType);
+            return InverseTransform(canvasX, Definition.ScaleParameters.X.ScaleType);
         }
 
         protected double ToCanvasHeight(double chartY)
         {
             ScaleType scaleType = ScaleType.Linear;
-            if (HasScaleParameters && definition.ScaleParameters.Y != null)
-                scaleType = definition.ScaleParameters.Y.ScaleType;
+            if (HasScaleParameters && Definition.ScaleParameters.Y != null)
+                scaleType = Definition.ScaleParameters.Y.ScaleType;
             return ToCanvasHeight(chartY, scaleType);
         }
 
         protected double ToCanvasHeight(double chartY, ScaleType scaleType)
         {
             double transformed = Transform(chartY, scaleType);
-            return transformed / divy * yExtCanvas;
+            return transformed / DivY * YExtCanvas;
         }
 
         protected double ToCanvasY(double chartY)
         {
             ScaleType scaleType = ScaleType.Linear;
-            if (HasScaleParameters && definition.ScaleParameters.Y != null)
-                scaleType = definition.ScaleParameters.Y.ScaleType;
+            if (HasScaleParameters && Definition.ScaleParameters.Y != null)
+                scaleType = Definition.ScaleParameters.Y.ScaleType;
             return ToCanvasY(chartY, scaleType);
         }
 
@@ -1028,25 +1036,27 @@ namespace StatsDirect.Charting.Renderer
         {
             double height = ToCanvasHeight(chartY, scaleType);
             if (isYAxisReversed)
-                return yExtCanvas + yAxisCanvas + yAxisCanvas - (offy + height);
-            return offy + height;
+                return YExtCanvas + YAxisCanvas + YAxisCanvas - (OffY + height);
+            return OffY + height;
         }
 
         protected double FromCanvasHeight(double canvasHeight)
         {
             ScaleType scaleType = ScaleType.Linear;
-            if (HasScaleParameters && definition.ScaleParameters.Y != null)
-                scaleType = definition.ScaleParameters.Y.ScaleType;
+            if (HasScaleParameters && Definition.ScaleParameters.Y != null)
+                scaleType = Definition.ScaleParameters.Y.ScaleType;
             return FromCanvasHeight(canvasHeight, scaleType);
         }
 
         protected double FromCanvasHeight(double canvasHeight, ScaleType scaleType)
         {
-            double rawChartHeight = canvasHeight * divy / yExtCanvas;
+            double rawChartHeight = canvasHeight * DivY / YExtCanvas;
             return InverseTransform(rawChartHeight, scaleType);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("TODO: Get pyramid to use an x scale without tics and draw this in that way")]
+#endif
         protected void DrawStringInCanvasCoordinates(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat)
         {
             statsDirectCanvas.DrawString(s, font, brush, x, y, txtFormat);
@@ -1066,7 +1076,9 @@ namespace StatsDirect.Charting.Renderer
         ///  <param name="direction"></param>
         ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected SizeF DrawStringAtAngleInCanvasCoordinates(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             return statsDirectCanvas.DrawStringAtAngle(s, font, brush, x, y, txtFormat, direction);
@@ -1081,7 +1093,9 @@ namespace StatsDirect.Charting.Renderer
         ///  <param name="size"></param>
         ///  <param name="fill">If true, fill the square; if false, merely draw the outline.</param>
         ///  <remarks></remarks>
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawSquareInCanvasCoordinates(Pen p, double x, double y, double size, bool fill)
         {
             statsDirectCanvas.DrawSquare(p, x, y, size, fill);
@@ -1096,19 +1110,25 @@ namespace StatsDirect.Charting.Renderer
         ///  <param name="size"></param>
         ///  <param name="fill">If true, fill the square; if false, merely draw the outline.</param>
         /// <remarks></remarks>
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawDiamondInCanvasCoordinates(Pen p, double x, double y, double size, bool fill)
         {
             statsDirectCanvas.DrawDiamond(p, x, y, size, fill);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawLineInCanvasCoordinates(Pen p, double x1, double y1, double x2, double y2)
         {
             statsDirectCanvas.DrawLine(p, x1, y1, x2, y2);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawMarkerInCanvasCoordinates(double x, double y, double size, MarkerShape shape, bool isFilled, Pen p)
         {
             statsDirectCanvas.DrawMarker(x, y, size, shape, isFilled, p);
@@ -1119,25 +1139,33 @@ namespace StatsDirect.Charting.Renderer
             statsDirectCanvas.DrawMarker(ToCanvasX(x), ToCanvasY(y), size, shape, isFilled, p);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void FillRectangleInCanvasCoordinates(Brush b, double x, double y, double w, double h)
         {
             statsDirectCanvas.FillRectangle(b, x, y, w, h);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected void DrawRectangleInCanvasCoordinates(Pen p, double x, double y, double w, double h)
         {
             statsDirectCanvas.DrawRectangle(p, x, y, w, h);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected SizeF MeasureStringInCanvasCoordinates(string s, Font font)
         {
             return statsDirectCanvas.MeasureString(s, font);
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected double GetFontHeightInCanvasCoordinates(Font f)
         {
             return statsDirectCanvas.GetFontHeight(f);
@@ -1147,18 +1175,41 @@ namespace StatsDirect.Charting.Renderer
         {
             if (mostRecentPen == null || !mostRecentPen.Color.Equals(color))
             {
-                if (null != mostRecentPen)
-                    mostRecentPen.Dispose();
+                mostRecentPen?.Dispose();
                 mostRecentPen = new Pen(color);
             }
             return mostRecentPen;
         }
-        public void DrawLineInChartCoordinates(Color color, double x1, double y1, double x2, double y2)
+
+        protected bool IsInsidePlotArea(AxisScales axisScales, double x, double y)
+        {
+            return y >= axisScales.Y.MinimumScaleValue && y <= axisScales.Y.MaximumScaleValue
+                && x >= axisScales.X.MinimumScaleValue && x <= axisScales.X.MaximumScaleValue;
+        }
+
+        protected bool AreInsidePlotArea(AxisScales axisScales, double x1, double y1, double x2, double y2)
+        {
+            return IsInsidePlotArea(axisScales, x1, y1) && IsInsidePlotArea(axisScales, x2, y2);
+        }
+
+        protected void MaybeDrawLineInChartCoordinates(AxisScales axisScales, Color color, double x1, double y1, double x2, double y2)
+        {
+            if (AreInsidePlotArea(axisScales, x1, y1, x2, y2))
+                DrawLineInChartCoordinates(GetSameOrDifferentPen(color), x1, y1, x2, y2);
+        }
+
+        protected void MaybeDrawLineInChartCoordinates(AxisScales axisScales, Pen p, double x1, double y1, double x2, double y2)
+        {
+            if (AreInsidePlotArea(axisScales, x1, y1, x2, y2))
+                DrawLineInChartCoordinates(p, x1, y1, x2, y2);
+        }
+
+        protected void DrawLineInChartCoordinates(Color color, double x1, double y1, double x2, double y2)
         {
             DrawLineInChartCoordinates(GetSameOrDifferentPen(color), x1, y1, x2, y2);
         }
 
-        public void DrawLineInChartCoordinates(Pen p, double x1, double y1, double x2, double y2)
+        protected void DrawLineInChartCoordinates(Pen p, double x1, double y1, double x2, double y2)
         {
             statsDirectCanvas.DrawLine(p, ToCanvasX(x1), ToCanvasY(y1), ToCanvasX(x2), ToCanvasY(y2));
         }
@@ -1168,9 +1219,9 @@ namespace StatsDirect.Charting.Renderer
             statsDirectCanvas.DrawRectangle(GetSameOrDifferentPen(color), ToCanvasX(left), ToCanvasY(top), ToCanvasWidth(width), ToCanvasHeight(height));
         }
 
-        protected bool HasScaleParameters => definition != null && definition.HasScaleParameters;
+        protected bool HasScaleParameters => Definition != null && Definition.HasScaleParameters;
 
-        protected bool HasChartOptions => definition != null && definition.ChartOptions != null;
+        protected bool HasChartOptions => Definition?.ChartOptions != null;
 
         protected bool ShouldUseColour
         {
@@ -1178,14 +1229,14 @@ namespace StatsDirect.Charting.Renderer
             {
                 bool useColour = !ChartPreferences.DefaultAllBlack;
                 if (HasChartOptions)
-                    useColour = definition.ChartOptions.UseColour;
+                    useColour = Definition.ChartOptions.UseColour;
                 return useColour;
             }
         }
 
         public Pen GetMarkerPen(MarkerType mt)
         {
-            return new Pen(ShouldUseColour ? mt.MarkerColor : grBlack, mt.Width);
+            return new Pen(ShouldUseColour ? mt.MarkerColor : GrBlack, mt.Width);
         }
 
         /// <summary>
@@ -1193,7 +1244,7 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         public Pen GetLinePen(MarkerType mt, bool ignoreStyle)
         {
-            Pen p = new Pen(ShouldUseColour ? mt.LineColor : grBlack, mt.Width);
+            Pen p = new Pen(ShouldUseColour ? mt.LineColor : GrBlack, mt.Width);
             if (!ignoreStyle)
                 p.DashStyle = mt.LineDashStyle;
             return p;
@@ -1205,7 +1256,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public static Color grBlack => Color.Black;
+        public static Color GrBlack => Color.Black;
 
         ///  <summary>
         ///  A colour to be used for drawing lines that are nominally green.
@@ -1213,7 +1264,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        protected Color grGreen => ShouldUseColour ? Color.Green : Color.Black;
+        protected Color GrGreen => ShouldUseColour ? Color.Green : Color.Black;
 
         ///  <summary>
         ///  A colour to be used for drawing lines that are nominally magenta.
@@ -1221,7 +1272,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        public Color grMagenta => ShouldUseColour ? Color.Magenta : Color.Black;
+        public Color GrMagenta => ShouldUseColour ? Color.Magenta : Color.Black;
 
         ///  <summary>
         ///  A colour to be used for drawing lines that are nominally red.
@@ -1229,7 +1280,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        protected Color grRed => ShouldUseColour ? Color.Red : Color.Black;
+        protected Color GrRed => ShouldUseColour ? Color.Red : Color.Black;
 
         ///  <summary>
         ///  A colour to be used for drawing axis lines
@@ -1237,18 +1288,20 @@ namespace StatsDirect.Charting.Renderer
         ///  <value></value>
         ///  <returns></returns>
         ///  <remarks></remarks>
-        private Color grAxis => ShouldUseColour ? Color.FromArgb(134, 134, 134) : Color.Black;
+        private Color GrAxis => ShouldUseColour ? Color.FromArgb(134, 134, 134) : Color.Black;
 
+#if WARN_OBSOLETES
         [Obsolete("RTF should not be used in ChartRenderer")]
+#endif
         public string GetAsciiRTF()
         {
             if (!IsAscii)
                 throw new InvalidOperationException("Trying to get ASCII string for a non-ASCII chart");
 
             StringBuilder sb = new StringBuilder();
-            for (int i = shTx.GetUpperBound(0); i >= shTx.GetLowerBound(0); i--)
+            for (int i = ShTx.GetUpperBound(0); i >= ShTx.GetLowerBound(0); i--)
             {
-                sb.Append(shTx[i]);
+                sb.Append(ShTx[i]);
                 sb.Append(Formatting.RTFCRLF);
             }
             return sb.ToString();
@@ -1257,15 +1310,15 @@ namespace StatsDirect.Charting.Renderer
         protected void WriteAsciiYX(int y, int x, string text)
         {
 #if DEBUG
-            if (y < 0 || y >= shTx.Length)
+            if (y < 0 || y >= ShTx.Length)
                 throw new Exception("y is out of the renderer's range");
 #endif
-            shTx[y] = ReplaceAt(shTx[y], x, text);
+            ShTx[y] = ReplaceAt(ShTx[y], x, text);
         }
 
         protected void WriteAsciiYX(int y, int x, char c)
         {
-            shTx[y] = ReplaceAt(shTx[y], x, c);
+            ShTx[y] = ReplaceAt(ShTx[y], x, c);
         }
 
         private static string ReplaceAt(string buffer, int x, string text)
@@ -1282,18 +1335,18 @@ namespace StatsDirect.Charting.Renderer
 
         public void AssignMarkersToSeries()
         {
-            if (definition.XSeries.Count > 0)
-                AssignMarkersToSeries(definition.XSeries);
-            if (definition.YSeries.Count > 0)
-                AssignMarkersToSeries(definition.YSeries);
+            if (Definition.XSeries.Count > 0)
+                AssignMarkersToSeries(Definition.XSeries);
+            if (Definition.YSeries.Count > 0)
+                AssignMarkersToSeries(Definition.YSeries);
         }
 
         protected void AssignMarkersToSeries(GenericOptions opts)
         {
-            if (definition.XSeries.Count > 0)
-                AssignMarkersToSeries(definition.XSeries, opts);
-            if (definition.YSeries.Count > 0)
-                AssignMarkersToSeries(definition.YSeries, opts);
+            if (Definition.XSeries.Count > 0)
+                AssignMarkersToSeries(Definition.XSeries, opts);
+            if (Definition.YSeries.Count > 0)
+                AssignMarkersToSeries(Definition.YSeries, opts);
         }
 
         protected void AssignMarkersToSeries(List<Series> s)
@@ -1356,10 +1409,10 @@ namespace StatsDirect.Charting.Renderer
                 axisBrush.Dispose();
                 axisBrush = null;
             }
-            if (null != axisPen)
+            if (null != AxisPen)
             {
-                axisPen.Dispose();
-                axisPen = null;
+                AxisPen.Dispose();
+                AxisPen = null;
             }
             if (null != statsDirectCanvas)
             {
@@ -1371,30 +1424,30 @@ namespace StatsDirect.Charting.Renderer
                 mostRecentPen.Dispose();
                 mostRecentPen = null;
             }
-            if (null != axisLabelFont)
+            if (null != AxisLabelFont)
             {
-                axisLabelFont.Dispose();
-                axisLabelFont = null;
+                AxisLabelFont.Dispose();
+                AxisLabelFont = null;
             }
-            if (null != axisTitleFont)
+            if (null != AxisTitleFont)
             {
-                axisTitleFont.Dispose();
-                axisTitleFont = null;
+                AxisTitleFont.Dispose();
+                AxisTitleFont = null;
             }
-            if (null != labelFont)
+            if (null != LabelFont)
             {
-                labelFont.Dispose();
-                labelFont = null;
+                LabelFont.Dispose();
+                LabelFont = null;
             }
-            if (null != legendFont)
+            if (null != LegendFont)
             {
-                legendFont.Dispose();
-                legendFont = null;
+                LegendFont.Dispose();
+                LegendFont = null;
             }
-            if (null != titleFont)
+            if (null != TitleFont)
             {
-                titleFont.Dispose();
-                titleFont = null;
+                TitleFont.Dispose();
+                TitleFont = null;
             }
         }
 
@@ -1407,17 +1460,17 @@ namespace StatsDirect.Charting.Renderer
         ///  <param name="lines">The number of lines of text in the ASCII plot</param>
         protected void ASCII_InitPlot(int lines)
         {
-            shTx = new string[lines + 1];
-            for (int c = 0; c <= shTx.GetUpperBound(0); c++)
+            ShTx = new string[lines + 1];
+            for (int c = 0; c <= ShTx.GetUpperBound(0); c++)
             {
-                shTx[c] = string.Empty.PadLeft(85);
+                ShTx[c] = string.Empty.PadLeft(85);
             }
         }
 
         protected void ASCII_PlotPoint(int x, int y)
         {
             // Check if a point has already been plotted
-            switch (shTx[y][x])
+            switch (ShTx[y][x])
             {
                 case ' ':
                     WriteAsciiYX(y, x, "*");
@@ -1434,7 +1487,7 @@ namespace StatsDirect.Charting.Renderer
                     return;
                 default:
                     // Must be numeric; add 1
-                    WriteAsciiYX(y, x, (char)(shTx[y][x] + 1));
+                    WriteAsciiYX(y, x, (char)(ShTx[y][x] + 1));
                     break;
             }
         }
@@ -1444,43 +1497,41 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         protected void MaybeDrawMarkerLines(AxisScales axisScales)
         {
-            if (null == definition)
+            if (Definition?.ScaleParameters == null)
                 return;
-            if (null == definition.ScaleParameters)
-                return;
-            if (definition.ScaleParameters.X.MarkerLineValue.HasValue)
+            if (Definition.ScaleParameters.X.MarkerLineValue.HasValue)
             {
-                double x = definition.ScaleParameters.X.MarkerLineValue.Value;
-                DrawLineInChartCoordinates(grBlack, x, axisScales.Y.MinimumScaleValue, x, axisScales.Y.MaximumScaleValue);
+                double x = Definition.ScaleParameters.X.MarkerLineValue.Value;
+                DrawLineInChartCoordinates(GrBlack, x, axisScales.Y.MinimumScaleValue, x, axisScales.Y.MaximumScaleValue);
             }
-            if (definition.ScaleParameters.Y.MarkerLineValue.HasValue)
+            if (Definition.ScaleParameters.Y.MarkerLineValue.HasValue)
             {
-                double y = definition.ScaleParameters.Y.MarkerLineValue.Value;
-                DrawLineInChartCoordinates(grBlack, axisScales.X.MinimumScaleValue, y, axisScales.X.MaximumScaleValue, y);
+                double y = Definition.ScaleParameters.Y.MarkerLineValue.Value;
+                DrawLineInChartCoordinates(GrBlack, axisScales.X.MinimumScaleValue, y, axisScales.X.MaximumScaleValue, y);
             }
         }
 
         protected void SetFontsAndThicknessesFromOptions(GenericOptions o)
         {
             if (o.UsesAxisLabelFontDescriptor && !string.IsNullOrEmpty(o.AxisLabelFontDescriptor))
-                axisLabelFont = ChartPreferences.FontFromSaveString(o.AxisLabelFontDescriptor);
+                AxisLabelFont = ChartPreferences.FontFromSaveString(o.AxisLabelFontDescriptor);
             if (o.UsesAxisTitleFontDescriptor && !string.IsNullOrEmpty(o.AxisTitleFontDescriptor))
-                axisTitleFont = ChartPreferences.FontFromSaveString(o.AxisTitleFontDescriptor);
+                AxisTitleFont = ChartPreferences.FontFromSaveString(o.AxisTitleFontDescriptor);
             if (o.UsesLegendFontDescriptor && !string.IsNullOrEmpty(o.LegendFontDescriptor))
-                legendFont = ChartPreferences.FontFromSaveString(o.LegendFontDescriptor);
+                LegendFont = ChartPreferences.FontFromSaveString(o.LegendFontDescriptor);
             if (o.UsesTitleFontDescriptor && !string.IsNullOrEmpty(o.TitleFontDescriptor))
-                titleFont = ChartPreferences.FontFromSaveString(o.TitleFontDescriptor);
+                TitleFont = ChartPreferences.FontFromSaveString(o.TitleFontDescriptor);
 
             if (o.UsesAxisLineThickness)
             {
-                axisLineThickness = o.AxisLineThickness;
+                AxisLineThickness = o.AxisLineThickness;
                 Color c = Color.Black;
-                if (axisPen != null)
+                if (AxisPen != null)
                 {
-                    c = axisPen.Color;
-                    axisPen.Dispose();
+                    c = AxisPen.Color;
+                    AxisPen.Dispose();
                 }
-                axisPen = new Pen(c, axisLineThickness);
+                AxisPen = new Pen(c, AxisLineThickness);
             }
         }
 
@@ -1513,7 +1564,7 @@ namespace StatsDirect.Charting.Renderer
             }
             else
             {
-                c = grBlack;
+                c = GrBlack;
                 f = mt.MarkerFillStyle;
             }
 
@@ -1524,13 +1575,13 @@ namespace StatsDirect.Charting.Renderer
                     //  Do nothing
                     break;
                 case FillStyle.Crosshatch:
-                    b = new System.Drawing.Drawing2D.HatchBrush(System.Drawing.Drawing2D.HatchStyle.DiagonalCross, c, Color.White);
+                    b = new HatchBrush(HatchStyle.DiagonalCross, c, Color.White);
                     break;
                 case FillStyle.BackwardDiagonal:
-                    b = new System.Drawing.Drawing2D.HatchBrush(System.Drawing.Drawing2D.HatchStyle.BackwardDiagonal, c, Color.White);
+                    b = new HatchBrush(HatchStyle.BackwardDiagonal, c, Color.White);
                     break;
                 case FillStyle.ForwardDiagonal:
-                    b = new System.Drawing.Drawing2D.HatchBrush(System.Drawing.Drawing2D.HatchStyle.ForwardDiagonal, c, Color.White);
+                    b = new HatchBrush(HatchStyle.ForwardDiagonal, c, Color.White);
                     break;
                 case FillStyle.Solid:
                     b = new SolidBrush(c);
@@ -1549,8 +1600,7 @@ namespace StatsDirect.Charting.Renderer
 
             if (useIfAvailable.Length > MAX_LABEL_LENGTH)
                 return useIfAvailable.Substring(0, MAX_LABEL_LENGTH);
-            else
-                return useIfAvailable;
+            return useIfAvailable;
         }
 
         public static string combo_ti(string cap)
@@ -1639,39 +1689,49 @@ namespace StatsDirect.Charting.Renderer
             max = scalemax;
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected float AxisLabelWidthInCanvasCoordinates(string s)
         {
-            return MeasureStringInCanvasCoordinates(s, axisLabelFont).Width;
+            return MeasureStringInCanvasCoordinates(s, AxisLabelFont).Width;
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected float AxisLabelHeightInCanvasCoordinates(string s)
         {
-            return MeasureStringInCanvasCoordinates(s, axisLabelFont).Height;
+            return MeasureStringInCanvasCoordinates(s, AxisLabelFont).Height;
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected float LegendWidthInCanvasCoordinates(string s)
         {
-            return MeasureStringInCanvasCoordinates(s, legendFont).Width;
+            return MeasureStringInCanvasCoordinates(s, LegendFont).Width;
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected float LegendHeightInCanvasCoordinates(string s)
         {
-            return MeasureStringInCanvasCoordinates(s, legendFont).Height;
+            return MeasureStringInCanvasCoordinates(s, LegendFont).Height;
         }
 
+#if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
         protected float TitleWidthInCanvasCoordinates(string s)
         {
-            return MeasureStringInCanvasCoordinates(s, titleFont).Width;
+            return MeasureStringInCanvasCoordinates(s, TitleFont).Width;
         }
 
         protected int ToAsciiX(double value)
         {
-            return Convert.ToInt32(offx + value / divx * 60);
+            return Convert.ToInt32(OffX + value / DivX * 60);
         }
 
         /// <summary>
@@ -1706,10 +1766,7 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         /// <param name="data"></param>
         /// <param name="scaleType">The scale that will use the data.  For log scales, values of 0 or less are ignored.</param>
-        /// <param name="min">Filled in with the global minimum value</param>
-        /// <param name="max">Filled in with the global maximum value</param>
-        /// <remarks>STYLE: Wouldn't this be better as a function returning some kind of data structure?</remarks>
-        protected Layout.Range GetMinMaxArray(double[] data, ScaleType scaleType)
+        protected Range GetMinMaxArray(double[] data, ScaleType scaleType)
         {
             bool ignoreZeroOrLess = scaleType == ScaleType.LogNatural || scaleType == ScaleType.Log10;
             double min = double.MaxValue;
@@ -1724,7 +1781,7 @@ namespace StatsDirect.Charting.Renderer
                         max = data[i];
                 }
             }
-            return new Layout.Range(min, max);
+            return new Range(min, max);
         }
 
         /// <summary>
@@ -1749,8 +1806,8 @@ namespace StatsDirect.Charting.Renderer
             ScaleType scaleTypeY = ScaleType.Linear;
             if (HasScaleParameters)
             {
-                scaleTypeX = definition.ScaleParameters.X.ScaleType;
-                scaleTypeY = definition.ScaleParameters.Y.ScaleType;
+                scaleTypeX = Definition.ScaleParameters.X.ScaleType;
+                scaleTypeY = Definition.ScaleParameters.Y.ScaleType;
             }
 
             //  If required, get the Min and Max for the data
@@ -1773,12 +1830,12 @@ namespace StatsDirect.Charting.Renderer
                     break;
                 case DataMinMax.XUseScaleParameters_YUseScaleParameters:
                     //  Take data from scale parameters
-                    axisYMax = definition.ScaleParameters.Y.Max;
-                    axisYMinGreaterThanZero = definition.ScaleParameters.Y.MinGreaterThanZero;
-                    axisYMin = definition.ScaleParameters.Y.Min;
-                    axisXMax = definition.ScaleParameters.X.Max;
-                    axisXMinGreaterThanZero = definition.ScaleParameters.X.MinGreaterThanZero;
-                    axisXMin = definition.ScaleParameters.X.Min;
+                    axisYMax = Definition.ScaleParameters.Y.Max;
+                    axisYMinGreaterThanZero = Definition.ScaleParameters.Y.MinGreaterThanZero;
+                    axisYMin = Definition.ScaleParameters.Y.Min;
+                    axisXMax = Definition.ScaleParameters.X.Max;
+                    axisXMinGreaterThanZero = Definition.ScaleParameters.X.MinGreaterThanZero;
+                    axisXMin = Definition.ScaleParameters.X.Min;
                     break;
                 case DataMinMax.XY_CalcTogether:
                     // X and Y must have the same scale
@@ -1815,7 +1872,7 @@ namespace StatsDirect.Charting.Renderer
                 false, useCalculatedScalesEvenWithDefinition);
 
             if (zPlot)
-                DrawQCanvas(offy);
+                DrawQCanvas(OffY);
 
             // Plot the points
             int rows = x.Length;
@@ -1848,9 +1905,9 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         protected void DrawQCanvas(double y)
         {
-            using (Pen greenPen = new Pen(grGreen, 2))
+            using (Pen greenPen = new Pen(GrGreen, 2))
             {
-                DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y, xAxisCanvas + xExtCanvas, y);
+                DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y, XAxisCanvas + XExtCanvas, y);
             }
         }
 
@@ -1879,7 +1936,7 @@ namespace StatsDirect.Charting.Renderer
             }
         }
 
-        protected bool IsAscii => null != definition && definition.IsAscii;
+        protected bool IsAscii => null != Definition && Definition.IsAscii;
 
         protected class AxisScaleAndSize
         {

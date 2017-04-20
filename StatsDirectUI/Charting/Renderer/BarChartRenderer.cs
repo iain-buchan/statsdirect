@@ -1,8 +1,8 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -15,7 +15,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            BarOptions bOptions = (BarOptions)definition.ChartOptions;
+            BarOptions bOptions = (BarOptions)Definition.ChartOptions;
 
             // No false origins
             DataMinY = 0;
@@ -31,10 +31,10 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double largestSoFar = 0;
 
-                    for (int offset = 0; offset <= definition.YSeries[0].AsDoubleSeries.Points - 1; offset++)
+                    for (int offset = 0; offset <= Definition.YSeries[0].AsDoubleSeries.Points - 1; offset++)
                     {
                         double thisTotal = 0;
-                        foreach (DoubleSeries s in definition.YSeries)
+                        foreach (DoubleSeries s in Definition.YSeries)
                             if (s.Data[offset] != Constant.MISSING)
                                 thisTotal += s.Data[offset];
                         if (thisTotal > largestSoFar)
@@ -82,10 +82,10 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            definition = definition.Clone();
+            Definition = Definition.Clone();
 
-            IList<Series> seriesToUse = definition.YSeries;
-            BarOptions bOptions = (BarOptions)definition.ChartOptions;
+            IList<Series> seriesToUse = Definition.YSeries;
+            BarOptions bOptions = (BarOptions)Definition.ChartOptions;
 
             string xAxisTitle = bOptions.XAxisTitle;
             string yAxisTitle = bOptions.YAxisTitle;
@@ -115,7 +115,7 @@ namespace StatsDirect.Charting.Renderer
 
                 // Assign
                 bOptions.SeriesTitles = newSeriesTitles;
-                definition.YSeries = newSeriesToUse;
+                Definition.YSeries = newSeriesToUse;
                 seriesToUse = newSeriesToUse;
 
                 // Ensure we have enough markers
@@ -160,11 +160,11 @@ namespace StatsDirect.Charting.Renderer
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(bOptions);
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(legendFont);
+            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
             EndVectorPlot();
 
             //  By now, all measurements are known.  Set up the plot areas.
-            double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
+            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
             double legendRowHeight = Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
             double legendSpacing = MINIMUM_LEGEND_GAP + legendRowHeight;
             double legendSpaceRequired = 0;
@@ -183,13 +183,13 @@ namespace StatsDirect.Charting.Renderer
             if (bOptions.Orientation == ChartOrientation.Horizontal)
             {
                 //  Flip the series, and hence the min/max values
-                definition = definition.Clone();
-                List<Series> tempSeries = definition.XSeries;
-                definition.XSeries = definition.YSeries;
-                definition.YSeries = tempSeries;
-                AxisScaleParameters tempAxisScaleParameters = definition.ScaleParameters.X;
-                definition.ScaleParameters.X = definition.ScaleParameters.Y;
-                definition.ScaleParameters.Y = tempAxisScaleParameters;
+                Definition = Definition.Clone();
+                List<Series> tempSeries = Definition.XSeries;
+                Definition.XSeries = Definition.YSeries;
+                Definition.YSeries = tempSeries;
+                AxisScaleParameters tempAxisScaleParameters = Definition.ScaleParameters.X;
+                Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
+                Definition.ScaleParameters.Y = tempAxisScaleParameters;
                 DataMinX = DataMinY;
                 DataMaxX = DataMaxY;
                 DataMinY = 0;
@@ -213,14 +213,14 @@ namespace StatsDirect.Charting.Renderer
                 }
                 xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title,
-                    new AxisDefinition(xAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired },
-                    new AxisDefinition(yAxisTitle, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles },
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
+                    new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired },
+                    new AxisDefinition(yAxisTitle, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles },
                     bOptions.ShouldBoxAxes, false);
-                divy = ((DoubleSeries)seriesToUse[0]).Points;
-                offy = -(0 / divy * yExtCanvas) + yAxisCanvas;
+                DivY = ((DoubleSeries)seriesToUse[0]).Points;
+                OffY = -(0 / DivY * YExtCanvas) + YAxisCanvas;
 
-                double eachAreaHeight = yExtCanvas / divy;
+                double eachAreaHeight = YExtCanvas / DivY;
                 double eachBarHeightFraction;
                 double eachBarHeight;
                 double totalBarHeightFraction;
@@ -313,13 +313,13 @@ namespace StatsDirect.Charting.Renderer
                                     double areaYOffset = (s.Data.Length - 1 - barIndex) * eachAreaHeight;
                                     double barH = eachBarHeight;
                                     double barW = ToCanvasWidth(dataW);
-                                    double barY = offy + areaYOffset + bottomOffsetInArea;
+                                    double barY = OffY + areaYOffset + bottomOffsetInArea;
                                     double barX = ToCanvasX(dataLowX);
                                     if (barBrush != null)
                                     {
                                         FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
                                     }
-                                    if (!definition.ChartOptions.UseColour)
+                                    if (!Definition.ChartOptions.UseColour)
                                     {
                                         DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
                                     }
@@ -332,10 +332,10 @@ namespace StatsDirect.Charting.Renderer
                     if (shouldDrawLegend)
                     {
                         if (barBrush != null)
-                            FillRectangleInCanvasCoordinates(barBrush, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        if (!definition.ChartOptions.UseColour)
-                            DrawRectangleInCanvasCoordinates(barPen, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        DrawStringLegendL(definition.XSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
+                            FillRectangleInCanvasCoordinates(barBrush, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                        if (!Definition.ChartOptions.UseColour)
+                            DrawRectangleInCanvasCoordinates(barPen, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                        DrawStringLegendL(Definition.XSeries[c].Title, XAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
                     }
 
                     if (barBrush != null)
@@ -363,11 +363,11 @@ namespace StatsDirect.Charting.Renderer
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(yAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
-                divx = ((DoubleSeries)seriesToUse[0]).Points;
-                offx = -(0 / divx * xExtCanvas) + xAxisCanvas;
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
+                DivX = ((DoubleSeries)seriesToUse[0]).Points;
+                OffX = -(0 / DivX * XExtCanvas) + XAxisCanvas;
 
-                double eachAreaWidth = xExtCanvas / divx;
+                double eachAreaWidth = XExtCanvas / DivX;
                 double eachBarWidthFraction;
                 double eachBarWidth;
                 double totalBarWidthFraction;
@@ -467,13 +467,13 @@ namespace StatsDirect.Charting.Renderer
                                 {
                                     double areaXOffset = barIndex * eachAreaWidth;
                                     double barW = eachBarWidth;
-                                    double barH = dataH / divy * yExtCanvas;
-                                    double barX = offx + areaXOffset + leftOffsetInArea;
+                                    double barH = dataH / DivY * YExtCanvas;
+                                    double barX = OffX + areaXOffset + leftOffsetInArea;
                                     double barY = ToCanvasY(dataLowY + dataH);
 
                                     if (barBrush != null)
                                         FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
-                                    if (!definition.ChartOptions.UseColour)
+                                    if (!Definition.ChartOptions.UseColour)
                                         DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
                                 }
                             }
@@ -484,10 +484,10 @@ namespace StatsDirect.Charting.Renderer
                     if (shouldDrawLegend)
                     {
                         if (barBrush == null)
-                            DrawRectangleInCanvasCoordinates(barPen, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                            DrawRectangleInCanvasCoordinates(barPen, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
                         else
-                            FillRectangleInCanvasCoordinates(barBrush, xAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        DrawStringLegendL(definition.YSeries[c].Title, xAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
+                            FillRectangleInCanvasCoordinates(barBrush, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
+                        DrawStringLegendL(Definition.YSeries[c].Title, XAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
                     }
 
                     if (barBrush != null)

@@ -29,7 +29,7 @@ namespace StatsDirect.UI
             btnReplaceAll.Click += btnReplaceAll_Click;
         }
 
-        private void btnFind_Click(Object sender, EventArgs e)
+        private void btnFind_Click(object sender, EventArgs e)
         {
 
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
@@ -50,7 +50,7 @@ namespace StatsDirect.UI
 
         }
 
-        private void btnFindNext_Click(Object sender, EventArgs e)
+        private void btnFindNext_Click(object sender, EventArgs e)
         {
             int startPosition = mainForm.rtbDoc.SelectionStart + 1;
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
@@ -69,7 +69,7 @@ namespace StatsDirect.UI
             mainForm.Focus();
         }
 
-        private void btnReplace_Click(Object sender, EventArgs e)
+        private void btnReplace_Click(object sender, EventArgs e)
         {
             if (mainForm.rtbDoc.SelectedText.Length != 0)
             {
@@ -94,7 +94,7 @@ namespace StatsDirect.UI
             mainForm.Focus();
         }
 
-        private void btnReplaceAll_Click(Object sender, EventArgs e)
+        private void btnReplaceAll_Click(object sender, EventArgs e)
         {
             // Save the selection
             int currentPosition = mainForm.rtbDoc.SelectionStart;

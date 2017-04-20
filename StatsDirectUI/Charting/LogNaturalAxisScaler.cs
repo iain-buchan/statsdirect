@@ -1,7 +1,5 @@
 using System;
-
 using StatsDirect.Templates;
-using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
 {

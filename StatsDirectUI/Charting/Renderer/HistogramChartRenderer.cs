@@ -1,7 +1,8 @@
-﻿using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Layout;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,7 +15,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            HistogramOptions options = (HistogramOptions)definition.ChartOptions;
+            HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
             bool showRelativeFrequencies = options.ShowRelativeFrequencies;
 
             //  We're looking over multiple histograms and getting a merged view
@@ -22,11 +23,11 @@ namespace StatsDirect.Charting.Renderer
             double maxX = double.MinValue;
             double maxY = 0.0;
 
-            for (int i = 0; i < definition.YSeries.Count; i++)
+            for (int i = 0; i < Definition.YSeries.Count; i++)
             {
                 HistogramSeriesOptions so = options.HistoSeriesOptions[i];
                 if (null == so.BinsDescriptor)
-                    so.Reset(true, 0, definition.YSeries[i], options.BinChoiceMethod);
+                    so.Reset(true, 0, Definition.YSeries[i], options.BinChoiceMethod);
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
                 minX = Math.Min(minX, so.BinsDescriptor.LowestEdge);
@@ -56,14 +57,14 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            HistogramOptions options = (HistogramOptions)definition.ChartOptions;
-            List<Series> seriesToUse = definition.YSeries;
+            HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
+            List<Series> seriesToUse = Definition.YSeries;
             MarkerType[] originalMarkerTypes = null;
             //  A space to save drawn ASCII plots until required
             List<string> savedLines = null;
 
             //  Ensure the data is sorted
-            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -137,8 +138,8 @@ namespace StatsDirect.Charting.Renderer
 
                         //  No longer the default Y axis!
                         DefaultAxes();
-                        yAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
-                        yExtCanvas = heightPerChart - Math.Min(heightPerChart / 4, 2 * DEFAULT_Y_GAP);
+                        YAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
+                        YExtCanvas = heightPerChart - Math.Min(heightPerChart / 4, 2 * DEFAULT_Y_GAP);
 
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
@@ -151,8 +152,8 @@ namespace StatsDirect.Charting.Renderer
 
                         // Draw the axes
                         AxisScalesAndExtraSize ases = DrawAxesOrFail(title,
-                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
-                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             false,
                             true);
 
@@ -164,7 +165,7 @@ namespace StatsDirect.Charting.Renderer
                             double x2 = ToCanvasX(descriptor.Edges[c + 1]);
                             double value = options.ShowRelativeFrequencies ? descriptor.Counts[c] / (double)s.Points : descriptor.Counts[c];
                             double y1 = ToCanvasY(value);
-                            double y2 = yAxisCanvas;
+                            double y2 = YAxisCanvas;
                             DrawRectangleInCanvasCoordinates(s.MarkerDetails.MarkerPen, x1, y1, x2 - x1, y1 - y2);
                         }
 
@@ -192,8 +193,8 @@ namespace StatsDirect.Charting.Renderer
 
                         DefaultAxes();
                         AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
-                            new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
-                            new AxisDefinition(null, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                            new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             false, true);
 
                         for (int c = 0; c < descriptor.Bins; c++)
@@ -216,13 +217,13 @@ namespace StatsDirect.Charting.Renderer
 
                         WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 16, "Mid-points");
                         WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 1, "Counts");
-                        shTx[2] = "     " + shTx[2].Substring(0, Math.Min(shTx[2].Length, 85));
-                        shTx[1] = "     " + shTx[1].Substring(0, Math.Min(shTx[1].Length, 85));
-                        shTx[0] = "     " + shTx[0].Substring(0, Math.Min(shTx[0].Length, 85));
+                        ShTx[2] = "     " + ShTx[2].Substring(0, Math.Min(ShTx[2].Length, 85));
+                        ShTx[1] = "     " + ShTx[1].Substring(0, Math.Min(ShTx[1].Length, 85));
+                        ShTx[0] = "     " + ShTx[0].Substring(0, Math.Min(ShTx[0].Length, 85));
 
                         //  Save this plot
-                        for (int i = shTx.Length - 1; i >= 0; i--)
-                            savedLines.Insert(0, shTx[i]);
+                        for (int i = ShTx.Length - 1; i >= 0; i--)
+                            savedLines.Insert(0, ShTx[i]);
 
                         //  Separator
                         savedLines.Insert(0, string.Empty);
@@ -236,9 +237,9 @@ namespace StatsDirect.Charting.Renderer
                 else
                 {
                     //  Fill in the output in its expected place from our saved place
-                    shTx = new string[savedLines.Count];
+                    ShTx = new string[savedLines.Count];
                     for (int i = 0; i <= savedLines.Count - 1; i++)
-                        shTx[i] = savedLines[i];
+                        ShTx[i] = savedLines[i];
                 }
 
                 return new ParameterBag();
@@ -272,7 +273,7 @@ namespace StatsDirect.Charting.Renderer
             double bins = zint * s.Points * (1.0 / (sdv * Math.Sqrt(2.0 * Math.PI)));
 
             //  Multiply the count to give more steps
-            int div = Convert.ToInt32(xExtCanvas / count / 5);
+            int div = Convert.ToInt32(XExtCanvas / count / 5);
             count *= div;
             zint /= div;
 
@@ -280,7 +281,7 @@ namespace StatsDirect.Charting.Renderer
             double y = bins * Math.Exp(-0.5 * Math.Pow((sumx - xbar) / sdv, 2.0)) * proportionScaler;
             double yMax = y;
             double yold = ToCanvasY(y);
-            double xold = xAxisCanvas;
+            double xold = XAxisCanvas;
 
             for (int c = 1; c <= count; c++)
             {
@@ -291,7 +292,7 @@ namespace StatsDirect.Charting.Renderer
                 if (shouldPlot)
                 {
                     double y1 = ToCanvasY(y);
-                    double x1 = xAxisCanvas + c / (double)count * xExtCanvas;
+                    double x1 = XAxisCanvas + c / (double)count * XExtCanvas;
                     DrawLineInCanvasCoordinates(s.MarkerDetails.MarkerPen, xold, yold, x1, y1);
                     xold = x1;
                     yold = y1;

@@ -1,5 +1,5 @@
-﻿using StatsDirect.Templates;
-using System;
+﻿using System;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {

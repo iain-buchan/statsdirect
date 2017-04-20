@@ -1,8 +1,8 @@
-﻿using StatsDirect.Numerics;
+﻿using System;
+using System.Drawing;
+using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using System;
-using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -15,7 +15,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            ForestOptions fOptions = (ForestOptions)definition.ChartOptions;
+            ForestOptions fOptions = (ForestOptions)Definition.ChartOptions;
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
             double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
@@ -66,8 +66,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            bool shouldDrawLine = DataMinX <= 0 || null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue;
-            double lineX = null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            bool shouldDrawLine = DataMinX <= 0 || null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue;
+            double lineX = null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue ? Definition.ScaleParameters.X.MarkerLineValue.Value : 0;
             if (shouldDrawLine)
             {
                 if (DataMaxX < lineX)
@@ -87,7 +87,7 @@ namespace StatsDirect.Charting.Renderer
         {
             int pbias = 0;
 
-            ForestOptions fOptions = (ForestOptions)definition.ChartOptions;
+            ForestOptions fOptions = (ForestOptions)Definition.ChartOptions;
             MarkerType studyMarkerType = fOptions.MarkerTypes[0];
             MarkerType pooledMarkerType = fOptions.MarkerTypes[1];
 
@@ -153,20 +153,20 @@ namespace StatsDirect.Charting.Renderer
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
             // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
-            bool shouldDrawLine = DataMinX <= 0 || null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue;
-            double lineX = null != definition && definition.HasScaleParameters && definition.ScaleParameters.X.MarkerLineValue.HasValue ? definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            bool shouldDrawLine = DataMinX <= 0 || null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue;
+            double lineX = null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue ? Definition.ScaleParameters.X.MarkerLineValue.Value : 0;
             if (shouldDrawLine)
             {
                 if (DataMaxX < lineX)
                     DataMaxX = lineX;
                 if (DataMinX > lineX)
                     DataMinX = lineX;
-                if (null != definition && definition.HasScaleParameters)
+                if (null != Definition && Definition.HasScaleParameters)
                 {
-                    if (definition.ScaleParameters.X.Max < lineX)
-                        definition.ScaleParameters.X.Max = lineX;
-                    if (definition.ScaleParameters.X.Min > lineX)
-                        definition.ScaleParameters.X.Min = lineX;
+                    if (Definition.ScaleParameters.X.Max < lineX)
+                        Definition.ScaleParameters.X.Max = lineX;
+                    if (Definition.ScaleParameters.X.Min > lineX)
+                        Definition.ScaleParameters.X.Min = lineX;
                 }
             }
 
@@ -182,8 +182,8 @@ namespace StatsDirect.Charting.Renderer
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
                     float titleWidth = TitleWidthInCanvasCoordinates(title[i]) + 30;
-                    if (titleWidth > xtra + xAxisCanvas)
-                        xtra = titleWidth - xAxisCanvas - 5;
+                    if (titleWidth > xtra + XAxisCanvas)
+                        xtra = titleWidth - XAxisCanvas - 5;
                     string rhs = Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")";
                     float rhsWidth = LegendWidthInCanvasCoordinates(rhs);
                     if (rhsWidth > rgap)
@@ -191,12 +191,12 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
             float w = TitleWidthInCanvasCoordinates(combo_ti(fOptions.Title)) + 30;
-            if (w > xtra + xAxisCanvas)
-                xtra = w - xAxisCanvas - 5;
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            if (w > xtra + XAxisCanvas)
+                xtra = w - XAxisCanvas - 5;
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
-            divy = kok + pbias;
-            offy = yAxisCanvas;
+            DivY = kok + pbias;
+            OffY = YAxisCanvas;
 
             int r = 0;
 
@@ -218,9 +218,9 @@ namespace StatsDirect.Charting.Renderer
                         double xr = ToCanvasX(odru[i]);
                         double y2 = (ytop - yctr) / 1.5;
                         double y3 = (ytop - yctr) / 4;
-                        double yc = offy + yctr;
-                        yt = offy + yctr + y2;
-                        double yb = offy + yctr - y2;
+                        double yc = OffY + yctr;
+                        yt = OffY + yctr + y2;
+                        double yb = OffY + yctr - y2;
                         if (pg == null || pg[i] == 0)
                         {
                             // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
@@ -258,15 +258,15 @@ namespace StatsDirect.Charting.Renderer
                             }
 
                         }
-                        AxisDrawStringAtAngleRM(title[i], xAxisCanvas - 15, yc, definition.ScaleParameters.Y.LabelDirection);
-                        DrawStringLabel(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")", xAxisCanvas + xExtCanvas + 10, yc, StringAlignment.Near, StringAlignment.Center);
+                        AxisDrawStringAtAngleRM(title[i], XAxisCanvas - 15, yc, Definition.ScaleParameters.Y.LabelDirection);
+                        DrawStringLabel(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")", XAxisCanvas + XExtCanvas + 10, yc, StringAlignment.Near, StringAlignment.Center);
                     }
                 }
 
                 if (shouldDrawLine)
                 {
                     // no effect line, which is effectively part of the axis so uses the axis pen
-                    DrawLineInCanvasCoordinates(axisPen, ToCanvasX(lineX), yt, ToCanvasX(lineX), ToCanvasY(axisScales.Y.MinimumScaleValue));
+                    DrawLineInCanvasCoordinates(AxisPen, ToCanvasX(lineX), yt, ToCanvasX(lineX), ToCanvasY(axisScales.Y.MinimumScaleValue));
                 }
             }
 

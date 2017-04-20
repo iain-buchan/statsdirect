@@ -76,7 +76,7 @@ namespace StatsDirect.Charting
                 int i = metaStream.ReadByte();
                 if (-1 == i)
                     break;
-                rtf.Append(String.Format("{0:X2}", i));
+                rtf.Append(string.Format("{0:X2}", i));
             }
 
             // Close the RTF image control string

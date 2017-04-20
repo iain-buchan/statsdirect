@@ -1,10 +1,10 @@
-﻿using StatsDirect.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace StatsDirect.Charting
 {
@@ -397,7 +397,7 @@ namespace StatsDirect.Charting
             {
                 string[] titles = new string[fOptions.k];
                 for (int i = 0; i < fOptions.k; i++)
-                    titles[i] = "stratum " + (i + 1).ToString();
+                    titles[i] = "stratum " + (i + 1);
                 fOptions.Titles = titles;
             }
 
@@ -456,7 +456,7 @@ namespace StatsDirect.Charting
                 DoubleVariable ydatu = ydatuFrame.Variables[sIndex] as DoubleVariable;
                 string seriesTitle =
                     string.IsNullOrWhiteSpace(ydat.Title)
-                        ? "Series " + (sIndex + 1).ToString()
+                        ? "Series " + (sIndex + 1)
                         : ydat.Title;
                 DoubleArraysAndBooleans noMissings = Numerics.Utilities.RemoveMissingRows(new[] { xdat.Data, ydat.Data, ydatl.Data, ydatu.Data }, 0, xdat.Length, 0);
                 MultiDoublePoint[] data = new MultiDoublePoint[noMissings.ArraysWithMissingRowsRemoved[0].Length];
@@ -471,7 +471,7 @@ namespace StatsDirect.Charting
                     p.set_Y(2, noMissings.ArraysWithMissingRowsRemoved[3][i]);
                     data[i] = p;
                 }
-                allSeries.Add(new MultiDoubleSeries() { Title = seriesTitle, Data = data });
+                allSeries.Add(new MultiDoubleSeries { Title = seriesTitle, Data = data });
             }
 
             ErrorBarOptions errorBarOptions = new ErrorBarOptions(host.Preferences.ShouldUseColour)
@@ -490,7 +490,7 @@ namespace StatsDirect.Charting
             {
                 errorBarOptions.SeriesTitles[i] =
                     string.IsNullOrEmpty(ydatFrame.Variables[i].Title)
-                        ? "Series " + (i + 1).ToString()
+                        ? "Series " + (i + 1)
                         : ydatFrame.Variables[i].Title;
             }
             errorBarOptions.SetMarkers();

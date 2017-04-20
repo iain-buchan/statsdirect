@@ -641,7 +641,7 @@ namespace StatsDirect.TemplateProcessing
                 IScriptEngine scriptEngine = host.GetScriptEngine(expression.Language);
                 return scriptEngine.Run(expression.Language, expression.Body.Substring(1), ScriptType.Expression, host, parameters, null, null);
             }
-            if (Int32.TryParse(expression.Body, out int candidateInt))
+            if (int.TryParse(expression.Body, out int candidateInt))
                 return candidateInt;
             if (double.TryParse(expression.Body, NumberStyles.Float, CultureInfo.InvariantCulture, out double candidateDouble))
                 return candidateDouble;

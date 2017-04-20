@@ -8,7 +8,7 @@ namespace StatsDirect.Templates
     {
         private bool preSelectVariables = true;
         private int minimumVariables = 1;
-        private int maximumVariables = Int32.MaxValue;
+        private int maximumVariables = int.MaxValue;
 
         [XmlElement(ElementName = "preselect-variables")]
         public bool PreSelectVariables

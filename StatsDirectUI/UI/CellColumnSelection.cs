@@ -146,9 +146,9 @@ namespace StatsDirect.UI
             StringBuilder sb = new StringBuilder();
             foreach (char ch in candidateTitle)
             {
-                if (Char.IsWhiteSpace(ch))
+                if (char.IsWhiteSpace(ch))
                     sb.Append(' ');
-                else if (!Char.IsControl(ch))
+                else if (!char.IsControl(ch))
                     sb.Append(ch);
             }
             return sb.ToString();

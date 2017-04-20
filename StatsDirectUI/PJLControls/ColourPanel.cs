@@ -258,7 +258,7 @@ namespace StatsDirect.PJLControls
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
 
-                    return String.CompareOrdinal(_a.Color.Name, _b.Color.Name);
+                    return string.CompareOrdinal(_a.Color.Name, _b.Color.Name);
                 }
             }
 

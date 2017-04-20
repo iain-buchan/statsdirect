@@ -5,6 +5,6 @@ namespace StatsDirect.Charting
         LT = 4,
         LE = 3,
         GT = 2,
-        GE = 1,
+        GE = 1
     } 
 } 

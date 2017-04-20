@@ -1,6 +1,7 @@
-﻿using StatsDirect.Templates;
+﻿using System.Drawing;
+using Layout;
+using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -17,10 +18,10 @@ namespace StatsDirect.Charting.Renderer
             double avMax = 0;
             double mxdMin = 0;
             double mxdMax = 0;
-            if (!(definition == null || definition.ChartOptions == null))
+            if (Definition?.ChartOptions != null)
             {
-                AgreementOptions aOptions = (AgreementOptions)definition.ChartOptions;
-                Layout.Range mxdRange = GetMinMaxArray(aOptions.mxd, ScaleType.Linear);
+                AgreementOptions aOptions = (AgreementOptions)Definition.ChartOptions;
+                Range mxdRange = GetMinMaxArray(aOptions.mxd, ScaleType.Linear);
                 mxdMin = mxdRange.Min;
                 mxdMax = mxdRange.Max;
                 if (aOptions.HasLimits)
@@ -30,7 +31,7 @@ namespace StatsDirect.Charting.Renderer
                     if (aOptions.ula > mxdMax)
                         mxdMax = aOptions.ula;
                 }
-                Layout.Range avRange = GetMinMaxArray(aOptions.av, ScaleType.Linear);
+                Range avRange = GetMinMaxArray(aOptions.av, ScaleType.Linear);
                 avMin = avRange.Min;
                 avMax = avRange.Max;
             }
@@ -56,13 +57,11 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            AgreementOptions aOptions = (AgreementOptions)definition.ChartOptions;
+            AgreementOptions aOptions = (AgreementOptions)Definition.ChartOptions;
             StartVectorPlot();
-            double mxdMin;
-            double mxdMax;
-            Layout.Range mxdRange = GetMinMaxArray(aOptions.mxd, definition.ScaleParameters.Y.ScaleType);
-            mxdMin = mxdRange.Min;
-            mxdMax = mxdRange.Max;
+            Range mxdRange = GetMinMaxArray(aOptions.mxd, Definition.ScaleParameters.Y.ScaleType);
+            double mxdMin = mxdRange.Min;
+            double mxdMax = mxdRange.Max;
             AxisScales axisScales;
             using (Pen p = GetMarkerPen(ChartPreferences.MarkerTypes[0]))
             {
@@ -72,20 +71,20 @@ namespace StatsDirect.Charting.Renderer
                         mxdMin = aOptions.lla;
                     if (aOptions.ula > mxdMax)
                         mxdMax = aOptions.ula;
-                    string xtxt = definition.ChartOptions.XAxisTitle;
+                    string xtxt = Definition.ChartOptions.XAxisTitle;
                     if (string.IsNullOrEmpty(xtxt))
                         xtxt = "mean";
-                    string ytxt = definition.ChartOptions.YAxisTitle;
+                    string ytxt = Definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "difference";
                     axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
                 }
                 else
                 {
-                    string xtxt = definition.ChartOptions.XAxisTitle;
+                    string xtxt = Definition.ChartOptions.XAxisTitle;
                     if (string.IsNullOrEmpty(xtxt))
                         xtxt = "mean";
-                    string ytxt = definition.ChartOptions.YAxisTitle;
+                    string ytxt = Definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "maximum difference";
                     axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
@@ -93,7 +92,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // Plot mean
-            using (Pen greenPen = new Pen(grGreen, 2))
+            using (Pen greenPen = new Pen(GrGreen, 2))
             {
                 DrawLineInChartCoordinates(greenPen, axisScales.X.MinimumScaleValue, aOptions.mean, axisScales.X.MaximumScaleValue, aOptions.mean);
                 if (aOptions.HasLimits)

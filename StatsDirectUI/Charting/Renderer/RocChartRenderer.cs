@@ -1,12 +1,10 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using StatsDirect.Utilities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -42,20 +40,20 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="host"></param>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
-            double GAMMA = rOptions.GAMMA;
-            if (GAMMA <= 0)
+            ROCOptions rOptions = (ROCOptions)Definition.ChartOptions;
+            double gamma = rOptions.GAMMA;
+            if (gamma <= 0)
                 return null;
-            MathDbl.civ(0, out double cit, GAMMA, out double P0);
+            MathDbl.civ(0, out double cit, gamma, out double p0);
 
             //  Assume data passed as series - X is positive, Y is negative.
 
-            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[definition.XSeries.Count];
-            for (int c = 0; c < definition.XSeries.Count; c++)
+            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[Definition.XSeries.Count];
+            for (int c = 0; c < Definition.XSeries.Count; c++)
             {
                 seriesData[c] = new ROCSeriesRecord();
-                DoubleSeries xs = definition.XSeries[c].AsDoubleSeries;
-                DoubleSeries ys = definition.YSeries[c].AsDoubleSeries;
+                DoubleSeries xs = Definition.XSeries[c].AsDoubleSeries;
+                DoubleSeries ys = Definition.YSeries[c].AsDoubleSeries;
                 seriesData[c].pdata = xs.Data;
                 seriesData[c].adata = ys.Data;
                 seriesData[c].pmn = xs.Sum / Convert.ToDouble(xs.Points);
@@ -76,24 +74,24 @@ namespace StatsDirect.Charting.Renderer
             // Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(rOptions);
-            double smallerExt = Math.Min(xExtCanvas, yExtCanvas);
-            xExtCanvas = smallerExt;
-            yExtCanvas = smallerExt;
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(legendFont);
+            double smallerExt = Math.Min(XExtCanvas, YExtCanvas);
+            XExtCanvas = smallerExt;
+            YExtCanvas = smallerExt;
+            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
             EndVectorPlot();
 
             // By now, all measurements are known.  Set up the plot areas.
-            double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
+            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
             double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
             double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendBottom = legendTop - definition.XSeries.Count * legendSpacing;
+            double legendBottom = legendTop - Definition.XSeries.Count * legendSpacing;
             if (legendBottom < LOWEST_ALLOWED_LEGEND)
             {
                 double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
 
                 //  Add in the extra space
                 imageHeight += (int)Math.Ceiling(extraSpaceRequired);
-                yAxisCanvas += extraSpaceRequired;
+                YAxisCanvas += extraSpaceRequired;
                 legendTop += extraSpaceRequired;
                 // legendBottom += extraSpaceRequired; 
             }
@@ -114,30 +112,30 @@ namespace StatsDirect.Charting.Renderer
             // null effect diagonal
             using (Pen tenPenDiagonal = new Pen(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
             {
-                DrawLineInCanvasCoordinates(tenPenDiagonal, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
+                DrawLineInCanvasCoordinates(tenPenDiagonal, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
             }
 
             // get the offsets for the markers
-            offx = xAxisCanvas;
-            offy = yAxisCanvas;
+            OffX = XAxisCanvas;
+            OffY = YAxisCanvas;
 
             bool hideopt = !rOptions.ShowOptimumCutOff;
             ComparisonValue showopt = rOptions.Showopts;
             ParameterBag results = new ParameterBag();
             IList<ParameterBag> allResults = new List<ParameterBag>();
             results.AddOutput("*datasets", allResults);
-            for (int cs = 0; cs < definition.XSeries.Count; cs++)
+            for (int cs = 0; cs < Definition.XSeries.Count; cs++)
             {
                 ROCSeriesRecord thisData = seriesData[cs];
-                DoubleSeries xs = definition.XSeries[cs].AsDoubleSeries;
-                DoubleSeries ys = definition.YSeries[cs].AsDoubleSeries;
+                DoubleSeries xs = Definition.XSeries[cs].AsDoubleSeries;
+                DoubleSeries ys = Definition.YSeries[cs].AsDoubleSeries;
                 double weight = rOptions.Weight;
                 if (weight <= 0)
                     weight = 1.0;
 
                 // Draw the legend for each series
-                DrawMarkerInCanvasCoordinates(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - cs * legendSpacing - markerMidlineOffset, LEGEND_MARKER_SIZE, definition.YSeries[cs].AsDoubleSeries);
-                DrawStringLegendL(rOptions.SeriesTitles[cs], xAxisCanvas + 9 + LEGEND_MARKER_SIZE, legendTop - cs * legendSpacing);
+                DrawMarkerInCanvasCoordinates(XAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - cs * legendSpacing - markerMidlineOffset, LEGEND_MARKER_SIZE, Definition.YSeries[cs].AsDoubleSeries);
+                DrawStringLegendL(rOptions.SeriesTitles[cs], XAxisCanvas + 9 + LEGEND_MARKER_SIZE, legendTop - cs * legendSpacing);
 
                 int a;
                 int b;
@@ -193,8 +191,8 @@ namespace StatsDirect.Charting.Renderer
                 d = thisData.adata.Length - b;
                 sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
                 double mspec = 1.0 - Convert.ToDouble(d) / Convert.ToDouble(b + d);
-                double x1 = offx + mspec * xExtCanvas;
-                double y1 = offy + sens * yExtCanvas;
+                double x1 = OffX + mspec * XExtCanvas;
+                double y1 = OffY + sens * YExtCanvas;
 
                 int stps = thisData.tdata.Length;
                 double[] rx = new double[stps];
@@ -216,22 +214,22 @@ namespace StatsDirect.Charting.Renderer
                 // Draw markers
                 for (int r = 0; r < stps; r++)
                 {
-                    double x2 = offx + rx[r] * xExtCanvas;
-                    double y2 = offy + ry[r] * yExtCanvas;
-                    DrawMarkerInCanvasCoordinates(x2, y2, ys.MarkerDetails.MarkerSize, definition.YSeries[cs].AsDoubleSeries);
+                    double x2 = OffX + rx[r] * XExtCanvas;
+                    double y2 = OffY + ry[r] * YExtCanvas;
+                    DrawMarkerInCanvasCoordinates(x2, y2, ys.MarkerDetails.MarkerSize, Definition.YSeries[cs].AsDoubleSeries);
                 }
 
                 // Draw lines between markers
-                double last_x2 = x1;
-                double last_y2 = y1;
+                double lastX2 = x1;
+                double lastY2 = y1;
                 for (int r = 0; r < stps; r++)
                 {
-                    double x2 = offx + rx[r] * xExtCanvas;
-                    double y2 = offy + ry[r] * yExtCanvas;
-                    if (r > 0 && (x2 != last_x2 || y2 != last_y2))
-                        DrawLineInCanvasCoordinates(xs.MarkerDetails.LinePen, last_x2, last_y2, x2, y2);
-                    last_x2 = x2;
-                    last_y2 = y2;
+                    double x2 = OffX + rx[r] * XExtCanvas;
+                    double y2 = OffY + ry[r] * YExtCanvas;
+                    if (r > 0 && (x2 != lastX2 || y2 != lastY2))
+                        DrawLineInCanvasCoordinates(xs.MarkerDetails.LinePen, lastX2, lastY2, x2, y2);
+                    lastX2 = x2;
+                    lastY2 = y2;
                 }
 
                 // Mark cutoff point.  This is reversed if the chart requires reversal.
@@ -242,7 +240,7 @@ namespace StatsDirect.Charting.Renderer
                     x = 1.0 - x;
                     y = 1.0 - y;
                 }
-                DrawMarkerInChartCoordinates(x, y, rOptions.MarkerTypes[definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[definition.XSeries.Count + cs]);
+                DrawMarkerInChartCoordinates(x, y, rOptions.MarkerTypes[Definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[Definition.XSeries.Count + cs]);
 
                 thisData.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
 
@@ -292,7 +290,7 @@ namespace StatsDirect.Charting.Renderer
                     thisResults.AddOutput("auc", host.RoundU(thisData.auc));
                     thisResults.AddOutput("theta", host.RoundU(theta));
                     thisResults.AddOutput("se", host.RoundU(sew));
-                    thisResults.AddOutput("pc", Formatting.XRound(100.0 * (1.0 - P0), 2));
+                    thisResults.AddOutput("pc", Formatting.XRound(100.0 * (1.0 - p0), 2));
                     if (ll < 0.0)
                         ll = 0.0;
                     thisResults.AddOutput("ll", host.RoundU(ll));
@@ -305,22 +303,22 @@ namespace StatsDirect.Charting.Renderer
                     thisResults.AddOutput("c", thisData.c.ToString(CultureInfo.InvariantCulture));
                     thisResults.AddOutput("d", thisData.d.ToString(CultureInfo.InvariantCulture));
                     // sensitivity CI
-                    MathDbl.binci(Convert.ToDouble(thisData.a), Convert.ToDouble(thisData.a + thisData.c), out ll, out ul, GAMMA, out string warn);
-                    thisResults.AddOutput("senspc", Formatting.XRound(100.0 * (1.0 - P0), 2));
+                    MathDbl.binci(Convert.ToDouble(thisData.a), Convert.ToDouble(thisData.a + thisData.c), out ll, out ul, gamma, out string warn);
+                    thisResults.AddOutput("senspc", Formatting.XRound(100.0 * (1.0 - p0), 2));
                     thisResults.AddOutput("sens", host.RoundU(thisData.sens));
                     thisResults.AddOutput("sensll", host.RoundU(ll));
                     thisResults.AddOutput("sensul", host.RoundU(ul) + warn);
                     // specificity CI
-                    MathDbl.binci(Convert.ToDouble(thisData.d), Convert.ToDouble(thisData.d + thisData.b), out ll, out ul, GAMMA, out warn);
-                    thisResults.AddOutput("specpc", Formatting.XRound(100.0 * (1.0 - P0), 2));
+                    MathDbl.binci(Convert.ToDouble(thisData.d), Convert.ToDouble(thisData.d + thisData.b), out ll, out ul, gamma, out warn);
+                    thisResults.AddOutput("specpc", Formatting.XRound(100.0 * (1.0 - p0), 2));
                     thisResults.AddOutput("spec", host.RoundU(thisData.spec));
                     thisResults.AddOutput("specll", host.RoundU(ll));
                     thisResults.AddOutput("specul", host.RoundU(ul) + warn);
 
                     //  BEWARE from this point on: a, b, c, d are integer, but divisions need to deal with floating-point.
                     // prevalence
-                    double N = thisData.a + thisData.b + thisData.c + thisData.d;
-                    double prevel = Convert.ToDouble(thisData.a + thisData.c) / N;
+                    double n = thisData.a + thisData.b + thisData.c + thisData.d;
+                    double prevel = Convert.ToDouble(thisData.a + thisData.c) / n;
 
                     // ppv
                     double ptld;
@@ -339,7 +337,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     thisResults.AddOutput("likely", host.RoundU(ptld));
                     // Clopper-Pearson CI
-                    MathDbl.binci(thisData.a, thisData.a + thisData.b, out double pil, out double piu, GAMMA, out warn);
+                    MathDbl.binci(thisData.a, thisData.a + thisData.b, out double pil, out double piu, gamma, out warn);
                     thisResults.AddOutput("likely_from", host.RoundU(pil));
                     thisResults.AddOutput("likely_to", host.RoundU(piu) + warn);
                     // as percentage
@@ -365,7 +363,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         ptlng = thisData.d / Convert.ToDouble(thisData.d + thisData.c);
                         temp1 = ptlng * 100.0;
-                        temp2 = Convert.ToInt32(ptlng * 100.0) - Convert.ToInt32(Convert.ToDouble(thisData.b + thisData.d) / N * 100.0);
+                        temp2 = Convert.ToInt32(ptlng * 100.0) - Convert.ToInt32(Convert.ToDouble(thisData.b + thisData.d) / n * 100.0);
                     }
                     else
                     {
@@ -375,7 +373,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     thisResults.AddOutput("likely_negative", host.RoundU(ptlng));
                     // Clopper-Pearson CI
-                    MathDbl.binci(thisData.d, thisData.d + thisData.c, out pil, out piu, GAMMA, out warn);
+                    MathDbl.binci(thisData.d, thisData.d + thisData.c, out pil, out piu, gamma, out warn);
                     thisResults.AddOutput("likely_negative_from", host.RoundU(pil));
                     thisResults.AddOutput("likely_negative_to", host.RoundU(piu) + warn);
                     // as percentage
@@ -411,7 +409,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     thisResults.AddOutput("likely_despite", host.RoundU(ptlnd));
                     // Clopper-Pearson CI
-                    MathDbl.binci(thisData.d, thisData.d + thisData.c, out pil, out piu, GAMMA, out warn);
+                    MathDbl.binci(thisData.d, thisData.d + thisData.c, out pil, out piu, gamma, out warn);
                     thisResults.AddOutput("likely_despite_from", host.RoundU(Math.Min(1.0 - pil, 1.0 - piu)));
                     thisResults.AddOutput("likely_despite_to", host.RoundU(Math.Max(1.0 - pil, 1.0 - piu)) + warn);
                     // as percentage
@@ -525,12 +523,12 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         ///  <param name="host"></param>
         ///  <param name="thisData"></param>
-        ///  <param name="Weight"></param>
+        ///  <param name="weight"></param>
         ///  <param name="ti"></param>
         ///  <remarks></remarks>
-        private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord thisData, double Weight, string ti)
+        private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord thisData, double weight, string ti)
         {
-            ROCCutoff payload = new ROCCutoff { SeriesRecord = thisData, Weight = Weight, Title = ti };
+            ROCCutoff payload = new ROCCutoff { SeriesRecord = thisData, Weight = weight, Title = ti };
             host.Amend(payload, null);
             return payload.SeriesRecord;
         }

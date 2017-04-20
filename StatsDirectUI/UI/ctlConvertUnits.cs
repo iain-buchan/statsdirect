@@ -96,7 +96,7 @@ namespace StatsDirect.UI
             cboConversion.Items.AddRange(conversions);
         }
 
-        private void Calc_Click(Object sender, EventArgs e)
+        private void Calc_Click(object sender, EventArgs e)
         {
             Calculate();
         }

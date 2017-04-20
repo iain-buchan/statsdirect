@@ -1,5 +1,5 @@
-﻿using StatsDirect.Templates;
-using System;
+﻿using System;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {
@@ -57,8 +57,7 @@ namespace StatsDirect.Charting
             double sc = x / Math.Pow(10.0, ipow);
             if (sc == 1.0)
                 return 1;
-            else
-                return sc.ToString().Length - 2;
+            return sc.ToString().Length - 2;
         }
 
         /**

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Text;
 using StatsDirect.Numerics;
 using System.Text.RegularExpressions;
@@ -19,7 +20,7 @@ namespace StatsDirect.Utilities
 
         private static string decimalSeparator;
 
-        public static string DecimalSeparator => decimalSeparator ?? (decimalSeparator = 5.5D.ToString().Substring(1, 1));
+        public static string DecimalSeparator => decimalSeparator ?? (decimalSeparator = 5.5D.ToString(CultureInfo.CurrentCulture).Substring(1, 1));
 
         public static string XRound(double amount, int places)
         {
@@ -60,7 +61,7 @@ namespace StatsDirect.Utilities
             {
                 return ERRR;
             }
-            return amount.ToString();
+            return amount.ToString(CultureInfo.CurrentCulture);
         }
 
         public static string RoundMeta(double x, double min)
@@ -119,39 +120,37 @@ namespace StatsDirect.Utilities
             {
                 return ERRR;
             }
-            return x.ToString("F" + decpm.ToString());
+            return x.ToString("F" + decpm.ToString(CultureInfo.CurrentCulture));
         }
 
-        public static string pval(double P, int decimalPlaces, bool useScientificNotationForSmallPValues)
+        public static string pval(double p, int decimalPlaces, bool useScientificNotationForSmallPValues)
         {
-            if (double.IsNaN(P) || double.IsInfinity(P) || Math.Abs(P) > 10)
+            if (double.IsNaN(p) || double.IsInfinity(p) || Math.Abs(p) > 10)
                 return "P = *";
-            if (P < Math.Pow(10D, -decimalPlaces))
+            if (p < Math.Pow(10D, -decimalPlaces))
             {
-                if (useScientificNotationForSmallPValues && P != 0.0)
-                    return "P = " + P.ToString("E");
-                else
-                    return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+                if (useScientificNotationForSmallPValues && p != 0.0)
+                    return "P = " + p.ToString("E");
+                return "P < 0" + DecimalSeparator + new string('0', decimalPlaces - 1) + "1";
             }
-            if (P > 1D - Math.Pow(10D, -decimalPlaces))
-                return "P > 0" + DecimalSeparator + new String('9', decimalPlaces);
-            return P.ToString("P = 0." + new String('#', decimalPlaces));
+            if (p > 1D - Math.Pow(10D, -decimalPlaces))
+                return "P > 0" + DecimalSeparator + new string('9', decimalPlaces);
+            return p.ToString("P = 0." + new string('#', decimalPlaces));
         }
 
-        public static string pval_half(double P, int decimalPlaces, bool useScientificNotationForSmallPValues)
+        public static string pval_half(double p, int decimalPlaces, bool useScientificNotationForSmallPValues)
         {
-            if (Math.Abs(P) > 10)
+            if (Math.Abs(p) > 10)
                 return "P = err";
-            if (P < Math.Pow(10D, -decimalPlaces))
+            if (p < Math.Pow(10D, -decimalPlaces))
             {
-                if (useScientificNotationForSmallPValues && P != 0.0)
-                    return "P = " + P.ToString("E");
-                else
-                    return "P < 0" + DecimalSeparator + new String('0', decimalPlaces - 1) + "1";
+                if (useScientificNotationForSmallPValues && p != 0.0)
+                    return "P = " + p.ToString("E");
+                return "P < 0" + DecimalSeparator + new string('0', decimalPlaces - 1) + "1";
             }
-            if (P > 0.5D - Math.Pow(10D, -decimalPlaces))
-                return "P > 0" + DecimalSeparator + "4" + new String('9', decimalPlaces - 1);
-            return P.ToString("P = 0." + new String('#', decimalPlaces));
+            if (p > 0.5D - Math.Pow(10D, -decimalPlaces))
+                return "P > 0" + DecimalSeparator + "4" + new string('9', decimalPlaces - 1);
+            return p.ToString("P = 0." + new string('#', decimalPlaces));
         }
 
         public static string pwr(double pwr, double p0)
@@ -204,7 +203,7 @@ namespace StatsDirect.Utilities
 
         public static string SFormat(double x)
         {
-            return Constant.MISSING == x ? ASTERISK : x.ToString();
+            return Constant.MISSING == x ? ASTERISK : x.ToString(CultureInfo.CurrentCulture);
         }
 
         public static string RoundOut(double q, int flt)
@@ -212,7 +211,7 @@ namespace StatsDirect.Utilities
             if (Constant.MISSING == q)
                 return ASTERISK;
             if (flt > 6)
-                return q.ToString();
+                return q.ToString(CultureInfo.CurrentCulture);
             return XRound(q, flt);
         }
 
@@ -233,9 +232,9 @@ namespace StatsDirect.Utilities
                 : ((int)x + 1).ToString();
         }
 
-        public static string pr15(double Q)
+        public static string pr15(double q)
         {
-            return Q.ToString(Q < Constant.EPSNEG ? "#.##########E+000" : "0.000000000000000");
+            return q.ToString(q < Constant.EPSNEG ? "#.##########E+000" : "0.000000000000000");
         }
 
         /// <summary>

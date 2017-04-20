@@ -1,7 +1,7 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Drawing;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -35,7 +35,7 @@ namespace StatsDirect.Charting.Renderer
         {
             const int MARKER_SIZE = 6;
 
-            LinearRegressionOptions lrOptions = (LinearRegressionOptions)definition.ChartOptions;
+            LinearRegressionOptions lrOptions = (LinearRegressionOptions)Definition.ChartOptions;
             double slope = lrOptions.Slope;
             double intercept = lrOptions.Intercept;
             bool fullWidth = lrOptions.FullWidth;
@@ -43,11 +43,11 @@ namespace StatsDirect.Charting.Renderer
             // Plot a metafile version
             StartVectorPlot();
             AssignMarkersToSeries();
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(lrOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(lrOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(lrOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(lrOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), BoxAxes, false);
 
             // plot points
-            DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
-            DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
+            DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys = Definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
             PointF[] xys = new PointF[xs.Data.Length];
@@ -73,11 +73,7 @@ namespace StatsDirect.Charting.Renderer
             for (double calcx = fullWidth ? axisScales.X.MinimumScaleValue : axisScales.X.MinimumDataValue; calcx <= (fullWidth ? axisScales.X.MaximumScaleValue : axisScales.X.MaximumDataValue); calcx += xstep)
             {
                 double calcy = slope * calcx + intercept;
-                if (calcx >= axisScales.X.MinimumScaleValue && calcy >= axisScales.Y.MinimumScaleValue
-                    && calcx <= axisScales.X.MaximumScaleValue && calcy <= axisScales.Y.MaximumScaleValue
-                    && oldx >= axisScales.X.MinimumScaleValue && oldy >= axisScales.Y.MinimumScaleValue
-                    && oldx <= axisScales.X.MaximumScaleValue && oldy <= axisScales.Y.MaximumScaleValue)
-                    DrawLineInChartCoordinates(grGreen, calcx, calcy, oldx, oldy);
+                MaybeDrawLineInChartCoordinates(axisScales, GrGreen, calcx, calcy, oldx, oldy);
                 oldx = calcx;
                 oldy = calcy;
             }
@@ -87,14 +83,14 @@ namespace StatsDirect.Charting.Renderer
             return new ParameterBag();
         }
 
-        internal void PlotLinearRegressionAndMaybeSeCiOrPredictionInterval(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double PERT, int nx, double MS, double SUMX, double SSX, bool isPredictionInterval, double dataMinY, double dataMaxY)
+        internal void PlotLinearRegressionAndMaybeSeCiOrPredictionInterval(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double pert, int nx, double ms, double sumx, double ssx, bool isPredictionInterval, double dataMinY, double dataMaxY)
         {
             DataMinY = dataMinY;
             DataMaxY = dataMaxY;
             StartVectorPlot();
             AxisScales axisScales = PlotLinearRegressionInternal(title, slope, intercept, fullWidth, xAxisTitle, yAxisTitle);
-            if (PERT != 0)
-                PlotSeCiOrPredictionInterval(PERT, slope, intercept, nx, MS, SUMX, SSX, isPredictionInterval, axisScales);
+            if (pert != 0)
+                PlotSeCiOrPredictionInterval(pert, slope, intercept, nx, ms, sumx, ssx, isPredictionInterval, axisScales);
             EndVectorPlot();
         }
 
@@ -105,20 +101,20 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries();
             //  What extra space do we need before the X axis?
             double xtra = 0;
-            if (definition.XSeries.Count > 1)
+            if (Definition.XSeries.Count > 1)
             {
-                foreach (Series s in definition.XSeries)
+                foreach (Series s in Definition.XSeries)
                 {
-                    double w = MeasureStringInCanvasCoordinates(s.Title, legendFont).Width + MINIMUM_X_WHITESPACE;
-                    if (w > xtra + xAxisCanvas)
-                        xtra = w - xAxisCanvas;
+                    double w = MeasureStringInCanvasCoordinates(s.Title, LegendFont).Width + MINIMUM_X_WHITESPACE;
+                    if (w > xtra + XAxisCanvas)
+                        xtra = w - XAxisCanvas;
                 }
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, boxAxes, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, BoxAxes, false);
 
             // plot points
-            DoubleSeries xs = definition.XSeries[0].AsDoubleSeries;
-            DoubleSeries ys = definition.YSeries[0].AsDoubleSeries;
+            DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys = Definition.YSeries[0].AsDoubleSeries;
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
             PointF[] xys = new PointF[xs.Data.Length];
@@ -145,8 +141,7 @@ namespace StatsDirect.Charting.Renderer
             for (double calcx = fullWidth ? axisScales.X.MinimumScaleValue : axisScales.X.MinimumDataValue; calcx <= (fullWidth ? axisScales.X.MaximumScaleValue : axisScales.X.MaximumDataValue); calcx += xstep)
             {
                 double calcy = slope * calcx + intercept;
-                if (calcx >= axisScales.X.MinimumScaleValue && calcy >= axisScales.Y.MinimumScaleValue && calcx <= axisScales.X.MaximumScaleValue && calcy <= axisScales.Y.MaximumScaleValue)
-                    DrawLineInChartCoordinates(grGreen, calcx, calcy, oldx, oldy);
+                MaybeDrawLineInChartCoordinates(axisScales, GrGreen, calcx, calcy, oldx, oldy);
                 oldx = calcx;
                 oldy = calcy;
             }
@@ -181,10 +176,8 @@ namespace StatsDirect.Charting.Renderer
                             first = false;
                         else
                         {
-                            if (lastY1P >= axisScales.Y.MinimumScaleValue && lastY1P <= axisScales.Y.MaximumScaleValue && y1P > axisScales.Y.MinimumScaleValue && y1P < axisScales.Y.MaximumScaleValue)
-                                DrawLineInChartCoordinates(grBlack, lastX1P, lastY1P, x1P, y1P);
-                            if (lastY1N >= axisScales.Y.MinimumScaleValue && lastY1N <= axisScales.Y.MaximumScaleValue && y1N > axisScales.Y.MinimumScaleValue && y1N < axisScales.Y.MaximumScaleValue)
-                                DrawLineInChartCoordinates(grBlack, lastX1N, lastY1N, x1N, y1N);
+                            MaybeDrawLineInChartCoordinates(axisScales, GrBlack, lastX1P, lastY1P, x1P, y1P);
+                            MaybeDrawLineInChartCoordinates(axisScales, GrBlack, lastX1N, lastY1N, x1N, y1N);
                         }
                         lastY1P = y1P;
                         lastX1P = x1P;
@@ -217,10 +210,8 @@ namespace StatsDirect.Charting.Renderer
                             first = false;
                         else
                         {
-                            if (lastY1P >= axisScales.Y.MinimumScaleValue && lastY1P <= axisScales.Y.MaximumScaleValue && y1P > axisScales.Y.MinimumScaleValue && y1P < axisScales.Y.MaximumScaleValue)
-                                DrawLineInChartCoordinates(grBlack, lastX1P, lastY1P, x1P, y1P);
-                            if (lastY1N >= axisScales.Y.MinimumScaleValue && lastY1N <= axisScales.Y.MaximumScaleValue && y1N > axisScales.Y.MinimumScaleValue && y1N < axisScales.Y.MaximumScaleValue)
-                                DrawLineInChartCoordinates(grBlack, lastX1N, lastY1N, x1N, y1N);
+                            MaybeDrawLineInChartCoordinates(axisScales, GrBlack, lastX1P, lastY1P, x1P, y1P);
+                            MaybeDrawLineInChartCoordinates(axisScales, GrBlack, lastX1N, lastY1N, x1N, y1N);
                         }
                         lastY1P = y1P;
                         lastX1P = x1P;
@@ -243,10 +234,8 @@ namespace StatsDirect.Charting.Renderer
                             first = false;
                         else
                         {
-                            if (lastY1P >= axisScales.Y.MinimumScaleValue && lastY1P <= axisScales.Y.MaximumScaleValue && y1P > axisScales.Y.MinimumScaleValue && y1P < axisScales.Y.MaximumScaleValue)
-                                DrawLineInChartCoordinates(grMagenta, lastX1P, lastY1P, x1P, y1P);
-                            if (lastY1N >= axisScales.Y.MinimumScaleValue && lastY1N <= axisScales.Y.MaximumScaleValue && y1N > axisScales.Y.MinimumScaleValue && y1N < axisScales.Y.MaximumScaleValue)
-                                DrawLineInChartCoordinates(grMagenta, lastX1N, lastY1N, x1N, y1N);
+                            MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, lastX1P, lastY1P, x1P, y1P);
+                            MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, lastX1N, lastY1N, x1N, y1N);
                         }
                         lastY1P = y1P;
                         lastX1P = x1P;

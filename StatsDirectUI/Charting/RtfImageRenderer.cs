@@ -1,6 +1,6 @@
-﻿using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.IO;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {

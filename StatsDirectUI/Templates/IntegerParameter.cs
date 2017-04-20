@@ -6,8 +6,8 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class IntegerParameter: RangeParameter, IDefaultParameter<int>
     {
-        private int minimumValue = Int32.MinValue;
-        private int maximumValue = Int32.MaxValue;
+        private int minimumValue = int.MinValue;
+        private int maximumValue = int.MaxValue;
 
         public IntegerParameter()
         {

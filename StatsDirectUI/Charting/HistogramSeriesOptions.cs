@@ -1,5 +1,5 @@
-using StatsDirect.Numerics;
 using System;
+using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
 {
@@ -45,12 +45,9 @@ namespace StatsDirect.Charting
 
             if (calculateBinCount || binsFromUser <= 1)
                 return HistogramBinChooser.ChooseBins(nonMissingData, actualRows, binChoiceMethod);
-            else
-            {
-                double[] edges = HistogramBinChooser.Linspace(nonMissingData[0], nonMissingData[actualRows - 1], binsFromUser);
-                int[] counts = HistogramBinChooser.SortedHist(nonMissingData, actualRows, edges);
-                return new BinsDescriptor { Edges = edges, Counts = counts };
-            }
+            double[] edges = HistogramBinChooser.Linspace(nonMissingData[0], nonMissingData[actualRows - 1], binsFromUser);
+            int[] counts = HistogramBinChooser.SortedHist(nonMissingData, actualRows, edges);
+            return new BinsDescriptor { Edges = edges, Counts = counts };
         }
 
         public static double[] ExtractNonMissingDataAndSort(Series series, out int actualRows)

@@ -1,7 +1,8 @@
-﻿using StatsDirect.Builtins;
+﻿using System;
+using Layout;
+using StatsDirect.Builtins;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using System;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,10 +15,10 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            NormalOptions nOptions = (NormalOptions)definition.ChartOptions;
+            NormalOptions nOptions = (NormalOptions)Definition.ChartOptions;
             NormalOptions.ScoreMethod method = nOptions.Method;
 
-            DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
 
             double[] x = new double[rows];
@@ -52,8 +53,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            Layout.Range xRange = GetMinMaxArray(x, ScaleType.Linear);
-            Layout.Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
+            Range xRange = GetMinMaxArray(x, ScaleType.Linear);
+            Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
             return new ScaleParameters
             {
                 X = { AllowedScaleTypes = new[] { ScaleType.Linear }, ScaleType = ScaleType.Linear, Min = xRange.Min, Max = xRange.Max },
@@ -69,7 +70,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            return PlotNormal(definition.XSeries[0].AsDoubleSeries.Data);
+            return PlotNormal(Definition.XSeries[0].AsDoubleSeries.Data);
         }
 
         ///  <summary>
@@ -78,7 +79,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         internal ParameterBag PlotNormal(double[] y)
         {
-            NormalOptions nOptions = (NormalOptions)definition.ChartOptions;
+            NormalOptions nOptions = (NormalOptions)Definition.ChartOptions;
             NormalOptions.ScoreMethod method = nOptions.Method;
             bool shouldScaleZ = nOptions.ShouldScaleZ;
 
@@ -107,7 +108,7 @@ namespace StatsDirect.Charting.Renderer
             // Set label
             string lab;
             if (shouldScaleZ)
-                lab = "Normal (" + definition.XSeries[0].Title + ")";
+                lab = "Normal (" + Definition.XSeries[0].Title + ")";
             else
             {
                 switch (method)
@@ -156,7 +157,7 @@ namespace StatsDirect.Charting.Renderer
 
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(nOptions);
-            AssignMarkersToSeries(definition.XSeries, nOptions);
+            AssignMarkersToSeries(Definition.XSeries, nOptions);
 
             DataMinMax Select_MinMaxY = DataMinMax.XCalc_YCalc;
             if (shouldScaleZ)
@@ -164,9 +165,9 @@ namespace StatsDirect.Charting.Renderer
             MarkerType mt = ChartPreferences.MarkerTypes[0];
             if (null != nOptions && null != nOptions.MarkerTypes && nOptions.MarkerTypes.Count >= 1)
                 mt = nOptions.MarkerTypes[0];
-            PlotXYInternal(x, y, lab, "Observed (" + definition.XSeries[0].Title + ")", nOptions.Title, false, Select_MinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
+            PlotXYInternal(x, y, lab, "Observed (" + Definition.XSeries[0].Title + ")", nOptions.Title, false, Select_MinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
             if (shouldScaleZ)
-                DrawLineInCanvasCoordinates(axisPen, xAxisCanvas, yAxisCanvas, xAxisCanvas + xExtCanvas, yAxisCanvas + yExtCanvas);
+                DrawLineInCanvasCoordinates(AxisPen, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
             EndVectorPlot();
 
             // Regression results

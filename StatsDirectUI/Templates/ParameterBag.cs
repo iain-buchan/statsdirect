@@ -250,12 +250,12 @@ namespace StatsDirect.Templates
             [XmlElement("direction")]
             public FilledParameterDirection Direction { get; set; }
 
-            [XmlElement("boolean", typeof(Boolean))]
+            [XmlElement("boolean", typeof(bool))]
             [XmlElement("datetime", typeof(DateTime))]
             [XmlElement("double", typeof(double))]
             [XmlElement("frame", typeof(DataFrame))]
-            [XmlElement("int", typeof(Int32))]
-            [XmlElement("string", typeof(String))]
+            [XmlElement("int", typeof(int))]
+            [XmlElement("string", typeof(string))]
             [XmlElement("string-list", typeof(List<string>))]
             public object Data { get; set; }
         }

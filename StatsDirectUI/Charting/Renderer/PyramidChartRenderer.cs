@@ -1,8 +1,7 @@
-﻿using StatsDirect.Data;
+﻿using System.Drawing;
+using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using System;
-using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -15,10 +14,10 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            PyramidOptions pOptions = (PyramidOptions)definition.ChartOptions;
+            PyramidOptions pOptions = (PyramidOptions)Definition.ChartOptions;
 
             DataFrame maleFrame = pOptions.MaleFrame;
-            DoubleVariable males = maleFrame.Variables[0] as DoubleVariable;
+            DoubleVariable males = (DoubleVariable) maleFrame.Variables[0];
             double maxmale = males.Max;
 
             double maxfemale;
@@ -26,7 +25,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
-                DoubleVariable females = femaleFrame.Variables[0] as DoubleVariable;
+                DoubleVariable females = (DoubleVariable) femaleFrame.Variables[0];
                 maxfemale = females.Max;
             }
             else
@@ -65,10 +64,10 @@ namespace StatsDirect.Charting.Renderer
         {
             const int MINIMUM_X_WHITESPACE = 30;
 
-            PyramidOptions pOptions = (PyramidOptions)definition.ChartOptions;
+            PyramidOptions pOptions = (PyramidOptions)Definition.ChartOptions;
 
             DataFrame maleFrame = pOptions.MaleFrame;
-            DoubleVariable males = maleFrame.Variables[0] as DoubleVariable;
+            DoubleVariable males = (DoubleVariable) maleFrame.Variables[0];
             int nmale = males.Length;
             double maxmale = males.Max;
 
@@ -81,7 +80,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 //  Separate male and female values
                 DataFrame femaleFrame = pOptions.FemaleFrame;
-                DoubleVariable females = femaleFrame.Variables[0] as DoubleVariable;
+                DoubleVariable females = (DoubleVariable) femaleFrame.Variables[0];
                 female = new double[nmale];
                 male = new double[nmale];
                 maxfemale = females.Max;
@@ -119,7 +118,7 @@ namespace StatsDirect.Charting.Renderer
             string[] title = new string[nmale + 1];
             if (pOptions.LabelFrame != null)
             {
-                StringVariable labels = pOptions.LabelFrame.Variables[0] as StringVariable;
+                StringVariable labels = (StringVariable) pOptions.LabelFrame.Variables[0];
                 int i;
                 for (i = labels.Length - 1; i >= 0; i--)
                 {
@@ -137,9 +136,9 @@ namespace StatsDirect.Charting.Renderer
             double tmax = maxfemale > maxmale ? maxfemale : maxmale;
             double tmx = pOptions.ScaleMaximum;
 
-            double ScaleMax = tmx;
-            if (ScaleMax < tmax)
-                ScaleMax = tmax;
+            double scaleMax = tmx;
+            if (scaleMax < tmax)
+                scaleMax = tmax;
 
             Brush maleBrush = null;
             if (pOptions.MarkerTypes.Count >= 1)
@@ -158,39 +157,39 @@ namespace StatsDirect.Charting.Renderer
             for (int i = 0; i < nmale; i++)
             {
                 double w = AxisLabelWidthInCanvasCoordinates(title[i]) + MINIMUM_X_WHITESPACE;
-                if (w > xtra + xAxisCanvas)
-                    xtra = w - xAxisCanvas - 5;
+                if (w > xtra + XAxisCanvas)
+                    xtra = w - XAxisCanvas - 5;
             }
 
-            xAxisCanvas = xAxisCanvas + xtra;
-            xExtCanvas = xExtCanvas - xtra;
+            XAxisCanvas = XAxisCanvas + xtra;
+            XExtCanvas = XExtCanvas - xtra;
 
             DrawTitle(pOptions.Title);
 
             using (StringFormat rightFormat = new StringFormat())
             {
                 rightFormat.Alignment = StringAlignment.Far;
-                double ystep = yExtCanvas / nmale;
+                double ystep = YExtCanvas / nmale;
                 if (title[0].Length > 0)
                 {
                     double txh = AxisLabelHeightInCanvasCoordinates(title[0]);
                     for (int i = 0; i < nmale; i++)
                     {
-                        double yc = yAxisCanvas + (nmale - i) * ystep - ystep / 2;
-                        DrawStringInCanvasCoordinates(title[i], axisLabelFont, Brushes.Black, xAxisCanvas - 15, yc + txh / 2, rightFormat);
+                        double yc = YAxisCanvas + (nmale - i) * ystep - ystep / 2;
+                        DrawStringInCanvasCoordinates(title[i], AxisLabelFont, Brushes.Black, XAxisCanvas - 15, yc + txh / 2, rightFormat);
                     }
                 }
 
-                double xstep = xExtCanvas / 2;
-                double xc = xAxisCanvas + xstep;
+                double xstep = XExtCanvas / 2;
+                double xc = XAxisCanvas + xstep;
                 using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
                 {
                     for (int i = 0; i < nmale; i++)
                     {
-                        double yt = yAxisCanvas + (nmale - i) * ystep;
-                        double yb = yAxisCanvas + (nmale - i - 1) * ystep;
-                        double xl = xAxisCanvas + xstep - male[i] / ScaleMax * xstep;
-                        double xr = xAxisCanvas + xstep + female[i] / ScaleMax * xstep;
+                        double yt = YAxisCanvas + (nmale - i) * ystep;
+                        double yb = YAxisCanvas + (nmale - i - 1) * ystep;
+                        double xl = XAxisCanvas + xstep - male[i] / scaleMax * xstep;
+                        double xr = XAxisCanvas + xstep + female[i] / scaleMax * xstep;
                         if (mode == PyramidMode.Pairs)
                         {
                             //  Male/female
@@ -207,10 +206,8 @@ namespace StatsDirect.Charting.Renderer
                         }
                         DrawRectangleInCanvasCoordinates(blackPen, xl, yt, xr - xl, yt - yb);
                     }
-                    if (maleBrush != null)
-                        maleBrush.Dispose();
-                    if (femaleBrush != null)
-                        femaleBrush.Dispose();
+                    maleBrush?.Dispose();
+                    femaleBrush?.Dispose();
 
                     using (StringFormat leftFormat = new StringFormat())
                     {
@@ -218,12 +215,12 @@ namespace StatsDirect.Charting.Renderer
 
                         if (mode == PyramidMode.Pairs)
                         {
-                            DrawLineInCanvasCoordinates(blackPen, xc, yAxisCanvas, xAxisCanvas + xstep, yAxisCanvas + nmale * ystep);
-                            DrawStringInCanvasCoordinates("male", axisLabelFont, Brushes.Black, xExtCanvas / 4 + xAxisCanvas, yAxisCanvas - 12, leftFormat);
-                            DrawStringInCanvasCoordinates("female", axisLabelFont, Brushes.Black, xExtCanvas / 4 + xExtCanvas / 2 + xAxisCanvas, yAxisCanvas - 12, leftFormat);
+                            DrawLineInCanvasCoordinates(blackPen, xc, YAxisCanvas, XAxisCanvas + xstep, YAxisCanvas + nmale * ystep);
+                            DrawStringInCanvasCoordinates("male", AxisLabelFont, Brushes.Black, XExtCanvas / 4 + XAxisCanvas, YAxisCanvas - 12, leftFormat);
+                            DrawStringInCanvasCoordinates("female", AxisLabelFont, Brushes.Black, XExtCanvas / 4 + XExtCanvas / 2 + XAxisCanvas, YAxisCanvas - 12, leftFormat);
                         }
 
-                        DrawStringInCanvasCoordinates("Scale maximum = " + ScaleMax, axisLabelFont, Brushes.Black, 40, yAxisCanvas - 40, leftFormat);
+                        DrawStringInCanvasCoordinates("Scale maximum = " + scaleMax, AxisLabelFont, Brushes.Black, 40, YAxisCanvas - 40, leftFormat);
 
                         EndVectorPlot();
                         return new ParameterBag();

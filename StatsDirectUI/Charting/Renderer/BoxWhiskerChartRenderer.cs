@@ -1,8 +1,10 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using Layout;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -22,14 +24,14 @@ namespace StatsDirect.Charting.Renderer
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
-            if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
+            if (Definition.XSeries.Count == 0 && Definition.YSeries.Count == 0)
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
-            if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
+            if (Definition.XSeries.Count > 0 && Definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            List<Series> SeriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            List<Series> SeriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             // sort the array and get the min, max values
-            Layout.Range dataRangeX = GetMinMaxSort(SeriesToUse);
+            Range dataRangeX = GetMinMaxSort(SeriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -47,13 +49,13 @@ namespace StatsDirect.Charting.Renderer
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
-            if (definition.XSeries.Count == 0 && definition.YSeries.Count == 0)
+            if (Definition.XSeries.Count == 0 && Definition.YSeries.Count == 0)
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
-            if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
+            if (Definition.XSeries.Count > 0 && Definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
-            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)Definition.ChartOptions;
 
             if (IsAscii)
                 return PlotBoxWhiskerAscii(seriesToUse);
@@ -67,11 +69,11 @@ namespace StatsDirect.Charting.Renderer
             ScaleHeight(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
-            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)Definition.ChartOptions;
 
             double p = (1.0 - bwOptions.Cco) / 2.0;
             if (p > 1.0 - p)
@@ -83,19 +85,19 @@ namespace StatsDirect.Charting.Renderer
             SetFontsAndThicknessesFromOptions(bwOptions);
             AssignMarkersToSeries();
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
             Color black = Color.Black;
-            MarkerType crossMarker = new MarkerType() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
-            MarkerType filledDiamondMarker = new MarkerType() { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
-            MarkerType hollowCircleMarker = new MarkerType() { MarkerShape = MarkerShape.Circle, MarkerColor = black, MarkerSize = 10 };
-            MarkerType filledCircleMarker = new MarkerType() { MarkerShape = MarkerShape.Circle, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
+            MarkerType crossMarker = new MarkerType { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
+            MarkerType filledDiamondMarker = new MarkerType { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
+            MarkerType hollowCircleMarker = new MarkerType { MarkerShape = MarkerShape.Circle, MarkerColor = black, MarkerSize = 10 };
+            MarkerType filledCircleMarker = new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
 
             using (Pen blackPen = GetMarkerPen(mt))
             {
                 using (Pen dottedBlackPen = GetMarkerPen(mt))
                 {
-                    dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                    dottedBlackPen.DashStyle = DashStyle.Dot;
 
                     // work through the columns
                     for (int c = 0; c < seriesToUse.Count; c++)
@@ -327,15 +329,15 @@ namespace StatsDirect.Charting.Renderer
             ScaleWidth(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
-            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)Definition.ChartOptions;
 
-            double P = (1.0 - bwOptions.Cco) / 2.0;
-            if (P > 1.0 - P)
-                P = 1.0 - P;
+            double p = (1.0 - bwOptions.Cco) / 2.0;
+            if (p > 1.0 - p)
+                p = 1.0 - p;
 
             // Plot a Metafile version
             StartVectorPlot();
@@ -345,36 +347,36 @@ namespace StatsDirect.Charting.Renderer
             //  Not horizontal, so vertical
 
             //  Swap over the X and Y axis definitions, as we've flipped the drawing
-            definition = definition.Clone(); //  Make sure the swaps are safe!
-            AxisScaleParameters temp = definition.ScaleParameters.X;
-            definition.ScaleParameters.X = definition.ScaleParameters.Y;
-            definition.ScaleParameters.Y = temp;
+            Definition = Definition.Clone(); //  Make sure the swaps are safe!
+            AxisScaleParameters temp = Definition.ScaleParameters.X;
+            Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
+            Definition.ScaleParameters.Y = temp;
 
             //  Ensure the X and Y series are where we need them to be for drawing axes
-            List<Series> tempSeries = definition.YSeries;
-            definition.YSeries = definition.XSeries;
-            definition.XSeries = tempSeries;
+            List<Series> tempSeries = Definition.YSeries;
+            Definition.YSeries = Definition.XSeries;
+            Definition.XSeries = tempSeries;
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
 
             using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
             {
                 using (Pen dottedBlackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
                 {
-                    dottedBlackPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                    dottedBlackPen.DashStyle = DashStyle.Dot;
 
                     // work through the columns
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, P, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
 
                         // Plot graphic
-                        double xctr = (c + 0.5) / divx * xExtCanvas;
-                        double xright = (c + 1) / divx * xExtCanvas;
+                        double xctr = (c + 0.5) / DivX * XExtCanvas;
+                        double xright = (c + 1) / DivX * XExtCanvas;
 
                         double halfBoxWidth = ToCanvasWidth(0.5 * BOX_FRACTION_OF_SPACE);
-                        double xc = offx + xctr;
+                        double xc = OffX + xctr;
                         double xr = xc + halfBoxWidth;
                         double xl = xc - halfBoxWidth;
 
@@ -598,48 +600,48 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotBoxWhiskerAscii(List<Series> seriesToUse)
         {
             // sort the array and get the min, max values
-            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
+            BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)Definition.ChartOptions;
 
-            double P = (1.0 - bwOptions.Cco) / 2.0;
-            if (P > 1.0 - P)
-                P = 1.0 - P;
+            double p = (1.0 - bwOptions.Cco) / 2.0;
+            if (p > 1.0 - p)
+                p = 1.0 - p;
 
             ASCII_InitPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
             DefaultAxes();
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(definition.ChartOptions.Title + "\r\n",
-                new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType),
-                new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType),
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title + "\r\n",
+                new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType),
                 false, false);
-            divx = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
-            offx = Convert.ToInt32(-(axisScales.X.MinimumScaleValue / divx * 60) + 16);
-            divy = seriesToUse.Count + 1;
-            offy = Convert.ToInt32(-(0 / divy * 20) + ASCII_Ytxt);
+            DivX = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
+            OffX = Convert.ToInt32(-(axisScales.X.MinimumScaleValue / DivX * 60) + 16);
+            DivY = seriesToUse.Count + 1;
+            OffY = Convert.ToInt32(-(0 / DivY * 20) + ASCII_Ytxt);
 
-            if (shTx[0].Length > bwOptions.XAxisTitle.Length)
+            if (ShTx[0].Length > bwOptions.XAxisTitle.Length)
             {
                 WriteAsciiYX(0, 45 - bwOptions.XAxisTitle.Length / 2, bwOptions.XAxisTitle);
             }
             else
             {
                 //  Axis title is larger than the chart, so replace the entire first string
-                shTx[0] = bwOptions.XAxisTitle;
+                ShTx[0] = bwOptions.XAxisTitle;
             }
 
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)
             {
                 DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                PlotBoxWhiskerCalc(s, bwOptions.Method, P, out double mdn, out double Q1, out double Q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
+                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
 
                 bool gatedl;
                 int xl;
-                if (s.Data[0] < outerFenceL && outerFenceL < Q1)
+                if (s.Data[0] < outerFenceL && outerFenceL < q1)
                 {
                     xl = ToAsciiX(outerFenceL);
                     gatedl = true;
@@ -652,7 +654,7 @@ namespace StatsDirect.Charting.Renderer
 
                 bool gatedr;
                 int xr;
-                if (s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > Q3)
+                if (s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > q3)
                 {
                     xr = ToAsciiX(outerFenceR);
                     gatedr = true;
@@ -665,13 +667,13 @@ namespace StatsDirect.Charting.Renderer
 
                 int xm = ToAsciiX(mdn);
 
-                int lq = ToAsciiX(Q1);
-                int uq = ToAsciiX(Q3);
+                int lq = ToAsciiX(q1);
+                int uq = ToAsciiX(q3);
 
                 // Plot it
-                int Y2 = 3 + c * 2;
-                WriteAsciiYX(Y2, lq, new string('.', uq - lq));
-                WriteAsciiYX(Y2, xm, "*");
+                int y2 = 3 + c * 2;
+                WriteAsciiYX(y2, lq, new string('.', uq - lq));
+                WriteAsciiYX(y2, xm, "*");
 
                 int l;
                 if (gatedl)
@@ -679,13 +681,13 @@ namespace StatsDirect.Charting.Renderer
                     l = lq - xl;
                     if (l < 2)
                         l = 2;
-                    WriteAsciiYX(Y2, xl, "|" + new string('-', l - 2) + "[");
+                    WriteAsciiYX(y2, xl, "|" + new string('-', l - 2) + "[");
                     for (int r = 0; r <= s.Data.Length - 1; r++)
                     {
                         if (s.Data[r] < outerFenceL)
                         {
                             int x1 = ToAsciiX(s.Data[r]);
-                            WriteAsciiYX(Y2, x1, ".");
+                            WriteAsciiYX(y2, x1, ".");
                         }
                     }
                 }
@@ -694,7 +696,7 @@ namespace StatsDirect.Charting.Renderer
                     l = lq - xl;
                     if (l < 2)
                         l = 2;
-                    WriteAsciiYX(Y2, xl, ">" + new string('-', l - 2) + "[");
+                    WriteAsciiYX(y2, xl, ">" + new string('-', l - 2) + "[");
                 }
 
                 if (gatedr)
@@ -702,13 +704,13 @@ namespace StatsDirect.Charting.Renderer
                     l = xr - uq;
                     if (l < 2)
                         l = 2;
-                    WriteAsciiYX(Y2, uq, "]" + new string('-', l - 2) + "|");
+                    WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "|");
                     for (int r = 0; r <= s.Data.Length - 1; r++)
                     {
                         if (s.Data[r] > outerFenceR)
                         {
                             int x1 = ToAsciiX(s.Data[r]);
-                            WriteAsciiYX(Y2, x1, ".");
+                            WriteAsciiYX(y2, x1, ".");
                         }
                     }
                 }
@@ -717,7 +719,7 @@ namespace StatsDirect.Charting.Renderer
                     l = xr - uq;
                     if (l < 2)
                         l = 2;
-                    WriteAsciiYX(Y2, uq, "]" + new string('-', l - 2) + "<");
+                    WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "<");
                 }
             }
             return new ParameterBag();
@@ -728,7 +730,7 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         ///  <param name="s">The series to use for calculation</param>
         ///  <param name="method">The calculation method</param>
-        ///  <param name="P">For Mean, CI, Range: the CI to calculate</param>
+        ///  <param name="p">For Mean, CI, Range: the CI to calculate</param>
         ///  <param name="centre">Returns the median value</param>
         ///  <param name="boxL">Returns the lower quertile</param>
         ///  <param name="boxR">Returns the upper quartile</param>
@@ -740,7 +742,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <param name="useOuterFence">True to calculate outer fences</param>
         ///  <param name="otherCentre">Another centre that might be appropriate to plot.  Mean if centre is median, and vice versa.</param>
         /// <param name="centreIsMedian">True if centre is the median and otherCentre is mean, false if the reverse is true.</param>
-        private void PlotBoxWhiskerCalc(DoubleSeries s, BoxWhiskerOptions.BoxWhiskerMethod method, double P, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bool useInnerFence, out double outerFenceL, out double outerFenceR, bool useOuterFence, out double otherCentre, out bool centreIsMedian)
+        private void PlotBoxWhiskerCalc(DoubleSeries s, BoxWhiskerOptions.BoxWhiskerMethod method, double p, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bool useInnerFence, out double outerFenceL, out double outerFenceR, bool useOuterFence, out double otherCentre, out bool centreIsMedian)
         {
             int count = s.Data.Length;
             switch (method)
@@ -906,7 +908,7 @@ namespace StatsDirect.Charting.Renderer
                                     boxR = mean + standardError;
                                     break;
                                 case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
-                                    double cit = PDF.tfromp(P, Convert.ToDouble(count - 1));
+                                    double cit = PDF.tfromp(p, Convert.ToDouble(count - 1));
                                     double bit = cit * standardDeviation / Math.Sqrt(count);
                                     boxL = mean - bit;
                                     boxR = mean + bit;

@@ -1,6 +1,7 @@
-﻿using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Layout;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,8 +15,8 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
-            Layout.Range xRange = GetMinMaxSort(seriesToUse);
+            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            Range xRange = GetMinMaxSort(seriesToUse);
 
             return new ScaleParameters
             {
@@ -26,32 +27,32 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            SpreadOptions sOptions = (SpreadOptions)definition.ChartOptions;
+            SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
             if (sOptions.Orientation == ChartOrientation.Horizontal)
             {
                 return PlotSpreadHorizontal();
             }
-            if (definition.XSeries.Count == 0 && definition.YSeries.Count > 0)
+            if (Definition.XSeries.Count == 0 && Definition.YSeries.Count > 0)
             {
-                definition = definition.Clone();
-                List<Series> temp = definition.XSeries;
-                definition.XSeries = definition.YSeries;
-                definition.YSeries = temp;
-                AxisScaleParameters tempAxisScaleParameters = definition.ScaleParameters.X;
-                definition.ScaleParameters.X = definition.ScaleParameters.Y;
-                definition.ScaleParameters.Y = tempAxisScaleParameters;
+                Definition = Definition.Clone();
+                List<Series> temp = Definition.XSeries;
+                Definition.XSeries = Definition.YSeries;
+                Definition.YSeries = temp;
+                AxisScaleParameters tempAxisScaleParameters = Definition.ScaleParameters.X;
+                Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
+                Definition.ScaleParameters.Y = tempAxisScaleParameters;
             }
             return PlotSpreadVertical();
         }
 
         private ParameterBag PlotSpreadHorizontal()
         {
-            SpreadOptions sOptions = (SpreadOptions)definition.ChartOptions;
-            List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
+            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             ScaleHeight(seriesToUse.Count);
 
-            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -59,9 +60,9 @@ namespace StatsDirect.Charting.Renderer
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
+            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
 
-            double ygap = yExtCanvas / divy;
+            double ygap = YExtCanvas / DivY;
 
             //  Work out what markers to use
             MarkerType mt = ChartPreferences.MarkerTypes[10]; // Default
@@ -73,7 +74,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             double inc = 2 * diam;
-            double xxwid = divx / (xExtCanvas / inc);
+            double xxwid = DivX / (XExtCanvas / inc);
             ygap -= diam * 2;
 
             for (int c = 0; c < seriesToUse.Count; c++)
@@ -135,12 +136,12 @@ namespace StatsDirect.Charting.Renderer
 
         private ParameterBag PlotSpreadVertical()
         {
-            SpreadOptions sOptions = (SpreadOptions)definition.ChartOptions;
-            List<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
+            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             ScaleWidth(seriesToUse.Count);
 
-            Layout.Range dataRangeY = GetMinMaxSort(seriesToUse);
+            Range dataRangeY = GetMinMaxSort(seriesToUse);
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
 
@@ -149,8 +150,8 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries(sOptions);
 
             //  TODO: Should we be using the X axis title for something that will be shown vertically?
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(null, AxisMode.Series, definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), sOptions.ShouldBoxAxes, false);
-            double xgap = xExtCanvas / divx;
+            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), sOptions.ShouldBoxAxes, false);
+            double xgap = XExtCanvas / DivX;
 
             //  Work out what markers to use
             MarkerType mt = ChartPreferences.MarkerTypes[10]; //  Default
@@ -162,7 +163,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             double inc = 2 * diam;
-            double yywid = divy / (yExtCanvas / inc);
+            double yywid = DivY / (YExtCanvas / inc);
             xgap -= diam * 2;
 
             for (int c = 0; c < seriesToUse.Count; c++)

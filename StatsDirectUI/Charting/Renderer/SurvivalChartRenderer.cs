@@ -1,7 +1,7 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Drawing;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,7 +14,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            SurvivalOptions sOptions = (SurvivalOptions)definition.ChartOptions;
+            SurvivalOptions sOptions = (SurvivalOptions)Definition.ChartOptions;
 
             // Setup the Min & Max Values
             DataMinX = double.MaxValue;
@@ -46,7 +46,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // #641: User can change survival plot maximum within reason - it can be set between actual DataMaxY and 1.0
-            double candidateMaxY = definition.HasScaleParameters ? definition.ScaleParameters.Y.Max : 1.0;
+            double candidateMaxY = Definition.HasScaleParameters ? Definition.ScaleParameters.Y.Max : 1.0;
             if (candidateMaxY < DataMaxY)
                 candidateMaxY = DataMaxY;
             if (candidateMaxY > 1.0)
@@ -71,7 +71,7 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            SurvivalOptions sOptions = (SurvivalOptions)definition.ChartOptions;
+            SurvivalOptions sOptions = (SurvivalOptions)Definition.ChartOptions;
 
             // Setup the Min & Max Values
             DataMinX = double.MaxValue;
@@ -109,31 +109,31 @@ namespace StatsDirect.Charting.Renderer
             }
             DataMinY = 0;
             // #641: User can change survival plot maximum within reason - it can be set between actual DataMaxY and 1.0
-            double candidateMaxY = definition.HasScaleParameters ? definition.ScaleParameters.Y.Max : 1.0;
+            double candidateMaxY = Definition.HasScaleParameters ? Definition.ScaleParameters.Y.Max : 1.0;
             if (candidateMaxY < DataMaxY)
                 candidateMaxY = DataMaxY;
             if (candidateMaxY > 1.0)
                 candidateMaxY = 1.0;
             DataMaxY = candidateMaxY;
 
-            bool use_marker = sOptions.ShowEventMarkers;
-            bool use_tic = sOptions.ShowCensorshipTics;
+            bool useMarker = sOptions.ShowEventMarkers;
+            bool useTic = sOptions.ShowCensorshipTics;
 
             //  If there is a legend, work out how many series there are and extend the plot area as required to hold the legend
 
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(sOptions);
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(legendFont);
+            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
             EndVectorPlot();
 
             //  By now, all measurements are known.  Set up the plot areas.
-            double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
             double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
             double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendBottom = legendTop - sOptions.Series.Count * legendSpacing;
             double xtra = 0;
 #if LEGEND_AT_BOTTOM
+            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
+            double legendBottom = legendTop - sOptions.Series.Count * legendSpacing;
             if (sOptions.ShowLegend && legendBottom < LOWEST_ALLOWED_LEGEND)
             {
                 double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
@@ -148,8 +148,8 @@ namespace StatsDirect.Charting.Renderer
             for (int c = 0; c < sOptions.Series.Count; c++)
             {
                 double w = LegendWidthInCanvasCoordinates(MakeTitle(sOptions.SeriesTitles[c], null)) + MINIMUM_X_WHITESPACE;
-                if (w > xtra + xAxisCanvas)
-                    xtra = w - xAxisCanvas;
+                if (w > xtra + XAxisCanvas)
+                    xtra = w - XAxisCanvas;
             }
 #endif
 
@@ -157,10 +157,10 @@ namespace StatsDirect.Charting.Renderer
             SetFontsAndThicknessesFromOptions(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition("Times", AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition("Times", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             //divy = cols + 1;
-            divy = 1;
-            offy = yAxisCanvas;
+            DivY = 1;
+            OffY = YAxisCanvas;
 
             // Work through the columns
             //  The CI marker type is always the last one in the list
@@ -170,8 +170,8 @@ namespace StatsDirect.Charting.Renderer
                 double[] ydat = sOptions.Series[c].YDat;
                 double[] xdat = sOptions.Series[c].XDat;
                 int[] cdat = sOptions.Series[c].CDat;
-                double[] ydat_l = sOptions.Series[c].YDatL;
-                double[] ydat_u = sOptions.Series[c].YDatU;
+                double[] ydatL = sOptions.Series[c].YDatL;
+                double[] ydatU = sOptions.Series[c].YDatU;
 
                 MarkerType mType = sOptions.MarkerTypes[c];
                 using (Pen p = GetMarkerPen(mType))
@@ -186,9 +186,9 @@ namespace StatsDirect.Charting.Renderer
                             double markerY = legendTop - (c * legendSpacing) - markerMidlineOffset;
 #else
                             double markerX = 9 + LEGEND_MARKER_SIZE / 2.0;
-                            double markerY = yAxisCanvas + yExtCanvas - 10 - c * legendSpacing - markerMidlineOffset;
+                            double markerY = YAxisCanvas + YExtCanvas - 10 - c * legendSpacing - markerMidlineOffset;
 #endif
-                            if (use_marker)
+                            if (useMarker)
                             {
                                 DrawMarkerInCanvasCoordinates(markerX, markerY, LEGEND_MARKER_SIZE, mType);
                             }
@@ -212,10 +212,10 @@ namespace StatsDirect.Charting.Renderer
                         {
                             x2 = ToCanvasX(xdat[r]);
                             y2 = ToCanvasY(ydat[r]);
-                            if (use_marker && cdat[r] > 0)
+                            if (useMarker && cdat[r] > 0)
                                 DrawMarkerInCanvasCoordinates(x2, y2, mType.MarkerSize, mType);
                             // Draw tic if censored
-                            if (cdat[r] == 0 && use_tic)
+                            if (cdat[r] == 0 && useTic)
                                 DrawLineInCanvasCoordinates(p, x2, y2, x2, y2 + 7);
                             // Then the lines
                             DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);
@@ -231,18 +231,15 @@ namespace StatsDirect.Charting.Renderer
                         // x1 = ToCanvasX( AxisXMin ); 
                         for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                         {
-                            if (ydat[r] != Constant.MISSING & ydat_l[r] != Constant.MISSING & ydat_u[r] != Constant.MISSING & xdat[r] != Constant.MISSING & cdat[r] != -1)
+                            if (ydat[r] != Constant.MISSING && ydatL[r] != Constant.MISSING && ydatU[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
                             {
-                                x2 = ToCanvasX(xdat[r]);
                                 // Confidence interval
                                 if (cdat[r] > 0)
                                 {
                                     Color ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
                                     using (Pen ciPen = new Pen(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle })
                                     {
-                                        double y2l = ToCanvasY(ydat_l[r]);
-                                        double y2u = ToCanvasY(ydat_u[r]);
-                                        DrawLineInCanvasCoordinates(ciPen, x2, y2l, x2, y2u);
+                                        DrawLineInCanvasCoordinates(ciPen, ToCanvasX(xdat[r]), ToCanvasY(ydatL[r]), ToCanvasX(xdat[r]), ToCanvasY(ydatU[r]));
                                     }
                                 }
                             }

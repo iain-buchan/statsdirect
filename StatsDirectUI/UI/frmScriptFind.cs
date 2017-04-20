@@ -20,7 +20,7 @@ namespace StatsDirect.UI
             btnFindNext.Click += btnFindNext_Click; 
         } 
         
-        private void btnFind_Click( Object sender, EventArgs e ) 
+        private void btnFind_Click( object sender, EventArgs e ) 
         {
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
             string text = mainForm.rtbDoc.Text; 
@@ -40,7 +40,7 @@ namespace StatsDirect.UI
         
         
         
-        private void btnFindNext_Click( Object sender, EventArgs e ) 
+        private void btnFindNext_Click( object sender, EventArgs e ) 
         {
             int startPosition = mainForm.rtbDoc.SelectionStart + 1;
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;

@@ -1071,13 +1071,13 @@ namespace StatsDirect.Builtins
             double b = 1.0 - P;
             double M = 1.0;
             x_tsample(a, b, k, M, 1, ref xn, out int flt);
-            if (xn < Convert.ToDouble(Int32.MaxValue))
+            if (xn < Convert.ToDouble(int.MaxValue))
             {
                 N = Math.Floor(xn) + 1.0;
             }
             else
             {
-                N = Int32.MaxValue;
+                N = int.MaxValue;
                 OK = false;
             }
             if (flt == 0 || flt == 2)
@@ -1163,13 +1163,13 @@ namespace StatsDirect.Builtins
                 M = 1;
             }
             x_tsample(a, b, k, M, 2, ref xn, out int fault);
-            if (xn < Convert.ToDouble(Int32.MaxValue))
+            if (xn < Convert.ToDouble(int.MaxValue))
             {
                 N = Math.Floor(xn) + 1L;
             }
             else
             {
-                N = Int32.MaxValue;
+                N = int.MaxValue;
                 ok = false;
             }
             if (fault == 0 | fault == 2)

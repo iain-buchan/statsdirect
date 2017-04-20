@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace StatsDirect.Charting
 {
@@ -30,7 +31,7 @@ namespace StatsDirect.Charting
                                                  LineColor = Color.Black,
                                                  IsMarkerFilled = true,
                                                  MarkerShape = MarkerShape.Square,
-                                                 LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid,
+                                                 LineDashStyle = DashStyle.Solid,
                                                  Width = 1
                                              };
             MarkerTypes.Add(studyMarkerType);
@@ -40,7 +41,7 @@ namespace StatsDirect.Charting
                                                   LineColor = Color.Black,
                                                   IsMarkerFilled = true,
                                                   MarkerShape = MarkerShape.Diamond,
-                                                  LineDashStyle = System.Drawing.Drawing2D.DashStyle.Solid,
+                                                  LineDashStyle = DashStyle.Solid,
                                                   Width = 1
                                               };
             MarkerTypes.Add(pooledMarkerType);

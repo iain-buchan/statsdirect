@@ -1,5 +1,3 @@
-using System;
-
 using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
@@ -16,11 +14,6 @@ namespace StatsDirect.Charting
 
         //  Similar to markers
         public MarkerDetails MarkerDetails { get; set; }
-
-        public MultiDoubleSeries()
-        {
-            //  Do nothing; this is only here because we also have a custom constructor
-        }
 
         public int Points => Data.Length;
 
@@ -78,9 +71,9 @@ namespace StatsDirect.Charting
         private void CalcMinMax()
         {
             // Assign points, setting X but leaving Y for later
-            min = new MultiDoublePoint() { X = double.MaxValue };
-            minGreaterThanZero = new MultiDoublePoint() { X = double.MaxValue };
-            max = new MultiDoublePoint() { X = double.MinValue };
+            min = new MultiDoublePoint { X = double.MaxValue };
+            minGreaterThanZero = new MultiDoublePoint { X = double.MaxValue };
+            max = new MultiDoublePoint { X = double.MinValue };
 
             foreach (MultiDoublePoint pt in Data)
             {

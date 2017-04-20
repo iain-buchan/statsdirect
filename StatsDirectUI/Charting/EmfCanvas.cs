@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using StatsDirect.Templates;
@@ -58,7 +59,7 @@ namespace StatsDirect.Charting
 
                     MetafileHeader header = metafile.GetMetafileHeader();
                     metafileGraphics = Graphics.FromImage(metafile);
-                    metafileGraphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    metafileGraphics.SmoothingMode = SmoothingMode.AntiAlias;
                 }
             }
         }

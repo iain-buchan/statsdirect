@@ -1,7 +1,7 @@
-﻿using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,7 +14,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            ErrorBarOptions eOptions = (ErrorBarOptions)definition.ChartOptions;
+            ErrorBarOptions eOptions = (ErrorBarOptions)Definition.ChartOptions;
 
             // Setup the Min & Max Values
             DataMinX = double.MaxValue;
@@ -66,7 +66,7 @@ namespace StatsDirect.Charting.Renderer
         /// <returns></returns>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            ErrorBarOptions eOptions = (ErrorBarOptions)definition.ChartOptions;
+            ErrorBarOptions eOptions = (ErrorBarOptions)Definition.ChartOptions;
             bool shouldCheckForOffsets = eOptions.ShouldCheckForOffsets;
             int seriesCount = eOptions.Series.Count;
 
@@ -99,11 +99,11 @@ namespace StatsDirect.Charting.Renderer
             //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
             StartVectorPlot();
             SetFontsAndThicknessesFromOptions(eOptions);
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(legendFont);
+            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
             EndVectorPlot();
 
             //  By now, all measurements are known.  Set up the plot areas.
-            double legendTop = yAxisCanvas - LEGEND_TOP_GAP;
+            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
             double legendRowHeight = Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
             double legendSpacing = MINIMUM_LEGEND_GAP + legendRowHeight;
             if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
@@ -116,7 +116,7 @@ namespace StatsDirect.Charting.Renderer
 
                     //  Add in the extra space
                     imageHeight += (int)Math.Ceiling(extraSpaceRequired);
-                    yAxisCanvas += extraSpaceRequired;
+                    YAxisCanvas += extraSpaceRequired;
                     legendTop += extraSpaceRequired;
                     // legendBottom += extraSpaceRequired; 
                 }
@@ -127,11 +127,11 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries(eOptions);
 
             // Draw the scale
-            DrawAxesOrEnlargeCanvas(eOptions.Title, new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), boxAxes, false);
+            DrawAxesOrEnlargeCanvas(eOptions.Title, new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), BoxAxes, false);
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
             Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new Dictionary<int, List<MultiDoublePoint>>();
-            double aboutALineWidth = divx / xExtCanvas;
+            double aboutALineWidth = DivX / XExtCanvas;
 
             // Work through the series
             for (int seriesIndex = 0; seriesIndex < eOptions.Series.Count; seriesIndex++)
@@ -226,8 +226,8 @@ namespace StatsDirect.Charting.Renderer
                 if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
                 {
                     double legendY = legendTop - seriesIndex * legendSpacing;
-                    DrawMarkerInCanvasCoordinates(xAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendY - legendFontHeight / 2.0, LEGEND_MARKER_SIZE, eOptions.MarkerTypes[seriesIndex]);
-                    DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], xAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
+                    DrawMarkerInCanvasCoordinates(XAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendY - legendFontHeight / 2.0, LEGEND_MARKER_SIZE, eOptions.MarkerTypes[seriesIndex]);
+                    DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], XAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
                 }
             }
             EndVectorPlot();

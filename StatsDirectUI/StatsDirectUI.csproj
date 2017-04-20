@@ -1823,7 +1823,9 @@
     <Content Include="Assets\Operations\PlotPredictionInterval.xml" />
     <Content Include="Assets\Operations\PlotResidualsSimple.xml" />
     <Content Include="Assets\Operations\PlotSeCi.xml" />
-    <Content Include="Assets\Operations\PlotSimpleLinearRegression.xml" />
+    <Content Include="Assets\Operations\PlotSimpleLinearRegression.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Assets\Operations\PoissonConfidenceInterval.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -1942,7 +1944,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

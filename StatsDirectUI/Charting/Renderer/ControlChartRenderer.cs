@@ -1,7 +1,7 @@
-﻿using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using System;
+﻿using System;
 using System.Drawing;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,8 +14,8 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
-            DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
+            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
             double[] xdat = new double[rows + 1];
             double[] ydat = new double[rows + 1];
@@ -36,7 +36,7 @@ namespace StatsDirect.Charting.Renderer
 
             MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
 
-            ControlOptions cOptions = (ControlOptions)definition.ChartOptions;
+            ControlOptions cOptions = (ControlOptions)Definition.ChartOptions;
             int kobs = cOptions.ObservationsToUse;
             if (cOptions.HasUserSpecifiedMeanAndSD)
             {
@@ -115,8 +115,8 @@ namespace StatsDirect.Charting.Renderer
         /// <returns>True if the plot succeeds, False otherwise.</returns>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
-            DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
+            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;
             double[] xdat = new double[rows + 1];
             double[] ydat = new double[rows + 1];
@@ -140,7 +140,7 @@ namespace StatsDirect.Charting.Renderer
 
             MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
 
-            ControlOptions cOptions = (ControlOptions)definition.ChartOptions;
+            ControlOptions cOptions = (ControlOptions)Definition.ChartOptions;
             cOptions.UseDates = looksLikeDates;
             double oldymean = ymean;
             double oldysd = ysd;
@@ -224,17 +224,17 @@ namespace StatsDirect.Charting.Renderer
             if (cOptions.UseDates)
             {
                 float vshift = AxisLabelWidthInCanvasCoordinates(new DateTime(1899, 12, 30, 0, 0, 0).AddDays(xdat[0]).ToString("d")) + 30;
-                yAxisCanvas += vshift;
-                yExtCanvas -= vshift;
+                YAxisCanvas += vshift;
+                YExtCanvas -= vshift;
             }
 
             double xtra = 0;
             double w = TitleWidthInCanvasCoordinates(cOptions.YAxisTitle) + 30;
-            if (w > xtra + xAxisCanvas)
-                xtra = w - xAxisCanvas;
+            if (w > xtra + XAxisCanvas)
+                xtra = w - XAxisCanvas;
 
-            xAxisCanvas += xtra;
-            xExtCanvas -= xtra;
+            XAxisCanvas += xtra;
+            XExtCanvas -= xtra;
 
             // draw the axes
             double xspace = 0;
@@ -245,8 +245,8 @@ namespace StatsDirect.Charting.Renderer
                 xmode = AxisMode.ScaleWithoutLabels;
             }
             DrawAxesOrEnlargeCanvas(cOptions.Title,
-                new AxisDefinition(cOptions.XAxisTitle, xmode, definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xspace, ExtraSpaceAfterAxisEnds = rgap },
-                new AxisDefinition(cOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType),
+                new AxisDefinition(cOptions.XAxisTitle, xmode, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xspace, ExtraSpaceAfterAxisEnds = rgap },
+                new AxisDefinition(cOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 cOptions.ShouldBoxAxes, false);
 
             double x1; double y1; double last_x1 = 0;
@@ -312,8 +312,8 @@ namespace StatsDirect.Charting.Renderer
                         {
                             x1 = ToCanvasX(xdat[r]);
                             string tx = new DateTime(1899, 12, 30, 0, 0, 0).AddDays(xdat[r]).ToString("d");
-                            y1 = yAxisCanvas - AxisLabelWidthInCanvasCoordinates(tx) - AXIS_BIG_TICK - 3;
-                            DrawStringAtAngleInCanvasCoordinates(tx, axisLabelFont, Brushes.Black, x1 - AxisLabelHeightInCanvasCoordinates(tx) / 2, y1, txtFormat, LabelDirection.Up);
+                            y1 = YAxisCanvas - AxisLabelWidthInCanvasCoordinates(tx) - AXIS_BIG_TICK - 3;
+                            DrawStringAtAngleInCanvasCoordinates(tx, AxisLabelFont, Brushes.Black, x1 - AxisLabelHeightInCanvasCoordinates(tx) / 2, y1, txtFormat, LabelDirection.Up);
                         }
                     }
                 }
@@ -321,31 +321,31 @@ namespace StatsDirect.Charting.Renderer
 
             int rhDp = cOptions.RightHandDecimalPlaces;
 
-            using (Pen blackPen = new Pen(grBlack))
+            using (Pen blackPen = new Pen(GrBlack))
             {
                 if (cOptions.HasUserSpecifiedLimits)
                 {
                     // user specified control and warning lines
-                    x1 = xAxisCanvas + xExtCanvas;
+                    x1 = XAxisCanvas + XExtCanvas;
                     y1 = ToCanvasY(cOptions.UpperWarningLimit);
-                    DrawLineInCanvasCoordinates(blackPen, xAxisCanvas, y1, x1, y1);
+                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
                     string tx = Math.Round(cOptions.UpperWarningLimit, rhDp) + " (warn)";
                     DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                     y1 = ToCanvasY(cOptions.LowerWarningLimit);
-                    DrawLineInCanvasCoordinates(blackPen, xAxisCanvas, y1, x1, y1);
+                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
                     tx = Math.Round(cOptions.LowerWarningLimit, rhDp) + " (warn)";
                     DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
-                    using (Pen redPen = new Pen(grRed))
+                    using (Pen redPen = new Pen(GrRed))
                     {
                         y1 = ToCanvasY(cOptions.UpperControlLimit);
-                        DrawLineInCanvasCoordinates(redPen, xAxisCanvas, y1, x1, y1);
+                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
                         tx = Math.Round(cOptions.UpperControlLimit, rhDp) + " (ctrl)";
                         DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                         y1 = ToCanvasY(ymean - ysd * 3.0);
-                        DrawLineInCanvasCoordinates(redPen, xAxisCanvas, y1, x1, y1);
+                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
                         tx = Math.Round(cOptions.LowerControlLimit, rhDp) + " (ctrl)";
                         DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
-                        DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, yAxisCanvas + yExtCanvas);
+                        DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
                     }
                 }
                 else
@@ -353,15 +353,15 @@ namespace StatsDirect.Charting.Renderer
                     // draw control lines
                     if (cOptions.UseMean)
                     {
-                        x1 = xAxisCanvas + xExtCanvas;
+                        x1 = XAxisCanvas + XExtCanvas;
                         y1 = ToCanvasY(ymean);
-                        DrawLineInCanvasCoordinates(blackPen, xAxisCanvas, y1, x1, y1);
+                        DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
                         string tx = Math.Round(ymean, rhDp) + " (mean)";
                         DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                         if (restricted)
-                            DrawStringLegendL("On first " + kobs + " points:", x1 + RHS_LABEL_GAP, yAxisCanvas + yExtCanvas);
+                            DrawStringLegendL("On first " + kobs + " points:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
                         else if (external)
-                            DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, yAxisCanvas + yExtCanvas);
+                            DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
                     }
 
                     if (ysd != Constant.MISSING)
@@ -369,15 +369,15 @@ namespace StatsDirect.Charting.Renderer
                         string tx;
                         if (cOptions.Use1SD)
                         {
-                            using (Pen greenPen = new Pen(grGreen))
+                            using (Pen greenPen = new Pen(GrGreen))
                             {
-                                x1 = xAxisCanvas + xExtCanvas;
+                                x1 = XAxisCanvas + XExtCanvas;
                                 y1 = ToCanvasY(ymean + ysd);
-                                DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, x1, y1);
+                                DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
                                 tx = Math.Round(ymean + ysd, rhDp) + " (+1 SD)";
                                 DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                                 y1 = ToCanvasY(ymean - ysd);
-                                DrawLineInCanvasCoordinates(greenPen, xAxisCanvas, y1, x1, y1);
+                                DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
                                 tx = Math.Round(ymean - ysd, rhDp) + " (-1 SD)";
                                 DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                             }
@@ -385,28 +385,28 @@ namespace StatsDirect.Charting.Renderer
 
                         if (cOptions.Use2SD)
                         {
-                            x1 = xAxisCanvas + xExtCanvas;
+                            x1 = XAxisCanvas + XExtCanvas;
                             y1 = ToCanvasY(ymean + ysd * 2.0);
-                            DrawLineInCanvasCoordinates(blackPen, xAxisCanvas, y1, x1, y1);
+                            DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
                             tx = Math.Round(ymean + ysd * 2.0, rhDp) + " (+2 SD)";
                             DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                             y1 = ToCanvasY(ymean - ysd * 2.0);
-                            DrawLineInCanvasCoordinates(blackPen, xAxisCanvas, y1, x1, y1);
+                            DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
                             tx = Math.Round(ymean - ysd * 2.0, rhDp) + " (-2 SD)";
                             DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                         }
 
                         if (cOptions.Use3SD)
                         {
-                            using (Pen redPen = new Pen(grRed))
+                            using (Pen redPen = new Pen(GrRed))
                             {
-                                x1 = xAxisCanvas + xExtCanvas;
+                                x1 = XAxisCanvas + XExtCanvas;
                                 y1 = ToCanvasY(ymean + ysd * 3.0);
-                                DrawLineInCanvasCoordinates(redPen, xAxisCanvas, y1, x1, y1);
+                                DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
                                 tx = Math.Round(ymean + ysd * 3.0, rhDp) + " (+3 SD)";
                                 DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                                 y1 = ToCanvasY(ymean - ysd * 3.0);
-                                DrawLineInCanvasCoordinates(redPen, xAxisCanvas, y1, x1, y1);
+                                DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
                                 tx = Math.Round(ymean - ysd * 3.0, rhDp) + " (-3 SD)";
                                 DrawStringLegendL(tx, x1 + RHS_LABEL_GAP, y1 + LegendHeightInCanvasCoordinates(tx) / 2);
                             }

@@ -1,7 +1,7 @@
-using StatsDirect.Templates;
 using System;
 using System.Globalization;
 using System.Linq;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {

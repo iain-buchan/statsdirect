@@ -1,5 +1,5 @@
-﻿using StatsDirect.Templates;
-using System.Drawing;
+﻿using System.Drawing;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -31,9 +31,9 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            GiniOptions gOptions = (GiniOptions)definition.ChartOptions;
-            DoubleSeries xs0 = definition.XSeries[0].AsDoubleSeries;
-            DoubleSeries ys0 = definition.YSeries[0].AsDoubleSeries;
+            GiniOptions gOptions = (GiniOptions)Definition.ChartOptions;
+            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
             StartVectorPlot();
 
             DataMinX = 0.0;
@@ -41,16 +41,16 @@ namespace StatsDirect.Charting.Renderer
             DataMinY = 0.0;
             DataMaxY = 1.0;
 
-            DrawAxesOrEnlargeCanvas(gOptions.Title.Trim(), new AxisDefinition(gOptions.XAxisTitle, AxisMode.Scale, definition.ScaleParameters.X.ScaleType), new AxisDefinition(gOptions.YAxisTitle, AxisMode.Scale, definition.ScaleParameters.Y.ScaleType), true, false);
+            DrawAxesOrEnlargeCanvas(gOptions.Title.Trim(), new AxisDefinition(gOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(gOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), true, false);
 
             // Draw equality line
-            DrawLineInChartCoordinates(grRed, 0, 0, 1, 1);
+            DrawLineInChartCoordinates(GrRed, 0, 0, 1, 1);
 
             // Draw Lorenz polygon
-            using (Pen greenPen = new Pen(grGreen))
+            using (Pen greenPen = new Pen(GrGreen))
             {
-                double lastX = offx;
-                double lastY = offy;
+                double lastX = OffX;
+                double lastY = OffY;
                 for (int j = 0; j < xs0.Points; j++)
                 {
                     double x = ToCanvasX(xs0.Data[j]);

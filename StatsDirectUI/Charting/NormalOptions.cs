@@ -10,7 +10,7 @@ namespace StatsDirect.Charting
         {
             VanDerWaerden = 1,
             Blom = 2,
-            ExpectedNormalOrder = 3,
+            ExpectedNormalOrder = 3
         }
 
         public ScoreMethod Method { get; set; }

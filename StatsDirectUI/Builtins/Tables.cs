@@ -23,7 +23,7 @@ namespace StatsDirect.Builtins
 
                 if (double.TryParse(x.Ti, out double nx) && double.TryParse(y.Ti, out double ny))
                     return nx.CompareTo(ny);
-                return String.CompareOrdinal(x.Ti, y.Ti);
+                return string.CompareOrdinal(x.Ti, y.Ti);
             }
         }
 

@@ -31,7 +31,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    lower = String.CompareOrdinal(x.Label, y.Label) < 0;
+                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
                 }
 
                 return lower ? -1 : 1;
@@ -61,7 +61,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    lower = String.CompareOrdinal(x.Label, y.Label) < 0;
+                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
                 }
 
                 return lower ? 1 : -1;
