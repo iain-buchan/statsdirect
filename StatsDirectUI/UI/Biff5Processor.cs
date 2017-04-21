@@ -28,9 +28,7 @@ namespace StatsDirect.UI
             {
                 using (CompoundFile contents = new CompoundFile(s))
                 {
-                    CFStream bookStream = contents.RootStorage.TryGetStream("Book");
-                    if (null == bookStream)
-                        bookStream = contents.RootStorage.TryGetStream("Workbook");
+                    CFStream bookStream = contents.RootStorage.TryGetStream("Book") ?? contents.RootStorage.TryGetStream("Workbook");
                     if (null == bookStream)
                     {
                         // Nothing named Book or Workbook; not an Excel workbook.
@@ -114,9 +112,8 @@ namespace StatsDirect.UI
                 return null;
             }
 
-            string localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new[] { "CLSID", excelClsId, "LocalServer" }, null);
-            if (null == localServerCommandLine)
-                localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new[] { "CLSID", excelClsId, "LocalServer32" }, null);
+            string localServerCommandLine = GetStringValueOrNull(Registry.ClassesRoot, new[] { "CLSID", excelClsId, "LocalServer" }, null)
+                ?? GetStringValueOrNull(Registry.ClassesRoot, new[] { "CLSID", excelClsId, "LocalServer32" }, null);
             if (null == localServerCommandLine)
             {
                 // Excel not installed, registry not readable, or similar awkwardness.  Give up.
@@ -165,7 +162,7 @@ namespace StatsDirect.UI
                     return null;
                 try
                 {
-                    return (string)here.GetValue(null);
+                    return (string)here.GetValue(valueName);
                 }
                 catch (Exception)
                 {

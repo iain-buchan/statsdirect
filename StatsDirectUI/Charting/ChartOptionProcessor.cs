@@ -97,10 +97,10 @@ namespace StatsDirect.Charting
             {
                 SurvivalOptions.SurvivalSeries ser = new SurvivalOptions.SurvivalSeries();
                 // Series: xdat...
-                DoubleVariable xdatVariable = xdatFrame.Variables[i] as DoubleVariable;
+                DoubleVariable xdatVariable = (DoubleVariable)xdatFrame.Variables[i];
                 ser.XDat = xdatVariable.Data;
                 // ... cdat...
-                DoubleVariable cdatVariable = cdatFrame.Variables[i] as DoubleVariable;
+                DoubleVariable cdatVariable = (DoubleVariable)cdatFrame.Variables[i];
                 int[] cdat = new int[cdatVariable.Length];
                 for (int r = 0; r < cdat.Length; r++)
                 {
@@ -111,18 +111,18 @@ namespace StatsDirect.Charting
                 }
                 ser.CDat = cdat;
                 // ... ydat...
-                DoubleVariable ydatVariable = ydatFrame.Variables[i] as DoubleVariable;
+                DoubleVariable ydatVariable = (DoubleVariable)ydatFrame.Variables[i];
                 ser.YDat = ydatVariable.Data;
                 // ... ydatl...
                 if (null != ydatlFrame)
                 {
-                    DoubleVariable ydatlVariable = ydatlFrame.Variables[i] as DoubleVariable;
+                    DoubleVariable ydatlVariable = (DoubleVariable)ydatlFrame.Variables[i];
                     ser.YDatL = ydatlVariable.Data;
                 }
                 // ... and ydatu
                 if (null != ydatuFrame)
                 {
-                    DoubleVariable ydatuVariable = ydatuFrame.Variables[i] as DoubleVariable;
+                    DoubleVariable ydatuVariable = (DoubleVariable)ydatuFrame.Variables[i];
                     ser.YDatU = ydatuVariable.Data;
                 }
                 survivalOptions.Series.Add(ser);
@@ -371,13 +371,13 @@ namespace StatsDirect.Charting
                         ? "Forest plot"
                         : "Forest plot from " + dataName,
                 k = parameters["odds"].AsDataFrame.Variables[0].Length,
-                OddsRatios = (parameters["odds"].AsDataFrame.Variables[0] as DoubleVariable).Data,
-                OddsRatioLcis = (parameters["lci"].AsDataFrame.Variables[0] as DoubleVariable).Data,
-                OddsRatioUcis = (parameters["uci"].AsDataFrame.Variables[0] as DoubleVariable).Data
+                OddsRatios = ((DoubleVariable)parameters["odds"].AsDataFrame.Variables[0]).Data,
+                OddsRatioLcis = ((DoubleVariable)parameters["lci"].AsDataFrame.Variables[0]).Data,
+                OddsRatioUcis = ((DoubleVariable)parameters["uci"].AsDataFrame.Variables[0]).Data
             };
             if (parameters.ContainsKey("gn") && null != parameters["gn"])
             {
-                fOptions.gn = (parameters["gn"].AsDataFrame.Variables[0] as DoubleVariable).Data;
+                fOptions.gn = ((DoubleVariable)parameters["gn"].AsDataFrame.Variables[0]).Data;
             }
             else
             {
@@ -387,11 +387,11 @@ namespace StatsDirect.Charting
                 fOptions.gn = gn;
             }
             if (parameters.ContainsKey("pg") && null != parameters["pg"])
-                fOptions.pg = (parameters["pg"].AsDataFrame.Variables[0] as DoubleVariable).Data;
+                fOptions.pg = ((DoubleVariable)parameters["pg"].AsDataFrame.Variables[0]).Data;
             fOptions.XAxisTitle = parameters["odds"].AsDataFrame.Variables[0].Title + " (95% confidence interval)";
             if (parameters.ContainsKey("title") && null != parameters["title"])
             {
-                fOptions.Titles = (parameters["title"].AsDataFrame.Variables[0] as StringVariable).Data;
+                fOptions.Titles = ((StringVariable)parameters["title"].AsDataFrame.Variables[0]).Data;
             }
             else
             {
@@ -450,10 +450,10 @@ namespace StatsDirect.Charting
 
             for (int sIndex = 0; sIndex < xdatFrame.VariableCount; sIndex++)
             {
-                DoubleVariable xdat = xdatFrame.Variables[sIndex] as DoubleVariable;
-                DoubleVariable ydat = ydatFrame.Variables[sIndex] as DoubleVariable;
-                DoubleVariable ydatl = ydatlFrame.Variables[sIndex] as DoubleVariable;
-                DoubleVariable ydatu = ydatuFrame.Variables[sIndex] as DoubleVariable;
+                DoubleVariable xdat = (DoubleVariable)xdatFrame.Variables[sIndex];
+                DoubleVariable ydat = (DoubleVariable)ydatFrame.Variables[sIndex];
+                DoubleVariable ydatl = (DoubleVariable)ydatlFrame.Variables[sIndex];
+                DoubleVariable ydatu = (DoubleVariable)ydatuFrame.Variables[sIndex];
                 string seriesTitle =
                     string.IsNullOrWhiteSpace(ydat.Title)
                         ? "Series " + (sIndex + 1)
@@ -462,9 +462,8 @@ namespace StatsDirect.Charting
                 MultiDoublePoint[] data = new MultiDoublePoint[noMissings.ArraysWithMissingRowsRemoved[0].Length];
                 for (int i = 0; i < noMissings.ArraysWithMissingRowsRemoved[0].Length; i++)
                 {
-                    MultiDoublePoint p = new MultiDoublePoint();
+                    MultiDoublePoint p = new MultiDoublePoint { X = noMissings.ArraysWithMissingRowsRemoved[0][i] };
                     // Ordinate
-                    p.X = noMissings.ArraysWithMissingRowsRemoved[0][i];
                     // Y values for error bars: [0] is centre, [1] is lower bound, [2] is upper bound.
                     p.set_Y(0, noMissings.ArraysWithMissingRowsRemoved[1][i]);
                     p.set_Y(1, noMissings.ArraysWithMissingRowsRemoved[2][i]);
@@ -479,13 +478,13 @@ namespace StatsDirect.Charting
                 ShouldAutoscale =
                     !ChartPreferences.DefaultRequestScaleLimits,
                 Title = null == dataName
-                            ? "Error bar plot"
-                            : "Error bar plot plot from " + dataName,
-                Series = allSeries
+                    ? "Error bar plot"
+                    : "Error bar plot plot from " + dataName,
+                Series = allSeries,
+                SeriesTitles = new string[ydatFrame.VariableCount],
+                YAxisTitle = ydatFrame.Variables[0].Title,
+                XAxisTitle = xdatFrame.Variables[0].Title
             };
-            errorBarOptions.SeriesTitles = new string[ydatFrame.VariableCount];
-            errorBarOptions.YAxisTitle = ydatFrame.Variables[0].Title;
-            errorBarOptions.XAxisTitle = xdatFrame.Variables[0].Title;
             for (int i = 0; i < ydatFrame.VariableCount; i++)
             {
                 errorBarOptions.SeriesTitles[i] =
@@ -539,7 +538,7 @@ namespace StatsDirect.Charting
             }
             rows = ctr;
 
-            MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
+            // MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
 
             controlOptions.UseDates = looksLikeDates;
             controlOptions.ObservationsToUse = rows;
@@ -602,7 +601,7 @@ namespace StatsDirect.Charting
                 barOptions.MaxBarWidth = 0.6 / definition.YSeries.Count;
             }
             DataFrame labelsFrame = parameters["labels"].AsDataFrame;
-            StringVariable labelsVariable = labelsFrame.Variables[0] as StringVariable;
+            StringVariable labelsVariable = (StringVariable)labelsFrame.Variables[0];
             barOptions.SeriesTitles = new string[labelsVariable.Length];
             for (int i = 0; i < labelsVariable.Length; i++)
                 barOptions.SeriesTitles[i] = labelsVariable.Data[i];
@@ -624,8 +623,8 @@ namespace StatsDirect.Charting
                 mean = parameters["mean"].AsDouble,
                 ula = parameters["ula"].AsDouble,
                 P0 = parameters["P0"].AsDouble,
-                av = (parameters["av"].AsDataFrame.Variables[0] as DoubleVariable).Data,
-                mxd = (parameters["mxd"].AsDataFrame.Variables[0] as DoubleVariable).Data
+                av = ((DoubleVariable)parameters["av"].AsDataFrame.Variables[0]).Data,
+                mxd = ((DoubleVariable)parameters["mxd"].AsDataFrame.Variables[0]).Data
             };
             return aOptions;
         }

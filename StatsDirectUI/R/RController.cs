@@ -121,12 +121,14 @@ namespace StatsDirect.R
                 preferredVersion = PreferredRVersion();
             }
 
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME);
-            startInfo.WorkingDirectory = rFolder;
-            startInfo.Arguments = string.Format("--vanilla \"{0}\"", scriptPath);
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = false;
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME),
+                WorkingDirectory = rFolder,
+                Arguments = $"--vanilla \"{scriptPath}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
             return Process.Start(startInfo);
         }
 

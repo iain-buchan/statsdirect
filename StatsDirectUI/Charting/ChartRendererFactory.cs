@@ -121,7 +121,7 @@ namespace StatsDirect.Charting
             cd.AddXSeries(x, xAxisTitle);
             using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
             {
-                ch.PlotLogit(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle);
+                ch.PlotLogit(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, useLogScale);
                 return Render(ch);
             }
         }

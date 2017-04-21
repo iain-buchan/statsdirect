@@ -17,7 +17,8 @@ namespace StatsDirect.Charting
         ///  <param name="qmin">The smallest value likely to be plotted on the axis.</param>
         ///  <param name="qMinGreaterThanZero">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; not used for LinearAxisScaler.</param>
         ///  <param name="qmax">The largest value likely to be plotted on the axis.</param>
-        ///  <remarks></remarks>
+        /// <param name="isYAxis"></param>
+        /// <remarks></remarks>
         public IAxisScale Q_Axis(double qmin, double qMinGreaterThanZero, double qmax, bool isYAxis)
         {
             //  If we have no points at all, the choice is irrelevant so we might as well do it the easy way.
@@ -115,11 +116,8 @@ namespace StatsDirect.Charting
         ///  </summary>
         ///  <param name="qmin">Smallest data value</param>
         ///  <param name="qmax">Largest data value</param>
-        ///  <param name="zmin">Axis minimum (output)</param>
-        ///  <param name="zint">Axis intervals</param>
-        ///  <param name="div"></param>
-        ///  <param name="score">A score on an arbitrary scale of the "look" of this axis; lower scores are better</param>
-        ///  <remarks></remarks>
+        /// <param name="unshiftedAxisScale"></param>
+        /// <param name="score">A score on an arbitrary scale of the "look" of this axis; lower scores are better</param>
         private static LinearAxisScale ShiftMinMax(double qmin, double qmax, LinearAxisScale unshiftedAxisScale, out int score)
         {
             // shift zmin to a nice spot

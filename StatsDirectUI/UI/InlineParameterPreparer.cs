@@ -244,7 +244,7 @@ namespace StatsDirect.UI
                     ctl = new ctlChiGFOptions((ChiSquareGoodnessOfFitOptions)fillable);
                     break;
                 case "ConvertUnits":
-                    ctl = new ctlConvertUnits(Host);
+                    ctl = new ctlConvertUnits();
                     break;
                 case "Distribution":
                     ctl = new ctlPDF((DistributionOptions)fillable, Host);

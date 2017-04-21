@@ -512,7 +512,7 @@ namespace StatsDirect.Charting.Renderer
         }
 
         ///  <remarks>Jul 09: updated to put log models on a log x axis scale</remarks>
-        internal void PlotLogit(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle)
+        internal void PlotLogit(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle, bool shouldPlotLog10Doses)
         {
             const int MARKER_SIZE = 6;
 
@@ -575,10 +575,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 double calcX = FromCanvasWidth(calcxCanvas);
                 double calcY = a + b * calcX;
-                if (model == 1)
-                    calcY = PDF.alnorm(calcY);
-                else
-                    calcY = Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
+                calcY = Remodel(model, calcY);
                 MaybeDrawLineInChartCoordinates(axisScales, GrGreen, calcX, calcY, oldx, oldy);
                 oldx = calcX;
                 oldy = calcY;
@@ -591,15 +588,11 @@ namespace StatsDirect.Charting.Renderer
             {
                 double calcX = FromCanvasWidth(calcxCanvas);
                 cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcX - xm, 2.0) / s1);
-                double calcY = a + b * calcX;
-                double cly = calcY + cl;
-                if (model == 1)
-                    cly = PDF.alnorm(cly);
-                else
-                    cly = Math.Exp(cly * 2.0) / (1.0 + Math.Exp(cly * 2.0));
+                double calcY = a + b * calcX + cl;
+                calcY = Remodel(model, calcY);
                 MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, calcX, calcY, oldx, oldy);
                 oldx = calcX;
-                oldy = cly;
+                oldy = calcY;
             }
             // Draw lower curve
             oldx = Constant.MISSING;
@@ -608,17 +601,20 @@ namespace StatsDirect.Charting.Renderer
             {
                 double calcX = FromCanvasWidth(calcxCanvas);
                 cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcX - xm, 2.0) / s1);
-                double calcY = a + b * calcX;
-                double cly = calcY - cl;
-                if (model == 1)
-                    cly = PDF.alnorm(cly);
-                else
-                    cly = Math.Exp(cly * 2.0) / (1.0 + Math.Exp(cly * 2.0));
+                double calcY = a + b * calcX - cl;
+                calcY = Remodel(model, calcY);
                 MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, calcX, calcY, oldx, oldy);
                 oldx = calcX;
-                oldy = cly;
+                oldy = calcY;
             }
             EndVectorPlot();
+        }
+
+        private static double Remodel(int model, double calcY)
+        {
+            if (model == 1)
+                return PDF.alnorm(calcY);
+            return Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
         }
 
         public void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)

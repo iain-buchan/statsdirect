@@ -426,7 +426,7 @@ namespace StatsDirect.Numerics
                 xsd = Constant.MISSING;
                 return;
             }
-            xmean = xsum / Convert.ToDouble(k);
+            xmean = xsum / k;
             double xss = 0.0;
             for (int i = lowerBound; i < k + lowerBound; i++)
                 if (x[i] != Constant.MISSING)
@@ -457,21 +457,6 @@ namespace StatsDirect.Numerics
         //         If fault <> 0 Then fvalp = MISSING
         //     End Function
 
-        //     Function pval_half(ByVal P As Double) As String
-        //         
-        //         If Abs(P) > 10.0 Then
-        //             pval_half = "P = err"
-        //         Else
-        //             If P < 10.0 ^ -PDECP Then
-        //                 pval_half = "P < " & DECSEP & String(PDECP - 1, "0") + "1"
-        //             ElseIf P > 0.5 - 10.0 ^ -PDECP Then
-        //                 pval_half = "P > " & DECSEP & "4" & String(PDECP - 1, "9")
-        //             Else
-        //                 pval_half = Format(P, "P = 0." + String(PDECP, "#"))
-        //             End If
-        //         End If
-        //     End Function
-
         public static double taufromp(double P, out double pu, out int ix, ref int nx, out int ifault)
         {
             double taufrompReturn = 0;
@@ -482,13 +467,9 @@ namespace StatsDirect.Numerics
                 ifault = 0;
                 pu = kendp(ix, nx, ref ifault);
                 if (pu < P)
-                {
                     break;
-                }
                 if (ix > 1000)
-                {
                     break;
-                }
             }
             while (true);
             do
@@ -514,7 +495,7 @@ namespace StatsDirect.Numerics
         public static void transpose_cr_rc(double[,] x, out double[,] z)
         {
             int cols = x.GetUpperBound(0);
-            int rows =  /* TRANSINFO: .NET Equivalent of Microsoft.VisualBasic NameSpace */ x.GetUpperBound(1);
+            int rows = x.GetUpperBound(1);
             z = new double[rows + 1, cols + 1];
             for (int c = 1; c <= cols; c++)
             {

@@ -1,29 +1,26 @@
 using System;
 using System.Windows.Forms;
 using StatsDirect.Builtins;
+using StatsDirect.Expressions;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using StatsDirect.Expressions;
 
 namespace StatsDirect.UI
 {
     public partial class ctlConvertUnits : IFillParameterBag
     {
         private string lastCalculationAsString;
-        private readonly ITemplateHost host;
 
-        public ctlConvertUnits(ITemplateHost host)
+        public ctlConvertUnits()
         {
-            this.host = host;
             InitializeComponent();
             SetupConversions();
         }
 
         private void SetupConversions()
         {
-            object[] conversions = new object[]
-            {
+            object[] conversions = {
                 new Conversion("X*76", "CM of Mercury (0&#176;C)", "Atmospheres to CM of Mercury (0&#176;C)"),
                 new Conversion("X*29.921", "Inches of Mercury (32&#176;F)", "Atmospheres to Inches of Mercury (32&#176;F)"),
                 new Conversion("X*2116.32", "Pounds/sq ft", "Atmospheres to Pounds/sq ft"),

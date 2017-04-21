@@ -99,8 +99,8 @@ namespace StatsDirect.Charting
 
         public ScaleParameters ScaleParameters
         {
-            get { return scaleParameters ?? (scaleParameters = GetScaleParameters()); }
-            set { scaleParameters = value; }
+            get => scaleParameters ?? (scaleParameters = GetScaleParameters());
+            set => scaleParameters = value;
         }
 
         private ScaleParameters GetScaleParameters()

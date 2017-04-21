@@ -1,14 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using StatsDirect.Charting;
+using StatsDirect.Data;
 using StatsDirect.Numerics;
+using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using StatsDirect.Data;
-
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using StatsDirect.Charting;
-using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.Builtins
 {
@@ -108,7 +107,7 @@ namespace StatsDirect.Builtins
 
             int seed = parameters["seed"].AsInt32;
             DataFrame capacitiesFrame = parameters["capacities"].AsDataFrame;
-            DoubleVariable capacitiesVariable = capacitiesFrame.Variables[0]as DoubleVariable;
+            DoubleVariable capacitiesVariable = (DoubleVariable) capacitiesFrame.Variables[0];
             int groups = capacitiesVariable.Length;
             int[] groupCapacities = new int[groups + 1];
             int capacity = 0;
@@ -123,13 +122,13 @@ namespace StatsDirect.Builtins
             int[,] x = new int[preferences + 1, subjects + 1];
             for (int i = 1; i <= preferences; i++)
             {
-                DoubleVariable preferencesVariable = preferencesFrame.Variables[i - 1]as DoubleVariable;
+                DoubleVariable preferencesVariable = (DoubleVariable) preferencesFrame.Variables[i - 1];
                 for (int j = 1; j <= subjects; j++)
                 {
                     x[i, j] = (int)preferencesVariable.Data[j - 1];
                     if (x[i, j] < 1 || x[i, j] > groups)
                     {
-                        host.Error("invalid preference in group " + i.ToString() + "at row " + j.ToString(), pg);
+                        host.Error("invalid preference in group " + i + "at row " + j, pg);
                         throw new TemplateOperationCancelledException();
                     }
                 }
@@ -141,7 +140,7 @@ namespace StatsDirect.Builtins
             }
             if (capacity < Convert.ToDouble(subjects))
             {
-                host.Error("more subects (" + subjects.ToString() + ") than total capacity of groups (" + capacity.ToString() + ")", pg);
+                host.Error("more subects (" + subjects + ") than total capacity of groups (" + capacity + ")", pg);
                 throw new TemplateOperationCancelledException();
             }
             bool[] done = new bool[subjects + 1];
@@ -278,7 +277,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*variable", variableList);
             foreach (Variable v in data.Variables)
             {
-                ClassifierVariable vc = v as ClassifierVariable;
+                ClassifierVariable vc = (ClassifierVariable) v;
                 ParameterBag variableParameters = new ParameterBag();
                 variableList.Add(variableParameters);
                 variableParameters.AddOutput("ti", vc.Title);
@@ -343,7 +342,7 @@ namespace StatsDirect.Builtins
         {
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable v0 = data.Variables[0]as DoubleVariable;
+            DoubleVariable v0 = (DoubleVariable) data.Variables[0];
             Summary sx = new Summary();
             sx.FullSummaryFromX(v0.Data, v0.Length, v0.Title, GAMMA, 5, 95, 1);
             const int flt = 6;
@@ -412,7 +411,7 @@ namespace StatsDirect.Builtins
             Range = 19,
             Udc1 = 20,
             Udc2 = 21
-        };
+        }
 
         private static ParameterBag RptDescriptive(ITemplateHost host, ParameterBag parameters, bool isWeighted)
         {
@@ -434,13 +433,13 @@ namespace StatsDirect.Builtins
                 cdx = new ColumnData[cols];
                 for (int i = 0; i < cols; i++)
                 {
-                    DoubleVariable vi = data.Variables[i]as DoubleVariable;
+                    DoubleVariable vi = (DoubleVariable) data.Variables[i];
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
                 }
 
                 w = new double[cols, maxrows + 1];
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
-                DoubleVariable weightsVariable = weightsFrame.Variables[0]as DoubleVariable;
+                DoubleVariable weightsVariable = (DoubleVariable) weightsFrame.Variables[0];
                 wti = weightsVariable.Title;
 
                 // Load the data, skipping rows where weights are 0 or missing
@@ -470,7 +469,7 @@ namespace StatsDirect.Builtins
                     for (int col = 0; col < cols; col++)
                     {
                         w[col, targetRow] = weight;
-                        DoubleVariable vi = data.Variables[col]as DoubleVariable;
+                        DoubleVariable vi = (DoubleVariable) data.Variables[col];
                         double value = Constant.MISSING;
                         if (vi.Length > row)
                             value = vi.Data[row];
@@ -492,7 +491,7 @@ namespace StatsDirect.Builtins
                 cdx = new ColumnData[cols];
                 for (int i = 0; i < cols; i++)
                 {
-                    DoubleVariable vi = data.Variables[i]as DoubleVariable;
+                    DoubleVariable vi = (DoubleVariable) data.Variables[i];
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
                     for (int j = 1; j <= vi.Length; j++)
                         x[i, j] = vi.Data[j - 1];
@@ -500,8 +499,8 @@ namespace StatsDirect.Builtins
             }
 
             // get options
-            double GAMMA = parameters["gamma"].AsDouble;
-            string qxcl = " " + Formatting.XRound(GAMMA * 100, 1) + "% CL of mean";
+            double gamma = parameters["gamma"].AsDouble;
+            string qxcl = " " + Formatting.XRound(gamma * 100, 1) + "% CL of mean";
             string sumTitle = isWeighted ? "Sum of weights" : "Sum";
             string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Interquartile range", "Minimum", "Range", "User defined centiles", null };
 
@@ -544,9 +543,9 @@ namespace StatsDirect.Builtins
             {
                 sx[i] = new Summary();
                 if (isWeighted)
-                    sx[i].WeightedSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, w, wti, nsumwt);
+                    sx[i].WeightedSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, gamma, centxl, centxu, w, wti, nsumwt);
                 else
-                    sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, GAMMA, centxl, centxu, prevCentileType);
+                    sx[i].FullSummaryFromXK(i, x, cdx[i].Rows, cdx[i].Title, gamma, centxl, centxu, prevCentileType);
             }
 
             // Fill the report
@@ -892,7 +891,7 @@ namespace StatsDirect.Builtins
             bool hasGroups = parameters.ContainsKey("groups") && parameters["groups"] != null && parameters["groups"].IsDataFrame;
             ClassifierVariable groupsVariable = null;
             if (hasGroups)
-                groupsVariable = parameters["groups"].AsDataFrame.Variables[0] as ClassifierVariable;
+                groupsVariable = (ClassifierVariable) parameters["groups"].AsDataFrame.Variables[0];
             double ci = parameters["ci"].AsDouble;
             bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
             // Bootstrap variables
@@ -917,7 +916,7 @@ namespace StatsDirect.Builtins
                     groups[gid].Group = group;
                 }
             else
-                groups.Add(new TimeSeriesSummaryStore() { Group = new Group("all", 0) });
+                groups.Add(new TimeSeriesSummaryStore { Group = new Group("all", 0) });
 
             // Pass 1: Allow the data structures to size themselves
             for (int row = 0; row < timesVariable.Length; row++)
@@ -1029,7 +1028,7 @@ namespace StatsDirect.Builtins
                 }
 
                 // Line plot, one line per subject with x-axis = time, y-axis = observation
-                ChartDefinition cd = new ChartDefinition() { ChartType = ChartType.ScatterXY, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                ChartDefinition cd = new ChartDefinition { ChartType = ChartType.ScatterXY, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
                 double[] times = group.IndexToTimeMap;
                 for (int subjectIndex = 0; subjectIndex < group.IndexToSubjectMap.Length; subjectIndex++)
                 {
@@ -1048,13 +1047,13 @@ namespace StatsDirect.Builtins
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
                     options.MarkerTypes[marker] = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
-                ParameterBag scrap = RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
+                RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
                 groupParameters.AddOutput("chart", rtf);
             }
 
             // Normal plots for AUC and log10(AUC) across all groups
             {
-                ChartDefinition cd = new ChartDefinition { ChartType = Templates.ChartType.Normal, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                ChartDefinition cd = new ChartDefinition { ChartType = ChartType.Normal, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
                 List<double> values = new List<double>();
                 foreach (TimeSeriesSummaryStore group in groups)
                     foreach (SubjectSummary subject in group.SubjectToSummaryMap.Values)
@@ -1095,7 +1094,7 @@ namespace StatsDirect.Builtins
                 {
                     TimeSeriesSummaryStore group = groups[groupIndex];
                     seriesTitles[groupIndex] = group.Group.Label;
-                    MultiDoubleSeries s = new MultiDoubleSeries() { Title = group.Group.Label };
+                    MultiDoubleSeries s = new MultiDoubleSeries { Title = group.Group.Label };
                     errorSeries.Add(s);
 
                     // Per-time point in this group
@@ -1103,7 +1102,7 @@ namespace StatsDirect.Builtins
                     int tIndex = 0;
                     foreach (TimeSummary time in group.TimeToSummaryMap.Values)
                     {
-                        MultiDoublePoint pt = new MultiDoublePoint() { X = time.Time };
+                        MultiDoublePoint pt = new MultiDoublePoint { X = time.Time };
                         pt.set_Y(0, time.Mean);
                         pt.set_Y(1, time.Mean - cit * time.Se);
                         pt.set_Y(2, time.Mean + cit * time.Se);
@@ -1111,7 +1110,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ChartDefinition cd = new ChartDefinition() { ChartType = ChartType.ErrorBar, ScaleParameters = new ScaleParameters() { X = new AxisScaleParameters() { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters() { ScaleType = ScaleType.Linear } } };
+                ChartDefinition cd = new ChartDefinition { ChartType = ChartType.ErrorBar, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
                 ErrorBarOptions options = new ErrorBarOptions(host.Preferences.ShouldUseColour)
                 {
                     Series = errorSeries,
@@ -1176,7 +1175,7 @@ namespace StatsDirect.Builtins
                             k++;
                     }
                     // 2-sided p-value
-                    double pBootstrap = (double)(k + 1) / (double)(bothBoots + 1);
+                    double pBootstrap = (k + 1) / (double)(bothBoots + 1);
 
                     Summary s = new Summary();
                     double edge = (1.0 - ci) / 2.0;
@@ -1272,11 +1271,11 @@ namespace StatsDirect.Builtins
                 IndexToTimeMap = SortedTimes.ToArray();
                 TimeToSummaryMap = new SortedDictionary<double, TimeSummary>();
                 for (int i = 0; i < IndexToTimeMap.Length; i++)
-                    TimeToSummaryMap.Add(IndexToTimeMap[i], new TimeSummary() { Index = i, Time = IndexToTimeMap[i] });
+                    TimeToSummaryMap.Add(IndexToTimeMap[i], new TimeSummary { Index = i, Time = IndexToTimeMap[i] });
                 IndexToSubjectMap = SortedSubjectIds.ToArray();
                 SubjectToSummaryMap = new SortedDictionary<double, SubjectSummary>();
                 for (int i = 0; i < IndexToSubjectMap.Length; i++)
-                    SubjectToSummaryMap.Add(IndexToSubjectMap[i], new SubjectSummary() { Index = i, SubjectId = IndexToSubjectMap[i] });
+                    SubjectToSummaryMap.Add(IndexToSubjectMap[i], new SubjectSummary { Index = i, SubjectId = IndexToSubjectMap[i] });
 
                 // Allocate our array of observations by time by subject.  First index is time point, then subject; this aids locality of reference later.
                 Observations = new double[IndexToTimeMap.Length, SortedSubjectIds.Count];
@@ -1440,7 +1439,7 @@ namespace StatsDirect.Builtins
                         aucs[subjectIndex] = ss.Auc;
                         timesToMax[subjectIndex] = ss.TimeToMax;
                         slopesToMax[subjectIndex] = ss.SlopeToMax;
-                        double weight = 1.0 / ss.SlopeToMaxVariance;
+                        // double weight = 1.0 / ss.SlopeToMaxVariance;
                     }
 
                     Summary sAuc = new Summary();
@@ -1465,7 +1464,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            private SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
+            private static SimpleLinearRegressionContext GetProcessedContext(double[] y, double[] x, int length)
             {
                 DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { y, x }, 0, length, 0);
                 SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1], copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0]);
@@ -1476,7 +1475,7 @@ namespace StatsDirect.Builtins
 
         private class BootstrappingTimeSeriesSummaryStore
         {
-            private TimeSeriesSummaryStore original;
+            private readonly TimeSeriesSummaryStore original;
             private TimeSeriesSummaryStore resampled;
             public int CompletedIterations { get; private set; }
             public double TLcl { get; private set; }
@@ -1498,7 +1497,7 @@ namespace StatsDirect.Builtins
                 }
 
                 CompletedIterations = iterations; // Will be overwritten if we abandon partway.
-                resampled = new TimeSeriesSummaryStore() { Group = original.Group, SortedTimes = original.SortedTimes, SortedSubjectIds = original.SortedSubjectIds };
+                resampled = new TimeSeriesSummaryStore { Group = original.Group, SortedTimes = original.SortedTimes, SortedSubjectIds = original.SortedSubjectIds };
                 resampled.NoteEndOfPass1(false);
                 double[] tValues = new double[iterations];
                 host.StartProgress("Bootstrapping " + original.Group.Label, true);
@@ -1536,10 +1535,7 @@ namespace StatsDirect.Builtins
             /// <summary>
             /// Resample the observations for each time point from input into output, with replacement.
             /// </summary>
-            /// <param name="mt"></param>
-            /// <param name="p"></param>
-            /// <returns></returns>
-            private void Shuffle(MersenneTwister mt, double[,] input, double[,] output)
+            private static void Shuffle(MersenneTwister mt, double[,] input, double[,] output)
             {
                 int tub = input.GetUpperBound(0);
                 int sub = input.GetUpperBound(1);

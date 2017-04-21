@@ -11,6 +11,7 @@ namespace StatsDirect.Charting
         ///  <param name="qmin">The smallest value likely to be plotted on the axis.</param>
         ///  <param name="qMinGreaterThanZero">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; may be zero if scaleType is known to be Linear.</param>
         ///  <param name="qmax">The largest value likely to be plotted on the axis.</param>
+        /// <param name="isYAxis"></param>
         public IAxisScale Q_Axis(double qmin, double qMinGreaterThanZero, double qmax, bool isYAxis)
         {
             //  If we have no points at all, the choice is irrelevant so we might as well do it the easy way.

@@ -1,11 +1,11 @@
-﻿using StatsDirect.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-using System.Globalization;
 
 namespace StatsDirect.R
 {
@@ -20,7 +20,7 @@ namespace StatsDirect.R
 
         public static void ToRName(StringBuilder sb, string rawVariableName)
         {
-            string[] reservedWords = new[] { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
+            string[] reservedWords = { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
             List<string> rw = new List<string>(reservedWords);
             string lowerName = rawVariableName.ToLower(CultureInfo.InvariantCulture);
             if (rw.Contains(lowerName))
@@ -47,6 +47,12 @@ namespace StatsDirect.R
 
         public static void ToR(StringBuilder sb, string name, FilledParameter filledParameter, FrameType frameTypePreference)
         {
+            if (null == filledParameter || !filledParameter.HasData)
+            {
+                sb.Append("NULL");
+                return;
+            }
+
             if (filledParameter.IsDataFrame)
             {
                 DataFrame frame = filledParameter.AsDataFrame;
@@ -56,9 +62,7 @@ namespace StatsDirect.R
             {
                 ToRName(sb, name);
                 sb.Append(" <- ");
-                if (null == filledParameter || !filledParameter.HasData)
-                    sb.Append("NULL");
-                else if (filledParameter.IsString)
+                if (filledParameter.IsString)
                     ToR(sb, filledParameter.AsString);
                 else if (filledParameter.IsDouble)
                     ToR(sb, filledParameter.AsDouble);
@@ -234,10 +238,7 @@ namespace StatsDirect.R
 
         public static void ToR(StringBuilder sb, double value)
         {
-            if (Constant.MISSING == value)
-                sb.Append("NA");
-            else
-                sb.Append(value.ToString("R", CultureInfo.InvariantCulture));
+            sb.Append(Constant.MISSING == value ? "NA" : value.ToString("R", CultureInfo.InvariantCulture));
         }
 
         public static void ToR(StringBuilder sb, DateTime value)

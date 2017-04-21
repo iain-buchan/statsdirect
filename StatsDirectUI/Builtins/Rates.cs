@@ -60,9 +60,9 @@ namespace StatsDirect.Builtins
                 cco = 0.95;
 
             DataFrame ratesFrame = parameters["rates"].AsDataFrame;
-            DoubleVariable ratesVariable = ratesFrame.Variables[0]as DoubleVariable;
+            DoubleVariable ratesVariable = (DoubleVariable) ratesFrame.Variables[0];
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
+            DoubleVariable timesVariable = (DoubleVariable) timesFrame.Variables[0];
             int rawRows = ratesVariable.Length;
 
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { ratesVariable.Data, timesVariable.Data }, 0, rawRows, 1);
@@ -140,11 +140,11 @@ namespace StatsDirect.Builtins
             double alpha = 1.0 - cco;
 
             DataFrame idxnFrame = parameters["idxn"].AsDataFrame;
-            DoubleVariable idxnVariable = idxnFrame.Variables[0]as DoubleVariable;
+            DoubleVariable idxnVariable = (DoubleVariable) idxnFrame.Variables[0];
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
+            DoubleVariable timesVariable = (DoubleVariable) timesFrame.Variables[0];
             DataFrame refnFrame = parameters["refn"].AsDataFrame;
-            DoubleVariable refnVariable = refnFrame.Variables[0]as DoubleVariable;
+            DoubleVariable refnVariable = (DoubleVariable) refnFrame.Variables[0];
             int rawRows = idxnVariable.Length;
 
 
@@ -275,16 +275,16 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
 
             DataFrame aFrame = parameters["a"].AsDataFrame;
-            DoubleVariable aVariable = aFrame.Variables[0]as DoubleVariable;
+            DoubleVariable aVariable = (DoubleVariable) aFrame.Variables[0];
             int rawRows = aVariable.Length;
             DataFrame pt1Frame = parameters["pt1"].AsDataFrame;
-            DoubleVariable pt1Variable = pt1Frame.Variables[0]as DoubleVariable;
+            DoubleVariable pt1Variable = (DoubleVariable) pt1Frame.Variables[0];
             DataFrame bFrame = parameters["b"].AsDataFrame;
-            DoubleVariable bVariable = bFrame.Variables[0]as DoubleVariable;
+            DoubleVariable bVariable = (DoubleVariable) bFrame.Variables[0];
             DataFrame pt2Frame = parameters["pt2"].AsDataFrame;
-            DoubleVariable pt2Variable = pt2Frame.Variables[0]as DoubleVariable;
+            DoubleVariable pt2Variable = (DoubleVariable) pt2Frame.Variables[0];
             DataFrame refFrame = parameters["ref"].AsDataFrame;
-            DoubleVariable refVariable = refFrame.Variables[0]as DoubleVariable;
+            DoubleVariable refVariable = (DoubleVariable) refFrame.Variables[0];
 
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { aVariable.Data, pt1Variable.Data, bVariable.Data, pt2Variable.Data, refVariable.Data }, 0, rawRows, 1);
             double[] a = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
