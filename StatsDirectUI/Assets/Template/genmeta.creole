@@ -3,30 +3,30 @@
 <line></line>
 <table>
 <tr><th>Study</th><th><in>stat</in></th><th>SE</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
-<block name="studies"><tr><td><in>st</in></td><td><in>y</in></td><td><in>se</in></td><td><ci><in>from</in></ci></td><td><ci><in>to</in></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="studies"><tr><td><in>st</in></td><td><inu>y</inu></td><td><inu>se</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized Effect</th><th>Standard Error</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="studies"><tr><td><in>st</in></td><td><in>standardized_effect</in></td><td><in>se</in></td><td><in>wt</in></td><td><in>dwt</in></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="studies"><tr><td><in>st</in></td><td><inu>standardized_effect</inu></td><td><inu>se</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
 </table>
 <line></line>
 <line><subtitle>Fixed effects (inverse variance)</subtitle></line>
-<line>Pooled <in>stat_fixed</in> = <in>rmh</in> (<ci><in>pc</in>% CI = <in>from_fixed</in> to <in>to_fixed</in></ci>)</line>
-<line>Z (test <in>task</in>) = <in>z</in>  <pval><in>p_fixed</in></pval></line>
+<line>Pooled <in>stat_fixed</in> = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from_fixed</inu> to <inu>to_fixed</inu></ci>)</line>
+<line>Z (test <in>task</in>) = <inu>z</inu>  <pval><inp>p_fixed</inp></pval></line>
 <line></line>
 <line><subtitle>Non-combinability of studies</subtitle></line>
-<line>Cochran Q = <in>qc</in>  (df = <in>df</in>) <pval><in>xp</in></pval></line>
-<line>Moment-based estimate of between studies variance = <in>tausq</in></line>
-<line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
+<line>Cochran Q = <inu>qc</inu>  (df = <in>df</in>) <pval><inp>xp</inp></pval></line>
+<line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
+<line>I<sub>2</sub> (inconsistency) = <inu>isq</inu>% (<ci><in>pc1</in>% CI = <inu>llisq</inu>% to <inu>ulisq</inu>%</ci>) </line>
 <line></line>
 <line><subtitle>Random effects (DerSimonian-Laird)</subtitle></line>
-<line>Pooled <in>dsstat</in> = <in>dsrr</in> (<ci><in>pc</in>% CI = <in>dsll</in> to <in>dsul</in></ci>)</line>
-<line>Z (test <in>stat</in>) = <in>dz</in>  <pval><in>dp</in></pval></line>
+<line>Pooled <in>dsstat</in> = <inu>dsrr</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)</line>
+<line>Z (test <in>stat</in>) = <inu>dz</inu>  <pval><inp>dp</inp></pval></line>
 <block name="bias">
 <line></line>
 <line><subtitle>Bias indicators</subtitle></line>
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
+<line>Egger: bias = <inu>a</inu> (<ci><in>pc</in>% CI = <inu>cl</inu> to <inu>cu</inu></ci>)  <pval><inp>p</inp></pval></line>
 </block>
 </report>
