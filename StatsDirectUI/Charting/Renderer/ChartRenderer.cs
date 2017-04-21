@@ -527,8 +527,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (v != Constant.MISSING)
                 {
-                    // TODO: Why is it correct to take log10(x) here?  It matches the old code to move to a log10 axis, but...?
-                    cl += v <= 0 ? v : Math.Log10(v);
+                    cl += v;
                     nx++;
                 }
             }
@@ -564,83 +563,63 @@ namespace StatsDirect.Charting.Renderer
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
 
             // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data).
-            // TODO: How to handle this on a log X scale?
-            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / 100.0;
+            double xstepCanvas = (ToCanvasWidth(axisScales.X.MaximumScaleValue) - ToCanvasWidth(axisScales.X.MinimumScaleValue)) / 100.0;
 
             // This routine has changed from the original
             // It is more efficient in drawing - but bigger in code
 
             // Draw central curve
-            using (Pen greenPen = new Pen(GrGreen, 1))
+            double oldx = Constant.MISSING;
+            double oldy = Constant.MISSING;
+            for (double calcxCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); calcxCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); calcxCanvas += xstepCanvas)
             {
-                double oldx = Constant.MISSING;
-                double oldy = 0;
-                // Transformations on this get messy: axisXMin and axisXMax are in transformed non-canvas units (e.g. log10); originalX is therefore the original value.
-                // However a and b are based on the transformed non-canvas unit!
-                // So we need to keep both around.
-                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
-                {
-                    double originalX = InverseTransformX(calcx);
-                    double calcY = a + b * calcx;
-                    if (model == 1)
-                        calcY = PDF.alnorm(calcY);
-                    else
-                        calcY = Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
-                    double x1 = ToCanvasX(originalX);
-                    double y1 = ToCanvasY(calcY);
-                    if (y1 >= YAxisCanvas && y1 <= YAxisCanvas + YExtCanvas && oldx != Constant.MISSING && oldy >= YAxisCanvas && oldy <= YAxisCanvas + YExtCanvas)
-                        DrawLineInCanvasCoordinates(greenPen, x1, y1, oldx, oldy);
-                    oldx = x1;
-                    oldy = y1;
-                }
+                double calcX = FromCanvasWidth(calcxCanvas);
+                double calcY = a + b * calcX;
+                if (model == 1)
+                    calcY = PDF.alnorm(calcY);
+                else
+                    calcY = Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
+                MaybeDrawLineInChartCoordinates(axisScales, GrGreen, calcX, calcY, oldx, oldy);
+                oldx = calcX;
+                oldy = calcY;
             }
 
-            // Draw upper curve - TODO: Repeat fix
-            using (Pen magentaPen = new Pen(GrMagenta, 1))
+            // Draw upper and lower curves
+            oldx = Constant.MISSING;
+            oldy = Constant.MISSING;
+            for (double calcxCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); calcxCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); calcxCanvas += xstepCanvas)
             {
-                double oldx = 0;
-                double oldy = 0;
-                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
-                {
-                    double originalX = InverseTransformX(calcx);
-                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcx - xm, 2.0) / s1);
-                    double calcy = a + b * calcx;
-                    double cly = calcy + cl;
-                    if (model == 1)
-                        cly = PDF.alnorm(cly);
-                    else
-                        cly = Math.Exp(cly * 2.0) / (1.0 + Math.Exp(cly * 2.0));
-                    double x1 = ToCanvasX(originalX);
-                    double y1 = ToCanvasY(cly);
-                    if (y1 >= YAxisCanvas && y1 < YAxisCanvas + YExtCanvas && oldx != Constant.MISSING && oldy >= YAxisCanvas && oldy < YAxisCanvas + YExtCanvas)
-                        DrawLineInCanvasCoordinates(magentaPen, x1, y1, oldx, oldy);
-                    oldx = x1;
-                    oldy = y1;
-                }
-                // Draw lower curve - TODO: repeat fix
-                oldx = 0;
-                oldy = 0;
-                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
-                {
-                    double originalX = InverseTransformX(calcx);
-                    cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcx - xm, 2.0) / s1);
-                    double calcy = a + b * calcx;
-                    double cly = calcy - cl;
-                    if (model == 1)
-                        cly = PDF.alnorm(cly);
-                    else
-                        cly = Math.Exp(cly * 2.0) / (1.0 + Math.Exp(cly * 2.0));
-                    double x1 = ToCanvasX(originalX);
-                    double y1 = ToCanvasY(cly);
-                    if (y1 >= YAxisCanvas && y1 < YAxisCanvas + YExtCanvas && oldx != Constant.MISSING && oldy >= YAxisCanvas && oldy < YAxisCanvas + YExtCanvas)
-                        DrawLineInCanvasCoordinates(magentaPen, x1, y1, oldx, oldy);
-                    oldx = x1;
-                    oldy = y1;
-                }
+                double calcX = FromCanvasWidth(calcxCanvas);
+                cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcX - xm, 2.0) / s1);
+                double calcY = a + b * calcX;
+                double cly = calcY + cl;
+                if (model == 1)
+                    cly = PDF.alnorm(cly);
+                else
+                    cly = Math.Exp(cly * 2.0) / (1.0 + Math.Exp(cly * 2.0));
+                MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, calcX, calcY, oldx, oldy);
+                oldx = calcX;
+                oldy = cly;
+            }
+            // Draw lower curve
+            oldx = Constant.MISSING;
+            oldy = Constant.MISSING;
+            for (double calcxCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); calcxCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); calcxCanvas += xstepCanvas)
+            {
+                double calcX = FromCanvasWidth(calcxCanvas);
+                cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcX - xm, 2.0) / s1);
+                double calcY = a + b * calcX;
+                double cly = calcY - cl;
+                if (model == 1)
+                    cly = PDF.alnorm(cly);
+                else
+                    cly = Math.Exp(cly * 2.0) / (1.0 + Math.Exp(cly * 2.0));
+                MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, calcX, calcY, oldx, oldy);
+                oldx = calcX;
+                oldy = cly;
             }
             EndVectorPlot();
         }
-
 
         public void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
         {
