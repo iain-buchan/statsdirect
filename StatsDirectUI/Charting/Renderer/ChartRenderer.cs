@@ -23,18 +23,32 @@ namespace StatsDirect.Charting.Renderer
         {
             StartVectorPlot();
             double xtra = 0;
+
+            /*
             if (Definition.XSeries.Count > 1)
             {
                 foreach (Series s in Definition.XSeries)
                 {
+                    string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label;
                     double w = MeasureStringInCanvasCoordinates(s.Title, LegendFont).Width + MINIMUM_X_WHITESPACE;
-                    if (w > xtra + XAxisCanvas)
-                        xtra = w - XAxisCanvas;
+                    if (w > xtra)
+                        xtra = w;
                 }
+            }
+             */
+
+            for (int i = 0; i < igroups; i++)
+            {
+                double w = MeasureStringInCanvasCoordinates(cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i].Label, LegendFont).Width + MINIMUM_X_WHITESPACE;
+                if (w > xtra + XAxisCanvas)
+                    xtra = w - XAxisCanvas - 5;
             }
 
             //  TODO: Log and log-log axes here
-            DrawAxesOrEnlargeCanvas("Log-log plot (parallel groups if hazards proportional)", new AxisDefinition("log(Time)", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("-log(-log(Survival))", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            DrawAxesOrEnlargeCanvas("Log-log plot (parallel groups if hazards proportional)",
+                new AxisDefinition("log(Time)", AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition("-log(-log(Survival))", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra },
+                false, false);
 
             // Draw the legends
             using (Pen p = new Pen(GrBlack, 1))
@@ -43,7 +57,8 @@ namespace StatsDirect.Charting.Renderer
                 for (int i = 1; i <= igroups; i++)
                 {
                     DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * i, 6, (MarkerShape)i, false, p);
-                    DrawStringLegendL(cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label, 24, YAxisCanvas + YExtCanvas - 10 - size2 * i);
+                    string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label;
+                    DrawStringLegendL(vq, 24, YAxisCanvas + YExtCanvas - 10 - size2 * i);
                 }
 
                 // plot points
@@ -288,7 +303,6 @@ namespace StatsDirect.Charting.Renderer
                 }
                 ix1 = ix2;
                 iy1 = iy2;
-
             }
             markerPen.Dispose();
             linePen.Dispose();
