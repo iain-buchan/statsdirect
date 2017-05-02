@@ -888,10 +888,8 @@ namespace StatsDirect.Charting.Renderer
                 foreach (PointF xy in xys)
                 {
                     if (xy.X >= 0 && xy.Y >= 0 && oldXy.X >= 0 && oldXy.Y >= 0 && (xy.X != oldXy.X || xy.Y != oldXy.Y))
-                    {
                         DrawLineInCanvasCoordinates(linePen, xy.X, xy.Y, oldXy.X, oldXy.Y);
-                        oldXy = xy;
-                    }
+                    oldXy = xy;
                 }
             }
 
