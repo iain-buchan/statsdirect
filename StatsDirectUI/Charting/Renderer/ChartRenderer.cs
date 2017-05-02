@@ -495,11 +495,7 @@ namespace StatsDirect.Charting.Renderer
                             s += xtxi[i, k] * px[k];
                         xcx += s * px[i];
                     }
-                    double sey;
-                    if (mode == 1)
-                        sey = Math.Sqrt(Math.Abs(rms * xcx));
-                    else
-                        sey = Math.Sqrt(Math.Abs(rms * (1.0 + xcx)));
+                    double sey = Math.Sqrt(mode == 1 ? Math.Abs(rms * xcx) : Math.Abs(rms * (1.0 + xcx)));
                     double cl = cit * sey;
                     double x1 = calcx;
                     double y1 = calcy + cl;
@@ -512,7 +508,7 @@ namespace StatsDirect.Charting.Renderer
         }
 
         ///  <remarks>Jul 09: updated to put log models on a log x axis scale</remarks>
-        internal void PlotLogit(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle, bool shouldPlotLog10Doses)
+        internal void PlotLogit(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle, bool modelIsLog10)
         {
             const int MARKER_SIZE = 6;
 
@@ -527,7 +523,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (v != Constant.MISSING)
                 {
-                    cl += v;
+                    cl += modelIsLog10 ? Math.Log10(v) : v;
                     nx++;
                 }
             }
@@ -565,19 +561,17 @@ namespace StatsDirect.Charting.Renderer
             // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data).
             double xstepCanvas = (ToCanvasWidth(axisScales.X.MaximumScaleValue) - ToCanvasWidth(axisScales.X.MinimumScaleValue)) / 100.0;
 
-            // This routine has changed from the original
-            // It is more efficient in drawing - but bigger in code
-
             // Draw central curve
             double oldx = Constant.MISSING;
             double oldy = Constant.MISSING;
-            for (double calcxCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); calcxCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); calcxCanvas += xstepCanvas)
+            for (double xCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); xCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); xCanvas += xstepCanvas)
             {
-                double calcX = FromCanvasWidth(calcxCanvas);
+                double x = FromCanvasWidth(xCanvas);
+                double calcX = modelIsLog10 ? Math.Log10(x) : x;
                 double calcY = a + b * calcX;
                 calcY = Remodel(model, calcY);
-                MaybeDrawLineInChartCoordinates(axisScales, GrGreen, calcX, calcY, oldx, oldy);
-                oldx = calcX;
+                MaybeDrawLineInChartCoordinates(axisScales, GrGreen, x, calcY, oldx, oldy);
+                oldx = x;
                 oldy = calcY;
             }
 
@@ -586,12 +580,13 @@ namespace StatsDirect.Charting.Renderer
             oldy = Constant.MISSING;
             for (double calcxCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); calcxCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); calcxCanvas += xstepCanvas)
             {
-                double calcX = FromCanvasWidth(calcxCanvas);
+                double x = FromCanvasWidth(calcxCanvas);
+                double calcX = modelIsLog10 ? Math.Log10(x) : x;
                 cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcX - xm, 2.0) / s1);
                 double calcY = a + b * calcX + cl;
                 calcY = Remodel(model, calcY);
-                MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, calcX, calcY, oldx, oldy);
-                oldx = calcX;
+                MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, x, calcY, oldx, oldy);
+                oldx = x;
                 oldy = calcY;
             }
             // Draw lower curve
@@ -599,12 +594,13 @@ namespace StatsDirect.Charting.Renderer
             oldy = Constant.MISSING;
             for (double calcxCanvas = ToCanvasWidth(axisScales.X.MinimumScaleValue); calcxCanvas <= ToCanvasWidth(axisScales.X.MaximumScaleValue); calcxCanvas += xstepCanvas)
             {
-                double calcX = FromCanvasWidth(calcxCanvas);
+                double x = FromCanvasWidth(calcxCanvas);
+                double calcX = modelIsLog10 ? Math.Log10(x) : x;
                 cl = t * Math.Sqrt(1.0 / sw + Math.Pow(calcX - xm, 2.0) / s1);
                 double calcY = a + b * calcX - cl;
                 calcY = Remodel(model, calcY);
-                MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, calcX, calcY, oldx, oldy);
-                oldx = calcX;
+                MaybeDrawLineInChartCoordinates(axisScales, GrMagenta, x, calcY, oldx, oldy);
+                oldx = x;
                 oldy = calcY;
             }
             EndVectorPlot();
@@ -629,15 +625,6 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot();
             PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, 0, 1, 0, 1);
             EndVectorPlot();
-        }
-
-        private ScaleParameters GetDefaultScaleParameters()
-        {
-            return new ScaleParameters
-            {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear } },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Linear } }
-            };
         }
 
         internal void PlotXYR(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, double dataMinX, double dataMaxX, double dataMinY, double dataMaxY)
@@ -1069,7 +1056,7 @@ namespace StatsDirect.Charting.Renderer
             EndVectorPlot();
         }
 
-        internal void PlotTies(double[] x, double[] y, int nx, double lla, double ula, double GAMMA, string v0Title, string v1Title, double mean)
+        internal void PlotTies(double[] x, double[] y, int nx, double lla, double ula, double gamma, string v0Title, string v1Title, double mean)
         {
             DataMinX = x[1];
             DataMaxX = x[1];
@@ -1098,7 +1085,7 @@ namespace StatsDirect.Charting.Renderer
 
             // Draw the titles
             int size2 = LabelFont.Height * 2;
-            DrawStringLegend("mean difference \u00B1 " + Formatting.XRound(GAMMA * 100.0, 2) + "% limits of agreement", XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas + size2, StringAlignment.Far);
+            DrawStringLegend("mean difference \u00B1 " + Formatting.XRound(gamma * 100.0, 2) + "% limits of agreement", XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas + size2, StringAlignment.Far);
 
             // Draw the limits
             double x1 = XAxisCanvas + XExtCanvas;
@@ -1124,7 +1111,7 @@ namespace StatsDirect.Charting.Renderer
             EndVectorPlot();
         }
 
-        private static void Get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool use_ci)
+        private static void Get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
         {
             y = new double[rows + 1];
             y[0] = Constant.MISSING;
@@ -1145,7 +1132,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             bool usept = xtxt.Contains("Incidence");
-            use_ci = host.MetaPlotCI;
+            useCi = host.MetaPlotCI;
 
             if (cco <= 0.0)
                 cco = 0.95;
