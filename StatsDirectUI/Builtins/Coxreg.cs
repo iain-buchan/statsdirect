@@ -2824,9 +2824,9 @@ namespace StatsDirect.Builtins
             }
 
             int ictr = 0;
-            double[] xp = new double[iobs + 1 ];
-            double[] yp = new double[iobs + 1 ];
-            double[] xr = new double[iobs + 1 ];
+            double[] xp = new double[iobs];
+            double[] yp = new double[iobs];
+            double[] xr = new double[iobs];
             for (i = 1; i <= iobs; i++)
             {
                 if (z[i].S != 0.0)
@@ -2834,14 +2834,12 @@ namespace StatsDirect.Builtins
                     double rc = z[i].Exb * z[i].H;
                     double rm = z[i].Censor - rc;
                     double rd = z[i].Censor - rm <= 0 ? Constant.MISSING : Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
-                    ictr++;
-                    yp[ictr] = rd;
+                    yp[ictr++] = rd;
                 }
-                xp[i] = z[i].Time;
+                xp[i - 1] = z[i].Time;
             }
 
-            ExFortran.Rank(xp, xr, 1, ictr, 1, out double xf);
-            yp[0] = Constant.MISSING; //  Ensure charts don't have bogus (0,0) points
+            ExFortran.Rank(xp, xr, 0, ictr, 1, out double xf);
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
