@@ -374,12 +374,12 @@ namespace StatsDirect.Charting
 
         private static string Render(IChartRenderer ch)
         {
-            return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
+            return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), (int)ch.ImageWidth, (int)ch.ImageHeight);
         }
 
         private static string Render(ChartRenderer ch)
         {
-            return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
+            return RtfImageRenderer.ImageStreamToRtf(ch.GetImageStream(), (int)ch.ImageWidth, (int)ch.ImageHeight);
         }
 
         private static ScaleParameters CreateScaleParameters(ScaleType xScaleType, ScaleType yScaleType)

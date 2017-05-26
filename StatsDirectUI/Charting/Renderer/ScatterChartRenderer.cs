@@ -35,53 +35,32 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            const int LEGEND_MARKER_X = 12;
-            const int LEGEND_MARKER_Y_OFFSET = 22;
-            const int LEGEND_TEXT_X = 24;
-
             ScatterXYOptions sOptions = (ScatterXYOptions)Definition.ChartOptions;
             bool shouldDrawMarkers = sOptions.PlotMarkers;
             bool joinMarkersWithLines = sOptions.JoinMarkersWithLines;
 
+            bool showLegend = sOptions.ShowLegend && Definition.XSeries.Count > 1;
+            Legend legend = null;
+            if (showLegend)
+            {
+                legend = new Legend() { Position = LegendPosition.Left };
+                foreach (Series s in Definition.XSeries)
+                    legend.LegendEntries.Add(new LegendEntry() { MarkerType = s.AsDoubleSeries.MarkerType, Label = s.Title });
+            }
+
             if (!IsAscii)
             {
                 // Plot a metafile version
-                StartVectorPlot();
-                SetFontsAndThicknessesFromOptions(sOptions);
+                StartVectorPlot(sOptions, legend);
                 AssignMarkersToSeries(sOptions);
-                //  What extra space do we need before the X axis?
-                bool showLegend = sOptions.ShowLegend;
-                double xtra = 0;
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
+                    new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                    new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                    BoxAxes, false,
+                    legend);
+
                 if (showLegend)
-                {
-                    if (Definition.XSeries.Count > 1)
-                    {
-                        foreach (Series s in Definition.XSeries)
-                        {
-                            double w = LegendWidthInCanvasCoordinates(s.Title) + MINIMUM_X_WHITESPACE;
-                            if (w > xtra + XAxisCanvas)
-                                xtra = w - XAxisCanvas;
-                        }
-                    }
-                }
-
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, BoxAxes, false);
-
-                float size2 = LabelFont.Size * 2;
-                //  If there are multiple series, draw the legends
-                if (showLegend && Definition.XSeries.Count > 1)
-                {
-                    int i = 1;
-                    foreach (Series s in Definition.XSeries)
-                    {
-                        if (s.Title.Length > 0)
-                        {
-                            DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, YAxisCanvas + YExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * i, LEGEND_MARKER_SIZE, Definition.YSeries[i - 1].AsDoubleSeries);
-                            DrawStringLegendL(s.Title, LEGEND_TEXT_X, YAxisCanvas + YExtCanvas - 10 - size2 * i);
-                        }
-                        i += 1;
-                    }
-                }
+                    DrawLegend(legend);
 
                 // plot points
                 for (int c = 0; c < Definition.XSeries.Count; c++)
@@ -110,7 +89,10 @@ namespace StatsDirect.Charting.Renderer
                             xys[r].Y = -1;
                         }
                     }
-                    DrawMarkerSeriesInCanvasCoordinates(xys, ys.MarkerDetails.MarkerSize, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, joinMarkersWithLines, shouldDrawMarkers);
+                    using (Pen markerPen = GetMarkerPen(ys.MarkerType), linePen = GetLinePen(ys.MarkerType, false))
+                    {
+                        DrawMarkerSeriesInCanvasCoordinates(xys, ys.MarkerType.MarkerSize, ys.MarkerType.MarkerShape, ys.MarkerType.IsMarkerFilled, markerPen, linePen, joinMarkersWithLines, shouldDrawMarkers);
+                    }
                 }
                 MaybeDrawMarkerLines(axisScales);
                 EndVectorPlot();
@@ -121,7 +103,7 @@ namespace StatsDirect.Charting.Renderer
                 ASCII_InitPlot(5 + y); // 5 = Title, top axis title, bottom axis, bottom scale, bottom axis title
 
                 // Draw the scale
-                DefaultAxes();
+                DefaultAxes(null, default(Size));
                 AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
                 SetStandardAsciiScaling(y, axisScales);
 

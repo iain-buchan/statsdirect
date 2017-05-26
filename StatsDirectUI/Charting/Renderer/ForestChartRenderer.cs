@@ -170,9 +170,7 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            StartVectorPlot();
-
-            SetFontsAndThicknessesFromOptions(fOptions);
+            StartVectorPlot(fOptions);
 
             double rgap = 0;
             double xtra = 0;

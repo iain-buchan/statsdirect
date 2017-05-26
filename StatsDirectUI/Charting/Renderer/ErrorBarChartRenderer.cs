@@ -38,7 +38,6 @@ namespace StatsDirect.Charting.Renderer
                     DataMinX = s.MinX;
                 if (DataMaxX < s.MaxX)
                     DataMaxX = s.MaxX;
-
             }
 
             return new ScaleParameters
@@ -95,39 +94,23 @@ namespace StatsDirect.Charting.Renderer
             }
 
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
-
-            //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(eOptions);
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
-            EndVectorPlot();
-
-            //  By now, all measurements are known.  Set up the plot areas.
-            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
-            double legendRowHeight = Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendSpacing = MINIMUM_LEGEND_GAP + legendRowHeight;
+            Legend legend = null;
             if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
             {
-                //  Dim markerMidlineOffset As Double = (legendFontHeight - LEGEND_MARKER_SIZE) / 2
-                double legendBottom = legendTop - seriesCount * legendSpacing;
-                if (legendBottom < LOWEST_ALLOWED_LEGEND)
-                {
-                    double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
-
-                    //  Add in the extra space
-                    imageHeight += (int)Math.Ceiling(extraSpaceRequired);
-                    YAxisCanvas += extraSpaceRequired;
-                    legendTop += extraSpaceRequired;
-                    // legendBottom += extraSpaceRequired; 
-                }
+                legend = new Legend() { Position = LegendPosition.Bottom };
+                for (int i = 0; i < seriesCount; i++)
+                    legend.LegendEntries.Add(new LegendEntry { Label = eOptions.SeriesTitles[i], MarkerType = eOptions.MarkerTypes[i] });
             }
 
-            StartVectorPlot(false);
-            SetFontsAndThicknessesFromOptions(eOptions);
+            StartVectorPlot(eOptions, legend);
             AssignMarkersToSeries(eOptions);
 
             // Draw the scale
-            DrawAxesOrEnlargeCanvas(eOptions.Title, new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), BoxAxes, false);
+            DrawAxesOrEnlargeCanvas(eOptions.Title,
+                new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                BoxAxes, false,
+                legend);
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
             Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new Dictionary<int, List<MultiDoublePoint>>();
@@ -221,15 +204,13 @@ namespace StatsDirect.Charting.Renderer
                         }
                     }
                 }
-
-                //  Legend
-                if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
-                {
-                    double legendY = legendTop - seriesIndex * legendSpacing;
-                    DrawMarkerInCanvasCoordinates(XAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendY - legendFontHeight / 2.0, LEGEND_MARKER_SIZE, eOptions.MarkerTypes[seriesIndex]);
-                    DrawStringLegendL(eOptions.SeriesTitles[seriesIndex], XAxisCanvas + LEGEND_MARKER_SIZE * 2, legendY);
-                }
             }
+
+
+            //  Legend
+            if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
+                DrawLegend(legend);
+
             EndVectorPlot();
             return new ParameterBag();
         }

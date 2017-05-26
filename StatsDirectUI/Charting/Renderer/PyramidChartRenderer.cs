@@ -149,9 +149,7 @@ namespace StatsDirect.Charting.Renderer
 
             ScaleHeight(nmale);
 
-            StartVectorPlot();
-
-            SetFontsAndThicknessesFromOptions(pOptions);
+            StartVectorPlot(pOptions);
 
             double xtra = 0;
             for (int i = 0; i < nmale; i++)

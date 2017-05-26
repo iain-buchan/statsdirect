@@ -80,9 +80,7 @@ namespace StatsDirect.Charting.Renderer
                 p = 1.0 - p;
 
             // Plot a Metafile version
-            StartVectorPlot();
-
-            SetFontsAndThicknessesFromOptions(bwOptions);
+            StartVectorPlot(bwOptions);
             AssignMarkersToSeries();
 
             AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
@@ -340,9 +338,7 @@ namespace StatsDirect.Charting.Renderer
                 p = 1.0 - p;
 
             // Plot a Metafile version
-            StartVectorPlot();
-
-            SetFontsAndThicknessesFromOptions(bwOptions);
+            StartVectorPlot(bwOptions);
             AssignMarkersToSeries();
             //  Not horizontal, so vertical
 
@@ -613,7 +609,7 @@ namespace StatsDirect.Charting.Renderer
             ASCII_InitPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
-            DefaultAxes();
+            DefaultAxes(null, default(Size));
             AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title + "\r\n",
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType),

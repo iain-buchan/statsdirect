@@ -208,10 +208,7 @@ namespace StatsDirect.Charting.Renderer
 
             const int RHS_LABEL_GAP = 7;
 
-            StartVectorPlot();
-
-            //  Fonts
-            SetFontsAndThicknessesFromOptions(cOptions);
+            StartVectorPlot(cOptions);
             //  NB we use the Legend font as the Control Label font!
 
             // Draw the scale
@@ -269,7 +266,12 @@ namespace StatsDirect.Charting.Renderer
                     xys[r].Y = -1;
                 }
             }
-            DrawMarkerSeriesInCanvasCoordinates(xys, 6, xs0.MarkerDetails.MarkerShape, xs0.MarkerDetails.IsMarkerFilled, xs0.MarkerDetails.MarkerPen, xs0.MarkerDetails.LinePen, true, false);
+
+            using (Pen markerPen = GetMarkerPen(xs0.MarkerType),
+                linePen = GetLinePen(xs0.MarkerType, true))
+            {
+                DrawMarkerSeriesInCanvasCoordinates(xys, 6, xs0.MarkerType.MarkerShape, xs0.MarkerType.IsMarkerFilled, markerPen, linePen, true, false);
+            }
 
             // draw vertical date markers
             if (cOptions.UseDates)

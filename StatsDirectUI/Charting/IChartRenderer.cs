@@ -14,7 +14,7 @@ namespace StatsDirect.Charting
 
         Stream GetImageStream();
 
-        int ImageWidth { get; }
-        int ImageHeight { get; }
+        double ImageWidth { get; }
+        double ImageHeight { get; }
     }
 }

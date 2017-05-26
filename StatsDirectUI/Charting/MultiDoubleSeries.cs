@@ -12,8 +12,7 @@ namespace StatsDirect.Charting
         private MultiDoublePoint max;
         public MultiDoublePoint[] Data { get; set; }
 
-        //  Similar to markers
-        public MarkerDetails MarkerDetails { get; set; }
+        public MarkerType MarkerType { get; set; }
 
         public int Points => Data.Length;
 

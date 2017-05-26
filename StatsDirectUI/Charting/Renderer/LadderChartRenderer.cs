@@ -34,8 +34,7 @@ namespace StatsDirect.Charting.Renderer
         {
             // Get the plot title
             LadderOptions lOptions = (LadderOptions)Definition.ChartOptions;
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(lOptions);
+            StartVectorPlot(lOptions);
             AssignMarkersToSeries(Definition.YSeries, lOptions);
 
             //  No need to calculate min/max values, as they've already been calculated as the series were added.
@@ -54,8 +53,8 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double y1 = ToCanvasY(s0.Data[r]);
                     double Y2 = ToCanvasY(s1.Data[r]);
-                    DrawMarkerInCanvasCoordinates(x1, y1, s0.MarkerDetails.MarkerSize, s0);
-                    DrawMarkerInCanvasCoordinates(x2, Y2, s1.MarkerDetails.MarkerSize, s1);
+                    DrawMarkerInCanvasCoordinates(x1, y1, s0.MarkerType.MarkerSize, s0);
+                    DrawMarkerInCanvasCoordinates(x2, Y2, s1.MarkerType.MarkerSize, s1);
                 }
             }
             //  Lines

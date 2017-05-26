@@ -11,6 +11,7 @@ namespace StatsDirect.Charting
         CircleLine = 6,
         SquareLine = 7,
         SquareCross = 8,
-        Diamond = 9
+        Diamond = 9,
+        SurvivalTic = 10
     } 
 } 

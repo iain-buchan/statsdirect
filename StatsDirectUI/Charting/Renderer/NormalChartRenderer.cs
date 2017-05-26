@@ -155,8 +155,7 @@ namespace StatsDirect.Charting.Renderer
                     x[j] = x[j] * sdy + ybar;
             }
 
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(nOptions);
+            StartVectorPlot(nOptions);
             AssignMarkersToSeries(Definition.XSeries, nOptions);
 
             DataMinMax Select_MinMaxY = DataMinMax.XCalc_YCalc;

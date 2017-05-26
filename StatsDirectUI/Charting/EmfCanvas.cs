@@ -18,6 +18,10 @@ namespace StatsDirect.Charting
         private double width;
         private double height;
 
+        public double Width => width;
+
+        public double Height => height;
+
         public void Dispose()
         {
             if (null != metafileGraphics)
@@ -83,7 +87,7 @@ namespace StatsDirect.Charting
         ///  <param name="direction"></param>
         ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
-        public SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
+        public void DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             //  Work out how to fiddle the text alignment
             if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
@@ -125,7 +129,10 @@ namespace StatsDirect.Charting
             // Undo the transform
             metafileGraphics.RotateTransform(0f - angle);
             metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(height - y));
+        }
 
+        public SizeF MeasureStringAtAngle(string s, Font font, LabelDirection direction)
+        { 
             SizeF uprightSize = metafileGraphics.MeasureString(s, font);
             SizeF boundingSize = ToBoundingSize(uprightSize, direction);
             return boundingSize;
@@ -371,6 +378,10 @@ namespace StatsDirect.Charting
                     break;
                 case MarkerShape.Diamond:
                     DrawDiamond(p, x, y, size2, isFilled);
+                    break;
+                case MarkerShape.SurvivalTic:
+                        DrawLine(p, x - size, y - size, x + size, y - size);
+                        DrawLine(p, x + size, y - size, x + size, y + size);
                     break;
                 default:
                     throw new ArgumentException("Don't know how to draw style's shape", nameof(shape));

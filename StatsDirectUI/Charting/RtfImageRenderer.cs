@@ -14,7 +14,7 @@ namespace StatsDirect.Charting
                 if (cd.IsAscii)
                     rtf = ch.GetAsciiRTF();
                 else
-                    rtf = ImageStreamToRtf(ch.GetImageStream(), ch.ImageWidth, ch.ImageHeight);
+                    rtf = ImageStreamToRtf(ch.GetImageStream(), (int)ch.ImageWidth, (int)ch.ImageHeight);
                 return results;
             }
         }

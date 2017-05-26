@@ -56,8 +56,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(sOptions);
+            StartVectorPlot(sOptions);
             AssignMarkersToSeries(sOptions);
 
             DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
@@ -145,12 +144,14 @@ namespace StatsDirect.Charting.Renderer
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
 
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(sOptions);
+            StartVectorPlot(sOptions);
             AssignMarkersToSeries(sOptions);
 
             //  TODO: Should we be using the X axis title for something that will be shown vertically?
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), sOptions.ShouldBoxAxes, false);
+            DrawAxesOrEnlargeCanvas(sOptions.Title,
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse },
+                new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                sOptions.ShouldBoxAxes, false);
             double xgap = XExtCanvas / DivX;
 
             //  Work out what markers to use

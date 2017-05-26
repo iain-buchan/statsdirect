@@ -8,7 +8,7 @@ namespace StatsDirect.Charting
         public double[] Data { get; set; }
 
         //  Similar to markers
-        public MarkerDetails MarkerDetails { get; set; }
+        public MarkerType MarkerType { get; set; }
 
         private bool hasSum;
         private double sum;
@@ -21,7 +21,7 @@ namespace StatsDirect.Charting
 
         public DoubleSeries()
         {
-            MarkerDetails = new MarkerDetails();
+            MarkerType = new MarkerType();
         }
 
         public DoubleSeries(double[] data, string title)

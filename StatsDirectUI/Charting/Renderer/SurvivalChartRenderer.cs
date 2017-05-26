@@ -119,53 +119,31 @@ namespace StatsDirect.Charting.Renderer
             bool useMarker = sOptions.ShowEventMarkers;
             bool useTic = sOptions.ShowCensorshipTics;
 
-            //  If there is a legend, work out how many series there are and extend the plot area as required to hold the legend
-
-            //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(sOptions);
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
-            EndVectorPlot();
-
-            //  By now, all measurements are known.  Set up the plot areas.
-            double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
-            double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double xtra = 0;
-#if LEGEND_AT_BOTTOM
-            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
-            double legendBottom = legendTop - sOptions.Series.Count * legendSpacing;
-            if (sOptions.ShowLegend && legendBottom < LOWEST_ALLOWED_LEGEND)
+            //  Legend
+            Legend legend = null;
+            if (sOptions.ShowLegend)
             {
-                double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
-
-                //  Add in the extra space
-                metafileHeight += extraSpaceRequired;
-                yAxisCanvas += extraSpaceRequired;
-                legendTop += extraSpaceRequired;
-                // legendBottom += extraSpaceRequired; 
+                legend = new Legend { Position = LegendPosition.Bottom };
+                for (int c = 0; c < sOptions.Series.Count; c++)
+                    legend.LegendEntries.Add(new LegendEntry { Label = MakeTitle(sOptions.SeriesTitles[c], string.Empty), MarkerType = sOptions.MarkerTypes[c] });
             }
-#else
-            for (int c = 0; c < sOptions.Series.Count; c++)
-            {
-                double w = LegendWidthInCanvasCoordinates(MakeTitle(sOptions.SeriesTitles[c], null)) + MINIMUM_X_WHITESPACE;
-                if (w > xtra + XAxisCanvas)
-                    xtra = w - XAxisCanvas;
-            }
-#endif
 
-            StartVectorPlot(false);
-            SetFontsAndThicknessesFromOptions(sOptions);
+
+            StartVectorPlot(sOptions, legend);
             AssignMarkersToSeries(sOptions);
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition("Times", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-            //divy = cols + 1;
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(sOptions.Title,
+                new AxisDefinition("Times", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                false, false,
+                legend);
             DivY = 1;
             OffY = YAxisCanvas;
 
             // Work through the columns
             //  The CI marker type is always the last one in the list
             MarkerType ciMarkerType = sOptions.MarkerTypes[sOptions.MarkerTypes.Count - 1];
-            for (int c = 0; c <= sOptions.Series.Count - 1; c++)
+            for (int c = 0; c < sOptions.Series.Count; c++)
             {
                 double[] ydat = sOptions.Series[c].YDat;
                 double[] xdat = sOptions.Series[c].XDat;
@@ -176,32 +154,6 @@ namespace StatsDirect.Charting.Renderer
                 MarkerType mType = sOptions.MarkerTypes[c];
                 using (Pen p = GetMarkerPen(mType))
                 {
-                    //  If necessary, draw the marker legend
-                    if (sOptions.ShowLegend)
-                    {
-                        if (sOptions.SeriesTitles[c].Length > 0)
-                        {
-#if LEGEND_AT_BOTTOM
-                            double markerX = xAxisCanvas + LEGEND_MARKER_SIZE / 2.0;
-                            double markerY = legendTop - (c * legendSpacing) - markerMidlineOffset;
-#else
-                            double markerX = 9 + LEGEND_MARKER_SIZE / 2.0;
-                            double markerY = YAxisCanvas + YExtCanvas - 10 - c * legendSpacing - markerMidlineOffset;
-#endif
-                            if (useMarker)
-                            {
-                                DrawMarkerInCanvasCoordinates(markerX, markerY, LEGEND_MARKER_SIZE, mType);
-                            }
-                            else
-                            {
-                                const double cornerOffset = LEGEND_MARKER_SIZE / 2.0;
-                                DrawLineInCanvasCoordinates(p, markerX - cornerOffset, markerY - cornerOffset, markerX + cornerOffset, markerY - cornerOffset);
-                                DrawLineInCanvasCoordinates(p, markerX + cornerOffset, markerY - cornerOffset, markerX + cornerOffset, markerY + cornerOffset);
-                            }
-                            DrawStringLegendL(MakeTitle(sOptions.SeriesTitles[c], null), markerX + LEGEND_MARKER_SIZE * 1.5, markerY + markerMidlineOffset);
-                        }
-                    }
-
                     double x1 = ToCanvasX(axisScales.X.MinimumScaleValue);
                     double y1 = ToCanvasY(1.0);
                     double x2 = 0;
@@ -228,26 +180,26 @@ namespace StatsDirect.Charting.Renderer
                     //  overlay confidence intervals
                     if (doCi)
                     {
-                        // x1 = ToCanvasX( AxisXMin ); 
-                        for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
+                        Color ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
+                        using (Pen ciPen = new Pen(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle })
                         {
-                            if (ydat[r] != Constant.MISSING && ydatL[r] != Constant.MISSING && ydatU[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
+                            for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                             {
-                                // Confidence interval
-                                if (cdat[r] > 0)
+                                if (ydat[r] != Constant.MISSING && ydatL[r] != Constant.MISSING && ydatU[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
                                 {
-                                    Color ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
-                                    using (Pen ciPen = new Pen(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle })
-                                    {
-                                        DrawLineInCanvasCoordinates(ciPen, ToCanvasX(xdat[r]), ToCanvasY(ydatL[r]), ToCanvasX(xdat[r]), ToCanvasY(ydatU[r]));
-                                    }
+                                    // Confidence interval
+                                    if (cdat[r] > 0)
+                                        DrawLineInChartCoordinates(ciPen, xdat[r], ydatL[r], xdat[r], ydatU[r]);
                                 }
                             }
-                            // x1 = x2; 
                         }
                     }
                 }
             }
+
+            if (null != legend)
+                DrawLegend(legend);
+
             EndVectorPlot();
             return new ParameterBag();
         }

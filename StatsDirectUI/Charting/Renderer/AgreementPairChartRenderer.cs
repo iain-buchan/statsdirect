@@ -58,7 +58,7 @@ namespace StatsDirect.Charting.Renderer
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             AgreementOptions aOptions = (AgreementOptions)Definition.ChartOptions;
-            StartVectorPlot();
+            StartVectorPlot(aOptions);
             Range mxdRange = GetMinMaxArray(aOptions.mxd, Definition.ScaleParameters.Y.ScaleType);
             double mxdMin = mxdRange.Min;
             double mxdMax = mxdRange.Max;

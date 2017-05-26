@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using Layout;
 using StatsDirect.Templates;
+using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class HistogramChartRenderer: AbstractChartRenderer, IChartRenderer
+    class HistogramChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public HistogramChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -78,14 +79,13 @@ namespace StatsDirect.Charting.Renderer
                     //  If there's more than one series, they're to be plotted separately.  Each plot is the same height as the original.
                     imageHeight *= seriesToUse.Count;
 
-                    StartVectorPlot();
+                    StartVectorPlot(options);
 
                     originalMarkerTypes = ChartPreferences.MarkerTypes;
                     ChartPreferences.PushAndCloneMarkerTypes();
                     for (int i = 0; i < originalMarkerTypes.Length; i++)
                         ChartPreferences.MarkerTypes[i].Width = options.LineWidth;
                     AssignMarkersToSeries(seriesToUse);
-                    SetFontsAndThicknessesFromOptions(options);
                 }
                 else
                 {
@@ -137,7 +137,7 @@ namespace StatsDirect.Charting.Renderer
                         double thisChartBottom = thisChartTop - heightPerChart;
 
                         //  No longer the default Y axis!
-                        DefaultAxes();
+                        DefaultAxes(null, default(Size));
                         YAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
                         YExtCanvas = heightPerChart - Math.Min(heightPerChart / 4, 2 * DEFAULT_Y_GAP);
 
@@ -145,37 +145,42 @@ namespace StatsDirect.Charting.Renderer
                         if (overlayNormalCurve)
                         {
                             double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
-                            double mxy = PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, false);
+                            double mxy = PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, null);
                             if (mxy > DataMaxY)
                                 DataMaxY = mxy;
                         }
 
                         // Draw the axes
-                        AxisScalesAndExtraSize ases = DrawAxesOrFail(title,
+                        AxisScales ass = DrawAxesOrFail(title,
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             false,
-                            true);
+                            true,
+                            default(Size));
 
                         // Plot each bar
-                        for (int c = 0; c < descriptor.Bins; c++)
+                        using (Pen markerPen = GetMarkerPen(s.MarkerType))
                         {
-                            // plot a bar at an absolute position (maxX / 20)
-                            double x1 = ToCanvasX(descriptor.Edges[c]);
-                            double x2 = ToCanvasX(descriptor.Edges[c + 1]);
-                            double value = options.ShowRelativeFrequencies ? descriptor.Counts[c] / (double)s.Points : descriptor.Counts[c];
-                            double y1 = ToCanvasY(value);
-                            double y2 = YAxisCanvas;
-                            DrawRectangleInCanvasCoordinates(s.MarkerDetails.MarkerPen, x1, y1, x2 - x1, y1 - y2);
+                            for (int c = 0; c < descriptor.Bins; c++)
+                            {
+                                // plot a bar at an absolute position (maxX / 20)
+                                double x1 = ToCanvasX(descriptor.Edges[c]);
+                                double x2 = ToCanvasX(descriptor.Edges[c + 1]);
+                                double value = options.ShowRelativeFrequencies ? descriptor.Counts[c] / (double)s.Points : descriptor.Counts[c];
+                                double y1 = ToCanvasY(value);
+                                double y2 = YAxisCanvas;
+                                DrawRectangleInCanvasCoordinates(markerPen, x1, y1, x2 - x1, y1 - y2);
+                            }
+
+                            //  ZInt was calculated at Mp*2
+                            if (overlayNormalCurve)
+                            {
+                                double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
+                                PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, markerPen);
+                            }
                         }
 
-                        //  ZInt was calculated at Mp*2
-                        if (overlayNormalCurve)
-                        {
-                            double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
-                            PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, true);
-                        }
-                        MaybeDrawMarkerLines(ases.AxisScales);
+                        MaybeDrawMarkerLines(ass);
                     }
                     else
                     {
@@ -191,7 +196,7 @@ namespace StatsDirect.Charting.Renderer
                         DataMinX = 0;
                         DataMaxX = DataMaxY;
 
-                        DefaultAxes();
+                        DefaultAxes(null, default(Size));
                         AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
                             new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                             new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
@@ -262,9 +267,9 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="zint">The midpoint interval</param>
         /// <param name="count">The number of bins</param>
         /// <param name="s">The series whose data is to be used for the calculation</param>
-        /// <param name="shouldPlot">Draws if true; merely returns the maximum value if false</param>
+        /// <param name="p">Draws using p if set; merely returns the maximum value if null</param>
         /// <returns>The maximum value of y</returns>
-        private double PlotNormalCurve(double zmin, double zint, int count, DoubleSeries s, double proportionScaler, bool shouldPlot)
+        private double PlotNormalCurve(double zmin, double zint, int count, DoubleSeries s, double proportionScaler, Pen p)
         {
             // Setup the plotting variables
             double xbar = s.Sum / s.Points;
@@ -289,11 +294,11 @@ namespace StatsDirect.Charting.Renderer
                 y = bins * Math.Exp(-0.5 * Math.Pow((sumx - xbar) / sdv, 2.0)) * proportionScaler;
                 if (y > yMax)
                     yMax = y;
-                if (shouldPlot)
+                if (null != p)
                 {
                     double y1 = ToCanvasY(y);
                     double x1 = XAxisCanvas + c / (double)count * XExtCanvas;
-                    DrawLineInCanvasCoordinates(s.MarkerDetails.MarkerPen, xold, yold, x1, y1);
+                    DrawLineInCanvasCoordinates(p, xold, yold, x1, y1);
                     xold = x1;
                     yold = y1;
                 }

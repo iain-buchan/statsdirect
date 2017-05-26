@@ -24,9 +24,10 @@ namespace StatsDirect.Charting
         ///  <param name="y"></param>
         ///  <param name="txtFormat"></param>
         ///  <param name="direction"></param>
-        ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
-        /// <remarks></remarks>
-        SizeF DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction);
+        void DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction);
+
+        ///  <returns>The bounding size of s drawn with txtFormat</returns>
+        SizeF MeasureStringAtAngle(string s, Font font, LabelDirection direction);
 
         ///  <summary>
         ///  Draw a square of side size, centred on (x, y).
@@ -56,6 +57,9 @@ namespace StatsDirect.Charting
         void DrawLine(Pen p, double x1, double y1, double x2, double y2);
         double GetFontHeight(Font f);
         SizeF MeasureString(string s, Font font);
+
+        double Width { get; }
+        double Height { get; }
 
         /// <summary>
         /// 

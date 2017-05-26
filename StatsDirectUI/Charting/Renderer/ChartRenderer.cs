@@ -351,7 +351,7 @@ namespace StatsDirect.Charting.Renderer
                     xys[r].Y = -1;
                 }
             }
-            DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
+            DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerType, false, true);
 
             double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2;
 
@@ -434,7 +434,7 @@ namespace StatsDirect.Charting.Renderer
                     xys[r].Y = -1;
                 }
             }
-            DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
+            DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerType, false, true);
 
             MathDbl.civ(nx - p, out double cit, gamma, out double p0);
             double rdf = Convert.ToDouble(nx - 1 - (p - 1));
@@ -570,7 +570,7 @@ namespace StatsDirect.Charting.Renderer
                     xys[r].Y = -1;
                 }
             }
-            DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerDetails.MarkerShape, ys.MarkerDetails.IsMarkerFilled, ys.MarkerDetails.MarkerPen, ys.MarkerDetails.LinePen, false, true);
+            DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerType, false, true);
 
             // Aim for 100 steps across the chart - anything coarser gives terrible resolution for tight curves (e.g. log10 of the sample data).
             double xstepCanvas = (ToCanvasWidth(axisScales.X.MaximumScaleValue) - ToCanvasWidth(axisScales.X.MinimumScaleValue)) / 100.0;
@@ -1314,7 +1314,23 @@ namespace StatsDirect.Charting.Renderer
 
         internal void x_plGraphInternal(int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker, double[,] x, double[,] y, int plotMode, string xAxisTitle, string yAxisTitle, string title)
         {
-            StartVectorPlot();
+            Legend legend = null;
+            if (groups > 1)
+            {
+                legend = new Legend { Position = LegendPosition.Left };
+                for (int k = 1; k <= groups; k++)
+                {
+                    MarkerType mt = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
+                    if (!marker)
+                    {
+                        mt.MarkerShape = MarkerShape.SurvivalTic;
+                        mt.IsMarkerFilled = false;
+                    }
+                    legend.LegendEntries.Add(new LegendEntry { Label = glab[k], MarkerType = mt });
+                }
+            }
+
+            StartVectorPlot(null, legend);
             DataMaxX = double.MinValue;
             DataMaxY = double.MinValue;
             DataMinX = double.MaxValue;
@@ -1338,30 +1354,12 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear), false, false);
+            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+                new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear),
+                false, false,
+                legend);
 
-            // Plot the legends
-            int size2 = LabelFont.Height * 2;
-            if (groups > 1)
-            {
-                for (int k = 1; k <= groups; k++)
-                {
-                    string vq = glab[k];
-                    if (marker)
-                    {
-                        DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
-                    }
-                    else
-                    {
-                        using (Pen p = GetMarkerPen(ChartPreferences.MarkerTypes[(k - 1) % 9]))
-                        {
-                            DrawLineInCanvasCoordinates(p, 10, YAxisCanvas + YExtCanvas - 18 - size2 * k, 20, YAxisCanvas + YExtCanvas - 18 - size2 * k);
-                            DrawLineInCanvasCoordinates(p, 20, YAxisCanvas + YExtCanvas - 18 - size2 * k, 20, YAxisCanvas + YExtCanvas - 28 - size2 * k);
-                        }
-                    }
-                    DrawStringLegendL(vq, 24, YAxisCanvas + YExtCanvas - 10 - size2 * k);
-                }
-            }
             for (int k = 1; k <= groups; k++)
             {
                 MarkerType mt = ChartPreferences.MarkerTypes[(k - 1) % 9];
@@ -1410,6 +1408,7 @@ namespace StatsDirect.Charting.Renderer
                     y1 = y2;
                 }
             }
+            DrawLegend(legend);
             EndVectorPlot();
         }
 

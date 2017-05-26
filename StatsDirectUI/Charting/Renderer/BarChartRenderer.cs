@@ -157,25 +157,16 @@ namespace StatsDirect.Charting.Renderer
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
             bool shouldDrawLegend = bOptions.Stacked || bOptions.ShowLegend && bOptions.ShowLegendIsRelevant;
 
-            //  Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(bOptions);
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
-            EndVectorPlot();
-
-            //  By now, all measurements are known.  Set up the plot areas.
-            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
-            double legendRowHeight = Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendSpacing = MINIMUM_LEGEND_GAP + legendRowHeight;
-            double legendSpaceRequired = 0;
+            Legend legend = null;
             if (shouldDrawLegend)
             {
-                double legendBottom = legendTop - seriesToUse.Count * legendSpacing;
-                if (legendBottom < LOWEST_ALLOWED_LEGEND)
+                legend = new Legend { Position = LegendPosition.Bottom };
+                for (int i = 0; i < Definition.YSeries.Count; i++)
                 {
-                    legendSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
-                    legendTop += legendSpaceRequired;
-                    legendBottom += legendSpaceRequired;
+                    Series series = Definition.YSeries[i];
+                    MarkerType mt = bOptions.MarkerTypes[i].Clone();
+                    mt.MarkerShape = MarkerShape.Square;
+                    legend.LegendEntries.Add(new LegendEntry { Label = series.Title, MarkerType = mt });
                 }
             }
 
@@ -198,25 +189,16 @@ namespace StatsDirect.Charting.Renderer
                 yAxisTitle = xAxisTitle;
                 xAxisTitle = temp;
 
-                StartVectorPlot(false);
-                SetFontsAndThicknessesFromOptions(bOptions);
+                StartVectorPlot(bOptions, legend);
 
                 // Draw the scale
                 AssignMarkersToSeries(bOptions);
 
-                double xtra = 0;
-                foreach (string s in bOptions.SeriesTitles)
-                {
-                    double w = AxisLabelWidthInCanvasCoordinates(s);
-                    if (w > xtra)
-                        xtra = w;
-                }
-                xtra = Math.Max(0, Convert.ToInt32(xtra - 20));
-
                 AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
-                    new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired },
-                    new AxisDefinition(yAxisTitle, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, Labels = bOptions.SeriesTitles },
-                    bOptions.ShouldBoxAxes, false);
+                    new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                    new AxisDefinition(yAxisTitle, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = bOptions.SeriesTitles },
+                    bOptions.ShouldBoxAxes, false,
+                    legend);
                 DivY = ((DoubleSeries)seriesToUse[0]).Points;
                 OffY = -(0 / DivY * YExtCanvas) + YAxisCanvas;
 
@@ -250,105 +232,96 @@ namespace StatsDirect.Charting.Renderer
                     else
                         bottomOffsetInArea = (seriesToUse.Count - c) * eachBarHeight + eachSideWhiteSpaceHeight;
 
-                    Pen barPen = s.MarkerDetails.LinePen;
-                    Brush barBrush = MarkerTypeToBrush(mt);
-
-                    for (int barIndex = 0; barIndex <= s.Data.Length - 1; barIndex++)
+                    using (Pen barPen = GetLinePen(s.MarkerType, true))
                     {
-                        double thisData = s.Data[barIndex];
-                        //  Missing data leads to missing bars
-                        if (thisData != Constant.MISSING)
+                        using (Brush barBrush = MarkerTypeToBrush(mt))
                         {
-                            double totalBelowThisBar = 0;
-                            double totalOfAllBars = 0;
-                            //  Data exists.  For stacked and 100% stacked bars, we now need to position and scale the bar.
-                            if (bOptions.Stacked)
+
+                            for (int barIndex = 0; barIndex <= s.Data.Length - 1; barIndex++)
                             {
-                                for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
+                                double thisData = s.Data[barIndex];
+                                //  Missing data leads to missing bars
+                                if (thisData != Constant.MISSING)
                                 {
-                                    double probeValue = seriesToUse[probeIndex].AsDoubleSeries.Data[barIndex];
-                                    if (probeValue != Constant.MISSING)
+                                    double totalBelowThisBar = 0;
+                                    double totalOfAllBars = 0;
+                                    //  Data exists.  For stacked and 100% stacked bars, we now need to position and scale the bar.
+                                    if (bOptions.Stacked)
                                     {
-                                        if (probeIndex < c)
-                                            totalBelowThisBar += probeValue;
-                                        totalOfAllBars += probeValue;
+                                        for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
+                                        {
+                                            double probeValue = seriesToUse[probeIndex].AsDoubleSeries.Data[barIndex];
+                                            if (probeValue != Constant.MISSING)
+                                            {
+                                                if (probeIndex < c)
+                                                    totalBelowThisBar += probeValue;
+                                                totalOfAllBars += probeValue;
+                                            }
+                                        }
+                                        //  By now: totalOfAllBars contains the total for all bars; totalBelowThisBar contains the total of bars that have already been drawn; thisData contains our own bar length
+                                        if (bOptions.Stacked100Percent)
+                                        {
+                                            if (totalOfAllBars <= 0)
+                                                thisData = Constant.MISSING;
+                                            else
+                                            {
+                                                //  Scale to percent
+                                                thisData = thisData / totalOfAllBars * 100.0;
+                                                totalBelowThisBar = totalBelowThisBar / totalOfAllBars * 100.0;
+                                            }
+                                        }
+                                        //  By now, totalBelowThisBar contains the sum of all the values below this bar scaled appropriately for 100% scaling if required.
+                                        //  thisData also contains appropriately scaled data.
+                                    }
+
+                                    //  If we should, draw this bar
+                                    if (thisData != Constant.MISSING)
+                                    {
+                                        //  Prevent portions of bars being drawn below the X axis
+                                        double dataW;
+                                        double dataLowX;
+                                        //  Dim dataHighX As Double = totalBelowThisBar + thisData
+                                        if (totalBelowThisBar < axisScales.X.MinimumScaleValue)
+                                        {
+                                            dataW = thisData + totalBelowThisBar - axisScales.X.MinimumScaleValue;
+                                            dataLowX = axisScales.X.MinimumScaleValue;
+                                        }
+                                        else
+                                        {
+                                            dataW = thisData;
+                                            dataLowX = totalBelowThisBar;
+                                        }
+
+                                        if (dataW > 0)
+                                        {
+                                            double areaYOffset = (s.Data.Length - 1 - barIndex) * eachAreaHeight;
+                                            double barH = eachBarHeight;
+                                            double barW = ToCanvasWidth(dataW);
+                                            double barY = OffY + areaYOffset + bottomOffsetInArea;
+                                            double barX = ToCanvasX(dataLowX);
+                                            if (barBrush != null)
+                                                FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
+                                            if (!Definition.ChartOptions.UseColour)
+                                                DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
+                                        }
                                     }
                                 }
-                                //  By now: totalOfAllBars contains the total for all bars; totalBelowThisBar contains the total of bars that have already been drawn; thisData contains our own bar length
-                                if (bOptions.Stacked100Percent)
-                                {
-                                    if (totalOfAllBars <= 0)
-                                        thisData = Constant.MISSING;
-                                    else
-                                    {
-                                        //  Scale to percent
-                                        thisData = thisData / totalOfAllBars * 100.0;
-                                        totalBelowThisBar = totalBelowThisBar / totalOfAllBars * 100.0;
-                                    }
-                                }
-                                //  By now, totalBelowThisBar contains the sum of all the values below this bar scaled appropriately for 100% scaling if required.
-                                //  thisData also contains appropriately scaled data.
                             }
 
-                            //  If we should, draw this bar
-                            if (thisData != Constant.MISSING)
-                            {
-                                //  Prevent portions of bars being drawn below the X axis
-                                double dataW;
-                                double dataLowX;
-                                //  Dim dataHighX As Double = totalBelowThisBar + thisData
-                                if (totalBelowThisBar < axisScales.X.MinimumScaleValue)
-                                {
-                                    dataW = thisData + totalBelowThisBar - axisScales.X.MinimumScaleValue;
-                                    dataLowX = axisScales.X.MinimumScaleValue;
-                                }
-                                else
-                                {
-                                    dataW = thisData;
-                                    dataLowX = totalBelowThisBar;
-                                }
-
-                                if (dataW > 0)
-                                {
-                                    double areaYOffset = (s.Data.Length - 1 - barIndex) * eachAreaHeight;
-                                    double barH = eachBarHeight;
-                                    double barW = ToCanvasWidth(dataW);
-                                    double barY = OffY + areaYOffset + bottomOffsetInArea;
-                                    double barX = ToCanvasX(dataLowX);
-                                    if (barBrush != null)
-                                    {
-                                        FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
-                                    }
-                                    if (!Definition.ChartOptions.UseColour)
-                                    {
-                                        DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
-                                    }
-                                }
-                            }
                         }
                     }
-
-                    //  Legend
-                    if (shouldDrawLegend)
-                    {
-                        if (barBrush != null)
-                            FillRectangleInCanvasCoordinates(barBrush, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        if (!Definition.ChartOptions.UseColour)
-                            DrawRectangleInCanvasCoordinates(barPen, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        DrawStringLegendL(Definition.XSeries[c].Title, XAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
-                    }
-
-                    if (barBrush != null)
-                        barBrush.Dispose();
                 }
                 MaybeDrawMarkerLines(axisScales);
+
+                //  Legend
+                if (shouldDrawLegend)
+                    DrawLegend(legend);
             }
             else
             {
                 //  Not horizontal, so vertical
 
-                StartVectorPlot(false);
-                SetFontsAndThicknessesFromOptions(bOptions);
+                StartVectorPlot(bOptions, legend);
                 AssignMarkersToSeries(bOptions);
 
                 //  Get overall minima and maxima
@@ -363,7 +336,11 @@ namespace StatsDirect.Charting.Renderer
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(xAxisTitle, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = legendSpaceRequired, Labels = bOptions.SeriesTitles }, new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), bOptions.ShouldBoxAxes, false);
+                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
+                    new AxisDefinition(xAxisTitle, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Labels = bOptions.SeriesTitles },
+                    new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                    bOptions.ShouldBoxAxes, false,
+                    legend);
                 DivX = ((DoubleSeries)seriesToUse[0]).Points;
                 OffX = -(0 / DivX * XExtCanvas) + XAxisCanvas;
 
@@ -393,107 +370,98 @@ namespace StatsDirect.Charting.Renderer
                     MarkerType mt = bOptions.MarkerTypes[c];
                     double leftOffsetInArea;
                     if (bOptions.Stacked)
-                    {
                         leftOffsetInArea = eachSideWhiteSpaceWidth;
-                    }
                     else
-                    {
                         leftOffsetInArea = c * eachBarWidth + eachSideWhiteSpaceWidth;
-                    }
 
-                    Pen barPen = s.MarkerDetails.LinePen;
-                    Brush barBrush = MarkerTypeToBrush(mt);
-
-                    for (int barIndex = 0; barIndex <= s.Data.Length - 1; barIndex++)
+                    using (Pen barPen = GetLinePen(s.MarkerType, false))
                     {
-                        double thisData = s.Data[barIndex];
-                        //  Missing data leads to missing bars
-                        if (thisData != Constant.MISSING)
+                        using (Brush barBrush = MarkerTypeToBrush(mt))
                         {
-                            double totalBelowThisBar = 0;
-                            //  Data exists.  For stacked and 100% stacked bars, we now need to position and scale the bar.
-                            if (bOptions.Stacked)
+                            for (int barIndex = 0; barIndex <= s.Data.Length - 1; barIndex++)
                             {
-                                double totalOfAllBars = 0;
-                                for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
+                                double thisData = s.Data[barIndex];
+                                //  Missing data leads to missing bars
+                                if (thisData != Constant.MISSING)
                                 {
-                                    double probeValue = seriesToUse[probeIndex].AsDoubleSeries.Data[barIndex];
-                                    if (probeValue != Constant.MISSING)
+                                    double totalBelowThisBar = 0;
+                                    //  Data exists.  For stacked and 100% stacked bars, we now need to position and scale the bar.
+                                    if (bOptions.Stacked)
                                     {
-                                        if (probeIndex < c)
+                                        double totalOfAllBars = 0;
+                                        for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
                                         {
-                                            totalBelowThisBar += probeValue;
+                                            double probeValue = seriesToUse[probeIndex].AsDoubleSeries.Data[barIndex];
+                                            if (probeValue != Constant.MISSING)
+                                            {
+                                                if (probeIndex < c)
+                                                {
+                                                    totalBelowThisBar += probeValue;
+                                                }
+                                                totalOfAllBars += probeValue;
+                                            }
                                         }
-                                        totalOfAllBars += probeValue;
+                                        //  By now: totalOfAllBars contains the total for all bars; totalBelowThisBar contains the total of bars that have already been drawn; thisData contains our own bar length
+                                        if (bOptions.Stacked100Percent)
+                                        {
+                                            if (totalOfAllBars <= 0)
+                                            {
+                                                thisData = Constant.MISSING;
+                                            }
+                                            else
+                                            {
+                                                //  Scale to percent
+                                                thisData = thisData / totalOfAllBars * 100.0;
+                                                totalBelowThisBar = totalBelowThisBar / totalOfAllBars * 100.0;
+                                            }
+                                        }
+                                        //  By now, totalBelowThisBar contains the sum of all the values below this bar scaled appropriately for 100% scaling if required.
+                                        //  thisData also contains appropriately scaled data.
+                                    }
+
+                                    //  If we should, draw this bar
+                                    if (thisData != Constant.MISSING)
+                                    {
+                                        //  Prevent portions of bars being drawn below the X axis
+                                        double dataH;
+                                        double dataLowY;
+                                        //  Dim dataHighX As Double = totalBelowThisBar + thisData
+                                        if (totalBelowThisBar < axisScales.Y.MinimumScaleValue)
+                                        {
+                                            dataH = thisData + totalBelowThisBar - axisScales.Y.MinimumScaleValue;
+                                            dataLowY = axisScales.Y.MinimumScaleValue;
+                                        }
+                                        else
+                                        {
+                                            dataH = thisData;
+                                            dataLowY = totalBelowThisBar;
+                                        }
+
+                                        if (dataH > 0)
+                                        {
+                                            double areaXOffset = barIndex * eachAreaWidth;
+                                            double barW = eachBarWidth;
+                                            double barH = dataH / DivY * YExtCanvas;
+                                            double barX = OffX + areaXOffset + leftOffsetInArea;
+                                            double barY = ToCanvasY(dataLowY + dataH);
+
+                                            if (barBrush != null)
+                                                FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
+                                            if (!Definition.ChartOptions.UseColour)
+                                                DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
+                                        }
                                     }
                                 }
-                                //  By now: totalOfAllBars contains the total for all bars; totalBelowThisBar contains the total of bars that have already been drawn; thisData contains our own bar length
-                                if (bOptions.Stacked100Percent)
-                                {
-                                    if (totalOfAllBars <= 0)
-                                    {
-                                        thisData = Constant.MISSING;
-                                    }
-                                    else
-                                    {
-                                        //  Scale to percent
-                                        thisData = thisData / totalOfAllBars * 100.0;
-                                        totalBelowThisBar = totalBelowThisBar / totalOfAllBars * 100.0;
-                                    }
-                                }
-                                //  By now, totalBelowThisBar contains the sum of all the values below this bar scaled appropriately for 100% scaling if required.
-                                //  thisData also contains appropriately scaled data.
                             }
 
-                            //  If we should, draw this bar
-                            if (thisData != Constant.MISSING)
-                            {
-                                //  Prevent portions of bars being drawn below the X axis
-                                double dataH;
-                                double dataLowY;
-                                //  Dim dataHighX As Double = totalBelowThisBar + thisData
-                                if (totalBelowThisBar < axisScales.Y.MinimumScaleValue)
-                                {
-                                    dataH = thisData + totalBelowThisBar - axisScales.Y.MinimumScaleValue;
-                                    dataLowY = axisScales.Y.MinimumScaleValue;
-                                }
-                                else
-                                {
-                                    dataH = thisData;
-                                    dataLowY = totalBelowThisBar;
-                                }
-
-                                if (dataH > 0)
-                                {
-                                    double areaXOffset = barIndex * eachAreaWidth;
-                                    double barW = eachBarWidth;
-                                    double barH = dataH / DivY * YExtCanvas;
-                                    double barX = OffX + areaXOffset + leftOffsetInArea;
-                                    double barY = ToCanvasY(dataLowY + dataH);
-
-                                    if (barBrush != null)
-                                        FillRectangleInCanvasCoordinates(barBrush, barX, barY, barW, barH);
-                                    if (!Definition.ChartOptions.UseColour)
-                                        DrawRectangleInCanvasCoordinates(barPen, barX, barY, barW, barH);
-                                }
-                            }
                         }
                     }
-
-                    //  Legend
-                    if (shouldDrawLegend)
-                    {
-                        if (barBrush == null)
-                            DrawRectangleInCanvasCoordinates(barPen, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        else
-                            FillRectangleInCanvasCoordinates(barBrush, XAxisCanvas, legendTop - c * legendSpacing, legendRowHeight, legendRowHeight);
-                        DrawStringLegendL(Definition.YSeries[c].Title, XAxisCanvas + 9 + legendRowHeight, legendTop - c * legendSpacing);
-                    }
-
-                    if (barBrush != null)
-                        barBrush.Dispose();
                 }
                 MaybeDrawMarkerLines(axisScales);
+
+                //  Legend
+                if (shouldDrawLegend)
+                    DrawLegend(legend);
             }
             EndVectorPlot();
             return new ParameterBag();

@@ -72,8 +72,7 @@ namespace StatsDirect.Charting.Renderer
             // Work out how many series there are and extend the plot area as required to hold the legend
 
             // Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartVectorPlot();
-            SetFontsAndThicknessesFromOptions(rOptions);
+            StartVectorPlot(rOptions);
             double smallerExt = Math.Min(XExtCanvas, YExtCanvas);
             XExtCanvas = smallerExt;
             YExtCanvas = smallerExt;
@@ -97,8 +96,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // We've hacked at the axes; don't re-default them.
-            StartVectorPlot(false);
-            SetFontsAndThicknessesFromOptions(rOptions);
+            StartVectorPlot(rOptions);
             AssignMarkersToSeries(rOptions);
 
             DataMinX = 0;
@@ -216,20 +214,23 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double x2 = OffX + rx[r] * XExtCanvas;
                     double y2 = OffY + ry[r] * YExtCanvas;
-                    DrawMarkerInCanvasCoordinates(x2, y2, ys.MarkerDetails.MarkerSize, Definition.YSeries[cs].AsDoubleSeries);
+                    DrawMarkerInCanvasCoordinates(x2, y2, ys.MarkerType.MarkerSize, Definition.YSeries[cs].AsDoubleSeries);
                 }
 
                 // Draw lines between markers
                 double lastX2 = x1;
                 double lastY2 = y1;
-                for (int r = 0; r < stps; r++)
+                using (Pen linePen = GetLinePen(xs.MarkerType, false))
                 {
-                    double x2 = OffX + rx[r] * XExtCanvas;
-                    double y2 = OffY + ry[r] * YExtCanvas;
-                    if (r > 0 && (x2 != lastX2 || y2 != lastY2))
-                        DrawLineInCanvasCoordinates(xs.MarkerDetails.LinePen, lastX2, lastY2, x2, y2);
-                    lastX2 = x2;
-                    lastY2 = y2;
+                    for (int r = 0; r < stps; r++)
+                    {
+                        double x2 = OffX + rx[r] * XExtCanvas;
+                        double y2 = OffY + ry[r] * YExtCanvas;
+                        if (r > 0 && (x2 != lastX2 || y2 != lastY2))
+                            DrawLineInCanvasCoordinates(linePen, lastX2, lastY2, x2, y2);
+                        lastX2 = x2;
+                        lastY2 = y2;
+                    }
                 }
 
                 // Mark cutoff point.  This is reversed if the chart requires reversal.
