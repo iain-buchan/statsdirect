@@ -25,7 +25,7 @@ namespace StatsDirect.R
         /// </summary>
         public static List<RVersion> CheckR()
         {
-            string[] rLocations = new[] { @"Software\R-core\R", @"Software\R-core\R64" };
+            string[] rLocations = { @"Software\R-core\R", @"Software\R-core\R64" };
             List<RVersion> installedVersions = new List<RVersion>();
             try
             {
@@ -66,7 +66,6 @@ namespace StatsDirect.R
         /// <summary>
         /// Rules: Prefer highest version, then highest bitness
         /// </summary>
-        /// <param name="candidates"></param>
         /// <returns></returns>
         public static RVersion PreferredRVersion()
         {
@@ -78,7 +77,9 @@ namespace StatsDirect.R
             return preferred;
         }
 
+        /// <param name="scriptBody"></param>
         /// <param name="rtfScriptBody">A version of the script body that contains everything necessary to run the script, suitable for emitting into an RTF report window.</param>
+        /// <param name="host"></param>
         /// <returns> <code>true</code> if the script appears to have been run successfully, <code>false</code> otherwise.</returns>
         public static Process RunScriptAndQuit(ITemplateHost host, string scriptBody, out string rtfScriptBody)
         {
@@ -94,8 +95,8 @@ namespace StatsDirect.R
                 .Replace("\n", "\r\n");
             rtfScriptBody = (string.Format(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\")) + "\r\n" + repairedScriptBody)
                 .Replace(@"\", @"\\")
-                .Replace(@"{", @"\{")
-                .Replace(@"}", @"\}")
+                .Replace("{", @"\{")
+                .Replace("}", @"\}")
                 .Replace("\n", "\n\\par ");
 
             using (TextWriter tw = new StreamWriter(scriptPath, false, Encoding.ASCII))
@@ -181,44 +182,42 @@ namespace StatsDirect.R
                 leafName = nameToParse;
                 return current;
             }
+
+            // A branch
+            string branchName = "*" + nameToParse.Substring(0, pos);
+            string rhs = nameToParse.Substring(pos + 1);
+            // Branches always have indexed lists of bags as immediate children
+            IList<ParameterBag> child;
+            if (current.ContainsKey(branchName))
+            {
+                child = current[branchName].AsParameterBagList;
+            }
             else
             {
-                // A branch
-                string branchName = "*" + nameToParse.Substring(0, pos);
-                string rhs = nameToParse.Substring(pos + 1);
-                // Branches always have indexed lists of bags as immediate children
-                IList<ParameterBag> child;
-                if (current.ContainsKey(branchName))
-                {
-                    child = current[branchName].AsParameterBagList;
-                }
-                else
-                {
-                    child = new List<ParameterBag>();
-                    current.AddOutput(branchName, child);
-                }
-                // The next name in the list might be non-numeric (it's the name of the next bag level at index 0 of this bag) or numeric (it's the index of a bag at this level).  Find the bag, creating as necessary.
-                int nextPos = rhs.IndexOf('$');
-                ParameterBag subBag;
-                if (nextPos < 0 || !int.TryParse(rhs.Substring(0, nextPos), out int bagIndex))
-                {
-                    // No $: Next is a leaf; we need to put the leaf into index 0
-                    // $ but non-numeric: Next is a branch; we need to put the leaf into index 0
-                    if (child.Count == 0)
-                        child.Add(new ParameterBag());
-                    subBag = child[0];
-                }
-                else
-                {
-                    // $ and next is numeric: We need to offset to that bag in the current list, creating any bags we're missing.  Note that R indices are 1-based, C# indices are 0-based.
-                    while (child.Count < bagIndex)
-                        child.Add(new ParameterBag());
-                    subBag = child[bagIndex - 1];
-                    rhs = rhs.Substring(nextPos + 1);
-                }
-                // Search down the branch
-                return GetBag(rhs, subBag, out leafName);
+                child = new List<ParameterBag>();
+                current.AddOutput(branchName, child);
             }
+            // The next name in the list might be non-numeric (it's the name of the next bag level at index 0 of this bag) or numeric (it's the index of a bag at this level).  Find the bag, creating as necessary.
+            int nextPos = rhs.IndexOf('$');
+            ParameterBag subBag;
+            if (nextPos < 0 || !int.TryParse(rhs.Substring(0, nextPos), out int bagIndex))
+            {
+                // No $: Next is a leaf; we need to put the leaf into index 0
+                // $ but non-numeric: Next is a branch; we need to put the leaf into index 0
+                if (child.Count == 0)
+                    child.Add(new ParameterBag());
+                subBag = child[0];
+            }
+            else
+            {
+                // $ and next is numeric: We need to offset to that bag in the current list, creating any bags we're missing.  Note that R indices are 1-based, C# indices are 0-based.
+                while (child.Count < bagIndex)
+                    child.Add(new ParameterBag());
+                subBag = child[bagIndex - 1];
+                rhs = rhs.Substring(nextPos + 1);
+            }
+            // Search down the branch
+            return GetBag(rhs, subBag, out leafName);
         }
 
         private static ParameterBag DictionaryToParameterBag(Dictionary<string, object> dictionary)

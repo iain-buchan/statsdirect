@@ -89,7 +89,7 @@ namespace StatsDirect.UI
             }
             File.Delete(biff5FileName);
 
-            MemoryStream biff8Stream = null;
+            MemoryStream biff8Stream;
             using (FileStream xlsxFileStream = File.OpenRead(xlsxTempFileName))
             {
                 IWorkbook workbook = Factory.GetWorkbookSet().Workbooks.OpenFromStream(xlsxFileStream);
