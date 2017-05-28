@@ -409,7 +409,7 @@ namespace StatsDirect.Builtins
             double a, prob, cla, cua;
             if (!tooFewStrata)
             {
-                MathDbl.civ(nx - P, out double citt, cco, out double p0);
+                MathDbl.civ(nx - P, out double citt, cco, out double _);
                 Debug.Assert(null != seb);
                 double tz = Math.Abs(bd[1] / seb[1]);
                 prob = PDF.tvalp(tz, Convert.ToDouble(nx - P));
@@ -1284,7 +1284,7 @@ namespace StatsDirect.Builtins
             double al = 1.0 - alpha;
             double au = alpha;
             const double acc = 0.0001;
-            double x = t; // LCID* z; 
+            double x = t; // lcid * z; 
             double na = ExFortran.pnct(t, df, x, out int fault);
             double delta = Math.Abs(na - al);
             double last = delta;
@@ -1295,25 +1295,22 @@ namespace StatsDirect.Builtins
             // lcig = Constant.MISSING;
             do
             {
-                cnt = cnt + 1;
+                cnt++;
                 if (cnt > 100)
-                {
                     break;
-                }
-                gstep = gstep / 10.0;
+                gstep /= 10.0;
                 gtry = x + gstep;
                 na = ExFortran.pnct(t, df, gtry, out fault);
             }
-            while (!(na > 0 & na < 1));
+            while (!(na > 0 && na < 1));
+
             if (Math.Abs(na - al) > delta)
-            {
                 gstep = -gstep;
-            }
             cnt = 0;
             gtry = x;
             do
             {
-                cnt = cnt + 1;
+                cnt++;
                 if (cnt > 500)
                 {
                     lcig = Constant.MISSING;
@@ -1328,9 +1325,7 @@ namespace StatsDirect.Builtins
                     break;
                 }
                 if (delta > last)
-                {
                     gstep = -gstep / 10.0;
-                }
                 last = delta;
             }
             while (true);
@@ -1343,26 +1338,24 @@ namespace StatsDirect.Builtins
             cnt = 0;
             do
             {
-                cnt = cnt + 1;
+                cnt++;
                 if (cnt > 100)
-                {
                     break;
-                }
-                gstep = gstep / 10.0;
+                gstep /= 10.0;
                 gtry = x + gstep;
                 na = ExFortran.pnct(t, df, gtry, out fault);
             }
             while (!(na > 0 & na < 1));
+
             if (Math.Abs(na - au) > delta)
-            {
                 gstep = -gstep;
-            }
+
             cnt = 0;
             gtry = x;
             ucig = Constant.MISSING;
             do
             {
-                cnt = cnt + 1;
+                cnt++;
                 if (cnt > 500)
                 {
                     lcig = Constant.MISSING;
@@ -1377,9 +1370,7 @@ namespace StatsDirect.Builtins
                     break;
                 }
                 if (delta > last)
-                {
                     gstep = -gstep / 10.0;
-                }
                 last = delta;
             }
             while (true);
@@ -1466,9 +1457,7 @@ namespace StatsDirect.Builtins
             ll = Math.Exp(Math.Log(rmh) - Math.Sqrt(serr * cit * cit));
             ul = Math.Exp(Math.Log(rmh) + Math.Sqrt(serr * cit * cit));
             if (ll > ul)
-            {
                 Utilities.Utilities.Swap(ref ll, ref ul);
-            }
             x2Rmh = Math.Pow(Math.Log(rmh) / Math.Sqrt(serr), 2.0);
 
             // Q (combinability)
@@ -1520,9 +1509,7 @@ namespace StatsDirect.Builtins
                     double c = o[i, 3];
                     double d = o[i, 4];
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    {
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                    }
                     double n = a + b + c + d;
                     // using weight as 1/var
                     svd1 = ((a + b) * (a + c) * (b + d) - a * b * n) / Math.Pow(n, 2.0);
@@ -3023,7 +3010,7 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame rFrame = parameters["r"].AsDataFrame;
-            DoubleVariable rVariable = rFrame.Variables[0] as DoubleVariable; //  Ends up in y
+            DoubleVariable rVariable = (DoubleVariable) rFrame.Variables[0]; //  Ends up in y
             int k = rVariable.Length;
             double[] y = new double[k + 2];
             // double[] n = new double[k + 2 ]; - unused
@@ -3875,7 +3862,7 @@ namespace StatsDirect.Builtins
             {
                 double mnsqr = ssres / Convert.ToDouble(realk - 2);
                 se = Math.Sqrt(mnsqr * (1.0 / Convert.ToDouble(realk) + Math.Pow(sumx / Convert.ToDouble(realk), 2.0) / ssx));
-                MathDbl.civ(realk - 2, out double cit, ncco, out double p0);
+                MathDbl.civ(realk - 2, out double cit, ncco, out double _);
                 ll = bias - se * cit;
                 ul = bias + se * cit;
             }

@@ -1035,7 +1035,7 @@ namespace StatsDirect.Builtins
 
                     if (g == 2)
                     {
-                        XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out double ka, out double lwr, out double upr, out int fault);
+                        XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out double _, out double lwr, out double upr, out int fault);
                         if (fault == 0)
                         {
                             ICollection<ParameterBag> deciList = new List<ParameterBag>();
@@ -1164,7 +1164,7 @@ namespace StatsDirect.Builtins
                     double medm = 0;
                     for (int i = 0; i < cats; i++)
                     {
-                        KappaHat(frame, catz[i], out double k, out double mbar, out double mbarh, out double pbar, out minm, out maxm, out medm);
+                        KappaHat(frame, catz[i], out double k, out double _, out double _, out double pbar, out minm, out maxm, out medm);
                         double qbar = 1.0 - pbar;
                         kj[i] = k;
                         sej[i] = Math.Sqrt(2.0 / (Convert.ToDouble(n) * mx * (mx - 1.0)));
@@ -1254,7 +1254,7 @@ namespace StatsDirect.Builtins
                     for (int row = 0; row < data.Length; row++)
                         agreeData[row + 1, rater + 1, 1] = data[row] + 1;
                 }
-                Agreement.Agree(frame.Variables[0].Length, raters, 1, agreeData, out double delta, out double edel, out double var, out double gam, out double r, out p);
+                Agreement.Agree(frame.Variables[0].Length, raters, 1, agreeData, out double _, out double _, out double _, out double _, out double r, out p);
                 outputParameters.AddOutput("kw", r);
                 outputParameters.AddOutput("pw", p);
 
@@ -1319,9 +1319,8 @@ namespace StatsDirect.Builtins
                 DataFrame frame = parameters["responses"].AsDataFrame;
                 int raters = frame.VariableCount;
                 if (raters != 2)
-                {
                     throw new NotImplementedException();
-                }
+
                 ClassifierVariable v0 = (ClassifierVariable)frame.Variables[0];
                 int n = v0.Length;
                 int ycats = 0;
@@ -1340,10 +1339,8 @@ namespace StatsDirect.Builtins
                 Namevar[] transTemp18 = new Namevar[ycats];
                 Array.Copy(ycat, transTemp18, Math.Min(ycat.Length, transTemp18.Length));
                 ycat = transTemp18;
-                for (int i = 0; i <= n - 1; i++)
-                {
+                for (int i = 0; i < n; i++)
                     y[i] = v0.Data[i];
-                }
                 SortName(ycats, ycat, 0);
                 ClassifierVariable v1 = (ClassifierVariable)frame.Variables[1];
                 int xcats = 0;
@@ -6937,7 +6934,7 @@ namespace StatsDirect.Builtins
             }
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
-            return Woolf(host, o, k, showIntermediates, cit, cco, out bool ierr);
+            return Woolf(host, o, k, showIntermediates, cit, cco, out bool _);
         }
 
 

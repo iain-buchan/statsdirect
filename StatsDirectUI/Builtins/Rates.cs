@@ -120,7 +120,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt32(100 * xl), 0));
                 outputParameters.AddOutput("to100", Convert.ToInt32(100 * xu));
 
-                ExFortran.poisson(etot, Convert.ToInt32(dead), out double phi, out double plo, out double term, out fault);
+                ExFortran.poisson(etot, Convert.ToInt32(dead), out double phi, out double plo, out double _, out fault);
                 if (fault != 0)
                     phi = Constant.MISSING;
 
@@ -169,7 +169,7 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= rows; i++)
                 refntot += refn[i];
 
-            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool hasUserSuppliedLabels);
+            string[] title = Meta.MakeTitles(parameters, "strata", "stratum {0}", rawRows, out bool _);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
             double nunit = Parsing.Cdbl_Txt(parameters["nunit"].AsString);
