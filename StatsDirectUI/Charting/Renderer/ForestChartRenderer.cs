@@ -191,7 +191,7 @@ namespace StatsDirect.Charting.Renderer
             float w = TitleWidthInCanvasCoordinates(combo_ti(fOptions.Title)) + 30;
             if (w > xtra + XAxisCanvas)
                 xtra = w - XAxisCanvas - 5;
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
             DivY = kok + pbias;
             OffY = YAxisCanvas;

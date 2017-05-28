@@ -181,10 +181,10 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         protected void DefaultAxes(Margin margin, Size axisLabelAndTicSpace)
         {
-            XAxisCanvas = DEFAULT_X_GAP + ((null == margin) ? 0 : margin.Left) + axisLabelAndTicSpace.Width;
-            YAxisCanvas = DEFAULT_Y_GAP + ((null == margin) ? 0 : margin.Bottom) + axisLabelAndTicSpace.Height;
-            XExtCanvas = ImageWidth - XAxisCanvas - ((null == margin) ? 0 : margin.Right) - DEFAULT_X_GAP;
-            YExtCanvas = ImageHeight - YAxisCanvas - DEFAULT_Y_GAP - ((null == margin) ? 0 : margin.Top);
+            XAxisCanvas = DEFAULT_X_GAP + (margin?.Left ?? 0) + axisLabelAndTicSpace.Width;
+            YAxisCanvas = DEFAULT_Y_GAP + (margin?.Bottom ?? 0) + axisLabelAndTicSpace.Height;
+            XExtCanvas = ImageWidth - XAxisCanvas - (margin?.Right ?? 0) - DEFAULT_X_GAP;
+            YExtCanvas = ImageHeight - YAxisCanvas - DEFAULT_Y_GAP - (margin?.Top ?? 0);
         }
 
         private bool ReconstituteFonts()
@@ -248,7 +248,6 @@ namespace StatsDirect.Charting.Renderer
 
         public void DrawYAxisTitle(string title, double axisWidth)
         {
-            // If the title would not fit on the current canvas, return false
             double rightOfYAxisTitle = XAxisCanvas - axisWidth - LABEL_TO_AXIS_LABEL_GAP;
 
             if (!string.IsNullOrEmpty(title))
@@ -271,7 +270,8 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="y">The axis definition for the Y-axis</param>
         /// <param name="shouldBoxAxes"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
-        protected AxisScales DrawAxesOrEnlargeCanvas(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Legend legend = null)
+        /// <param name="legend"></param>
+        protected AxisScales LayoutChartAndDrawAxes(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Legend legend = null)
         {
             // TODO: Fix this so that the user can spec their own scales again!
             useCalculatedScalesEvenWithDefinition = true;
@@ -282,8 +282,8 @@ namespace StatsDirect.Charting.Renderer
 
             Margin plotAreaMargins = new Margin
             {
-                Bottom = y.ExtraSpaceBeforeAxisStarts + ((null != legend && legend.Position == LegendPosition.Bottom) ? legendSize.Height : 0),
-                Left = x.ExtraSpaceBeforeAxisStarts + ((null != legend && legend.Position == LegendPosition.Left) ? legendSize.Width : 0),
+                Bottom = y.ExtraSpaceBeforeAxisStarts + (null != legend && legend.Position == LegendPosition.Bottom ? legendSize.Height : 0),
+                Left = x.ExtraSpaceBeforeAxisStarts + (null != legend && legend.Position == LegendPosition.Left ? legendSize.Width : 0),
                 Right = x.ExtraSpaceAfterAxisEnds,
                 Top = y.ExtraSpaceAfterAxisEnds
             };
@@ -291,11 +291,11 @@ namespace StatsDirect.Charting.Renderer
             Size extraSizeForAxes = CalculateAxisSizes(title, x, y, useCalculatedScalesEvenWithDefinition);
 
             DefaultAxes(plotAreaMargins, extraSizeForAxes);
-            AxisScales ass = DrawAxesOrFail(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, extraSizeForAxes);
+            AxisScales ass = DrawAxes(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, extraSizeForAxes);
             return ass;
         }
 
-        protected AxisScales DrawAxesOrFail(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Size extraSizeForAxes)
+        protected AxisScales DrawAxes(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Size extraSizeForAxes)
         {
             if (!IsAscii)
             {
@@ -541,13 +541,8 @@ namespace StatsDirect.Charting.Renderer
                     if ((x - linearAxisScale.Phase) % linearAxisScale.IntervalsPerMajorTic == 0)
                     {
                         string lab = (xAxisScale.MinimumScaleValue + x * linearAxisScale.Interval).ToString(msk);
-                        int l = lab.Length;
                         int s = Convert.ToInt32(x * (60 / intervals) + 15);
-                        int s2;
-                        if (lab.Substring(0, 1) == "-")
-                            s2 = s - 1;
-                        else
-                            s2 = s;
+                        int s2 = s - (lab[0] == '-' ? 1 : 0);
                         WriteAsciiYX(ASCII_Ytxt - 2, s2, lab);
                         WriteAsciiYX(ASCII_Ytxt - 1, s, "+");
                     }
@@ -580,7 +575,6 @@ namespace StatsDirect.Charting.Renderer
                     direction = Definition.ScaleParameters.X.LabelDirection;
                 foreach (Tic tic in xAxisScale.Tics())
                 {
-                    double x1 = ToCanvasX(tic.Value);
                     switch (tic.TicType)
                     {
                         case TicType.Minor:
@@ -643,7 +637,7 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="reverse"></param>
+        /// <param name="drawLabels"></param>
         /// <param name="scaleType"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
@@ -732,7 +726,7 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="reverse"></param>
+        /// <param name="drawLabels"></param>
         /// <param name="scaleType"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         /// <returns>The width of the axis, ticks, gap to labels, and labels</returns>
@@ -756,7 +750,6 @@ namespace StatsDirect.Charting.Renderer
             {
                 foreach (Tic tic in yAxisScale.Tics())
                 {
-                    double y1 = ToCanvasY(tic.Value);
                     switch (tic.TicType)
                     {
                         case TicType.Minor:
@@ -849,7 +842,6 @@ namespace StatsDirect.Charting.Renderer
                 LabelDirection direction = LabelDirection.Across;
                 if (HasScaleParameters && Definition.ScaleParameters.Y != null)
                     direction = Definition.ScaleParameters.Y.LabelDirection;
-                double count = labels.Count;
                 for (int y = 0; y < labels.Count; y++)
                     maxLabelWidth = Math.Max(maxLabelWidth, statsDirectCanvas.MeasureStringAtAngle(labels[y], AxisLabelFont, direction).Width);
             }
@@ -905,7 +897,6 @@ namespace StatsDirect.Charting.Renderer
                 LabelDirection direction = LabelDirection.Across;
                 if (HasScaleParameters && Definition.ScaleParameters.X != null)
                     direction = Definition.ScaleParameters.X.LabelDirection;
-                double count = labels.Count;
                 for (int x = 0; x < labels.Count; x++)
                     maxHeight = Math.Max(maxHeight, statsDirectCanvas.MeasureStringAtAngle(labels[x], AxisLabelFont, direction).Height);
             }
@@ -1573,7 +1564,7 @@ namespace StatsDirect.Charting.Renderer
             }
         }
 
-        private void SetSeriesFromMarkerTypeAndOptions(DoubleSeries ds, MarkerType mt, GenericOptions o)
+        private static void SetSeriesFromMarkerTypeAndOptions(DoubleSeries ds, MarkerType mt, GenericOptions o)
         {
             ds.MarkerType = mt.Clone();
             if (o != null)
@@ -1582,7 +1573,7 @@ namespace StatsDirect.Charting.Renderer
 
         protected void AssignMarkersToSeries(List<Series> s, GenericOptions opts)
         {
-            if (opts == null || opts.MarkerTypes == null || opts.MarkerTypes.Count < 1)
+            if (opts?.MarkerTypes == null || opts.MarkerTypes.Count < 1)
             {
                 for (int i = 0; i < s.Count; i++)
                 {
@@ -2005,7 +1996,7 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="zPlot">If true, draw a line at the smallest Y value</param>
         /// <param name="minMaxY"></param>
         /// <param name="markerSize"></param>
-        /// <param name="Shape"></param>
+        /// <param name="shape"></param>
         /// <param name="isFilled"></param>
         /// <param name="p"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
@@ -2076,7 +2067,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinGreaterThanZeroX = axisXMinGreaterThanZero;
             DataMaxX = axisXMax;
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xtxt, AxisMode.Scale, scaleTypeX),
                 new AxisDefinition(ytxt, AxisMode.Scale, scaleTypeY),
                 false, useCalculatedScalesEvenWithDefinition);
@@ -2164,7 +2155,6 @@ namespace StatsDirect.Charting.Renderer
                     left = LEGEND_LEFT_GAP;
                     top = YAxisCanvas + YExtCanvas;
                     break;
-                case LegendPosition.NotSet:
                 default:
                     throw new Exception("Only Left and Bottom legend positions known");
             }
@@ -2174,8 +2164,8 @@ namespace StatsDirect.Charting.Renderer
             {
                 double legendFontHeight = LegendHeightInCanvasCoordinates("M");
                 double rowHeight = Math.Max(LEGEND_MARKER_SIZE, legendFontHeight);
-                double rowCentre = top - (rowHeight * (i + 0.5)) - (INTER_ROW_GAP * i);
-                DrawMarkerInCanvasCoordinates(left + BORDER_WIDTH + LEGEND_MARKER_SIZE / 2, rowCentre, LEGEND_MARKER_SIZE, entry.MarkerType);
+                double rowCentre = top - rowHeight * (i + 0.5) - INTER_ROW_GAP * i;
+                DrawMarkerInCanvasCoordinates(left + BORDER_WIDTH + LEGEND_MARKER_SIZE / 2.0, rowCentre, LEGEND_MARKER_SIZE, entry.MarkerType);
                 DrawStringLegendLC(entry.Label, left + BORDER_WIDTH + LEGEND_MARKER_SIZE + MARKER_TO_LEGEND_GAP, rowCentre);
                 i++;
             }

@@ -194,7 +194,7 @@ namespace StatsDirect.Charting.Renderer
                 // Draw the scale
                 AssignMarkersToSeries(bOptions);
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
+                AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(yAxisTitle, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = bOptions.SeriesTitles },
                     bOptions.ShouldBoxAxes, false,
@@ -336,7 +336,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 DataMinY = min; // HACK!  TODO: We really need to fix up the references to min, DataMin and so on.
 
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
+                AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(xAxisTitle, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Labels = bOptions.SeriesTitles },
                     new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                     bOptions.ShouldBoxAxes, false,

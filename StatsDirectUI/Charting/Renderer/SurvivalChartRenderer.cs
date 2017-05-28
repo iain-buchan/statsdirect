@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 
@@ -132,7 +131,7 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot(sOptions, legend);
             AssignMarkersToSeries(sOptions);
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(sOptions.Title,
+            AxisScales axisScales = LayoutChartAndDrawAxes(sOptions.Title,
                 new AxisDefinition("Times", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 false, false,

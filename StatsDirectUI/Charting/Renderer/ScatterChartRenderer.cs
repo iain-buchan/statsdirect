@@ -53,7 +53,7 @@ namespace StatsDirect.Charting.Renderer
                 // Plot a metafile version
                 StartVectorPlot(sOptions, legend);
                 AssignMarkersToSeries(sOptions);
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title,
+                AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                     BoxAxes, false,
@@ -104,7 +104,7 @@ namespace StatsDirect.Charting.Renderer
 
                 // Draw the scale
                 DefaultAxes(null, default(Size));
-                AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
+                AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
                 SetStandardAsciiScaling(y, axisScales);
 
                 // Draw the title text

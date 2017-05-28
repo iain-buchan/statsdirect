@@ -132,14 +132,18 @@ namespace StatsDirect.Charting.Renderer
                     if (!IsAscii)
                     {
                         // Plot a Metafile version
-                        double heightPerChart = imageHeight / seriesToUse.Count; //  Should end up as the old MetaH
+                        int heightPerChart = imageHeight / seriesToUse.Count; //  Should end up as the old MetaH
                         double thisChartTop = imageHeight - seriesIndex * heightPerChart;
                         double thisChartBottom = thisChartTop - heightPerChart;
 
                         //  No longer the default Y axis!
-                        DefaultAxes(null, default(Size));
+                        Size extraSpaceForAxes = CalculateAxisSizes(title,
+                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                            true);
+                        DefaultAxes(null, extraSpaceForAxes);
                         YAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
-                        YExtCanvas = heightPerChart - Math.Min(heightPerChart / 4, 2 * DEFAULT_Y_GAP);
+                        YExtCanvas = heightPerChart - Math.Min(heightPerChart / 4.0, 2 * DEFAULT_Y_GAP);
 
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
@@ -151,12 +155,12 @@ namespace StatsDirect.Charting.Renderer
                         }
 
                         // Draw the axes
-                        AxisScales ass = DrawAxesOrFail(title,
+                        AxisScales ass = DrawAxes(title,
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             false,
                             true,
-                            default(Size));
+                            extraSpaceForAxes);
 
                         // Plot each bar
                         using (Pen markerPen = GetMarkerPen(s.MarkerType))
@@ -197,22 +201,22 @@ namespace StatsDirect.Charting.Renderer
                         DataMaxX = DataMaxY;
 
                         DefaultAxes(null, default(Size));
-                        AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+                        AxisScales axisScales = LayoutChartAndDrawAxes(title,
                             new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                             new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             false, true);
 
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
-                            int L = Convert.ToInt32(descriptor.Counts[c] / DataMaxY * 60);
-                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', L));
-                            if (descriptor.Counts[c] > 0 && L == 0)
+                            int l = Convert.ToInt32(descriptor.Counts[c] / DataMaxY * 60);
+                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', l));
+                            if (descriptor.Counts[c] > 0 && l == 0)
                                 WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, ":");
 
                             double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
                             string buf = midpoint.ToString(mask) + "|";
-                            L = buf.Length;
-                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - L + 5, buf);
+                            l = buf.Length;
+                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - l + 5, buf);
 
                             buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
                             WriteAsciiYX(c + ASCII_Ytxt, 1, buf);

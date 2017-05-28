@@ -59,7 +59,7 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            DrawAxesOrEnlargeCanvas(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
+            LayoutChartAndDrawAxes(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
 
             double ygap = YExtCanvas / DivY;
 
@@ -148,7 +148,7 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries(sOptions);
 
             //  TODO: Should we be using the X axis title for something that will be shown vertically?
-            DrawAxesOrEnlargeCanvas(sOptions.Title,
+            LayoutChartAndDrawAxes(sOptions.Title,
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse },
                 new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 sOptions.ShouldBoxAxes, false);

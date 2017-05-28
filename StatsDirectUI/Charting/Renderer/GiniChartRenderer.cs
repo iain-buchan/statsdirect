@@ -41,7 +41,7 @@ namespace StatsDirect.Charting.Renderer
             DataMinY = 0.0;
             DataMaxY = 1.0;
 
-            DrawAxesOrEnlargeCanvas(gOptions.Title.Trim(), new AxisDefinition(gOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(gOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), true, false);
+            LayoutChartAndDrawAxes(gOptions.Title.Trim(), new AxisDefinition(gOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(gOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), true, false);
 
             // Draw equality line
             DrawLineInChartCoordinates(GrRed, 0, 0, 1, 1);

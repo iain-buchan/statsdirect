@@ -241,7 +241,7 @@ namespace StatsDirect.Charting.Renderer
                 xspace = AxisLabelWidthInCanvasCoordinates(new DateTime(1900, 1, 1, 0, 0, 0).ToString("d"));
                 xmode = AxisMode.ScaleWithoutLabels;
             }
-            DrawAxesOrEnlargeCanvas(cOptions.Title,
+            LayoutChartAndDrawAxes(cOptions.Title,
                 new AxisDefinition(cOptions.XAxisTitle, xmode, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xspace, ExtraSpaceAfterAxisEnds = rgap },
                 new AxisDefinition(cOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 cOptions.ShouldBoxAxes, false);

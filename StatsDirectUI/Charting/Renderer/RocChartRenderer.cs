@@ -105,7 +105,7 @@ namespace StatsDirect.Charting.Renderer
             DataMaxY = 1;
 
             // Draw the scale
-            DrawAxesOrEnlargeCanvas(rOptions.Title, new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
+            LayoutChartAndDrawAxes(rOptions.Title, new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
 
             // null effect diagonal
             using (Pen tenPenDiagonal = new Pen(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
@@ -255,7 +255,7 @@ namespace StatsDirect.Charting.Renderer
                     double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1];
                     Array.Copy(thisData.pdata, 0, mwx, 1, thisData.pdata.Length);
                     Array.Copy(thisData.adata, 0, mwx, 1 + thisData.pdata.Length, thisData.adata.Length);
-                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, out double[] mwrScrap, out double u, out double zScrap, out double xfScrap, out double r1Scrap, out bool fault);
+                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, out double[] _, out double u, out double _, out double _, out double _, out bool fault);
                     double theta;
                     double ll;
                     double ul;

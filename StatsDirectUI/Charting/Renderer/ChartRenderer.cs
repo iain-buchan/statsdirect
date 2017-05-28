@@ -45,7 +45,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             //  TODO: Log and log-log axes here
-            DrawAxesOrEnlargeCanvas("Log-log plot (parallel groups if hazards proportional)",
+            LayoutChartAndDrawAxes("Log-log plot (parallel groups if hazards proportional)",
                 new AxisDefinition("log(Time)", AxisMode.Scale, ScaleType.Linear),
                 new AxisDefinition("-log(-log(Survival))", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra },
                 false, false);
@@ -166,7 +166,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // Draw the axes
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
 
             // draw legend
             double size2 = LabelFont.Size * 2;
@@ -327,7 +327,7 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
                 BoxAxes, false);
@@ -410,7 +410,7 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
                 BoxAxes, false);
@@ -436,7 +436,7 @@ namespace StatsDirect.Charting.Renderer
             }
             DrawMarkerSeriesInCanvasCoordinates(xys, MARKER_SIZE, ys.MarkerType, false, true);
 
-            MathDbl.civ(nx - p, out double cit, gamma, out double p0);
+            MathDbl.civ(nx - p, out double cit, gamma, out double _);
             double rdf = Convert.ToDouble(nx - 1 - (p - 1));
             double rms = rss / rdf;
             double[] px = new double[p + 1];
@@ -550,7 +550,7 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 false, false);
@@ -661,7 +661,7 @@ namespace StatsDirect.Charting.Renderer
                 if (w > xtra + XAxisCanvas)
                     xtra = w - XAxisCanvas;
             }
-            DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            LayoutChartAndDrawAxes(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
 
             double size2 = LabelFont.Size * 2;
 
@@ -792,7 +792,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                 }
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), isLAabbe, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), isLAabbe, false);
 
             if (zPlot)
                 DrawQCanvas(OffY);
@@ -979,7 +979,7 @@ namespace StatsDirect.Charting.Renderer
 
             StartVectorPlot();
             // Peto plots are boxed
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
 
             // plot the points
             for (int r = 1; r <= rows; r++)
@@ -1095,7 +1095,7 @@ namespace StatsDirect.Charting.Renderer
             string xtxt = "Mean ((" + v0Title + " + " + v1Title + ") / 2)";
             string ytxt = "Difference (" + v0Title + " - " + v1Title + ")";
             StartVectorPlot();
-            DrawAxesOrEnlargeCanvas(string.Empty, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), false, false);
+            LayoutChartAndDrawAxes(string.Empty, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), false, false);
 
             // Draw the titles
             int size2 = LabelFont.Height * 2;
@@ -1354,7 +1354,7 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title,
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear),
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear),
                 false, false,
@@ -1485,7 +1485,7 @@ namespace StatsDirect.Charting.Renderer
                         rgap = w;
                 }
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Category) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Category) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
             DivY = k + pbias;
             OffY = YAxisCanvas;
@@ -1693,7 +1693,7 @@ namespace StatsDirect.Charting.Renderer
                         rgap = w;
                 }
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
             DivY = k + pbias;
             OffY = YAxisCanvas;
@@ -1863,7 +1863,7 @@ namespace StatsDirect.Charting.Renderer
                         xtra = w - XAxisCanvas - 5;
                 }
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
             axisScales.Y = new CategoryAxisScale(kok + pbias);
             DivY = kok + pbias;
             OffY = YAxisCanvas;
@@ -2081,7 +2081,7 @@ namespace StatsDirect.Charting.Renderer
             switch (xform)
             {
                 case Transformation.Log:
-                    axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+                    axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
                     break;
                 default:
                     {
@@ -2090,7 +2090,7 @@ namespace StatsDirect.Charting.Renderer
                             DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
                             DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                         }
-                        axisScales = DrawAxesOrEnlargeCanvas(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+                        axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
                         DataMinX = axisScales.X.MinimumScaleValue;
                         DataMaxX = axisScales.X.MaximumScaleValue;
                     }

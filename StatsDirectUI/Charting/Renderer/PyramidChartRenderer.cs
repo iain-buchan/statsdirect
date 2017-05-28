@@ -2,6 +2,7 @@
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using System;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -154,13 +155,12 @@ namespace StatsDirect.Charting.Renderer
             double xtra = 0;
             for (int i = 0; i < nmale; i++)
             {
-                double w = AxisLabelWidthInCanvasCoordinates(title[i]) + MINIMUM_X_WHITESPACE;
-                if (w > xtra + XAxisCanvas)
-                    xtra = w - XAxisCanvas - 5;
+                double w = AxisLabelWidthInCanvasCoordinates(title[i]);
+                if (w > xtra)
+                    xtra = w;
             }
 
-            XAxisCanvas = XAxisCanvas + xtra;
-            XExtCanvas = XExtCanvas - xtra;
+            DefaultAxes(null, new Size((int)Math.Ceiling(xtra), 0));
 
             DrawTitle(pOptions.Title);
 

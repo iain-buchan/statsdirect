@@ -83,7 +83,7 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot(bwOptions);
             AssignMarkersToSeries();
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
             Color black = Color.Black;
             MarkerType crossMarker = new MarkerType { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
@@ -101,7 +101,7 @@ namespace StatsDirect.Charting.Renderer
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool _);
 
                         // Plot graphic
                         // #1316: Plot labels are plotted top-down, data was plotted bottom-up.  Reverse the data so that the first series is at the top to match the labels.
@@ -353,7 +353,7 @@ namespace StatsDirect.Charting.Renderer
             Definition.YSeries = Definition.XSeries;
             Definition.XSeries = tempSeries;
 
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
 
             using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
             {
@@ -365,11 +365,10 @@ namespace StatsDirect.Charting.Renderer
                     for (int c = 0; c < seriesToUse.Count; c++)
                     {
                         DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
+                        PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool _);
 
                         // Plot graphic
                         double xctr = (c + 0.5) / DivX * XExtCanvas;
-                        double xright = (c + 1) / DivX * XExtCanvas;
 
                         double halfBoxWidth = ToCanvasWidth(0.5 * BOX_FRACTION_OF_SPACE);
                         double xc = OffX + xctr;
@@ -610,7 +609,7 @@ namespace StatsDirect.Charting.Renderer
 
             // Draw the scale
             DefaultAxes(null, default(Size));
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title + "\r\n",
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title + "\r\n",
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType),
                 false, false);
@@ -633,7 +632,7 @@ namespace StatsDirect.Charting.Renderer
             for (int c = 0; c < seriesToUse.Count; c++)
             {
                 DoubleSeries s = seriesToUse[c].AsDoubleSeries;
-                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool centreIsMedian);
+                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double _, out double _, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double _, out bool _);
 
                 bool gatedl;
                 int xl;
@@ -948,7 +947,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Get the nth centile (divided by 100,  so 0.25 for lower quartile etc) from the given series containing a sorted 0-based array of data
         ///  </summary>
-        private double Quantile(DoubleSeries s, double n)
+        private static double Quantile(DoubleSeries s, double n)
         {
             int count = s.Data.Length;
             double imdn = n * count - 0.5;

@@ -43,7 +43,7 @@ namespace StatsDirect.Charting.Renderer
             // Plot a metafile version
             StartVectorPlot();
             AssignMarkersToSeries();
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(Definition.ChartOptions.Title, new AxisDefinition(lrOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(lrOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), BoxAxes, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title, new AxisDefinition(lrOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(lrOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), BoxAxes, false);
 
             // plot points
             DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;
@@ -110,7 +110,7 @@ namespace StatsDirect.Charting.Renderer
                         xtra = w - XAxisCanvas;
                 }
             }
-            AxisScales axisScales = DrawAxesOrEnlargeCanvas(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, BoxAxes, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, BoxAxes, false);
 
             // plot points
             DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;

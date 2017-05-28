@@ -106,7 +106,7 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries(eOptions);
 
             // Draw the scale
-            DrawAxesOrEnlargeCanvas(eOptions.Title,
+            LayoutChartAndDrawAxes(eOptions.Title,
                 new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 BoxAxes, false,
@@ -121,7 +121,6 @@ namespace StatsDirect.Charting.Renderer
             {
                 MultiDoubleSeries s = eOptions.Series[seriesIndex];
                 List<MultiDoublePoint> safesBySeries = new List<MultiDoublePoint>();
-                int length = s.Data.Length;
 
                 // Draw the error bars first so we don't interfere with connection lines
                 using (Pen p = GetMarkerPen(eOptions.MarkerTypes[seriesIndex]))
