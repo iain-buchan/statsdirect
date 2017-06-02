@@ -1,5 +1,8 @@
 ﻿using System;
 using StatsDirect.Numerics;
+using System.Collections.Generic;
+using System.Diagnostics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {
@@ -13,6 +16,8 @@ namespace StatsDirect.Charting
                     return ChooseBinsDoane(sortedX, length);
                 case BinChoiceMethod.FreedmanDaconis:
                     return ChooseBinsFreedmanDaconis(sortedX, length);
+                case BinChoiceMethod.OldStatsDirect:
+                    return ChooseBinsOldStatsDirect(sortedX, length);
                 case BinChoiceMethod.Shimazaki:
                     return ChooseBinsShimazaki(sortedX, length);
                 case BinChoiceMethod.Stata:
@@ -188,6 +193,187 @@ namespace StatsDirect.Charting
             for (int i = 0; i < ki.Length; i++)
                 sumSq += (ki[i] - mean) * (ki[i] - mean);
             return sumSq / divisor;
+        }
+
+        private static void v_axis(double qmin, double qmax, int divisions, out double zMinimum, out double zInterval)
+        {
+            if (divisions > 0)
+            {
+                ILinearAxisScale output = LinearAxisScaler.v_axis(qmin, qmax, divisions);
+                zMinimum = output.MinimumScaleValue;
+                zInterval = output.Interval;
+            }
+            else
+            {
+                // 1 division of the whole range
+                zMinimum = qmin;
+                zInterval = qmax - qmin;
+            }
+        }
+
+        ///  <summary>
+        ///  
+        ///  </summary>
+        ///  <param name="oneOrMoreSeries">Input data. All data will be pooled for the purposes of calculating minimum and maximum values.</param>
+        ///  <param name="binsFromUser">A user-entered bin count.</param>
+        ///  <param name="calculateBinCount">If false, use the user-entered bin count.  If true, calculate from scratch.</param>
+        ///  <param name="min">The lowest value in the input, minus 1 if there's only one value.</param>
+        ///  <param name="max">The highest value in the input, plus 1 if there's only one value.</param>
+        ///  <param name="bestMinimumMidpoint"></param>
+        ///  <param name="bestMidpointInterval"></param>
+        /// <param name="bestBinCount">The number of bins that should be used to plot the histogram.</param>
+        /// <remarks></remarks>
+        private static BinsDescriptor ChooseBinsOldStatsDirect(double[] sortedData, int length)
+        {
+            double min = sortedData[0];
+            double max = sortedData[length - 1];
+
+            //  Work out how many bins we should have at maximum: between 7 and 20, depending on the number of samples
+            int maxBins = Convert.ToInt32(Math.Pow(length, 0.88) / 4.0);
+            maxBins = Constrain(maxBins, 7, 20);
+
+            int bestBinsSoFar = 0;
+            double bestMinimumMidpoint;
+            double bestMidpointInterval;
+            double mxx = 0.0;
+            int mpp = 0;
+            for (int candidateBins = 1; candidateBins <= maxBins; candidateBins++)
+            {
+                v_axis(min, max, candidateBins - 1, out bestMinimumMidpoint, out bestMidpointInterval);
+
+                // What about cm intervals (if cm < 10) or cm - 2 intervals (if cm >= 10)?
+                int nmp = candidateBins < 10 ? candidateBins + 1 : candidateBins - 1;
+                v_axis(min, max, nmp - 1, out double candidateMinimumMidpoint, out double candidateMidpointInterval);
+
+                // Use whichever gives the "neater" axis (defined as shorter strings)
+                if (candidateMidpointInterval.ToString().Length + candidateMinimumMidpoint.ToString().Length < bestMidpointInterval.ToString().Length + bestMinimumMidpoint.ToString().Length)
+                {
+                    bestMidpointInterval = candidateMidpointInterval;
+                    bestMinimumMidpoint = candidateMinimumMidpoint;
+                    bestBinsSoFar = nmp;
+                }
+                else
+                {
+                    bestBinsSoFar = candidateBins;
+                }
+                int firstIndexThisBin = 0;
+                int clm = 0;
+                for (int c = 1; c <= bestBinsSoFar; c++)
+                {
+                    double high = bestMinimumMidpoint + (bestMidpointInterval * (c - 1)) + bestMidpointInterval / 2.0;
+                    int firstIndexPastHigh;
+                    for (firstIndexPastHigh = firstIndexThisBin; firstIndexPastHigh < length; firstIndexPastHigh++)
+                    {
+                        if (sortedData[firstIndexPastHigh] > high)
+                            break;
+                    }
+                    int valuesInThisBin = firstIndexPastHigh - firstIndexThisBin;
+                    if (valuesInThisBin > 0)
+                        clm++;
+                    firstIndexThisBin = firstIndexPastHigh;
+                }
+                double qxx = clm;
+                if (qxx > mxx)
+                {
+                    mxx = qxx;
+                    mpp = bestBinsSoFar;
+                }
+            }
+            bestBinsSoFar = mpp;
+
+            //  Ensure the total number of bins is between 1 and 20
+            bestBinsSoFar = Constrain(bestBinsSoFar, 1, 20);
+
+            v_axis(min, max, bestBinsSoFar - 1, out bestMinimumMidpoint, out bestMidpointInterval);
+            for (int c = 1; c <= 2; c++)
+            {
+                int nmp = bestBinsSoFar - c;
+                double nzmin = 0;
+                double nzint = 0;
+                if (nmp > 3)
+                {
+                    v_axis(min, max, nmp - 1, out nzmin, out nzint);
+                    if (nzint.ToString().Length + nzmin.ToString().Length < bestMidpointInterval.ToString().Length + bestMinimumMidpoint.ToString().Length)
+                    {
+                        bestMidpointInterval = nzint;
+                        bestMinimumMidpoint = nzmin;
+                        bestBinsSoFar = nmp;
+                        break;
+                    }
+                }
+                nmp = bestBinsSoFar + c;
+                if (nmp <= 20)
+                {
+                    v_axis(min, max, nmp - 1, out nzmin, out nzint);
+                    if (nzint.ToString().Length + nzmin.ToString().Length < bestMidpointInterval.ToString().Length + bestMinimumMidpoint.ToString().Length)
+                    {
+                        bestMidpointInterval = nzint;
+                        bestMinimumMidpoint = nzmin;
+                        bestBinsSoFar = nmp;
+                        break;
+                    }
+                }
+            }
+
+            // Get rid of empty bins on the upper end of the histogram
+            int c2 = length - 1;
+            for (int c = bestBinsSoFar - 1; c >= 0; --c)
+            {
+                double binLeft = bestMinimumMidpoint + (bestMidpointInterval * c) - bestMidpointInterval / 2.0;
+                bool thisBinHasData = false;
+                for (int c1 = c2; c1 >= 0; c1--)
+                {
+                    if (sortedData[c1] > binLeft)
+                    {
+                        thisBinHasData = true;
+                        c2 = c1;
+                        break;
+                    }
+                }
+                if (thisBinHasData)
+                    break;
+                else
+                    --bestBinsSoFar;
+            }
+
+            // Get rid of empty bins on the lower end of the histogram
+            int emptyBinsLeft = 0;
+            c2 = 0;
+            for (int c = 0; c < bestBinsSoFar; c++)
+            {
+                double binRight = bestMinimumMidpoint + (bestMidpointInterval * c) + bestMidpointInterval / 2.0;
+                bool thisBinHasData = false;
+                for (int c1 = c2; c1 < length; c1++)
+                {
+                    if (sortedData[c1] <= binRight)
+                    {
+                        thisBinHasData = true;
+                        c2 = c1 + 1;
+                        break;
+                    }
+                }
+                if (thisBinHasData)
+                    break;
+                else
+                {
+                    emptyBinsLeft++;
+                    --bestBinsSoFar;
+                }
+            }
+            bestMinimumMidpoint += bestMidpointInterval * emptyBinsLeft;
+            double[] edges = Linspace(bestMinimumMidpoint, bestMinimumMidpoint + bestMidpointInterval * bestBinsSoFar, bestBinsSoFar);
+            int[] counts = SortedHist(sortedData, length, edges);
+            BinsDescriptor descriptor = new BinsDescriptor() { Edges = edges, Counts = counts };
+            return descriptor;
+        }
+
+        private static int Constrain(int value, int lowerBound, int upperBound)
+        {
+            if (value < lowerBound)
+                return lowerBound;
+            if (value > upperBound)
+                return upperBound;
+            return value;
         }
     }
 }

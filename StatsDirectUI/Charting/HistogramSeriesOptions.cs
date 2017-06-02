@@ -23,13 +23,8 @@ namespace StatsDirect.Charting
         public void Reset(bool calculateBinCount, int binsFromUser, Series series, BinChoiceMethod binChoiceMethod)
         {
             //  Work out the values
-            double min;
-            double max;
             DoubleSeries s = series.AsDoubleSeries;
-            min = s.Min;
-            max = s.Max;
-            BinsDescriptor descriptor = Calculate(s, binsFromUser, calculateBinCount, binChoiceMethod);
-            BinsDescriptor = descriptor;
+            BinsDescriptor = Calculate(s, binsFromUser, calculateBinCount, binChoiceMethod);
         }
 
         ///  <summary>

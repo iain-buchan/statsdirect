@@ -7,6 +7,7 @@
         FreedmanDaconis = 2,
         Stata = 3,
         Sturges = 4,
-        Shimazaki = 5
+        Shimazaki = 5,
+        OldStatsDirect = 6
     }
 }

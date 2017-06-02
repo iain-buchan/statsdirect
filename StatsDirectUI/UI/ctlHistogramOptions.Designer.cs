@@ -315,6 +315,7 @@ namespace StatsDirect.UI
             "Freedman-Daconis",
             "Shimazaki-Shinomoto",
             "Stata",
+            "StatsDirect midpoint",
             "Sturges"});
             this.cboBinChoiceMethod.Location = new System.Drawing.Point(138, 93);
             this.cboBinChoiceMethod.Name = "cboBinChoiceMethod";
