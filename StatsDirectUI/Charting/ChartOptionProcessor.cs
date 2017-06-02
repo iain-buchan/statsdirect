@@ -326,6 +326,7 @@ namespace StatsDirect.Charting
             HistogramOptions hOptions = new HistogramOptions(host.Preferences.ShouldUseColour)
             {
                 IsAscii = step.IsAscii,
+                BinChoiceMethod = step.IsAscii ? BinChoiceMethod.OldStatsDirect : BinChoiceMethod.Doane,
                 LineWidth = 2,
                 HistoSeriesOptions = new List<HistogramSeriesOptions>(series.Count)
             };

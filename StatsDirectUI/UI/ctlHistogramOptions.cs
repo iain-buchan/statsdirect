@@ -4,7 +4,6 @@ using System.Windows.Forms;
 using StatsDirect.Charting;
 using System.Media;
 using StatsDirect.Utilities;
-using System.Drawing;
 using StatsDirect.Numerics;
 
 namespace StatsDirect.UI
@@ -115,11 +114,11 @@ namespace StatsDirect.UI
                 double maximumBinMidpoint = (descriptor.Edges[descriptor.Bins] + descriptor.Edges[descriptor.Bins - 1]) / 2.0;
                 double binMidpointInterval = (maximumBinMidpoint - minimumBinMidpoint) / (descriptor.Bins - 1);
 
-                lblDataMaximum.Text = descriptor.HighestEdge.ToString();
-                lblDataMinimum.Text = descriptor.LowestEdge.ToString();
+                lblDataMaximum.Text = descriptor.HighestEdge.ToString("G12");
+                lblDataMinimum.Text = descriptor.LowestEdge.ToString("G12");
                 txtBins.Text = descriptor.Bins.ToString();
-                txtMidpointInterval.Text = binMidpointInterval.ToString();
-                txtMinimumMidpoint.Text = minimumBinMidpoint.ToString();
+                txtMidpointInterval.Text = binMidpointInterval.ToString("G12");
+                txtMinimumMidpoint.Text = minimumBinMidpoint.ToString("G12");
                 chkShowRelativeFrequencies.Checked = options.ShowRelativeFrequencies;
 
                 if (options.IsAscii)
@@ -299,7 +298,7 @@ namespace StatsDirect.UI
                 case BinChoiceMethod.Shimazaki:
                     return "Shimazaki-Shinomoto";
                 case BinChoiceMethod.OldStatsDirect:
-                    return "StatsDirect midpoint";
+                    return "StatsDirect Mid-point";
                 case BinChoiceMethod.NotSet:
                 case BinChoiceMethod.Doane:
                 case BinChoiceMethod.Stata:
@@ -317,15 +316,9 @@ namespace StatsDirect.UI
                 return BinChoiceMethod.Shimazaki;
             if ("Freedman-Daconis".Equals(displayString))
                 return BinChoiceMethod.FreedmanDaconis;
-            if ("StatsDirect midpoint".Equals(displayString))
+            if ("StatsDirect Mid-point".Equals(displayString))
                 return BinChoiceMethod.OldStatsDirect;
             return BinChoiceMethod.NotSet;
-        }
-
-        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
-        {
-            base.ScaleControl(factor, specified);
-            cboBinChoiceMethod.AutoSizeToList();
         }
     }
 }
