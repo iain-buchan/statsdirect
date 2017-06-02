@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public static class Parametric
     {
-        private static void univariate(double[] arr1, int nx, out double sum, out double mean, out double var)
+        private static void Univariate(double[] arr1, int nx, out double sum, out double mean, out double var)
         {
             sum = 0;
             double sumsqdev = 0;
@@ -33,7 +33,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void para(DataFrame frame, double[] mean, double[] ss, double[] var, double[] sd, double[] sem, int[] tnx)
+        private static void Para(DataFrame frame, double[] mean, double[] ss, double[] var, double[] sd, double[] sem, int[] tnx)
         {
             for (int d = 0; d < frame.VariableCount; d++)
             {
@@ -86,7 +86,7 @@ namespace StatsDirect.Builtins
             double[] sem = new double[1 + 1 /* VB to C# conversion */ ];
             int[] tnx = new int[1 + 1 /* VB to C# conversion */ ];
             DataFrame data = parameters["data"].AsDataFrame;
-            para(data, mean, ss, var, sd, sem, tnx);
+            Para(data, mean, ss, var, sd, sem, tnx);
             if (Math.Abs(var[0]) > Math.Abs(var[1]))
             {
                 top = 0;
@@ -151,7 +151,7 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             }
             MathDbl.civ(0, out double z, GAMMA, out double P0);
-            para(data, mean, ss, var, sd, sem, tnx);
+            Para(data, mean, ss, var, sd, sem, tnx);
             double xbar = mean[0];
             double s = sd[(int)Math.Floor(o)];
             int N = tnx[0];
@@ -335,7 +335,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag rptPoissonConfidenceInterval(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPoissonConfidenceInterval(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             double percent2 = parameters["gamma"].AsDouble * 100.0;
@@ -427,7 +427,7 @@ namespace StatsDirect.Builtins
             {
                 DataFrame Data = parameters["data"].AsDataFrame;
                 MathDbl.civ(0, out double cit, GAMMA, out double P0);
-                para(Data, mean, ss, var, sd, sem, tnx);
+                Para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new ParameterBag();
                 IList<ParameterBag> sampleList = new List<ParameterBag>();
                 outputParameters.AddOutput("*sample", sampleList);
@@ -454,8 +454,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("p_2", host.pval(P * 2));
                 if (tnx[0] < 30 || tnx[1] < 30)
                 {
-                    IList<ParameterBag> warnList = new List<ParameterBag>();
-                    warnList.Add(new ParameterBag());
+                    IList<ParameterBag> warnList = new List<ParameterBag>
+                    {
+                        new ParameterBag()
+                    };
                     outputParameters.AddOutput("*warn", warnList);
                 }
                 else
@@ -473,7 +475,7 @@ namespace StatsDirect.Builtins
                                  ? parameters["popsd"].AsDouble
                                  : Constant.MISSING;
                 MathDbl.civ(0, out double cit, GAMMA, out double P0);
-                para(Data, mean, ss, var, sd, sem, tnx);
+                Para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("name", v0.Title);
                 outputParameters.AddOutput("mean", host.RoundU(mean[0]));
@@ -994,7 +996,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag rptTUnpairedSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTUnpairedSummary(ITemplateHost host, ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             int nx1 = parameters["nx1"].AsInt32;
@@ -1146,7 +1148,7 @@ namespace StatsDirect.Builtins
             int[] tnx = new int[1 + 1 /* VB to C# conversion */];
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
-            para(data, mean, ss, var, sd, sem, tnx);
+            Para(data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] + tnx[1] - 2;
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
             double um1 = mean[0];
@@ -1244,7 +1246,7 @@ namespace StatsDirect.Builtins
             double mu0 = parameters["population-mean"].AsDouble;
             double GAMMA = parameters["gamma"].AsDouble;
 
-            para(Data, mean, ss, var, sd, sem, tnx);
+            Para(Data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] - 1;
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
             ParameterBag outputParameters = new ParameterBag();
@@ -1312,7 +1314,7 @@ namespace StatsDirect.Builtins
                 txc = "differences between " + v0.Title + " and " + v1.Title;
             }
 
-            univariate(arr1, nx, out double sum, out double mean, out double var);
+            Univariate(arr1, nx, out double sum, out double mean, out double var);
             double sd = Math.Sqrt(var);
             double sem = sd / Math.Sqrt(Convert.ToDouble(nx));
             int degf = nx - 1;

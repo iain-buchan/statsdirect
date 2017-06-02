@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using Layout;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -608,15 +609,13 @@ namespace StatsDirect.Charting.Renderer
             ASCII_InitPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
-            DefaultAxes(null, default(Size));
             AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title + "\r\n",
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType),
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = seriesToUse.Select(s => s.Title).ToList() },
                 false, false);
-            DivX = axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue;
-            OffX = Convert.ToInt32(-(axisScales.X.MinimumScaleValue / DivX * 60) + 16);
+            SetStandardAsciiScaling(0, axisScales);
             DivY = seriesToUse.Count + 1;
-            OffY = Convert.ToInt32(-(0 / DivY * 20) + ASCII_Ytxt);
+            OffY = ASCII_Ytxt;
 
             if (ShTx[0].Length > bwOptions.XAxisTitle.Length)
             {
@@ -670,10 +669,9 @@ namespace StatsDirect.Charting.Renderer
                 WriteAsciiYX(y2, lq, new string('.', uq - lq));
                 WriteAsciiYX(y2, xm, "*");
 
-                int l;
                 if (gatedl)
                 {
-                    l = lq - xl;
+                    int l = lq - xl;
                     if (l < 2)
                         l = 2;
                     WriteAsciiYX(y2, xl, "|" + new string('-', l - 2) + "[");
@@ -688,7 +686,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 else
                 {
-                    l = lq - xl;
+                    int l = lq - xl;
                     if (l < 2)
                         l = 2;
                     WriteAsciiYX(y2, xl, ">" + new string('-', l - 2) + "[");
@@ -696,7 +694,7 @@ namespace StatsDirect.Charting.Renderer
 
                 if (gatedr)
                 {
-                    l = xr - uq;
+                    int l = xr - uq;
                     if (l < 2)
                         l = 2;
                     WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "|");
@@ -711,7 +709,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 else
                 {
-                    l = xr - uq;
+                    int l = xr - uq;
                     if (l < 2)
                         l = 2;
                     WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "<");

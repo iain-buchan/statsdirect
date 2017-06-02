@@ -428,10 +428,7 @@ namespace StatsDirect.PJLControls
         /// <param name="e"></param>
         protected virtual void OnColorChanged(ColorChangedEventArgs e)
         {
-            if (null != ColorChanged)
-            {
-                ColorChanged(this, e);
-            }
+            ColorChanged?.Invoke(this, e);
 
             Refresh();
         }

@@ -69,23 +69,25 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptKaplan(ITemplateHost host, ParameterBag parameters)
         {
+            /*
             int lc = 0; int nmax = 0; int j;
             int lap;
-            int lastk = 0; int groups;
-            double stk = 0; double tk = 0;
             string gid;
+            */
 
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0.0)
-            {
                 gamma = 0.95;
-            }
-            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0, out int fault);
+
+            double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0);
+
+            /*
             double[] gpid = new double[1 + 1];
             string[] glab = new string[1 + 1];
             int r;
             int c;
             double[] g;
+            */
 
             // Store the times data
             DataFrame timesFrame = parameters["times"].AsDataFrame;
@@ -94,10 +96,8 @@ namespace StatsDirect.Builtins
             ColumnData[] cd = new ColumnData[2 + 1 ];
             cd[1] = new ColumnData { Title = timesVariable.Title };
             double[] t = new double[rows + 1];
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 t[r] = timesVariable.Data[r - 1];
-            }
 
             // Store the death/event data
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
@@ -105,24 +105,25 @@ namespace StatsDirect.Builtins
             cd[2] = new ColumnData { Title = deathsVariable.Title };
             double[] d = new double[rows + 1 ];
             int extra = 0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
                 d[r] = deathsVariable.Data[r - 1];
                 if (d[r] > 1)
-                {
-                    extra = extra + Convert.ToInt32(d[r]) - 1;
-                }
+                    extra += Convert.ToInt32(d[r]) - 1;
             }
 
+            int groups;
+            double[] g;
+            string gid;
+            string[] groupLabels;
+            double[] gpid;
             if (parameters.ContainsKey("groups") && parameters["groups"] != null)
             {
                 DataFrame groupsFrame = parameters["groups"].AsDataFrame;
                 ClassifierVariable groupsVariable = groupsFrame.Variables[0] as ClassifierVariable;
-                glab = new string[groupsVariable.GroupCount + 1 ];
-                for (j = 1; j <= groupsVariable.GroupCount; j++)
-                {
-                    glab[j] = groupsVariable.Groups[j - 1].Label;
-                }
+                groupLabels = new string[groupsVariable.GroupCount + 1 ];
+                for (int j = 1; j <= groupsVariable.GroupCount; j++)
+                    groupLabels[j] = groupsVariable.Groups[j - 1].Label;
                 gid = groupsVariable.Title;
                 int zbase = 0;
                 foreach (double v in groupsVariable.Data)
@@ -136,19 +137,17 @@ namespace StatsDirect.Builtins
                 // Store the group data
                 cd[0] = new ColumnData { Title = groupsVariable.Title };
                 g = new double[rows + 1 ];
-                for (r = 1; r <= rows; r++)
-                {
+                for (int r = 1; r <= rows; r++)
                     g[r] = groupsVariable.Data[r - 1] + zbase;
-                }
                 gpid = new double[0 + 1 ];
                 int igot = 0;
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
                     double temp = g[r];
                     if (temp != Constant.MISSING)
                     {
                         bool ok = true;
-                        for (j = 1; j <= igot; j++)
+                        for (int j = 1; j <= igot; j++)
                         {
                             if (temp == gpid[j])
                             {
@@ -160,17 +159,17 @@ namespace StatsDirect.Builtins
                         {
                             igot++;
                             // create temp variable for copying values 
-                            double[] transTemp5 = new double[igot + 1 ];
-                            Array.Copy(gpid, transTemp5, Math.Min(gpid.Length, transTemp5.Length));
-                            gpid = transTemp5;
+                            double[] gpidCopy = new double[igot + 1 ];
+                            Array.Copy(gpid, gpidCopy, gpid.Length);
+                            gpid = gpidCopy;
                             gpid[igot] = temp;
                         }
                     }
                 }
                 groups = igot;
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
-                    for (j = 1; j <= groups; j++)
+                    for (int j = 1; j <= groups; j++)
                     {
                         if (gpid[j] == g[r])
                         {
@@ -185,30 +184,30 @@ namespace StatsDirect.Builtins
                 //  one group
                 cd[0] = new ColumnData { Rows = rows };
                 g = new double[rows + 1 ];
-                for (r = 1; r <= rows; r++)
-                {
+                for (int r = 1; r <= rows; r++)
                     g[r] = 1;
-                }
                 groups = 1;
                 gid = string.Empty;
+                groupLabels = new string[1 + 1];
+                gpid = new double[1 + 1];
             }
 
             // Put the data back into the Public array
             double[,] arr2 = new double[2 + 1, rows + extra + 1];
             ColumnData[] cdat1 = new ColumnData[2 + 1 ];
-            for (c = 0; c <= 2; c++)
+            for (int c = 0; c <= 2; c++)
             {
                 cdat1[c] = cd[c];
                 cdat1[c].Rows = rows + extra;
             }
             int ctr = 0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
-                if (d[r] > 1 & d[r] != Constant.MISSING)
+                if (d[r] > 1 && d[r] != Constant.MISSING)
                 {
-                    for (j = 1; j <= Convert.ToInt32(d[r]); j++)
+                    for (int j = 1; j <= Convert.ToInt32(d[r]); j++)
                     {
-                        ctr = ctr + 1;
+                        ctr++;
                         arr2[0, ctr] = g[r];
                         arr2[1, ctr] = t[r];
                         arr2[2, ctr] = 1;
@@ -217,10 +216,8 @@ namespace StatsDirect.Builtins
                 else
                 {
                     if (d[r] < 0)
-                    {
                         d[r] = 0;
-                    }
-                    ctr = ctr + 1;
+                    ctr++;
                     arr2[0, ctr] = g[r];
                     arr2[1, ctr] = t[r];
                     arr2[2, ctr] = d[r];
@@ -229,16 +226,13 @@ namespace StatsDirect.Builtins
 
             int nt = cdat1[0].Rows;
             int[] gnx = new int[groups + 1];
-            for (lap = 1; lap <= groups; lap++)
+            int nmax = 0;
+            for (int lap = 1; lap <= groups; lap++)
             {
                 int j2 = 0;
-                for (j = 1; j <= nt; j++)
-                {
-                    if (arr2[0, j] != Constant.MISSING & arr2[0, j] == lap)
-                    {
-                        j2 = j2 + 1;
-                    }
-                }
+                for (int j = 1; j <= nt; j++)
+                    if (arr2[0, j] != Constant.MISSING && arr2[0, j] == lap)
+                        j2++;
                 gnx[lap] = j2;
                 if (j2 > nmax)
                     nmax = j2;
@@ -256,7 +250,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> groupList = new List<ParameterBag>();
             outputParameters.AddOutput("*group", groupList);
             DataFrame resultsFrame = new DataFrame();
-            for (lap = 1; lap <= groups; lap++)
+            for (int lap = 1; lap <= groups; lap++)
             {
                 ParameterBag groupParameters = new ParameterBag();
                 groupList.Add(groupParameters);
@@ -265,7 +259,7 @@ namespace StatsDirect.Builtins
                 int[] cen = new int[gnx[lap] + 1 ];
                 int[] allcens = new int[gnx[lap] + 1 ];
                 double[] alltime = new double[gnx[lap] + 2 ];
-                Plprep(ref arr2, ref cdat1, ref stime, ref dead, ref nat, ref cen, ref gnx, out int nx, ref lap, out nt, ref allcens, ref alltime);
+                Plprep(arr2, cdat1, stime, dead, nat, cen, gnx, out int nx, lap, out nt, allcens, alltime);
 
                 if (gid.Length == 0)
                 {
@@ -277,12 +271,12 @@ namespace StatsDirect.Builtins
                     groupParameters.AddOutput("*grp", grpList);
                     ParameterBag grpParameters = new ParameterBag();
                     grpList.Add(grpParameters);
-                    grpParameters.AddOutput("grp", gid + " = " + glab[Convert.ToInt32(gpid[lap])]);
+                    grpParameters.AddOutput("grp", gid + " = " + groupLabels[Convert.ToInt32(gpid[lap])]);
                 }
                 cnx[lap] = nx;
                 double[] vh = new double[nx + 1];
                 double[] vs = new double[nx + 1];
-                Plest(host, groupParameters, ref stime, ref nat, ref dead, ref cen, ref h, ref s, ref vh, ref vs, ref nx, ref lap);
+                Plest(host, groupParameters, stime, nat, dead, cen, h, s, vh, vs, nx, lap);
                 //  median survival time
                 //  Hosmer & Lemeshow
                 //  Andersen PK et al.. Statistical models based on counting processes. New York: Springer-Verlag 1993.
@@ -296,26 +290,17 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= cnx[lap]; i++)
                 {
                     if (s[i, lap] <= p & i < imed)
-                    {
                         imed = i;
-                    }
                     if (s[i, lap] <= p - area & i < ilp)
-                    {
                         ilp = i;
-                    }
                     if (s[i, lap] >= p + area & i > iup)
-                    {
                         iup = i;
-                    }
                 }
                 if (imed == biglong)
-                {
                     imed = 0;
-                }
                 if (ilp == biglong)
-                {
                     ilp = 0;
-                }
+
                 double ul;
                 double ll;
                 if (vs[imed] == Constant.MISSING | ilp == 0 | iup == 0 | stime[ilp, lap] - stime[iup, lap] == 0)
@@ -349,50 +334,37 @@ namespace StatsDirect.Builtins
                 int ilcl = biglong;
                 for (i = 1; i <= cnx[lap]; i++)
                 {
-                    if (s[i, lap] <= 0.5 & imed == 0)
-                    {
+                    if (s[i, lap] <= 0.5 && imed == 0)
                         imed = i;
-                    }
-                    if (vs[i] != Constant.MISSING & vs[i] > 0.0)
+                    if (vs[i] != Constant.MISSING && vs[i] > 0.0)
                     {
                         if (Math.Abs(s[i, lap] - 0.5) / Math.Sqrt(vs[i]) <= cit)
                         {
                             if (i < ilcl)
-                            {
                                 ilcl = i;
-                            }
                             if (i > iucl)
-                            {
                                 iucl = i;
-                            }
                         }
                     }
                 }
                 if (ilcl == biglong)
-                {
                     ilcl = 0;
-                }
                 if (ilcl != 0)
-                {
                     groupParameters.AddOutput("bll", stime[ilcl, lap]);
-                }
                 else
-                {
                     groupParameters.AddOutput("bll", imed == 0 ? Formatting.ASTERISK : Formatting.INFRESNEG);
-                }
-                if (iucl != 0 & iucl <= cnx[lap] & imed > 0)
-                {
+                if (iucl != 0 & iucl <= cnx[lap] && imed > 0)
                     groupParameters.AddOutput("bul", stime[iucl, lap]);
-                }
                 else
-                {
                     groupParameters.AddOutput("bul", imed == 0 ? Formatting.ASTERISK : Formatting.INFRES);
-                }
                 //  mean survival time
                 //  Hosmer & Lemeshow
                 //  Andersen PK et al.. Statistical models based on counting processes. New York: Springer-Verlag 1993.
                 //  get largest observed event time tk and survival Stk, and largest time TL
                 int last = cnx[lap];
+                double stk = 0;
+                double tk = 0;
+                int lastk = 0;
                 for (i = last; i >= 1; i--)
                 {
                     if (cen[i] == 0)
@@ -406,22 +378,16 @@ namespace StatsDirect.Builtins
                 double tl = stime[last, lap];
                 // get mean survival time mu
                 double mu = 1.0 * stime[1, lap];
-                for (i = 1; i <= lastk - 1; i++)
-                {
-                    mu = mu + s[i, lap] * (stime[i + 1, lap] - stime[i, lap]);
-                }
+                for (i = 1; i < lastk; i++)
+                    mu += s[i, lap] * (stime[i + 1, lap] - stime[i, lap]);
                 if (tk != tl)
-                {
                     mu += stk * (tl - tk);
-                }
                 //  are there both censored and uncensored at tk?
                 bool lastCen = false;
                 for (i = lastk; i >= 1; i--)
                 {
                     if (stime[i, lap] != tk)
-                    {
                         break;
-                    }
                     if (cen[i] == 1)
                     {
                         lastCen = true;
@@ -436,29 +402,19 @@ namespace StatsDirect.Builtins
                     double asq = 0;
                     int l;
                     for (l = i; l <= lastk - 1; l++)
-                    {
-                        asq = asq + s[l, lap] * (stime[l + 1, lap] - stime[l, lap]);
-                    }
+                        asq += s[l, lap] * (stime[l + 1, lap] - stime[l, lap]);
                     if (!lastCen)
-                    {
-                        asq = asq + stk * (tl - tk);
-                    }
+                        asq += stk * (tl - tk);
                     asq = asq * asq;
                     double denom = Convert.ToDouble(nat[i] * (nat[i] - dead[i, lap]));
                     if (denom != 0.0)
-                    {
-                        vmu = vmu + asq * Convert.ToDouble(dead[i, lap]) / denom;
-                    }
-                    totdead = totdead + dead[i, lap];
+                        vmu += asq * Convert.ToDouble(dead[i, lap]) / denom;
+                    totdead += dead[i, lap];
                 }
                 if (tl != tk)
-                {
                     groupParameters.AddOutput("lim", "[limit: " + host.RoundU(tl) + " on " + host.RoundU(tk) + "] ");
-                }
                 else
-                {
                     groupParameters.AddOutput("lim", string.Empty);
-                }
                 groupParameters.AddOutput("mu", host.RoundU(mu));
                 if (totdead > 1 & vmu > 0)
                 {
@@ -474,9 +430,7 @@ namespace StatsDirect.Builtins
                     groupParameters.AddOutput("ul", Constant.MISSING);
                 }
                 if (save)
-                {
-                    Plsave(resultsFrame, ref stime, ref nat, ref dead, ref s, ref h, ref vs, ref vh, ref nx, ref lap, ref gamma, ref lc, ref allcens, ref alltime);
-                }
+                    Plsave(resultsFrame, stime, nat, dead, s, h, vs, vh, nx, lap, gamma, allcens, alltime);
             }
 
             outputParameters.Add("ARR2", new FilledParameter(FilledParameterDirection.Input, arr2));
@@ -487,7 +441,7 @@ namespace StatsDirect.Builtins
             outputParameters.Add("dead", new FilledParameter(FilledParameterDirection.Input, dead));
             outputParameters.Add("ngroups", new FilledParameter(FilledParameterDirection.Input, groups));
             outputParameters.Add("cnx", new FilledParameter(FilledParameterDirection.Input, cnx));
-            outputParameters.Add("glab", new FilledParameter(FilledParameterDirection.Input, glab));
+            outputParameters.Add("glab", new FilledParameter(FilledParameterDirection.Input, groupLabels));
             if (save)
                 outputParameters.AddOutput("results", resultsFrame);
 
@@ -546,13 +500,9 @@ namespace StatsDirect.Builtins
                     yl[i] = sl[i] / rm[i];
                     t[i] = yl[i];
                     if (sl[i] == 0.0)
-                    {
                         e[i] = Constant.MISSING;
-                    }
                     else
-                    {
                         e[i] = t[i] / sl[i];
-                    }
                 }
                 else
                 {
@@ -566,25 +516,19 @@ namespace StatsDirect.Builtins
             {
                 t[rows - i] = t[rows + 1 - i] + yl[rows - i];
                 if (sl[rows - i] == 0.0)
-                {
                     e[rows - i] = Constant.MISSING;
-                }
                 else
-                {
                     e[rows - i] = t[rows - i] / sl[rows - i];
-                }
             }
         }
 
 
         private static void ABLifetableMedianMode(int rows, double[] dd, out double emo, out double emd, double[] sl, double[] x)
         {
-            int i;
-
             // mode
             int j = 1;
             emo = dd[1];
-            for (i = 2; i <= rows; i++)
+            for (int i = 2; i <= rows; i++)
             {
                 if (emo - dd[i] <= 0.0)
                 {
@@ -595,7 +539,7 @@ namespace StatsDirect.Builtins
             emo = x[j];
             // median e
             emd = x[rows];
-            for (i = 2; i <= rows; i++)
+            for (int i = 2; i <= rows; i++)
             {
                 if (sl[i] - 50000.0 <= 0.0)
                 {
@@ -609,12 +553,9 @@ namespace StatsDirect.Builtins
 
         private static void ABLifetableVariance(int rows, double[] vq, double[] q, double[] d, double[] a, double[] r, double[] e, double[] sl, double[] ve, double[] vs)
         {
-            int i;
-            double w;
-
             double[] f = new double[rows + 1];
             double[] c = new double[rows + 1];
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
             {
                 vq[i] = q[i] * q[i] * (1.0 - q[i]) / d[i];
                 if (i < rows)
@@ -624,27 +565,23 @@ namespace StatsDirect.Builtins
                 }
             }
             f[rows - 1] = c[rows - 1];
-            for (i = 1; i <= rows - 2; i++)
+            for (int i = 1; i <= rows - 2; i++)
             {
                 f[rows - 1 - i] = f[rows - i] + c[rows - 1 - i];
             }
-            for (i = 1; i <= rows - 1; i++)
+            for (int i = 1; i <= rows - 1; i++)
             {
                 if (sl[i] == 0.0)
-                {
                     ve[i] = Constant.MISSING;
-                }
                 else
-                {
                     ve[i] = f[i] / (sl[i] * sl[i]);
-                }
                 if (sl[1] == 0.0)
                 {
                     vs[i] = Constant.MISSING;
                 }
                 else
                 {
-                    w = sl[i] / sl[1];
+                    double w = sl[i] / sl[1];
                     vs[i] = sl[1] * w * (1.0 - w);
                 }
             }
@@ -654,7 +591,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                w = sl[rows] / sl[1];
+                double w = sl[rows] / sl[1];
                 vs[rows] = sl[1] * w * (1.0 - w);
             }
             ve[rows] = Constant.MISSING;
@@ -667,34 +604,27 @@ namespace StatsDirect.Builtins
         {
             int j = i == 1 ? 0 : 1;
             if (i < rows)
-            {
                 return Convert.ToInt32(x[i]).ToString() + " to " + Convert.ToInt32(x[i + 1] - j).ToString();
-            }
             return Convert.ToInt32(x[i]).ToString() + " up";
         }
 
 
-        private static void Plest(ITemplateHost host, ParameterBag groupParameters, ref double[,] stime, ref int[] nat, ref int[,] dead, ref int[] cen, ref double[,] h, ref double[,] s, ref double[] vh, ref double[] vs, ref int nx, ref int lap)
+        private static void Plest(ITemplateHost host, ParameterBag groupParameters, double[,] stime, int[] nat, int[,] dead, int[] cen, double[,] h, double[,] s, double[] vh, double[] vs, int nx, int lap)
         {
             double var = 0;
-            int j;
 
             double s0 = 1.0;
             IList<ParameterBag> estList = new List<ParameterBag>();
             groupParameters.AddOutput("*est", estList);
-            for (j = 1; j <= nx; j++)
+            for (int j = 1; j <= nx; j++)
             {
                 if (nat[j] > 0)
                 {
                     s0 = s0 * Convert.ToDouble(nat[j] - dead[j, lap]) / Convert.ToDouble(nat[j]);
                     if (nat[j] - dead[j, lap] > 0)
-                    {
-                        var = var + Convert.ToDouble(dead[j, lap]) / (Convert.ToDouble(nat[j]) * Convert.ToDouble(nat[j] - dead[j, lap]));
-                    }
+                        var += Convert.ToDouble(dead[j, lap]) / (Convert.ToDouble(nat[j]) * Convert.ToDouble(nat[j] - dead[j, lap]));
                     else
-                    {
                         var = 0.0;
-                    }
                 }
                 else
                 {
@@ -721,11 +651,9 @@ namespace StatsDirect.Builtins
                 estParameters.AddOutput("dead", dead[j, lap].ToString());
                 estParameters.AddOutput("cen", cen[j].ToString());
                 estParameters.AddOutput("s", host.RoundU(s[j, lap]));
-                estParameters.AddOutput("ses",
-                                        vs[j] == Constant.MISSING ? Formatting.ASTERISK : host.RoundU(Math.Sqrt(vs[j])));
+                estParameters.AddOutput("ses", vs[j] == Constant.MISSING ? Formatting.ASTERISK : host.RoundU(Math.Sqrt(vs[j])));
                 estParameters.AddOutput("h", h[j, lap] == Constant.MISSING ? Formatting.INFRES : host.RoundU(h[j, lap]));
-                estParameters.AddOutput("seh",
-                                        vh[j] == Constant.MISSING ? Formatting.ASTERISK : host.RoundU(Math.Sqrt(vh[j])));
+                estParameters.AddOutput("seh", vh[j] == Constant.MISSING ? Formatting.ASTERISK : host.RoundU(Math.Sqrt(vh[j])));
             }
         }
 
@@ -743,27 +671,25 @@ namespace StatsDirect.Builtins
         ///  <remarks>ALGORITHM AS 6 APPL. STATIST. (1968) VOL.17, P.195</remarks>
         private static void Chol(double[] a, int n, int nn, double[] u, ref int nullty, out int ifault)
         {
-            int icol;
             double w = 0;
 
             const double eta = 0.000000001;
+
             ifault = 1;
             if (n <= 0)
-            {
                 return;
-            }
+
             ifault = 3;
             if (nn != n * (n + 1) / 2)
-            {
                 return;
-            }
+
             ifault = 2;
             nullty = 0;
             int j = 1;
             int k = 0;
             const double eta2 = eta * eta;
             int ii = 0;
-            for (icol = 1; icol <= n; icol++)
+            for (int icol = 1; icol <= n; icol++)
             {
                 ii = ii + icol;
                 double x = eta2 * a[ii];
@@ -788,15 +714,11 @@ namespace StatsDirect.Builtins
                         m = m + 1;
                     }
                     if (irow == icol)
-                    {
                         break;
-                    }
                     if (u[l] == 0)
                     {
                         if (w * w > Math.Abs(x * a[kk]))
-                        {
                             return;
-                        }
                         u[k] = 0;
                     }
                     else
@@ -812,12 +734,10 @@ namespace StatsDirect.Builtins
                 else
                 {
                     if (w < 0)
-                    {
                         return;
-                    }
                     u[k] = Math.Sqrt(w);
                 }
-                j = j + icol;
+                j += icol;
             }
             ifault = 0;
         }
@@ -825,7 +745,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptWeiLachin(ITemplateHost host, ParameterBag parameters)
         {
-            int gid2 = 0; int j;
+            int gid2 = 0;
             int[,] s;
             double[,] x;
 
@@ -840,24 +760,18 @@ namespace StatsDirect.Builtins
             int[] g = new int[rows + 1];
             int[] n = new int[2 + 1];
             int gid1 = Convert.ToInt32(gidVariable.Data[0]) + 1;
-            for (j = 1; j <= rows; j++)
+            for (int j = 1; j <= rows; j++)
             {
                 if (gidVariable.Data[j - 1] + 1 != gid1)
-                {
                     gid2 = Convert.ToInt32(gidVariable.Data[j - 1]) + 1;
-                }
                 g[j] = Convert.ToInt32(gidVariable.Data[j - 1]) + 1;
             }
-            for (j = 1; j <= rows; j++)
+            for (int j = 1; j <= rows; j++)
             {
                 if (g[j] == gid1)
-                {
                     n[1]++;
-                }
                 else if (g[j] == gid2)
-                {
                     n[2]++;
-                }
             }
             int nr = parameters["nr"].AsInt32;
             if (nr > 0)
@@ -868,20 +782,17 @@ namespace StatsDirect.Builtins
 
                 DataFrame timesFrame = parameters["times"].AsDataFrame;
                 DataFrame censorFrame = parameters["censor"].AsDataFrame;
-                int r;
-                for (j = 1; j <= nr; j++)
+                for (int j = 1; j <= nr; j++)
                 {
                     DoubleVariable timesVariable = timesFrame.Variables[j - 1]as DoubleVariable;
                     DoubleVariable censorVariable = censorFrame.Variables[j - 1]as DoubleVariable;
-                    for (r = 1; r <= rows; r++)
+                    for (int r = 1; r <= rows; r++)
                     {
                         x[r, j] = timesVariable.Data[r - 1];
                         if (x[r, j] < minTime)
-                        {
                             minTime = x[r, j];
-                        }
                     }
-                    for (r = 1; r <= rows; r++)
+                    for (int r = 1; r <= rows; r++)
                     {
                         double dv = censorVariable.Data[r - 1];
                         if (0.0 == dv || 1.0 == dv)
@@ -901,9 +812,9 @@ namespace StatsDirect.Builtins
                 if (minTime == 0.0)
                 {
                     missingCode = 0.0;
-                    for (j = 1; j <= nr; j++)
+                    for (int j = 1; j <= nr; j++)
                     {
-                        for (r = 1; r <= rows; r++)
+                        for (int r = 1; r <= rows; r++)
                         {
                             if (x[r, j] == 0.0 & s[r, j] == 1)
                             {
@@ -917,9 +828,9 @@ namespace StatsDirect.Builtins
                 {
                     missingCode = minTime - 1.0;
                 }
-                for (j = 1; j <= nr; j++)
+                for (int j = 1; j <= nr; j++)
                 {
-                    for (r = 1; r <= rows; r++)
+                    for (int r = 1; r <= rows; r++)
                     {
                         if (x[r, j] == Constant.MISSING)
                         {
@@ -948,20 +859,13 @@ namespace StatsDirect.Builtins
                 XWl(host, outerParameters, nr, rows, n, g, s, x, 2, out ifault);
             }
             if (ifault != 0)
-            {
                 host.Error("Error in calculation, report invalid", null);
-            }
             return outputParameters;
         }
 
 
         private static void XWl(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
         {
-            int nullty = 0; int j2; int i; int k2; int k1; int ipoint; int r;
-            int j; int k;
-            double q = 0;
-            string tx;
-
             int nn = (int)Math.Floor((double)nr * (nr + 1) / 2);
             int[,] y = new int[2 + 1, nt + 1];
             int[,] d = new int[2 + 1, nr + 1];
@@ -975,34 +879,32 @@ namespace StatsDirect.Builtins
             double[] nruniv = new double[nr + 1];
             double[, ,] sig = new double[2 + 1, nr + 1, nr + 1];
             ifault = 0;
-            for (i = 1; i <= 2; i++)
+            for (int i = 1; i <= 2; i++)
             {
-                for (k = 1; k <= nr; k++)
+                for (int k = 1; k <= nr; k++)
                 {
                     ees[i, k] = 0.0;
                     d[i, k] = 0;
-                    for (k2 = 1; k2 <= nr; k2++)
-                    {
+                    for (int k2 = 1; k2 <= nr; k2++)
                         sig[i, k, k2] = 0.0;
-                    }
                 }
             }
             //   Y = NUMBER AT RISK OF FAILURE
             //   ees: PARTIAL SUM USED in EQN. 1
             //   QE = Q*E (SEE EQN. 4)
             //   EVALUATE MU (EQN. 4)
-            for (k = 1; k <= nr; k++)
+            for (int k = 1; k <= nr; k++)
             {
-                for (j = 1; j <= nt; j++)
+                for (int j = 1; j <= nt; j++)
                 {
-                    for (i = 1; i <= 2; i++)
+                    for (int i = 1; i <= 2; i++)
                     {
                         y[i, j] = 0;
                         mu[i, j, k] = 0.0;
                     }
                     if (s[j, k] == 1)
                     {
-                        for (j2 = 1; j2 <= nt; j2++)
+                        for (int j2 = 1; j2 <= nt; j2++)
                         {
                             if (x[j2, k] >= x[j, k])
                             {
@@ -1015,15 +917,12 @@ namespace StatsDirect.Builtins
                             ifault = 1;
                             return;
                         }
+                        double q = 0;
                         if (method == 1)
-                        {
                             q = sum / Convert.ToDouble(nt);
-                        }
                         if (method == 2)
-                        {
                             q = 1.0;
-                        }
-                        for (i = 1; i <= 2; i++)
+                        for (int i = 1; i <= 2; i++)
                         {
                             qe[i] = q * Convert.ToDouble(y[i, j]) / sum;
                         }
@@ -1039,18 +938,18 @@ namespace StatsDirect.Builtins
                     }
                 }
                 //   EVALUATE PSI (EQN. 5)
-                for (j = 1; j <= nt; j++)
+                for (int j = 1; j <= nt; j++)
                 {
-                    for (i = 1; i <= 2; i++)
+                    for (int i = 1; i <= 2; i++)
                     {
                         psi[i, j, k] = 0.0;
-                        for (j2 = 1; j2 <= nt; j2++)
+                        for (int j2 = 1; j2 <= nt; j2++)
                         {
                             if (g[j2] == i & x[j2, k] <= x[j, k])
                             {
                                 if (s[j2, k] == 1)
                                 {
-                                    psi[i, j, k] = psi[i, j, k] + mu[i, j2, k] / Convert.ToDouble(y[i, j2]);
+                                    psi[i, j, k] = psi[i, j, k] + mu[i, j2, k] / y[i, j2];
                                 }
                             }
                         }
@@ -1058,13 +957,13 @@ namespace StatsDirect.Builtins
                 }
             }
             //   COMPUTE ENTRIES in COVARIANCE MATRIX (SEE EQNS. 2 AND 3)
-            for (k1 = 1; k1 <= nr; k1++)
+            for (int k1 = 1; k1 <= nr; k1++)
             {
-                for (k2 = 1; k2 <= k1; k2++)
+                for (int k2 = 1; k2 <= k1; k2++)
                 {
-                    for (j = 1; j <= nt; j++)
+                    for (int j = 1; j <= nt; j++)
                     {
-                        i = g[j];
+                        int i = g[j];
                         if (n[i] == 0)
                         {
                             ifault = 2;
@@ -1072,7 +971,7 @@ namespace StatsDirect.Builtins
                         }
                         sig[i, k1, k2] = sig[i, k1, k2] + (mu[i, j, k1] * Convert.ToDouble(s[j, k1]) - psi[i, j, k1]) * (mu[i, j, k2] * Convert.ToDouble(s[j, k2]) - psi[i, j, k2]) / Convert.ToDouble(n[i]);
                     }
-                    ipoint = (int)Math.Floor((double)k1 * (k1 - 1) / 2) + k2;
+                    int ipoint = (int)Math.Floor((double)k1 * (k1 - 1) / 2) + k2;
                     sigma[ipoint] = (Convert.ToDouble(n[1]) * sig[1, k1, k2] + Convert.ToDouble(n[2]) * sig[2, k1, k2]) / Convert.ToDouble(nt);
                 }
             }
@@ -1084,19 +983,15 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("grp_2", n[2].ToString());
             IList<ParameterBag> repeatsList = new List<ParameterBag>();
             outputParameters.AddOutput("*repeats", repeatsList);
-            for (k = 1; k <= nr; k++)
+            for (int k = 1; k <= nr; k++)
             {
                 ParameterBag repeatsParameters = new ParameterBag();
                 repeatsList.Add(repeatsParameters);
                 if (Math.Abs(ees[1, k] - ees[2, k]) < Constant.EPSILON * 100.0)
-                {
                     wlt[k] = 0.0;
-                }
                 else
-                {
                     wlt[k] = (ees[1, k] - ees[2, k]) / Math.Sqrt(Convert.ToDouble(nt));
-                }
-                ipoint = (int)Math.Floor((double)k * (k + 1) / 2);
+                int ipoint = (int)Math.Floor((double)k * (k + 1) / 2);
                 if (sigma[ipoint] == 0)
                 {
                     ifault = 3;
@@ -1124,18 +1019,19 @@ namespace StatsDirect.Builtins
             //   COMPUTE INVERSE OF COVARIANCE MATRIX AND WEI-LACHIN
             //   MULTIVARIATE STATISTICS CHIOMB (FOR OMNIBUS TEST) AND
             //   NRSTOC (FOR TEST OF STOCHASTIC ORDERING)  (SEE EQN 7)
-            Syminv(ref sigma, ref nr, ref nn, ref siginv, ref nullty, out int ifail);
+            int nullty = 0;
+            Syminv(sigma, nr, nn, siginv, ref nullty, out int ifail);
             double chiomb = 0.0;
             double tsum = 0.0;
             double sigsum = 0.0;
-            for (j = 1; j <= nr; j++)
+            for (int j = 1; j <= nr; j++)
             {
                 tsum = tsum + wlt[j];
-                ipoint = (int)Math.Floor((double)j * (j + 1) / 2);
+                int ipoint = (int)Math.Floor((double)j * (j + 1) / 2);
                 chiomb = chiomb + wlt[j] * wlt[j] * siginv[ipoint];
                 sigsum = sigsum + sigma[ipoint];
                 int jm1 = j - 1;
-                for (j2 = 1; j2 <= jm1; j2++)
+                for (int j2 = 1; j2 <= jm1; j2++)
                 {
                     ipoint = (int)Math.Floor((double)j * (j - 1) / 2) + j2;
                     chiomb = chiomb + 2.0 * wlt[j] * wlt[j2] * siginv[ipoint];
@@ -1151,14 +1047,12 @@ namespace StatsDirect.Builtins
             int zImin = 1;
             IList<ParameterBag> covarList = new List<ParameterBag>();
             outputParameters.AddOutput("*covar", covarList);
-            for (r = 1; r <= nr; r++)
+            for (int r = 1; r <= nr; r++)
             {
                 zImax = r + zImax;
-                tx = string.Empty;
-                for (i = zImin; i <= zImax; i++)
-                {
-                    tx = tx + host.RoundU(sigma[i]) + "\t";
-                }
+                string tx = string.Empty;
+                for (int i = zImin; i <= zImax; i++)
+                    tx += host.RoundU(sigma[i]) + "\t";
                 ParameterBag covarParameters = new ParameterBag();
                 covarList.Add(covarParameters);
                 covarParameters.AddOutput("mat", tx);
@@ -1168,14 +1062,12 @@ namespace StatsDirect.Builtins
             zImin = 1;
             IList<ParameterBag> invCovarList = new List<ParameterBag>();
             outputParameters.AddOutput("*inv_covar", invCovarList);
-            for (r = 1; r <= nr; r++)
+            for (int r = 1; r <= nr; r++)
             {
                 zImax = r + zImax;
-                tx = string.Empty;
-                for (i = zImin; i <= zImax; i++)
-                {
-                    tx = tx + host.RoundU(siginv[i]) + "\t";
-                }
+                string tx = string.Empty;
+                for (int i = zImin; i <= zImax; i++)
+                    tx += host.RoundU(siginv[i]) + "\t";
                 ParameterBag invCovarParameters = new ParameterBag();
                 invCovarList.Add(invCovarParameters);
                 invCovarParameters.AddOutput("mat", tx);
@@ -1188,9 +1080,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("z", host.RoundU(nrstoc));
             double p = 1.0 - PDF.alnorm(Math.Abs(nrstoc));
             if (p > 1.0 - p)
-            {
                 p = 1.0 - p;
-            }
             outputParameters.AddOutput("p_1", host.pval(p));
             outputParameters.AddOutput("p_2", host.pval(p * 2.0));
         }
@@ -1206,26 +1096,24 @@ namespace StatsDirect.Builtins
         ///  <param name="nullty"></param>
         ///  <param name="ifault"></param>
         ///  <remarks>ALGORITHM AS 7 APPL. STATIST. (1968) VOL.17, P.198</remarks>
-        private static void Syminv(ref double[] a, ref int n, ref int nn, ref double[] c, ref int nullty, out int ifault)
+        private static void Syminv(double[] a, int n, int nn, double[] c, ref int nullty, out int ifault)
         {
-            double[] w = new double[n + 1 ];
             Chol(a, n, nn, c, ref nullty, out ifault);
             if (ifault != 0)
-            {
                 return;
-            }
+
             int irow = n;
             int ndiag = nn;
+            double[] w = new double[n + 1];
             do
             {
                 int l = ndiag;
                 if (c[ndiag] != 0.0)
                 {
-                    int i;
-                    for (i = irow; i <= n; i++)
+                    for (int i = irow; i <= n; i++)
                     {
                         w[i] = c[l];
-                        l = l + i;
+                        l += i;
                     }
                     int icol = n;
                     int jcol = nn;
@@ -1235,53 +1123,44 @@ namespace StatsDirect.Builtins
                         l = jcol;
                         double x = 0.0;
                         if (icol == irow)
-                        {
                             x = 1.0 / w[irow];
-                        }
                         int k = n;
                         do
                         {
                             if (k == irow)
-                            {
                                 break;
-                            }
                             x = x - w[k] * c[l];
-                            k = k - 1;
-                            l = l - 1;
+                            k--;
+                            l--;
                             if (l > mdiag)
-                            {
                                 l = l - k + 1;
-                            }
                         }
                         while (true);
                         c[l] = x / w[irow];
                         if (icol == irow)
-                        {
                             break;
-                        }
-                        mdiag = mdiag - icol;
-                        icol = icol - 1;
-                        jcol = jcol - 1;
+                        mdiag -= icol;
+                        icol--;
+                        jcol--;
                     }
                     while (true);
                 }
                 else
                 {
-                    int j;
-                    for (j = irow; j <= n; j++)
+                    for (int j = irow; j <= n; j++)
                     {
                         c[l] = 0;
-                        l = l + j;
+                        l += j;
                     }
                 }
-                ndiag = ndiag - irow;
-                irow = irow - 1;
+                ndiag -= irow;
+                irow--;
             }
             while (irow != 0);
         }
 
 
-        private static void Plsave(DataFrame resultsFrame, ref double[,] stime, ref int[] nat, ref int[,] dead, ref double[,] s, ref double[,] h, ref double[] vs, ref double[] vh, ref int nx, ref int lap, ref double gamma, ref int lc, ref int[] allcens, ref double[] alltime)
+        private static void Plsave(DataFrame resultsFrame, double[,] stime, int[] nat, int[,] dead, double[,] s, double[,] h, double[] vs, double[] vh, int nx, int lap, double gamma, int[] allcens, double[] alltime)
         {
             double p = (1.0 - gamma) / 2;
             double cit = PDF.gauinv(1.0 - p, out int ifault);
@@ -1385,7 +1264,7 @@ namespace StatsDirect.Builtins
                         sehlVariable.SetData(r, h[j, lap] - cit * Math.Sqrt(vh[j]));
                         sehuVariable.SetData(r, h[j, lap] + cit * Math.Sqrt(vh[j]));
                     }
-                    r = r + 1;
+                    r++;
                 }
                 while (alltime[r] == stime[j, lap]);
             }
@@ -1402,7 +1281,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void Plprep(ref double[,] arr2, ref ColumnData[] cdat1, ref double[,] stime, ref int[,] dead, ref int[] nat, ref int[] cen, ref int[] gnx, out int nx, ref int lap, out int nt, ref int[] allcens, ref double[] alltime)
+        private static void Plprep(double[,] arr2, ColumnData[] cdat1, double[,] stime, int[,] dead, int[] nat, int[] cen, int[] gnx, out int nx, int lap, out int nt, int[] allcens, double[] alltime)
         {
             nt = cdat1[0].Rows;
             Trisvar[] q = new Trisvar[nt + 1];
@@ -1412,9 +1291,7 @@ namespace StatsDirect.Builtins
                 if (arr2[1, j] != Constant.MISSING & arr2[1, j] != Constant.MISSING & arr2[2, j] != Constant.MISSING)
                 {
                     if (j >= 1)
-                    {
-                        nxx = nxx + 1;
-                    }
+                        nxx++;
                     q[j] = new Trisvar { Tm = arr2[1, j], Gp = Convert.ToInt32(arr2[0, j]), Cs = Convert.ToInt32(arr2[2, j]) };
                 }
             }
@@ -1431,23 +1308,16 @@ namespace StatsDirect.Builtins
                     stime[nx, lap] = q[j].Tm;
                     dead[nx, lap] = q[j].Cs;
                     if (dead[nx, lap] == 0)
-                    {
                         wdr = 1;
-                    }
-                    int j2;
-                    for (j2 = j; j2 <= nt - 1; j2++)
+                    for (int j2 = j; j2 <= nt - 1; j2++)
                     {
-                        if (q[j].Tm == q[j2 + 1].Tm & q[j2 + 1].Gp == q[j].Gp)
+                        if (q[j].Tm == q[j2 + 1].Tm && q[j2 + 1].Gp == q[j].Gp)
                         {
                             if (q[j2 + 1].Cs == 1)
-                            {
-                                dead[nx, lap] = dead[nx, lap] + 1;
-                            }
+                                dead[nx, lap]++;
                             else
-                            {
-                                wdr = wdr + 1;
-                            }
-                            j = j + 1;
+                                wdr++;
+                            j++;
                         }
                         else
                         {
@@ -1463,7 +1333,7 @@ namespace StatsDirect.Builtins
             {
                 if (q[j].Gp == lap)
                 {
-                    ctr = ctr + 1;
+                    ctr++;
                     alltime[ctr] = q[j].Tm;
                     allcens[ctr] = q[j].Cs;
                 }
@@ -1472,10 +1342,6 @@ namespace StatsDirect.Builtins
 
         private static void Petoprep(ITemplateHost host, ParameterBag parameters, ref int rows, out double gamma, ref double cit, ref int groups, ref int strata, ref double[] score, ref string gid, ref double[] gpid, ref string[] glab, ref string[] slab, out bool ifault, ref double[,] arr2, ref ColumnData[] cdat1)
         {
-            int r; int j;
-            double temp;
-            bool ok;
-
             ifault = true;
             gamma = parameters["gamma"].AsDouble;
             if (gamma < 0)
@@ -1487,26 +1353,22 @@ namespace StatsDirect.Builtins
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
             glab = new string[gidVariable.GroupCount + 1 ];
-            for (j = 1; j <= gidVariable.GroupCount; j++)
-            {
+            for (int j = 1; j <= gidVariable.GroupCount; j++)
                 glab[j] = gidVariable.Groups[j - 1].Label;
-            }
             rows = gidVariable.Length;
             gid = gidVariable.Title;
             double[] g = new double[rows + 1];
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 g[r] = gidVariable.Data[r - 1] + 1;
-            }
             gpid = new double[0 + 1 ];
             int igot = 0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
-                temp = g[r];
+                double temp = g[r];
                 if (temp != Constant.MISSING)
                 {
-                    ok = true;
-                    for (j = 1; j <= igot; j++)
+                    bool ok = true;
+                    for (int j = 1; j <= igot; j++)
                     {
                         if (temp == gpid[j])
                         {
@@ -1516,19 +1378,19 @@ namespace StatsDirect.Builtins
                     }
                     if (ok)
                     {
-                        igot = igot + 1;
+                        igot++;
                         // create temp variable for copying values - TODO: Optimise
-                        double[] transTemp6 = new double[igot + 1 ];
-                        Array.Copy(gpid, transTemp6, Math.Min(gpid.Length, transTemp6.Length));
-                        gpid = transTemp6;
+                        double[] gpidCopy = new double[igot + 1 ];
+                        Array.Copy(gpid, gpidCopy, gpid.Length);
+                        gpid = gpidCopy;
                         gpid[igot] = temp;
                     }
                 }
             }
             groups = igot;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
-                for (j = 1; j <= groups; j++)
+                for (int j = 1; j <= groups; j++)
                 {
                     if (gpid[j] == g[r])
                     {
@@ -1541,18 +1403,14 @@ namespace StatsDirect.Builtins
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
             double[] t = new double[rows + 1];
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 t[r] = timesVariable.Data[r - 1];
-            }
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
             double[] c = new double[rows + 1];
-            for (r = 1; r <= rows; r++)
-            {
+            for (int r = 1; r <= rows; r++)
                 c[r] = deathsVariable.Data[r - 1];
-            }
 
             double[] s = new double[rows + 1];
             if (parameters.ContainsKey("strata") && parameters["strata"] != null)
@@ -1560,23 +1418,19 @@ namespace StatsDirect.Builtins
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 ClassifierVariable strataVariable = strataFrame.Variables[0] as ClassifierVariable;
                 slab = new string[strataVariable.GroupCount + 1];
-                for (j = 1; j <= strataVariable.GroupCount; j++)
-                {
+                for (int j = 1; j <= strataVariable.GroupCount; j++)
                     slab[j] = strataVariable.Title + "=" + strataVariable.Groups[j - 1].Label;
-                }
-                for (r = 1; r <= rows; r++)
-                {
+                for (int r = 1; r <= rows; r++)
                     s[r] = strataVariable.Data[r - 1];
-                }
                 double[] sid = new double[0 + 1];
                 int igots = 0;
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
-                    temp = s[r];
+                    double temp = s[r];
                     if (temp != Constant.MISSING)
                     {
-                        ok = true;
-                        for (j = 1; j <= igots; j++)
+                        bool ok = true;
+                        for (int j = 1; j <= igots; j++)
                         {
                             if (temp == sid[j])
                             {
@@ -1596,9 +1450,9 @@ namespace StatsDirect.Builtins
                     }
                 }
                 strata = igots;
-                for (r = 1; r <= rows; r++)
+                for (int r = 1; r <= rows; r++)
                 {
-                    for (j = 1; j <= strata; j++)
+                    for (int j = 1; j <= strata; j++)
                     {
                         if (sid[j] == s[r])
                         {
@@ -1609,29 +1463,26 @@ namespace StatsDirect.Builtins
                 }
             }
             int extra = 0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
                 if (c[r] > 1)
                 {
-                    extra = extra + (int)Math.Floor(c[r]) - 1;
+                    extra += (int)Math.Floor(c[r]) - 1;
                 }
             }
             // put the data back into the Public array
             arr2 = new double[3 + 1, rows + extra + 1];
             cdat1 = new ColumnData[3 + 1];
-            for (j = 0; j <= 3; j++)
-            {
+            for (int j = 0; j <= 3; j++)
                 cdat1[j] = new ColumnData { Rows = rows + extra };
-
-            }
             int ctr = 0;
-            for (r = 1; r <= rows; r++)
+            for (int r = 1; r <= rows; r++)
             {
-                if (c[r] > 1 & c[r] != Constant.MISSING)
+                if (c[r] > 1 && c[r] != Constant.MISSING)
                 {
-                    for (j = 1; j <= (int)Math.Floor(c[r]); j++)
+                    for (int j = 1; j <= (int)Math.Floor(c[r]); j++)
                     {
-                        ctr = ctr + 1;
+                        ctr++;
                         arr2[0, ctr] = g[r];
                         arr2[1, ctr] = t[r];
                         arr2[2, ctr] = 1;
@@ -1641,29 +1492,27 @@ namespace StatsDirect.Builtins
                 else
                 {
                     if (c[r] < 0)
-                    {
                         c[r] = 0;
-                    }
-                    ctr = ctr + 1;
+                    ctr++;
                     arr2[0, ctr] = g[r];
                     arr2[1, ctr] = t[r];
                     arr2[2, ctr] = c[r];
                     arr2[3, ctr] = s[r];
                 }
             }
-            rows = rows + extra;
+            rows += extra;
             if (groups > 2)
             {
                 score = new double[groups + 1 ];
                 bool use123 = parameters["use123"].AsBoolean;
                 if (use123)
                 {
-                    for (j = 1; j <= groups; j++)
+                    for (int j = 1; j <= groups; j++)
                         score[j] = Convert.ToDouble(j);
                 }
                 else
                 {
-                    for (j = 1; j <= groups; j++)
+                    for (int j = 1; j <= groups; j++)
                     {
                         score[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out bool wasCancelled);
                         if (wasCancelled)

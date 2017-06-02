@@ -23,10 +23,10 @@ namespace Layout
             };
         }
 
-        public Axis layoutAxis(Graphics g)
+        public Axis LayoutAxis(Graphics g)
         {
             AxisLabeler labeler = new ExtendedAxisLabeler(g);
-            return labeler.generate(options, AxisDensity);
+            return labeler.Generate(options, AxisDensity);
         }
     }
 }

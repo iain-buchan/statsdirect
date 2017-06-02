@@ -4,6 +4,6 @@ namespace StatsDirect.Charting
 {
     public interface IAxisScaler
     {
-        IAxisScale Q_Axis(double qMin, double qMinGreaterThanZero, double qMax, bool isYAxis);
+        IAxisScale Q_Axis(double minimumDataValue, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues);
     }
 }

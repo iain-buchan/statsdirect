@@ -1015,8 +1015,10 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag warnParameters = new ParameterBag();
                 warnParameters.AddOutput("warn", context.warn);
-                IList<ParameterBag> warnList = new List<ParameterBag>();
-                warnList.Add(warnParameters);
+                IList<ParameterBag> warnList = new List<ParameterBag>
+                {
+                    warnParameters
+                };
                 outputParameters.AddOutput("*warn", warnList);
             }
             else

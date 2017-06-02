@@ -7,7 +7,7 @@ using System.Drawing;
 namespace Layout
 {
     /// <remarks>Implements the axis labeling routine described in 
-    /// Talbot, Lin, and Hanrahan. An Extension of Wilkinson’s Algorithm for Positioning Tick Labels on Axes, Infovis 2010.
+    /// Talbot, Lin, and Hanrahan. An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes, Infovis 2010.
     /// </remarks>
     class ExtendedAxisLabeler : AxisLabeler
     {
@@ -120,14 +120,14 @@ namespace Layout
             return w[0] * simplicity + w[1] * coverage + w[2] * density + w[3] * legibility;
         }
 
-        public override Axis generate(Options options, double density)
+        public override Axis Generate(Options options, double density)
         {
             double space = options.Direction == AxisDirection.Horizontal ? options.Screen.Width : options.Screen.Height;
 
             decimal dmax = (decimal)options.DataRange.Max;
             decimal dmin = (decimal)options.DataRange.Min;
 
-            if (dmax == dmin)
+            if (dmax <= dmin)
                 return null;
 
             Axis best = null;

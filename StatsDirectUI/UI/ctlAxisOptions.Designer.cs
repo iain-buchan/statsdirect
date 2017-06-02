@@ -46,7 +46,7 @@
             this.tabAxis.Margin = new System.Windows.Forms.Padding(0);
             this.tabAxis.Name = "tabAxis";
             this.tabAxis.SelectedIndex = 0;
-            this.tabAxis.Size = new System.Drawing.Size(240, 276);
+            this.tabAxis.Size = new System.Drawing.Size(240, 241);
             this.tabAxis.TabIndex = 0;
             // 
             // tabX
@@ -56,7 +56,7 @@
             this.tabX.Location = new System.Drawing.Point(4, 22);
             this.tabX.Margin = new System.Windows.Forms.Padding(0);
             this.tabX.Name = "tabX";
-            this.tabX.Size = new System.Drawing.Size(232, 250);
+            this.tabX.Size = new System.Drawing.Size(232, 215);
             this.tabX.TabIndex = 0;
             this.tabX.Text = "X";
             // 
@@ -67,7 +67,7 @@
             this.tabY.Location = new System.Drawing.Point(4, 22);
             this.tabY.Margin = new System.Windows.Forms.Padding(0);
             this.tabY.Name = "tabY";
-            this.tabY.Size = new System.Drawing.Size(232, 272);
+            this.tabY.Size = new System.Drawing.Size(232, 215);
             this.tabY.TabIndex = 1;
             this.tabY.Text = "Y";
             // 
@@ -103,7 +103,7 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tabAxis);
             this.Name = "ctlAxisOptions";
-            this.Size = new System.Drawing.Size(240, 276);
+            this.Size = new System.Drawing.Size(240, 241);
             this.tabAxis.ResumeLayout(false);
             this.tabX.ResumeLayout(false);
             this.tabX.PerformLayout();

@@ -179,6 +179,7 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Set up some appropriate default axes, allowing room for axis labels and for other elements that might be on the canvas.
         ///  </summary>
+        ///  <remarks>Precondition: Chart is graphical, not ASCII</remarks>
         protected void DefaultAxes(Margin margin, Size axisLabelAndTicSpace)
         {
             XAxisCanvas = DEFAULT_X_GAP + (margin?.Left ?? 0) + axisLabelAndTicSpace.Width;
@@ -233,11 +234,8 @@ namespace StatsDirect.Charting.Renderer
 
         protected void DrawTitle(string title)
         {
-            using (StringFormat txtFormat = new StringFormat())
-            {
-                txtFormat.Alignment = StringAlignment.Center;
-                statsDirectCanvas.DrawString(title, TitleFont, Brushes.Black, XExtCanvas / 2 + XAxisCanvas, YAxisCanvas + YExtCanvas + 60 - TitleFont.Height * 0.25F, txtFormat);
-            }
+            if (!string.IsNullOrEmpty(title))
+                DrawStringInCanvasCoordinates(title, TitleFont, Brushes.Black, XExtCanvas / 2 + XAxisCanvas, YAxisCanvas + YExtCanvas + 60, StringAlignment.Center, StringAlignment.Near);
         }
 
         public void DrawXAxisTitle(string title, double gapForAxisLabels)
@@ -273,9 +271,6 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="legend"></param>
         protected AxisScales LayoutChartAndDrawAxes(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Legend legend = null)
         {
-            // TODO: Fix this so that the user can spec their own scales again!
-            useCalculatedScalesEvenWithDefinition = true;
-
             SizeF legendSize = default(SizeF);
             if (null != legend)
                 legendSize = ChartPartSizer.Size(this, legend);
@@ -290,7 +285,8 @@ namespace StatsDirect.Charting.Renderer
 
             Size extraSizeForAxes = CalculateAxisSizes(title, x, y, useCalculatedScalesEvenWithDefinition);
 
-            DefaultAxes(plotAreaMargins, extraSizeForAxes);
+            if (!IsAscii)
+                DefaultAxes(plotAreaMargins, extraSizeForAxes);
             AxisScales ass = DrawAxes(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, extraSizeForAxes);
             return ass;
         }
@@ -299,7 +295,7 @@ namespace StatsDirect.Charting.Renderer
         {
             if (!IsAscii)
             {
-                // Draw the axes
+                // Draw the axis lines
                 if ((x.Mode & AxisMode.Line) == AxisMode.Line)
                     AxisDrawline(XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas);
 
@@ -313,12 +309,6 @@ namespace StatsDirect.Charting.Renderer
                     if ((y.Mode & AxisMode.Line) == AxisMode.Line)
                         AxisDrawline(XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas);
                 }
-            }
-            else
-            { //  Is Ascii
-                // Draw the Title
-                int s = 40 - title.Length / 2;
-                WriteAsciiYX(ShTx.GetUpperBound(0), s, title);
             }
 
             IAxisScale xAs;
@@ -408,7 +398,12 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // Draw the chart title now that we know it's safe to do so.
-            if (!IsAscii)
+            if (IsAscii)
+            {
+                int s = 40 - title.Length / 2;
+                WriteAsciiYX(ShTx.GetUpperBound(0), s, title);
+            }
+            else
                 DrawTitle(title);
             return axisScales;
         }
@@ -594,8 +589,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 //  ASCII - always linear for now.  TODO: Log
                 ILinearAxisScale linearAxisScale = (ILinearAxisScale)xAxisScale;
-                int intervals = xAxisScale.Tics().Count - 1;
-                for (int x = 0; x <= intervals; x++)
+                for (int x = 0; x < xAxisScale.Tics().Count; x++)
                 {
                     if ((x - linearAxisScale.Phase) % linearAxisScale.IntervalsPerMajorTic == 0)
                     {
@@ -618,7 +612,7 @@ namespace StatsDirect.Charting.Renderer
                     return asp.AxisScale;
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
-            return AxisScalerFactory.AxisScalerFor(scaleType).Q_Axis(qmin, qMinGreaterThanZero, qmax, isY);
+            return AxisScalerFactory.AxisScalerFor(scaleType).Q_Axis(qmin, qMinGreaterThanZero, qmax, isY, false);
         }
 
         private string AxisMaskOrFromDefinition(IAxisScale axisScale, /* double stepp, double znmin, int nstep, int sp, */ bool isY, /* ScaleType scaleType, */ bool UseCalculatedScalesEvenWithDefinition)
@@ -683,8 +677,7 @@ namespace StatsDirect.Charting.Renderer
                                 //  Major tic - may or may not be labelled
                                 if (drawLabels)
                                 {
-                                    string lab = tic.Value.ToString(msk);
-                                    AxisDrawStringAtAngleRM(lab, XAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction);
+                                    AxisDrawStringAtAngleRM(tic.Value.ToString(msk), XAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction);
                                     AxisDrawline(XAxisCanvas - AXIS_BIG_TICK, y1, XAxisCanvas, y1);
                                 }
                                 else
@@ -704,8 +697,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 // ASCII charts only work with linear scales
                 ILinearAxisScale linearAxisScale = (ILinearAxisScale)yAxisScale;
-                int intervals = yAxisScale.Tics().Count - 1;
-                for (int y = 0; y <= intervals; y++)
+                for (int y = 0; y < yAxisScale.Tics().Count; y++)
                 {
                     if ((y - linearAxisScale.Phase) % linearAxisScale.IntervalsPerMajorTic == 0)
                     {
@@ -1663,9 +1655,7 @@ namespace StatsDirect.Charting.Renderer
         {
             ShTx = new string[lines + 1];
             for (int c = 0; c <= ShTx.GetUpperBound(0); c++)
-            {
-                ShTx[c] = string.Empty.PadLeft(85);
-            }
+                ShTx[c] = new string(' ', 85);
         }
 
         protected void ASCII_PlotPoint(int x, int y)
@@ -1812,82 +1802,6 @@ namespace StatsDirect.Charting.Renderer
             else if (cap.Contains("random effects"))
                 x += " [random]";
             return x;
-        }
-
-        /// <summary>
-        /// Calculate a ratio scale with tics in each decade at 1, 2, 3, 5.
-        /// </summary>
-        /// <param name="tics"></param>
-        /// <param name="tic"></param>
-        /// <param name="min"></param>
-        /// <param name="max"></param>
-        /// <param name="scalemin"></param>
-        /// <param name="scalemax"></param>
-        protected static void CreateRatioLogScale(out int tics, out double[] tic, ref double min, ref double max, out double scalemin, out double scalemax)
-        {
-            double top = max, bot = min;
-            // #1323: Detect an exact power of 10 and prevent it from fouling up the algorithm
-            if (min == Math.Pow(10, Math.Floor(Math.Log10(min))))
-                bot = 0.99 * bot;
-
-            if (max <= 0)
-                top = 100000000;
-            if (min <= 0)
-                bot = 0.00000001;
-
-            double tmp = bot;
-            int i = 1;
-            double z;
-            do
-            {
-                z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
-                tmp = z;
-                if (tmp >= bot) i++;
-                if (tmp >= top) break;
-                tmp += z;
-                if (tmp >= bot) i++;
-                if (tmp >= top) break;
-                tmp += z;
-                if (tmp >= bot) i++;
-                if (tmp >= top) break;
-                tmp += z * 2;
-                if (tmp >= bot) i++;
-                if (tmp >= top) break;
-                tmp += z * 5;
-            } while (tmp < top * 2);
-
-            tics = i;
-            tic = new double[tics + 1];
-
-            tmp = bot;
-            i = 1;
-            do
-            {
-                z = Math.Pow(10, Math.Floor(Math.Log10(tmp)));
-                tmp = z;
-                if (tmp >= bot) i++;
-                tic[i] = tmp;
-                if (tmp >= top) break;
-                tmp += z;
-                if (tmp >= bot) i++;
-                tic[i] = tmp;
-                if (tmp >= top) break;
-                tmp += z;
-                if (tmp >= bot) i++;
-                tic[i] = tmp;
-                if (tmp >= top) break;
-                tmp += z * 2;
-                if (tmp >= bot) i++;
-                tic[i] = tmp;
-                if (tmp >= top) break;
-                // TODO: Does this give a higher max than our scale points if we multiply tmp here and then exit (yes), and does it matter if it does (dunno)?
-                tmp += z * 5;
-            } while (tmp < top * 2);
-
-            scalemin = tic[1];
-            scalemax = tmp;
-            min = scalemin;
-            max = scalemax;
         }
 
 #if WARN_OBSOLETES

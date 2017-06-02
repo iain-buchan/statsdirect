@@ -14,30 +14,30 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  Try to get a neat axis division suitable for values between qmin and qmax.
         ///  </summary>
-        ///  <param name="qmin">The smallest value likely to be plotted on the axis.</param>
-        ///  <param name="qMinGreaterThanZero">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; not used for LinearAxisScaler.</param>
-        ///  <param name="qmax">The largest value likely to be plotted on the axis.</param>
+        ///  <param name="minimumDataValue">The smallest value likely to be plotted on the axis.</param>
+        ///  <param name="minimumDataValueGreaterThanZero">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; not used for LinearAxisScaler.</param>
+        ///  <param name="maximumDataValue">The largest value likely to be plotted on the axis.</param>
         /// <param name="isYAxis"></param>
         /// <remarks></remarks>
-        public IAxisScale Q_Axis(double qmin, double qMinGreaterThanZero, double qmax, bool isYAxis)
+        public IAxisScale Q_Axis(double minimumDataValue, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
         {
             //  If we have no points at all, the choice is irrelevant so we might as well do it the easy way.
-            if (qmin > qmax)
+            if (minimumDataValue > maximumDataValue)
             {
-                qmin = 0.0;
-                qmax = 1.0;
+                minimumDataValue = 0.0;
+                maximumDataValue = 1.0;
             }
 
             // Short-circuit for the common case of a 0 to 1 axis.
-            if (qmin == 0.0 && qmax == 1.0)
-                return new LinearAxisScale(qmin, qmax, qmin, qmax, 20, 5);
+            if (minimumDataValue == 0.0 && maximumDataValue == 1.0)
+                return new LinearAxisScale(minimumDataValue, maximumDataValue, minimumDataValue, maximumDataValue, 20, 5);
 
             int bestScoreSoFar = int.MaxValue; // Lower is better
             ILinearAxisScale bestScaleSoFar = null;
             foreach (int candidateDivisions in DIVISIONS_TO_TRY)
             {
-                LinearAxisScale unshiftedAxisScale = Axis(qmin, qmax, candidateDivisions);
-                ILinearAxisScale shiftedAxisScale = ShiftMinMax(qmin, qmax, unshiftedAxisScale, out int shiftedScore);
+                LinearAxisScale unshiftedAxisScale = Axis(minimumDataValue, maximumDataValue, candidateDivisions);
+                ILinearAxisScale shiftedAxisScale = ShiftMinMax(minimumDataValue, maximumDataValue, unshiftedAxisScale, out int shiftedScore);
                 NeatnessComparison neater = CompareNeatness(bestScaleSoFar, shiftedAxisScale);
                 if (neater == NeatnessComparison.Second || neater == NeatnessComparison.Equal && shiftedScore < bestScoreSoFar)
                 {

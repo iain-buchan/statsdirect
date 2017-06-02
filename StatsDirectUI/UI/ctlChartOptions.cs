@@ -39,8 +39,8 @@ namespace StatsDirect.UI
             if (options.UsesYAxisTitle)
                 options.YAxisTitle = ctlAxisOptions.Y.Title;
             ScaleParameters scaleParameters = definition.ScaleParameters;
-            FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X);
-            FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y);
+            FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X, false);
+            FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y, true);
             if (options.UsesAxisLabelFontDescriptor)
                 options.AxisLabelFontDescriptor = ChartPreferences.SaveStringFromFont(ctlAxisLabelFont.UserFont);
             if (options.UsesAxisTitleFontDescriptor)
@@ -81,30 +81,11 @@ namespace StatsDirect.UI
             FillOrientationFromForm();
         }
 
-        private static void FillAxisScaleParametersFromForm(AxisScaleParameters asp, ctlOneAxisOptions ao)
+        private static void FillAxisScaleParametersFromForm(AxisScaleParameters asp, ctlOneAxisOptions ao, bool isYAxis)
         {
             asp.ScaleType = ao.ScaleType;
             asp.LabelDirection = ao.LabelDirection;
-
-            switch (asp.ScaleType)
-            {
-                case ScaleType.Category:
-                    // Do nothing
-                    break;
-                case ScaleType.Date:
-                case ScaleType.Linear:
-                    asp.AxisScale = new LinearAxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, ao.Intervals, ao.IntervalsPerMajorTic);
-                    break;
-                case ScaleType.Log10:
-                    asp.AxisScale = new Log10AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Math.Log10(ao.MinimumScaleValue)), 1, (int)Math.Round(Math.Log10(ao.MaximumScaleValue)), 10, new List<int>());
-                    break;
-                case ScaleType.LogNatural:
-                    asp.AxisScale = new Log2AxisScale(ao.MinimumScaleValue, ao.MaximumScaleValue, (int)Math.Round(Log2(ao.MinimumScaleValue)), (int)Math.Round(Log2(ao.MaximumScaleValue)));
-                    break;
-                case ScaleType.NotSet:
-                default:
-                    throw new NotImplementedException("Unknown scale type in FillAxisScaleParametersFromForm");
-            }
+            asp.AxisScale = AxisScalerFactory.AxisScalerFor(asp.ScaleType).Q_Axis(ao.MinimumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, isYAxis, true);
             asp.Mask = ao.Mask;
 
             asp.HasGridLines = ao.HasGridLines;

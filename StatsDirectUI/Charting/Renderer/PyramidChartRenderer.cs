@@ -63,8 +63,6 @@ namespace StatsDirect.Charting.Renderer
 
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
-            const int MINIMUM_X_WHITESPACE = 30;
-
             PyramidOptions pOptions = (PyramidOptions)Definition.ChartOptions;
 
             DataFrame maleFrame = pOptions.MaleFrame;

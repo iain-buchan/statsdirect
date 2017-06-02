@@ -12,10 +12,8 @@ namespace StatsDirect.UI
         private double dataMinimum;
         private double dataMinGreaterThanZero;
         private double dataMaximum;
-        private int intervals;
         private double scaleMinimum;
         private double scaleMaximum;
-        private int intervalsPerMajorTic;
         private string mask;
         private bool settingValues;
         private List<ScaleType> scaleTypesInCboScale;
@@ -76,8 +74,6 @@ namespace StatsDirect.UI
             }
         }
 
-        public int Intervals => intervals;
-
         public LabelDirection LabelDirection
         {
             get { return (LabelDirection)cboScaleTextDirection.SelectedIndex; }
@@ -85,8 +81,6 @@ namespace StatsDirect.UI
         }
 
         public string Mask => mask;
-
-        public int IntervalsPerMajorTic => intervalsPerMajorTic;
 
         public double MinimumScaleValue => scaleMinimum;
 
@@ -145,12 +139,15 @@ namespace StatsDirect.UI
         {
             cboScale.Items.Clear();
             scaleTypesInCboScale.Clear();
-            foreach (ScaleType scaleType in Enum.GetValues(typeof(ScaleType)))
+            if (null != allowedScaleTypes)
             {
-                if (allowedScaleTypes.Contains(scaleType))
+                foreach (ScaleType scaleType in Enum.GetValues(typeof(ScaleType)))
                 {
-                    cboScale.Items.Add(printableScaleTypes[(int)scaleType]);
-                    scaleTypesInCboScale.Add(scaleType);
+                    if (allowedScaleTypes.Contains(scaleType))
+                    {
+                        cboScale.Items.Add(printableScaleTypes[(int)scaleType]);
+                        scaleTypesInCboScale.Add(scaleType);
+                    }
                 }
             }
             if (cboScale.Items.Count > 0)
@@ -226,32 +223,27 @@ namespace StatsDirect.UI
             if (MaximumDataValue <= MinimumDataValue)
                 return;
 
-            double qMin = MinimumDataValue;
-            double qMax = MaximumDataValue;
+            double minimumValue = MinimumDataValue;
+            double minimumValueGreaterThanZero = DataMinGreaterThanZero;
+            double maximumValue = MaximumDataValue;
             if (ShouldShowMarkerLine && HasMarkerLine)
             {
                 double v = MarkerLineValue;
-                if (v < qMin)
-                    qMin = v;
-                if (v > qMax)
-                    qMax = v;
+                if (v < minimumValue)
+                    minimumValue = v;
+                if (v > 0 && v < minimumValueGreaterThanZero)
+                    minimumValueGreaterThanZero = v;
+                if (v > maximumValue)
+                    maximumValue = v;
             }
             ScaleType selectedScaleType = ScaleType;
-            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(qMin, DataMinGreaterThanZero, qMax, IsYAxis);
-            IList<Tic> tics = axisScale.Tics();
-            intervals = tics.Count - 1;
+            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
             scaleMinimum = axisScale.MinimumScaleValue;
             scaleMaximum = axisScale.MaximumScaleValue;
-            int majorTics = tics.Where(tic => tic.TicType == TicType.Major).Count();
-            if (majorTics > 1)
-                intervalsPerMajorTic = intervals / (majorTics - 1); // There's one extra tic - should be a major - at the end. TODO: Check this if there's ever phase added to this.
-            else
-                intervalsPerMajorTic = 1;
             mask = Charting.AxisMasker.AxisMask(axisScale);
             settingValues = true;
             txtScaleTextMask.Text = mask;
             txtMinimum.Text = scaleMinimum.ToString(mask);
-            txtTics.Text = intervals.ToString("N0");
             txtMaximum.Text = scaleMaximum.ToString(mask);
             settingValues = false;
         }
@@ -273,20 +265,7 @@ namespace StatsDirect.UI
             if (settingValues)
                 return;
             scaleMinimum = Utilities.Parsing.Cdbl_Txt(txtMinimum.Text);
-            intervals = Utilities.Parsing.Cint_Txt(txtTics.Text);
             scaleMaximum = Utilities.Parsing.Cdbl_Txt(txtMaximum.Text);
-        }
-
-        private void txtTics_TextChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                RecalculateScale();
-            }
-            catch (Exception)
-            {
-                // TODO: Warn of the exception
-            }
         }
 
         private void txtMaximum_TextChanged(object sender, EventArgs e)

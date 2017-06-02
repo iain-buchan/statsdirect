@@ -949,7 +949,7 @@ namespace StatsDirect.Charting.Renderer
                     throw new ArgumentOutOfRangeException(nameof(xform), xform, "Unexpected transform: only Log, None, Z known");
             }
 
-            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinY, 0, DataMaxY, true);
+            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinY, 0, DataMaxY, true, false);
             DataMinY = axisScale.MinimumDataValue;
             DataMaxY = axisScale.MaximumDataValue;
             double ymn = axisScale.MinimumScaleValue;
@@ -1671,7 +1671,7 @@ namespace StatsDirect.Charting.Renderer
             if (DataMinX > orlMin && orlMin != Constant.MISSING)
                 DataMinX = orlMin;
 
-            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false);
+            ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false, false);
             DataMinX = axisScale.MinimumScaleValue;
             DataMaxX = axisScale.MaximumScaleValue;
 
@@ -1849,7 +1849,7 @@ namespace StatsDirect.Charting.Renderer
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
 
-            IAxisScale xAxisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false);
+            IAxisScale xAxisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(DataMinX, 0, DataMaxX, false, false);
             DataMinX = xAxisScale.MinimumScaleValue;
             DataMaxX = xAxisScale.MaximumScaleValue;
 

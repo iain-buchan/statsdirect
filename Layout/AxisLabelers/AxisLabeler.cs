@@ -26,6 +26,6 @@ namespace Layout
             }
         }
 
-        public abstract Axis generate(Options options, double m);
+        public abstract Axis Generate(Options options, double m);
     }
 }
