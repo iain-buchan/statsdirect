@@ -226,7 +226,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("groups", groups);
             outputParameters.AddOutput("capacity", capacity);
             outputParameters.AddOutput("subjects", subjects);
-            outputParameters.AddOutput("seed", seed);
+            // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
             IList<ParameterBag> groupsList = new List<ParameterBag>();
             outputParameters.AddOutput("*groups", groupsList);
             for (int i = 1; i <= subjects; i++)

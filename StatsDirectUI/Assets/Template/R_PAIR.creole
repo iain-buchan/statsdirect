@@ -1,7 +1,7 @@
 <report>
 <line><title>Randomized intervention-control pairs</title></line>
 <line></line>
-<line>Randomized with seed: <in>seed</in></line>
+<line>Randomized with seed: <in>seedAndNote</in></line>
 <line></line>
 <table>
 <block name="pairs"><tr><td><subtotal><in>index</in></subtotal></td><td><in>random</in></td></tr></block>

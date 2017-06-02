@@ -476,16 +476,16 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptRandomPairs(ITemplateHost host, ParameterBag parameters)
         {
-            int Seed = AutoSeed(parameters);
-            MersenneTwister mt = new MersenneTwister(Seed);
+            int seed = AutoSeed(parameters);
+            MersenneTwister mt = new MersenneTwister(seed);
             int pairs = parameters["pairs"].AsInt32;
             bool balance = pairs >= 1 && Math.Floor(pairs / 2.0) == pairs / 2.0 && parameters["balance"].AsBoolean;
 
             ParameterBag outputParameters = new ParameterBag();
             if (balance)
-                outputParameters.AddOutput("seed", Seed + ",  balanced allocation");
+                outputParameters.AddOutput("seedAndNote", seed + ",  balanced allocation");
             else
-                outputParameters.AddOutput("seed", Seed);
+                outputParameters.AddOutput("seedAndNote", seed);
 
             if (pairs >= 1)
             {
@@ -565,7 +565,7 @@ namespace StatsDirect.Builtins
                 Array.Sort(brand, 1, halfHigh);
 
                 ParameterBag outputParameters = new ParameterBag();
-                outputParameters.AddOutput("seed", seed);
+                // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
                 List<ParameterBag> allocationsList = new List<ParameterBag>();
                 outputParameters.AddOutput("*allocations", allocationsList);
                 for (int N = 1; N <= halfHigh; N++)
@@ -614,7 +614,7 @@ namespace StatsDirect.Builtins
                 }
 
                 ParameterBag outputParameters = new ParameterBag();
-                outputParameters.AddOutput("seed", seed);
+                // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
                 List<ParameterBag> allocationsList = new List<ParameterBag>();
                 outputParameters.AddOutput("*allocations", allocationsList);
                 for (N = low; N <= high; N++)
