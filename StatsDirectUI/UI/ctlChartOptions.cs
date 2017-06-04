@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using StatsDirect.Numerics;
 using StatsDirect.Charting;
 using StatsDirect.Templates;
-using System.Collections.Generic;
 
 namespace StatsDirect.UI
 {
@@ -85,21 +84,14 @@ namespace StatsDirect.UI
         {
             asp.ScaleType = ao.ScaleType;
             asp.LabelDirection = ao.LabelDirection;
-            asp.AxisScale = AxisScalerFactory.AxisScalerFor(asp.ScaleType).Q_Axis(ao.MinimumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, isYAxis, true);
+            IAxisScaler scaler = AxisScalerFactory.AxisScalerFor(asp.ScaleType);
+            if (null != scaler)
+                asp.AxisScale = scaler.Q_Axis(ao.MinimumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, isYAxis, true);
             asp.Mask = ao.Mask;
 
             asp.HasGridLines = ao.HasGridLines;
             asp.GridLineDashStyle = ao.GridLineDashStyle;
-
-            if (ao.HasMarkerLine)
-                asp.MarkerLineValue = ao.MarkerLineValue;
-            else
-                asp.MarkerLineValue = default(double?);
-        }
-
-        private static double Log2(double value)
-        {
-            return Math.Log(value) / Math.Log(2.0);
+            asp.MarkerLineValue = ao.HasMarkerLine ? ao.MarkerLineValue : default(double?);
         }
 
         private void FillOrientationFromForm()
