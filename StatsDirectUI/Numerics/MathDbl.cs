@@ -399,20 +399,19 @@ namespace StatsDirect.Numerics
 
 
         ///  <summary>
-        ///  Calculate and return the mean and standard deviation of the doubles in x(LowerBound) to x(LowerBound + k - 1) inclusive.
+        ///  Calculate and return the mean and standard deviation of the doubles in x[0] to x[k - 1] inclusive.
         ///  </summary>
         ///  <param name="x">The array of values</param>
-        ///  <param name="lowerBound">The index at which the first value can be found.  Typically 0 or 1.</param>
         ///  <param name="k">The number of values.  Set to the number of non-MISSING values.</param>
         ///  <param name="xmean">The output mean, or Constant.MISSING</param>
         ///  <param name="xsd">The output standard deviation, or Constant.MISSING</param>
         ///  <remarks></remarks>
-        public static void meansd(double[] x, int lowerBound, ref int k, out double xmean, out double xsd)
+        public static void MeanSD(double[] x, ref int k, out double xmean, out double xsd)
         {
 
             double xsum = 0.0;
             int ctr = 0;
-            for (int i = lowerBound; i < k + lowerBound; i++)
+            for (int i = 0; i < k; i++)
             {
                 if (x[i] != Constant.MISSING)
                 {
@@ -428,14 +427,13 @@ namespace StatsDirect.Numerics
             }
             xmean = xsum / k;
             double xss = 0.0;
-            for (int i = lowerBound; i < k + lowerBound; i++)
+            for (int i = 0; i < k; i++)
                 if (x[i] != Constant.MISSING)
                     xss += (x[i] - xmean) * (x[i] - xmean);
             double xvar = xss / (ctr - 1);
             xsd = xvar >= 0 ? Math.Sqrt(xvar) : Constant.MISSING;
             k = ctr;
         }
-
 
         //     Function chivalp(ByVal x As Double, ByVal df As Double) As Double
         //         Dim fault As Long

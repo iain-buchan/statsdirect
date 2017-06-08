@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using StatsDirect.Templates;
-using System.Linq;
 
 namespace StatsDirect.UI
 {
@@ -12,14 +11,11 @@ namespace StatsDirect.UI
         private double dataMinimum;
         private double dataMinGreaterThanZero;
         private double dataMaximum;
-        private double scaleMinimum;
-        private double scaleMaximum;
-        private string mask;
         private bool settingValues;
-        private List<ScaleType> scaleTypesInCboScale;
+        private readonly List<ScaleType> scaleTypesInCboScale;
 
         // Must match the indices order of ScaleType, as must the combo box entries.
-        private static readonly string[] printableScaleTypes = { "Linear", "Natural log", "Log 10", "Date", "Category" };
+        private static readonly string[] PRINTABLE_SCALE_TYPES = { "Linear", "Natural log", "Log 10", "Date", "Category" };
 
         public ctlOneAxisOptions()
         {
@@ -33,7 +29,7 @@ namespace StatsDirect.UI
 
         public ICollection<ScaleType> AllowedScaleTypes
         {
-            get { return allowedScaleTypes; }
+            get => allowedScaleTypes;
             set
             {
                 allowedScaleTypes = value;
@@ -43,7 +39,7 @@ namespace StatsDirect.UI
 
         public double MinimumDataValue
         {
-            get { return dataMinimum; }
+            get => dataMinimum;
             set
             {
                 dataMinimum = value;
@@ -54,7 +50,7 @@ namespace StatsDirect.UI
 
         public double DataMinGreaterThanZero
         {
-            get { return dataMinGreaterThanZero; }
+            get => dataMinGreaterThanZero;
             set
             {
                 dataMinGreaterThanZero = value;
@@ -65,7 +61,7 @@ namespace StatsDirect.UI
 
         public double MaximumDataValue
         {
-            get { return dataMaximum; }
+            get => dataMaximum;
             set
             {
                 dataMaximum = value;
@@ -76,27 +72,27 @@ namespace StatsDirect.UI
 
         public LabelDirection LabelDirection
         {
-            get { return (LabelDirection)cboScaleTextDirection.SelectedIndex; }
-            set { cboScaleTextDirection.SelectedIndex = (int)value; }
+            get => (LabelDirection)cboScaleTextDirection.SelectedIndex;
+            set => cboScaleTextDirection.SelectedIndex = (int)value;
         }
 
-        public string Mask => mask;
+        public string Mask { get; private set; }
 
-        public double MinimumScaleValue => scaleMinimum;
+        public double MinimumScaleValue { get; private set; }
 
-        public double MaximumScaleValue => scaleMaximum;
+        public double MaximumScaleValue { get; private set; }
 
         public ScaleType ScaleType
         {
             // TODO: Why does the combo on Y sometimes drift to having nothing selected?
-            get { return scaleTypesInCboScale[cboScale.SelectedIndex < 0 ? 0 : cboScale.SelectedIndex]; }
-            set { cboScale.SelectedIndex = scaleTypesInCboScale.IndexOf(value); }
+            get => scaleTypesInCboScale[cboScale.SelectedIndex < 0 ? 0 : cboScale.SelectedIndex];
+            set => cboScale.SelectedIndex = scaleTypesInCboScale.IndexOf(value);
         }
 
         public string Title
         {
-            get { return txtTitle.Text; }
-            set { txtTitle.Text = value; }
+            get => txtTitle.Text;
+            set => txtTitle.Text = value;
         }
 
         public System.Drawing.Drawing2D.DashStyle GridLineDashStyle
@@ -119,18 +115,12 @@ namespace StatsDirect.UI
 
         public bool HasGridLines => cboGridLines.SelectedIndex > 0;
 
-        public bool HasMarkerLine
-        {
-            get
-            {
-                return double.TryParse(cboMarkerLineAt.Text, out double scratch);
-            }
-        }
+        public bool HasMarkerLine => double.TryParse(cboMarkerLineAt.Text, out double _);
 
         public bool HasTitle
         {
-            get { return pnlTitle.Visible; }
-            set { pnlTitle.Visible = value; }
+            get => pnlTitle.Visible;
+            set => pnlTitle.Visible = value;
         }
 
         public double MarkerLineValue => Utilities.Parsing.Cdbl_Txt(cboMarkerLineAt.Text);
@@ -145,7 +135,7 @@ namespace StatsDirect.UI
                 {
                     if (allowedScaleTypes.Contains(scaleType))
                     {
-                        cboScale.Items.Add(printableScaleTypes[(int)scaleType]);
+                        cboScale.Items.Add(PRINTABLE_SCALE_TYPES[(int)scaleType]);
                         scaleTypesInCboScale.Add(scaleType);
                     }
                 }
@@ -214,7 +204,7 @@ namespace StatsDirect.UI
 
         private void SetDataRangeLabel()
         {
-            lblDataRange.Text = string.Format("Data range: {0} to {1}", SdApplication.SoleInstance.RoundU(MinimumDataValue), SdApplication.SoleInstance.RoundU(MaximumDataValue));
+            lblDataRange.Text = $"Data range: {SdApplication.SoleInstance.RoundU(MinimumDataValue)} to {SdApplication.SoleInstance.RoundU(MaximumDataValue)}";
         }
 
         private void SetCandidateScaleValues()
@@ -224,27 +214,24 @@ namespace StatsDirect.UI
                 return;
 
             double minimumValue = MinimumDataValue;
-            double minimumValueGreaterThanZero = DataMinGreaterThanZero;
             double maximumValue = MaximumDataValue;
             if (ShouldShowMarkerLine && HasMarkerLine)
             {
                 double v = MarkerLineValue;
                 if (v < minimumValue)
                     minimumValue = v;
-                if (v > 0 && v < minimumValueGreaterThanZero)
-                    minimumValueGreaterThanZero = v;
                 if (v > maximumValue)
                     maximumValue = v;
             }
             ScaleType selectedScaleType = ScaleType;
             IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
-            scaleMinimum = axisScale.MinimumScaleValue;
-            scaleMaximum = axisScale.MaximumScaleValue;
-            mask = Charting.AxisMasker.AxisMask(axisScale);
+            MinimumScaleValue = axisScale.MinimumScaleValue;
+            MaximumScaleValue = axisScale.MaximumScaleValue;
+            Mask = Charting.AxisMasker.AxisMask(axisScale);
             settingValues = true;
-            txtScaleTextMask.Text = mask;
-            txtMinimum.Text = scaleMinimum.ToString(mask);
-            txtMaximum.Text = scaleMaximum.ToString(mask);
+            txtScaleTextMask.Text = Mask;
+            txtMinimum.Text = MinimumScaleValue.ToString(Mask);
+            txtMaximum.Text = MaximumScaleValue.ToString(Mask);
             settingValues = false;
         }
 
@@ -264,8 +251,8 @@ namespace StatsDirect.UI
         {
             if (settingValues)
                 return;
-            scaleMinimum = Utilities.Parsing.Cdbl_Txt(txtMinimum.Text);
-            scaleMaximum = Utilities.Parsing.Cdbl_Txt(txtMaximum.Text);
+            MinimumScaleValue = Utilities.Parsing.Cdbl_Txt(txtMinimum.Text);
+            MaximumScaleValue = Utilities.Parsing.Cdbl_Txt(txtMaximum.Text);
         }
 
         private void txtMaximum_TextChanged(object sender, EventArgs e)
@@ -284,7 +271,7 @@ namespace StatsDirect.UI
         {
             if (settingValues)
                 return;
-            mask = txtScaleTextMask.Text;
+            Mask = txtScaleTextMask.Text;
         }
 
         private void cboMarkerLineAt_SelectedIndexChanged(object sender, EventArgs e)

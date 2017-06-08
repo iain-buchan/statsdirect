@@ -5,15 +5,11 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {
-    public static class AxisMasker
+    public static class LinearAxisMasker : IAxisMasker
     {
         /// <summary>
         /// Work out a sensible axis mask for the given linear scale
         /// </summary>
-        /// <param name="interval">The interval between labels</param>
-        /// <param name="znmin">The value at the zeroth division</param>
-        /// <param name="intervals">The number of divisions</param>
-        /// <param name="intervalsPerMajorTic">The number of intervals per major (labeled) tic</param>
         public static string AxisMask(IAxisScale axisScale)
         {
             int numberOfDecimalPlaces = DecimalPlaces(axisScale);

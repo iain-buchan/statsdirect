@@ -116,13 +116,14 @@ namespace StatsDirect.Charting.Renderer
         {
             double min = double.MaxValue;
             double max = double.MinValue;
-            foreach (DoubleSeries s in seriesToUse)
+            foreach (Series s in seriesToUse)
             {
-                Array.Sort(s.Data);
-                if (s.Data[0] < min)
-                    min = s.Data[0];
-                if (s.Data[s.Data.Length - 1] > max)
-                    max = s.Data[s.Data.Length - 1];
+                DoubleSeries ds = (DoubleSeries)s;
+                Array.Sort(ds.Data);
+                if (ds.Data[0] < min)
+                    min = ds.Data[0];
+                if (ds.Data[ds.Data.Length - 1] > max)
+                    max = ds.Data[ds.Data.Length - 1];
             }
             return new Range(min, max);
         }
@@ -413,6 +414,7 @@ namespace StatsDirect.Charting.Renderer
             double xHeight;
             isXAxisReversed = x.Reverse;
             isYAxisReversed = y.Reverse;
+            // ReSharper disable once SwitchStatementMissingSomeCases
             switch (x.Mode)
             {
                 case AxisMode.LineOnly:
@@ -437,6 +439,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             double yWidth;
+            // ReSharper disable once SwitchStatementMissingSomeCases
             switch (y.Mode)
             {
                 case AxisMode.LineOnly:
@@ -1914,6 +1917,10 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="isFilled"></param>
         /// <param name="p"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
+        /// <param name="presetXMin"></param>
+        /// <param name="presetXMax"></param>
+        /// <param name="presetYMin"></param>
+        /// <param name="presetYMax"></param>
         /// <remarks></remarks>
         protected AxisScales PlotXYInternal(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, double markerSize, MarkerShape shape, bool isFilled, Pen p, bool useCalculatedScalesEvenWithDefinition, double presetXMin = 0, double presetXMax = 0, double presetYMin = 0, double presetYMax = 0)
         {
@@ -1971,7 +1978,7 @@ namespace StatsDirect.Charting.Renderer
                     axisYMax = presetYMax;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException("MinMaxY", minMaxY, "Don't know how to plot using the given minMaxY");
+                    throw new ArgumentOutOfRangeException(nameof(minMaxY), minMaxY, "Don't know how to plot using the given minMaxY");
             }
 
             DataMinY = axisYMin;

@@ -6,24 +6,22 @@ namespace StatsDirect.Charting
     [ Serializable ]
     public class ControlOptions : GenericOptions 
     { 
-        
-        public bool UseDates; 
-        public bool UseMean; 
-        public bool Use1SD; 
-        public bool Use2SD; 
-        public bool Use3SD; 
-        public bool HasUserSpecifiedMeanAndSD; 
-        public double UserSpecifiedMean; 
-        public double UserSpecifiedSD; 
-        public bool HasUserSpecifiedLimits; 
-        public double LowerWarningLimit; 
-        public double UpperWarningLimit; 
-        public double LowerControlLimit; 
-        public double UpperControlLimit; 
-        public int ObservationsToUse; 
-        public int RightHandDecimalPlaces; 
-        
-        public ControlOptions( bool UseColour ) : base( UseColour ) 
+        public bool UseMean { get; set; }
+        public bool Use1SD { get; set; }
+        public bool Use2SD { get; set; }
+        public bool Use3SD { get; set; }
+        public bool HasUserSpecifiedMeanAndSD { get; set; }
+        public double UserSpecifiedMean { get; set; }
+        public double UserSpecifiedSD { get; set; }
+        public bool HasUserSpecifiedLimits { get; set; }
+        public double LowerWarningLimit { get; set; }
+        public double UpperWarningLimit { get; set; }
+        public double LowerControlLimit { get; set; }
+        public double UpperControlLimit { get; set; }
+        public int ObservationsToUse { get; set; }
+        public int RightHandDecimalPlaces { get; set; }
+
+        public ControlOptions( bool useColour ) : base( useColour ) 
         { 
             
             LowerControlLimit = Constant.MISSING; 

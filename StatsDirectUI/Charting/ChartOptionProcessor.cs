@@ -523,7 +523,6 @@ namespace StatsDirect.Charting
             double[] ydat = new double[rows];
 
             int ctr = 0;
-            bool looksLikeDates = true;
             double[] ySeriesData = ys0.Data;
             double[] xSeriesData = xs0.Data;
             for (int r = 0; r < rows; r++)
@@ -532,16 +531,11 @@ namespace StatsDirect.Charting
                 {
                     xdat[ctr] = xSeriesData[r];
                     ydat[ctr] = ySeriesData[r];
-                    if (xdat[ctr] < 20000)
-                        looksLikeDates = false;
                     ctr++;
                 }
             }
             rows = ctr;
 
-            // MathDbl.meansd(ydat, 0, ref rows, out double ymean, out double ysd);
-
-            controlOptions.UseDates = looksLikeDates;
             controlOptions.ObservationsToUse = rows;
 
             controlOptions.YAxisTitle = definition.YSeries[0].Title;

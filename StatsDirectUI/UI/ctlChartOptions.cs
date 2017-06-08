@@ -231,7 +231,9 @@ namespace StatsDirect.UI
                 controlOptions.LowerControlLimit = Constant.MISSING;
                 controlOptions.UpperControlLimit = Constant.MISSING;
             }
-            int.TryParse(cboControlDecimalPlaces.Text, out controlOptions.RightHandDecimalPlaces);
+            int rightHandDecimalPlaces;
+            if (int.TryParse(cboControlDecimalPlaces.Text, out rightHandDecimalPlaces))
+                controlOptions.RightHandDecimalPlaces = rightHandDecimalPlaces;
         }
 
         private void FillFormFromOptions()

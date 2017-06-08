@@ -58,7 +58,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * i, 6, (MarkerShape)i, false, p);
                     string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label;
-                    DrawStringLegendL(vq, 24, YAxisCanvas + YExtCanvas - 10 - size2 * i);
+                    DrawStringLegendLC(vq, 24, YAxisCanvas + YExtCanvas - 22 - size2 * i);
                 }
 
                 // plot points
@@ -166,7 +166,10 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // Draw the axes
-            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
+                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
+                false, false);
 
             // draw legend
             double size2 = LabelFont.Size * 2;
@@ -187,7 +190,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
                     }
-                    DrawStringLegendL(vq, 24, YAxisCanvas + YExtCanvas - 10 - size2 * k);
+                    DrawStringLegendLC(vq, 24, YAxisCanvas + YExtCanvas - 22 - size2 * k);
                 }
             }
             //  Legend
@@ -208,7 +211,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
                     }
-                    DrawStringLegendL(vq, 24, YAxisCanvas + YExtCanvas - 10 - size2 * k);
+                    DrawStringLegendLC(vq, 24, YAxisCanvas + YExtCanvas - 22 - size2 * k);
                 }
             }
 
@@ -674,7 +677,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
                         DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, YAxisCanvas + YExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * g, LEGEND_MARKER_SIZE, ChartPreferences.MarkerTypes[mkr]); //  TODO: Broken?
-                        DrawStringLegendL(bnam[g], LEGEND_TEXT_X, YAxisCanvas + YExtCanvas - 10 - size2 * g);
+                        DrawStringLegendLC(bnam[g], LEGEND_TEXT_X, YAxisCanvas + YExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * g);
                     }
                 }
             }

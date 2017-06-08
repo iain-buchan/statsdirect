@@ -12,7 +12,8 @@ namespace StatsDirect.Charting
                 case ScaleType.Category:
                     // We don't have an axis scaler for a category axis, but it's legitimate to ask us.
                     return null;
-                case ScaleType.Date: // TODO: Eventually dates should use a different scaler as e.g. weeks, months might be useful intervals.
+                case ScaleType.Date:
+                    return new DateAxisScaler();
                 case ScaleType.Linear:
                     return new TalbotLinHanrahanAxisScaler();
                 case ScaleType.Log10:
