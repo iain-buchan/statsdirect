@@ -225,42 +225,47 @@ namespace StatsDirect.Charting
         /// <remarks></remarks>
         private static BinsDescriptor ChooseBinsOldStatsDirect(double[] sortedData, int length)
         {
-            double min = sortedData[0];
-            double max = sortedData[length - 1];
+            double minimumDataValue = sortedData[0];
+            double maximumDataValue = sortedData[length - 1];
 
             //  Work out how many bins we should have at maximum: between 7 and 20, depending on the number of samples
             int maxBins = Convert.ToInt32(Math.Pow(length, 0.88) / 4.0);
             maxBins = Constrain(maxBins, 7, 20);
 
-            int bestBinsSoFar = 0;
-            double bestMinimumMidpoint;
-            double bestMidpointInterval;
-            double mxx = 0.0;
-            int mpp = 0;
+            int bestNonEmptyBins = 0;
+            int bestBins = 0;
             for (int candidateBins = 1; candidateBins <= maxBins; candidateBins++)
             {
-                v_axis(min, max, candidateBins - 1, out bestMinimumMidpoint, out bestMidpointInterval);
+                v_axis(minimumDataValue, maximumDataValue, candidateBins - 1, out double candidateMinimumMidpoint, out double candidateMidpointInterval);
 
                 // What about cm intervals (if cm < 10) or cm - 2 intervals (if cm >= 10)?
-                int nmp = candidateBins < 10 ? candidateBins + 1 : candidateBins - 1;
-                v_axis(min, max, nmp - 1, out double candidateMinimumMidpoint, out double candidateMidpointInterval);
+                int alternativeBins = candidateBins < 10 ? candidateBins + 1 : candidateBins - 1;
+                v_axis(minimumDataValue, maximumDataValue, alternativeBins - 1, out double alternativeMinimumMidpoint, out double alternativeMidpointInterval);
 
                 // Use whichever gives the "neater" axis (defined as shorter strings)
-                if (candidateMidpointInterval.ToString().Length + candidateMinimumMidpoint.ToString().Length < bestMidpointInterval.ToString().Length + bestMinimumMidpoint.ToString().Length)
+                int betterBinCount = 0;
+                double betterMidpointInterval;
+                double betterMinimumMidpoint;
+                if (alternativeMidpointInterval.ToString().Length + alternativeMinimumMidpoint.ToString().Length < candidateMidpointInterval.ToString().Length + candidateMinimumMidpoint.ToString().Length)
                 {
-                    bestMidpointInterval = candidateMidpointInterval;
-                    bestMinimumMidpoint = candidateMinimumMidpoint;
-                    bestBinsSoFar = nmp;
+                    betterMidpointInterval = alternativeMidpointInterval;
+                    betterMinimumMidpoint = alternativeMinimumMidpoint;
+                    betterBinCount = alternativeBins;
                 }
                 else
                 {
-                    bestBinsSoFar = candidateBins;
+                    betterMidpointInterval = candidateMidpointInterval;
+                    betterMinimumMidpoint = candidateMinimumMidpoint;
+                    betterBinCount = candidateBins;
                 }
+
+                // By the time we get here, betterBinCount, betterMinimumMidpoint, and betterMidpointInterval are set to the "neater" of the two options under consideration.
+                // Now score this against our previous options: we prefer histograms with the largest number of non-empty bins, but we prefer smaller bin counts where the number of non-empty bins is equal.
                 int firstIndexThisBin = 0;
-                int clm = 0;
-                for (int c = 1; c <= bestBinsSoFar; c++)
+                int nonEmptyBins = 0;
+                for (int c = 1; c <= betterBinCount; c++)
                 {
-                    double high = bestMinimumMidpoint + (bestMidpointInterval * (c - 1)) + bestMidpointInterval / 2.0;
+                    double high = betterMinimumMidpoint + (betterMidpointInterval * (c - 1)) + betterMidpointInterval / 2.0;
                     int firstIndexPastHigh;
                     for (firstIndexPastHigh = firstIndexThisBin; firstIndexPastHigh < length; firstIndexPastHigh++)
                     {
@@ -269,47 +274,46 @@ namespace StatsDirect.Charting
                     }
                     int valuesInThisBin = firstIndexPastHigh - firstIndexThisBin;
                     if (valuesInThisBin > 0)
-                        clm++;
+                        nonEmptyBins++;
                     firstIndexThisBin = firstIndexPastHigh;
                 }
-                double qxx = clm;
-                if (qxx > mxx)
+                if (nonEmptyBins > bestNonEmptyBins)
                 {
-                    mxx = qxx;
-                    mpp = bestBinsSoFar;
+                    bestNonEmptyBins = nonEmptyBins;
+                    bestBins = betterBinCount;
                 }
             }
-            bestBinsSoFar = mpp;
 
             //  Ensure the total number of bins is between 1 and 20
-            bestBinsSoFar = Constrain(bestBinsSoFar, 1, 20);
+            bestBins = Constrain(bestBins, 1, 20);
 
-            v_axis(min, max, bestBinsSoFar - 1, out bestMinimumMidpoint, out bestMidpointInterval);
+            // We didn't bother remembering our best minimum midpoint and midpoint intervals previously, so get them back now.
+            v_axis(minimumDataValue, maximumDataValue, bestBins - 1, out double minimumMidpoint, out double midpointInterval);
             for (int c = 1; c <= 2; c++)
             {
-                int nmp = bestBinsSoFar - c;
+                int nmp = bestBins - c;
                 double nzmin = 0;
                 double nzint = 0;
                 if (nmp > 3)
                 {
-                    v_axis(min, max, nmp - 1, out nzmin, out nzint);
-                    if (nzint.ToString().Length + nzmin.ToString().Length < bestMidpointInterval.ToString().Length + bestMinimumMidpoint.ToString().Length)
+                    v_axis(minimumDataValue, maximumDataValue, nmp - 1, out nzmin, out nzint);
+                    if (nzint.ToString().Length + nzmin.ToString().Length < midpointInterval.ToString().Length + minimumMidpoint.ToString().Length)
                     {
-                        bestMidpointInterval = nzint;
-                        bestMinimumMidpoint = nzmin;
-                        bestBinsSoFar = nmp;
+                        midpointInterval = nzint;
+                        minimumMidpoint = nzmin;
+                        bestBins = nmp;
                         break;
                     }
                 }
-                nmp = bestBinsSoFar + c;
+                nmp = bestBins + c;
                 if (nmp <= 20)
                 {
-                    v_axis(min, max, nmp - 1, out nzmin, out nzint);
-                    if (nzint.ToString().Length + nzmin.ToString().Length < bestMidpointInterval.ToString().Length + bestMinimumMidpoint.ToString().Length)
+                    v_axis(minimumDataValue, maximumDataValue, nmp - 1, out nzmin, out nzint);
+                    if (nzint.ToString().Length + nzmin.ToString().Length < midpointInterval.ToString().Length + minimumMidpoint.ToString().Length)
                     {
-                        bestMidpointInterval = nzint;
-                        bestMinimumMidpoint = nzmin;
-                        bestBinsSoFar = nmp;
+                        midpointInterval = nzint;
+                        minimumMidpoint = nzmin;
+                        bestBins = nmp;
                         break;
                     }
                 }
@@ -317,9 +321,9 @@ namespace StatsDirect.Charting
 
             // Get rid of empty bins on the upper end of the histogram
             int c2 = length - 1;
-            for (int c = bestBinsSoFar - 1; c >= 0; --c)
+            for (int c = bestBins - 1; c >= 0; --c)
             {
-                double binLeft = bestMinimumMidpoint + (bestMidpointInterval * c) - bestMidpointInterval / 2.0;
+                double binLeft = minimumMidpoint + (midpointInterval * c) - midpointInterval / 2.0;
                 bool thisBinHasData = false;
                 for (int c1 = c2; c1 >= 0; c1--)
                 {
@@ -333,15 +337,15 @@ namespace StatsDirect.Charting
                 if (thisBinHasData)
                     break;
                 else
-                    --bestBinsSoFar;
+                    --bestBins;
             }
 
             // Get rid of empty bins on the lower end of the histogram
             int emptyBinsLeft = 0;
             c2 = 0;
-            for (int c = 0; c < bestBinsSoFar; c++)
+            for (int c = 0; c < bestBins; c++)
             {
-                double binRight = bestMinimumMidpoint + (bestMidpointInterval * c) + bestMidpointInterval / 2.0;
+                double binRight = minimumMidpoint + (midpointInterval * c) + midpointInterval / 2.0;
                 bool thisBinHasData = false;
                 for (int c1 = c2; c1 < length; c1++)
                 {
@@ -357,11 +361,13 @@ namespace StatsDirect.Charting
                 else
                 {
                     emptyBinsLeft++;
-                    --bestBinsSoFar;
+                    --bestBins;
                 }
             }
-            bestMinimumMidpoint += bestMidpointInterval * emptyBinsLeft;
-            double[] edges = Linspace(bestMinimumMidpoint, bestMinimumMidpoint + bestMidpointInterval * bestBinsSoFar, bestBinsSoFar);
+            minimumMidpoint += midpointInterval * emptyBinsLeft;
+
+            // Found what we're going to use; return the data.
+            double[] edges = Linspace(minimumMidpoint - 0.5 * midpointInterval, minimumMidpoint + midpointInterval * (bestBins - 0.5), bestBins);
             int[] counts = SortedHist(sortedData, length, edges);
             BinsDescriptor descriptor = new BinsDescriptor() { Edges = edges, Counts = counts };
             return descriptor;
