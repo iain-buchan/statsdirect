@@ -129,6 +129,8 @@ namespace StatsDirect.Charting.Renderer
                     if (seriesMaxY > DataMaxY)
                         DataMaxY = seriesMaxY;
 
+                    double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
+
                     if (!IsAscii)
                     {
                         // Plot a Metafile version
@@ -148,7 +150,6 @@ namespace StatsDirect.Charting.Renderer
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
                         {
-                            double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
                             double mxy = PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, null);
                             if (mxy > DataMaxY)
                                 DataMaxY = mxy;
@@ -170,7 +171,7 @@ namespace StatsDirect.Charting.Renderer
                                 // plot a bar at an absolute position (maxX / 20)
                                 double x1 = ToCanvasX(descriptor.Edges[c]);
                                 double x2 = ToCanvasX(descriptor.Edges[c + 1]);
-                                double value = options.ShowRelativeFrequencies ? descriptor.Counts[c] / (double)s.Points : descriptor.Counts[c];
+                                double value = descriptor.Counts[c] * proportionScaler;
                                 double y1 = ToCanvasY(value);
                                 double y2 = YAxisCanvas;
                                 DrawRectangleInCanvasCoordinates(markerPen, x1, y1, x2 - x1, y1 - y2);
@@ -178,10 +179,7 @@ namespace StatsDirect.Charting.Renderer
 
                             //  ZInt was calculated at Mp*2
                             if (overlayNormalCurve)
-                            {
-                                double proportionScaler = options.ShowRelativeFrequencies ? 1.0 / s.Points : 1.0;
                                 PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, markerPen);
-                            }
                         }
 
                         MaybeDrawMarkerLines(ass);
@@ -202,20 +200,19 @@ namespace StatsDirect.Charting.Renderer
 
                         AxisScales axisScales = LayoutChartAndDrawAxes(title,
                             new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                            new AxisDefinition(null, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                            new AxisDefinition(null, AxisMode.LineOnly, Definition.ScaleParameters.Y.ScaleType),
                             false, true);
 
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
-                            int l = Convert.ToInt32(descriptor.Counts[c] / DataMaxY * 60);
-                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', l));
-                            if (descriptor.Counts[c] > 0 && l == 0)
+                            int barLength = Convert.ToInt32(descriptor.Counts[c] * proportionScaler / DataMaxY * 60);
+                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', barLength));
+                            if (descriptor.Counts[c] > 0 && barLength == 0)
                                 WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, ":");
 
                             double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
                             string buf = midpoint.ToString(mask) + "|";
-                            l = buf.Length;
-                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - l + 5, buf);
+                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - buf.Length + 5, buf);
 
                             buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
                             WriteAsciiYX(c + ASCII_Ytxt, 1, buf);
