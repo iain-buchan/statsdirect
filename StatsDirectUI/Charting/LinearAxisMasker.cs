@@ -5,12 +5,12 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {
-    public static class LinearAxisMasker : IAxisMasker
+    public class LinearAxisMasker : IAxisMasker
     {
         /// <summary>
         /// Work out a sensible axis mask for the given linear scale
         /// </summary>
-        public static string AxisMask(IAxisScale axisScale)
+        public string AxisMask(IAxisScale axisScale)
         {
             int numberOfDecimalPlaces = DecimalPlaces(axisScale);
 

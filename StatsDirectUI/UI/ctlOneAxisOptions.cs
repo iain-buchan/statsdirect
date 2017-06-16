@@ -227,7 +227,7 @@ namespace StatsDirect.UI
             IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
             MinimumScaleValue = axisScale.MinimumScaleValue;
             MaximumScaleValue = axisScale.MaximumScaleValue;
-            Mask = Charting.AxisMasker.AxisMask(axisScale);
+            Mask = new Charting.AxisMaskMaker().AxisMaskFor(axisScale);
             settingValues = true;
             txtScaleTextMask.Text = Mask;
             txtMinimum.Text = MinimumScaleValue.ToString(Mask);

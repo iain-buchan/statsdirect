@@ -513,7 +513,7 @@ namespace StatsDirect.Charting.Renderer
                                 //  Major tic - may or may not be labelled
                                 if (drawLabels)
                                 {
-                                    string lab = tic.Value.ToString(msk);
+                                    string lab = xAxisScale.ToAxisLabel(tic, msk);
                                     AxisDrawStringAtAngleCT(lab, x1, YAxisCanvas - AXIS_BIG_TICK, direction);
                                     AxisDrawline(x1, YAxisCanvas - AXIS_BIG_TICK, x1, YAxisCanvas);
                                 }
@@ -581,7 +581,7 @@ namespace StatsDirect.Charting.Renderer
                             //  Major tic - may or may not be labelled
                             if (drawLabels)
                             {
-                                string lab = tic.Value.ToString(msk);
+                                string lab = xAxisScale.ToAxisLabel(tic, msk);
                                 labelHeight = Math.Max(AxisMeasureStringAtAngle(lab, direction).Height, labelHeight);
                             }
                             break;
@@ -618,7 +618,7 @@ namespace StatsDirect.Charting.Renderer
             return AxisScalerFactory.AxisScalerFor(scaleType).Q_Axis(qmin, qMinGreaterThanZero, qmax, isY, false);
         }
 
-        private string AxisMaskOrFromDefinition(IAxisScale axisScale, /* double stepp, double znmin, int nstep, int sp, */ bool isY, /* ScaleType scaleType, */ bool UseCalculatedScalesEvenWithDefinition)
+        private string AxisMaskOrFromDefinition(IAxisScale axisScale, bool isY, bool UseCalculatedScalesEvenWithDefinition)
         {
             if (Definition != null && Definition.HasScaleParameters && !UseCalculatedScalesEvenWithDefinition)
             {
@@ -628,7 +628,7 @@ namespace StatsDirect.Charting.Renderer
                     return asp.Mask;
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
-            return AxisMasker.AxisMask(axisScale);
+            return new AxisMaskMaker().AxisMaskFor(axisScale);
         }
 
         /// <summary>
@@ -680,7 +680,7 @@ namespace StatsDirect.Charting.Renderer
                                 //  Major tic - may or may not be labelled
                                 if (drawLabels)
                                 {
-                                    AxisDrawStringAtAngleRM(tic.Value.ToString(msk), XAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction);
+                                    AxisDrawStringAtAngleRM(yAxisScale.ToAxisLabel(tic, msk), XAxisCanvas - (AXIS_BIG_TICK + AXIS_LABEL_OFFSET_FROM_BIG_TICK), y1, direction);
                                     AxisDrawline(XAxisCanvas - AXIS_BIG_TICK, y1, XAxisCanvas, y1);
                                 }
                                 else
@@ -753,7 +753,7 @@ namespace StatsDirect.Charting.Renderer
                             //  Major tic - may or may not be labelled
                             if (drawLabels)
                             {
-                                string lab = tic.Value.ToString(msk);
+                                string lab = yAxisScale.ToAxisLabel(tic, msk);
                                 maxLabelWidth = Math.Max(maxLabelWidth, AxisMeasureStringAtAngle(lab, direction).Width);
                             }
                             break;

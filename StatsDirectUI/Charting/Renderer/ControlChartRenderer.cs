@@ -260,56 +260,6 @@ namespace StatsDirect.Charting.Renderer
                 DrawMarkerSeriesInCanvasCoordinates(xys, 6, xs0.MarkerType.MarkerShape, xs0.MarkerType.IsMarkerFilled, markerPen, linePen, true, false);
             }
 
-            // draw vertical date markers
-            if (useDates)
-            {
-                //  If labels overlap, scale down font
-                /*
-                ctr = 0;
-                double scaler = 1.0;
-                do
-                {
-                    bool ok = true;
-                    for (int r = 0; r < rows; r++)
-                    {
-                        if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
-                        {
-                            x1 = ToCanvasX(xdat[r]);
-                            string tx = new DateTime(1899, 12, 30, 0, 0, 0).AddDays(xdat[r]).ToString("d");
-                            if (Math.Abs(x1 - lastX1) < AxisLabelHeightInCanvasCoordinates(tx))
-                            {
-                                ok = false;
-                                break;
-                            }
-                            lastX1 = x1;
-                        }
-                    }
-                    if (ok || ctr > 15)
-                        break;
-                    // At least one label overlaps; try a smaller scale font and go again
-                    scaler *= 0.9;
-                    ctr++;
-                } while (true);
-                //  TODO: Scale font to scaler if needed
-                */
-                using (StringFormat txtFormat = new StringFormat())
-                {
-                    txtFormat.Alignment = StringAlignment.Near;
-                    txtFormat.LineAlignment = StringAlignment.Center;
-
-                    for (int r = 0; r < rows; r++)
-                    {
-                        if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
-                        {
-                            double x1 = ToCanvasX(xdat[r]);
-                            string tx = new DateTime(1899, 12, 30, 0, 0, 0).AddDays(xdat[r]).ToString("d");
-                            double y1 = YAxisCanvas - AxisLabelWidthInCanvasCoordinates(tx) - AXIS_BIG_TICK - 3;
-                            DrawStringAtAngleInCanvasCoordinates(tx, AxisLabelFont, Brushes.Black, x1, y1, txtFormat, LabelDirection.Up);
-                        }
-                    }
-                }
-            }
-
             int rhDp = cOptions.RightHandDecimalPlaces;
 
             using (Pen blackPen = new Pen(GrBlack))

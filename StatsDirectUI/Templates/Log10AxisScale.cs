@@ -50,5 +50,15 @@ namespace StatsDirect.Templates
                 tics.Add(new Tic { TicType = TicType.Major, Value = lastMajorTicValue });
             return tics;
         }
+
+        void IAxisScale.Accept(IAxisScaleVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+
+        string IAxisScale.ToAxisLabel(Tic tic, string mask)
+        {
+            return tic.Value.ToString(mask);
+        }
     }
 }

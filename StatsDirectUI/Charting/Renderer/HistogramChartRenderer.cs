@@ -188,7 +188,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     else
                     {
-                        string mask = AxisMasker.AxisMask(new LinearAxisScale(0, 0, minimumBinMidpoint, minimumBinMidpoint + binMidpointInterval * descriptor.Bins, descriptor.Bins, 1));
+                        string mask = new AxisMaskMaker().AxisMaskFor(new LinearAxisScale(0, 0, minimumBinMidpoint, minimumBinMidpoint + binMidpointInterval * descriptor.Bins, descriptor.Bins, 1));
 
                         // Plot one ASCII histogram per series.  The cheat is to plot each one, save it, and concatenate at the end!
                         ASCII_InitPlot(descriptor.Bins + 4);

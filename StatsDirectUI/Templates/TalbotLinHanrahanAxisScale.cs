@@ -4,9 +4,9 @@ using System.Linq;
 using Layout;
 using StatsDirect.Templates;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Templates
 {
-    class TalbotLinHanrahanAxisScale : ILinearAxisScale
+    public class TalbotLinHanrahanAxisScale : ILinearAxisScale
     {
         private Axis TlhAxis { get; set; }
         private double QMin { get; set; }
@@ -38,6 +38,16 @@ namespace StatsDirect.Charting
         public IList<Tic> Tics()
         {
             return TlhAxis.Labels.Select(label => new Tic { TicType = TicType.Major, Value = Convert.ToDouble(label.Item1) }).ToList();
+        }
+
+        void IAxisScale.Accept(IAxisScaleVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+
+        string IAxisScale.ToAxisLabel(Tic tic, string mask)
+        {
+            return tic.Value.ToString(mask);
         }
     }
 }

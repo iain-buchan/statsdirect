@@ -14,5 +14,9 @@ namespace StatsDirect.Templates
         double MaximumScaleValue { get; }
         // Tics, guaranteed to be in order from low to high
         IList<Tic> Tics();
+
+        void Accept(IAxisScaleVisitor visitor);
+
+        string ToAxisLabel(Tic tic, string mask);
     }
 }

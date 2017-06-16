@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace StatsDirect.Templates
 {
@@ -48,6 +49,16 @@ namespace StatsDirect.Templates
         public override string ToString()
         {
             return string.Format("LinearAxisScale({0}, {2}({3}) * {4}, {1})", MinimumScaleValue, MaximumScaleValue, Intervals, IntervalsPerMajorTic, Interval);
+        }
+
+        void IAxisScale.Accept(IAxisScaleVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+
+        string IAxisScale.ToAxisLabel(Tic tic, string mask)
+        {
+            return tic.Value.ToString(mask);
         }
     }
 }

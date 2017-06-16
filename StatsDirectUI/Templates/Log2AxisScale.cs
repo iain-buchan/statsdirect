@@ -32,5 +32,15 @@ namespace StatsDirect.Templates
                 tics.Add(new Tic { TicType = TicType.Major, Value = Math.Pow(2, power) });
             return tics;
         }
+
+        void IAxisScale.Accept(IAxisScaleVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
+
+        string IAxisScale.ToAxisLabel(Tic tic, string mask)
+        {
+            return tic.Value.ToString(mask);
+        }
     }
 }
