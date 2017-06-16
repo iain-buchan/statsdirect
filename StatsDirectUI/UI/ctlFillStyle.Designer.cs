@@ -36,8 +36,8 @@
             // 
             // cboFillStyle
             // 
-            this.cboFillStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboFillStyle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.cboFillStyle.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.cboFillStyle.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboFillStyle.FormattingEnabled = true;
@@ -62,8 +62,8 @@
             // 
             // ctlFillStyle
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.Controls.Add(this.cboFillStyle);
             this.Margin = new System.Windows.Forms.Padding(0);
             this.MinimumSize = new System.Drawing.Size(40, 21);
