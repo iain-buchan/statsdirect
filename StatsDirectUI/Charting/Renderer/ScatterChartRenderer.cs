@@ -18,7 +18,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 X =
                 {
-                    AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural },
+                    AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural, ScaleType.Date },
                     Max = DataMaxX,
                     MinGreaterThanZero = DataMinGreaterThanZeroX,
                     Min = DataMinX
