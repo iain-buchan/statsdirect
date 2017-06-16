@@ -126,6 +126,7 @@ namespace StatsDirect.UI
                 else
                     chkOverlayNormalCurve.Checked = options.OverlayNormalCurve;
                 ListBins();
+                cboBinChoiceMethod.AutoSizeToList();
             }
             finally
             {
