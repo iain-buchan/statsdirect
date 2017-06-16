@@ -50,8 +50,6 @@
             // 
             // cboMarkerShape
             // 
-            this.cboMarkerShape.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.cboMarkerShape.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.cboMarkerShape.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboMarkerShape.FormattingEnabled = true;
@@ -72,7 +70,7 @@
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.cboMarkerShape);
-            this.MinimumSize = new System.Drawing.Size(40, 21);
+            this.MinimumSize = new System.Drawing.Size(40, 25);
             this.Name = "ctlMarkerShape";
             this.Size = new System.Drawing.Size(40, 25);
             this.ResumeLayout(false);
