@@ -21,47 +21,25 @@ namespace StatsDirect.Charting.Renderer
 
         internal void PlotCox2(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
         {
-            StartVectorPlot();
-            double xtra = 0;
-
-            /*
-            if (Definition.XSeries.Count > 1)
+            Legend legend = new Legend();
+            for (int i = 1; i <= igroups; i++)
             {
-                foreach (Series s in Definition.XSeries)
-                {
-                    string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label;
-                    double w = MeasureStringInCanvasCoordinates(s.Title, LegendFont).Width + MINIMUM_X_WHITESPACE;
-                    if (w > xtra)
-                        xtra = w;
-                }
+                MarkerType mt = new MarkerType { MarkerShape = (MarkerShape)i, MarkerColor = GrBlack, MarkerSize = 6 };
+                string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label;
+                legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = mt });
             }
-             */
 
-            for (int i = 0; i < igroups; i++)
-            {
-                double w = MeasureStringInCanvasCoordinates(cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i].Label, LegendFont).Width + MINIMUM_X_WHITESPACE;
-                if (w > xtra + XAxisCanvas)
-                    xtra = w - XAxisCanvas - 5;
-            }
+            StartVectorPlot(null, legend);
 
             //  TODO: Log and log-log axes here
             LayoutChartAndDrawAxes("Log-log plot (parallel groups if hazards proportional)",
                 new AxisDefinition("log(Time)", AxisMode.Scale, ScaleType.Linear),
-                new AxisDefinition("-log(-log(Survival))", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra },
-                false, false);
+                new AxisDefinition("-log(-log(Survival))", AxisMode.Scale, ScaleType.Linear),
+                false, false,
+                legend);
 
-            // Draw the legends
             using (Pen p = new Pen(GrBlack, 1))
             {
-                float size2 = LabelFont.Size * 2;
-                for (int i = 1; i <= igroups; i++)
-                {
-                    DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * i, 6, (MarkerShape)i, false, p);
-                    string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i - 1].Label;
-                    DrawStringLegendLC(vq, 24, YAxisCanvas + YExtCanvas - 22 - size2 * i);
-                }
-
-                // plot points
                 int istart = 0;
                 for (int k = 1; k <= 2; k++)
                 {
@@ -85,6 +63,7 @@ namespace StatsDirect.Charting.Renderer
                     istart += gn[k];
                 }
             }
+            DrawLegend(legend);
             EndVectorPlot();
         }
 
@@ -143,77 +122,46 @@ namespace StatsDirect.Charting.Renderer
                     throw new Exception("Unexpected case");
             }
 
-            StartVectorPlot();
             AssignMarkersToSeries();
-            double xtra = 0;
-            if (stratified)
-            {
-                for (int i = 1; i <= istrata; i++)
-                {
-                    double w = MeasureStringInCanvasCoordinates("Stratum " + i, LegendFont).Width + MINIMUM_X_WHITESPACE;
-                    if (w > xtra + XAxisCanvas)
-                        xtra = w - XAxisCanvas - 5;
-                }
-            }
-            if (grouped)
-            {
-                for (int i = 0; i < igroups; i++)
-                {
-                    double w = MeasureStringInCanvasCoordinates(cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[i].Label, LegendFont).Width + MINIMUM_X_WHITESPACE;
-                    if (w > xtra + XAxisCanvas)
-                        xtra = w - XAxisCanvas - 5;
-                }
-            }
 
-            // Draw the axes
-            AxisScales axisScales = LayoutChartAndDrawAxes(title,
-                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
-                false, false);
-
-            // draw legend
-            double size2 = LabelFont.Size * 2;
+            Legend legend = new Legend();
             if (grouped)
             {
                 for (int k = 1; k <= igroups; k++)
                 {
-                    string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[k - 1].Label;
+                    MarkerType legendMarker = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
                     if (!useMarker)
                     {
-                        using (Pen legendPen = GetLinePen(ChartPreferences.MarkerTypes[(k - 1) % 9], true))
-                        {
-                            DrawLineInCanvasCoordinates(legendPen, 10, YAxisCanvas + YExtCanvas - 18 - size2 * k, 20, YAxisCanvas + YExtCanvas - 18 - size2 * k);
-                            DrawLineInCanvasCoordinates(legendPen, 20, YAxisCanvas + YExtCanvas - 18 - size2 * k, 20, YAxisCanvas + YExtCanvas - 28 - size2 * k);
-                        }
+                        legendMarker = legendMarker.Clone();
+                        legendMarker.MarkerShape = MarkerShape.SurvivalTic;
                     }
-                    else
-                    {
-                        DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
-                    }
-                    DrawStringLegendLC(vq, 24, YAxisCanvas + YExtCanvas - 22 - size2 * k);
+                    string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[k - 1].Label;
+                    legend.LegendEntries.Add(new LegendEntry {Label = vq, MarkerType = legendMarker});
                 }
             }
-            //  Legend
             if (stratified)
             {
                 for (int k = 1; k <= istrata; k++)
                 {
-                    string vq = "Stratum " + k;
+                    MarkerType legendMarker = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
                     if (!useMarker)
                     {
-                        using (Pen legendPen = GetLinePen(ChartPreferences.MarkerTypes[(k - 1) % 9], true))
-                        {
-                            DrawLineInCanvasCoordinates(legendPen, 10, YAxisCanvas + YExtCanvas - 18 - size2 * k, 20, YAxisCanvas + YExtCanvas - 18 - size2 * k);
-                            DrawLineInCanvasCoordinates(legendPen, 20, YAxisCanvas + YExtCanvas - 18 - size2 * k, 20, YAxisCanvas + YExtCanvas - 28 - size2 * k);
-                        }
+                        legendMarker = legendMarker.Clone();
+                        legendMarker.MarkerShape = MarkerShape.SurvivalTic;
                     }
-                    else
-                    {
-                        DrawMarkerInCanvasCoordinates(12, YAxisCanvas + YExtCanvas - 22 - size2 * k, 6, ChartPreferences.MarkerTypes[(k - 1) % 9]);
-                    }
-                    DrawStringLegendLC(vq, 24, YAxisCanvas + YExtCanvas - 22 - size2 * k);
+                    string vq = "Stratum " + k;
+                    legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = legendMarker });
                 }
             }
+
+            StartVectorPlot(null, legend);
+
+            // Draw the axes
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
+                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                false, false,
+                legend);
 
             // starting positions
             double ix0 = 0;
@@ -235,10 +183,10 @@ namespace StatsDirect.Charting.Renderer
             int igp = 0;
 
             MarkerType mt = ChartPreferences.MarkerTypes[igp % 9];
-            Pen markerPen = GetMarkerPen(mt);
-            Pen linePen = GetLinePen(mt, true);
             MarkerShape shape = mt.MarkerShape;
             bool isFilled = mt.IsMarkerFilled;
+            Pen markerPen = GetMarkerPen(mt);
+            Pen linePen = GetLinePen(mt, true);
 
             for (int i = 1; i <= iobs; i++)
             {
@@ -309,6 +257,7 @@ namespace StatsDirect.Charting.Renderer
             }
             markerPen.Dispose();
             linePen.Dispose();
+            DrawLegend(legend);
             EndVectorPlot();
         }
 
@@ -324,15 +273,15 @@ namespace StatsDirect.Charting.Renderer
             {
                 foreach (Series s in Definition.XSeries)
                 {
-                    double w = MeasureStringInCanvasCoordinates(s.Title, LegendFont).Width + MINIMUM_X_WHITESPACE;
-                    if (w > xtra + XAxisCanvas)
-                        xtra = w - XAxisCanvas;
+                    double w = LegendWidthInCanvasCoordinates(s.Title);
+                    if (w > xtra)
+                        xtra = w;
                 }
             }
 
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
-                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
+                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
+                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 BoxAxes, false);
 
             // plot points
@@ -407,15 +356,15 @@ namespace StatsDirect.Charting.Renderer
             {
                 foreach (Series ser in Definition.XSeries)
                 {
-                    double w = MeasureStringInCanvasCoordinates(ser.Title, LegendFont).Width + MINIMUM_X_WHITESPACE;
+                    double w = LegendWidthInCanvasCoordinates(ser.Title);
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas;
                 }
             }
 
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
-                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
+                new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
+                new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 BoxAxes, false);
 
             // plot points
@@ -646,41 +595,28 @@ namespace StatsDirect.Charting.Renderer
 
         internal void PlotXYR(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, double dataMinX, double dataMaxX, double dataMinY, double dataMaxY)
         {
-            const int LEGEND_MARKER_X = 12;
-            const int LEGEND_MARKER_Y_OFFSET = 15;
-            const int LEGEND_TEXT_X = 24;
-
             DataMinX = dataMinX;
             DataMaxX = dataMaxX;
             DataMinY = dataMinY;
             DataMaxY = dataMaxY;
 
-            StartVectorPlot();
-            // Draw the scale
-            double xtra = 0;
-            for (int g = 1; g <= ng; g++)
-            {
-                double w = MeasureStringInCanvasCoordinates(bnam[g], LegendFont).Width + 55;
-                if (w > xtra + XAxisCanvas)
-                    xtra = w - XAxisCanvas;
-            }
-            LayoutChartAndDrawAxes(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
-
-            double size2 = LabelFont.Size * 2;
-
-            // Draw the legends
+            Legend legend = null;
             if (ng > 1)
             {
+                legend = new Legend();
                 for (int g = 1; g <= ng; g++)
                 {
-                    if (bnam[g].Length > 0)
-                    {
-                        int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
-                        DrawMarkerInCanvasCoordinates(LEGEND_MARKER_X, YAxisCanvas + YExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * g, LEGEND_MARKER_SIZE, ChartPreferences.MarkerTypes[mkr]); //  TODO: Broken?
-                        DrawStringLegendLC(bnam[g], LEGEND_TEXT_X, YAxisCanvas + YExtCanvas - LEGEND_MARKER_Y_OFFSET - size2 * g);
-                    }
+                    MarkerType mt = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(g - 1)];
+                    legend.LegendEntries.Add(new LegendEntry { Label = bnam[g], MarkerType = mt });
                 }
             }
+
+            StartVectorPlot(null, legend);
+            LayoutChartAndDrawAxes(title,
+                new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear),
+                false, false,
+                legend);
 
             // Plot the points
             for (int g = 1; g <= ng; g++)
@@ -763,6 +699,7 @@ namespace StatsDirect.Charting.Renderer
                     DrawLineInCanvasCoordinates(p, x1, y1, x2, ToCanvasY(calcy));
                 }
             }
+            DrawLegend(legend);
             EndVectorPlot();
         }
 
@@ -795,7 +732,10 @@ namespace StatsDirect.Charting.Renderer
                     }
                 }
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), isLAabbe, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
+                new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear),
+                isLAabbe, false);
 
             if (zPlot)
                 DrawQCanvas(OffY);
@@ -982,7 +922,10 @@ namespace StatsDirect.Charting.Renderer
 
             StartVectorPlot();
             // Peto plots are boxed
-            AxisScales axisScales = LayoutChartAndDrawAxes(title, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear), !reverse && diagonal, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(title,
+                new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear),
+                !reverse && diagonal, false);
 
             // plot the points
             for (int r = 1; r <= rows; r++)
@@ -1098,10 +1041,13 @@ namespace StatsDirect.Charting.Renderer
             string xtxt = "Mean ((" + v0Title + " + " + v1Title + ") / 2)";
             string ytxt = "Difference (" + v0Title + " - " + v1Title + ")";
             StartVectorPlot();
-            LayoutChartAndDrawAxes(string.Empty, new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear), false, false);
+            LayoutChartAndDrawAxes(string.Empty,
+                new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(ytxt, AxisMode.Scale, ScaleType.Linear),
+                false, false);
 
             // Draw the titles
-            int size2 = LabelFont.Height * 2;
+            double size2 = LabelHeightInCanvasCoordinates("M") * 2;
             DrawStringLegend("mean difference \u00B1 " + Formatting.XRound(gamma * 100.0, 2) + "% limits of agreement", XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas + size2, StringAlignment.Far);
 
             // Draw the limits
@@ -1473,22 +1419,25 @@ namespace StatsDirect.Charting.Renderer
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            double w = MeasureStringInCanvasCoordinates(combo_ti(cap), LegendFont).Width + 30;
+            double w = LegendWidthInCanvasCoordinates(combo_ti(cap)) + 30;
             if (w > xtra + XAxisCanvas)
                 xtra = w - XAxisCanvas - AXIS_BIG_TICK;
             for (int i = 1; i <= k; i++)
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
-                    w = MeasureStringInCanvasCoordinates(title[i], LegendFont).Width + 30;
+                    w = LegendWidthInCanvasCoordinates(title[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - AXIS_BIG_TICK;
-                    w = MeasureStringInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", LegendFont).Width;
+                    w = LegendWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")");
                     if (w > rgap)
                         rgap = w;
                 }
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Category) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(cap,
+                new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+                new AxisDefinition(null, AxisMode.None, ScaleType.Category),
+                false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
             DivY = k + pbias;
             OffY = YAxisCanvas;
@@ -1518,7 +1467,7 @@ namespace StatsDirect.Charting.Renderer
                 pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false))
             {
                 int r = 0;
-                double txh = MeasureStringInCanvasCoordinates(title[1], LabelFont).Height;
+                double txh = LabelHeightInCanvasCoordinates(title[1]);
                 double realamin = axisScales.X.MinimumScaleValue;
                 double realamax = axisScales.X.MaximumScaleValue;
                 double yc = 0;
@@ -1681,22 +1630,22 @@ namespace StatsDirect.Charting.Renderer
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            float w = MeasureStringInCanvasCoordinates(combo_ti(cap), LabelFont).Width + 30;
-            if (w > xtra + XAxisCanvas)
-                xtra = w - XAxisCanvas - 5;
             for (int i = 1; i <= k; i++)
             {
                 if (odr[i] != Constant.MISSING)
                 {
-                    w = MeasureStringInCanvasCoordinates(title[i], LabelFont).Width + 30;
+                    float w = LabelWidthInCanvasCoordinates(title[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - 5;
-                    w = MeasureStringInCanvasCoordinates(Formatting.RoundMeta(odr[i], absMin) + " (" + Formatting.RoundMeta(odrl[i], absMin) + ", " + Formatting.RoundMeta(odru[i], absMin) + ")", LabelFont).Width;
+                    w = LabelWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absMin) + " (" + Formatting.RoundMeta(odrl[i], absMin) + ", " + Formatting.RoundMeta(odru[i], absMin) + ")");
                     if (w > rgap)
                         rgap = w;
                 }
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(cap,
+                new AxisDefinition(qid + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+                new AxisDefinition(null, AxisMode.None, ScaleType.Linear),
+                false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
             DivY = k + pbias;
             OffY = YAxisCanvas;
@@ -1727,7 +1676,7 @@ namespace StatsDirect.Charting.Renderer
                 int r = 0;
                 double yc = 0;
                 double yt = 0;
-                double txh = MeasureStringInCanvasCoordinates(title[1], LabelFont).Height;
+                double txh = LabelHeightInCanvasCoordinates(title[1]);
                 for (int i = k; i >= 1; i--)
                 {
                     r++;
@@ -1861,12 +1810,15 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (odr[i] != Constant.MISSING)
                 {
-                    double w = MeasureStringInCanvasCoordinates(title[i], TitleFont).Width + 30;
+                    double w = LabelWidthInCanvasCoordinates(title[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - 5;
                 }
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear), new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(cap,
+                new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra },
+                new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
+                false, false);
             axisScales.Y = new CategoryAxisScale(kok + pbias);
             DivY = kok + pbias;
             OffY = YAxisCanvas;
@@ -1876,7 +1828,7 @@ namespace StatsDirect.Charting.Renderer
                 double yc = 0;
                 double yt = 0;
                 int r = 0;
-                double txh = MeasureStringInCanvasCoordinates(title[1], LabelFont).Height;
+                double txh = LabelHeightInCanvasCoordinates(title[1]);
                 for (int i = k; i >= 1; i--)
                 {
                     if (odr[i] != Constant.MISSING)
@@ -2063,28 +2015,27 @@ namespace StatsDirect.Charting.Renderer
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            double w;
             for (int i = 1; i <= k; i++)
             {
                 if (odr[i] != Constant.MISSING)
                 {
-                    w = MeasureStringInCanvasCoordinates(title[i], LabelFont).Width + 30;
-                    if (w > xtra + XAxisCanvas)
-                        xtra = w - XAxisCanvas - 5;
-                    w = MeasureStringInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", LabelFont).Width;
+                    double w = LabelWidthInCanvasCoordinates(title[i]);
+                    if (w > xtra)
+                        xtra = w;
+                    w = LabelWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")");
                     if (w > rgap)
                         rgap = w;
                 }
             }
-            w = MeasureStringInCanvasCoordinates(combo_ti(cap), LabelFont).Width + 30;
-            if (w > xtra + XAxisCanvas)
-                xtra = w - XAxisCanvas - 5;
 
             AxisScales axisScales;
             switch (xform)
             {
                 case Transformation.Log:
-                    axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+                    axisScales = LayoutChartAndDrawAxes(cap,
+                        new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+                        new AxisDefinition(null, AxisMode.None, ScaleType.Linear),
+                        false, false);
                     break;
                 default:
                     {
@@ -2093,7 +2044,10 @@ namespace StatsDirect.Charting.Renderer
                             DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
                             DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                         }
-                        axisScales = LayoutChartAndDrawAxes(cap, new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+                        axisScales = LayoutChartAndDrawAxes(cap,
+                            new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+                            new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
+                            false, false);
                         DataMinX = axisScales.X.MinimumScaleValue;
                         DataMaxX = axisScales.X.MaximumScaleValue;
                     }
@@ -2129,7 +2083,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 double rmh = -99;
                 int r = 0;
-                double txh = MeasureStringInCanvasCoordinates(title[1], LabelFont).Height;
+                double txh = LabelHeightInCanvasCoordinates(title[1]);
                 double botlim = double.NegativeInfinity;
                 double yt = 0;
                 for (int i = k; i >= 1; i--)

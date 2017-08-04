@@ -41,11 +41,11 @@ namespace StatsDirect.Charting.Renderer
         private Brush axisBrush;
         private const double AXIS_LITTLE_TICK = 4;
         protected const double AXIS_BIG_TICK = 7;
-        protected Font TitleFont { get; private set; }
-        protected Font LegendFont { get; private set; }
+        private Font TitleFont { get; set; }
+        private Font LegendFont { get; set; }
         protected bool BoxAxes { get; } = ChartPreferences.DefaultBoxAxes;
 
-        protected Font LabelFont { get; private set; }
+        private Font LabelFont { get; set; }
 
         private bool isXAxisReversed;
         private bool isYAxisReversed;
@@ -270,7 +270,8 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="shouldBoxAxes"></param>
         /// <param name="useCalculatedScalesEvenWithDefinition"></param>
         /// <param name="legend"></param>
-        protected AxisScales LayoutChartAndDrawAxes(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Legend legend = null)
+        /// <param name="isSquarePlotArea">If true, the plot area is sized to square (the larger axis length will be reduced to the size of the smaller). If false, the usual rectangular plot area will be used.</param>
+        protected AxisScales LayoutChartAndDrawAxes(string title, AxisDefinition x, AxisDefinition y, bool shouldBoxAxes, bool useCalculatedScalesEvenWithDefinition, Legend legend = null, bool isSquarePlotArea = false)
         {
             SizeF legendSize = default(SizeF);
             if (null != legend)
@@ -288,6 +289,12 @@ namespace StatsDirect.Charting.Renderer
 
             if (!IsAscii)
                 DefaultAxes(plotAreaMargins, extraSizeForAxes);
+            if (isSquarePlotArea)
+            {
+                double smallerExt = Math.Min(XExtCanvas, YExtCanvas);
+                XExtCanvas = smallerExt;
+                YExtCanvas = smallerExt;
+            }
             AxisScales ass = DrawAxes(title, x, y, shouldBoxAxes, useCalculatedScalesEvenWithDefinition, extraSizeForAxes);
             return ass;
         }
@@ -1366,9 +1373,9 @@ namespace StatsDirect.Charting.Renderer
 #if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
 #endif
-        protected double GetFontHeightInCanvasCoordinates(Font f)
+        protected double LegendFontHeightInCanvasCoordinates()
         {
-            return statsDirectCanvas.GetFontHeight(f);
+            return statsDirectCanvas.GetFontHeight(LegendFont);
         }
 
         private Pen GetSameOrDifferentPen(Color color)
@@ -1551,7 +1558,7 @@ namespace StatsDirect.Charting.Renderer
 
         protected void AssignMarkersToSeries(List<Series> s)
         {
-            for (int i = 0; i <= s.Count - 1; i++)
+            for (int i = 0; i < s.Count; i++)
             {
                 DoubleSeries ds = (DoubleSeries)s[i];
                 int mkr = ChartOptions.SeriesNumberToMarkerNumber(i);
@@ -1821,6 +1828,22 @@ namespace StatsDirect.Charting.Renderer
         protected float AxisLabelHeightInCanvasCoordinates(string s)
         {
             return MeasureStringInCanvasCoordinates(s, AxisLabelFont).Height;
+        }
+
+#if WARN_OBSOLETES
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
+        public float LabelWidthInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, LabelFont).Width;
+        }
+
+#if WARN_OBSOLETES
+        [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
+#endif
+        public float LabelHeightInCanvasCoordinates(string s)
+        {
+            return MeasureStringInCanvasCoordinates(s, LabelFont).Height;
         }
 
 #if WARN_OBSOLETES

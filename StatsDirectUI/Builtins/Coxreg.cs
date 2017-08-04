@@ -2409,13 +2409,13 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxBaselineToReport(ITemplateHost host, ParameterBag parameters)
         {
-            return RptCoxBaseline(host, parameters, false, string.Empty, false);
+            return RptCoxBaseline(parameters, false, string.Empty, false);
         }
 
 
         public static ParameterBag RptCoxBaselineToWorksheet(ITemplateHost host, ParameterBag parameters)
         {
-            return RptCoxBaseline(host, parameters, false, string.Empty, true);
+            return RptCoxBaseline(parameters, false, string.Empty, true);
         }
 
 
@@ -2429,14 +2429,14 @@ namespace StatsDirect.Builtins
                 if (selectedGroups[i])
                 {
                     string selectedGroup = subgroupsVariable.Data[i];
-                    return RptCoxBaseline(host, parameters, true, selectedGroup, false);
+                    return RptCoxBaseline(parameters, true, selectedGroup, false);
                 }
             }
             return new ParameterBag();
         }
 
 
-        private static ParameterBag RptCoxBaseline(ITemplateHost host, ParameterBag parameters, bool plot, string groupVar, bool createGrid)
+        private static ParameterBag RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
             double watch_time;
@@ -2582,7 +2582,7 @@ namespace StatsDirect.Builtins
             if (plot)
             {
                 // bypass reporting and plot if called by the plot function
-                CoxPlot(host, parameters, z, iobs, istrata, groupVar, outputParameters);
+                CoxPlot(parameters, z, iobs, istrata, groupVar, outputParameters);
             }
             else if (createGrid)
             {
@@ -2606,7 +2606,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void CoxPlot(ITemplateHost host, ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
+        private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
         {
             int igroups;
             int groupid = 0;

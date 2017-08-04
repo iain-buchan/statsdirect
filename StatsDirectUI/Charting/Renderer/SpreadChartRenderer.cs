@@ -59,7 +59,10 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot(sOptions);
             AssignMarkersToSeries(sOptions);
 
-            LayoutChartAndDrawAxes(sOptions.Title, new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, sOptions.ShouldBoxAxes, false);
+            LayoutChartAndDrawAxes(sOptions.Title,
+                new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse },
+                sOptions.ShouldBoxAxes, false);
 
             double ygap = YExtCanvas / DivY;
 

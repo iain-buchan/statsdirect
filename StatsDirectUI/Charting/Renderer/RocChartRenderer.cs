@@ -69,35 +69,12 @@ namespace StatsDirect.Charting.Renderer
                 Array.Sort(seriesData[c].tdata);
             }
 
-            // Work out how many series there are and extend the plot area as required to hold the legend
-
-            // Measurements and set axes.  These are done on a scratchpad canvas before the proper measurements are set up.
-            StartVectorPlot(rOptions);
-            double smallerExt = Math.Min(XExtCanvas, YExtCanvas);
-            XExtCanvas = smallerExt;
-            YExtCanvas = smallerExt;
-            double legendFontHeight = GetFontHeightInCanvasCoordinates(LegendFont);
-            EndVectorPlot();
-
-            // By now, all measurements are known.  Set up the plot areas.
-            double legendTop = YAxisCanvas - LEGEND_TOP_GAP;
-            double markerMidlineOffset = (legendFontHeight - LEGEND_MARKER_SIZE) / 2;
-            double legendSpacing = MINIMUM_LEGEND_GAP + Math.Max(LEGEND_MARKER_SIZE, Convert.ToInt32(legendFontHeight));
-            double legendBottom = legendTop - Definition.XSeries.Count * legendSpacing;
-            if (legendBottom < LOWEST_ALLOWED_LEGEND)
-            {
-                double extraSpaceRequired = LOWEST_ALLOWED_LEGEND - legendBottom;
-
-                //  Add in the extra space
-                imageHeight += (int)Math.Ceiling(extraSpaceRequired);
-                YAxisCanvas += extraSpaceRequired;
-                legendTop += extraSpaceRequired;
-                // legendBottom += extraSpaceRequired; 
-            }
-
-            // We've hacked at the axes; don't re-default them.
-            StartVectorPlot(rOptions);
             AssignMarkersToSeries(rOptions);
+            Legend legend = new Legend();
+            for (int cs = 0; cs < Definition.XSeries.Count; cs++)
+                legend.LegendEntries.Add(new LegendEntry {Label = rOptions.SeriesTitles[cs], MarkerType = Definition.YSeries[cs].AsDoubleSeries.MarkerType });
+
+            StartVectorPlot(rOptions, legend);
 
             DataMinX = 0;
             DataMaxX = 1;
@@ -105,7 +82,11 @@ namespace StatsDirect.Charting.Renderer
             DataMaxY = 1;
 
             // Draw the scale
-            LayoutChartAndDrawAxes(rOptions.Title, new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear), new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear), true, false);
+            LayoutChartAndDrawAxes(rOptions.Title,
+                new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear),
+                true, false,
+                legend, true);
 
             // null effect diagonal
             using (Pen tenPenDiagonal = new Pen(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
@@ -130,10 +111,6 @@ namespace StatsDirect.Charting.Renderer
                 double weight = rOptions.Weight;
                 if (weight <= 0)
                     weight = 1.0;
-
-                // Draw the legend for each series
-                DrawMarkerInCanvasCoordinates(XAxisCanvas + LEGEND_MARKER_SIZE / 2.0, legendTop - cs * legendSpacing - markerMidlineOffset, LEGEND_MARKER_SIZE, Definition.YSeries[cs].AsDoubleSeries);
-                DrawStringLegendL(rOptions.SeriesTitles[cs], XAxisCanvas + 9 + LEGEND_MARKER_SIZE, legendTop - cs * legendSpacing);
 
                 int a;
                 int b;
@@ -431,6 +408,7 @@ namespace StatsDirect.Charting.Renderer
                     thisResults.AddOutput("likely_despite_change", Formatting.XRound(temp2, 2));
                 }
             }
+            DrawLegend(legend);
             EndVectorPlot();
             return results;
         }

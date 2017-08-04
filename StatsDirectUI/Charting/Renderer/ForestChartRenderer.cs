@@ -179,19 +179,19 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
-                    float titleWidth = TitleWidthInCanvasCoordinates(title[i]) + 30;
-                    if (titleWidth > xtra + XAxisCanvas)
-                        xtra = titleWidth - XAxisCanvas - 5;
+                    float titleWidth = LegendWidthInCanvasCoordinates(title[i]);
+                    if (titleWidth > xtra)
+                        xtra = titleWidth;
                     string rhs = Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")";
                     float rhsWidth = LegendWidthInCanvasCoordinates(rhs);
                     if (rhsWidth > rgap)
                         rgap = rhsWidth;
                 }
             }
-            float w = TitleWidthInCanvasCoordinates(combo_ti(fOptions.Title)) + 30;
-            if (w > xtra + XAxisCanvas)
-                xtra = w - XAxisCanvas - 5;
-            AxisScales axisScales = LayoutChartAndDrawAxes(fOptions.Title, new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceAfterAxisEnds = rgap }, new AxisDefinition(null, AxisMode.None, ScaleType.NotSet) { ExtraSpaceBeforeAxisStarts = xtra }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(fOptions.Title,
+                new AxisDefinition(fOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+                new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
+                false, false);
             axisScales.Y = new CategoryAxisScale(k + pbias);
             DivY = kok + pbias;
             OffY = YAxisCanvas;

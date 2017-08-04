@@ -84,7 +84,10 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot(bwOptions);
             AssignMarkersToSeries();
 
-            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType), new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse }, false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
+                new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse },
+                false, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
             Color black = Color.Black;
             MarkerType crossMarker = new MarkerType { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
@@ -354,7 +357,10 @@ namespace StatsDirect.Charting.Renderer
             Definition.YSeries = Definition.XSeries;
             Definition.XSeries = tempSeries;
 
-            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title, new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse }, new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType), false, false);
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse },
+                new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                false, false);
 
             using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
             {
@@ -609,7 +615,7 @@ namespace StatsDirect.Charting.Renderer
             ASCII_InitPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
-            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title + "\r\n",
+            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = seriesToUse.Select(s => s.Title).ToList() },
                 false, false);
