@@ -31,7 +31,7 @@ namespace StatsDirect.TemplateProcessing
         {
             Dictionary<string, CreoleReportSubstitute> substitutions = new Dictionary<string, CreoleReportSubstitute>
             {
-                // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal), 9 = dark yellow (warnabit).
+                // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal).
                 { "<report>", new CreoleReportSubstitute("") },
                 { "</report>", new CreoleReportSubstitute("") },
                 { "<b>", new CreoleReportSubstitute(@"{\b ") },
@@ -80,8 +80,6 @@ namespace StatsDirect.TemplateProcessing
                 { "</u>", new CreoleReportSubstitute(@"}") },
                 { "<warn>", new CreoleReportSubstitute(@"{\cf6 ") },
                 { "</warn>", new CreoleReportSubstitute(@"}") },
-                { "<warnabit>", new CreoleReportSubstitute(@"{\cf9 ") },
-                { "</warnabit>", new CreoleReportSubstitute(@"}") },
                 { "&amp;", new CreoleReportSubstitute(@"&") },
                 { "&gt;", new CreoleReportSubstitute(@">") },
                 { "&lt;", new CreoleReportSubstitute(@"<") },

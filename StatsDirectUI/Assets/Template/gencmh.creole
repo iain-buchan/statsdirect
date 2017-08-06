@@ -12,9 +12,9 @@
 <line></line>
 <table>
 <tr><th>Alternative hypothesis</th><th>Statistic</th><th>DF</th><th>Probability</th></tr>
-<tr><td>Ordinal association</td><td><in>x21</in></td><td><in>df1</in></td><td><pval><in>p1</in></pval></td></tr>
-<tr><td>Nominal rows vs. ordinal columns association</td><td><in>x22</in></td><td><in>df2</in></td><td><pval><in>p2</in></pval></td></tr>
-<tr><td>Nominal association</td><td><in>x23</in></td><td><in>df3</in></td><td><pval><in>p3</in></pval></td></tr>
+<tr><td>Ordinal association</td><td><in>x21</in></td><td><in>df1</in></td><td><pval><inp>p1</inp></pval></td></tr>
+<tr><td>Nominal rows vs. ordinal columns association</td><td><in>x22</in></td><td><in>df2</in></td><td><pval><inp>p2</inp></pval></td></tr>
+<tr><td>Nominal association</td><td><in>x23</in></td><td><in>df3</in></td><td><pval><inp>p3</inp></pval></td></tr>
 </table>
 <line></line>
 <line>Sample size = <in>nt</in></line>

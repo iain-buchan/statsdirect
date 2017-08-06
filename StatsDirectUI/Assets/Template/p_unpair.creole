@@ -16,7 +16,7 @@
 <line>Standard error of proportion difference = <inu>se</inu></line>
 <line>Standard normal deviate (z) = <inu>z</inu></line>
 <block name="approx2">
-<line><pval>Approximate two sided <in>p_2</in></pval></line>
-<line><pval>Approximate one sided <in>p_1</in></pval></line>
+<line><pval>Approximate two sided <inp>p_2</inp></pval></line>
+<line><pval>Approximate one sided <inp>p_1</inp></pval></line>
 </block>
 </report>

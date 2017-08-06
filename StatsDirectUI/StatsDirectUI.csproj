@@ -1265,7 +1265,9 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="Assets\Template\mcnamar.creole" />
-    <None Include="Assets\Template\metaCorrelation.creole" />
+    <None Include="Assets\Template\metaCorrelation.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\multi.creole" />
     <None Include="Assets\Template\M_PAIRED.creole">
       <SubType>Designer</SubType>
@@ -1958,7 +1960,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

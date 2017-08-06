@@ -17,17 +17,17 @@
 <line>Schwartz information criterion = <in>sch</in></line>
 <line></line>
 <line>Deviance with no covariates = <in>devx</in></line>
-<line>Deviance (likelihood ratio, G&#xb2;) = <in>x2dev</in>   df = <in>x2df</in>   <pval><in>x2p</in></pval></line>
+<line>Deviance (likelihood ratio, G&#xb2;) = <in>x2dev</in>   df = <in>x2df</in>   <pval><inp>x2p</inp></pval></line>
 <line>Pseudo (McFadden) R-square = <in>r2</in></line>
 <line>Pseudo (likelihood ratio index) R-square = <in>r2i</in></line>
 <line></line>
-<line>Pearson goodness of fit = <in>x2_pearson</in>   df = <in>idf</in>   <pval><in>p_pearson</in></pval></line>
-<line>Deviance goodness of fit = <in>dev</in>   df = <in>idf</in>   <pval><in>p_dev</in></pval></line>
+<line>Pearson goodness of fit = <in>x2_pearson</in>   df = <in>idf</in>   <pval><inp>p_pearson</inp></pval></line>
+<line>Deviance goodness of fit = <in>dev</in>   df = <in>idf</in>   <pval><inp>p_dev</inp></pval></line>
 <line></line>
 <line>Over-dispersion scale parameter = <in>sp</in></line>
-<line>Scaled G&#xb2; = <in>x2dev_scaled</in>   df = <in>x2df</in>   <pval><in>x2p_scaled</in></pval></line>
-<line>Scaled Pearson goodness of fit = <in>x2_scaled</in>   df = <in>idf</in>   <pval><in>p_p_scaled</in></pval></line>
-<line>Scaled Deviance goodness of fit = <in>dev_scaled</in>   df = <in>idf</in>   <pval><in>p_dev_scaled</in></pval></line>
+<line>Scaled G&#xb2; = <in>x2dev_scaled</in>   df = <in>x2df</in>   <pval><inp>x2p_scaled</inp></pval></line>
+<line>Scaled Pearson goodness of fit = <in>x2_scaled</in>   df = <in>idf</in>   <pval><inp>p_p_scaled</inp></pval></line>
+<line>Scaled Deviance goodness of fit = <in>dev_scaled</in>   df = <in>idf</in>   <pval><inp>p_dev_scaled</inp></pval></line>
 <line></line>
 <table>
 <tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</th></tr>
@@ -36,7 +36,7 @@
 <line></line>
 <table>
 <tr><th>Parameter</th><th>Scaled Standard Error</th><th>Scaled Wald z</th><th></th></tr>
-<block name="scaled"><tr><td><in>par</in></td><td><in>err</in></td><td><in>z</in></td><td><pval><in>p</in></pval></td></tr></block>
+<block name="scaled"><tr><td><in>par</in></td><td><in>err</in></td><td><in>z</in></td><td><pval><inp>p</inp></pval></td></tr></block>
 </table>
 </report>]]>
     </report>

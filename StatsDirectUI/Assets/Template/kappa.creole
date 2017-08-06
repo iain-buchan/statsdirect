@@ -35,7 +35,7 @@
 <line></line>
 <line><title>Disagreement over any category and asymmetry of disagreement (2 raters)</title></line>
 <line></line>
-<line>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><in>pmaxwell</in></pval></line>
+<line>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><inp>pmaxwell</inp></pval></line>
 <line></line>
 <line>Symmetry (generalised McNemar) chi-square = <inu>x2m</inu>  df = <in>dfmcnemar</in>  <pval><inp>pmcnemar</inp></pval></line>
 </report>

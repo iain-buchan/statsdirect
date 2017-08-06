@@ -3,12 +3,12 @@
 <line></line>
 <table>
 <tr><th>Study</th><th><in>stat</in></th><th>SE</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
-<block name="studies"><tr><td><in>st</in></td><td><inu>y</inu></td><td><inu>se</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="studies"><tr><td><in>st</in></td><td><inu>y</inu></td><td><inu>se</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized Effect</th><th>Standard Error</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="studies"><tr><td><in>st</in></td><td><inu>standardized_effect</inu></td><td><inu>se</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="studies"><tr><td><in>st</in></td><td><inu>standardized_effect</inu></td><td><inu>se</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <line><subtitle>Fixed effects (inverse variance)</subtitle></line>

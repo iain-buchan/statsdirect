@@ -42,13 +42,13 @@
 <line><ci>Exact (Clopper-Pearson) <in>ci_exact</in>% confidence interval = <in>lower_exact</in> to <in>upper_exact</in></ci></line>
 <line></line>
 <line>Using null hypothesis that the population proportion equals <in>null</in></line>
-<line><pval><in>ap_1_exact</in> one sided <in>p_1_exact</in></pval></line>
-<line><pval><in>ap_2_exact</in> two sided <in>p_2_exact</in></pval></line>
+<line><pval><inp>ap_1_exact</inp> one sided <inp>p_1_exact</inp></pval></line>
+<line><pval><inp>ap_2_exact</inp> two sided <inp>p_2_exact</inp></pval></line>
 <line></line>
 <line>Approximate (Wilson) <in>ci_approx</in>% mid-P confidence interval = <in>lower_approx</in> to <in>upper_approx</in></line>
 <line></line>
-<line><pval><in>ap_1_approx</in> one sided mid-<in>p_1_approx</in></pval></line>
-<line><pval><in>ap_2_approx</in> two sided mid-<in>p_2_approx</in></pval></line>
+<line><pval><inp>ap_1_approx</inp> one sided mid-<inp>p_1_approx</inp></pval></line>
+<line><pval><inp>ap_2_approx</inp> two sided mid-<inp>p_2_approx</inp></pval></line>
 </report>
       ]]>
     </report>

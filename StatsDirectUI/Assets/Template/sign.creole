@@ -11,8 +11,8 @@
 <block name="large"><line><warn>sample is too large for an exact calculation</warn></line></block>
 <line></line>
 <line>Normal approximate z = <inu>z</inu></line>
-<line><pval>Two sided <in>p_2</in></pval></line>
-<line><pval>One sided <in>p_1</in></pval></line>
+<line><pval>Two sided <inp>p_2</inp></pval></line>
+<line><pval>One sided <inp>p_1</inp></pval></line>
 <line></line>
 <line><b><ci>Exact (Clopper-Pearson) <in>ci</in>% confidence interval for the proportion:</ci></b></line>
 <table>

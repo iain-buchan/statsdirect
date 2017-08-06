@@ -13,8 +13,8 @@
 <line><ci><in>pc</in>% confidence interval <in>for</in> = <in>from</in> to <in>to</in></ci></line>
 <line></line>
 <line>Standard normal deviate (z) = <in>z</in></line>
-<line><pval>One sided <in>p_1</in></pval></line>
-<line><pval>Two sided <in>p_2</in></pval></line>
+<line><pval>One sided <inp>p_1</inp></pval></line>
+<line><pval>Two sided <inp>p_2</inp></pval></line>
 <line></line>
 <line>For lognormal data:</line>
 <line><subtotal>Geometric mean = <in>gmean</in>  (<in>pc2</in>% confidence interval = <in>lrr</in> to <in>urr</in>)</subtotal></line>

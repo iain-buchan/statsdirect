@@ -17,7 +17,7 @@
 <line>variance-covariance matrix:</line>
 <block name="covar"><line><in>mat</in></line></block>
 <line></line>
-<line>Chi-square for equivalence of death rates = <inu>chi</inu>  <pval><in>p</in></pval></line>
+<line>Chi-square for equivalence of death rates = <inu>chi</inu>  <pval><inp>p</inp></pval></line>
 <block name="trends"><line>Chi-square for trend = <inu>trend</inu> <pval> <inp>p_trend</inp></pval></line></block>
 <block name="strata">
 <line></line>

@@ -4,7 +4,7 @@
 <table>
 <tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>|L/SE(L)|</th><th></th></tr>
 <block name="differences">
-<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><inu>delta</inu></td><td><in>gps</in></td><td><inu>t</inu></td><td><pval><in>p</in></pval></td></tr>
+<tr><td><in>cf1</in> vs. <in>cf2</in></td><td><inu>delta</inu></td><td><in>gps</in></td><td><inu>t</inu></td><td><pval><inp>p</inp></pval></td></tr>
 </block>
 </table>
 <line></line>

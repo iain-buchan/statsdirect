@@ -98,8 +98,8 @@
 <line></line>
 <line>F = <in>f</in></line>
 <line></line>
-<line><pval>Upper side <in>p_1</in></pval></line>
-<line><pval>Two sided <in>p_2</in></pval></line>
+<line><pval>Upper side <inp>p_1</inp></pval></line>
+<line><pval>Two sided <inp>p_2</inp></pval></line>
 </report>]]>
     </report>
   </steps>

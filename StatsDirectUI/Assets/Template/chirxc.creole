@@ -25,19 +25,19 @@
 <line></line>
 <line><subtitle>NOMINAL INDEPENDENCE</subtitle></line>
 <table>
-<tr><td>Chi-square = <inu>chio</inu></td><td>DF = <inu>dfo</inu></td><td><pval><in>po</in></pval></td></tr>
-<tr><td>G-square = <inu>g2</inu></td><td>DF = <inu>dfo</inu></td><td><pval><in>pog2</in></pval></td></tr>
+<tr><td>Chi-square = <inu>chio</inu></td><td>DF = <inu>dfo</inu></td><td><pval><inp>po</inp></pval></td></tr>
+<tr><td>G-square = <inu>g2</inu></td><td>DF = <inu>dfo</inu></td><td><pval><inp>pog2</inp></pval></td></tr>
 <tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval><inp>p2</inp></pval>  <in>lb</in></td></tr>
 </table>
 <line></line>
 <line><subtitle>ANOVA</subtitle></line>
 <line>Chi-square for equality of mean column scores = <inu>chie</inu></line>
-<line>DF = <in>dfe</in> <pval><in>pe</in></pval></line>
+<line>DF = <in>dfe</in> <pval><inp>pe</inp></pval></line>
 <line></line>
 <line><subtitle>LINEAR TREND</subtitle></line>
 <line>Sample correlation (r) = <inu>r</inu></line>
 <line>Chi-square for linear trend (M&#xb2;) = <inu>chit</inu></line>
-<line>DF = 1  <pval><in>pt</in></pval></line>
+<line>DF = 1  <pval><inp>pt</inp></pval></line>
 <line></line>
 <line><subtitle>NOMINAL ASSOCIATION</subtitle></line>
 <line>Phi = <inu>phi</inu></line>

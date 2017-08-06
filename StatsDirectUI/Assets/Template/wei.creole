@@ -12,7 +12,7 @@
 <tr><td>observed failures by group =</td><td><in>fail_1</in> and <in>fail_2</in></td></tr>
 <tr><td>Wei-Lachin t =</td><td><in>t</in></td></tr>
 <tr><td>Wei-Lachin variance =</td><td><in>var</in></td></tr>
-<tr><td>chi-square =</td><td><in>chi</in></td><td><pval><in>p</in></pval></td></tr>
+<tr><td>chi-square =</td><td><in>chi</in></td><td><pval><inp>p</inp></pval></td></tr>
 </table>
 </block>
 <line></line>
@@ -25,8 +25,8 @@
 <block name="inv_covar"><line><in>mat</in></line></block>
 <line></line>
 <line>repeat times = <in>rep</in></line>
-<line>chi-square omnibus statistic = <in>stat</in>  <pval><in>p_omnibus</in></pval></line>
+<line>chi-square omnibus statistic = <in>stat</in>  <pval><inp>p_omnibus</inp></pval></line>
 <line></line>
-<line>stochastic ordering z = <in>z</in>  <pval>one sided <in>p_1</in>,  two sided <in>p_2</in></pval></line>
+<line>stochastic ordering z = <in>z</in>  <pval>one sided <inp>p_1</inp>,  two sided <inp>p_2</inp></pval></line>
 </block>
 </report>

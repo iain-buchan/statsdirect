@@ -6,13 +6,13 @@
 <line>Percentages:  A = <in>pc_a</in> C = <in>pc_c</in> Total = <in>pc_t</in></line>
 <block name="warn_small"><line><warn>WARNING: SMALL EXPECTED FREQUENCIES, CHECK BY EXACT METHODS</warn></line></block>
 <line>Uncorrected Chi&#xb2; = <in>table_chi_2</in> Chi = <in>table_chi</in></line>
-<line>Yates' corrected Chi&#xb2; = <in>yates_chi_2</in> Chi = <in>yates_chi</in> <pval><in>yates_chi_p</in></pval></line>
+<line>Yates' corrected Chi&#xb2; = <in>yates_chi_2</in> Chi = <in>yates_chi</in> <pval><inp>yates_chi_p</inp></pval></line>
 <line></line>
 <block name="no_haldane">
 <line><b>Without Haldane Correction:</b></line>
 <line>Odds ratio = <in>odds</in>  log odds ratio = <in>log</in></line>
 <line>Variance of log odds ratio = <in>var</in>  standard error = <in>se</in>  weight = <in>weight</in></line>
-<line>Chi&#xb2; = <in>chi_2</in> Chi = <in>chi</in><ci> </ci><pval><in>chi_p</in></pval></line>
+<line>Chi&#xb2; = <in>chi_2</in> Chi = <in>chi</in><ci> </ci><pval><inp>chi_p</inp></pval></line>
 <line><ci>Approximate <in>pc</in>% CI for log odds ratio = <in>ci_from</in> to <in>ci_to</in></ci></line>
 <line><ci>Giving an odds ratio of <in>odds_from</in> to <in>odds_to</in></ci></line></block>
 <block name="warn_no_haldane">
@@ -23,7 +23,7 @@
 <line><b>With Haldane Correction:</b></line>
 <line>Odds ratio = <in>odds</in>  log odds ratio = <in>log</in></line>
 <line>Variance of log odds ratio = <in>var</in>  standard error = <in>se</in>  weight = <in>weight</in></line>
-<line>Chi&#xb2; = <in>chi_2</in>  Chi = <in>chi</in> <pval><in>chi_p</in></pval></line>
+<line>Chi&#xb2; = <in>chi_2</in>  Chi = <in>chi</in> <pval><inp>chi_p</inp></pval></line>
 <line><ci>Approximate <in>pc</in>% CI for log odds ratio = <in>ci_from</in> to <in>ci_to</in></ci></line>
 <line><ci>Giving an odds ratio of <in>odds_from</in> to <in>odds_to</in></ci></line>
 </block>
@@ -36,8 +36,8 @@
 <line>Variance of mean log odds ratio = <in>var</in>  standard error = <in>se</in></line>
 <line><ci>Approximate <in>pc</in>% CI for mean log odds ratio = <in>ci_from</in> to <in>ci_to</in></ci></line>
 <line><ci>Giving odds ratio of <in>odds_from</in> to <in>odds_to</in></ci></line>
-<line>Chi&#xb2; for expected log odds ratio = 0 is <in>chi_2</in> Chi = <in>chi</in> <pval><in>chi_p</in></pval></line>
-<line>Chi&#xb2; for heterogeneity = <in>het_chi_2</in> DF = <in>df</in> <pval><in>het_chi_p</in></pval></line>
+<line>Chi&#xb2; for expected log odds ratio = 0 is <in>chi_2</in> Chi = <in>chi</in> <pval><inp>chi_p</inp></pval></line>
+<line>Chi&#xb2; for heterogeneity = <in>het_chi_2</in> DF = <in>df</in> <pval><inp>het_chi_p</inp></pval></line>
 </block>
 <block name="combined_with_haldane">
 <line></line>
@@ -47,7 +47,7 @@
 <line>Variance of mean log odds ratio = <in>varx</in>  standard error = <in>sex</in></line>
 <line><ci>Approximate <in>pc</in>% CI for mean log odds ratio = <in>ci_fromx</in> to <in>ci_tox</in></ci></line>
 <line><ci>Giving odds ratio of <in>odds_fromx</in> to <in>odds_tox</in></ci></line>
-<line>Chi&#xb2; for expected log odds ratio = 0 is <in>chi_2x</in> Chi = <in>chix</in> <pval><in>chi_px</in></pval></line>
-<line>Chi&#xb2; for heterogeneity = <in>het_chi_2x</in> DF = <in>dfx</in> <pval><in>het_chi_px</in></pval></line>
+<line>Chi&#xb2; for expected log odds ratio = 0 is <in>chi_2x</in> Chi = <in>chix</in> <pval><inp>chi_px</inp></pval></line>
+<line>Chi&#xb2; for heterogeneity = <in>het_chi_2x</in> DF = <in>dfx</in> <pval><inp>het_chi_px</inp></pval></line>
 </block>
 </report>

@@ -12,7 +12,7 @@
 <line>Kappa = <inu>kc</inu></line>
 <line><in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu></line>
 <line>z (for k = 0) = <inu>zc</inu></line>
-<line><pval><in>p</in></pval></line>
+<line><pval><inp>p</inp></pval></line>
 <line></line>
 <line><u>Universal (Berry-Mielke) R</u></line>
 <line>Weighted (linear) kappa = <inu>kw</inu></line>

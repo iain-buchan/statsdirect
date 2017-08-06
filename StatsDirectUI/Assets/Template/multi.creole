@@ -7,7 +7,7 @@
 <line></line>
 <block name="row">
 <table>
-<block name="col"><tr><td><in>label</in></td><td>b<in>b</in> = <in>val_b</in></td><td><in>rp</in></td><td>t = <in>t</in></td><td><pval><in>p</in></pval></td></tr></block>
+<block name="col"><tr><td><in>label</in></td><td>b<in>b</in> = <in>val_b</in></td><td><in>rp</in></td><td>t = <in>t</in></td><td><pval><inp>p</inp></pval></td></tr></block>
 </table>
 <line></line>
 <line><in>y</in> = <block name="z"><in>z</in></block></line>

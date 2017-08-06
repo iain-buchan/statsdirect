@@ -10,9 +10,9 @@
 <line></line>
 <line>One sided test (suspecting <in>sample_1</in> shifted left of <in>sample_2</in>):</line>
 <line>D = <inu>d_l</inu></line>
-<line><pval><in>p_l</in></pval></line>
+<line><pval><inp>p_l</inp></pval></line>
 <line></line>
 <line>One sided test (suspecting <in>sample_1</in> shifted right of <in>sample_2</in>):</line>
 <line>D = <inu>d_r</inu></line>
-<line><pval><in>p_r</in></pval></line>
+<line><pval><inp>p_r</inp></pval></line>
 </report>

@@ -20,7 +20,7 @@
 <table>
 <tr><th>Akaike Information</th><th>McFadden R-square</th><th>Significant coefficients</th><thfirst>LR Goodness of Fit</thfirst><thspan/><th></th></tr>
 <block name="parameters"><tr><tdfirst><model><in>model</in></model></tdfirst><tdspan/><tdspan/><tdspan/><tdspan/><tdspan/></tr>
-<tr><td><in>aic</in></td><td><in>r2</in></td><td><in>scoef</in> / <in>ncoef</in></td><td><in>x2dev</in></td><td><pval><in>p_dev</in></pval></td><td></td></tr>
+<tr><td><in>aic</in></td><td><in>r2</in></td><td><in>scoef</in> / <in>ncoef</in></td><td><in>x2dev</in></td><td><pval><inp>p_dev</inp></pval></td><td></td></tr>
 </block>
 </table>
 </report>]]></report>

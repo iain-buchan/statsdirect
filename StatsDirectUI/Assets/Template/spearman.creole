@@ -7,13 +7,13 @@
 <line></line>
 <line>Spearman's rank correlation coefficient (Rho) =  <inu>rho</inu></line>
 <line></line>
-<block name="noci"><line><warnabit>CI not calculated when rho is 1 or -1.</warnabit></line></block>
+<block name="noci"><line><warn>CI not calculated when rho is 1 or -1.</warn></line></block>
 <block name="ci"><line><ci><in>pc</in>% CI for rho (Fisher's Z transformed) = <inu>from</inu> to <inu>to</inu></ci></line></block>
 <block name="lown">
 <line></line>
-<line><warnabit>Can not consider probability with very small samples (n &lt; 4)</warnabit></line></block>
+<line><warn>Can not consider probability with very small samples (n &lt; 4)</warn></line></block>
 <block name="results">
-<block name="nop"><line><warnabit>P not calculable</warnabit></line></block>
+<block name="nop"><line><warn>P not calculable</warn></line></block>
 <block name="results">
 <line></line>
 <line><pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: positive correlation)</line>
@@ -23,6 +23,6 @@
 </block>
 <block name="ties">
 <line></line>
-<line><warnabit>Ties present: exact P not used</warnabit></line>
+<line><pval>Ties present: exact P not used</pval></line>
 </block>
 </report>

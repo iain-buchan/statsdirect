@@ -3,12 +3,12 @@
 <line></line>
 <table>
 <tr><th>Study</th><th>Size</th><th><in>stat</in></th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
-<block name="studies"><tr><td><in>st</in></td><td><inu>n</inu></td><td><inu>y</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="studies"><tr><td><in>st</in></td><td><inu>n</inu></td><td><inu>y</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random, size)</thfirst><thspan/><thspan/><th></th></tr>
-<block name="studies"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><inu>nwt</inu></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="studies"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><inu>nwt</inu></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <line><u>Hedges-Olkin fixed effects</u></line>
@@ -26,8 +26,8 @@
 <line></line>
 <line><u>Bias indicators</u></line>
 <block name="bias">
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
 </block>
 <line></line>
 <line><u>Schmidt-Hunter</u></line>

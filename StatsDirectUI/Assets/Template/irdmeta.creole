@@ -10,12 +10,12 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><th>IRD</th><thfirst><ci><in>pc</in>% CI (approximate)</ci></thfirst><thspan/><th></th></tr>
-<block name="ir"><tr><td><in>st</in></td><td><inu>ird</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><warnabit><in>lb</in></warnabit></td></tr></block>
+<block name="ir"><tr><td><in>st</in></td><td><inu>ird</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="ir"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><in>wt</in></td><td><in>dwt</in></td><td><warnabit><in>lb</in></warnabit></td></tr></block>
+<block name="ir"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><in>wt</in></td><td><in>dwt</in></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <line><subtitle>Fixed effects (inverse variance)</subtitle></line>
@@ -33,7 +33,7 @@
 <line></line>
 <block name="egger">
 <line><subtitle>Bias indicators</subtitle></line>
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
 </block>
 </report>

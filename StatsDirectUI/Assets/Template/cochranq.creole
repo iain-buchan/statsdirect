@@ -6,7 +6,7 @@
 <line>Number of blocks = <in>nb</in></line>
 <line>Q = <in>t1</in></line>
 <line>df = <in>df</in></line>
-<line><pval><in>p</in></pval></line>
+<line><pval><inp>p</inp></pval></line>
 <block name="message">
 <line></line>
 <line><in>msg</in></line>

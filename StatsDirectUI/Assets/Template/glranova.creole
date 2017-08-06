@@ -10,7 +10,7 @@
 <line></line>
 <line>Root MSE = <in>mse</in></line>
 <line></line>
-<line>F = <in>f</in> <pval><in>p</in></pval></line>
+<line>F = <in>f</in> <pval><inp>p</inp></pval></line>
 <line></line>
 <table>
 <tr><td>Multiple correlation coefficient</td><td>(R) = <in>r</in></td></tr>

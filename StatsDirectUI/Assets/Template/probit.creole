@@ -9,9 +9,9 @@
 <line>* Dose for centile <in>centile</in> = <in>doseq</in></line>
 <line><ci>Confidence interval <in>het_cent</in> = <in>from_cent</in> to <in>to_cent</in></ci></line>
 <line></line>
-<line>Chi<sub>2</sub> (heterogeneity of deviations from model) = <in>dev</in>  (<in>df</in> df)  <pval><in>p</in></pval></line>
+<line>Chi<sub>2</sub> (heterogeneity of deviations from model) = <in>dev</in>  (<in>df</in> df)  <pval><inp>p</inp></pval></line>
 <line></line>
-<line>t for slope = <in>t_slope</in> (<in>df</in> df_slope)  <pval><in>p_slope</in></pval></line>
+<line>t for slope = <in>t_slope</in> (<in>df</in> df_slope)  <pval><inp>p_slope</inp></pval></line>
 <block name="warn">
 <line><warn>WARNING: slope not significant</warn></line>
 </block>

@@ -3,17 +3,17 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><th>J(N-2)</th><th>g</th><thfirst><ci>Exact <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
-<block name="exact"><tr><td><in>st</in></td><td><inu>gj</inu></td><td><inu>g</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="exact"><tr><td><in>st</in></td><td><inu>gj</inu></td><td><inu>g</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>d</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
-<block name="approximate"><tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><inu>d</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="approximate"><tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><inu>d</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><thfirst>% weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="weights"><tr><td><in>st</in></td><td><inu>howt</inu></td><td><inu>dswt</inu></td><td><subtotal><in>lb</in></subtotal></td></tr></block>
+<block name="weights"><tr><td><in>st</in></td><td><inu>howt</inu></td><td><inu>dswt</inu></td><td><in>lb</in></td></tr></block>
 </table>
 <block name="poolok">
 <line></line>
@@ -33,7 +33,7 @@
 <block name="egger">
 <line></line>
 <line><subtitle>Bias indicators</subtitle></line>
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
 </block>
 </report>

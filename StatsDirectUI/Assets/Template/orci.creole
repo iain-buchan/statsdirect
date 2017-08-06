@@ -15,5 +15,5 @@
 <line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
 <line></line>
 <line><ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci></line>
-<line><pval>Exact mid-P one sided <inp>p1m</in>, two sided <inp>p2m</inp></pval></line>
+<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
 </report>

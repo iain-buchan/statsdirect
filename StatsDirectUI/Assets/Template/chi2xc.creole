@@ -13,12 +13,12 @@
 <line><warn>Warning: <in>num</in> out of <in>den</in> cells have expected frequency less than 5</warn></line>
 </block>
 <line></line>
-<line>Total Chi&#xb2; = <in>chi</in>  |Chi| = <in>chi_abs</in> (<in>totdf</in> DF)  <pval><in>chi_p</in></pval></line>
+<line>Total Chi&#xb2; = <in>chi</in>  |Chi| = <in>chi_abs</in> (<in>totdf</in> DF)  <pval><inp>chi_p</inp></pval></line>
 <block name="z">
 <line></line>
-<line>Chi&#xb2; for linear trend = <in>chi_lin</in>  |Chi| = <in>chi_1df</in> (1 DF)  <pval><in>chi_lin_p</in></pval></line>
+<line>Chi&#xb2; for linear trend = <in>chi_lin</in>  |Chi| = <in>chi_1df</in> (1 DF)  <pval><inp>chi_lin_p</inp></pval></line>
 <line></line>
-<line>Remaining Chi&#xb2; (non-linearity) = <in>chi_non</in> (<in>df</in> DF)  <pval><in>chi_non_p</in></pval></line>
+<line>Remaining Chi&#xb2; (non-linearity) = <in>chi_non</in> (<in>df</in> DF)  <pval><inp>chi_non_p</inp></pval></line>
 </block>
 <line></line>
 <line></line>

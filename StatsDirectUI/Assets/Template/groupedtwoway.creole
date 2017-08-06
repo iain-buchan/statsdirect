@@ -12,9 +12,9 @@
 <tr><td>Corrected total</td><td><in>tot_sum</in></td><td><in>tot_df</in></td></tr>
 </table>
 <line></line>
-<line>F (VR between blocks) = <in>sub_vr</in>  <pval><in>sub_p</in></pval></line>
+<line>F (VR between blocks) = <in>sub_vr</in>  <pval><inp>sub_p</inp></pval></line>
 <line></line>
-<line>F (VR between treatments) = <in>grp_vr</in>  <pval><in>grp_p</in></pval></line>
+<line>F (VR between treatments) = <in>grp_vr</in>  <pval><inp>grp_p</inp></pval></line>
 <line></line>
 <line></line>
 </block>

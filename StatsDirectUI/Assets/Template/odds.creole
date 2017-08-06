@@ -8,7 +8,7 @@
 <line></line>
 <line>Using conditional likelihood estimation:</line>
 <line><ci>Fisher exact <in>ci</in>% confidence interval = <in>llf</in> to <in>ulf</in></ci></line>
-<line><pval>Exact Fisher one sided <in>p1f</in>, two sided <in>p2f</in></pval></line>
+<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
 <line><ci>mid-P exact <in>ci</in>% confidence interval = <in>llm</in> to <in>ulm</in></ci></line>
-<line><pval>Exact mid-P one sided <in>p1m</in>, two sided <in>p2m</in></pval></line>
+<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
 </report>

@@ -11,7 +11,7 @@
 <tr><td>Corrected Total</td><td><in>t_sum</in></td><td><in>t_df</in></td></tr>
 </table>
 <line></line>
-<line>F (variance ratio) = <in>f</in>  <warnabit><in>p</in></warnabit></line>
+<line>F (variance ratio) = <in>f</in>  <pval><in>p</in></pval></line>
 <line></line>
 <line></line>
 </block>

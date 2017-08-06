@@ -8,12 +8,12 @@
 <line></line>
 <table>
 <tr><th>Stratum</th><th>IRR</th><thfirst><ci><in>pc</in>% CI (exact)</ci></thfirst><thspan/><th></th></tr>
-<block name="ir"><tr><td><in>st</in></td><td><inu>irr</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><pval><in>lb</in></pval></td></tr></block>
+<block name="ir"><tr><td><in>st</in></td><td><inu>irr</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="ir"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><in>wt</in></td><td><in>dwt</in></td><td><pval><in>lb</in></pval></td></tr></block>
+<block name="ir"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><in>wt</in></td><td><in>dwt</in></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
 <line><u>Fixed effects (inverse variance)</u></line>
@@ -30,7 +30,7 @@
 </block>
 <line></line>
 <line><u>Non-combinability of studies</u></line>
-<line>Cohran Q = <inu>qc</inu>  (df = <in>df</in>) <warnabit> </warnabit><pval><inp>xp</inp></pval></line>
+<line>Cohran Q = <inu>qc</inu>  (df = <in>df</in>) <pval><inp>xp</inp></pval></line>
 <line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
 <line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
@@ -40,7 +40,7 @@
 <block name="egger">
 <line></line>
 <line><u>Bias indicators</u></line>
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><in>p2</in></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><in>p</in></pval></line>
+<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
+<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
 </block>
 </report>

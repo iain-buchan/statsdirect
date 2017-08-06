@@ -12,9 +12,9 @@
 <tr><td>Total</td><td><in>tot_sum</in></td><td><in>tot_f</in></td><td></td></tr>
 </table>
 <line></line>
-<line><b>F (rows) </b>= <in>f_row</in>  <pval><in>p_row</in></pval></line>
+<line><b>F (rows) </b>= <in>f_row</in>  <pval><inp>p_row</inp></pval></line>
 <line></line>
-<line><b>F (columns)</b> = <in>f_col</in>  <pval><in>p_col</in></pval></line>
+<line><b>F (columns)</b> = <in>f_col</in>  <pval><inp>p_col</inp></pval></line>
 <line></line>
-<line><b>F (treatments)</b> = <in>f_treat</in>  <pval><in>p_treat</in></pval></line>
+<line><b>F (treatments)</b> = <in>f_treat</in>  <pval><inp>p_treat</inp></pval></line>
 </report>
