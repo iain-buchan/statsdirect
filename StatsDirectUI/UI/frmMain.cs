@@ -4014,7 +4014,7 @@ namespace StatsDirect.UI
 
         private static Bitmap IconFromMessageBoxIcon(MessageBoxIcon icon)
         {
-            Icon rawIcon;
+            System.Drawing.Icon rawIcon;
             switch (icon)
             {
                 case MessageBoxIcon.Asterisk:
@@ -4042,7 +4042,7 @@ namespace StatsDirect.UI
             }
             if (null == rawIcon)
                 return null;
-            Icon sizedIcon = new Icon(rawIcon, 40, 40);
+            System.Drawing.Icon sizedIcon = new System.Drawing.Icon(rawIcon, 40, 40);
             Bitmap bmp = new Bitmap(sizedIcon.Width, sizedIcon.Height);
             Graphics gxMem = Graphics.FromImage(bmp);
             gxMem.DrawIcon(sizedIcon, 0, 0);
