@@ -300,25 +300,26 @@ namespace StatsDirect.UI
                 Size = new Size((int)(494 * Form.currentScaleFactor.Width), (int)(305 * Form.currentScaleFactor.Height)),
                 ContextMenuStrip = Form.InlineGridContextMenuStrip
             };
-            grid.ActiveWorkbookSet.GetLock();
-            if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
+            grid.WithLock(() =>
             {
-                IWorksheet sheet = grid.ActiveWorksheet;
-                IRange usedRange = sheet.UsedRange;
-                DataFrame frame = Context[parameter.Name].AsDataFrame;
-                for (int col = 0; col < frame.VariableCount; col++)
+                if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
                 {
-                    DoubleVariable v = (DoubleVariable) frame.Variables[col];
-                    for (int row = 0; row < v.Length; row++)
-                        usedRange.Cells[row, col].Value = v.Data[row];
+                    IWorksheet sheet = grid.ActiveWorksheet;
+                    IRange usedRange = sheet.UsedRange;
+                    DataFrame frame = Context[parameter.Name].AsDataFrame;
+                    for (int col = 0; col < frame.VariableCount; col++)
+                    {
+                        DoubleVariable v = (DoubleVariable)frame.Variables[col];
+                        for (int row = 0; row < v.Length; row++)
+                            usedRange.Cells[row, col].Value = v.Data[row];
+                    }
                 }
-            }
-            grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
-            int maximumColumns = parameter.MaximumColumns(Processor, Context);
-            if (maximumColumns > 0)
-                grid.ActiveWorksheet.Cells[0, maximumColumns, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
-            grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
-            grid.ActiveWorkbookSet.ReleaseLock();
+                grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
+                int maximumColumns = parameter.MaximumColumns(Processor, Context);
+                if (maximumColumns > 0)
+                    grid.ActiveWorksheet.Cells[0, maximumColumns, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
+                grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
+            });
             grid.AllowChartExplorer = false;
             grid.AllowRangeExplorer = false;
             grid.AllowShapeExplorer = false;
@@ -610,16 +611,15 @@ namespace StatsDirect.UI
                     Padding = new Padding(0, 0, 0, 0),
                     Margin = new Padding(0, 0, 0, 0)
                 };
-                grid.GetLock();
-                try
+                grid.WithLock(() =>
                 {
                     if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
                     {
                         DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                         if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0] is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
                         {
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, (DoubleVariable) sourceFrame.Variables[0]);
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, (DoubleVariable) sourceFrame.Variables[1]);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, (DoubleVariable)sourceFrame.Variables[0]);
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, (DoubleVariable)sourceFrame.Variables[1]);
                             if (has3Columns && sourceFrame.VariableCount >= 3)
                                 DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2] as DoubleVariable);
                         }
@@ -683,11 +683,7 @@ namespace StatsDirect.UI
                         colsPanel.Controls.Add(col3Label);
                     }
 
-                }
-                finally
-                {
-                    grid.ReleaseLock();
-                }
+                });
                 ssgContainer.Controls.Add(grid, 1, 1);
 
                 tlp.Controls.Add(ssgContainer);
@@ -714,23 +710,18 @@ namespace StatsDirect.UI
                 ssgContainer.Controls.Add(rowsLabel, 0, 1);
 
                 WorkbookView grid = new WorkbookView { Size = new Size((int)(450 * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
-                grid.GetLock();
-                try
+                grid.WithLock(() =>
                 {
                     if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
                     {
                         DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                         for (int col = 0; col < sourceFrame.VariableCount; col++)
                             if (sourceFrame.Variables[col] is DoubleVariable)
-                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, (DoubleVariable) sourceFrame.Variables[col]);
+                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, (DoubleVariable)sourceFrame.Variables[col]);
                     }
                     grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
                     grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
-                }
-                finally
-                {
-                    grid.ReleaseLock();
-                }
+                });
                 ssgContainer.Controls.Add(grid, 1, 1);
 
                 tlp.Controls.Add(ssgContainer);

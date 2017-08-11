@@ -33,7 +33,8 @@ namespace StatsDirect.UI
             // See http://stackoverflow.com/questions/23637869/spreadsheetgear-for-winforms-paste-from-excel-removes-validation-on-target-cell - Tim Andersen's solution to adding a command manager to a workbook set.
             new ClipboardManglingCommandManager(workbookView.ActiveWorkbookSet);
             SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
-            LockWorkbookAnd(() => {
+            workbookView.WithLock(() =>
+            {
                 workbookView.ActiveWorkbook?.Close();
                 string fontString = Properties.Settings.Default.DefaultWorkbookFont;
                 if (null != fontString)
@@ -95,7 +96,8 @@ namespace StatsDirect.UI
                 return SaveAsContents();
 
             // Known path, overwrite
-            return LockWorkbookAndReturn(() => {
+            return workbookView.WithLock(() =>
+            {
                 workbookView.ActiveWorkbook.Save();
                 dirty = false;
                 return true;
@@ -137,7 +139,8 @@ namespace StatsDirect.UI
             if (!string.IsNullOrEmpty(extension))
                 extension = extension.ToLower(CultureInfo.InvariantCulture);
             FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
-            return LockWorkbookAndReturn(() => {
+            return workbookView.WithLock(() =>
+            {
                 workbookView.ActiveWorkbook.SaveAs(path, format);
                 dirty = false;
                 SdApplication.SoleInstance.NoteRecentFile(path, true);
@@ -148,8 +151,9 @@ namespace StatsDirect.UI
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
         {
             if (null != workbookView.ActiveWorkbook)
-                LockWorkbookAnd(() => workbookView.ActiveWorkbook.Close());
-            return LockWorkbookAndReturn(() => {
+                workbookView.WithLock(() => workbookView.ActiveWorkbook.Close());
+            return workbookView.WithLock(() =>
+            {
                 IWorkbook wb = workbookView.ActiveWorkbookSet.Workbooks.Open(filename);
                 if (!isTempFile)
                     Path = filename;
@@ -165,25 +169,20 @@ namespace StatsDirect.UI
 
         object[,] IGrid.GetValues(int top, int left, int bottom, int right)
         {
-            workbookView.GetLock();
-            try
+            return workbookView.WithLock(() =>
             {
                 object val = workbookView.ActiveWorksheet.Cells[top, left, bottom, right].Value;
                 if (null != val && val.GetType().IsArray)
                     return (object[,])val;
                 return new[,] { { val } };
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         string IGrid.ActiveWorksheetName
         {
             get
             {
-                return LockWorkbookAndReturn(() => workbookView.ActiveWorksheet.Name);
+                return workbookView.WithLock(() => workbookView.ActiveWorksheet.Name);
             }
         }
 
@@ -191,7 +190,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                return LockWorkbookAndReturn(() => workbookView.ActiveWorkbook.FullName);
+                return workbookView.WithLock(() => workbookView.ActiveWorkbook.FullName);
             }
         }
 
@@ -199,7 +198,7 @@ namespace StatsDirect.UI
         {
             int RowsMinusOne = values.GetUpperBound(0) - values.GetLowerBound(0);
             int ColsMinusOne = values.GetUpperBound(1) - values.GetLowerBound(1);
-            LockWorkbookAnd(() => workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values);
+            workbookView.WithLock(() => workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values);
             dirty = true;
         }
 
@@ -212,8 +211,7 @@ namespace StatsDirect.UI
                 WorksheetOrigin worksheetOrigin = (WorksheetOrigin)variable.Origin;
 
                 // Set the active worksheet
-                workbookView.ActiveWorkbookSet.GetLock();
-                try
+                workbookView.ActiveWorkbookSet.WithLock(() =>
                 {
                     string sheetName = worksheetOrigin.WorksheetName;
                     IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
@@ -221,11 +219,7 @@ namespace StatsDirect.UI
                     if (!succeeded)
                         throw new Exception("Cannot refill variable as the worksheet \"" + worksheetOrigin.WorksheetName + "\" in workbook \"" + worksheetOrigin.WorkbookPath + "\" no longer exists.");
                     workbookView.ActiveSheet = worksheet;
-                }
-                finally
-                {
-                    workbookView.ActiveWorkbookSet.ReleaseLock();
-                }
+                });
 
                 CellColumnSelection cellColumnSelection = new CellColumnSelection(this) { ColumnIndex = worksheetOrigin.Column, RowCount = worksheetOrigin.Rows, RowIndex = worksheetOrigin.TopRow };
                 MaybeExpandCellColumnSelection(cellColumnSelection);
@@ -255,7 +249,7 @@ namespace StatsDirect.UI
             int probeBottom = Math.Min(probeTop + PROBE_ROWS - 1, lastUsedRow);
             while (probeTop <= probeBottom)
             {
-                object[,] probe = GetCellObjects(cellColumnSelection.ColumnIndex, probeTop, probeBottom, out int nonHiddenRowCount);
+                (object[,] probe, int nonHiddenRowCount) = GetCellObjects(cellColumnSelection.ColumnIndex, probeTop, probeBottom);
                 for (int offset = 0; offset < nonHiddenRowCount; offset++)
                 {
                     object value = probe[offset, 0];
@@ -277,11 +271,8 @@ namespace StatsDirect.UI
             if (frame.VariableCount <= 0)
                 return;
 
-            bool isLocked = false;
-            try
+            workbookView.WithLock(() =>
             {
-                workbookView.GetLock();
-                isLocked = true;
                 IWorksheet worksheet = workbookView.ActiveWorksheet;
                 IRange usedRange = worksheet.UsedRange;
                 int firstFreeColumn = usedRange.Column + usedRange.ColumnCount;
@@ -359,12 +350,7 @@ namespace StatsDirect.UI
                 holder.Frame = null;
                 holder.MissingIndicator = null;
                 workbookView.Focus();
-            }
-            finally
-            {
-                if (isLocked)
-                    workbookView.ReleaseLock();
-            }
+            });
         }
 
         private class VariableInsertionVisitor : IVariableVisitor
@@ -466,11 +452,8 @@ namespace StatsDirect.UI
 
         private void WriteDataFrameInternal(DataFrame frame, bool isFormulae, string missingIndicator, IRange range, bool shouldMove, int offsetForTitles)
         {
-            bool isLocked = false;
-            try
+            workbookView.WithLock(() =>
             {
-                workbookView.GetLock();
-                isLocked = true;
                 IWorksheet worksheet = workbookView.ActiveWorksheet;
                 IValues values = (IValues)worksheet;
                 // Work out the first column we're going to insert into, moving the existing contents out of the way if we're inserting in existing data
@@ -500,31 +483,18 @@ namespace StatsDirect.UI
                 insertedRange.NumberFormat = string.Empty;
                 insertedRange.Columns.AutoFit();
                 dirty = true;
-            }
-            finally
-            {
-                if (isLocked)
-                    workbookView.ReleaseLock();
-            }
+            });
         }
 
         Area IGrid.UsedArea
         {
             get
             {
-                bool isLocked = false;
-                try
+                return workbookView.WithLock<Area>(() =>
                 {
-                    workbookView.GetLock();
-                    isLocked = true;
                     IRange rawRange = workbookView.ActiveWorksheet.UsedRange;
                     return IRangeToArea(this, rawRange);
-                }
-                finally
-                {
-                    if (isLocked)
-                        workbookView.ReleaseLock();
-                }
+                });
             }
         }
 
@@ -546,15 +516,10 @@ namespace StatsDirect.UI
                     Area area = value.Areas[0];
                     IWorksheet worksheet = workbookView.ActiveWorksheet;
                     IRange newDataRange = worksheet.Range[area.Top, area.Left, area.Bottom, area.Right];
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         newDataRange.Select();
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
                 }
             }
         }
@@ -567,7 +532,7 @@ namespace StatsDirect.UI
 
         public void ClearSelection()
         {
-            LockWorkbookAnd(() => workbookView.ActiveCell.Select());
+            workbookView.WithLock(() => workbookView.ActiveCell.Select());
         }
 
         private static Area IRangeToArea(IGrid grid, IRange range)
@@ -605,32 +570,6 @@ namespace StatsDirect.UI
                 // TODO: It'd be nice to know that the exception happened for our diagnostic purposes.
             }
 #endif
-        }
-
-        private void LockWorkbookAnd(Action func)
-        {
-            workbookView.GetLock();
-            try
-            {
-                func();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
-
-        }
-        private T LockWorkbookAndReturn<T>(Func<T> func)
-        {
-            workbookView.GetLock();
-            try
-            {
-                return func();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
         }
 
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -849,21 +788,16 @@ namespace StatsDirect.UI
         /// <returns>MISSING if the value could not be converted, MISSING * 10 if the value was previously MISSING, or the converted value</returns>
         double IGetCells.GetCellValue(int row, int column)
         {
-            return LockWorkbookAndReturn(() => ToCellValue(workbookView.ActiveWorksheet.Cells[row, column].Value));
+            return workbookView.WithLock(() => ToCellValue(workbookView.ActiveWorksheet.Cells[row, column].Value));
         }
 
         string IGetCells.GetCellText(int row, int column)
         {
-            workbookView.GetLock();
-            try
+            return workbookView.WithLock(() =>
             {
                 object val = workbookView.ActiveWorksheet.Cells[row, column].Value;
                 return null == val ? string.Empty : val.ToString();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         /// <summary>
@@ -874,15 +808,12 @@ namespace StatsDirect.UI
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
         /// <param name="nonHiddenRowCount">The number of non-hidden objects in the array.  Note that raw retrieved values will have been copied down the array to obscure hidden objects in this case; the top end of the array will NOT have been null-filled, so the values in return[nonHiddenRowCount] and above should be considered unknown.</param>
         /// <returns></returns>
-        public object[,] GetCellObjects(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
+        public (object[,], int) GetCellObjects(int column, int firstRow, int lastRow)
         {
             if (lastRow < firstRow)
-            {
-                nonHiddenRowCount = 0;
-                return new object[0, 0];
-            }
-            workbookView.GetLock();
-            try
+                return (new object[0, 0], 0);
+
+            return workbookView.WithLock(() =>
             {
                 object val = workbookView.ActiveWorksheet.Cells[firstRow, column, lastRow, column].Value;
                 if (null != val && val.GetType().IsArray)
@@ -903,18 +834,15 @@ namespace StatsDirect.UI
                             validRows++;
                         }
                     }
-                    nonHiddenRowCount = validRows;
-                    return valArray;
+                    return (valArray, validRows);
                 }
 
                 // If we get here, the returned value is a single cell.  It may still be hidden.
-                nonHiddenRowCount = workbookView.ActiveWorksheet.Cells[firstRow, column].EntireRow.Hidden ? 0 : 1;
-                return new[,] { { val } };
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+                return (
+                    new[,] { { val } },
+                    workbookView.ActiveWorksheet.Cells[firstRow, column].EntireRow.Hidden ? 0 : 1
+                );
+            });
         }
 
         /// <summary>
@@ -924,10 +852,9 @@ namespace StatsDirect.UI
         /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
         /// <returns></returns>
-        string[] IGetCells.GetCellFormulae(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
+        (string[], int) IGetCells.GetCellFormulae(int column, int firstRow, int lastRow)
         {
-            workbookView.GetLock();
-            try
+            return workbookView.WithLock(() =>
             {
                 string[] result = new string[lastRow - firstRow + 1];
                 int validRows = 0;
@@ -937,47 +864,36 @@ namespace StatsDirect.UI
                     if (!hidden)
                         result[validRows++] = workbookView.ActiveWorksheet.Cells[row, column].Formula;
                 }
-                nonHiddenRowCount = validRows;
-                return result;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+                return (result, validRows);
+            });
         }
 
-        double[] IGetCells.GetCellValues(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
+        (double[], int) IGetCells.GetCellValues(int column, int firstRow, int lastRow)
         {
             if (IsHiddenColumn(column))
-            {
-                nonHiddenRowCount = 0;
-                return null;
-            }
+                return (null, 0);
 
-            object[,] values = GetCellObjects(column, firstRow, lastRow, out nonHiddenRowCount);
+            (object[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
 
             double[] returnValues = new double[nonHiddenRowCount];
             for (int r = 0; r < nonHiddenRowCount; r++)
                 returnValues[r] = ToCellValue(values[r, 0]);
-            return returnValues;
+            return (returnValues, nonHiddenRowCount);
         }
 
         private bool IsHiddenColumn(int column)
         {
-            workbookView.GetLock();
-            bool isHidden = workbookView.ActiveWorksheet.Cells[0, column].EntireColumn.Hidden;
-            workbookView.ReleaseLock();
-            return isHidden;
+            return workbookView.WithLock(() => workbookView.ActiveWorksheet.Cells[0, column].EntireColumn.Hidden);
         }
 
-        DateTime[] IGetCells.GetCellDateValues(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
+        (DateTime[], int) IGetCells.GetCellDateValues(int column, int firstRow, int lastRow)
         {
-            object[,] values = GetCellObjects(column, firstRow, lastRow, out nonHiddenRowCount);
+            (object[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
 
             DateTime[] returnValues = new DateTime[nonHiddenRowCount];
             for (int r = 0; r < nonHiddenRowCount; r++)
                 returnValues[r] = ToCellDateValue(values[r, 0]);
-            return returnValues;
+            return (returnValues, nonHiddenRowCount);
         }
 
         /// <summary>
@@ -986,11 +902,10 @@ namespace StatsDirect.UI
         /// <param name="column">The grid column (indexed from 0) from which to obtain the values</param>
         /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
-        /// <returns></returns>
-        string[] IGetCells.GetCellTexts(int column, int firstRow, int lastRow, out int nonHiddenRowCount)
+        /// <returns>(dispplay strings, hidden row count)</returns>
+        (string[], int) IGetCells.GetCellTexts(int column, int firstRow, int lastRow)
         {
-            workbookView.GetLock();
-            try
+            return workbookView.WithLock(() =>
             {
                 string[] returnedValues = new string[lastRow - firstRow + 1];
                 int validRows = 0;
@@ -1000,13 +915,8 @@ namespace StatsDirect.UI
                     if (!hidden)
                         returnedValues[validRows++] = workbookView.ActiveWorksheet.Cells[firstRow + i, column].Text;
                 }
-                nonHiddenRowCount = validRows;
-                return returnedValues;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+                return (returnedValues, validRows);
+            });
         }
 
         /// <summary>
@@ -1041,10 +951,11 @@ namespace StatsDirect.UI
                 WindowInformation info = WindowInformation;
                 string prefix = Text;
                 List<Pane> panes = new List<Pane>();
-                workbookView.ActiveWorkbookSet.GetLock();
-                foreach (IWorksheet sheet in workbookView.ActiveWorkbook.Worksheets)
-                    panes.Add(new Pane(prefix + " " + sheet.Name, info, sheet.Name));
-                workbookView.ActiveWorkbookSet.ReleaseLock();
+                workbookView.WithLock(() =>
+                {
+                    foreach (IWorksheet sheet in workbookView.ActiveWorkbook.Worksheets)
+                        panes.Add(new Pane(prefix + " " + sheet.Name, info, sheet.Name));
+                });
                 panes.Add(new Pane("New sheet in " + prefix, info, null));
                 return panes;
             }
@@ -1059,8 +970,7 @@ namespace StatsDirect.UI
         bool IGetCells.IsFormattedLikeATitle(int columnIndex, int rowIndex)
         {
             // TODO: Cross-workbook cell selections
-            workbookView.GetLock();
-            try
+            return workbookView.WithLock(() =>
             {
                 IWorksheet worksheet = workbookView.ActiveWorksheet;
                 IRange cell = worksheet.Range[rowIndex, columnIndex];
@@ -1071,32 +981,29 @@ namespace StatsDirect.UI
                     return false;
                 string v = oV.ToString();
                 return v.StartsWith("\"") || v.StartsWith("'");
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         public override bool SelectPane(Pane pane)
         {
             bool succeeded = true;
-            workbookView.ActiveWorkbookSet.GetLock();
-            if (null == pane || null == pane.Tag)
+            workbookView.ActiveWorkbookSet.WithLock(() =>
             {
-                // New pane
-                IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets.Add();
-                workbookView.ActiveSheet = worksheet;
-            }
-            else
-            {
-                // Existing pane, selected by name.  If the name doesn't exist any more, return false.
-                string sheetName = (string)pane.Tag;
-                IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
-                succeeded = null != worksheet;
-                workbookView.ActiveSheet = worksheet;
-            }
-            workbookView.ActiveWorkbookSet.ReleaseLock();
+                if (null == pane || null == pane.Tag)
+                {
+                    // New pane
+                    IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets.Add();
+                    workbookView.ActiveSheet = worksheet;
+                }
+                else
+                {
+                    // Existing pane, selected by name.  If the name doesn't exist any more, return false.
+                    string sheetName = (string)pane.Tag;
+                    IWorksheet worksheet = workbookView.ActiveWorkbook.Worksheets[sheetName];
+                    succeeded = null != worksheet;
+                    workbookView.ActiveSheet = worksheet;
+                }
+            });
             return succeeded;
         }
 
@@ -1106,11 +1013,11 @@ namespace StatsDirect.UI
             {
                 WindowInformation info = WindowInformation;
                 string prefix = Text;
-                workbookView.ActiveWorkbookSet.GetLock();
-                IWorksheet sheet = workbookView.ActiveWorksheet;
-                Pane pane = new Pane(prefix + " " + sheet.Name, info, sheet.Name);
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-                return pane;
+                return workbookView.ActiveWorkbookSet.WithLock(() =>
+                {
+                    IWorksheet sheet = workbookView.ActiveWorksheet;
+                    return new Pane(prefix + " " + sheet.Name, info, sheet.Name);
+                });
             }
         }
 
@@ -1168,17 +1075,12 @@ namespace StatsDirect.UI
                 // Show the dialog
                 using (PageSetupDialog pageSetupDialog = new PageSetupDialog())
                 {
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         // Pull settings into the page setup dialog
                         pageSetupDialog.PageSettings = new System.Drawing.Printing.PageSettings { Color = !pageSetup.BlackAndWhite, Landscape = pageSetup.Orientation == PageOrientation.Landscape, Margins = { Top = PointsToHundredths(pageSetup.TopMargin), Bottom = PointsToHundredths(pageSetup.BottomMargin), Left = PointsToHundredths(pageSetup.LeftMargin), Right = PointsToHundredths(pageSetup.RightMargin) } };
                         // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
 
                     pageSetupDialog.AllowOrientation = true;
                     pageSetupDialog.AllowMargins = true;
@@ -1187,8 +1089,7 @@ namespace StatsDirect.UI
                     if (res == DialogResult.OK)
                     {
                         // Save settings into SSG's sheet settings
-                        workbookView.GetLock();
-                        try
+                        workbookView.WithLock(() =>
                         {
                             pageSetup.BlackAndWhite = !pageSetupDialog.PageSettings.Color;
                             pageSetup.Orientation = pageSetupDialog.PageSettings.Landscape ? PageOrientation.Landscape : PageOrientation.Portrait;
@@ -1197,11 +1098,7 @@ namespace StatsDirect.UI
                             pageSetup.LeftMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Left);
                             pageSetup.RightMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Right);
                             // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
-                        }
-                        finally
-                        {
-                            workbookView.ReleaseLock();
-                        }
+                        });
                     }
                 }
             }
@@ -1240,7 +1137,7 @@ namespace StatsDirect.UI
 
         private void InsertSheet()
         {
-            LockWorkbookAnd(() => workbookView.ActiveWorksheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet));
+            workbookView.WithLock(() => workbookView.ActiveWorksheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet));
         }
 
         private void rowToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1250,8 +1147,7 @@ namespace StatsDirect.UI
 
         private void InsertRow()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireColumns)
@@ -1262,11 +1158,7 @@ namespace StatsDirect.UI
 
                 currentRange = currentRange.EntireRow;
                 currentRange.Insert();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void columnToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1276,8 +1168,7 @@ namespace StatsDirect.UI
 
         private void InsertColumn()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireRows)
@@ -1288,11 +1179,7 @@ namespace StatsDirect.UI
 
                 currentRange = currentRange.EntireColumn;
                 currentRange.Insert();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void cellsToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -1307,8 +1194,7 @@ namespace StatsDirect.UI
                 frm.ShowDialog(this);
                 if (!frm.UserCancelled)
                 {
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         if (frm.IsEntire)
                         {
@@ -1338,11 +1224,7 @@ namespace StatsDirect.UI
                                 return true;
                             }));
                         }
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
                 }
             }
         }
@@ -1354,17 +1236,12 @@ namespace StatsDirect.UI
 
         private void SheetSettings()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IWorkbookSet workbookSet = workbookView.ActiveWorkbookSet;
                 WorkbookExplorer explorer = new WorkbookExplorer(workbookSet) { Text = "Sheet settings" };
                 explorer.Show(workbookView);
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void findToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1400,17 +1277,12 @@ namespace StatsDirect.UI
 
         private void GoToCell()
         {
-            try
+            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            workbookView.WithLock(() =>
             {
-                string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
-                workbookView.GetLock();
                 if (null != cell)
                     workbookView.ActiveWorksheet.Cells[cell].Activate();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void clearSelectionToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1437,8 +1309,7 @@ namespace StatsDirect.UI
                 frm.ShowDialog(this);
                 if (!frm.UserCancelled)
                 {
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         if (frm.IsEntire)
                         {
@@ -1468,11 +1339,7 @@ namespace StatsDirect.UI
                                 return true;
                             }));
                         }
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
                 }
             }
 
@@ -1485,16 +1352,11 @@ namespace StatsDirect.UI
 
         private void DeleteColumn()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection.EntireColumn;
                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(currentRange, "Delete column", () => { currentRange.Delete(); return true; }));
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void deleteRowToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1504,16 +1366,11 @@ namespace StatsDirect.UI
 
         private void DeleteRow()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection.EntireRow;
                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(currentRange, "Delete row", () => { currentRange.Delete(); return true; }));
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1525,17 +1382,7 @@ namespace StatsDirect.UI
         {
             bool shouldDelete = SdApplication.SoleInstance.Query("This will delete the current sheet. You cannot undo this operation. Are you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
-            {
-                workbookView.GetLock();
-                try
-                {
-                    workbookView.ActiveWorksheet.Delete();
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
-            }
+                workbookView.WithLock(() => workbookView.ActiveWorksheet.Delete());
         }
 
         private void describeColumnDataToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1550,16 +1397,11 @@ namespace StatsDirect.UI
                 // This describes the column.  If there's not a column selection... select it!
                 if (workbookView.RangeSelection.CellCount < 2)
                 {
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         IRange cellSelection = workbookView.RangeSelection;
                         cellSelection.EntireColumn.Select();
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
                 }
                 DoOperation("QuickSummary");
             }
@@ -1576,15 +1418,7 @@ namespace StatsDirect.UI
 
         private void EditFillDown()
         {
-            workbookView.GetLock();
-            try
-            {
-                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill down", () => { workbookView.RangeSelection.FillDown(); return true; }));
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            workbookView.WithLock(() => workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill down", () => { workbookView.RangeSelection.FillDown(); return true; })));
         }
 
         private void fillRightToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1594,15 +1428,7 @@ namespace StatsDirect.UI
 
         private void EditFillRight()
         {
-            workbookView.GetLock();
-            try
-            {
-                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill right", () => { workbookView.RangeSelection.FillRight(); return true; }));
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            workbookView.WithLock(() => workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill right", () => { workbookView.RangeSelection.FillRight(); return true; })));
         }
 
         private void rowHideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1612,16 +1438,11 @@ namespace StatsDirect.UI
 
         private void HideRow()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection.EntireRow;
                 currentRange.Hidden = true;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void rowUnhideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1631,16 +1452,11 @@ namespace StatsDirect.UI
 
         private void UnhideRow()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection.EntireRow;
                 currentRange.Hidden = false;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void columnHideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1650,16 +1466,11 @@ namespace StatsDirect.UI
 
         private void HideColumn()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection.EntireColumn;
                 currentRange.Hidden = true;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void columnUnhideToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1669,16 +1480,11 @@ namespace StatsDirect.UI
 
         private void UnhideColumn()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IRange currentRange = workbookView.RangeSelection.EntireColumn;
                 currentRange.Hidden = false;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void freezePanesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1688,8 +1494,7 @@ namespace StatsDirect.UI
 
         private void FreezePanes()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IWorksheet worksheet = workbookView.ActiveWorksheet;
                 IWorksheetWindowInfo info = worksheet.WindowInfo;
@@ -1705,12 +1510,7 @@ namespace StatsDirect.UI
                     // Freeze the panes.  Defaults to freezing at the current row/column, so no need to set that before freezing.
                     info.FreezePanes = true;
                 }
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
-
+            });
         }
 
         private void autoFitWidthToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1720,15 +1520,7 @@ namespace StatsDirect.UI
 
         private void AutoFitWidth()
         {
-            workbookView.GetLock();
-            try
-            {
-                workbookView.RangeSelection.Columns.AutoFit();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            workbookView.WithLock(() => workbookView.RangeSelection.Columns.AutoFit());
         }
 
         private void defaultFontToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1748,16 +1540,11 @@ namespace StatsDirect.UI
             DialogResult result = dlg.ShowDialog(this);
             if (DialogResult.OK == result)
             {
-                workbookView.GetLock();
-                try
+                workbookView.WithLock(() =>
                 {
                     workbookView.ActiveWorkbookSet.DefaultFontName = dlg.Font.FontFamily.Name;
                     workbookView.ActiveWorkbookSet.DefaultFontSize = dlg.Font.SizeInPoints;
-                }
-                finally
-                {
-                    workbookView.ReleaseLock();
-                }
+                });
                 Properties.Settings.Default.DefaultWorkbookFont = Utilities.Utilities.SaveStringFromFont(dlg.Font);
                 Properties.Settings.Default.Save();
             }
@@ -1770,16 +1557,11 @@ namespace StatsDirect.UI
 
         private void LockSheet()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 workbookView.ActiveWorksheet.ProtectContents = !workbookView.ActiveWorksheet.ProtectContents;
                 lockSheetToolStripMenuItem.Checked = workbookView.ActiveWorksheet.ProtectContents;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void workbookView_ActiveTabChanged(object sender, ActiveTabChangedEventArgs e)
@@ -1894,8 +1676,7 @@ namespace StatsDirect.UI
 
         private void InsertComment()
         {
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 if (null == workbookView.ActiveCell.Comment)
                 {
@@ -1903,11 +1684,7 @@ namespace StatsDirect.UI
                 }
                 // By now, the comment is known to exist.
                 workbookView.ActiveCell.Comment.Visible = true;
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         private void goToContextMenuItem_Click(object sender, EventArgs e)
@@ -1932,8 +1709,7 @@ namespace StatsDirect.UI
             }
 
             // If we get here, no selection is occurring
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 IComment comment = workbookView.ActiveCell.Comment;
                 insertCommentContextMenuItem.Visible = null == comment;
@@ -1941,11 +1717,7 @@ namespace StatsDirect.UI
                 showCommentContextMenuItem.Visible = null != comment && !comment.Visible;
                 hideCommentContextMenuItem.Visible = null != comment && comment.Visible;
                 editCommentContextMenuItem.Visible = false; // null != comment;
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         private void deleteCommentContextMenuItem_Click(object sender, EventArgs e)
@@ -1955,18 +1727,11 @@ namespace StatsDirect.UI
 
         private void DeleteComment()
         {
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 if (null != workbookView.ActiveCell.Comment)
-                {
                     workbookView.ActiveCell.ClearComments();
-                }
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         private void showCommentContextMenuItem_Click(object sender, EventArgs e)
@@ -1976,18 +1741,11 @@ namespace StatsDirect.UI
 
         private void ShowComment()
         {
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 if (null != workbookView.ActiveCell.Comment)
-                {
                     workbookView.ActiveCell.Comment.Visible = true;
-                }
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         private void editCommentContextMenuItem_Click(object sender, EventArgs e)
@@ -1997,18 +1755,13 @@ namespace StatsDirect.UI
 
         private void EditComment()
         {
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 if (null != workbookView.ActiveCell.Comment)
                 {
                     // TODO: Do something!
                 }
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         private void hideCommentContextMenuItem_Click(object sender, EventArgs e)
@@ -2018,18 +1771,13 @@ namespace StatsDirect.UI
 
         private void HideComment()
         {
-            workbookView.ActiveWorkbookSet.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 if (null != workbookView.ActiveCell.Comment)
                 {
                     workbookView.ActiveCell.Comment.Visible = false;
                 }
-            }
-            finally
-            {
-                workbookView.ActiveWorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2085,18 +1833,13 @@ namespace StatsDirect.UI
 
         private void ShowRangeExplorer()
         {
-            workbookView.GetLock();
-            try
+            workbookView.WithLock(() =>
             {
                 const RangeExplorerCategoryFlags categoryFlags = RangeExplorerCategoryFlags.All;
                 IWorkbookSet workbookSet = workbookView.ActiveWorkbookSet;
                 RangeExplorer explorer = new RangeExplorer(workbookSet, categoryFlags);
                 explorer.Show(workbookView);
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            });
         }
 
         private void summaryContextMenuItem_Click(object sender, EventArgs e)
@@ -2107,15 +1850,8 @@ namespace StatsDirect.UI
         internal void SetUnsavedName(string childName)
         {
             Text = childName;
-            workbookView.GetLock();
-            try
-            {
-                workbookView.ActiveWorkbook.FullName = childName;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            workbookView.WithLock(() =>
+                workbookView.ActiveWorkbook.FullName = childName);
         }
 
         private void exportToRToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2136,15 +1872,7 @@ namespace StatsDirect.UI
 
         internal void ToggleFilters()
         {
-            workbookView.GetLock();
-            try
-            {
-                workbookView.RangeSelection.AutoFilter();
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            workbookView.WithLock(() => workbookView.RangeSelection.AutoFilter());
         }
 
         private void renameWorksheetContextMenuItem_Click(object sender, EventArgs e)
@@ -2155,30 +1883,13 @@ namespace StatsDirect.UI
         private void RenameWorksheet()
         {
             string currentWorksheetName = null;
-            workbookView.GetLock();
-            try
-            {
-                currentWorksheetName = workbookView.ActiveSheet.Name;
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
-            }
+            workbookView.WithLock(() =>
+                currentWorksheetName = workbookView.ActiveSheet.Name);
             if (null != currentWorksheetName)
             {
                 string newWorksheetName = SdApplication.SoleInstance.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
                 if (!string.IsNullOrWhiteSpace(newWorksheetName))
-                {
-                    workbookView.GetLock();
-                    try
-                    {
-                        workbookView.ActiveSheet.Name = newWorksheetName;
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
-                }
+                    workbookView.WithLock(() => workbookView.ActiveSheet.Name = newWorksheetName);
             }
         }
 

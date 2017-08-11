@@ -31,8 +31,7 @@ namespace StatsDirect.UI
             dt.Columns.Add("Offset", typeof(int));
             dt.Columns.Add("Name", typeof(string));
             dt.Rows.Add(-1, "<none>");
-            range.WorkbookSet.GetLock();
-            try
+            range.WorkbookSet.WithLock(() =>
             {
                 for (int col = 0; col < range.ColumnCount; col++)
                 {
@@ -50,11 +49,7 @@ namespace StatsDirect.UI
                     // Add the item to the drop-down
                     dt.Rows.Add(col, columnName);
                 }
-            }
-            finally
-            {
-                range.WorkbookSet.ReleaseLock();
-            }
+            });
 
             SortBy.DataSource = dt;
             SortBy.DisplayMember = "Name";
@@ -92,18 +87,13 @@ namespace StatsDirect.UI
                 }
             }
 
-            range.WorkbookSet.GetLock();
-            try
+            range.WorkbookSet.WithLock(() =>
             {
                 IRange dataRange = chkUseHeaders.Checked ? range.Range[1, 0, range.RowCount - 1, range.ColumnCount - 1] : range;
                 SortCommand sortCommand = new SortCommand(dataRange, keys.ToArray());
                 workbookView.ActiveCommandManager.Execute(sortCommand);
                 // sortCommand.Dispose(); must not be called, otherwise an Undo will fail as the command has already been disposed.
-            }
-            finally
-            {
-                range.WorkbookSet.ReleaseLock();
-            }
+            });
         }
 
         #endregion

@@ -162,14 +162,14 @@ namespace StatsDirect.UI
         internal string[] GetTexts()
         {
             if (null == cachedTexts)
-                cachedTexts = cellGetter.GetCellTexts(ColumnIndex, RowIndex, RowIndex + RowCount - 1, out nonHiddenRowCount);
+                (cachedTexts, nonHiddenRowCount) = cellGetter.GetCellTexts(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
             return cachedTexts;
         }
 
         internal string[] GetTextValues()
         {
             if (null == cachedTextValues)
-                cachedTextValues = cellGetter.GetCellTexts(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenDataRowCount);
+                (cachedTextValues, nonHiddenDataRowCount) = cellGetter.GetCellTexts(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
             return cachedTextValues;
         }
 
@@ -180,7 +180,9 @@ namespace StatsDirect.UI
 
         internal DateTime[] GetDateValues()
         {
-            return cellGetter.GetCellDateValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenDataRowCount);
+            DateTime[] values;
+            (values, nonHiddenDataRowCount) = cellGetter.GetCellDateValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
+            return values;
         }
 
         /// <summary>
@@ -189,21 +191,21 @@ namespace StatsDirect.UI
         internal double[] GetDataValues()
         {
             if (null == cachedDataValues)
-                cachedDataValues = cellGetter.GetCellValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1, out nonHiddenDataRowCount);
+                (cachedDataValues, nonHiddenDataRowCount) = cellGetter.GetCellValues(ColumnIndex, GridFirstDataRow, GridFirstDataRow + DataRows - 1);
             return cachedDataValues;
         }
 
         internal string[] GetFormulae()
         {
             if (null == cachedFormulae)
-                cachedFormulae = cellGetter.GetCellFormulae(ColumnIndex, RowIndex, RowIndex + RowCount - 1, out nonHiddenRowCount);
+                (cachedFormulae, nonHiddenRowCount) = cellGetter.GetCellFormulae(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
             return cachedFormulae;
         }
 
         internal object[,] GetObjects()
         {
             if (null == cachedObjects)
-                cachedObjects = cellGetter.GetCellObjects(ColumnIndex, RowIndex, RowIndex + RowCount - 1, out nonHiddenRowCount);
+                (cachedObjects, nonHiddenRowCount) = cellGetter.GetCellObjects(ColumnIndex, RowIndex, RowIndex + RowCount - 1);
             return cachedObjects;
         }
 

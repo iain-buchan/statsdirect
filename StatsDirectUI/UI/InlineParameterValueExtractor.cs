@@ -177,21 +177,22 @@ namespace StatsDirect.UI
             WorkbookView grid = (WorkbookView)Control;
             IWorksheet sheet = grid.ActiveWorksheet;
             // TODO: Force end edit if one is current
-            grid.ActiveWorkbookSet.GetLock();
-            IRange usedRange = sheet.UsedRange;
             DataFrame frame = new DataFrame();
-            for (int col = 0; col < usedRange.ColumnCount; col++)
+            grid.WithLock(() =>
             {
-                DoubleVariable v = new DoubleVariable(usedRange.RowCount, string.Empty);
-                frame.Variables.Add(v);
-                for (int row = 0; row < usedRange.RowCount; row++)
+                IRange usedRange = sheet.UsedRange;
+                for (int col = 0; col < usedRange.ColumnCount; col++)
                 {
-                    object rawValue = usedRange.Cells[row, col].Value;
-                    double parsedValue = frmSpreadsheetGear.ToCellValue(rawValue);
-                    v.Data[row] = parsedValue;
+                    DoubleVariable v = new DoubleVariable(usedRange.RowCount, string.Empty);
+                    frame.Variables.Add(v);
+                    for (int row = 0; row < usedRange.RowCount; row++)
+                    {
+                        object rawValue = usedRange.Cells[row, col].Value;
+                        double parsedValue = frmSpreadsheetGear.ToCellValue(rawValue);
+                        v.Data[row] = parsedValue;
+                    }
                 }
-            }
-            grid.ActiveWorkbookSet.ReleaseLock();
+            });
 
             if (DoValidation)
             {
@@ -280,18 +281,13 @@ namespace StatsDirect.UI
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                 IWorksheet worksheet = grid.ActiveWorksheet;
-                grid.GetLock();
-                object value;
-                try
+                object value = grid.WithLock(() =>
                 {
-                    value = worksheet.UsedRange.Value;
-                    if (null != value && !value.GetType().IsArray)
-                        value = new[,] { { value } };
-                }
-                finally
-                {
-                    grid.ReleaseLock();
-                }
+                    object v = worksheet.UsedRange.Value;
+                    if (null != v && !v.GetType().IsArray)
+                        v = new[,] { { v } };
+                    return v;
+                });
 
                 if (null != value)
                 {
@@ -302,9 +298,7 @@ namespace StatsDirect.UI
                     {
                         DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "Column " + (col + 1).ToString());
                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
-                        {
                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
-                        }
                         frame.Variables.Add(dv);
                     }
                     OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, frame);
@@ -316,18 +310,13 @@ namespace StatsDirect.UI
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                 IWorksheet worksheet = grid.ActiveWorksheet;
-                grid.GetLock();
-                object value;
-                try
+                object value = grid.WithLock(() =>
                 {
-                    value = worksheet.UsedRange.Value;
-                    if (null != value && !value.GetType().IsArray)
-                        value = new[,] { { value } };
-                }
-                finally
-                {
-                    grid.ReleaseLock();
-                }
+                    object v = worksheet.UsedRange.Value;
+                    if (null != v && !v.GetType().IsArray)
+                        v = new[,] { { v } };
+                    return v;
+                });
                 if (null != value)
                 {
                     object[,] ary = (object[,])value;
@@ -337,9 +326,7 @@ namespace StatsDirect.UI
                     {
                         DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
-                        {
                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
-                        }
                         frame.Variables.Add(dv);
                     }
                     OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, frame);

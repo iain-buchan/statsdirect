@@ -3611,8 +3611,7 @@ namespace StatsDirect.UI
                 frm.ShowDialog(this);
                 if (!frm.UserCancelled)
                 {
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         if (frm.IsEntire)
                         {
@@ -3629,11 +3628,7 @@ namespace StatsDirect.UI
                         {
                             workbookView.RangeSelection.Insert(frm.InsertShiftDirection);
                         }
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
                 }
             }
         }
@@ -3660,8 +3655,7 @@ namespace StatsDirect.UI
                 frm.ShowDialog(this);
                 if (!frm.UserCancelled)
                 {
-                    workbookView.GetLock();
-                    try
+                    workbookView.WithLock(() =>
                     {
                         if (frm.IsEntire)
                         {
@@ -3678,11 +3672,7 @@ namespace StatsDirect.UI
                         {
                             workbookView.RangeSelection.Delete(frm.DeleteShiftDirection);
                         }
-                    }
-                    finally
-                    {
-                        workbookView.ReleaseLock();
-                    }
+                    });
                 }
             }
 
@@ -3725,19 +3715,17 @@ namespace StatsDirect.UI
             try
             {
                 string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
-                workbookView.GetLock();
-                if (null != cell)
+                workbookView.WithLock(() =>
                 {
-                    workbookView.ActiveWorksheet.Cells[cell].Activate();
-                }
+                    if (null != cell)
+                    {
+                        workbookView.ActiveWorksheet.Cells[cell].Activate();
+                    }
+                });
             }
             catch (Exception ex)
             {
                 SdApplication.SoleInstance.Warning(ex.Message, "Go to cell");
-            }
-            finally
-            {
-                workbookView.ReleaseLock();
             }
         }
 
