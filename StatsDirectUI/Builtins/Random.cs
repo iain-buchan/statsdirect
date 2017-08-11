@@ -1,434 +1,377 @@
-using StatsDirect.Data; 
-using StatsDirect.Numerics; 
-using StatsDirect.Templates; 
-using StatsDirect.Utilities; 
+using StatsDirect.Data;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 using System;
 namespace StatsDirect.Builtins
 {
-    public static class Random  
-    { 
-        private const string BADPARA = "The parameters are not acceptable."; 
-        
-        public static DataFrame rndPoisson( ITemplateHost host, int rows, int cols, double XM, int Seed ) 
-        { 
-            PoissonRNG RNG = new PoissonRNG(); 
-            RNG.Seed( Seed, null ); 
-            string ti = "Poisson (seed " +  Seed.ToString() + ", mean " +  XM.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenPoisson( XM ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndUni( ITemplateHost host, int rows, int cols, double a, double b, bool isCount, int Seed ) 
-        { 
-            UniformXRNG RNG = new UniformXRNG(); 
-            RNG.Seed( Seed, null ); 
-            DataFrame outputFrame = new DataFrame(); 
-            if ( a != Constant.MISSING & b != Constant.MISSING ) 
-            { 
-                string ti = "Uniform " + Math.Min( a, b ).ToString() + " to " + Math.Max( a, b ).ToString() + " (seed " +  Seed.ToString() + ")"; 
-                for ( int C=0; C <= cols - 1; C++ ) 
-                { 
-                    DoubleVariable v = new DoubleVariable( rows, ti ); 
-                    outputFrame.Variables.Add( v ); 
-                    for ( int N=0; N <= rows - 1; N++ ) 
-                    { 
-                        v.SetData( N, RNG.GenUniAB( a, b, isCount ) ); 
-                    } 
-                } 
-            } 
-            else 
-            { 
-                string ti = "Uniform 0 to 1 (seed " +  Seed.ToString() + ")"; 
-                for ( int C=0; C <= cols - 1; C++ ) 
-                { 
-                    DoubleVariable v = new DoubleVariable( rows, ti ); 
-                    outputFrame.Variables.Add( v ); 
-                    for ( int N=0; N <= rows - 1; N++ ) 
-                    { 
-                        v.Data[N] = RNG.GenUni(); 
-                    } 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndBino( ITemplateHost host, int rows, int cols, int nn, double PP, int Seed ) 
-        { 
-            BinomialRND RNG = new BinomialRND(); 
-            RNG.Seed( Seed ); 
-            double nx = Convert.ToDouble( nn ); 
-            string ti = "Binomial (seed " +  Seed.ToString() + ", n = " +  nn.ToString() + ", p = " +  PP.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenBinom( nx, PP ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndExpo( ITemplateHost host, int rows, int cols, double M, int Seed ) 
-        { 
-            ExponentialRNG RNG = new ExponentialRNG();
+    public static class Random
+    {
+        private const string BADPARA = "The parameters are not acceptable.";
 
-            const string mx = "Exponential deviates"; 
-            if ( M <= 0.0 | rows <= 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            RNG.Seed( Seed ); 
-            string ti = "Exponential (seed " +  Seed.ToString() + ", rate = " +  M.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.Data[N] = RNG.GenExp() / M; 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndF( ITemplateHost host, int rows, int cols, double dfn, double dfd, int Seed ) 
+        public static DataFrame RndPoisson(int rows, int cols, double xm, int seed)
         {
-            const string mx = "F deviates"; 
-            if ( dfn <= 0.0 | dfd <= 0.0 | rows <= 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            GammaRNG RNG = new GammaRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "F (seed " +  Seed.ToString() + ", dfn = " +  dfn.ToString() + ", dfd = " +  dfd.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenF( dfn, dfd ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndGeom( ITemplateHost host, int rows, int cols, double a, int Seed ) 
-        { 
-            const string mx = "Geometric deviates"; 
-            if ( rows <= 0 | a <= 0.0 | a > 1.0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            PoissonRNG RNG = new PoissonRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Geometric (seed " +  Seed.ToString() + ", P = " +  a.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenGeom( a ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndNegBin( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
+            PoissonRNG rng = new PoissonRNG();
+            rng.Seed(seed, null);
+            string ti = $"Poisson (seed {seed}, mean {xm})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenPoisson(xm);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndUni(int rows, int cols, double a, double b, bool isCount, int seed)
         {
-            const string mx = "Negative binomial deviates"; 
-            if ( rows <= 0 | b <= 0.0 | b > 1.0 | a <= 0.0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            PoissonRNG RNG = new PoissonRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Negative binomial (seed " +  Seed.ToString() + ", size = " +  a.ToString() + ", P = " +  b.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenNegbin( a, b ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndBeta( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
+            UniformXRNG rng = new UniformXRNG();
+            rng.Seed(seed, null);
+            DataFrame outputFrame = new DataFrame();
+            if (a != Constant.MISSING && b != Constant.MISSING)
+            {
+                string ti = $"Uniform {Math.Min(a, b)} to {Math.Max(a, b)} (seed {seed})";
+                for (int c = 0; c < cols; c++)
+                {
+                    DoubleVariable v = new DoubleVariable(rows, ti);
+                    outputFrame.Variables.Add(v);
+                    for (int n = 0; n < rows; n++)
+                        v.SetData(n, rng.GenUniAB(a, b, isCount));
+                }
+            }
+            else
+            {
+                string ti = $"Uniform 0 to 1 (seed {seed})";
+                for (int c = 0; c < cols; c++)
+                {
+                    DoubleVariable v = new DoubleVariable(rows, ti);
+                    outputFrame.Variables.Add(v);
+                    for (int n = 0; n < rows; n++)
+                        v.Data[n] = rng.GenUni();
+                }
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndBino(int rows, int cols, int nn, double pp, int seed)
         {
-            const string mx = "beta deviates"; 
-            if ( rows <= 0 | b <= 0.0 | a <= 0.0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            BetaRNG RNG = new BetaRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Beta (seed " +  Seed.ToString() + ", a = " +  a.ToString() + ", b = " +  b.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenBeta( a, b ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndCauchy( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
+            BinomialRND rng = new BinomialRND();
+            rng.Seed(seed);
+            double nx = Convert.ToDouble(nn);
+            string ti = $"Binomial (seed {seed}, n = {nn}, p = {pp})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenBinom(nx, pp);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndExpo(ITemplateHost host, int rows, int cols, double m, int seed)
         {
-            const string mx = "Cauchy deviates"; 
-            if ( rows <= 0 | b < 0.0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            UniformXRNG RNG = new UniformXRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Cauchy (seed " +  Seed.ToString() + ", loc = " +  a.ToString() + ", scl = " +  b.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenCauchy( a, b ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndWeibull( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
+            ExponentialRNG rng = new ExponentialRNG();
+
+            const string mx = "Exponential deviates";
+            if (m <= 0.0 || rows <= 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            rng.Seed(seed);
+            string ti = $"Exponential (seed {seed}, rate = {m})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenExp() / m;
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndF(ITemplateHost host, int rows, int cols, double dfn, double dfd, int seed)
         {
-            const string mx = "Weibull deviates"; 
-            if ( rows <= 0 | a <= 0.0 | b <= 0.0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            UniformXRNG RNG = new UniformXRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Weibull (seed " +  Seed.ToString() + ", shp = " +  a.ToString() + ", scl = " +  b.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenWeibull( a, b ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndLogit( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
+            const string mx = "F deviates";
+            if (dfn <= 0.0 || dfd <= 0.0 || rows <= 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            GammaRNG rng = new GammaRNG();
+            rng.Seed(seed);
+            string ti = $"F (seed {seed}, dfn = {dfn}, dfd = {dfd})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenF(dfn, dfd);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndGeom(ITemplateHost host, int rows, int cols, double a, int seed)
         {
-            const string mx = "Logistic deviates"; 
-            if ( rows <= 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            UniformXRNG RNG = new UniformXRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Logistic (seed " +  Seed.ToString() + ", loc = " +  a.ToString() + ", scl = " +  b.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenLogistic( a, b ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndT( ITemplateHost host, int rows, int cols, double df, int Seed ) 
+            const string mx = "Geometric deviates";
+            if (rows <= 0 || a <= 0.0 || a > 1.0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            PoissonRNG rng = new PoissonRNG();
+            rng.Seed(seed);
+            string ti = $"Geometric (seed {seed}, P = {a})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenGeom(a);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndNegBin(ITemplateHost host, int rows, int cols, double a, double b, int seed)
         {
-            const string mx = "Student t deviates"; 
-            if ( df <= 0.0 | rows <= 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            GammaRNG RNG = new GammaRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Student t (seed " +  Seed.ToString() + ", df = " +  df.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenT( df ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndChi( ITemplateHost host, int rows, int cols, double df, int Seed ) 
+            const string mx = "Negative binomial deviates";
+            if (rows <= 0 || b <= 0.0 || b > 1.0 || a <= 0.0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            PoissonRNG rng = new PoissonRNG();
+            rng.Seed(seed);
+            string ti = $"Negative binomial (seed {seed}, size = {a}, P = {b})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenNegbin(a, b);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndBeta(ITemplateHost host, int rows, int cols, double a, double b, int seed)
         {
-            const string mx = "Chi-square deviates"; 
-            if ( df <= 0.0 | rows <= 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            GammaRNG RNG = new GammaRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Chi-square (seed " +  Seed.ToString() + ", df = " +  df.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    double e = RNG.GenChiSq( df ); 
-                    if ( e == Constant.MISSING ) 
-                    { 
-                        host.Error( BADPARA, mx ); 
-                        return null; 
-                    } 
-                    v.SetData( N, e ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndGamma( ITemplateHost host, int rows, int cols, double a, double b, int Seed ) 
+            const string mx = "beta deviates";
+            if (rows <= 0 || b <= 0.0 || a <= 0.0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            BetaRNG rng = new BetaRNG();
+            rng.Seed(seed);
+            string ti = $"Beta (seed {seed}, a = {a}, b = {b})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenBeta(a, b);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndCauchy(ITemplateHost host, int rows, int cols, double a, double b, int seed)
         {
-            const string mx = "Gamma deviates"; 
-            if ( a <= 0.0 | rows <= 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            GammaRNG RNG = new GammaRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Gamma (seed " +  Seed.ToString() + ", A = " +  a.ToString() + ", B = " +  b.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenGamma( a, b ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndLogNorm( ITemplateHost host, int rows, int cols, double XM, double sd, int Seed ) 
-        { 
-            const string mx = "Lognormal deviates"; 
-            if ( sd < 0 ) 
-            { 
-                host.Error( BADPARA, mx ); 
-                return null; 
-            } 
-            
-            NormalRNG RNG = new NormalRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Lognormal (seed " +  Seed.ToString() + ", log mean = " +  XM.ToString() + ", log sd = " +  sd.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                // get mean and var of lognormal
-                // a = Exp(xm + sd * sd / 2#)
-                // b = Exp(2# * xm + 2# * sd * sd) - Exp(2# * xm + sd * sd)
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, Formatting.SafeExp( RNG.GenNorm( XM, sd ) ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        public static DataFrame rndNorm( ITemplateHost host, int rows, int cols, double XM, double sd, int Seed ) 
-        { 
-            NormalRNG RNG = new NormalRNG(); 
-            RNG.Seed( Seed ); 
-            string ti = "Normal (seed " +  Seed.ToString() + ", mean = " +  XM.ToString() + ", sd = " +  sd.ToString() + ")"; 
-            DataFrame outputFrame = new DataFrame(); 
-            for ( int C=0; C <= cols - 1; C++ ) 
-            { 
-                DoubleVariable v = new DoubleVariable( rows, ti ); 
-                outputFrame.Variables.Add( v ); 
-                for ( int N=0; N <= rows - 1; N++ ) 
-                { 
-                    v.SetData( N, RNG.GenNorm( XM, sd ) ); 
-                } 
-            } 
-            return outputFrame; 
-        } 
-        
-        
-        
-        
-        
-    } 
-    
-    
-} 
+            const string mx = "Cauchy deviates";
+            if (rows <= 0 || b < 0.0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            UniformXRNG rng = new UniformXRNG();
+            rng.Seed(seed);
+            string ti = $"Cauchy (seed {seed}, loc = {a}, scl = {b})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenCauchy(a, b);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndWeibull(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        {
+            const string mx = "Weibull deviates";
+            if (rows <= 0 || a <= 0.0 || b <= 0.0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            UniformXRNG rng = new UniformXRNG();
+            rng.Seed(seed);
+            string ti = $"Weibull (seed {seed}, shp = {a}, scl = {b})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenWeibull(a, b);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndLogit(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        {
+            const string mx = "Logistic deviates";
+            if (rows <= 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            UniformXRNG rng = new UniformXRNG();
+            rng.Seed(seed);
+            string ti = $"Logistic (seed {seed}, loc = {a}, scl = {b})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenLogistic(a, b);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndT(ITemplateHost host, int rows, int cols, double df, int seed)
+        {
+            const string mx = "Student t deviates";
+            if (df <= 0.0 || rows <= 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            GammaRNG rng = new GammaRNG();
+            rng.Seed(seed);
+            string ti = $"Student t (seed {seed}, df = {df})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenT(df);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndChi(ITemplateHost host, int rows, int cols, double df, int seed)
+        {
+            const string mx = "Chi-square deviates";
+            if (df <= 0.0 || rows <= 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            GammaRNG rng = new GammaRNG();
+            rng.Seed(seed);
+            string ti = $"Chi-square (seed {seed}, df = {df})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                {
+                    double e = rng.GenChiSq(df);
+                    if (e == Constant.MISSING)
+                    {
+                        host.Error(BADPARA, mx);
+                        return null;
+                    }
+                    v.Data[n] = e;
+                }
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndGamma(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        {
+            const string mx = "Gamma deviates";
+            if (a <= 0.0 || rows <= 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            GammaRNG rng = new GammaRNG();
+            rng.Seed(seed);
+            string ti = $"Gamma (seed {seed}, A = {a}, B = {b})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenGamma(a, b);
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndLogNorm(ITemplateHost host, int rows, int cols, double xm, double sd, int seed)
+        {
+            const string mx = "Lognormal deviates";
+            if (sd < 0)
+            {
+                host.Error(BADPARA, mx);
+                return null;
+            }
+
+            NormalRNG rng = new NormalRNG();
+            rng.Seed(seed);
+            string ti = $"Lognormal (seed {seed}, log mean = {xm}, log sd = {sd})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = Formatting.SafeExp(rng.GenNorm(xm, sd));
+            }
+            return outputFrame;
+        }
+
+        public static DataFrame RndNorm(int rows, int cols, double xm, double sd, int seed)
+        {
+            NormalRNG rng = new NormalRNG();
+            rng.Seed(seed);
+            string ti = $"Normal (seed {seed}, mean = {xm}, sd = {sd})";
+            DataFrame outputFrame = new DataFrame();
+            for (int c = 0; c < cols; c++)
+            {
+                DoubleVariable v = new DoubleVariable(rows, ti);
+                outputFrame.Variables.Add(v);
+                for (int n = 0; n < rows; n++)
+                    v.Data[n] = rng.GenNorm(xm, sd);
+            }
+            return outputFrame;
+        }
+    }
+}

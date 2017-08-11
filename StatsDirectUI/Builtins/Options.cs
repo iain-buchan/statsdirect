@@ -3,7 +3,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    class Options
+    static class Options
     {
         public static ParameterBag SetAnalysisOptions(ITemplateHost host, ParameterBag parameters)
         {

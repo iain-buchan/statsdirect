@@ -3660,13 +3660,9 @@ namespace StatsDirect.UI
                         if (frm.IsEntire)
                         {
                             if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
-                            {
                                 workbookView.RangeSelection.EntireColumn.Delete();
-                            }
                             else
-                            {
                                 workbookView.RangeSelection.EntireRow.Delete();
-                            }
                         }
                         else
                         {
@@ -3675,7 +3671,6 @@ namespace StatsDirect.UI
                     });
                 }
             }
-
         }
 
         private void clearContentsContextMenuItem_Click(object sender, EventArgs e)
@@ -3712,21 +3707,12 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            try
+            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            workbookView.WithLock(() =>
             {
-                string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
-                workbookView.WithLock(() =>
-                {
-                    if (null != cell)
-                    {
-                        workbookView.ActiveWorksheet.Cells[cell].Activate();
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.Warning(ex.Message, "Go to cell");
-            }
+                if (null != cell)
+                    workbookView.ActiveWorksheet.Cells[cell].Activate();
+            });
         }
 
         private void findAndReplaceContextMenuItem_Click(object sender, EventArgs e)

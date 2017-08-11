@@ -46,7 +46,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag FileImportReport(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag FileImportReport()
         {
             // import text to the active report
             using (OpenFileDialog openFileDialog = new OpenFileDialog())

@@ -1863,7 +1863,7 @@ namespace StatsDirect.Builtins
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndBeta(host, rows, cols, a, b, seed));
+            return WrapFrame("output", Random.RndBeta(host, rows, cols, a, b, seed));
         }
 
         public static ParameterBag ShtRndBinomial(ITemplateHost host, ParameterBag parameters)
@@ -1873,7 +1873,7 @@ namespace StatsDirect.Builtins
             int nn = parameters["nn"].AsInt32;
             double p = parameters["p"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndBino(host, rows, cols, nn, p, seed));
+            return WrapFrame("output", Random.RndBino(rows, cols, nn, p, seed));
         }
 
         public static ParameterBag ShtRndCauchy(ITemplateHost host, ParameterBag parameters)
@@ -1883,7 +1883,7 @@ namespace StatsDirect.Builtins
             double l = parameters["l"].AsDouble;
             double s = parameters["s"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndCauchy(host, rows, cols, l, s, seed));
+            return WrapFrame("output", Random.RndCauchy(host, rows, cols, l, s, seed));
         }
 
         public static ParameterBag ShtRndChiSquare(ITemplateHost host, ParameterBag parameters)
@@ -1892,7 +1892,7 @@ namespace StatsDirect.Builtins
             int rows = parameters["rows"].AsInt32;
             double df = parameters["df"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndChi(host, rows, cols, df, seed));
+            return WrapFrame("output", Random.RndChi(host, rows, cols, df, seed));
         }
 
         public static ParameterBag ShtRndExponential(ITemplateHost host, ParameterBag parameters)
@@ -1901,7 +1901,7 @@ namespace StatsDirect.Builtins
             int rows = parameters["rows"].AsInt32;
             double xm = parameters["xm"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndExpo(host, rows, cols, xm, seed));
+            return WrapFrame("output", Random.RndExpo(host, rows, cols, xm, seed));
         }
 
         public static ParameterBag ShtRndF(ITemplateHost host, ParameterBag parameters)
@@ -1911,7 +1911,7 @@ namespace StatsDirect.Builtins
             double dfn = parameters["dfn"].AsDouble;
             double dfd = parameters["dfd"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndF(host, rows, cols, dfn, dfd, seed));
+            return WrapFrame("output", Random.RndF(host, rows, cols, dfn, dfd, seed));
         }
 
         public static ParameterBag ShtRndGamma(ITemplateHost host, ParameterBag parameters)
@@ -1921,7 +1921,7 @@ namespace StatsDirect.Builtins
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndGamma(host, rows, cols, a, b, seed));
+            return WrapFrame("output", Random.RndGamma(host, rows, cols, a, b, seed));
         }
 
         public static ParameterBag ShtRndGeometric(ITemplateHost host, ParameterBag parameters)
@@ -1930,7 +1930,7 @@ namespace StatsDirect.Builtins
             int rows = parameters["rows"].AsInt32;
             double p = parameters["p"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndGeom(host, rows, cols, p, seed));
+            return WrapFrame("output", Random.RndGeom(host, rows, cols, p, seed));
         }
 
         public static ParameterBag ShtRndLogit(ITemplateHost host, ParameterBag parameters)
@@ -1940,7 +1940,7 @@ namespace StatsDirect.Builtins
             double mu = parameters["mu"].AsDouble;
             double sigma = parameters["sigma"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndLogit(host, rows, cols, mu, sigma, seed));
+            return WrapFrame("output", Random.RndLogit(host, rows, cols, mu, sigma, seed));
         }
 
         public static ParameterBag ShtRndLogNormal(ITemplateHost host, ParameterBag parameters)
@@ -1950,7 +1950,7 @@ namespace StatsDirect.Builtins
             double xm = parameters["xm"].AsDouble;
             double sd = parameters["sd"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndLogNorm(host, rows, cols, xm, sd, seed));
+            return WrapFrame("output", Random.RndLogNorm(host, rows, cols, xm, sd, seed));
         }
 
         public static ParameterBag ShtRndNegativeBinomial(ITemplateHost host, ParameterBag parameters)
@@ -1960,7 +1960,7 @@ namespace StatsDirect.Builtins
             double n = parameters["n"].AsDouble;
             double p = parameters["p"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndNegBin(host, rows, cols, n, p, seed));
+            return WrapFrame("output", Random.RndNegBin(host, rows, cols, n, p, seed));
         }
 
         public static ParameterBag ShtRndNormal(ITemplateHost host, ParameterBag parameters)
@@ -1970,7 +1970,7 @@ namespace StatsDirect.Builtins
             double xm = parameters["xm"].AsDouble;
             double sd = parameters["sd"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndNorm(host, rows, cols, xm, sd, seed));
+            return WrapFrame("output", Random.RndNorm(rows, cols, xm, sd, seed));
         }
 
         public static ParameterBag ShtRndPoisson(ITemplateHost host, ParameterBag parameters)
@@ -1979,7 +1979,7 @@ namespace StatsDirect.Builtins
             int rows = parameters["rows"].AsInt32;
             double xm = parameters["xm"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndPoisson(host, rows, cols, xm, seed));
+            return WrapFrame("output", Random.RndPoisson(rows, cols, xm, seed));
         }
 
         public static ParameterBag ShtRndT(ITemplateHost host, ParameterBag parameters)
@@ -1988,7 +1988,7 @@ namespace StatsDirect.Builtins
             int rows = parameters["rows"].AsInt32;
             double df = parameters["df"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndT(host, rows, cols, df, seed));
+            return WrapFrame("output", Random.RndT(host, rows, cols, df, seed));
         }
 
         public static ParameterBag ShtRndUniform01(ITemplateHost host, ParameterBag parameters)
@@ -1996,7 +1996,7 @@ namespace StatsDirect.Builtins
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndUni(host, rows, cols, Constant.MISSING, Constant.MISSING, false, seed));
+            return WrapFrame("output", Random.RndUni(rows, cols, Constant.MISSING, Constant.MISSING, false, seed));
         }
 
         public static ParameterBag ShtRndUniformAB(ITemplateHost host, ParameterBag parameters)
@@ -2007,7 +2007,7 @@ namespace StatsDirect.Builtins
             double b = parameters["b"].AsDouble;
             bool isCount = "count".Equals(parameters["numberType"].AsString);
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndUni(host, rows, cols, a, b, isCount, seed));
+            return WrapFrame("output", Random.RndUni(rows, cols, a, b, isCount, seed));
         }
 
         public static ParameterBag ShtRndWeibull(ITemplateHost host, ParameterBag parameters)
@@ -2017,7 +2017,7 @@ namespace StatsDirect.Builtins
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.rndWeibull(host, rows, cols, a, b, seed));
+            return WrapFrame("output", Random.RndWeibull(host, rows, cols, a, b, seed));
         }
 
         private static ParameterBag WrapFrame(string name, DataFrame frame)
@@ -2038,10 +2038,7 @@ namespace StatsDirect.Builtins
             foreach (double value in inputVariable.Data)
             {
                 if (value != Constant.MISSING)
-                {
-                    nx++;
-                    prk[nx] = value;
-                }
+                    prk[++nx] = value;
             }
             double[] r = new double[nx + 1];
             ExFortran.Rank(prk, r, 1, nx, q, out double tie);
