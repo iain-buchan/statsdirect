@@ -226,42 +226,44 @@
     <Compile Include="Charting\ChartPartSizer.cs" />
     <Compile Include="Charting\ChartPreferences.cs" />
     <Compile Include="Charting\AxisMaskMaker.cs" />
-    <Compile Include="Charting\CorrelationRowType.cs" />
-    <Compile Include="Charting\CoxPlotMode.cs" />
-    <Compile Include="Charting\CategoryAxisMasker.cs" />
+    <Compile Include="Charting\Enums\CorrelationRowType.cs" />
+    <Compile Include="Charting\Enums\CoxPlotMode.cs" />
+    <Compile Include="Charting\Log2AxisMasker.cs" />
+    <Compile Include="Charting\Scales\CategoryAxisMasker.cs" />
     <Compile Include="Charting\EmfCanvasFactory.cs" />
     <Compile Include="Charting\ICanvasFactory.cs" />
     <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\IChartSizable.cs" />
-    <Compile Include="Charting\DateAxisMasker.cs" />
+    <Compile Include="Charting\Scales\DateAxisMasker.cs" />
+    <Compile Include="Charting\Scales\Log10AxisMasker.cs" />
     <Compile Include="Templates\IAxisScaleVisitor.cs" />
     <Compile Include="Charting\IChartSizableVisitor.cs" />
     <Compile Include="Charting\Legend.cs" />
-    <Compile Include="Charting\DateAxisScaler.cs" />
+    <Compile Include="Charting\Scales\DateAxisScaler.cs" />
     <Compile Include="Charting\IAxisMasker.cs" />
     <Compile Include="Charting\Margin.cs" />
     <Compile Include="Charting\Renderer\AbstractChartRenderer.cs" />
     <Compile Include="Charting\Options\AgreementOptions.cs" />
     <Compile Include="Charting\Renderer\AgreementPairChartRenderer.cs" />
     <Compile Include="Charting\AxisDefinition.cs" />
-    <Compile Include="Charting\AxisMode.cs" />
+    <Compile Include="Charting\Enums\AxisMode.cs" />
     <Compile Include="Charting\AxisScalerFactory.cs" />
-    <Compile Include="Charting\AxisScales.cs" />
+    <Compile Include="Charting\Scales\AxisScales.cs" />
     <Compile Include="Charting\Renderer\ControlChartRenderer.cs" />
     <Compile Include="Charting\Renderer\ErrorBarChartRenderer.cs" />
     <Compile Include="Charting\Renderer\GiniChartRenderer.cs" />
     <Compile Include="Charting\Renderer\HistogramChartRenderer.cs" />
     <Compile Include="Charting\IAxisScaler.cs" />
-    <Compile Include="Charting\LinearAxisScaler.cs" />
-    <Compile Include="Charting\Log10AxisScaler.cs" />
-    <Compile Include="Charting\LogNaturalAxisScaler.cs" />
+    <Compile Include="Charting\Scales\LinearAxisScaler.cs" />
+    <Compile Include="Charting\Scales\Log10AxisScaler.cs" />
+    <Compile Include="Charting\Scales\LogNaturalAxisScaler.cs" />
     <Compile Include="Charting\Renderer\LinearRegressionChartRenderer.cs" />
     <Compile Include="Charting\Renderer\NormalChartRenderer.cs" />
     <Compile Include="Charting\Renderer\NotSetChartRenderer.cs" />
     <Compile Include="Charting\Renderer\RocChartRenderer.cs" />
     <Compile Include="Charting\Renderer\ScatterChartRenderer.cs" />
     <Compile Include="Templates\TalbotLinHanrahanAxisScale.cs" />
-    <Compile Include="Charting\TalbotLinHanrahanAxisScaler.cs" />
+    <Compile Include="Charting\Scales\TalbotLinHanrahanAxisScaler.cs" />
     <Compile Include="Templates\ChartType.cs" />
     <Compile Include="Templates\IAxisScale.cs" />
     <Compile Include="Templates\ILinearAxisScale.cs" />
@@ -271,10 +273,10 @@
     <Compile Include="Templates\Log2AxisScale.cs" />
     <Compile Include="Templates\Log10AxisScale.cs" />
     <Compile Include="Templates\LinearAxisScale.cs" />
-    <Compile Include="Charting\LinearAxisMasker.cs" />
+    <Compile Include="Charting\Scales\LinearAxisMasker.cs" />
     <Compile Include="Charting\Renderer\BarChartRenderer.cs" />
     <Compile Include="Charting\Options\BarOptions.cs" />
-    <Compile Include="Charting\BinChoiceMethod.cs" />
+    <Compile Include="Charting\Enums\BinChoiceMethod.cs" />
     <Compile Include="Charting\BinsDescriptor.cs" />
     <Compile Include="Charting\Renderer\BoxWhiskerChartRenderer.cs" />
     <Compile Include="Charting\Options\BoxWhiskerOptions.cs" />
@@ -283,7 +285,7 @@
     <Compile Include="Charting\Options\ChartOptions.cs" />
     <Compile Include="Charting\Renderer\ChartRenderer.cs" />
     <Compile Include="Charting\ChartRendererFactory.cs" />
-    <Compile Include="Charting\ComparisonValue.cs" />
+    <Compile Include="Charting\Enums\ComparisonValue.cs" />
     <Compile Include="Charting\Options\ControlOptions.cs" />
     <Compile Include="Charting\Renderer\ForestChartRenderer.cs" />
     <Compile Include="Charting\HistogramBinChooser.cs" />
@@ -293,11 +295,11 @@
     <Compile Include="Charting\Renderer\LadderChartRenderer.cs" />
     <Compile Include="Charting\MultiDoublePoint.cs" />
     <Compile Include="Charting\MultiDoubleSeries.cs" />
-    <Compile Include="Charting\DataMinMax.cs" />
+    <Compile Include="Charting\Enums\DataMinMax.cs" />
     <Compile Include="Charting\DoubleSeries.cs" />
     <Compile Include="Charting\EmfCanvas.cs" />
-    <Compile Include="Charting\ErrorBarOptions.cs" />
-    <Compile Include="Charting\FillStyle.cs" />
+    <Compile Include="Charting\Options\ErrorBarOptions.cs" />
+    <Compile Include="Charting\Enums\FillStyle.cs" />
     <Compile Include="Charting\Options\ForestOptions.cs" />
     <Compile Include="Charting\Options\GenericOptions.cs" />
     <Compile Include="Charting\Options\GiniOptions.cs" />
@@ -305,7 +307,7 @@
     <Compile Include="Charting\IStatsDirectCanvas.cs" />
     <Compile Include="Charting\Options\LadderOptions.cs" />
     <Compile Include="Charting\Options\LinearRegressionOptions.cs" />
-    <Compile Include="Charting\MarkerShape.cs" />
+    <Compile Include="Charting\Enums\MarkerShape.cs" />
     <Compile Include="Charting\MarkerType.cs" />
     <Compile Include="Charting\Options\NormalOptions.cs" />
     <Compile Include="Charting\Renderer\PyramidChartRenderer.cs" />
@@ -315,7 +317,7 @@
     <Compile Include="Charting\ROCSeriesRecord.cs" />
     <Compile Include="Charting\RtfImageConverter.cs" />
     <Compile Include="Charting\RtfImageRenderer.cs" />
-    <Compile Include="Charting\ScatterXYOptions.cs" />
+    <Compile Include="Charting\Options\ScatterXYOptions.cs" />
     <Compile Include="Charting\Series.cs" />
     <Compile Include="Charting\SeriesOptionsDescriptor.cs" />
     <Compile Include="Charting\Renderer\SpreadChartRenderer.cs" />
@@ -323,9 +325,9 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\Renderer\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\Options\SurvivalOptions.cs" />
-    <Compile Include="Charting\NewLinearAxisScaler.cs" />
+    <Compile Include="Charting\Scales\NewLinearAxisScaler.cs" />
     <Compile Include="Templates\Tic.cs" />
-    <Compile Include="Charting\Transformation.cs" />
+    <Compile Include="Charting\Enums\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
     <Compile Include="CsvParser\Csv.g4.lexer.cs">
       <DependentUpon>Csv.g4</DependentUpon>
@@ -1960,7 +1962,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

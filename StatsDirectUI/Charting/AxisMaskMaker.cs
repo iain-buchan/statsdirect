@@ -35,12 +35,12 @@ namespace StatsDirect.Charting
 
         public void Visit(Log10AxisScale _)
         {
-            axisMasker = new LinearAxisMasker();
+            axisMasker = new Log10AxisMasker();
         }
 
         public void Visit(Log2AxisScale _)
         {
-            axisMasker = new LinearAxisMasker();
+            axisMasker = new Log2AxisMasker();
         }
 
         public void Visit(NewLinearAxisScale _)
