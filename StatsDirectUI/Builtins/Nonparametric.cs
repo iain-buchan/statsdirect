@@ -1013,9 +1013,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("z", stat);
             double p = 1.0 - PDF.alnorm(Math.Abs(stat));
             if (p > 1.0 - p)
-            {
                 p = 1.0 - p;
-            }
             outputParameters.AddOutput("p_1", p);
             outputParameters.AddOutput("p_2", p * 2.0);
             if (tie != 0)
