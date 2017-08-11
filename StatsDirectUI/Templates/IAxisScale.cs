@@ -16,7 +16,5 @@ namespace StatsDirect.Templates
         IList<Tic> Tics();
 
         void Accept(IAxisScaleVisitor visitor);
-
-        string ToAxisLabel(Tic tic, string mask);
     }
 }

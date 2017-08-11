@@ -186,10 +186,8 @@ namespace StatsDirect.Charting.Renderer
                     }
                     else
                     {
-                        string mask = new AxisMaskMaker().AxisMaskFor(new LinearAxisScale(0, 0, minimumBinMidpoint, minimumBinMidpoint + binMidpointInterval * descriptor.Bins, descriptor.Bins, 1));
-
                         // Plot one ASCII histogram per series.  The cheat is to plot each one, save it, and concatenate at the end!
-                        ASCII_InitPlot(descriptor.Bins + 4);
+                        StartAsciiPlot(descriptor.Bins + 4);
                         // Draw the scale
 
                         // the ASCII version is plotted sideways
@@ -203,32 +201,33 @@ namespace StatsDirect.Charting.Renderer
                             new AxisDefinition(null, AxisMode.LineOnly, Definition.ScaleParameters.Y.ScaleType),
                             false, true);
 
+                        string mask = "G12";
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
                             int barLength = Convert.ToInt32(descriptor.Counts[c] * proportionScaler / DataMaxY * 60);
-                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, new string('=', barLength));
+                            WriteAsciiYX(c + ASCII_YTxt, ASCII_XTxt + 5, new string('=', barLength));
                             if (descriptor.Counts[c] > 0 && barLength == 0)
-                                WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt + 5, ":");
+                                WriteAsciiYX(c + ASCII_YTxt, ASCII_XTxt + 5, ":");
 
                             double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
-                            string buf = midpoint.ToString(mask) + "|";
-                            WriteAsciiYX(c + ASCII_Ytxt, ASCII_XTxt - buf.Length + 5, buf);
+                            string buf = midpoint.ToString(mask);
+                            WriteAsciiYX(c + ASCII_YTxt, ASCII_XTxt - buf.Length + 4, buf);
 
                             buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
-                            WriteAsciiYX(c + ASCII_Ytxt, 1, buf);
+                            WriteAsciiYX(c + ASCII_YTxt, 1, buf);
                         }
 
                         WriteAsciiYX(0, ASCII_XTxt, options.HistoSeriesOptions[seriesIndex].XAxisTitle);
 
-                        WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 16, "Mid-points");
-                        WriteAsciiYX(descriptor.Bins + ASCII_Ytxt, 1, "Counts");
-                        ShTx[2] = "     " + ShTx[2].Substring(0, Math.Min(ShTx[2].Length, 85));
-                        ShTx[1] = "     " + ShTx[1].Substring(0, Math.Min(ShTx[1].Length, 85));
-                        ShTx[0] = "     " + ShTx[0].Substring(0, Math.Min(ShTx[0].Length, 85));
+                        WriteAsciiYX(descriptor.Bins + ASCII_YTxt, 16, "Mid-points");
+                        WriteAsciiYX(descriptor.Bins + ASCII_YTxt, 1, "Counts");
+                        TextCanvas[2] = "     " + TextCanvas[2].Substring(0, Math.Min(TextCanvas[2].Length, 85));
+                        TextCanvas[1] = "     " + TextCanvas[1].Substring(0, Math.Min(TextCanvas[1].Length, 85));
+                        TextCanvas[0] = "     " + TextCanvas[0].Substring(0, Math.Min(TextCanvas[0].Length, 85));
 
                         //  Save this plot
-                        for (int i = ShTx.Length - 1; i >= 0; i--)
-                            savedLines.Insert(0, ShTx[i]);
+                        for (int i = TextCanvas.Length - 1; i >= 0; i--)
+                            savedLines.Insert(0, TextCanvas[i]);
 
                         //  Separator
                         savedLines.Insert(0, string.Empty);
@@ -242,9 +241,9 @@ namespace StatsDirect.Charting.Renderer
                 else
                 {
                     //  Fill in the output in its expected place from our saved place
-                    ShTx = new string[savedLines.Count];
+                    TextCanvas = new string[savedLines.Count];
                     for (int i = 0; i <= savedLines.Count - 1; i++)
-                        ShTx[i] = savedLines[i];
+                        TextCanvas[i] = savedLines[i];
                 }
 
                 return new ParameterBag();

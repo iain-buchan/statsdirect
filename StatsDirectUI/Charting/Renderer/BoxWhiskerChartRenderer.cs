@@ -612,25 +612,24 @@ namespace StatsDirect.Charting.Renderer
             if (p > 1.0 - p)
                 p = 1.0 - p;
 
-            ASCII_InitPlot(seriesToUse.Count * 2 + 4);
+            StartAsciiPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
             AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = seriesToUse.Select(s => s.Title).ToList() },
                 false, false);
-            SetStandardAsciiScaling(0, axisScales);
             DivY = seriesToUse.Count + 1;
-            OffY = ASCII_Ytxt;
+            OffY = ASCII_YTxt;
 
-            if (ShTx[0].Length > bwOptions.XAxisTitle.Length)
+            if (TextCanvas[0].Length > bwOptions.XAxisTitle.Length)
             {
                 WriteAsciiYX(0, 45 - bwOptions.XAxisTitle.Length / 2, bwOptions.XAxisTitle);
             }
             else
             {
                 //  Axis title is larger than the chart, so replace the entire first string
-                ShTx[0] = bwOptions.XAxisTitle;
+                TextCanvas[0] = bwOptions.XAxisTitle;
             }
 
             // work through the columns

@@ -76,8 +76,6 @@ namespace StatsDirect.UI
             set => cboScaleTextDirection.SelectedIndex = (int)value;
         }
 
-        public string Mask { get; private set; }
-
         public double MinimumScaleValue { get; private set; }
 
         public double MaximumScaleValue { get; private set; }
@@ -147,7 +145,6 @@ namespace StatsDirect.UI
         private void SetScaleVisibility()
         {
             pnlScale.Visible = ShouldShowScaleChooser;
-            pnlScaleTextMask.Visible = ShouldShowScaleTextMask;
             pnlScaleTextDirection.Visible = ShouldShowScaleTextDirection;
             pnlRange.Visible = ShouldShowRange;
             pnlMarkerLine.Visible = ShouldShowMarkerLine;
@@ -172,18 +169,6 @@ namespace StatsDirect.UI
                 return selectedScaleType == ScaleType.Linear
                     || selectedScaleType == ScaleType.Log10
                     || selectedScaleType == ScaleType.LogNatural;
-            }
-        }
-
-        private bool ShouldShowScaleTextMask
-        {
-            get
-            {
-                ScaleType selectedScaleType = ScaleType;
-                return selectedScaleType == ScaleType.Linear
-                    || selectedScaleType == ScaleType.Log10
-                    || selectedScaleType == ScaleType.LogNatural
-                    || selectedScaleType == ScaleType.Date;
             }
         }
 
@@ -227,11 +212,9 @@ namespace StatsDirect.UI
             IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
             MinimumScaleValue = axisScale.MinimumScaleValue;
             MaximumScaleValue = axisScale.MaximumScaleValue;
-            Mask = new Charting.AxisMaskMaker().AxisMaskFor(axisScale);
             settingValues = true;
-            txtScaleTextMask.Text = Mask;
-            txtMinimum.Text = MinimumScaleValue.ToString(Mask);
-            txtMaximum.Text = MaximumScaleValue.ToString(Mask);
+            txtMinimum.Text = MinimumScaleValue.ToString();
+            txtMaximum.Text = MaximumScaleValue.ToString();
             settingValues = false;
         }
 
@@ -265,13 +248,6 @@ namespace StatsDirect.UI
             {
                 // TODO: Warn of the exception
             }
-        }
-
-        private void txtScaleTextMask_TextChanged(object sender, EventArgs e)
-        {
-            if (settingValues)
-                return;
-            Mask = txtScaleTextMask.Text;
         }
 
         private void cboMarkerLineAt_SelectedIndexChanged(object sender, EventArgs e)

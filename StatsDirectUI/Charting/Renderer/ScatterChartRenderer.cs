@@ -7,6 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class ScatterChartRenderer: AbstractChartRenderer, IChartRenderer
     {
+        const int ASCII_LINES_PER_TIC = 5;
+
         public ScatterChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
             : base (cd, canvasFactory)
         {
@@ -99,22 +101,21 @@ namespace StatsDirect.Charting.Renderer
             }
             else
             {
-                int y = Definition.ScaleParameters.Y.AxisScale.Tics().Count - 1;
-                ASCII_InitPlot(5 + y); // 5 = Title, top axis title, bottom axis, bottom scale, bottom axis title
+                int y = Definition.ScaleParameters.Y.AxisScale.Tics().Count * ASCII_LINES_PER_TIC - 1;
+                StartAsciiPlot(5 + y); // 5 = Title, top axis title, bottom axis, bottom scale, bottom axis title
 
                 // Draw the scale
                 AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                     false, false);
-                SetStandardAsciiScaling(y, axisScales);
 
                 // Draw the title text
-                int L = sOptions.YAxisTitle.Length;
-                int Q = L < 14 ? 14 - L : 2;
-                WriteAsciiYX(ShTx.GetUpperBound(0) - 1, Q, sOptions.YAxisTitle);
-                L = sOptions.XAxisTitle.Length;
-                WriteAsciiYX(0, 76 - L, sOptions.XAxisTitle);
+                int l = sOptions.YAxisTitle.Length;
+                int q = l < 14 ? 14 - l : 2;
+                WriteAsciiYX(TextCanvas.GetUpperBound(0) - 1, q, sOptions.YAxisTitle);
+                l = sOptions.XAxisTitle.Length;
+                WriteAsciiYX(0, 76 - l, sOptions.XAxisTitle);
 
                 // Work through the columns
                 for (int c = 0; c <= Definition.XSeries.Count - 1; c++)
@@ -124,18 +125,11 @@ namespace StatsDirect.Charting.Renderer
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
                     // Work through the rows
-                    for (int r = 0; r <= xdat.Length - 1; r++)
-                    {
+                    for (int r = 0; r < xdat.Length; r++)
                         if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
-                        {
-                            int x1 = Convert.ToInt32(OffX + Convert.ToInt32(xdat[r] / DivX * 60));
-                            int y1 = Convert.ToInt32(OffY + Convert.ToInt32(ydat[r] / DivY * y));
-                            ASCII_PlotPoint(x1, y1);
-                        }
-                    }
+                            ASCII_PlotPointInChartCoordinates(xdat[r], ydat[r]);
                 }
             }
-            //  End If
             return new ParameterBag();
         }
     }

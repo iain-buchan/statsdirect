@@ -29,18 +29,16 @@ namespace StatsDirect.Templates
         {
             List<Tic> tics = new List<Tic>();
             for (int power = MinimumPower; power <= MaximumPower; power++)
-                tics.Add(new Tic { TicType = TicType.Major, Value = Math.Pow(2, power) });
+            {
+                double value = Math.Pow(2, power);
+                tics.Add(new Tic(value, value.ToString("G")));
+            }
             return tics;
         }
 
         void IAxisScale.Accept(IAxisScaleVisitor visitor)
         {
             visitor.Visit(this);
-        }
-
-        string IAxisScale.ToAxisLabel(Tic tic, string mask)
-        {
-            return tic.Value.ToString(mask);
         }
     }
 }

@@ -228,22 +228,16 @@
     </Compile>
     <Compile Include="Charting\ChartPartSizer.cs" />
     <Compile Include="Charting\ChartPreferences.cs" />
-    <Compile Include="Charting\AxisMaskMaker.cs" />
     <Compile Include="Charting\Enums\CorrelationRowType.cs" />
     <Compile Include="Charting\Enums\CoxPlotMode.cs" />
-    <Compile Include="Charting\Log2AxisMasker.cs" />
-    <Compile Include="Charting\Scales\CategoryAxisMasker.cs" />
     <Compile Include="Charting\EmfCanvasFactory.cs" />
     <Compile Include="Charting\ICanvasFactory.cs" />
     <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\IChartSizable.cs" />
-    <Compile Include="Charting\Scales\DateAxisMasker.cs" />
-    <Compile Include="Charting\Scales\Log10AxisMasker.cs" />
     <Compile Include="Templates\IAxisScaleVisitor.cs" />
     <Compile Include="Charting\IChartSizableVisitor.cs" />
     <Compile Include="Charting\Legend.cs" />
     <Compile Include="Charting\Scales\DateAxisScaler.cs" />
-    <Compile Include="Charting\IAxisMasker.cs" />
     <Compile Include="Charting\Margin.cs" />
     <Compile Include="Charting\Renderer\AbstractChartRenderer.cs" />
     <Compile Include="Charting\Options\AgreementOptions.cs" />
@@ -272,7 +266,6 @@
     <Compile Include="Templates\ILinearAxisScale.cs" />
     <Compile Include="Templates\CategoryAxisScale.cs" />
     <Compile Include="Templates\DateAxisScale.cs" />
-    <Compile Include="Templates\NewLinearAxisScale.cs" />
     <Compile Include="Templates\Log2AxisScale.cs" />
     <Compile Include="Templates\Log10AxisScale.cs" />
     <Compile Include="Templates\LinearAxisScale.cs" />
@@ -328,7 +321,6 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\Renderer\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\Options\SurvivalOptions.cs" />
-    <Compile Include="Charting\Scales\NewLinearAxisScaler.cs" />
     <Compile Include="Templates\Tic.cs" />
     <Compile Include="Charting\Enums\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />

@@ -37,17 +37,12 @@ namespace StatsDirect.Templates
 
         public IList<Tic> Tics()
         {
-            return TlhAxis.Labels.Select(label => new Tic { TicType = TicType.Major, Value = Convert.ToDouble(label.Item1) }).ToList();
+            return TlhAxis.Labels.Select(label => new Tic(Convert.ToDouble(label.Item1), label.Item2)).ToList();
         }
 
         void IAxisScale.Accept(IAxisScaleVisitor visitor)
         {
             visitor.Visit(this);
-        }
-
-        string IAxisScale.ToAxisLabel(Tic tic, string mask)
-        {
-            return tic.Value.ToString(mask);
         }
     }
 }

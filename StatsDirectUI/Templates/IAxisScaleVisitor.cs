@@ -7,7 +7,6 @@
         void Visit(LinearAxisScale _);
         void Visit(Log10AxisScale _);
         void Visit(Log2AxisScale _);
-        void Visit(NewLinearAxisScale _);
         void Visit(TalbotLinHanrahanAxisScale _);
     }
 }

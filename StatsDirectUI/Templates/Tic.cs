@@ -3,17 +3,17 @@
 namespace StatsDirect.Templates
 {
     /// <summary>
-    /// A tic is a mark on a chart axis.  It appears at some point on the axis (stored in chart co-ordinates) and is a major (large) or minor (small) tic.
+    /// A tic is a mark on a chart axis.  It appears at some point on the axis (stored in chart co-ordinates), with a given label.
     /// </summary>
     public class Tic
     {
-        public double Value { get; set; }
-        public TicType TicType { get; set; }
-    }
+        public double Value { get; private set; }
+        public string Label { get; private set; }
 
-    public enum TicType
-    {
-        Major,
-        Minor
+        public Tic (double value, string label)
+        {
+            Value = value;
+            Label = label;
+        }
     }
 }

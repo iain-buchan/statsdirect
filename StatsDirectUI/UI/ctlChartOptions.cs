@@ -87,7 +87,6 @@ namespace StatsDirect.UI
             IAxisScaler scaler = AxisScalerFactory.AxisScalerFor(asp.ScaleType);
             if (null != scaler)
                 asp.AxisScale = scaler.Q_Axis(ao.MinimumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, isYAxis, true);
-            asp.Mask = ao.Mask;
 
             asp.HasGridLines = ao.HasGridLines;
             asp.GridLineDashStyle = ao.GridLineDashStyle;

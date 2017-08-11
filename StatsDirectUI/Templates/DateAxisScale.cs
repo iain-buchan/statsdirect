@@ -38,7 +38,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddMinutes(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern)));
                     candidate = candidate.AddMinutes(1);
                 }
             }
@@ -52,7 +52,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddMinutes(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern)));
                     candidate = candidate.AddMinutes(5);
                 }
             }
@@ -66,7 +66,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddMinutes(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern)));
                     candidate = candidate.AddMinutes(15);
                 }
             }
@@ -78,7 +78,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddHours(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString()));
                     candidate = candidate.AddHours(1);
                 }
             }
@@ -90,7 +90,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddDays(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString()));
                     candidate = candidate.AddDays(1);
                 }
             }
@@ -105,7 +105,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddDays(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddDays(7);
                 }
             }
@@ -117,7 +117,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddMonths(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddMonths(1);
                 }
             }
@@ -131,7 +131,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddMonths(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddMonths(3);
                 }
             }
@@ -143,7 +143,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddYears(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddYears(1);
                 }
             }
@@ -157,7 +157,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddYears(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddYears(10);
                 }
             }
@@ -173,7 +173,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddYears(10);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic { Value = candidate.ToOADate(), TicType = TicType.Major });
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddYears(100);
                 }
             }
@@ -183,11 +183,6 @@ namespace StatsDirect.Templates
         void IAxisScale.Accept(IAxisScaleVisitor visitor)
         {
             visitor.Visit(this);
-        }
-
-        string IAxisScale.ToAxisLabel(Tic tic, string mask)
-        {
-            return DateTime.FromOADate(tic.Value).ToString(mask);
         }
     }
 }

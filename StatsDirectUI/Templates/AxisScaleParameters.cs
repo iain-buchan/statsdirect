@@ -14,7 +14,6 @@ namespace StatsDirect.Templates
 
         // Scale
         public IAxisScale AxisScale { get; set; }
-        public string Mask { get; set; }
         public LabelDirection LabelDirection { get; set; }
 
         // Grid lines

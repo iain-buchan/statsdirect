@@ -30,7 +30,7 @@ namespace StatsDirect.Charting
 
             // Short-circuit for the common case of a 0 to 1 axis.
             if (minimumDataValue == 0.0 && maximumDataValue == 1.0)
-                return new LinearAxisScale(minimumDataValue, maximumDataValue, minimumDataValue, maximumDataValue, 20, 5);
+                return new LinearAxisScale(minimumDataValue, maximumDataValue, minimumDataValue, maximumDataValue, 5);
 
             int bestScoreSoFar = int.MaxValue; // Lower is better
             ILinearAxisScale bestScaleSoFar = null;
@@ -179,7 +179,7 @@ namespace StatsDirect.Charting
             int intervalsPerMajorTic = div % 5 == 0 ? 5 : 4;
             score += ScoreIntervalLook(minimumScaleValue + zint * intervalsPerMajorTic);
 
-            return new LinearAxisScale(qmin, qmax, minimumScaleValue, minimumScaleValue + div * zint, div, intervalsPerMajorTic);
+            return new LinearAxisScale(qmin, qmax, minimumScaleValue, minimumScaleValue + div * zint, div / intervalsPerMajorTic);
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace StatsDirect.Charting
             double zmax = maximumDataValue;
             // Check for crazy values
             if (zmin == Constant.MISSING || zmax == Constant.MISSING || double.IsInfinity(zmin) || double.IsInfinity(zmax) || double.IsNaN(zmin) || double.IsNaN(zmax) || divisions < 1)
-                return new LinearAxisScale(0, 0, 0, 0, 1, 1);
+                return new LinearAxisScale(0, 0, 0, 0, 1);
 
             if (Math.Abs(zmin - zmax) < 1e-10)
             {
@@ -232,7 +232,7 @@ namespace StatsDirect.Charting
 
             double rint = (zmax - zmin) / (divisions + 0.1);
             if (rint <= 0.0)
-                return new LinearAxisScale(0, 0, 0, 0, 1, 1);
+                return new LinearAxisScale(0, 0, 0, 0, 1);
 
             // Nothing too crazy going on.  What can we make?
             double[] r = { 0.1, 0.15, 0.2, 0.25, 0.4, 0.5, 0.6, 0.75, 0.8 };
@@ -262,7 +262,7 @@ namespace StatsDirect.Charting
 
                 ar = zstep * Math.Floor((1.0 + 2.0 * Constant.EPSNEG) * zmin / zstep);
                 if (double.IsInfinity(ar))
-                    return new LinearAxisScale(0, 0, 0, 0, 1, 1);
+                    return new LinearAxisScale(0, 0, 0, 0, 1);
 
                 while (!(ar - zstep * 0.05 <= zmin))
                     ar -= zstep;
@@ -284,7 +284,7 @@ namespace StatsDirect.Charting
                 maxB = 0;
             maxB = -maxB;
             if (maxA + maxB >= 10)
-                return new LinearAxisScale(minimumDataValue, maximumDataValue, znmin, znmin + zstep * divisions, divisions, 1);
+                return new LinearAxisScale(minimumDataValue, maximumDataValue, znmin, znmin + zstep * divisions, divisions);
             double znm = znmin;
             for (int i = 0; i <= 9; i++)
             {
@@ -296,14 +296,14 @@ namespace StatsDirect.Charting
                     znm = znm - 1.0;
                 znm = Math.Floor(znm) / Math.Pow(10.0, maxB - i);
             }
-            return new LinearAxisScale(minimumDataValue, maximumDataValue, znmin, znmin + zstep * divisions, divisions, 1);
+            return new LinearAxisScale(minimumDataValue, maximumDataValue, znmin, znmin + zstep * divisions, divisions);
         }
 
         public static ILinearAxisScale v_axis(double qmin, double qmax, int divisions)
         {
             if (divisions > 0)
                 return Axis(qmin, qmax, divisions);
-            return new LinearAxisScale(qmin, qmax, qmin, qmax, 1, 1);
+            return new LinearAxisScale(qmin, qmax, qmin, qmax, 1);
         }
     }
 }

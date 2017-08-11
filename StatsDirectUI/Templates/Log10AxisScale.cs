@@ -37,28 +37,23 @@ namespace StatsDirect.Templates
             {
                 double basePower = Math.Pow(10, power);
                 if (basePower >= MinimumScaleValue && basePower <= MaximumScaleValue)
-                    tics.Add(new Tic { TicType = TicType.Major, Value = basePower });
+                    tics.Add(new Tic(basePower, basePower.ToString("G")));
                 foreach (double multiplier in MinorTicMultipliers)
                 {
                     double ticValue = basePower * multiplier;
                     if (ticValue >= MinimumScaleValue && ticValue <= MaximumScaleValue)
-                        tics.Add(new Tic { TicType = TicType.Major, Value = ticValue });
+                        tics.Add(new Tic(ticValue, ticValue.ToString("G")));
                 }
             }
             double lastMajorTicValue = Math.Pow(10, MaximumPower);
             if (lastMajorTicValue >= MinimumScaleValue && lastMajorTicValue <= MaximumScaleValue)
-                tics.Add(new Tic { TicType = TicType.Major, Value = lastMajorTicValue });
+                tics.Add(new Tic(lastMajorTicValue, lastMajorTicValue.ToString("G")));
             return tics;
         }
 
         void IAxisScale.Accept(IAxisScaleVisitor visitor)
         {
             visitor.Visit(this);
-        }
-
-        string IAxisScale.ToAxisLabel(Tic tic, string mask)
-        {
-            return tic.Value.ToString(mask);
         }
     }
 }

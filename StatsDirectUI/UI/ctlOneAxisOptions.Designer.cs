@@ -32,8 +32,6 @@
             this.lblScale = new System.Windows.Forms.Label();
             this.cboScaleTextDirection = new System.Windows.Forms.ComboBox();
             this.lblScaleTextDirection = new System.Windows.Forms.Label();
-            this.txtScaleTextMask = new System.Windows.Forms.TextBox();
-            this.lblScaleTextMask = new System.Windows.Forms.Label();
             this.lblDataRange = new System.Windows.Forms.Label();
             this.txtMinimum = new System.Windows.Forms.TextBox();
             this.txtMaximum = new System.Windows.Forms.TextBox();
@@ -49,7 +47,6 @@
             this.pnlTitle = new System.Windows.Forms.Panel();
             this.pnlScale = new System.Windows.Forms.Panel();
             this.pnlScaleTextDirection = new System.Windows.Forms.Panel();
-            this.pnlScaleTextMask = new System.Windows.Forms.Panel();
             this.pnlRange = new System.Windows.Forms.Panel();
             this.pnlGridLines = new System.Windows.Forms.Panel();
             this.pnlMarkerLine = new System.Windows.Forms.Panel();
@@ -57,7 +54,6 @@
             this.pnlTitle.SuspendLayout();
             this.pnlScale.SuspendLayout();
             this.pnlScaleTextDirection.SuspendLayout();
-            this.pnlScaleTextMask.SuspendLayout();
             this.pnlRange.SuspendLayout();
             this.pnlGridLines.SuspendLayout();
             this.pnlMarkerLine.SuspendLayout();
@@ -113,26 +109,6 @@
             this.lblScaleTextDirection.Size = new System.Drawing.Size(97, 13);
             this.lblScaleTextDirection.TabIndex = 3;
             this.lblScaleTextDirection.Text = "Scale text direction";
-            // 
-            // txtScaleTextMask
-            // 
-            this.txtScaleTextMask.Location = new System.Drawing.Point(106, 3);
-            this.txtScaleTextMask.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
-            this.txtScaleTextMask.Name = "txtScaleTextMask";
-            this.txtScaleTextMask.Size = new System.Drawing.Size(125, 20);
-            this.txtScaleTextMask.TabIndex = 4;
-            this.txtScaleTextMask.Text = "#.###";
-            this.txtScaleTextMask.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-            this.txtScaleTextMask.TextChanged += new System.EventHandler(this.txtScaleTextMask_TextChanged);
-            // 
-            // lblScaleTextMask
-            // 
-            this.lblScaleTextMask.AutoSize = true;
-            this.lblScaleTextMask.Location = new System.Drawing.Point(3, 6);
-            this.lblScaleTextMask.Name = "lblScaleTextMask";
-            this.lblScaleTextMask.Size = new System.Drawing.Size(82, 13);
-            this.lblScaleTextMask.TabIndex = 5;
-            this.lblScaleTextMask.Text = "Scale text mask";
             // 
             // lblDataRange
             // 
@@ -253,15 +229,13 @@
             this.tlpOnOff.Controls.Add(this.pnlTitle, 0, 0);
             this.tlpOnOff.Controls.Add(this.pnlScale, 0, 1);
             this.tlpOnOff.Controls.Add(this.pnlScaleTextDirection, 0, 2);
-            this.tlpOnOff.Controls.Add(this.pnlScaleTextMask, 0, 3);
-            this.tlpOnOff.Controls.Add(this.pnlRange, 0, 4);
-            this.tlpOnOff.Controls.Add(this.pnlGridLines, 0, 5);
-            this.tlpOnOff.Controls.Add(this.pnlMarkerLine, 0, 6);
+            this.tlpOnOff.Controls.Add(this.pnlRange, 0, 3);
+            this.tlpOnOff.Controls.Add(this.pnlGridLines, 0, 4);
+            this.tlpOnOff.Controls.Add(this.pnlMarkerLine, 0, 5);
             this.tlpOnOff.Location = new System.Drawing.Point(0, 0);
             this.tlpOnOff.Margin = new System.Windows.Forms.Padding(0);
             this.tlpOnOff.Name = "tlpOnOff";
-            this.tlpOnOff.RowCount = 7;
-            this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tlpOnOff.RowCount = 6;
             this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpOnOff.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -306,18 +280,6 @@
             this.pnlScaleTextDirection.Name = "pnlScaleTextDirection";
             this.pnlScaleTextDirection.Size = new System.Drawing.Size(234, 24);
             this.pnlScaleTextDirection.TabIndex = 2;
-            // 
-            // pnlScaleTextMask
-            // 
-            this.pnlScaleTextMask.AutoSize = true;
-            this.pnlScaleTextMask.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.pnlScaleTextMask.Controls.Add(this.txtScaleTextMask);
-            this.pnlScaleTextMask.Controls.Add(this.lblScaleTextMask);
-            this.pnlScaleTextMask.Location = new System.Drawing.Point(0, 71);
-            this.pnlScaleTextMask.Margin = new System.Windows.Forms.Padding(0);
-            this.pnlScaleTextMask.Name = "pnlScaleTextMask";
-            this.pnlScaleTextMask.Size = new System.Drawing.Size(234, 23);
-            this.pnlScaleTextMask.TabIndex = 3;
             // 
             // pnlRange
             // 
@@ -375,8 +337,6 @@
             this.pnlScale.PerformLayout();
             this.pnlScaleTextDirection.ResumeLayout(false);
             this.pnlScaleTextDirection.PerformLayout();
-            this.pnlScaleTextMask.ResumeLayout(false);
-            this.pnlScaleTextMask.PerformLayout();
             this.pnlRange.ResumeLayout(false);
             this.pnlRange.PerformLayout();
             this.pnlGridLines.ResumeLayout(false);
@@ -394,8 +354,6 @@
         private System.Windows.Forms.Label lblScale;
         private System.Windows.Forms.ComboBox cboScaleTextDirection;
         private System.Windows.Forms.Label lblScaleTextDirection;
-        private System.Windows.Forms.TextBox txtScaleTextMask;
-        private System.Windows.Forms.Label lblScaleTextMask;
         private System.Windows.Forms.Label lblDataRange;
         private System.Windows.Forms.TextBox txtMinimum;
         private System.Windows.Forms.TextBox txtMaximum;
@@ -411,7 +369,6 @@
         private System.Windows.Forms.Panel pnlTitle;
         private System.Windows.Forms.Panel pnlScale;
         private System.Windows.Forms.Panel pnlScaleTextDirection;
-        private System.Windows.Forms.Panel pnlScaleTextMask;
         private System.Windows.Forms.Panel pnlRange;
         private System.Windows.Forms.Panel pnlGridLines;
         private System.Windows.Forms.Panel pnlMarkerLine;
