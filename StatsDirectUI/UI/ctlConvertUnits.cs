@@ -123,7 +123,7 @@ namespace StatsDirect.UI
                 Calcit c = new Calcit(conversion.Expression, new[] { DataType.Double }, false);
                 double[] x = new double[1];
                 x[0] = from;
-                txtTo.Text = c.Evaluate(x).ToString();
+                txtTo.Text = c.Evaluate<object>(x).ToString();
                 lastCalculationAsString = txtFrom.Text + " as " + conversion.ResultUnit + " = " + txtTo.Text;
             }
         }

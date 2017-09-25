@@ -3,39 +3,38 @@ using StatsDirect.Numerics;
 
 namespace StatsDirect.Data
 {
-    ///  <summary>
-    ///  Represents a single non-classifier variable/factor/column/field.
-    ///  Use ClassiferVariable to represent a classifier variable.
-    ///  </summary>
     [Serializable]
-    public class DoubleVariable : Variable
+    public class DoubleVariable : GenericVariable<double>
     {
-        private double[] data;
         private double sum;
         private double min;
         private double max;
         private bool hasSummaries;
 
         public DoubleVariable()
+            : base()
         {
-            //  Do nothing
         }
 
         public DoubleVariable(double[] data)
+            : base(data)
         {
-            this.data = data;
         }
 
         public DoubleVariable(double[] data, string title)
+            : base(data, title)
         {
-            this.data = data;
-            Title = title;
         }
 
         public DoubleVariable(int length, string title)
+            : base(length, title)
         {
-            EnsureLength(length);
-            Title = title;
+        }
+
+        protected override void Invalidate()
+        {
+            base.Invalidate();
+            hasSummaries = false;
         }
 
         public double Sum
@@ -73,7 +72,7 @@ namespace StatsDirect.Data
             min = double.MaxValue;
             max = double.MinValue;
             sum = 0;
-            foreach (double d in data)
+            foreach (double d in Data)
             {
                 if (d != Constant.MISSING)
                 {
@@ -87,115 +86,6 @@ namespace StatsDirect.Data
             hasSummaries = true;
         }
 
-
-        ///  <summary>
-        ///  Manage the entire data array at one time
-        ///  </summary>
-        ///  <value>The new data array to set</value>
-        ///  <returns>The current data array</returns>
-        ///  <remarks></remarks>
-        public double[] Data
-        {
-            get
-            {
-                return data;
-            }
-            set
-            {
-                data = value;
-                hasSummaries = false;
-            }
-        }
-
-        ///  <summary>
-        ///  Access a single element of the data array
-        ///  </summary>
-        ///  <param name="index">The element to access</param>
-        ///  <param name="value">The new value to set. Storage management is done internally, so the array is always sufficently large to hold the value</param>
-        ///  <returns>The value at the specified index, or an exception if the index is out of bounds</returns>
-        ///  <remarks></remarks>
-        public void SetData(int index, double value)
-        {
-            EnsureLength(index + 1);
-            data[index] = value;
-            hasSummaries = false;
-        }
-
-        public override int Length => data == null ? 0 : data.Length;
-
-        public override void EnsureLength(int minimumLength)
-        {
-            if (data == null)
-            {
-                data = new double[minimumLength];
-            }
-            else
-            {
-                if (data.Length < minimumLength)
-                {
-                    double[] transTemp0 = new double[minimumLength];
-                    Array.Copy(data, transTemp0, data.Length);
-                    data = transTemp0;
-                }
-            }
-        }
-
-        public void EnsureLength(int minimumLength, double fillValue)
-        {
-            if (data == null)
-            {
-                data = new double[minimumLength];
-                for (int i = 0; i <= minimumLength - 1; i++)
-                    data[i] = fillValue;
-            }
-            else
-            {
-                if (data.Length < minimumLength)
-                {
-                    int oldLength = data.Length;
-                    double[] transTemp1 = new double[minimumLength];
-                    Array.Copy(data, transTemp1, data.Length);
-                    data = transTemp1;
-                    for (int i = oldLength; i < minimumLength; i++)
-                        data[i] = fillValue;
-                }
-            }
-        }
-
-        public override void EnsureLength(int minimumLength, bool useMissing)
-        {
-            if (useMissing)
-                EnsureLength(minimumLength, Constant.MISSING);
-            else
-                EnsureLength(minimumLength);
-        }
-
-        public override void TruncateDataToLength(int maximumLength)
-        {
-            if (data.Length > maximumLength)
-            {
-                double[] transTemp2 = new double[maximumLength];
-                Array.Copy(data, transTemp2, Math.Min(data.Length, transTemp2.Length));
-                data = transTemp2;
-                hasSummaries = false;
-            }
-        }
-
-        public override Variable SameSizeForResults()
-        {
-            Variable newVariable = new DoubleVariable();
-            newVariable.EnsureLength(Length);
-            return newVariable;
-        }
-
-        public override void StealDataFrom(Variable victim)
-        {
-            if (!(victim is DoubleVariable))
-                throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            data = (victim as DoubleVariable).data;
-            hasSummaries = false;
-        }
-
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
             DoubleVariable copy = new DoubleVariable();
@@ -203,26 +93,14 @@ namespace StatsDirect.Data
             return copy;
         }
 
-        protected void CopyAndStripForRedoInto(DoubleVariable copy, bool shouldKeepData)
-        {
-            base.CopyAndStripForRedoInto(copy, shouldKeepData);
-            if (Origin == null || shouldKeepData)
-            {
-                //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
-                copy.data = data;
-            }
-        }
-
-        public override object DataAsObject(int i)
-        {
-            return Data[i];
-        }
-
-        protected override bool HasData => data != null;
-
         public override void Accept(IVariableVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public override void EnsureLengthAndPadWithMissing(int minimumLength)
+        {
+            EnsureLength(minimumLength, Constant.MISSING);
         }
     }
 }

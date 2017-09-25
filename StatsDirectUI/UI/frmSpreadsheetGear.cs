@@ -202,11 +202,11 @@ namespace StatsDirect.UI
             dirty = true;
         }
 
-        void IGrid.Refill(List<Variable> variables)
+        void IGrid.Refill(List<IVariable> variables)
         {
             CellSelection revisedCellSelection = new CellSelection();
 
-            foreach (Variable variable in variables)
+            foreach (IVariable variable in variables)
             {
                 WorksheetOrigin worksheetOrigin = (WorksheetOrigin)variable.Origin;
 
@@ -228,6 +228,8 @@ namespace StatsDirect.UI
             }
             WorksheetOrigin firstWorksheetOrigin = (WorksheetOrigin)variables[0].Origin;
             DataFrame refilledFrame = CellArrayProcessor.ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup, ((WindowInformation)Tag).FriendlyName);
+            if (null == refilledFrame)
+                throw new Exception("Cannot refill frame; have you deleted some variables?");
             if (refilledFrame.VariableCount != variables.Count)
                 throw new Exception("Cannot refill frame as the number of variables present in the workbook \"" + firstWorksheetOrigin.WorkbookPath + "\" appears to differ now.");
             for (int i = 0; i < refilledFrame.VariableCount; i++)
@@ -298,7 +300,7 @@ namespace StatsDirect.UI
 
                 // If any variable has a title, leave a title row.
                 int offsetForTitles = 0;
-                foreach (Variable v in frame.Variables)
+                foreach (IVariable v in frame.Variables)
                 {
                     if (null != v.Title)
                     {
@@ -361,6 +363,16 @@ namespace StatsDirect.UI
             public int OffsetForTitles { get; set; }
             public IValues Values { get; set; }
 
+            public void Visit(BooleanVariable variable)
+            {
+                bool[] data = variable.Data;
+                if (null != data)
+                {
+                    for (int i = 0; i < data.Length; i++)
+                        Values.SetNumber(i + OffsetForTitles, Column, data[i] ? 1 : 0);
+                }
+            }
+
             public void Visit(DoubleVariable variable)
             {
                 double[] data = variable.Data;
@@ -380,9 +392,8 @@ namespace StatsDirect.UI
                 if (null != data)
                 {
                     for (int i = 0; i < data.Length; i++)
-                        if (data[i] is double)
+                        if (data[i] is double val)
                         {
-                            double val = (double)data[i];
                             if (Constant.MISSING == val || double.IsNaN(val))
                                 Values.SetText(i + OffsetForTitles, Column, MissingIndicator);
                             else
@@ -472,7 +483,7 @@ namespace StatsDirect.UI
                 // Now do the inserts.  Frames may contain any types of variables.
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
-                    Variable variable = frame.Variables[v];
+                    IVariable variable = frame.Variables[v];
                     string title = variable.Title;
                     if (null != title)
                         values.SetText(0, firstColumnOfData + v, title);
@@ -741,9 +752,8 @@ namespace StatsDirect.UI
                 return (double)val;
             if (val is int)
                 return (int)val;
-            if (val is string)
+            if (val is string buf)
             {
-                string buf = (string)val;
                 if (double.TryParse(buf, out double dval))
                     return dval;
                 string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);

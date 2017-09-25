@@ -479,10 +479,10 @@ namespace StatsDirect.Builtins
             nx = inx;
 
             // first do the pca to check for scale reversal like Stata alpha command without the asis subcommand
-            x_principal(N, ref nx, ref x, out xc, out xr, out double[,] u, out double[] w, out v, ref irv, ref ifault);
+            XPrincipal(N, ref nx, ref x, out xc, out xr, out double[,] u, out double[] w, out v, ref irv, ref ifault);
             bool signrev = false;
             string revlab = string.Empty;
-            x_pscore1_corr(N, nx, x, v, irv, revx);
+            XPscore1Corr(N, nx, x, v, irv, revx);
             for (i = 1; i <= N; i++)
             {
                 if (!revx[i])
@@ -515,7 +515,7 @@ namespace StatsDirect.Builtins
             }
 
             // do the pca with the selected covariance or correlation approach
-            x_principal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault);
+            XPrincipal(N, ref nx, ref x, out xc, out xr, out u, out w, out v, ref irv, ref ifault);
 
             ParameterBag outputParameters = new ParameterBag();
             if (ifault == 0)
@@ -568,7 +568,7 @@ namespace StatsDirect.Builtins
         ///  <param name="irv"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        private static void x_principal(int N, ref int nx, ref double[,] x, out double[,] xc, out double[,] xr, out double[,] u, out double[] w, out double[,] v, ref int irv, ref int ifault)
+        private static void XPrincipal(int N, ref int nx, ref double[,] x, out double[,] xc, out double[,] xr, out double[,] u, out double[] w, out double[,] v, ref int irv, ref int ifault)
         {
             int i; int j;
 
@@ -624,7 +624,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void x_pscore1_corr(int N, int nx, double[,] x, double[,] v, int irv, bool[] negcorr)
+        private static void XPscore1Corr(int N, int nx, double[,] x, double[,] v, int irv, bool[] negcorr)
         {
             int j;
             int i;
@@ -1489,7 +1489,7 @@ namespace StatsDirect.Builtins
             double rms = rss / rdf;
 
             DataFrame frame = new DataFrame();
-            IList<Variable> pendedVariables = new List<Variable>();
+            IList<IVariable> pendedVariables = new List<IVariable>();
             for (int i = 1; i <= context.P; i++)
             {
                 DoubleVariable vxxi = new DoubleVariable();
@@ -1509,7 +1509,7 @@ namespace StatsDirect.Builtins
             //  Spacer
             frame.Variables.Add(new DoubleVariable());
             //  Add all the cv variables
-            foreach (Variable v in pendedVariables)
+            foreach (IVariable v in pendedVariables)
                 frame.Variables.Add(v);
 
             ParameterBag outputParameters = new ParameterBag();

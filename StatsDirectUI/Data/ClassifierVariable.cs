@@ -6,21 +6,14 @@ using System.Collections.Generic;
 namespace StatsDirect.Data
 {
     [Serializable]
-    public class ClassifierVariable : DoubleVariable
+    public class ClassifierVariable : GenericVariable<double>
     {
         public ClassifierVariable()
         {
             Groups = new List<Group>();
         }
 
-        public override Variable SameSizeForResults()
-        {
-            Variable newVariable = new DoubleVariable();
-            newVariable.EnsureLength(Length);
-            return newVariable;
-        }
-
-        public override void StealDataFrom(Variable victim)
+        public override void StealDataFrom(IVariable victim)
         {
             if (!(victim is ClassifierVariable))
                 throw new InvalidCastException("Victim must be of the same type when stealing variables");
@@ -37,9 +30,7 @@ namespace StatsDirect.Data
         public void EnsureGroups(int minimumSize)
         {
             while (Groups.Count < minimumSize)
-            {
                 Groups.Add(null);
-            }
         }
 
         public override object CopyAndStripForRedo(bool shouldKeepData)

@@ -23,6 +23,12 @@ namespace StatsDirect.UI
             FillControlFromOptions();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        /// <param name="outputParameters"></param>
+        /// <returns>A Control to select for user correction if there was an input error, null otherwise.</returns>
         private Control Extract(bool count, ParameterBag outputParameters)
         {
             ITemplateHost host = SdApplication.SoleInstance;
@@ -49,43 +55,49 @@ namespace StatsDirect.UI
                 return txtExpression;
             }
 
-            int rows = options.DataFrame.Variables[0].Length;
+            DoubleVariable inputVariable = options.DataFrame.Variables[0] as DoubleVariable;
+            int rows = inputVariable.Length;
   
             string expressionWithOriginalNames = expression;
             for (int k = 0; k < options.IdentifiersFrame.VariableCount; k++)
-            {
                 expressionWithOriginalNames = expressionWithOriginalNames.Replace("X" + (k + 1).ToString(), options.IdentifiersFrame.Variables[k].Title);
-            }
     
             expressionWithOriginalNames = dtitle + " {" + expressionWithOriginalNames + "}";
             if (!count)
             {
-                DataFrame outputFrame = new DataFrame();
-                StringVariable outputVariable = new StringVariable(rows, expressionWithOriginalNames);
-                outputFrame.Variables.Add(outputVariable);
-                int cnt = 0;
+                // Work out the calculations
                 DataType[] dataTypes = new DataType[cols];
                 for (int col = 0; col < cols; col++)
                     dataTypes[col] = DataType.Double;
                 Calcit calcit = new Calcit(expression, dataTypes, false);
+
+                // We now know the output type; set up an output variable appropriately to handle it.
+                DataFrame outputFrame = new DataFrame();
+                DoubleVariable outputVariable = new DoubleVariable(rows, expressionWithOriginalNames);
+                outputFrame.Variables.Add(outputVariable);
+                int cnt = 0;
                 double[] x = new double[cols];
                 for (int n = 0; n < rows; n++)
                 {
-                    if ((options.DataFrame.Variables[0] as DoubleVariable).Data[n] != Constant.MISSING)
+                    if (inputVariable.Data[n] != Constant.MISSING)
                     {
    
                         // Put row into working array
                         for (int j = 0; j < cols; j++)
                             x[j] = (options.IdentifiersFrame.Variables[j] as DoubleVariable).Data[n];
-  
+
                         // See if expression is true
-                        if (1 == calcit.Evaluate(x))
+                        if (calcit.Evaluate<bool>(x))
                         {
                             int rw = chkKeepRowPositions.Checked ? n : cnt;
-                            outputVariable.Data[rw] = (options.DataFrame.Variables[0] as DoubleVariable).Data[n].ToString();
+                            outputVariable.Data[rw] = inputVariable.Data[n];
                             cnt++;
                         }
-      
+                        else
+                        {
+                            if (chkKeepRowPositions.Checked)
+                                outputVariable.Data[n] = Constant.MISSING;
+                        }
                     }
                 }
                 if (!chkKeepRowPositions.Checked)
@@ -101,16 +113,16 @@ namespace StatsDirect.UI
                     dataTypes[col] = DataType.Double;
                 Calcit calcit = new Calcit(expression, dataTypes, false);
                 double[] x = new double[cols];
-                for (int N = 0; N < rows; N++)
+                for (int n = 0; n < rows; n++)
                 {
-                    if ((options.DataFrame.Variables[0] as DoubleVariable).Data[N] != Constant.MISSING)
+                    if (inputVariable.Data[n] != Constant.MISSING)
                     {
                         // Put row into working array
                         for (int j = 0; j < cols; j++)
-                            x[j] = (options.IdentifiersFrame.Variables[j] as DoubleVariable).Data[N];
+                            x[j] = (options.IdentifiersFrame.Variables[j] as DoubleVariable).Data[n];
   
                         // See if expression is true
-                        if (1 == calcit.Evaluate(x))
+                        if (calcit.Evaluate<bool>(x))
                             cnt++;
                     }
                 }

@@ -21,7 +21,7 @@
         <frame>
           <name>preferences</name>
           <prompt>Select columns for preferences</prompt>
-          <mode>NumericSkipMissing</mode>
+          <mode>NumericReplaceMissing</mode>
           <same-length>true</same-length>
           <min-columns>1</min-columns>
           <max-columns>200</max-columns>

@@ -9,6 +9,8 @@ namespace StatsDirect.Templates
         /// </summary>
         public string DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
+            if (null == DefaultValueExpression)
+                return null;
             return processor.Evaluate(DefaultValueExpression, parameters).ToString();
         }
 

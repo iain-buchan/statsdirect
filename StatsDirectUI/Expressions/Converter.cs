@@ -15,8 +15,10 @@ namespace StatsDirect.Expressions
                 expr = expr.Replace(" ", string.Empty);
 
             AntlrInputStream input = new AntlrInputStream(expr);
-            StatsDirectExpressionLexer lexer = new StatsDirectExpressionLexer(input);
-            lexer.Separators = GetSeparatorStructure();
+            StatsDirectExpressionLexer lexer = new StatsDirectExpressionLexer(input)
+            {
+                Separators = GetSeparatorStructure()
+            };
             CommonTokenStream tokenStream = new CommonTokenStream(lexer);
             StatsDirectExpressionParser parser = new StatsDirectExpressionParser(tokenStream);
             StringBuilder errorBuilder = new StringBuilder();

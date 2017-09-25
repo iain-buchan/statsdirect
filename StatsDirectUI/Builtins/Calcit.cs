@@ -92,13 +92,13 @@ namespace StatsDirect.Builtins
             return retval;
         }
 
-        public double Evaluate(double[] values)
+        public T Evaluate<T>(double[] values)
         {
             try
             {
                 object[] parameters = new object[] { values};
                 object output = methodInfo.Invoke(instance, parameters);
-                return Convert.ToDouble(output);
+                return (T)Convert.ChangeType(output, typeof(T));
             }
             catch (TargetInvocationException tie)
             {
@@ -108,12 +108,12 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public object EvaluateObject(object[] values)
+        public T EvaluateObject<T>(object[] values)
         {
             try
             {
                 object[] parameters = new object[] { values };
-                return methodInfo.Invoke(instance, parameters);
+                return (T)methodInfo.Invoke(instance, parameters);
             }
             catch (TargetInvocationException tie)
             {

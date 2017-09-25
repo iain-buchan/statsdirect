@@ -1,37 +1,34 @@
 using System;
-using StatsDirect.Utilities;
+using StatsDirect.Numerics;
 
 namespace StatsDirect.Data
 {
-    ///  <summary>
-    ///  Represents a single variant variable/factor/column/field.
-    ///  </summary>
     [Serializable]
-    public sealed class VariantVariable : GenericVariable<object>
+    public class BooleanVariable : GenericVariable<bool>
     {
-        public VariantVariable()
+        public BooleanVariable()
             : base()
         {
         }
 
-        public VariantVariable(object[] data)
+        public BooleanVariable(bool[] data)
             : base(data)
         {
         }
 
-        public VariantVariable(object[] data, string title)
+        public BooleanVariable(bool[] data, string title)
             : base(data, title)
         {
         }
 
-        public VariantVariable(int length, string title)
+        public BooleanVariable(int length, string title)
             : base(length, title)
         {
         }
 
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
-            VariantVariable copy = new VariantVariable();
+            BooleanVariable copy = new BooleanVariable();
             CopyAndStripForRedoInto(copy, shouldKeepData);
             return copy;
         }

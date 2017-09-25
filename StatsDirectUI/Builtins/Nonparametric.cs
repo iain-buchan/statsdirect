@@ -3307,7 +3307,7 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
 
             int prelx = 0;
-            foreach (Variable v in frame.Variables)
+            foreach (IVariable v in frame.Variables)
             {
                 prelx = prelx + v.Length;
             }
@@ -3403,7 +3403,7 @@ namespace StatsDirect.Builtins
             host.StartProgress("Simulating exact P", true);
 
             int prelx = 0;
-            foreach (Variable v in frame.Variables)
+            foreach (IVariable v in frame.Variables)
                 prelx += v.Length;
             double[] x = new double[prelx + 1];
             int[] l = new int[frame.VariableCount + 1];
@@ -3574,7 +3574,7 @@ namespace StatsDirect.Builtins
 
             //  Re-do Kruskal-Wallis test (from rpt_kruskal)
             int prelx = 0;
-            foreach (Variable varbl in frame.Variables)
+            foreach (IVariable varbl in frame.Variables)
             {
                 prelx = prelx + varbl.Length;
             }

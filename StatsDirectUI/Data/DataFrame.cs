@@ -8,15 +8,15 @@ namespace StatsDirect.Data
     {
         public DataFrame()
         {
-            Variables = new List<Variable>();
+            Variables = new List<IVariable>();
         }
 
-        public DataFrame(Variable v)
+        public DataFrame(IVariable v)
         {
-            Variables = new List<Variable> { v };
+            Variables = new List<IVariable> { v };
         }
 
-        public DataFrame(Variable v, string name)
+        public DataFrame(IVariable v, string name)
             : this(v)
         {
             Name = name;
@@ -29,27 +29,27 @@ namespace StatsDirect.Data
         public string Name { get; set; }
 
         [XmlIgnore]
-        public IList<Variable> Variables { get; set; }
+        public IList<IVariable> Variables { get; set; }
 
         [XmlArray("variables")]
         [XmlArrayItem("classifier-variable", typeof(ClassifierVariable))]
         [XmlArrayItem("date-variable", typeof(DateVariable))]
         [XmlArrayItem("double-variable", typeof(DoubleVariable))]
         [XmlArrayItem("string-variable", typeof(StringVariable))]
-        public Variable[] VariablesForXml
+        public IVariable[] VariablesForXml
         {
             get
             {
-                Variable[] retval = new Variable[Variables.Count];
+                IVariable[] retval = new IVariable[Variables.Count];
                 int i = 0;
-                foreach (Variable v in Variables)
+                foreach (IVariable v in Variables)
                     retval[i++] = v;
                 return retval;
             }
             set
             {
                 Variables.Clear();
-                foreach (Variable v in value)
+                foreach (IVariable v in value)
                     Variables.Add(v);
             }
         }
@@ -67,7 +67,7 @@ namespace StatsDirect.Data
             get
             {
                 int maxLength = 0;
-                foreach (Variable v in Variables)
+                foreach (IVariable v in Variables)
                     maxLength = Math.Max(maxLength, v.Length);
                 return maxLength;
             }
@@ -81,7 +81,7 @@ namespace StatsDirect.Data
                     return 0;
 
                 int minLength = int.MaxValue;
-                foreach (Variable v in Variables)
+                foreach (IVariable v in Variables)
                     minLength = Math.Min(minLength, v.Length);
                 return minLength;
             }
@@ -102,23 +102,9 @@ namespace StatsDirect.Data
             }
         }
 
-        ///  <summary>
-        ///  Return a new DataFrame with the same number of variables, each of the same size, as this frame.
-        ///  The new frame is not otherwise initialised - no names, no values.
-        ///  </summary>
-        ///  <returns>a new DataFrame with the same number of variables, each of the same size, as this frame</returns>
-        public DataFrame SameSizeForResults()
+        public IVariable FindVariable(string title)
         {
-            DataFrame newFrame = new DataFrame();
-            newFrame.EnsureVariables(VariableCount);
-            foreach (Variable v in Variables)
-                newFrame.Variables.Add(v.SameSizeForResults());
-            return newFrame;
-        }
-
-        public Variable FindVariable(string title)
-        {
-            foreach (Variable v in Variables)
+            foreach (IVariable v in Variables)
                 if (v.Title != null && v.Title.Equals(title))
                     return v;
             return null;
@@ -127,8 +113,8 @@ namespace StatsDirect.Data
         public object CopyAndStripForRedo(bool shouldKeepData)
         {
             DataFrame copy = new DataFrame { Name = Name };
-            foreach (Variable v in Variables)
-                copy.Variables.Add((Variable)v.CopyAndStripForRedo(shouldKeepData));
+            foreach (IVariable v in Variables)
+                copy.Variables.Add((IVariable)v.CopyAndStripForRedo(shouldKeepData));
             return copy;
         }
 

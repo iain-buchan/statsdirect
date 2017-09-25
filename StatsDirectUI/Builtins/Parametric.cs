@@ -346,7 +346,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> sampleList = new List<ParameterBag>();
             outputParameters.AddOutput("*sample", sampleList);
-            foreach (Variable varbl in data.Variables)
+            foreach (IVariable varbl in data.Variables)
             {
                 DoubleVariable variable = varbl as DoubleVariable;
                 double[] x = new double[variable.Length + 1 ];
@@ -568,7 +568,7 @@ namespace StatsDirect.Builtins
             List<ParameterBag> outputList = new List<ParameterBag>();
             outputParameters.AddOutput("*variable", outputList);
 
-            foreach (Variable v in frame.Variables)
+            foreach (IVariable v in frame.Variables)
             {
                 DoubleVariable v0 = v as DoubleVariable;
                 double[] data = v0.Data;

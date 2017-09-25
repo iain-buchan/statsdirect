@@ -12,6 +12,6 @@ namespace StatsDirect.Data
         ///  Request that each variable in variables is filled from its origin, taking into account that some (but not all) may have been acquired together and hence need a common length.
         ///  </summary>
         ///  <param name="v">The variable to be refilled</param>
-        void Refill(IList<Variable> variables);
+        void Refill(IList<IVariable> variables);
     }
 }

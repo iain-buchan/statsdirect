@@ -85,7 +85,7 @@ namespace StatsDirect.Builtins
             {
                 v.SetData(i, currentval);
                 x[0] = currentval;
-                currentval = c.Evaluate(x);
+                currentval = c.Evaluate<double>(x);
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
@@ -103,7 +103,7 @@ namespace StatsDirect.Builtins
 
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DataFrame outputFrame = new DataFrame();
-            foreach (Variable inputVariable in dataFrame.Variables)
+            foreach (IVariable inputVariable in dataFrame.Variables)
             {
                 DoubleVariable dataVariable = (DoubleVariable)inputVariable;
                 DoubleVariable outputVariable = new DoubleVariable(dataVariable.Length, inputVariable.Title + " {" + outputUnits + "}");
@@ -117,7 +117,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         x[0] = data[i];
-                        output[i] = c.Evaluate(x);
+                        output[i] = c.Evaluate<double>(x);
                     }
                 }
             }
@@ -1161,32 +1161,34 @@ namespace StatsDirect.Builtins
             bool[] rowsToDelete = new bool[inputFrame.MaxRows];
             int matches = 0;
             object[] values = new object[1];
-            foreach (Variable inputVariable in inputFrame.Variables)
+            foreach (IVariable inputVariable in inputFrame.Variables)
             {
                 // Use a VariantVariable as we're not sure what the result of the replace will be
-                VariantVariable outputVariable = new VariantVariable(inputVariable.Length, inputVariable.Title);
+                IVariable outputVariable = new VariantVariable();
+                outputVariable.EnsureLength(inputVariable.Length);
+                outputVariable.Title = inputVariable.Title;
                 outputFrame.Variables.Add(outputVariable);
                 int outputIndex = 0;
                 for (int inputIndex = 0; inputIndex < inputVariable.Length; inputIndex++)
                 {
                     values[0] = inputVariable.DataAsObject(inputIndex);
-                    bool isMatch = (bool)searcher.EvaluateObject(values);
+                    bool isMatch = searcher.EvaluateObject<bool>(values);
                     if (isMatch)
                     {
                         matches++; // In case counting - faster to just do this than branch and cause a bubble in the CPU pipeline.
                         // If deleting matching cells, do nothing - this avoids copying the value to the output, effectively deleting it.
                         rowsToDelete[inputIndex] = true; // In case deleting rows - probably faster to just do this than branch.
                         if (replacingWithValue)
-                            outputVariable.Data[outputIndex++] = replaceExpression;
+                            outputVariable.DataAsObject(outputIndex++, replaceExpression);
                         else if (replacingWithExpression)
                         {
                             // values still holds the value we need; we can simply re-use it.
-                            outputVariable.Data[outputIndex++] = replacer.EvaluateObject(values);
+                            outputVariable.DataAsObject(outputIndex++, replacer.EvaluateObject<object>(values));
                         }
                     }
                     else
                     {
-                        outputVariable.Data[outputIndex++] = inputVariable.DataAsObject(inputIndex);
+                        outputVariable.DataAsObject(outputIndex++, inputVariable.DataAsObject(inputIndex));
                     }
                 }
                 // If deleting cells, the output variable may well be shorter than the input.
@@ -1252,17 +1254,17 @@ namespace StatsDirect.Builtins
             {
                 if (value != Constant.MISSING)
                 {
-                    nx += 1;
+                    nx++;
                     sum += value;
                 }
             }
-            double mean = sum / Convert.ToDouble(nx);
+            double mean = sum / nx;
             double ssq = 0;
             foreach (double value in inputData)
             {
                 ssq += (value - mean) * (value - mean);
             }
-            double sd = Math.Sqrt(ssq / Convert.ToDouble(nx - 1));
+            double sd = Math.Sqrt(ssq / (nx - 1));
             // int lc = 1; 
             string pre = "Std (" + lab + "): ";
 
@@ -1330,7 +1332,7 @@ namespace StatsDirect.Builtins
             string gpti = null; string datti = null; string lastgpti = null; string lastdatti = null;
 
             DataFrame data = parameters["data"].AsDataFrame;
-            foreach (Variable v in data.Variables)
+            foreach (IVariable v in data.Variables)
                 totrows += v.Length;
 
             // reconstitute original labels if split using split function --->
@@ -2199,12 +2201,12 @@ namespace StatsDirect.Builtins
             {
                 for (int col = 0; col < cols; col++)
                     x[col] = ((DoubleVariable)data.Variables[col]).Data[row];
-                sortArray[row] = new SortPair(XSpr(clc.Evaluate(x)), row);
+                sortArray[row] = new SortPair(XSpr(clc.Evaluate<double>(x)), row);
             }
             Array.Sort(sortArray);
 
             DataFrame outputFrame = new DataFrame();
-            foreach (Variable v in data.Variables)
+            foreach (IVariable v in data.Variables)
                 outputFrame.Variables.Add(new DoubleVariable(rows, "Sort(" + expression + "): " + v.Title));
             for (int col = 0; col < cols; col++)
             {
@@ -2557,14 +2559,12 @@ namespace StatsDirect.Builtins
                 Data = inputVariable
             };
             if (null == host.Amend(options, parameters))
-            {
                 throw new TemplateOperationCancelledException();
-            }
+
             DataFrame outputFrame = new DataFrame();
             if (options.PassX != null && options.PassX.Length > 0)
             {
-                string lab = options.Title;
-                DoubleVariable boundariesVariable = new DoubleVariable(options.PassX, lab);
+                DoubleVariable boundariesVariable = new DoubleVariable(options.PassX, options.Title);
                 outputFrame.Variables.Add(boundariesVariable);
             }
             if (options.Categories != null)
@@ -2573,11 +2573,8 @@ namespace StatsDirect.Builtins
                 outputFrame.Variables.Add(categoryVariable);
                 DoubleVariable countVariable = new DoubleVariable(options.Counts.Length, "count");
                 outputFrame.Variables.Add(countVariable);
-                int r;
-                for (r = 0; r <= options.Counts.Length - 1; r++)
-                {
+                for (int r = 0; r < options.Counts.Length; r++)
                     countVariable.SetData(r, options.Counts[r]);
-                }
             }
             return WrapFrame("output", outputFrame);
         }
@@ -2603,20 +2600,8 @@ namespace StatsDirect.Builtins
 
                 int cols = identifiersFrame.VariableCount;
                 string l = string.Empty;
-                /* #537: Always use X1, X2 etc.
-                if (cols == 1)
-                {
-                    l += "X: " + identifiersFrame.Variables[0].Title + "\r\n";
-                }
-                else
-                 */
-                {
-                    int j;
-                    for (j = 1; j <= cols; j++)
-                    {
-                        l += "X" + j + ": " + identifiersFrame.Variables[j - 1].Title + "\r\n";
-                    }
-                }
+                for (int j = 1; j <= cols; j++)
+                    l += "X" + j + ": " + identifiersFrame.Variables[j - 1].Title + "\r\n";
 
                 ExtractionOptions options = new ExtractionOptions
                 {
@@ -2743,7 +2728,7 @@ namespace StatsDirect.Builtins
                 if (null != covariatesOrNull)
                 {
                     // Add covariates.
-                    foreach (Variable inputCovariant in covariatesOrNull.Variables)
+                    foreach (IVariable inputCovariant in covariatesOrNull.Variables)
                     {
                         VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
                         for (int i = 0; i < nextDifferentValue; i++)
@@ -2809,7 +2794,7 @@ namespace StatsDirect.Builtins
                 if (null != covariatesOrNull)
                 {
                     // Add covariates.
-                    foreach (Variable inputCovariant in covariatesOrNull.Variables)
+                    foreach (IVariable inputCovariant in covariatesOrNull.Variables)
                     {
                         VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
                         for (int i = 0; i < nextDifferentValue; i++)
@@ -3002,96 +2987,36 @@ namespace StatsDirect.Builtins
 
         private static int ClassifyObjects(int[] differenceArray, DataFrame inputFrame, int nextDifferentValue)
         {
-            foreach (Variable variable in inputFrame.Variables)
-                nextDifferentValue = ClassifyObjects(differenceArray, variable, nextDifferentValue);
+            foreach (dynamic variable in inputFrame.Variables)
+                nextDifferentValue = ClassifyObjectsInOneVariable(differenceArray, variable, nextDifferentValue);
             return nextDifferentValue;
         }
 
-        private class VariableObjectClassifier : IVariableVisitor
+        private class IntAndSomething<T>
         {
-            public int[] DifferenceArray { get; set; }
-            public int NextDifferentValue { get; set; }
+            public int I { get; }
+            public T Something { get; }
 
-            public void Visit(DoubleVariable variable)
+            public override int GetHashCode()
             {
-                ClassifyObjects(variable.Data);
+                return I ^ Something.GetHashCode();
             }
 
-            public void Visit(VariantVariable variable)
+            public override bool Equals(object obj)
             {
-                ClassifyObjects(variable.Data);
+                if (!(obj is IntAndSomething<T>))
+                    return false;
+                IntAndSomething<T> other = (IntAndSomething<T>)obj;
+                return I == other.I && Something.Equals(other.Something);
             }
 
-            public void Visit(StringVariable variable)
+            public IntAndSomething(int i, T something)
             {
-                ClassifyObjects(variable.Data);
-            }
-
-            public void Visit(DateVariable variable)
-            {
-                ClassifyObjects(variable.Data);
-            }
-
-            public void Visit(ClassifierVariable variable)
-            {
-                ClassifyObjects(variable.Data);
-            }
-
-            private void ClassifyObjects<T>(T[] testArray)
-            {
-                HashSet<int> seenDifferences = new HashSet<int>();
-                Dictionary<IntAndSomething<T>, int> differenceMapper = new Dictionary<IntAndSomething<T>, int>();
-                for (int i = 0; i < DifferenceArray.Length; i++)
-                {
-                    int differenceValue = DifferenceArray[i];
-                    IntAndSomething<T> probe = new IntAndSomething<T>(differenceValue, i < testArray.Length ? testArray[i] : default(T));
-                    // Holds the value we'll use
-                    if (differenceMapper.TryGetValue(probe, out int target))
-                    {
-                        // We've seen this value before; use the existing mapping
-                    }
-                    else
-                    {
-                        // We've not seen this combination before.  Create a mapping for it and set the value in differenceArray accordingly.
-                        // If this is the first time we've seen this value in differenceArray, re-use it; otherwise, assign a new unique value.
-                        if (!seenDifferences.Contains(differenceValue))
-                        {
-                            seenDifferences.Add(differenceValue);
-                            target = differenceValue;
-                        }
-                        else
-                            target = NextDifferentValue++;
-                        differenceMapper.Add(probe, target);
-                    }
-                    DifferenceArray[i] = target;
-                }
-            }
-
-            private class IntAndSomething<T>
-            {
-                public int I { get; }
-                public T Something { get; }
-
-                public override int GetHashCode()
-                {
-                    return I ^ Something.GetHashCode();
-                }
-
-                public override bool Equals(object obj)
-                {
-                    if (!(obj is IntAndSomething<T>))
-                        return false;
-                    IntAndSomething<T> other = (IntAndSomething<T>)obj;
-                    return I == other.I && Something.Equals(other.Something);
-                }
-
-                public IntAndSomething(int i, T something)
-                {
-                    I = i;
-                    Something = something;
-                }
+                I = i;
+                Something = something;
             }
         }
+
         /// <summary>
         /// Assume differenceArray already holds differences for variables earlier than this one.  Where elements of this variable differ, distinguish new values in differenceArray.
         /// </summary>
@@ -3099,11 +3024,36 @@ namespace StatsDirect.Builtins
         /// <param name="variable"></param>
         /// <param name="nextDifferentValue"></param>
         /// <returns></returns>
-        private static int ClassifyObjects(int[] differenceArray, Variable variable, int nextDifferentValue)
+        private static int ClassifyObjectsInOneVariable<T>(int[] differenceArray, GenericVariable<T> variable, int nextDifferentValue)
         {
-            VariableObjectClassifier classifier = new VariableObjectClassifier { DifferenceArray = differenceArray, NextDifferentValue = nextDifferentValue };
-            variable.Accept(classifier);
-            return classifier.NextDifferentValue;
+            T[] testArray = variable.Data;
+            HashSet<int> seenDifferences = new HashSet<int>();
+            Dictionary<IntAndSomething<T>, int> differenceMapper = new Dictionary<IntAndSomething<T>, int>();
+            for (int i = 0; i < differenceArray.Length; i++)
+            {
+                int differenceValue = differenceArray[i];
+                IntAndSomething<T> probe = new IntAndSomething<T>(differenceValue, i < testArray.Length ? testArray[i] : default(T));
+                // Holds the value we'll use
+                if (differenceMapper.TryGetValue(probe, out int target))
+                {
+                    // We've seen this value before; use the existing mapping
+                }
+                else
+                {
+                    // We've not seen this combination before.  Create a mapping for it and set the value in differenceArray accordingly.
+                    // If this is the first time we've seen this value in differenceArray, re-use it; otherwise, assign a new unique value.
+                    if (!seenDifferences.Contains(differenceValue))
+                    {
+                        seenDifferences.Add(differenceValue);
+                        target = differenceValue;
+                    }
+                    else
+                        target = nextDifferentValue++;
+                    differenceMapper.Add(probe, target);
+                }
+                differenceArray[i] = target;
+            }
+            return nextDifferentValue;
         }
 
         private class CountAndRowIndex

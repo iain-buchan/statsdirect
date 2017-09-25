@@ -33,7 +33,7 @@ namespace StatsDirect.Charting
             MarkerTypes = new List<MarkerType>();
             for (int seriesIndex = 0; seriesIndex <= f.VariableCount - 1; seriesIndex++)
             {
-                Variable v = f.Variables[seriesIndex];
+                IVariable v = f.Variables[seriesIndex];
 
                 MarkerType marker = new MarkerType { MarkerColor = Color.Gray, LineColor = Color.Gray, IsMarkerFilled = false };
 

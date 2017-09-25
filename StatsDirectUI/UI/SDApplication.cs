@@ -1272,28 +1272,28 @@ namespace StatsDirect.UI
             }
         }
 
-        void IRefillSource.Refill(IList<Variable> variables)
+        void IRefillSource.Refill(IList<IVariable> variables)
         {
             // Split up the variables, which might occasionally have come from more than one selection, into their different selections.
-            Dictionary<int, List<Variable>> variablesByOriginGroup = new Dictionary<int, List<Variable>>();
-            foreach (Variable variable in variables)
+            Dictionary<int, List<IVariable>> variablesByOriginGroup = new Dictionary<int, List<IVariable>>();
+            foreach (IVariable variable in variables)
             {
                 if (null == variable.Origin)
                     continue;
-                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out List<Variable> variablesByThisGroup))
+                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out List<IVariable> variablesByThisGroup))
                 {
-                    variablesByThisGroup = new List<Variable>();
+                    variablesByThisGroup = new List<IVariable>();
                     variablesByOriginGroup.Add(variable.Origin.OriginGroup, variablesByThisGroup);
                 }
                 variablesByThisGroup.Add(variable);
             }
 
             // For each selection, check they all have the same workbook (we can't handle cross-workbook selections as we hand off to an IGrid), load it and delegate the refill to it.
-            foreach (List<Variable> candidates in variablesByOriginGroup.Values)
+            foreach (List<IVariable> candidates in variablesByOriginGroup.Values)
             {
                 string workbookPath = null;
                 bool atLeastOneFailedVariable = false;
-                foreach (Variable candidate in candidates)
+                foreach (IVariable candidate in candidates)
                 {
                     if (!(candidate.Origin is WorksheetOrigin))
                     {

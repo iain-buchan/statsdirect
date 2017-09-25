@@ -133,6 +133,7 @@ namespace StatsDirect.Charting
             for (int i = 0; i < groupCount; i++)
                 survivalOptions.SeriesTitles[i] = (i + 1).ToString();
             survivalOptions.SetMarkers();
+            survivalOptions.ShowLegend = groupCount > 1;
             return survivalOptions;
         }
 

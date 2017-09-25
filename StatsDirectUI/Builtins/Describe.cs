@@ -109,11 +109,11 @@ namespace StatsDirect.Builtins
             DataFrame capacitiesFrame = parameters["capacities"].AsDataFrame;
             DoubleVariable capacitiesVariable = (DoubleVariable)capacitiesFrame.Variables[0];
             int groups = capacitiesVariable.Length;
-            int[] groupCapacities = new int[groups + 1];
+            int[] groupCapacities = new int[groups]; // 0-based
             int capacity = 0;
-            for (int i = 1; i <= groups; i++)
+            for (int i = 0; i < groups; i++)
             {
-                groupCapacities[i] = (int)capacitiesVariable.Data[i - 1];
+                groupCapacities[i] = (int)capacitiesVariable.Data[i];
                 capacity += groupCapacities[i];
             }
             DataFrame preferencesFrame = parameters["preferences"].AsDataFrame;
@@ -125,10 +125,16 @@ namespace StatsDirect.Builtins
                 DoubleVariable preferencesVariable = (DoubleVariable)preferencesFrame.Variables[i - 1];
                 for (int j = 1; j <= subjects; j++)
                 {
-                    x[i, j] = (int)preferencesVariable.Data[j - 1];
-                    if (x[i, j] < 1 || x[i, j] > groups)
+                    double value = preferencesVariable.Data[j - 1];
+                    x[i, j] = (int)value;
+                    if (value == Constant.MISSING)
                     {
-                        host.Error("invalid preference in group " + i + "at row " + j, pg);
+                        // #1328: Repeat the first preference if a subject doesn't express all preferences.
+                        x[i, j] = x[1, j];
+                    }
+                    else if (x[i, j] < 1 || x[i, j] > groups)
+                    {
+                        host.Error("invalid preference in group " + i + " at row " + j, pg);
                         throw new TemplateOperationCancelledException();
                     }
                 }
@@ -138,15 +144,15 @@ namespace StatsDirect.Builtins
                 host.Error("fewer groups than preferences", pg);
                 throw new TemplateOperationCancelledException();
             }
-            if (capacity < Convert.ToDouble(subjects))
+            if (capacity < subjects)
             {
-                host.Error("more subects (" + subjects + ") than total capacity of groups (" + capacity + ")", pg);
+                host.Error("more subjects (" + subjects + ") than total capacity of groups (" + capacity + ")", pg);
                 throw new TemplateOperationCancelledException();
             }
-            bool[] done = new bool[subjects + 1];
-            int[] allocatedGroup = new int[subjects + 1];
-            int[] allocatedSoFar = new int[groups + 1];
-            int[] toConsider = new int[subjects + 2];
+            bool[] done = new bool[subjects + 1]; // 1-based
+            int[] allocatedGroup = new int[subjects + 1]; // 1-based
+            int[] allocatedSoFar = new int[groups + 1]; // 1-based
+            int[] toConsider = new int[subjects]; // 0-based
             MersenneTwister mt = new MersenneTwister(seed);
             int ok = 0;
             // First allocate according to preferences where possible - 1st preference, then 2nd preference, etc..
@@ -155,25 +161,21 @@ namespace StatsDirect.Builtins
                 for (int grp = 1; grp <= groups; grp++)
                 {
                     // If the group is already full, there's no point trying to assign any more at this preference
-                    if (allocatedSoFar[grp] < groupCapacities[grp])
+                    if (allocatedSoFar[grp] < groupCapacities[grp - 1])
                     {
                         // Gather all subjects who have expressed a preference here for group grp
                         int underConsideration = 0;
                         for (int subject = 1; subject <= subjects; subject++)
-                        {
                             if (x[preference, subject] == grp && !done[subject])
-                            {
-                                underConsideration++;
-                                toConsider[underConsideration] = subject;
-                            }
-                        }
+                                toConsider[underConsideration++] = subject;
+
                         // Allocate those who want this group to it; if it's over-subscribed, shuffle the candidates so that all have an equal chance to get their choice.
                         if (underConsideration > 0)
                         {
-                            Shuffle(mt, toConsider, 1, underConsideration);
-                            int space = groupCapacities[grp] - allocatedSoFar[grp];
+                            Shuffle(mt, toConsider, 0, underConsideration - 1);
+                            int space = groupCapacities[grp - 1] - allocatedSoFar[grp];
                             int successfulCandidates = Math.Min(space, underConsideration);
-                            for (int toAllocate = 1; toAllocate <= successfulCandidates; toAllocate++)
+                            for (int toAllocate = 0; toAllocate < successfulCandidates; toAllocate++)
                             {
                                 int subject = toConsider[toAllocate];
                                 allocatedGroup[subject] = grp;
@@ -192,18 +194,11 @@ namespace StatsDirect.Builtins
                 // Put groups with remaining space into toConsider...
                 int availableGroups = 0;
                 for (int grp = 1; grp <= groups; grp++)
-                {
-                    if (allocatedSoFar[grp] < groupCapacities[grp])
-                    {
-                        for (int k = 1; k <= groupCapacities[grp] - allocatedSoFar[grp]; k++)
-                        {
-                            availableGroups++;
-                            toConsider[availableGroups] = grp;
-                        }
-                    }
-                }
+                    if (allocatedSoFar[grp] < groupCapacities[grp - 1])
+                        for (int k = 1; k <= groupCapacities[grp - 1] - allocatedSoFar[grp]; k++)
+                            toConsider[availableGroups++] = grp;
                 // ... and shuffle them so that they're filled in random order
-                Shuffle(mt, toConsider, 1, availableGroups);
+                Shuffle(mt, toConsider, 0, availableGroups - 1);
 
                 // Find unallocated subjects and allocate one to a random group until we run out of subjects or groups.
                 int groupToUse = 0;
@@ -211,8 +206,7 @@ namespace StatsDirect.Builtins
                 {
                     if (!done[k])
                     {
-                        groupToUse++;
-                        allocatedGroup[k] = toConsider[groupToUse];
+                        allocatedGroup[k] = toConsider[groupToUse++];
                         ok++;
                     }
 
@@ -275,7 +269,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> variableList = new List<ParameterBag>();
             outputParameters.AddOutput("*variable", variableList);
-            foreach (Variable v in data.Variables)
+            foreach (IVariable v in data.Variables)
             {
                 ClassifierVariable vc = (ClassifierVariable)v;
                 ParameterBag variableParameters = new ParameterBag();

@@ -860,7 +860,7 @@ namespace StatsDirect.TemplateProcessing
 
                         // Otherwise ensure all values are in {0, 1}
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                         {
                             if (variable is DoubleVariable)
                             {
@@ -884,7 +884,7 @@ namespace StatsDirect.TemplateProcessing
 
                         // Otherwise ensure all values are > 0
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                         {
                             if (variable is DoubleVariable)
                             {
@@ -907,7 +907,7 @@ namespace StatsDirect.TemplateProcessing
                             return null;
 
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                             if (!(variable is DoubleVariable))
                                 return "Data must be numeric";
 
@@ -915,7 +915,7 @@ namespace StatsDirect.TemplateProcessing
                         for (int row = 0; row < dataFrame.MinRows; row++)
                         {
                             double sum = 0;
-                            foreach (Variable variable in dataFrame.Variables)
+                            foreach (IVariable variable in dataFrame.Variables)
                             {
                                 double x = (variable as DoubleVariable).Data[row];
                                 if (!(x == Constant.MISSING || double.IsInfinity(x)))
@@ -933,7 +933,7 @@ namespace StatsDirect.TemplateProcessing
                             return null;
 
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                             if (!(variable is DoubleVariable))
                                 return "Data must be numeric";
 
@@ -943,7 +943,7 @@ namespace StatsDirect.TemplateProcessing
                             double sum = 0;
                             for (int col = 0; col < dataFrame.Variables.Count - 1; col++)
                             {
-                                Variable variable = dataFrame.Variables[col];
+                                IVariable variable = dataFrame.Variables[col];
                                 double x = (variable as DoubleVariable).Data[row];
                                 if (!(x == Constant.MISSING || double.IsInfinity(x)))
                                     sum += x;
@@ -961,7 +961,7 @@ namespace StatsDirect.TemplateProcessing
 
                         // Otherwise ensure all values are >= 0
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                         {
                             if (variable is DoubleVariable)
                             {
@@ -985,7 +985,7 @@ namespace StatsDirect.TemplateProcessing
 
                         // Otherwise ensure all values are in the range (0, 1)
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                         {
                             if (variable is DoubleVariable)
                             {
@@ -1009,7 +1009,7 @@ namespace StatsDirect.TemplateProcessing
 
                         // Otherwise ensure all values are in the range [0, 1]
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                         {
                             if (variable is DoubleVariable)
                             {
@@ -1044,7 +1044,7 @@ namespace StatsDirect.TemplateProcessing
 
                         // Otherwise ensure there's no missing data in any of the numeric variables in the frame
                         DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (Variable variable in dataFrame.Variables)
+                        foreach (IVariable variable in dataFrame.Variables)
                         {
                             if (variable is DoubleVariable)
                             {

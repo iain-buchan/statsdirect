@@ -37,10 +37,10 @@ namespace StatsDirect.UI
             {
                 DataFrame outputFrame = new DataFrame();
                 double[] x = new double[1];
-                foreach (Variable source in options.DataFrame.Variables)
+                foreach (IVariable source in options.DataFrame.Variables)
                 {
                     int rows = source.Length;
-                    StringVariable outputVariable = new StringVariable(rows, source.Title);
+                    IVariable outputVariable = new VariantVariable(rows, source.Title);
                     outputFrame.Variables.Add(outputVariable);
                     double[] sourceData = ((DoubleVariable) source).Data;
                     for (int n = 0; n < rows; n++)
@@ -48,8 +48,8 @@ namespace StatsDirect.UI
                         if (sourceData[n] != Constant.MISSING)
                         {
                             x[0] = sourceData[n];
-                            if (1 == finder.Evaluate(x))
-                                outputVariable.Data[n] = replacer.Evaluate(x).ToString();
+                            if (finder.Evaluate<bool>(x))
+                                outputVariable.DataAsObject(n, replacer.Evaluate<object>(x));
                         }
                     }
                 }

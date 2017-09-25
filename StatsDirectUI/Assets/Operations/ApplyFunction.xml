@@ -89,7 +89,7 @@ Return outputParameters
                 outputVariable.Data(N) = Constant.MISSING
             Else
                 'Calculate the new value
-                outputVariable.Data(N) = Sheet.XSpr(clc.Evaluate(x))
+                outputVariable.Data(N) = Sheet.XSpr(clc.Evaluate(Of Double)(x))
             End If
         Next
         Dim outputParameters As New ParameterBag

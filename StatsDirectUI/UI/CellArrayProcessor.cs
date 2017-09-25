@@ -81,11 +81,11 @@ namespace StatsDirect.UI
                 // TODO: How does this affect minimum-column requirements?  Do they need checking later?
                 if (null != frame && frame.VariableCount > 1)
                 {
-                    List<Variable> toRemove = new List<Variable>();
-                    foreach (Variable v in frame.Variables)
+                    List<IVariable> toRemove = new List<IVariable>();
+                    foreach (IVariable v in frame.Variables)
                         if (v.Length == 0)
                             toRemove.Add(v);
-                    foreach (Variable v in toRemove)
+                    foreach (IVariable v in toRemove)
                         frame.Variables.Remove(v);
                 }
 
@@ -178,7 +178,7 @@ namespace StatsDirect.UI
                         DataFrame dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, variable, true);
                         if (null != dummyFrame)
                         {
-                            foreach (Variable v in dummyFrame.Variables)
+                            foreach (IVariable v in dummyFrame.Variables)
                                 frame.Variables.Add(v);
                         }
                         else
@@ -255,7 +255,7 @@ namespace StatsDirect.UI
                             }
                             if (null != dummyFrame)
                             {
-                                foreach (Variable v in dummyFrame.Variables)
+                                foreach (IVariable v in dummyFrame.Variables)
                                     frame.Variables.Add(v);
                             }
                             else
@@ -747,7 +747,7 @@ namespace StatsDirect.UI
                     if (!(null == victim || victim is double))
                         allNumeric = false;
                 }
-                Variable variable;
+                IVariable variable;
                 if (allNumeric)
                 {
                     double[] cooked = new double[nonHiddenDataRowCount];

@@ -427,7 +427,7 @@ namespace StatsDirect.UI
             StringVariable newValues = new StringVariable(data, parameter.ValueVariable);
             DataFrame oldFrame = Context[parameter.Source].AsDataFrame;
             DataFrame newFrame = new DataFrame();
-            foreach (Variable v in oldFrame.Variables)
+            foreach (IVariable v in oldFrame.Variables)
                 newFrame.Variables.Add(parameter.ValueVariable.Equals(v.Title) ? newValues : v);
             OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, newFrame);
         }

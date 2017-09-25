@@ -1,105 +1,27 @@
 using System;
 namespace StatsDirect.Data
 {
-    ///  <summary>
-    ///  Represents a single non-classifier variable/factor/column/field.
-    ///  Use ClassiferVariable to represent a classifier variable.
-    ///  </summary>
     [Serializable]
-    public sealed class DateVariable : Variable
+    public sealed class DateVariable : GenericVariable<DateTime>
     {
         public DateVariable()
+            : base()
         {
-            //  Do nothing
         }
 
         public DateVariable(DateTime[] data)
+            : base(data)
         {
-            Data = data;
         }
 
         public DateVariable(DateTime[] data, string title)
+            : base(data, title)
         {
-            Data = data;
-            Title = title;
         }
 
         public DateVariable(int length, string title)
+            : base(length, title)
         {
-            EnsureLength(length);
-            Title = title;
-        }
-
-        ///  <summary>
-        ///  Manage the entire data array at one time
-        ///  </summary>
-        ///  <value>The new data array to set</value>
-        ///  <returns>The current data array</returns>
-        ///  <remarks></remarks>
-        public DateTime[] Data { get; set; }
-
-        public override int Length => Data == null ? 0 : Data.Length;
-
-        public override void EnsureLength(int minimumLength)
-        {
-            if (Data == null)
-                Data = new DateTime[minimumLength];
-            else
-            {
-                if (Data.Length < minimumLength)
-                {
-                    DateTime[] temp = new DateTime[minimumLength];
-                    Array.Copy(Data, temp, Data.Length);
-                    Data = temp;
-                }
-            }
-        }
-
-        public void EnsureLength(int minimumLength, DateTime fillValue)
-        {
-            if (Data == null)
-            {
-                Data = new DateTime[minimumLength];
-                for (int i = 0; i < minimumLength; i++)
-                    Data[i] = fillValue;
-            }
-            else
-            {
-                if (Data.Length < minimumLength)
-                {
-                    int oldLength = Data.Length;
-                    DateTime[] temp = new DateTime[minimumLength];
-                    Array.Copy(Data, temp, Data.Length);
-                    Data = temp;
-                    for (int i = oldLength; i < minimumLength; i++)
-                        Data[i] = fillValue;
-                }
-            }
-        }
-
-        public override void EnsureLength(int minimumLength, bool useMissing)
-        {
-            if (useMissing)
-                EnsureLength(minimumLength, DateTime.MinValue);
-            else
-                EnsureLength(minimumLength);
-        }
-
-        public override void TruncateDataToLength(int maximumLength)
-        {
-            if (Data.Length > maximumLength)
-            {
-                DateTime[] temp = new DateTime[maximumLength];
-                Array.Copy(Data, temp, Math.Min(Data.Length, temp.Length));
-                Data = temp;
-            }
-        }
-
-        public override Variable SameSizeForResults()
-        {
-            Variable newVariable = new DoubleVariable();
-            newVariable.EnsureLength(Length);
-            return newVariable;
         }
 
         public override object CopyAndStripForRedo(bool shouldKeepData)
@@ -108,30 +30,6 @@ namespace StatsDirect.Data
             CopyAndStripForRedoInto(copy, shouldKeepData);
             return copy;
         }
-
-        private void CopyAndStripForRedoInto(DateVariable copy, bool ShouldKeepData)
-        {
-            base.CopyAndStripForRedoInto(copy, ShouldKeepData);
-            if (Origin == null || ShouldKeepData)
-            {
-                //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
-                copy.Data = Data;
-            }
-        }
-
-        public override void StealDataFrom(Variable victim)
-        {
-            if (!(victim is DateVariable))
-                throw new InvalidCastException("Victim must be of the same type when stealing variables");
-            Data = (victim as DateVariable).Data;
-        }
-
-        public override object DataAsObject(int i)
-        {
-            return Data[i];
-        }
-
-        protected override bool HasData => Data != null;
 
         public override void Accept(IVariableVisitor visitor)
         {

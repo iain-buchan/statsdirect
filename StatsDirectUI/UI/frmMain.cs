@@ -214,9 +214,8 @@ namespace StatsDirect.UI
 
             bool enabledViaGrid = true;
             object tagObject = ToTagObject(item);
-            if (tagObject is Dictionary<string, string>)
+            if (tagObject is Dictionary<string, string> tagDictionary)
             {
-                Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
                 if (tagDictionary.TryGetValue("operation", out string operationName))
                 {
                     Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
@@ -236,9 +235,8 @@ namespace StatsDirect.UI
                 return null;
 
             // Check for one of our specially formatted key-value strings
-            if (o is string)
+            if (o is string s)
             {
-                string s = (string)o;
                 if (s.StartsWith("#{") && s.EndsWith("}"))
                     return ToTagObject(s);
             }
@@ -1449,7 +1447,8 @@ namespace StatsDirect.UI
             }
             finally
             {
-                pnlTop.ResumeLayout();
+                pnlTop.ResumeLayout(false);
+                pnlTop.PerformLayout();
             }
             currentPanelType = panelType;
         }
@@ -1918,18 +1917,16 @@ namespace StatsDirect.UI
             if (operation.Steps.Count > 0)
             {
                 Step firstStep = operation.Steps[0];
-                if (firstStep is ParametersStep)
+                if (firstStep is ParametersStep pStep)
                 {
-                    ParametersStep pStep = (ParametersStep)firstStep;
                     foreach (Parameter p in pStep.Parameters)
                     {
                         if (p.MustRequest || null != inputParameters && (null == p.Name || !inputParameters.ContainsKey(p.Name)))
                         {
                             // The parameter will probably be requested, unless it will be defaulted.
                             // CI parameters can be defaulted
-                            if (p is ConfidenceIntervalParameter)
+                            if (p is ConfidenceIntervalParameter cip)
                             {
-                                ConfidenceIntervalParameter cip = (ConfidenceIntervalParameter)p;
                                 if (cip.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                                 {
                                     // The CI can be defaulted; no decision!
@@ -2058,9 +2055,8 @@ namespace StatsDirect.UI
         private void ShowHelp()
         {
             // Check for hovering over a menu item
-            if (lastSeenMenuItemTag is Dictionary<string, string>)
+            if (lastSeenMenuItemTag is Dictionary<string, string> tags)
             {
-                Dictionary<string, string> tags = (Dictionary<string, string>)lastSeenMenuItemTag;
                 if (tags.TryGetValue("help", out string menuTopic))
                 {
                     SdApplication.SoleInstance.ShowHelp(this, menuTopic);
@@ -2244,14 +2240,18 @@ namespace StatsDirect.UI
             finally
             {
                 // Make absolutely certain we haven't suspended layout on pnlUser and not fixed that.
-                pnlUser.ResumeLayout();
                 TableLayoutPanel tlp = GetUserInputTable();
                 if (null != tlp)
                 {
-                    tlp.ResumeLayout(true);
                     foreach (Control col in tlp.Controls)
-                        col.ResumeLayout();
+                    {
+                        col.ResumeLayout(false);
+                        col.PerformLayout();
+                    }
+                    tlp.ResumeLayout(false);
+                    tlp.PerformLayout();
                 }
+                pnlUser.ResumeLayout();
 
                 // Make absolutely certain a parameter doesn't survive between operations on the confidence interval drop-down
                 cboConfidenceInterval.Tag = null;
@@ -2301,7 +2301,7 @@ namespace StatsDirect.UI
                     {
                         shouldShow = true;
                         sb.AppendLine(parameterTitle);
-                        foreach (Variable v in pair.Value.AsDataFrame.Variables)
+                        foreach (IVariable v in pair.Value.AsDataFrame.Variables)
                         {
                             sb.AppendLine("   " + (v?.Title ?? "(unnamed)"));
                         }
@@ -2531,24 +2531,24 @@ namespace StatsDirect.UI
                                     processor = new TemplateProcessor(SdApplication.SoleInstance);
                                 bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
                                 if (control.Visible != shouldAcquire)
-                                    atLeastOneVisibilityChange = true;
-                                if (!layoutSuspended)
                                 {
-                                    tlp.SuspendLayout();
-                                    foreach (Control col in tlp.Controls)
-                                        col.SuspendLayout();
-                                    layoutSuspended = true;
+                                    atLeastOneVisibilityChange = true;
+                                    if (!layoutSuspended)
+                                    {
+                                        foreach (Control col in tlp.Controls)
+                                            col.SuspendLayout();
+                                        tlp.SuspendLayout();
+                                        layoutSuspended = true;
+                                    }
+                                    control.Visible = shouldAcquire;
                                 }
-                                control.Visible = shouldAcquire;
                             }
 
                             // We may need to enable/disable some radio or dropdown options if this is an option parameter
-                            if (parameter is OptionParameter)
+                            if (parameter is OptionParameter optionParameter)
                             {
-                                OptionParameter optionParameter = (OptionParameter)parameter;
-                                if (control is ComboBoxEx)
+                                if (control is ComboBoxEx cbo)
                                 {
-                                    ComboBoxEx cbo = (ComboBoxEx)control;
                                     // Options and drop-down entries have a 1:1 correspondence.  Iterate through each setting enabled as necessary.
                                     for (int i = 0; i < optionParameter.Options.Count; i++)
                                     {
@@ -2578,7 +2578,10 @@ namespace StatsDirect.UI
                 if (layoutSuspended)
                 {
                     foreach (Control col in tlp.Controls)
+                    {
                         col.ResumeLayout(false);
+                        col.PerformLayout();
+                    }
                     tlp.ResumeLayout(true);
                 }
             }
@@ -2648,10 +2651,13 @@ namespace StatsDirect.UI
         internal void FillCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, bool shouldShow, string cancelSkipsParameterString, ICollection<Parameter> parametersToValidate, ref ParameterBag outputParameters)
         {
             TableLayoutPanel tlp = GetUserInputTable();
-            pnlUser.ResumeLayout();
-            tlp.ResumeLayout(true);
             foreach (Control col in tlp.Controls)
-                col.ResumeLayout();
+            {
+                col.ResumeLayout(false);
+                col.PerformLayout();
+            }
+            tlp.ResumeLayout(true);
+            pnlUser.ResumeLayout();
             CheckCombinedParameterVisibility(context);
 
             if (!shouldShow)

@@ -869,7 +869,7 @@ namespace StatsDirect.Builtins
                 {
                     int adit = 0;
                     double adsum = 0;
-                    Variable candidate = frame.Variables[n - 1][d]; // There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
+                    IVariable candidate = frame.Variables[n - 1][d]; // There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
                     if (candidate != null)
                     {
                         DoubleVariable v = candidate as DoubleVariable;
@@ -1001,7 +1001,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < frame.Variables[j].Count; i++)
                 {
                     //  Input variables may be jagged; ensure that null variables don't cause issues
-                    Variable v = frame.Variables[j][i];
+                    IVariable v = frame.Variables[j][i];
                     if (v != null)
                     {
                         if (i == 0)

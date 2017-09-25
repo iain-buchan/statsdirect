@@ -112,7 +112,7 @@ namespace StatsDirect.UI
                             targetFrame = new DataFrame();
                             outputParameters.Add(frameParameter.AppendToFrame, new FilledParameter(FilledParameterDirection.Input, targetFrame));
                         }
-                        foreach (Variable v in frame.Variables)
+                        foreach (IVariable v in frame.Variables)
                             targetFrame.Variables.Add(v);
                         // frame.Variables.Clear(); Removed as this prevents validation - the original frame's variables have to stay intact until after the validation phase.
                         // HACK: As an unpleasant side effect, this means that *both* frames share a pointer to the variable.
@@ -251,7 +251,7 @@ originGroup);
                                     rows = repeatFrame.MinRows;
                                     cols = repeatFrame.VariableCount;
                                     frame.EnsureVariablesSquare(rows, cols);
-                                    foreach (IList<Variable> vl in frame.Variables)
+                                    foreach (IList<IVariable> vl in frame.Variables)
                                     {
                                         for (int i = 0; i < vl.Count; i++)
                                         {
@@ -591,8 +591,8 @@ originGroup);
                     // Unequal - ask the user, if they accept then force all the data to maximum length, missing-padded
                     if (SdApplication.SoleInstance.MsgboxX("Warning: unequal length columns. If you select OK then the jagged ends of columns will be padded with missing data.", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true) == DialogResult.OK)
                     {
-                        foreach (Variable v in frame.Variables)
-                            v.EnsureLength(maxRows, true);
+                        foreach (IVariable v in frame.Variables)
+                            v.EnsureLengthAndPadWithMissing(maxRows);
                         return frame;
                     }
                 }
@@ -669,7 +669,7 @@ originGroup);
                     double thisGroupId = groupIdVariable.Groups[i].Id;
                     DoubleVariable v = new DoubleVariable();
                     outputFrame.Variables.Add(v);
-                    v.EnsureLength(maxgn, false);
+                    v.EnsureLength(maxgn);
 
                     int cnt = 0;
                     if (DataAcquisitionMode.NumericSkipMissing == mode)
@@ -905,7 +905,7 @@ originGroup);
                                 if (cnt > 0)
                                 {
                                     string title = groupVariable.Title + "_" + gcat[groupNumber] + " (" + subGroupVariable.Title + "_" + sgcat[subGroupNumber] + ")";
-                                    Variable variable = new DoubleVariable(data, title); // TODO: Origin
+                                    IVariable variable = new DoubleVariable(data, title); // TODO: Origin
                                     variable.TruncateDataToLength(cnt);
                                     resultFrame.EnsureVariablesJagged(groupNumber + 1, subGroupNumber + 1); // Results may not be rectangular, hence this is done in the inner loop.
                                     resultFrame.Variables[groupNumber][subGroupNumber] = variable;

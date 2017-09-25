@@ -78,7 +78,7 @@ namespace StatsDirect.R
         {
             List<string> variableNames = new List<string>();
             List<string> columnNames = new List<string>();
-            foreach (Variable variable in frame.Variables)
+            foreach (IVariable variable in frame.Variables)
             {
                 StringBuilder nameBuilder = new StringBuilder();
                 ToRName(nameBuilder, variable.Title);
@@ -132,92 +132,108 @@ namespace StatsDirect.R
 
         private class ToRVariableVisitor : IVariableVisitor
         {
-            public StringBuilder sb { get; set; }
+            public StringBuilder Sb { get; set; }
+
+            public void Visit(BooleanVariable variable)
+            {
+                bool[] data = variable.Data;
+                Sb.Append("c(");
+                bool first = true;
+                foreach (bool value in data)
+                {
+                    if (first)
+                        first = false;
+                    else
+                        Sb.Append(",");
+                    ToR(Sb, value);
+                }
+                Sb.Append(")");
+            }
 
             public void Visit(DoubleVariable variable)
             {
                 double[] data = variable.Data;
-                sb.Append("c(");
+                Sb.Append("c(");
                 bool first = true;
                 foreach (double value in data)
                 {
                     if (first)
                         first = false;
                     else
-                        sb.Append(",");
-                    ToR(sb, value);
+                        Sb.Append(",");
+                    ToR(Sb, value);
                 }
-                sb.Append(")");
+                Sb.Append(")");
             }
 
             public void Visit(VariantVariable variable)
             {
                 object[] data = variable.Data;
-                sb.Append("c(");
+                Sb.Append("c(");
                 bool first = true;
                 foreach (object value in data)
                 {
                     if (first)
                         first = false;
                     else
-                        sb.Append(",");
-                    ToR(sb, value);
+                        Sb.Append(",");
+                    ToR(Sb, value);
                 }
-                sb.Append(")");
+                Sb.Append(")");
             }
 
             public void Visit(StringVariable variable)
             {
                 string[] data = variable.Data;
-                sb.Append("c(");
+                Sb.Append("c(");
                 bool first = true;
                 foreach (string value in data)
                 {
                     if (first)
                         first = false;
                     else
-                        sb.Append(",");
-                    ToR(sb, value);
+                        Sb.Append(",");
+                    ToR(Sb, value);
                 }
-                sb.Append(")");
+                Sb.Append(")");
             }
 
             public void Visit(DateVariable variable)
             {
                 DateTime[] data = variable.Data;
-                sb.Append("c(");
+                Sb.Append("c(");
                 bool first = true;
                 foreach (DateTime value in data)
                 {
                     if (first)
                         first = false;
                     else
-                        sb.Append(",");
-                    ToR(sb, value);
+                        Sb.Append(",");
+                    ToR(Sb, value);
                 }
-                sb.Append(")");
+                Sb.Append(")");
             }
 
             public void Visit(ClassifierVariable variable)
             {
                 double[] data = variable.Data;
-                sb.Append("c(");
+                Sb.Append("c(");
                 bool first = true;
                 foreach (double value in data)
                 {
                     if (first)
                         first = false;
                     else
-                        sb.Append(",");
-                    ToR(sb, variable.Groups[(int)value].Label);
+                        Sb.Append(",");
+                    ToR(Sb, variable.Groups[(int)value].Label);
                 }
-                sb.Append(")");
+                Sb.Append(")");
             }
         }
 
-        public static void ToR(StringBuilder sb, Variable variable)
+        public static void ToR(StringBuilder sb, IVariable variable)
         {
-            variable.Accept(new ToRVariableVisitor { sb = sb });
+            variable.Accept(new ToRVariableVisitor { Sb = sb });
         }
 
         public static void ToR(StringBuilder sb, object value)
@@ -269,7 +285,7 @@ namespace StatsDirect.R
         {
             // Check types: use double if all double, else (for now) string.  TODO: Other types.
             bool allDouble = data.All(o => o is double);
-            Variable v;
+            IVariable v;
             if (allDouble)
             {
                 DoubleVariable dv = new DoubleVariable(data.Count, variableName);

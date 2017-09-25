@@ -1103,7 +1103,7 @@ namespace StatsDirect.Builtins
             {
                 //  More than two raters
                 IList<string> categoryList = new List<string>();
-                foreach (Variable v in frame.Variables)
+                foreach (IVariable v in frame.Variables)
                 {
                     foreach (Group gr in ((ClassifierVariable)v).Groups)
                     {

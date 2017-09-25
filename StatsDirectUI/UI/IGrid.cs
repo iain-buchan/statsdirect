@@ -97,6 +97,6 @@ namespace StatsDirect.UI
             get;
         }
 
-        void Refill(List<Variable> variable);
+        void Refill(List<IVariable> variable);
     }
 }
