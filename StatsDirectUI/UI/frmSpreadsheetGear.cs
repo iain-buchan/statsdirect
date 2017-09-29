@@ -32,7 +32,7 @@ namespace StatsDirect.UI
             InitializeComponent();
             // See http://stackoverflow.com/questions/23637869/spreadsheetgear-for-winforms-paste-from-excel-removes-validation-on-target-cell - Tim Andersen's solution to adding a command manager to a workbook set.
             new ClipboardManglingCommandManager(workbookView.ActiveWorkbookSet);
-            SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
+            SdApplication.SoleInstance.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
             workbookView.WithLock(() =>
             {
                 workbookView.ActiveWorkbook?.Close();
@@ -127,7 +127,7 @@ namespace StatsDirect.UI
                 saveFileDialog.InitialDirectory = System.IO.Path.GetDirectoryName(path);
                 saveFileDialog.FileName = System.IO.Path.GetFileName(path);
             }
-            DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
+            DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
             if (DialogResult.Cancel == result)
             {
                 // User cancelled, failed save
@@ -670,15 +670,11 @@ namespace StatsDirect.UI
                     fullSelectionMessage += " (" + minimumColumns.ToString() + " column" + (minimumColumns > 1 ? "s" : string.Empty) + ")";
                 else
                     fullSelectionMessage += " (Min " + minimumColumns.ToString() + ": Max " + maximumColumns.ToString() + ")";
-                SdApplication.SoleInstance.MainWindow.CanSelectMultipleRows = maximumColumns > 1;
-                SdApplication.SoleInstance.MainWindow.CanSelectGroupMethod = allowUserToPivot;
-                if (allowUserToPivot)
-                    SdApplication.SoleInstance.MainWindow.GroupsByIdentifier = SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
                 Color oldBackColor = BackColor;
                 BackColor = SystemColors.Info;
                 try
                 {
-                    if (!SdApplication.SoleInstance.MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out bool wasPivoted))
+                    if (!SdApplication.SoleInstance.SelectCells(fullSelectionMessage, cancelButtonLabel, maximumColumns > 1, allowUserToPivot, out bool wasPivoted))
                     {
                         // The user either cancelled or pivoted
                         return new CellSelectionResult { UserCancelled = !wasPivoted, WasPivoted = wasPivoted };
@@ -946,10 +942,10 @@ namespace StatsDirect.UI
 
         private void workbookView_KeyDown(object sender, KeyEventArgs e)
         {
-            if (SdApplication.SoleInstance.MainWindow.IsSelecting && e.KeyCode == Keys.Enter)
+            if (SdApplication.SoleInstance.IsSelecting && e.KeyCode == Keys.Enter)
             {
                 // This changes the state both for selecting and for data input, but is OK because we only get here if we're selecting.
-                SdApplication.SoleInstance.MainWindow.NoteEndOfSelection(true);
+                SdApplication.SoleInstance.NoteEndOfSelection(true);
                 e.Handled = true;
             }
         }
@@ -1095,7 +1091,7 @@ namespace StatsDirect.UI
                     pageSetupDialog.AllowOrientation = true;
                     pageSetupDialog.AllowMargins = true;
                     // pageSetupDialog.AllowPaper = true;
-                    DialogResult res = pageSetupDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                    DialogResult res = pageSetupDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                     if (res == DialogResult.OK)
                     {
                         // Save settings into SSG's sheet settings
@@ -1611,7 +1607,7 @@ namespace StatsDirect.UI
 
         private static void DoOperation(string operationName)
         {
-            SdApplication.SoleInstance.MainWindow.DoOperation(operationName);
+            SdApplication.SoleInstance.DoOperation(operationName);
         }
 
         private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1713,7 +1709,7 @@ namespace StatsDirect.UI
             if (SdApplication.SoleInstance.SelectingData)
             {
                 // NoteEndOfSelection clears both selectingData and inputtingData.  However, that's safe here, as we only get here if we're SelectingData.
-                SdApplication.SoleInstance.MainWindow.NoteEndOfSelection(true);
+                SdApplication.SoleInstance.NoteEndOfSelection(true);
                 e.Cancel = true;
                 return;
             }

@@ -451,7 +451,7 @@ namespace StatsDirect.UI
             try
             {
                 Operation operation = TemplateFactory.Operations[operationName];
-                SdApplication.SoleInstance.MainWindow.DoOperationOnceOrUntilCancelled(operation, null);
+                SdApplication.SoleInstance.DoOperationOnceOrUntilCancelled(operation, null);
             }
             catch (CancelCurrentOperationAndDoException ex)
             {

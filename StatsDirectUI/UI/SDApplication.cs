@@ -50,6 +50,11 @@ namespace StatsDirect.UI
 
         private ParameterBag sessionParametersAcrossOperations;
 
+        internal void NoteASubformCloseIsStarting()
+        {
+            MainWindow.NoteASubformCloseIsStarting();
+        }
+
         private readonly Queue<DialogAndAction> queuedDialogs;
         /// <summary>
         /// If true, the UI is presently showing a dialog that was submitted using QueueDialog.
@@ -80,6 +85,11 @@ namespace StatsDirect.UI
             LoadPersistentValues();
         }
 
+        internal void NoteASubformCloseIsCancelled()
+        {
+            MainWindow.NoteASubformCloseIsCancelled();
+        }
+
         /// <summary>
         /// On occasion, we have the potential for dialogs created in a background thread to be displayable while another dialog is on-screen.  Show this dialog if possible, but force a queue so that no more than one dialog is on-screen at one time.
         /// </summary>
@@ -101,6 +111,36 @@ namespace StatsDirect.UI
 
             // If we get here, we're safe to show the dialog now.
             ShowDialogOnUiThread(f, postDisplayAction);
+        }
+
+        internal bool OpenFile()
+        {
+            return MainWindow.OpenFile();
+        }
+
+        internal bool OpenFile(string path, bool removeFromRecentFilesIfNotFound)
+        {
+            return MainWindow.OpenFile(path, removeFromRecentFilesIfNotFound);
+        }
+
+        internal void CreateMainWindow()
+        {
+            MainWindow = new frmMain();
+        }
+
+        internal StatsDirectForm CreateReport()
+        {
+            return MainWindow.CreateReport();
+        }
+
+        internal StatsDirectForm CreateGrid()
+        {
+            return MainWindow.CreateGrid();
+        }
+
+        internal void Run()
+        {
+            Application.Run(MainWindow);
         }
 
         /// <summary>
@@ -325,7 +365,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// The MDI window in which newly-created children are placed
         /// </summary>
-        internal frmMain MainWindow { get; set; }
+        private frmMain MainWindow { get; set; }
 
         internal void AddWindow(WindowInformation info)
         {
@@ -446,6 +486,11 @@ namespace StatsDirect.UI
                 }
             }
             return availableWindows;
+        }
+
+        internal void DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag parameterBag)
+        {
+            MainWindow.DoOperationOnceOrUntilCancelled(operation, parameterBag);
         }
 
         internal IList<PaneAndPosition> AvailableReportPanesAndPositions()
@@ -663,6 +708,11 @@ namespace StatsDirect.UI
             return true;
         }
 
+        internal void PuntThroughEventLoop(Exception ex)
+        {
+            MainWindow.PuntThroughEventLoop(ex);
+        }
+
         internal void EraseAnyOutstandingParameters()
         {
             outstandingParameters = null;
@@ -727,6 +777,20 @@ namespace StatsDirect.UI
             ChartOptionsParameter chartOptionsParameter = new ChartOptionsParameter("dummy", ChartDefinition);
             ith.FillParameter(processor, chartOptionsParameter, context, true);
             return ith.FillAndValidateCombinedParameters(processor, context);
+        }
+
+        internal void NoteEndOfSelection(bool ok)
+        {
+            MainWindow.NoteEndOfSelection(ok);
+        }
+
+        internal bool SelectCells(string fullSelectionMessage, string cancelButtonLabel, bool canSelectMultipleRows, bool allowUserToPivot, out bool wasPivoted)
+        {
+            MainWindow.CanSelectMultipleRows = canSelectMultipleRows;
+            MainWindow.CanSelectGroupMethod = allowUserToPivot;
+            if (allowUserToPivot)
+                MainWindow.GroupsByIdentifier = Preferences.SelectGroupsByIdentifier;
+            return MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted);
         }
 
         /// <summary>
@@ -1425,8 +1489,33 @@ namespace StatsDirect.UI
             boxWriter.WriteLine();
         }
 
+        internal void EnsureBuiltInMenuItemsCanShowHelp(MenuStrip menuStrip)
+        {
+            MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
+        }
+
         public bool ClosingForUpgrade => closingForUpgrade;
 
         public static bool IsRunningOnMono => Type.GetType("Mono.Runtime") != null;
+
+        public Form DialogOwner { get { return MainWindow; } }
+
+        public bool InOperation { get { return MainWindow.InOperation; } }
+
+        internal void DoOperation(string operationName)
+        {
+            MainWindow.DoOperation(operationName);
+        }
+
+        internal bool IsSelecting { get { return MainWindow.IsSelecting; } }
+
+        public Form ActiveMdiChild { get { return MainWindow.ActiveMdiChild; } }
+
+        internal void OpenFileOnUiThread(string path)
+        {
+            if (null != MainWindow)
+                if (MainWindow.InvokeRequired)
+                    MainWindow.Invoke(new Action(() => OpenFile(path, false)));
+        }
     }
 }

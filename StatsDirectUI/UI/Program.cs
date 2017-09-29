@@ -92,7 +92,7 @@ namespace StatsDirect.UI
                 SetupUserInterface();
 
                 // Get ready to show the main window...
-                SdApplication.SoleInstance.MainWindow = new frmMain();
+                SdApplication.SoleInstance.CreateMainWindow();
 
                 // ... and go!
                 loader.Hide();
@@ -100,8 +100,8 @@ namespace StatsDirect.UI
 
             if (args.Length >= 2)
                 if ("FileOpen".Equals(args[0]) && null != args[1])
-                    SdApplication.SoleInstance.MainWindow.OpenFile(args[1], true);
-            Application.Run(SdApplication.SoleInstance.MainWindow);
+                    SdApplication.SoleInstance.OpenFile(args[1], true);
+            SdApplication.SoleInstance.Run();
         }
 
         /// <summary>

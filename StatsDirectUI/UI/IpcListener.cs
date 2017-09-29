@@ -103,19 +103,9 @@ namespace StatsDirect.UI
             listening = false;
         }
 
-        delegate void OpenFileCallback(string path);
-
         private static void ReceiveFileOpen(string path)
         {
-            if (null != SdApplication.SoleInstance && null != SdApplication.SoleInstance.MainWindow)
-            {
-                SdApplication.SoleInstance.MainWindow.Invoke(new OpenFileCallback(UiFileOpen), path);
-            }
-        }
-
-        private static void UiFileOpen(string path)
-        {
-            SdApplication.SoleInstance.MainWindow.OpenFile(path, false);
+            SdApplication.SoleInstance.OpenFileOnUiThread(path);
         }
     }
 }

@@ -530,8 +530,8 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.MainWindow.InOperation)
-                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                if (SdApplication.SoleInstance.InOperation)
+                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
                 else
                     throw;
             }
@@ -561,8 +561,8 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.MainWindow.InOperation)
-                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                if (SdApplication.SoleInstance.InOperation)
+                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
                 else
                     throw;
             }
@@ -586,8 +586,8 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.MainWindow.InOperation)
-                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                if (SdApplication.SoleInstance.InOperation)
+                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
                 else
                     throw;
             }
@@ -626,7 +626,7 @@ namespace StatsDirect.UI
                     {
                         string rtf = "{\\rtf1\\ansi " + renderer.GetAsciiRTF() + "}";
                         textPreview.Rtf = rtf;
-                        textPreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                        textPreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                     }
                 }
                 else
@@ -642,7 +642,7 @@ namespace StatsDirect.UI
                     using (frmImagePreview imagePreview = new frmImagePreview())
                     {
                         imagePreview.Image = metaImage;
-                        imagePreview.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                        imagePreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                     }
                 }
             }

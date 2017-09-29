@@ -23,7 +23,7 @@ namespace StatsDirect.Builtins
                 openFileDialog.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
                 openFileDialog.CheckFileExists = true;
 
-                DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                 if (DialogResult.OK != result)
                     return null;
 
@@ -55,7 +55,7 @@ namespace StatsDirect.Builtins
                 openFileDialog.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
                 openFileDialog.CheckFileExists = true;
 
-                DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                 if (DialogResult.OK != result)
                 {
                     return null;
@@ -170,7 +170,7 @@ namespace StatsDirect.Builtins
                 string source = data.Name;
                 saveFileDialog.FileName = source.Contains(".") ? source.Substring(0, source.Length - 4) + ".csv" : source + ".csv";
                 saveFileDialog.OverwritePrompt = true;
-                DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                 if (DialogResult.OK == result)
                 {
                     bool useTabDelimiter = saveFileDialog.FileName.Substring(saveFileDialog.FileName.Length - 3).ToLower(CultureInfo.InvariantCulture) == "tab";

@@ -141,7 +141,7 @@ namespace StatsDirect.R
         {
             using (frmInstallR f = new frmInstallR())
             {
-                f.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                 return f.UserThinksRIsInstalled;
             }
         }

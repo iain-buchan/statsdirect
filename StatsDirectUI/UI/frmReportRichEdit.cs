@@ -22,7 +22,7 @@ namespace StatsDirect.UI
         {
             InitializeComponent();
             LoadTemplateFile();
-            SdApplication.SoleInstance.MainWindow.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
+            SdApplication.SoleInstance.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
             SetCustomCommandFactory(); // #1202: Paste in table form
         }
 
@@ -428,11 +428,11 @@ namespace StatsDirect.UI
             string helpString = GetHiddenTextEnclosedBy("help");
             if (int.TryParse(helpString, out int helpId))
             {
-                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow, helpId.ToString(CultureInfo.InvariantCulture));
+                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.DialogOwner, helpId.ToString(CultureInfo.InvariantCulture));
             }
             else
             {
-                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.MainWindow);
+                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.DialogOwner);
             }
         }
 
@@ -499,7 +499,7 @@ namespace StatsDirect.UI
                 SaveFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(currentFile);
                 SaveFileDialog1.FileName = System.IO.Path.GetFileName(currentFile);
             }
-            DialogResult res = SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.MainWindow);
+            DialogResult res = SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
             if (res != DialogResult.OK)
                 return false;
             if (string.IsNullOrEmpty(SaveFileDialog1.FileName))
@@ -593,7 +593,7 @@ namespace StatsDirect.UI
             {
                 using (frmExportGraphic f = new frmExportGraphic(img, bytes))
                 {
-                    f.ShowDialog(SdApplication.SoleInstance.MainWindow);
+                    f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                 }
             }
             else
@@ -708,9 +708,9 @@ namespace StatsDirect.UI
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.InOperation)
                 {
-                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
                 }
                 else
                 {
@@ -794,9 +794,9 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.MainWindow.InOperation)
+                if (SdApplication.SoleInstance.InOperation)
                 {
-                    SdApplication.SoleInstance.MainWindow.PuntThroughEventLoop(ex);
+                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
                 }
                 else
                 {
