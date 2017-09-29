@@ -863,11 +863,6 @@ namespace StatsDirect.Builtins
                         default:
                             throw new ArgumentException("Unknown opt", nameof(opt));
                     }
-
-                    if ((i + 1) % 3 == 0 && cols > 3)
-                    {
-                        res += Formatting.RTFCRLF;
-                    }
                     resultsParameters.AddOutput("result", res);
                 }
                 string s = resultsList[resultsList.Count - 1]["result"].AsString;
