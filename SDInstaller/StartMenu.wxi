@@ -1,26 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <!-- Start menu shortcuts -->
-  <DirectoryRef Id="ApplicationProgramsFolder">
-    <Component Id="ApplicationShortcut" Guid="4A69823D-392D-49aa-81DF-B660EA920F25">
+  <Directory Id="ProgramMenuFolder">
+    <Component Id="ApplicationShortcut" Guid="4A69827f-392D-49aa-81DF-B660EA920F25">
       <Shortcut Id="ApplicationStartMenuShortcut"
-                Name="StatsDirect 3"
+                Name="StatsDirect"
                 Description="StatsDirect Statistical Package"
                 Icon="statsdirect.ico"
                 Target="[INSTALLLOCATION]StatsDirect.exe"
                 WorkingDirectory="INSTALLLOCATION"/>
       <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-      <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+      <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="startMenuInstalled" Type="integer" Value="1" KeyPath="yes"/>
     </Component>
-    <Component Id="CalculatorShortcut" Guid="827ED6FB-DBEC-42e7-A3B1-22BF3FAAB104">
-      <Shortcut Id="CalculatorStartMenuShortcut"
-                Name="StatsDirect Calculator"
-                Description="StatsDirect Calculator Utility"
-                Icon="calculator.ico"
-                Target="[INSTALLLOCATION]StatsDirect.exe"
-                Arguments="-calculator"
-                WorkingDirectory="INSTALLLOCATION"/>
-      <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirectCalculator" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
-    </Component>
-  </DirectoryRef>
+  </Directory>
 </Include>

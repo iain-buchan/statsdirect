@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Component Id="menu.xml">
     <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
   </Component>

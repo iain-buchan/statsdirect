@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi"
+         xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
   <!-- Upgrading: we're willing to upgrade pretty much any version up to this one. -->
   <!-- For now, that's 3.x only - we're not blowing away 2.x installs.  That will change. -->
   <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
@@ -41,7 +42,6 @@
 
   <!-- Icon in add/remove programs -->
   <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico"/>
-  <Icon Id="calculator.ico" SourceFile="..\StatsDirectUI\UI\Graphics\calculator.ico"/>
   <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
 
   <!-- Installation conditions: At least Windows XP, no service pack required, no upper limit on OS version-->

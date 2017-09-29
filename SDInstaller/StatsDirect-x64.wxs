@@ -12,12 +12,8 @@
 
     <?include Package.wxi ?>
     <?include Ui.wxi ?>
-    <?include StartMenu.wxi ?>
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <!-- Start menu shortcut location -->
-      <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="StatsDirect 3"/>
-      </Directory>
+      <?include StartMenu.wxi ?>
 
       <Directory Id="DesktopFolder" Name="Desktop" />
       <Directory Id="ProgramFiles64Folder">

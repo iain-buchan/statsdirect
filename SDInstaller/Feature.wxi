@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Include xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Feature Id="ProductFeature" Title="SDInstaller" Level="1">
     <!-- Shortcuts -->
     <ComponentRef Id="ApplicationShortcut" />
-    <ComponentRef Id="CalculatorShortcut" />
 
     <!-- Main files -->
     <ComponentRef Id="ProductComponent" />
