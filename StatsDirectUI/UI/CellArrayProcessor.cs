@@ -708,6 +708,7 @@ namespace StatsDirect.UI
         private static DataFrame ProcessCellArrayTextWithFormulae(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
             DataFrame frame = new DataFrame();
+            int longestColumnLengthSoFar = 0;
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
@@ -719,11 +720,17 @@ namespace StatsDirect.UI
                     Array.Copy(formulae, temp, ccs.NonHiddenRowCount);
                     formulae = temp;
                 }
+                int lastNonBlank = formulae.Length;
+                while (lastNonBlank > 0 && string.IsNullOrWhiteSpace(formulae[lastNonBlank - 1]))
+                    --lastNonBlank;
+                longestColumnLengthSoFar = Math.Max(longestColumnLengthSoFar, lastNonBlank);
                 StringVariable variable = new StringVariable(formulae, null);
                 IOrigin origin = ccs.GetWorksheetOrigin(mode, false, originGroup);
                 variable.Origin = origin;
                 frame.Variables.Add(variable);
             }
+            foreach (IVariable variable in frame.Variables)
+                variable.TruncateDataToLength(longestColumnLengthSoFar);
             return frame;
         }
 
@@ -771,6 +778,7 @@ namespace StatsDirect.UI
         private static DataFrame ProcessCellArrayTextNoTitles(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
             DataFrame frame = new DataFrame();
+            int longestColumnLengthSoFar = 0;
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
@@ -782,12 +790,18 @@ namespace StatsDirect.UI
                     Array.Copy(texts, temp, ccs.NonHiddenRowCount);
                     texts = temp;
                 }
+                int lastNonBlank = texts.Length;
+                while (lastNonBlank > 0 && string.IsNullOrWhiteSpace(texts[lastNonBlank - 1]))
+                    --lastNonBlank;
+                longestColumnLengthSoFar = Math.Max(longestColumnLengthSoFar, lastNonBlank);
                 StringVariable variable = new StringVariable(texts, null)
                 {
                     Origin = ccs.GetWorksheetOrigin(mode, false, originGroup)
                 };
                 frame.Variables.Add(variable);
             }
+            foreach (IVariable variable in frame.Variables)
+                variable.TruncateDataToLength(longestColumnLengthSoFar);
             return frame;
         }
 
