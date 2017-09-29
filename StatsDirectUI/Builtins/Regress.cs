@@ -5660,8 +5660,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_slope", host.pval(tp));
             if (tp > 0.05)
             {
-                IList<ParameterBag> warnList = new List<ParameterBag>();
-                warnList.Add(new ParameterBag());
+                IList<ParameterBag> warnList = new List<ParameterBag>() { new ParameterBag() };
                 outputParameters.AddOutput("*warn", warnList);
             }
             else

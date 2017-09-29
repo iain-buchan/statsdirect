@@ -1019,8 +1019,7 @@ namespace StatsDirect.Builtins
             if (tie != 0)
             {
                 ParameterBag tiesParameters = new ParameterBag();
-                IList<ParameterBag> tiesList = new List<ParameterBag>();
-                tiesList.Add(tiesParameters);
+                IList<ParameterBag> tiesList = new List<ParameterBag> { tiesParameters };
                 outputParameters.AddOutput("*ties", tiesList);
                 vart = vart * (1.0 - tie * 12.0 / (Convert.ToDouble(n) * (Convert.ToDouble(n) * Convert.ToDouble(n) - 1.0)));
                 stat = (st - et) / Math.Sqrt(vart);
@@ -1644,8 +1643,7 @@ namespace StatsDirect.Builtins
                 if (n1 < 4 || n2 < 4)
                 {
                     // CI not calculated if n1 or n2 < 4
-                    IList<ParameterBag> noconfList = new List<ParameterBag>();
-                    noconfList.Add(new ParameterBag());
+                    IList<ParameterBag> noconfList = new List<ParameterBag> { new ParameterBag() };
                     outputParameters.AddOutput("*noconf", noconfList);
                     outputParameters.AddOutput("*conf", null);
                 }
@@ -2094,8 +2092,7 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("*cannotcalculate", null);
                 ParameterBag resultsParameters = new ParameterBag();
-                IList<ParameterBag> resultsList = new List<ParameterBag>();
-                resultsList.Add(resultsParameters);
+                IList<ParameterBag> resultsList = new List<ParameterBag> { resultsParameters };
                 outputParameters.AddOutput("*results", resultsList);
                 resultsParameters.AddOutput("pc", 100 * gamma);
                 resultsParameters.AddOutput("mdn", mdn);
@@ -2199,8 +2196,7 @@ namespace StatsDirect.Builtins
             if (n1 < 4)
             {
                 //  "CI not calculated if n1 or n2 < 4"
-                IList<ParameterBag> noconfList = new List<ParameterBag>();
-                noconfList.Add(new ParameterBag());
+                IList<ParameterBag> noconfList = new List<ParameterBag> { new ParameterBag() };
                 outputParameters.AddOutput("*noconf", noconfList);
                 outputParameters.AddOutput("*conf", null);
             }
@@ -3084,8 +3080,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag messageParameters = new ParameterBag();
                 messageParameters.AddOutput("msg", "At least one of your sample populations tends to yield larger observations than at least one other sample population.");
-                IList<ParameterBag> messageList = new List<ParameterBag>();
-                messageList.Add(messageParameters);
+                IList<ParameterBag> messageList = new List<ParameterBag> { messageParameters };
                 outputParameters.AddOutput("*message", messageList);
 
             }
@@ -3379,8 +3374,7 @@ namespace StatsDirect.Builtins
 
                 ParameterBag messageParameters = new ParameterBag();
                 messageParameters.AddOutput("msg", "At least one of your sample populations tends to yield larger observations than at least one other sample population.");
-                IList<ParameterBag> messageList = new List<ParameterBag>();
-                messageList.Add(messageParameters);
+                IList<ParameterBag> messageList = new List<ParameterBag> { messageParameters };
                 outputParameters.AddOutput("*message", messageList);
             }
             else

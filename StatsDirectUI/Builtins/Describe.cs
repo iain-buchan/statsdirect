@@ -939,8 +939,8 @@ namespace StatsDirect.Builtins
                 {
                     BootstrappingTimeSeriesSummaryStore bst = new BootstrappingTimeSeriesSummaryStore(store);
                     bst.Bootstrap(host, iterations, mt, ci, groups.Count == 2);
-                    store.tLclAucBarBootstrap = store.AucMean + bst.TLcl * store.Se;
-                    store.tUclAucBarBootstrap = store.AucMean + bst.TUcl * store.Se;
+                    store.TLclAucBarBootstrap = store.AucMean + bst.TLcl * store.Se;
+                    store.TUclAucBarBootstrap = store.AucMean + bst.TUcl * store.Se;
                     store.CompletedIterations = bst.CompletedIterations;
                     store.AucMeans = bst.AucMeans;
                     store.VarAucMeans = bst.VarAucMeans;
@@ -960,14 +960,14 @@ namespace StatsDirect.Builtins
                 // Per-group
                 groupParameters.AddOutput("groupName", group.Group.Label);
                 groupParameters.AddOutput("subjects", group.N);
-                groupParameters.AddOutput("totalObservations", group.nObservations);
+                groupParameters.AddOutput("totalObservations", group.NObservations);
                 groupParameters.AddOutput("meanObservationsPerTimePoint", group.MeanObservationsPerTimePoint);
                 groupParameters.AddOutput("aucMean", group.AucMean);
                 groupParameters.AddOutput("aucSd", group.AucSd);
-                groupParameters.AddOutput("aucTLcl", group.tLclAucBar);
-                groupParameters.AddOutput("aucTUcl", group.tUclAucBar);
-                groupParameters.AddOutput("aucZLcl", group.zLclAucBar);
-                groupParameters.AddOutput("aucZUcl", group.zUclAucBar);
+                groupParameters.AddOutput("aucTLcl", group.TLclAucBar);
+                groupParameters.AddOutput("aucTUcl", group.TUclAucBar);
+                groupParameters.AddOutput("aucZLcl", group.ZLclAucBar);
+                groupParameters.AddOutput("aucZUcl", group.ZUclAucBar);
                 groupParameters.AddOutput("medianAuc", group.MedianAuc);
                 groupParameters.AddOutput("iqrAuc", group.UpperQuartileAuc - group.LowerQuartileAuc);
                 groupParameters.AddOutput("medianTimeToMax", group.MedianTimeToMax);
@@ -1016,8 +1016,8 @@ namespace StatsDirect.Builtins
                     groupParameters.AddOutput("*bootstrap", bootstrapList);
                     ParameterBag bootstrapParameters = new ParameterBag();
                     bootstrapList.Add(bootstrapParameters);
-                    bootstrapParameters.AddOutput("aucTLclBoot", group.tLclAucBarBootstrap);
-                    bootstrapParameters.AddOutput("aucTUclBoot", group.tUclAucBarBootstrap);
+                    bootstrapParameters.AddOutput("aucTLclBoot", group.TLclAucBarBootstrap);
+                    bootstrapParameters.AddOutput("aucTUclBoot", group.TUclAucBarBootstrap);
                     bootstrapParameters.AddOutput("completedIterations", group.CompletedIterations);
                 }
 
@@ -1198,7 +1198,7 @@ namespace StatsDirect.Builtins
             public SortedSet<double> SortedTimes { get; set; }
             public SortedSet<double> SortedSubjectIds { get; set; }
             public double[,] Observations { get; private set; }
-            public int nObservations { get; private set; }
+            public int NObservations { get; private set; }
             private double[,] AreasUnderCurve { get; set; }
             public SortedDictionary<double, TimeSummary> TimeToSummaryMap { get; private set; }
             public double[] IndexToTimeMap { get; private set; }
@@ -1209,14 +1209,14 @@ namespace StatsDirect.Builtins
             public double AucMean { get; private set; }
             public double VarAucMean { get; private set; }
             public double Se { get; private set; }
-            public double zLclAucBar { get; private set; }
-            public double zUclAucBar { get; private set; }
+            public double ZLclAucBar { get; private set; }
+            public double ZUclAucBar { get; private set; }
             public double DfNumerator { get; private set; }
             public double DfDenominator { get; private set; }
             public double Df { get; private set; }
             public double CriticalT { get; private set; }
-            public double tLclAucBar { get; private set; }
-            public double tUclAucBar { get; private set; }
+            public double TLclAucBar { get; private set; }
+            public double TUclAucBar { get; private set; }
             public double MeanObservationsPerTimePoint { get; private set; }
             public double MedianAuc { get; private set; }
             public double UpperQuartileAuc { get; private set; }
@@ -1230,8 +1230,8 @@ namespace StatsDirect.Builtins
             public double MeanSlopeToMax { get; set; }
             public double MeanSlopeToMaxSD { get; set; }
             // Bootstrapping
-            public double tLclAucBarBootstrap { get; set; }
-            public double tUclAucBarBootstrap { get; set; }
+            public double TLclAucBarBootstrap { get; set; }
+            public double TUclAucBarBootstrap { get; set; }
             public double CompletedIterations { get; set; }
             public double[] AucMeans { get; set; }
             public double[] VarAucMeans { get; set; }
@@ -1286,7 +1286,7 @@ namespace StatsDirect.Builtins
                 if (Observations[timeIndex, subjectIndex] != Constant.MISSING)
                     throw new Exception("Your data contains multiple, non-identical observations for the same subject and time point; time series summary cannot interpret this. Please remove the duplicate(s).");
                 Observations[timeIndex, subjectIndex] = observation;
-                nObservations++;
+                NObservations++;
             }
 
             /// <summary>
@@ -1415,13 +1415,13 @@ namespace StatsDirect.Builtins
                     double gamma = 1.0 - (1.0 - ci) / 2.0;
                     CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
                     double td = Se * CriticalT;
-                    tLclAucBar = AucMean - td;
-                    tUclAucBar = AucMean + td;
+                    TLclAucBar = AucMean - td;
+                    TUclAucBar = AucMean + td;
                     double invGamma = PDF.gauinv(gamma);
                     double zd = Se * invGamma;
-                    zLclAucBar = AucMean - zd;
-                    zUclAucBar = AucMean + zd;
-                    MeanObservationsPerTimePoint = nObservations / (double)IndexToTimeMap.Length;
+                    ZLclAucBar = AucMean - zd;
+                    ZUclAucBar = AucMean + zd;
+                    MeanObservationsPerTimePoint = NObservations / (double)IndexToTimeMap.Length;
 
                     // AUC, time to max and slope to max medians and IQRs
                     double[] aucs = new double[IndexToSubjectMap.Length];
