@@ -402,6 +402,8 @@
       <xs:enumeration value="NumericReplaceMissing" />
       <xs:enumeration value="NumericSkipMissing" />
       <xs:enumeration value="Text" />
+      <xs:enumeration value="TextWithFormulae" />
+      <xs:enumeration value="TextNoTitles" />
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="FrameData">
