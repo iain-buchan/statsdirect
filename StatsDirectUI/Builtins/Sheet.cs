@@ -2074,11 +2074,11 @@ namespace StatsDirect.Builtins
             int cols = data.VariableCount;
             int rows = data.MaxRows;
             DataFrame outputFrame = new DataFrame();
-            for (int row = 0; row <= rows - 1; row++)
+            for (int row = 0; row < rows; row++)
             {
                 StringVariable v = new StringVariable(cols, null); //  Prevent title being emitted on output
                 outputFrame.Variables.Add(v);
-                for (int col = 0; col <= cols - 1; col++)
+                for (int col = 0; col < cols; col++)
                 {
                     StringVariable inv = (StringVariable)data.Variables[col];
                     if (inv.Length > row)

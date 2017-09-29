@@ -24,7 +24,7 @@
               <prompt>Select data to ROTATE</prompt>
               <mode>TextWithFormulae</mode>
               <min-columns>1</min-columns>
-              <max-columns>256</max-columns>
+              <max-columns>10000</max-columns>
             </frame>
           </parameters>
         <builtin function-name="shtRotate"/>
@@ -37,7 +37,7 @@
               <prompt>Select data to ROTATE</prompt>
               <mode>TextNoTitles</mode>
               <min-columns>1</min-columns>
-              <max-columns>256</max-columns>
+              <max-columns>10000</max-columns>
             </frame>
           </parameters>
         <builtin function-name="shtRotate"/>
