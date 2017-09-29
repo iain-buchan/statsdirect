@@ -61,8 +61,8 @@ namespace StatsDirect.UI
             const string cfp = "PNG|*.png";
             const string cfj = "JPEG|*.jpg;*.jpeg";
             const string cfb = "Windows Bitmap|*.bmp";
-            const string cfw = "Windows Metafile|*.wmf";
-            const string cfa = "All formats|*.png;*.jpeg;*.jpg;*.bmp;*.wmf";
+            const string cfw = "Windows Metafile|*.emf;*.wmf";
+            const string cfa = "All formats|*.png;*.jpeg;*.jpg;*.bmp;*.wmf;*.emf";
 
             int width = int.MinValue;
             int height = int.MinValue;
@@ -99,7 +99,7 @@ namespace StatsDirect.UI
             else
             {
                 saveFileDialog.Filter = cfw + "|" + cfp + "|" + cfj + "|" + cfb + "|" + cfa;
-                saveFileDialog.DefaultExt = "wmf";
+                saveFileDialog.DefaultExt = "emf";
             }
             DialogResult result = saveFileDialog.ShowDialog(this);
             if (result == DialogResult.OK || result == DialogResult.Yes)
@@ -170,7 +170,7 @@ namespace StatsDirect.UI
             {
                 WithWhiteBackground(originalImage, width, height).Save(path, ImageFormat.Bmp);
             }
-            else if ("wmf".Equals(extension))
+            else if ("wmf".Equals(extension) || "emf".Equals(extension))
             {
                 SaveMetafile(path);
             }

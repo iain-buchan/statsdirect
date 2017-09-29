@@ -182,6 +182,7 @@ namespace StatsDirect.UI
         /// <returns>DialogResult.Abort if the application should close, otherwise something else.</returns>
         private static DialogResult CopeWithUnhandledException(Exception ex, bool canTryToContinue)
         {
+            SdApplication.WriteToBlackbox("Uncaught exception", ex);
             string message = ex.Message + Environment.NewLine + ex.StackTrace;
             using (frmErrorMessage e = new frmErrorMessage(message))
             {

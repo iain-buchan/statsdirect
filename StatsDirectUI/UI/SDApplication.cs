@@ -11,6 +11,8 @@ using StatsDirect.Configuration;
 using StatsDirect.Data;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Utilities;
+using System.Text;
+using System.Collections;
 
 namespace StatsDirect.UI
 {
@@ -755,6 +757,8 @@ namespace StatsDirect.UI
         internal void FriendlyError(string explanation, Exception ex, bool showHelpButton)
         {
             MsgboxX(explanation + (null == ex ? string.Empty : "\r\n" + ex.Message), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
+            if (null != ex)
+                WriteToBlackbox(explanation, ex);
         }
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
@@ -1369,6 +1373,56 @@ namespace StatsDirect.UI
                 closingForUpgrade = true;
                 MainWindow.Close();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="ex"></param>
+        public static void WriteToBlackbox(string message, Exception ex)
+        {
+            try
+            {
+                using (Stream boxStream = File.OpenWrite(Path.Combine(SDConfiguration.MyStatsDirectFolder, "Blackbox.txt")))
+                using (TextWriter boxWriter = new StreamWriter(boxStream, Encoding.UTF8))
+                {
+                    boxWriter.WriteLine("StatsDirect exception log generated at {0} local time ({1} UTC)", DateTime.Now, DateTime.UtcNow);
+                    boxWriter.WriteLine();
+                    boxWriter.WriteLine("This file contains a trace of what StatsDirect was doing when your error occurred. If we've asked you for it, please attach the file or, if you prefer, paste the contents into an email to us.");
+                    boxWriter.WriteLine();
+                    if (null != message)
+                    {
+                        boxWriter.WriteLine("Message generated from StatsDirect: {0}", message);
+                        boxWriter.WriteLine();
+                    }
+                    WriteExceptionToBlackbox(boxWriter, ex, false);
+                }
+            }
+            catch (Exception)
+            {
+                // If our black box can't operate, we're hosed.  Ignore this error!
+            }
+        }
+
+        private static void WriteExceptionToBlackbox(TextWriter boxWriter, Exception ex, bool isInnerException)
+        {
+            if (null == ex)
+                return;
+
+            if (isInnerException)
+                boxWriter.WriteLine("Inner exception:");
+            boxWriter.WriteLine(ex.GetType().FullName);
+            boxWriter.WriteLine(ex.Message);
+            boxWriter.WriteLine(ex.Source);
+            boxWriter.WriteLine(ex.StackTrace);
+            if (null != ex.Data)
+                foreach (DictionaryEntry de in ex.Data)
+                    boxWriter.WriteLine("{0} = {1}", de.Key, de.Value);
+
+            if (null != ex.InnerException)
+                WriteExceptionToBlackbox(boxWriter, ex.InnerException, true);
+            boxWriter.WriteLine();
         }
 
         public bool ClosingForUpgrade => closingForUpgrade;

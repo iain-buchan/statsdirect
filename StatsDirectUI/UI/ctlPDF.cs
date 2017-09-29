@@ -966,6 +966,7 @@ namespace StatsDirect.UI
         private void FriendlyError(Exception ex)
         {
             lblError.Text = "StatsDirect couldn't calculate that function: " + ex.Message;
+            SdApplication.WriteToBlackbox("Somewhere in ctlPdf", ex);
         }
 
         public Control Fill(ParameterBag outputParameters, bool doValidation)
