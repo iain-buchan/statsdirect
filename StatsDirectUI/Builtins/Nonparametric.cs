@@ -3827,10 +3827,10 @@ namespace StatsDirect.Builtins
 
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
-            int boots = parameters["boots"].AsInt32;
-            int bootsDivisor = Math.Max(1, boots / 1000);
             if (gamma <= 0)
                 throw new TemplateOperationCancelledException();
+            int boots = parameters["boots"].AsInt32;
+            int bootsDivisor = Math.Max(1, boots / 1000);
 
             MathDbl.civ(0, out double cit, gamma, out double p0);
 
@@ -3842,7 +3842,7 @@ namespace StatsDirect.Builtins
             List<ParameterBag> outputList = new List<ParameterBag>();
             outputParameters.AddOutput("*data", outputList);
             int rx = 0;
-            for (int k = 0; k <= frame.VariableCount - 1; k++)
+            for (int k = 0; k < frame.VariableCount; k++)
             {
                 DoubleVariable v = (DoubleVariable)frame.Variables[k];
                 host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
@@ -3850,11 +3850,11 @@ namespace StatsDirect.Builtins
                 double vtot = 0.0;
                 foreach (double val in v.Data)
                 {
-                    if (val != Constant.MISSING & val > 0.0)
+                    if (val != Constant.MISSING && val > 0.0)
                     {
                         rx++;
                         r[rx] = val;
-                        vtot += vtot;
+                        vtot += val;
                     }
                 }
                 double vmean = vtot / rx;
@@ -3865,13 +3865,13 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= rx; j++)
                 { // ascending order required
 
-                    sumx = sumx + r[j];
-                    sumy = sumy + Convert.ToDouble(2 * j - rx - 1) * r[j];
-                    sumsqdev = sumsqdev + (r[j] - vmean) * (r[j] - vmean);
+                    sumx += r[j];
+                    sumy += (2 * j - rx - 1) * r[j];
+                    sumsqdev += (r[j] - vmean) * (r[j] - vmean);
                 }
-                double gini = sumy / (Convert.ToDouble(rx) * sumx);
+                double gini = sumy / (rx * sumx);
 
-                double drxm1 = Convert.ToDouble(rx - 1);
+                double drxm1 = rx - 1;
                 double cv = Math.Sqrt(sumsqdev / drxm1) / vmean;
 
                 double[] rb = new double[rx + 1];
@@ -3894,15 +3894,13 @@ namespace StatsDirect.Builtins
                     for (int j = 1; j <= rx; j++)
                     { // ascending order required
 
-                        sumx = sumx + rb[j];
-                        sumy = sumy + Convert.ToDouble(2 * j - rx - 1) * rb[j];
+                        sumx += rb[j];
+                        sumy += (2 * j - rx - 1) * rb[j];
                     }
-                    ginib[i] = sumy / (Convert.ToDouble(rx) * sumx);
+                    ginib[i] = sumy / (rx * sumx);
                     theta = theta + ginib[i];
                     if (ginib[i] <= gini)
-                    {
-                        ctr = ctr + 1;
-                    }
+                        ctr++;
                     if (i % bootsDivisor == 0)
                     {
                         if (host.UpdateProgress(i / (double)boots))
@@ -3917,12 +3915,10 @@ namespace StatsDirect.Builtins
                 if (ok)
                 {
                     // get bias and bootstrap variance
-                    theta = theta / Convert.ToDouble(boots);
+                    theta = theta / boots;
                     double thetasq = 0.0;
                     for (int i = 1; i <= boots; i++)
-                    {
-                        thetasq = thetasq + Math.Pow(ginib[i] - theta, 2.0);
-                    }
+                        thetasq += Math.Pow(ginib[i] - theta, 2.0);
                     thetase = Base.SafeSqrt(1.0 / (boots - 1) * thetasq);
                     bias = gini - theta;
                     // sort bootstraps
@@ -3930,9 +3926,9 @@ namespace StatsDirect.Builtins
                     double q = 1.0 - gamma > gamma ? 1.0 - gamma : gamma;
                     q = (1.0 - q) / 2.0;
                     // percentile
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * q) + 1;
+                    pick = Convert.ToInt32((boots - 1) * q) + 1;
                     bl = ginib[pick];
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - q)) + 1;
+                    pick = Convert.ToInt32((boots - 1) * (1.0 - q)) + 1;
                     bu = ginib[pick];
                     // BC
                     // BCa
@@ -3945,11 +3941,11 @@ namespace StatsDirect.Builtins
                         {
                             if (j != i)
                             {
-                                sumx = sumx + r[j];
-                                sumy = sumy + Convert.ToDouble(2 * j - rx - 1) * r[j];
+                                sumx += r[j];
+                                sumy += (2 * j - rx - 1) * r[j];
                             }
                         }
-                        bgini = bgini + sumy / (Convert.ToDouble(rx - 1) * sumx);
+                        bgini += sumy / ((rx - 1) * sumx);
                     }
                     bgini = bgini / Convert.ToDouble(rx);
                     for (int i = 1; i <= rx; i++)
@@ -3960,12 +3956,12 @@ namespace StatsDirect.Builtins
                         {
                             if (j != i)
                             {
-                                sumx = sumx + r[j];
-                                sumy = sumy + Convert.ToDouble(2 * j - rx - 1) * r[j];
+                                sumx += r[j];
+                                sumy += (2 * j - rx - 1) * r[j];
                             }
                         }
-                        bgini2 = bgini2 + Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 2.0);
-                        bgini3 = bgini3 + Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 3.0);
+                        bgini2 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 2.0);
+                        bgini3 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 3.0);
                     }
                     double accel = bgini3 / (6.0 * Math.Pow(bgini2, 1.5));
                     double z0 = ctr / (double)boots;
@@ -3989,13 +3985,9 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("ti", v.Title);
                 varParameters.AddOutput("n", rx);
                 if (rx != v.Length)
-                {
                     varParameters.AddOutput("msg", "(note " + (v.Length - rx) + " other observations not used)");
-                }
                 else
-                {
                     varParameters.AddOutput("msg", string.Empty);
-                }
                 varParameters.AddOutput("cv", cv);
                 varParameters.AddOutput("boots", boots.ToString("N0"));
                 varParameters.AddOutput("bias", bias);
