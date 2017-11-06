@@ -26,6 +26,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int MainTop {
             get {
                 return ((int)(this["MainTop"]));
@@ -38,6 +39,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int MainLeft {
             get {
                 return ((int)(this["MainLeft"]));
@@ -50,6 +52,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int MainWidth {
             get {
                 return ((int)(this["MainWidth"]));
@@ -62,6 +65,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int MainHeight {
             get {
                 return ((int)(this["MainHeight"]));
@@ -88,6 +92,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("menu.xml")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string MenuFileName {
             get {
                 return ((string)(this["MenuFileName"]));
@@ -209,6 +214,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public global::System.Collections.Specialized.StringCollection RecentFileList {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["RecentFileList"]));
@@ -235,6 +241,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
 <ArrayOfString xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
   <string>Calculator</string>
@@ -253,6 +260,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
 <ArrayOfString xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
   <string>%STATSDIRECT%\StatsDirect.exe -calculator</string>
@@ -272,6 +280,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Data")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DataDirectory {
             get {
                 return ((string)(this["DataDirectory"]));
@@ -282,6 +291,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("test.xlsx")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DefaultRecentlyUsedFile {
             get {
                 return ((string)(this["DefaultRecentlyUsedFile"]));
@@ -320,6 +330,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool ShouldUseColour {
             get {
                 return ((bool)(this["ShouldUseColour"]));
@@ -333,6 +344,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Calibri;0;11")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DefaultWorkbookFont {
             get {
                 return ((string)(this["DefaultWorkbookFont"]));
@@ -346,6 +358,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Template")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string TemplateDirectory {
             get {
                 return ((string)(this["TemplateDirectory"]));
@@ -356,6 +369,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Operations")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string OperationsDirectory {
             get {
                 return ((string)(this["OperationsDirectory"]));
@@ -366,6 +380,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int CalculatorTop {
             get {
                 return ((int)(this["CalculatorTop"]));
@@ -379,6 +394,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int CalculatorLeft {
             get {
                 return ((int)(this["CalculatorLeft"]));
@@ -392,6 +408,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int CalculatorWidth {
             get {
                 return ((int)(this["CalculatorWidth"]));
@@ -405,6 +422,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int CalculatorHeight {
             get {
                 return ((int)(this["CalculatorHeight"]));
@@ -418,6 +436,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool CalculatorMaximized {
             get {
                 return ((bool)(this["CalculatorMaximized"]));
@@ -431,6 +450,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string Markers {
             get {
                 return ((string)(this["Markers"]));
@@ -444,6 +464,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string TitleFont {
             get {
                 return ((string)(this["TitleFont"]));
@@ -457,6 +478,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string LabelFont {
             get {
                 return ((string)(this["LabelFont"]));
@@ -470,6 +492,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool BoxAxes {
             get {
                 return ((bool)(this["BoxAxes"]));
@@ -483,6 +506,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool BlackAndWhite {
             get {
                 return ((bool)(this["BlackAndWhite"]));
@@ -496,6 +520,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool RequestScaleLimits {
             get {
                 return ((bool)(this["RequestScaleLimits"]));
@@ -509,6 +534,7 @@ namespace StatsDirect.UI.Properties {
         [global::System.Configuration.SettingsProviderAttribute(typeof(StatsDirect.UI.PortableSettingsProvider))]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool UseScientificNotationForSmallPValues {
             get {
                 return ((bool)(this["UseScientificNotationForSmallPValues"]));
