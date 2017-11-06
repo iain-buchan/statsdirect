@@ -4,6 +4,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using StatsDirect.Templates;
+using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
@@ -12,8 +13,16 @@ namespace StatsDirect.Charting
     /// </summary>
     class EmfCanvas : IStatsDirectCanvas
     {
+        const float PIXELS_PER_INCH = 96.0f;
+        const float POINTS_PER_INCH = 72.0f;
+        const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
+
+        const float SMALLEST_PIXEL_SIZE = 5;
+        const float LARGEST_PIXEL_SIZE = 100;
+
         private Metafile metafile;
         private Graphics metafileGraphics;
+        private FontMap fontMap;
         private Stream outputStream;
         private double width;
         private double height;
@@ -22,29 +31,11 @@ namespace StatsDirect.Charting
 
         public double Height => height;
 
-        public void Dispose()
-        {
-            if (null != metafileGraphics)
-            {
-                metafileGraphics.Dispose();
-                metafileGraphics = null;
-            }
-            if (null != metafile)
-            {
-                metafile.Dispose();
-                metafile = null;
-            }
-            if (null != outputStream)
-            {
-                outputStream.Dispose();
-                outputStream = null;
-            }
-        }
-
         public EmfCanvas(double width, double height)
         {
             this.width = width;
             this.height = height;
+            fontMap = new FontMap();
             SetupGraphics();
         }
 
@@ -68,9 +59,9 @@ namespace StatsDirect.Charting
             }
         }
 
-        public void DrawString(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat)
+        public void DrawString(string s, FontDescriptor font, Brush brush, double x, double y, StringFormat txtFormat)
         {
-            metafileGraphics.DrawString(s, font, brush, Convert.ToSingle(x), Convert.ToSingle(height - y), txtFormat);
+            metafileGraphics.DrawString(s, fontMap[font], brush, Convert.ToSingle(x), Convert.ToSingle(height - y), txtFormat);
         }
 
         ///  <summary>
@@ -87,7 +78,7 @@ namespace StatsDirect.Charting
         ///  <param name="direction"></param>
         ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
-        public void DrawStringAtAngle(string s, Font font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
+        public void DrawStringAtAngle(string s, FontDescriptor font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             //  Work out how to fiddle the text alignment
             if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
@@ -125,15 +116,15 @@ namespace StatsDirect.Charting
             float angle = DirectionToAngle(direction);
             metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(height - y));
             metafileGraphics.RotateTransform(angle);
-            metafileGraphics.DrawString(s, font, brush, 0, 0, txtFormat);
+            metafileGraphics.DrawString(s, fontMap[font], brush, 0, 0, txtFormat);
             // Undo the transform
             metafileGraphics.RotateTransform(0f - angle);
             metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(height - y));
         }
 
-        public SizeF MeasureStringAtAngle(string s, Font font, LabelDirection direction)
+        public SizeF MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction)
         { 
-            SizeF uprightSize = metafileGraphics.MeasureString(s, font);
+            SizeF uprightSize = metafileGraphics.MeasureString(s, fontMap[font]);
             SizeF boundingSize = ToBoundingSize(uprightSize, direction);
             return boundingSize;
         }
@@ -175,9 +166,9 @@ namespace StatsDirect.Charting
             return new SizeF();
         }
 
-        public SizeF MeasureString(string s, Font font)
+        public SizeF MeasureString(string s, FontDescriptor font)
         {
-            return metafileGraphics.MeasureString(s, font);
+            return metafileGraphics.MeasureString(s, fontMap[font]);
         }
 
         public Stream DetachAndReturnImageStream()
@@ -413,9 +404,115 @@ namespace StatsDirect.Charting
             metafileGraphics.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(height - y2, 0)));
         }
 
-        public double GetFontHeight(Font f)
+        public double GetFontHeight(FontDescriptor f)
         {
-            return f.GetHeight(metafileGraphics);
+            return fontMap[f].GetHeight(metafileGraphics);
+        }
+
+        private class FontMap : IDisposable
+        {
+            private Dictionary<FontDescriptor, Font> fonts = new Dictionary<FontDescriptor, Font>();
+
+            public Font this[FontDescriptor fontDescriptor]
+            {
+                get
+                {
+                    if (fonts.TryGetValue(fontDescriptor, out Font found))
+                        return found;
+                    fonts.Add(fontDescriptor, FontFromDescriptor(fontDescriptor));
+                    return fonts[fontDescriptor];
+                }
+            }
+
+            #region IDisposable Support
+            private bool disposedValue = false;
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    if (disposing)
+                    {
+                        foreach (Font f in fonts.Values)
+                            f.Dispose();
+                    }
+
+                    disposedValue = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+            }
+            #endregion
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    metafile?.Dispose();
+                    metafileGraphics?.Dispose();
+                    fontMap?.Dispose();
+                    outputStream?.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
+
+        public static FontDescriptor DescriptorFromFont(Font f)
+        {
+            float emSize;
+            switch (f.Unit)
+            {
+                case GraphicsUnit.Pixel:
+                    emSize = f.Size / PIXELS_PER_POINT;
+                    break;
+                case GraphicsUnit.Point:
+                    emSize = f.Size;
+                    break;
+                default:
+                    throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit);
+            }
+            return new FontDescriptor(f.FontFamily.Name, Convert.ToInt32(f.Style), +emSize);
+        }
+
+        /// <summary>
+        /// Returns a font matching the descriptor appropriate for drawing on a metafile, or null if no font can be derived from the descriptor.  #830: To prevent scaling issues, assume the metafile is drawn at 96dpi.
+        /// </summary>
+        public static Font FontFromDescriptor(FontDescriptor descriptor)
+        {
+            if (null == descriptor)
+                return null;
+            FontStyle style = (FontStyle)descriptor.Style;
+            float pixelSize = descriptor.SizeInPoints * PIXELS_PER_POINT;
+
+            // #1380: Prevent crazy font sizes
+            if (pixelSize < SMALLEST_PIXEL_SIZE)
+                pixelSize = SMALLEST_PIXEL_SIZE;
+            if (pixelSize > LARGEST_PIXEL_SIZE)
+                pixelSize = LARGEST_PIXEL_SIZE;
+            try
+            {
+                return new Font(descriptor.FontFamily, pixelSize, style, GraphicsUnit.Pixel);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }

@@ -11,20 +11,13 @@ namespace StatsDirect.Charting
 {
     static class ChartPreferences
     {
-        const float PIXELS_PER_INCH = 96.0f;
-        const float POINTS_PER_INCH = 72.0f;
-        const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
-
-        const float SMALLEST_PIXEL_SIZE = 5;
-        const float LARGEST_PIXEL_SIZE = 100;
-
         public static bool AreSharedValuesInitialised { get; private set; }
 
-        private static string defaultAxisLabelFont;
-        private static string defaultAxisTitleFont;
-        private static string defaultTitleFont;
-        private static string defaultLegendFont;
-        private static string defaultLabelFont;
+        private static FontDescriptor defaultAxisLabelFont;
+        private static FontDescriptor defaultAxisTitleFont;
+        private static FontDescriptor defaultTitleFont;
+        private static FontDescriptor defaultLegendFont;
+        private static FontDescriptor defaultLabelFont;
 
         private static bool defaultBoxAxes;
 
@@ -67,7 +60,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string DefaultAxisLabelFont
+        public static FontDescriptor DefaultAxisLabelFont
         {
             get
             {
@@ -81,9 +74,9 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string DefaultSeriesLabelFont => DefaultAxisLabelFont;
+        public static FontDescriptor DefaultSeriesLabelFont => DefaultAxisLabelFont;
 
-        public static string DefaultAxisTitleFont
+        public static FontDescriptor DefaultAxisTitleFont
         {
             get
             {
@@ -97,7 +90,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string DefaultLabelFont
+        public static FontDescriptor DefaultLabelFont
         {
             get
             {
@@ -111,7 +104,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string DefaultLegendFont
+        public static FontDescriptor DefaultLegendFont
         {
             get
             {
@@ -125,7 +118,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string DefaultTitleFont
+        public static FontDescriptor DefaultTitleFont
         {
             get
             {
@@ -160,11 +153,11 @@ namespace StatsDirect.Charting
         internal static void InitFirstFonts()
         {
             //  Default fonts, in case there are no preferences
-            DefaultAxisLabelFont = "Calibri;0;15";
-            DefaultAxisTitleFont = "Calibri;1;15";
-            DefaultLabelFont = "Calibri;0;15";
-            DefaultLegendFont = "Calibri;0;15";
-            DefaultTitleFont = "Calibri;1;22";
+            DefaultAxisLabelFont = new FontDescriptor("Calibri", 0, 15);
+            DefaultAxisTitleFont = new FontDescriptor("Calibri", 1, 15);
+            DefaultLabelFont = new FontDescriptor("Calibri", 0, 15);
+            DefaultLegendFont = new FontDescriptor("Calibri", 0, 15);
+            DefaultTitleFont = new FontDescriptor("Calibri", 1, 22);
             SaveFonts();
         }
 
@@ -239,8 +232,8 @@ namespace StatsDirect.Charting
 
         public static void SaveFonts()
         {
-            Settings.Default.LabelFont = DefaultLabelFont;
-            Settings.Default.TitleFont = DefaultTitleFont;
+            Settings.Default.LabelFont = DefaultLabelFont.ToString();
+            Settings.Default.TitleFont = DefaultTitleFont.ToString();
 
             SaveSettings(Settings.Default);
         }
@@ -361,18 +354,19 @@ namespace StatsDirect.Charting
             //  Title
             string savedTitleFont = Settings.Default.TitleFont;
 
-            if (savedTitleFont == null || !CanParseSaveString(savedTitleFont))
+            if (savedTitleFont == null || !FontDescriptor.TryParse(savedTitleFont, out FontDescriptor savedTitleFontDescriptor))
             {
                 InitFirstFonts();
             }
             else
             {
-                DefaultTitleFont = savedTitleFont;
+                DefaultTitleFont = savedTitleFontDescriptor;
                 string savedLabelFont = Settings.Default.LabelFont;
-                DefaultAxisLabelFont = savedLabelFont;
-                DefaultAxisTitleFont = savedLabelFont;
-                DefaultLabelFont = savedLabelFont;
-                DefaultLegendFont = savedLabelFont;
+                FontDescriptor.TryParse(savedLabelFont, out FontDescriptor savedLabelFontDescriptor);
+                DefaultAxisLabelFont = savedLabelFontDescriptor;
+                DefaultAxisTitleFont = savedLabelFontDescriptor;
+                DefaultLabelFont = savedLabelFontDescriptor;
+                DefaultLegendFont = savedLabelFontDescriptor;
             }
         }
 
@@ -381,69 +375,6 @@ namespace StatsDirect.Charting
             s.Save();
         }
 
-        public static bool CanParseSaveString(string descriptor)
-        {
-            try
-            {
-                string[] fontStrings = descriptor.Split(';');
-                if (fontStrings.Length != 3)
-                    return false;
-                if (!int.TryParse(fontStrings[1], out int scrapInt))
-                    return false;
-                return float.TryParse(fontStrings[2], out float scrapFloat);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        public static string SaveStringFromFont(Font f)
-        {
-            float emSize;
-            switch (f.Unit)
-            {
-                case GraphicsUnit.Pixel:
-                    emSize = f.Size / PIXELS_PER_POINT;
-                    break;
-                case GraphicsUnit.Point:
-                    emSize = f.Size;
-                    break;
-                default:
-                    throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit);
-            }
-            return f.FontFamily.Name + ";" + Convert.ToInt32(f.Style) + ";" + emSize;
-        }
-
-        /// <summary>
-        /// Returns a font matching the descriptor appropriate for drawing on a metafile, or null if no font can be derived from the descriptor.  #830: To prevent scaling issues, assume the metafile is drawn at 96dpi.
-        /// </summary>
-        public static Font FontFromSaveString(string descriptor)
-        {
-            if (string.IsNullOrWhiteSpace(descriptor))
-                return null;
-            string[] fontStrings = descriptor.Split(';');
-            if (fontStrings.Length != 3)
-                return null;
-            string familyName = fontStrings[0];
-            FontStyle style = (FontStyle)Parsing.Cint_Txt(fontStrings[1]);
-            float emSize = float.Parse(fontStrings[2]);
-            float pixelSize = emSize * PIXELS_PER_POINT;
-
-            // #1380: Prevent crazy font sizes
-            if (pixelSize < SMALLEST_PIXEL_SIZE)
-                pixelSize = SMALLEST_PIXEL_SIZE;
-            if (pixelSize > LARGEST_PIXEL_SIZE)
-                pixelSize = LARGEST_PIXEL_SIZE;
-            try
-            {
-                return new Font(familyName, pixelSize, style, GraphicsUnit.Pixel);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
 
         public static void PushAndCloneMarkerTypes()
         {

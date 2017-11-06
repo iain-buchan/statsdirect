@@ -9,10 +9,10 @@ namespace StatsDirect.Charting
         public bool ShouldAutoscale;
         public bool ShouldBoxAxes;
         public string[] SeriesTitles;
-        public string TitleFontDescriptor;
-        public string AxisTitleFontDescriptor;
-        public string AxisLabelFontDescriptor;
-        public string LegendFontDescriptor;
+        public FontDescriptor TitleFontDescriptor { get; set; }
+        public FontDescriptor AxisTitleFontDescriptor { get; set; }
+        public FontDescriptor AxisLabelFontDescriptor { get; set; }
+        public FontDescriptor LegendFontDescriptor { get; set; }
         public IList<SeriesOptionsDescriptor> SeriesOptions;
         public ChartOrientation Orientation;
         public bool ShouldForceIsFilled;

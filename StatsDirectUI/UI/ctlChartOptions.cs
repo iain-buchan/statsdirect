@@ -41,13 +41,13 @@ namespace StatsDirect.UI
             FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X, false);
             FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y, true);
             if (options.UsesAxisLabelFontDescriptor)
-                options.AxisLabelFontDescriptor = ChartPreferences.SaveStringFromFont(ctlAxisLabelFont.UserFont);
+                options.AxisLabelFontDescriptor = EmfCanvas.DescriptorFromFont(ctlAxisLabelFont.UserFont);
             if (options.UsesAxisTitleFontDescriptor)
-                options.AxisTitleFontDescriptor = ChartPreferences.SaveStringFromFont(ctlAxisTitleFont.UserFont);
+                options.AxisTitleFontDescriptor = EmfCanvas.DescriptorFromFont(ctlAxisTitleFont.UserFont);
             if (options.UsesTitleFontDescriptor)
-                options.TitleFontDescriptor = ChartPreferences.SaveStringFromFont(ctlTitleFont.UserFont);
+                options.TitleFontDescriptor = EmfCanvas.DescriptorFromFont(ctlTitleFont.UserFont);
             if (options.UsesLegendFontDescriptor)
-                options.LegendFontDescriptor = ChartPreferences.SaveStringFromFont(ctlLegendFont.UserFont);
+                options.LegendFontDescriptor = EmfCanvas.DescriptorFromFont(ctlLegendFont.UserFont);
             if (options.ShowBarOptions)
                 FillBarOptionsFromForm();
             if (options.ShowBoxWhiskerOptions)
@@ -311,24 +311,24 @@ namespace StatsDirect.UI
             if (options.UsesAxisLabelFontDescriptor)
             {
                 ctlAxisLabelFont.Purpose = options.AxisLabelFontLabel + " Font";
-                if (!string.IsNullOrEmpty(options.AxisLabelFontDescriptor))
-                    ctlAxisLabelFont.UserFont = ChartPreferences.FontFromSaveString(options.AxisLabelFontDescriptor);
+                if (null != options.AxisLabelFontDescriptor)
+                    ctlAxisLabelFont.UserFont = EmfCanvas.FontFromDescriptor(options.AxisLabelFontDescriptor);
             }
             if (options.UsesAxisTitleFontDescriptor)
             {
-                if (!string.IsNullOrEmpty(options.AxisTitleFontDescriptor))
-                    ctlAxisTitleFont.UserFont = ChartPreferences.FontFromSaveString(options.AxisTitleFontDescriptor);
+                if (null != options.AxisTitleFontDescriptor)
+                    ctlAxisTitleFont.UserFont = EmfCanvas.FontFromDescriptor(options.AxisTitleFontDescriptor);
             }
             if (options.UsesLegendFontDescriptor)
             {
                 ctlLegendFont.Purpose = options.LegendFontLabel + " Font";
-                if (!string.IsNullOrEmpty(options.LegendFontDescriptor))
-                    ctlLegendFont.UserFont = ChartPreferences.FontFromSaveString(options.LegendFontDescriptor);
+                if (null != options.LegendFontDescriptor)
+                    ctlLegendFont.UserFont = EmfCanvas.FontFromDescriptor(options.LegendFontDescriptor);
             }
             if (options.UsesTitleFontDescriptor)
             {
-                if (!string.IsNullOrEmpty(options.TitleFontDescriptor))
-                    ctlTitleFont.UserFont = ChartPreferences.FontFromSaveString(options.TitleFontDescriptor);
+                if (null != options.TitleFontDescriptor)
+                    ctlTitleFont.UserFont = EmfCanvas.FontFromDescriptor(options.TitleFontDescriptor);
             }
             if (options.UsesAxisLineThickness)
             {
