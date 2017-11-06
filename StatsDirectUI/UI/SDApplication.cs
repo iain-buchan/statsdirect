@@ -753,7 +753,7 @@ namespace StatsDirect.UI
                 {
                     foreach (Validator validator in parameter.Validators)
                     {
-                        validationResult = TemplateProcessor.Validate(this, validator.ValidatorName, parameter, filler.outputParameters, parameter.ValidationFailMessage);
+                        validationResult = ValidationProcessor.Validate(this, validator.ValidatorName, parameter, filler.outputParameters, parameter.ValidationFailMessage);
                         if (null != validationResult)
                             break;
                     }
