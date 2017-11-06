@@ -707,10 +707,7 @@ namespace StatsDirect.TemplateProcessing
 
             ClassifierVariable cv = new ClassifierVariable { Title = v.Title, Data = v.Data };
             for (int i = 0; i < ng; i++)
-            {
-                Group grp = new Group(g[i].ToString(), g[i]) { NBin = gin[i] };
-                cv.Groups.Add(grp);
-            }
+                cv.Groups.Add(new Group(g[i].ToString(), g[i]) { NBin = gin[i] });
             return cv;
         }
 
@@ -741,65 +738,45 @@ namespace StatsDirect.TemplateProcessing
                     }
                 }
             }
+
+            // If we're allowing blank parameters, accept a blank
+            if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
+                return null;
+
             // If there's no custom validator with that name, use a generic if we have one.
+            DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
             switch (validatorName)
             {
                 case "Pooling":
                     {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure all values are in {-1, 0, 1}
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        // Ensure all values are in {-1, 0, 1}
                         DoubleVariable variable = dataFrame.Variables[0]as DoubleVariable;
                         foreach (double value in variable.Data)
-                        {
                             if (0 != value && -1 != value && 1 != value)
                                 return failedValidationMessage ?? "Pooling indicator must be 0 (not pooled), 1 (subgroup) or -1 (pooled) only";
-                        }
                     }
                     return null;
                 case "Square":
                     {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure the number of values is a square number
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        // Ensure the number of values is a square number
                         DoubleVariable variable = dataFrame.Variables[0]as DoubleVariable;
                         if (Math.Sqrt(variable.Length) != Math.Floor(Math.Sqrt(variable.Length)))
-                        {
                             return failedValidationMessage ?? "Number of observations can not be arranged as a square (i.e. integer square root)";
-                        }
                     }
                     return null;
                 case "SquareBins":
                     {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure the number of bins is the square root of the number of values
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        // Ensure the number of bins is the square root of the number of values
                         DoubleVariable variable = dataFrame.Variables[0]as DoubleVariable;
                         ClassifierVariable cv = gidx_bins(variable);
                         if (Math.Sqrt(variable.Length) != cv.GroupCount)
-                        {
                             return failedValidationMessage ?? "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes";
-                        }
                     }
                     return null;
                 case "CheckForNonDummiedCategories":
                     {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure the number of bins, if >2, is at least 12 (or they're all distinct)
-                        DataFrame frame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (DoubleVariable v in frame.Variables)
+                        // Ensure the number of bins, if >2, is at least 12 (or they're all distinct)
+                        foreach (DoubleVariable v in dataFrame.Variables)
                         {
                             double[] data = v.Data;
                             bool skip = false;
@@ -837,9 +814,7 @@ namespace StatsDirect.TemplateProcessing
                                         }
                                     }
                                     if (newa)
-                                    {
                                         g[ng++] = (int)data[j];
-                                    }
                                 }
                                 if (ng > 2 && ng < Math.Min(data.Length - 2, 12))
                                 {
@@ -853,212 +828,104 @@ namespace StatsDirect.TemplateProcessing
                     }
                     return null;
                 case "Boolean":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure all values are in {0, 1}
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                        {
-                            if (variable is DoubleVariable)
-                            {
-                                DoubleVariable doubleVariable = variable as DoubleVariable;
-                                foreach (double value in doubleVariable.Data)
-                                {
-                                    if (0.0 != value && 1.0 != value)
-                                    {
-                                        return failedValidationMessage ?? "Case-control indicator must be 1 for case or 0 for control only";
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Ensure all values are in {0, 1}
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (0.0 != value && 1.0 != value)
+                                    return failedValidationMessage ?? "Case-control indicator must be 1 for case or 0 for control only";
                     return null;
                 case "Positive":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure all values are > 0
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                        {
-                            if (variable is DoubleVariable)
-                            {
-                                DoubleVariable doubleVariable = variable as DoubleVariable;
-                                foreach (double value in doubleVariable.Data)
-                                {
-                                    if (value <= 0)
-                                    {
-                                        return failedValidationMessage ?? "Data must be positive non-zero numbers";
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Ensure all values are > 0
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (value <= 0)
+                                    return failedValidationMessage ?? "Data must be positive non-zero numbers";
+                    return null;
+                case "Integer":
+                    // Ensure all values are integers
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (value != Math.Floor(value))
+                                    return failedValidationMessage ?? "Data must be integer numbers";
                     return null;
                 case "PositiveRows":
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (!(variable is DoubleVariable))
+                            return "Data must be numeric";
+
+                    // Ensure the sum of all values across a row is > 0
+                    for (int row = 0; row < dataFrame.MinRows; row++)
                     {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
+                        double sum = 0;
                         foreach (IVariable variable in dataFrame.Variables)
-                            if (!(variable is DoubleVariable))
-                                return "Data must be numeric";
-
-                        // Otherwise ensure the sum of all values across a row is > 0
-                        for (int row = 0; row < dataFrame.MinRows; row++)
                         {
-                            double sum = 0;
-                            foreach (IVariable variable in dataFrame.Variables)
-                            {
-                                double x = (variable as DoubleVariable).Data[row];
-                                if (!(x == Constant.MISSING || double.IsInfinity(x)))
-                                    sum += x;
-                            }
-                            if (sum <= 0)
-                                return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
+                            double x = (variable as DoubleVariable).Data[row];
+                            if (!(x == Constant.MISSING || double.IsInfinity(x)))
+                                sum += x;
                         }
+                        if (sum <= 0)
+                            return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
                     }
                     return null;
                 case "PositiveRowsExceptLastColumn":
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (!(variable is DoubleVariable))
+                            return "Data must be numeric";
+
+                    // Ensure the sum of all values across a row except the last column is > 0
+                    for (int row = 0; row < dataFrame.MinRows; row++)
                     {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                            if (!(variable is DoubleVariable))
-                                return "Data must be numeric";
-
-                        // Otherwise ensure the sum of all values across a row except the last column is > 0
-                        for (int row = 0; row < dataFrame.MinRows; row++)
+                        double sum = 0;
+                        for (int col = 0; col < dataFrame.Variables.Count - 1; col++)
                         {
-                            double sum = 0;
-                            for (int col = 0; col < dataFrame.Variables.Count - 1; col++)
-                            {
-                                IVariable variable = dataFrame.Variables[col];
-                                double x = (variable as DoubleVariable).Data[row];
-                                if (!(x == Constant.MISSING || double.IsInfinity(x)))
-                                    sum += x;
-                            }
-                            if (sum <= 0)
-                                return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
+                            IVariable variable = dataFrame.Variables[col];
+                            double x = (variable as DoubleVariable).Data[row];
+                            if (!(x == Constant.MISSING || double.IsInfinity(x)))
+                                sum += x;
                         }
+                        if (sum <= 0)
+                            return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
                     }
                     return null;
                 case "NonNegative":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure all values are >= 0
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                        {
-                            if (variable is DoubleVariable)
-                            {
-                                DoubleVariable doubleVariable = variable as DoubleVariable;
-                                foreach (double value in doubleVariable.Data)
-                                {
-                                    if (value < 0)
-                                    {
-                                        return failedValidationMessage ?? "Data must be positive or zero numbers";
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Ensure all values are >= 0
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (value < 0)
+                                    return failedValidationMessage ?? "Data must be positive or zero numbers";
                     return null;
                 case "ZeroToOneExclusive":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure all values are in the range (0, 1)
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                        {
-                            if (variable is DoubleVariable)
-                            {
-                                DoubleVariable doubleVariable = variable as DoubleVariable;
-                                foreach (double value in doubleVariable.Data)
-                                {
-                                    if (value <= 0 || value >= 1)
-                                    {
-                                        return failedValidationMessage ?? "Data must lie between 0 and 1";
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Ensure all values are in the range (0, 1)
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (value <= 0 || value >= 1)
+                                    return failedValidationMessage ?? "Data must lie between 0 and 1";
                     return null;
                 case "ZeroToOneInclusive":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure all values are in the range [0, 1]
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                        {
-                            if (variable is DoubleVariable)
-                            {
-                                DoubleVariable doubleVariable = variable as DoubleVariable;
-                                foreach (double value in doubleVariable.Data)
-                                    if (value < 0 || value > 1)
-                                        return failedValidationMessage ?? "Data must lie between 0 and 1 inclusive";
-                            }
-                        }
-                    }
+                    // Ensure all values are in the range [0, 1]
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (value < 0 || value > 1)
+                                    return failedValidationMessage ?? "Data must lie between 0 and 1 inclusive";
                     return null;
                 case "TwoBinsAndNoMissingData":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure there are exactly two bins in the classifier variable
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        ClassifierVariable variable = dataFrame.Variables[0] as ClassifierVariable;
-                        if (variable.GroupCount != 2)
-                        {
-                            return failedValidationMessage ?? "Group identifier must contain two groups and no missing data";
-                        }
-                    }
+                    // Ensure there are exactly two bins in the classifier variable
+                    if (((ClassifierVariable)dataFrame.Variables[0]).GroupCount != 2)
+                        return failedValidationMessage ?? "Group identifier must contain two groups and no missing data";
                     return null;
                 case "NoMissingData":
-                    {
-                        // If we're allowing blank parameters, accept a blank
-                        if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                            return null;
-
-                        // Otherwise ensure there's no missing data in any of the numeric variables in the frame
-                        DataFrame dataFrame = filledParameters[parameter.Name].AsDataFrame;
-                        foreach (IVariable variable in dataFrame.Variables)
-                        {
-                            if (variable is DoubleVariable)
-                            {
-                                DoubleVariable doubleVariable = variable as DoubleVariable;
-                                foreach (double value in doubleVariable.Data)
-                                {
-                                    if (value == Constant.MISSING)
-                                    {
-                                        return failedValidationMessage ?? "Data with missing values cannot be used here";
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // Ensure there's no missing data in any of the numeric variables in the frame
+                    foreach (IVariable variable in dataFrame.Variables)
+                        if (variable is DoubleVariable doubleVariable)
+                            foreach (double value in doubleVariable.Data)
+                                if (value == Constant.MISSING)
+                                    return failedValidationMessage ?? "Data with missing values cannot be used here";
                     return null;
                 case "PersonTimeSize":
                     {
