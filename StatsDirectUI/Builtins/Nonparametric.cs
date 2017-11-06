@@ -539,7 +539,6 @@ namespace StatsDirect.Builtins
             fault = false;
         }
 
-
         private static void XInvu(int n2, int n1, double gamma, ref double lev, ref int k, out bool fault)
         {
             double pcum = 0;
@@ -584,7 +583,6 @@ namespace StatsDirect.Builtins
             lev = pcum - unitd * frqncy[q + 1];
             k = q;
         }
-
 
         private static void XUdist(int m, int n, ref double[] frqncy, ref int lfr, ref double[] work, ref int lwrk, out bool fault)
         {
@@ -650,7 +648,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///      LOWER TAIL PROBABILITY P FOR MANN-WHINEY STATISTIC IV
         ///      CASE WHERE THERE ARE NO TIES in THE POOLED SAMPLE
@@ -690,34 +687,23 @@ namespace StatsDirect.Builtins
                 binom = binom * Convert.ToDouble(m2 + i) / Convert.ToDouble(i);
                 int upper;
                 if (i * m2 + 1 < lim)
-                {
                     upper = i * m2 + 1;
-                }
-                else { upper = lim; }
+                else
+                    upper = lim;
                 int lower = i + m2 + 1;
                 for (j = upper; j >= lower; j--)
-                {
                     wrk[j] = wrk[j] - wrk[j - lower + 1];
-                }
                 for (j = i + 1; j <= upper; j++)
-                {
                     wrk[j] = wrk[j] + wrk[j - i];
-                }
             }
             wrk[1] = wrk[1] / binom;
             for (j = 2; j <= lim; j++)
-            {
                 wrk[j] = wrk[j - 1] + wrk[j] / binom;
-            }
             p = wrk[iv + 1];
             if (p > 1)
-            {
                 p = 1;
-            }
             if (p < 0)
-            {
                 p = 0;
-            }
         }
 
         private static double XMwupNt(int n1, int n2, double u)
@@ -778,7 +764,6 @@ namespace StatsDirect.Builtins
             iv = nm - iv;
             return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, iRanks, iv);
         }
-
 
         private static ParameterBag XMwcon(ITemplateHost host, double[] x, int k, int n1, int n2)
         {
@@ -894,7 +879,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to", host.RoundU(ku));
             return outputParameters;
         }
-
 
         private static double XXmdn(double[] x, int nx, int n1, int n2)
         {
@@ -1038,7 +1022,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptDiversity(ITemplateHost host, ParameterBag parameters)
         {
             double bias = 0; double biasx = 0;
@@ -1084,13 +1067,9 @@ namespace StatsDirect.Builtins
                         sumnlogn = sumnlogn + r[rx] * Math.Log(r[rx]);
                         sumnlognsq = sumnlognsq + r[rx] * Math.Pow(Math.Log(r[rx]), 2.0);
                         if (Convert.ToInt32(r[rx]) == 1)
-                        {
                             singletons = singletons + 1;
-                        }
                         if (Convert.ToInt32(r[rx]) == 2)
-                        {
                             doubletons = doubletons + 1;
-                        }
                     }
                 }
                 if (rx < 3)
@@ -3821,11 +3800,8 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptGini(ITemplateHost host, ParameterBag parameters)
         {
-            double sumsqdev = 0;
-            double bgini2 = 0; double bgini3 = 0; double bcal = 0; double bcau = 0;
-            double thetase = 0; double bias = 0;
-
-            DataFrame frame = parameters["data"].AsDataFrame;
+            DataFrame dataFrame = parameters["data"].AsDataFrame;
+            DataFrame weightsFrame = parameters.ContainsKey("weights") ? parameters["weights"].AsDataFrame : null;
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
                 throw new TemplateOperationCancelledException();
@@ -3834,37 +3810,57 @@ namespace StatsDirect.Builtins
 
             MathDbl.civ(0, out double cit, gamma, out double p0);
 
-            MersenneTwister rng = new MersenneTwister(); //  Seeds itself
-
-            double[] r = new double[frame.MaxRows + 1];
-
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> outputList = new List<ParameterBag>();
             outputParameters.AddOutput("*data", outputList);
-            int rx = 0;
-            for (int k = 0; k < frame.VariableCount; k++)
+
+            MersenneTwister rng = new MersenneTwister(); // Seeds itself
+            for (int k = 0; k < dataFrame.VariableCount; k++)
             {
-                DoubleVariable v = (DoubleVariable)frame.Variables[k];
-                host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
-                rx = 0;
-                double vtot = 0.0;
-                foreach (double val in v.Data)
+                DoubleVariable v = (DoubleVariable)dataFrame.Variables[k];
+                double[] weightsData;
+                if (null == weightsFrame)
                 {
-                    if (val != Constant.MISSING && val > 0.0)
-                    {
-                        rx++;
-                        r[rx] = val;
-                        vtot += val;
-                    }
+                    // No weight data; weight everything equally
+                    weightsData = new double[v.Length];
+                    for (int i = 0; i < weightsData.Length; i++)
+                        weightsData[i] = 1;
                 }
+                else
+                {
+                    weightsData = ((DoubleVariable)weightsFrame.Variables[k]).Data;
+                }
+                host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
+
+                DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { v.Data, weightsData, }, 0, v.Length, 0);
+                double[] rawR = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+                double[] w = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+
+                // Handle the weights by replicating each value the appropriate number of times.  This pre-calculates the required array length, then copies.
+                double vtot = 0;
+                int totalWeights = 0;
+                for (int i = 0; i < rawR.Length; i++)
+                {
+                    vtot += rawR[i] * Math.Floor(w[i]);
+                    totalWeights += (int)Math.Floor(w[i]);
+                }
+                double[] r = new double[totalWeights + 1];
+                int nx = 0;
+                for (int i = 0; i < rawR.Length; i++)
+                    for (int repeats = 0; repeats < (int)Math.Floor(w[i]); repeats++)
+                        r[++nx] = rawR[i];
+
+                // By now, r contains the values, repeated the correct number of times.
+                int rx = r.Length - 1;
                 double vmean = vtot / rx;
                 Array.Sort(r, 1, rx);
 
                 double sumx = 0;
                 double sumy = 0;
+                double sumsqdev = 0;
                 for (int j = 1; j <= rx; j++)
-                { // ascending order required
-
+                {
+                    // ascending order required
                     sumx += r[j];
                     sumy += (2 * j - rx - 1) * r[j];
                     sumsqdev += (r[j] - vmean) * (r[j] - vmean);
@@ -3876,6 +3872,7 @@ namespace StatsDirect.Builtins
 
                 double[] rb = new double[rx + 1];
                 double[] ginib = new double[boots + 1];
+
                 // get resample boots times
                 double theta = 0.0;
                 int ctr = 0;
@@ -3912,6 +3909,10 @@ namespace StatsDirect.Builtins
                 }
                 double bl;
                 double bu;
+                double thetase;
+                double bias;
+                double bcal;
+                double bcau;
                 if (ok)
                 {
                     // get bias and bootstrap variance
@@ -3947,7 +3948,9 @@ namespace StatsDirect.Builtins
                         }
                         bgini += sumy / ((rx - 1) * sumx);
                     }
-                    bgini = bgini / Convert.ToDouble(rx);
+                    bgini /= rx;
+                    double bgini2 = 0;
+                    double bgini3 = 0;
                     for (int i = 1; i <= rx; i++)
                     {
                         sumx = 0.0;
@@ -3965,7 +3968,7 @@ namespace StatsDirect.Builtins
                     }
                     double accel = bgini3 / (6.0 * Math.Pow(bgini2, 1.5));
                     double z0 = ctr / (double)boots;
-                    z0 = PDF.gauinv(z0, out int ifault);
+                    z0 = PDF.gauinv(z0);
                     double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
                     double p2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
                     pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p1) + 1;
@@ -3977,6 +3980,10 @@ namespace StatsDirect.Builtins
                 {
                     bl = Constant.MISSING;
                     bu = Constant.MISSING;
+                    bcal = Constant.MISSING;
+                    bcau = Constant.MISSING;
+                    thetase = 0;
+                    bias = 0;
                 }
                 host.FinishProgress();
 
@@ -3984,8 +3991,8 @@ namespace StatsDirect.Builtins
                 outputList.Add(varParameters);
                 varParameters.AddOutput("ti", v.Title);
                 varParameters.AddOutput("n", rx);
-                if (rx != v.Length)
-                    varParameters.AddOutput("msg", "(note " + (v.Length - rx) + " other observations not used)");
+                if (rawR.Length != v.Length)
+                    varParameters.AddOutput("msg", "(note " + (v.Length - rawR.Length) + " other observation(s) not used)");
                 else
                     varParameters.AddOutput("msg", string.Empty);
                 varParameters.AddOutput("cv", cv);
@@ -4000,39 +4007,40 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("BCafrom", bcal);
                 varParameters.AddOutput("BCato", bcau);
 
-                double unbias = Convert.ToDouble(rx) / Convert.ToDouble(rx - 1);
+                double unbias = rx / (rx - 1.0);
                 varParameters.AddOutput("gini-unbiased", gini * unbias);
                 varParameters.AddOutput("from-unbiased", bl * unbias);
                 varParameters.AddOutput("to-unbiased", bu * unbias);
                 varParameters.AddOutput("BCafrom-unbiased", bcal * unbias);
                 varParameters.AddOutput("BCato-unbiased", bcau * unbias);
 
-            }
-
-            //  In the single-variable case, plot as well
-            if (frame.VariableCount == 1)
-            {
-                double[] x = new double[rx];
-                double[] y = new double[rx];
-                double vtot = 0.0;
-                for (int j = 1; j <= rx; j++)
+                //  In the single-variable case, plot as well.  Only evaluate on the first time through, to prevent us removing placeholders multiple times!
+                if (k == 0)
                 {
-                    vtot += r[j];
-                    x[j - 1] = Convert.ToDouble(j) / Convert.ToDouble(rx);
+                    if (dataFrame.VariableCount == 1)
+                    {
+                        double[] x = new double[rx];
+                        double[] y = new double[rx];
+                        double sum = 0.0;
+                        for (int j = 1; j <= rx; j++)
+                        {
+                            sum += r[j];
+                            x[j - 1] = j / (double)rx;
+                        }
+                        double runningTotal = 0.0;
+                        for (int j = 1; j <= rx; j++)
+                        {
+                            runningTotal += r[j] / sum;
+                            y[j - 1] = runningTotal;
+                        }
+                        outputParameters.AddOutput("X", new DataFrame(new DoubleVariable(x), dataFrame.Variables[0].Title));
+                        outputParameters.AddOutput("Y", new DataFrame(new DoubleVariable(y), dataFrame.Variables[0].Title));
+                    }
+                    else
+                    {
+                        outputParameters.AddOutput("chart", null);
+                    }
                 }
-                double lasty = 0.0;
-                for (int j = 1; j <= rx; j++)
-                {
-                    y[j - 1] = lasty + r[j] / vtot;
-                    lasty = y[j - 1];
-                }
-                outputParameters.AddOutput("X", new DataFrame(new DoubleVariable(x), frame.Variables[0].Title));
-                outputParameters.AddOutput("Y", new DataFrame(new DoubleVariable(y), frame.Variables[0].Title));
-            }
-            else
-            {
-                //  TODO: HACK: We really need a template processor that removes placeholders if they're not present
-                outputParameters.AddOutput("chart", null);
             }
             return outputParameters;
         }
