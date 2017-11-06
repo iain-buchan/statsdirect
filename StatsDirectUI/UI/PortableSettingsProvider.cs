@@ -7,6 +7,7 @@ using System.Xml;
 using System.IO;
 
 using StatsDirect.Configuration;
+using System.Xml.XPath;
 
 namespace StatsDirect.UI
 {
@@ -123,7 +124,7 @@ namespace StatsDirect.UI
 
         private void SetValue(SettingsPropertyValue propVal)
         {
-            if (propVal?.SerializedValue == null)
+            if (null == propVal?.SerializedValue)
                 return;
             if (null == propVal.Name)
                 return;
@@ -140,7 +141,7 @@ namespace StatsDirect.UI
                 else
                     settingNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName + "/" + propVal.Name);
             }
-            catch (Exception)
+            catch (XPathException)
             {
                 settingNode = null;
             }
@@ -168,7 +169,7 @@ namespace StatsDirect.UI
                     {
                         machineNode = (XmlElement)SettingsXML.SelectSingleNode(SETTINGSROOT + "/" + SystemInformation.ComputerName);
                     }
-                    catch (Exception)
+                    catch (XPathException)
                     {
                         machineNode = null;
                     }
@@ -194,11 +195,8 @@ namespace StatsDirect.UI
             foreach (DictionaryEntry d in prop.Attributes)
             {
                 Attribute a = (Attribute)d.Value;
-                if (a is SettingsManageabilityAttribute)
-                {
-                    SettingsManageabilityAttribute sma = (SettingsManageabilityAttribute)a;
+                if (a is SettingsManageabilityAttribute sma)
                     return sma.Manageability == SettingsManageability.Roaming;
-                }
             }
             return false;
         }
