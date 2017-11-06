@@ -15,6 +15,9 @@ namespace StatsDirect.Charting
         const float POINTS_PER_INCH = 72.0f;
         const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
 
+        const float SMALLEST_PIXEL_SIZE = 5;
+        const float LARGEST_PIXEL_SIZE = 100;
+
         public static bool AreSharedValuesInitialised { get; private set; }
 
         private static string defaultAxisLabelFont;
@@ -426,6 +429,12 @@ namespace StatsDirect.Charting
             FontStyle style = (FontStyle)Parsing.Cint_Txt(fontStrings[1]);
             float emSize = float.Parse(fontStrings[2]);
             float pixelSize = emSize * PIXELS_PER_POINT;
+
+            // #1380: Prevent crazy font sizes
+            if (pixelSize < SMALLEST_PIXEL_SIZE)
+                pixelSize = SMALLEST_PIXEL_SIZE;
+            if (pixelSize > LARGEST_PIXEL_SIZE)
+                pixelSize = LARGEST_PIXEL_SIZE;
             try
             {
                 return new Font(familyName, pixelSize, style, GraphicsUnit.Pixel);
