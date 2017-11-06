@@ -7,7 +7,7 @@ using DevExpress.Office.Services.Implementation;
 namespace StatsDirect.UI
 {
     /// <remarks>Taken from https://www.devexpress.com/Support/Center/Example/Details/E3665</remarks>
-    public class CF_HTMLHelper
+    public static class CF_HTMLHelper
     {
         // HTML Clipboard Format http://msdn.microsoft.com/en-us/library/aa767917(v=vs.85).aspx
         const string StartFragmentTag = "<!--StartFragment-->";
