@@ -11,28 +11,32 @@ namespace StatsDirect.UI
 {
     internal class ImmediateParameterFiller : IParameterVisitor
     {
-        public ParameterBag context { get; set; }
-        public ParameterBag outputParameters { get; private set; }
-        public ITemplateProcessor processor { get; set; }
+        public ParameterBag Context { get; set; }
+        public ParameterBag OutputParameters { get; private set; }
+        public ITemplateProcessor Processor { get; set; }
+        /// <summary>
+        /// If true, this is a repeat acquisition after the previous attempt failed with a validation error.  If false, this is a first attempt or a previous error was not a validation error.
+        /// </summary>
+        public bool IsRepeatAfterValidationError { get; set; }
 
         public void Visit(ConfidenceIntervalParameter parameter)
         {
             // Can we get away without asking?
             if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
             {
-                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval));
+                OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval));
                 return;
             }
 
             // Prompt - keep going until the user cancels or gives a valid entry
-            string prompt = parameter.Prompt(processor, context);
+            string prompt = parameter.Prompt(Processor, Context);
             if (string.IsNullOrEmpty(prompt))
                 prompt = "Enter confidence interval (%, in the range [0, 100])";
 
             double result = 0.0;
             if (SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
                 result = SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval;
-            double? defaultValue = parameter.DefaultValue(processor, context);
+            double? defaultValue = parameter.DefaultValue(Processor, Context);
             if (defaultValue.HasValue && defaultValue.Value > 0.0)
                 result = defaultValue.Value;
 
@@ -45,7 +49,7 @@ namespace StatsDirect.UI
                 {
                     result /= 100.0;
                     if (result >= 0.0 && result <= 1.0)
-                        outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
+                        OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
                 }
                 // else go round again
             }
@@ -58,8 +62,8 @@ namespace StatsDirect.UI
 
         public void Visit(DoubleParameter parameter)
         {
-            double minimumValue = parameter.MinimumValue(processor, context);
-            double maximumValue = parameter.MaximumValue(processor, context);
+            double minimumValue = parameter.MinimumValue(Processor, Context);
+            double maximumValue = parameter.MaximumValue(Processor, Context);
             // Prompt for the range
             string suffix = string.Empty;
             if (minimumValue > double.MinValue || maximumValue < double.MaxValue)
@@ -75,15 +79,15 @@ namespace StatsDirect.UI
             while (true)
             {
                 string defaultValueString = string.Empty;
-                double? defaultValue = parameter.DefaultValue(processor, context);
+                double? defaultValue = parameter.DefaultValue(Processor, Context);
                 if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value))
                     defaultValueString = defaultValue.Value.ToString();
-                string response = SdApplication.SoleInstance.GetString(parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValueString);
+                string response = SdApplication.SoleInstance.GetString(parameter.Prompt(Processor, Context) + suffix, "StatsDirect", defaultValueString);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (null != parameter.CancelSkipsParameter)
                     {
-                        outputParameters = new ParameterBag();
+                        OutputParameters = new ParameterBag();
                         return;
                     }
                     throw new TemplateOperationCancelledException();
@@ -91,7 +95,7 @@ namespace StatsDirect.UI
                 double result = Parsing.Cdbl_Txt(response);
                 if (result >= minimumValue && result <= maximumValue)
                 {
-                    outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
+                    OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
                     break;
                 }
                 // else go round and prompt again
@@ -108,7 +112,7 @@ namespace StatsDirect.UI
             // If the parameter already holds static data, we don't need to request that from the user.
             if (null != parameter.Data)
             {
-                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Output, parameter.Data.Frame));
+                OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Output, parameter.Data.Frame));
                 return;
             }
 
@@ -119,7 +123,10 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
-            outputParameters = new GridSelectionProcessor(grid).FillFrameParameter(parameter, processor, SdApplication.SoleInstance, context);
+            // #1403: Prevent looping with a selection if there was also a validation error.
+            if (IsRepeatAfterValidationError)
+                grid.ClearSelection();
+            OutputParameters = new GridSelectionProcessor(grid).FillFrameParameter(parameter, Processor, SdApplication.SoleInstance, Context);
         }
 
         public void Visit(IntegerParameter parameter)
@@ -140,14 +147,14 @@ namespace StatsDirect.UI
             {
                 int? defaultValue = 0;
                 if (parameter.HasDefaultValue)
-                    defaultValue = parameter.DefaultValue(processor, context);
+                    defaultValue = parameter.DefaultValue(Processor, Context);
 
-                string response = SdApplication.SoleInstance.GetString(parameter.Prompt(processor, context) + suffix, "StatsDirect", defaultValue.HasValue ? defaultValue.Value.ToString() : string.Empty);
+                string response = SdApplication.SoleInstance.GetString(parameter.Prompt(Processor, Context) + suffix, "StatsDirect", defaultValue.HasValue ? defaultValue.Value.ToString() : string.Empty);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (null != parameter.CancelSkipsParameter)
                     {
-                        outputParameters = new ParameterBag();
+                        OutputParameters = new ParameterBag();
                         return;
                     }
                     throw new TemplateOperationCancelledException();
@@ -155,7 +162,7 @@ namespace StatsDirect.UI
                 int result = Parsing.Cint_Txt(response);
                 if (result >= parameter.MinimumValue && result <= parameter.MaximumValue)
                 {
-                    outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
+                    OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
                     return;
                 }
                 // else go round and prompt again
@@ -195,9 +202,9 @@ namespace StatsDirect.UI
         public void Visit(GroupedCovarianceParameter parameter)
         {
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
-            Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter(processor);
+            Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter(Processor);
             if (null != data)
-                outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, data));
+                OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, data));
         }
 
         public void Visit(Frame2DParameter parameter)
@@ -208,8 +215,8 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
-            DataFrame2D frame = new GridSelectionProcessor(grid).FillFrameParameter2D(parameter, processor, SdApplication.SoleInstance, context);
-            outputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
+            DataFrame2D frame = new GridSelectionProcessor(grid).FillFrameParameter2D(parameter, Processor, SdApplication.SoleInstance, Context);
+            OutputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
         }
 
         public void Visit(EditGridParameter parameter)
@@ -234,17 +241,17 @@ namespace StatsDirect.UI
 
         public void Visit(BooleanParameter parameter)
         {
-            DialogResult result = SdApplication.SoleInstance.MsgboxX(parameter.Prompt(processor, context), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "StatsDirect", true);
+            DialogResult result = SdApplication.SoleInstance.MsgboxX(parameter.Prompt(Processor, Context), MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, "StatsDirect", true);
             if (DialogResult.Cancel == result)
             {
                 if (null != parameter.CancelSkipsParameter)
                 {
-                    outputParameters = new ParameterBag();
+                    OutputParameters = new ParameterBag();
                     return;
                 }
                 throw new TemplateOperationCancelledException();
             }
-            outputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, DialogResult.Yes == result));
+            OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, DialogResult.Yes == result));
         }
     }
 }

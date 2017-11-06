@@ -742,9 +742,10 @@ namespace StatsDirect.UI
                     return null;
 
             // We can't combine the parameter and need to acquire it.
+            bool lastHadValidationError = false;
             while (true)
             {
-                ImmediateParameterFiller filler = new ImmediateParameterFiller { context = context, processor = processor };
+                ImmediateParameterFiller filler = new ImmediateParameterFiller { Context = context, Processor = processor, IsRepeatAfterValidationError = lastHadValidationError };
                 parameter.Accept(filler);
 
                 // Validate; if no errors, stop.  If there are errors, show them and go round again.
@@ -753,15 +754,16 @@ namespace StatsDirect.UI
                 {
                     foreach (Validator validator in parameter.Validators)
                     {
-                        validationResult = ValidationProcessor.Validate(this, validator.ValidatorName, parameter, filler.outputParameters, parameter.ValidationFailMessage);
+                        validationResult = ValidationProcessor.Validate(this, validator.ValidatorName, parameter, filler.OutputParameters, parameter.ValidationFailMessage);
                         if (null != validationResult)
                             break;
                     }
                 }
                 if (null == validationResult)
-                    return filler.outputParameters;
+                    return filler.OutputParameters;
 
                 MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                lastHadValidationError = true;
             }
         }
 
