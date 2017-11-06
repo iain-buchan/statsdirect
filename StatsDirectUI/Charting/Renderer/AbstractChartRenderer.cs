@@ -22,6 +22,17 @@ namespace StatsDirect.Charting.Renderer
         protected const int LOWEST_ALLOWED_LEGEND = 30;
         protected const int MAX_LABEL_LENGTH = 50;
         protected const int MINIMUM_X_WHITESPACE = 70;
+        private const double AXIS_LITTLE_TICK = 4;
+        protected const double AXIS_BIG_TICK = 7;
+        private const int DEFAULT_METAFILE_HEIGHT = 800;
+        private const int DEFAULT_METAFILE_WIDTH = 1132;
+        protected const double DEFAULT_X_GAP = 80;
+        protected const double DEFAULT_Y_GAP = 80;
+        protected const int LABEL_TO_AXIS_LABEL_GAP = 3;
+
+        protected const int ASCII_YTxt = 3;
+        protected const int ASCII_XTxt = 15;
+        private const int ASCII_XExt = 60;
 
         protected double DataMinX { get; set; }
         protected double DataMinGreaterThanZeroX { get; set; }
@@ -34,18 +45,24 @@ namespace StatsDirect.Charting.Renderer
 
         private IStatsDirectCanvas statsDirectCanvas;
 
-        protected Font AxisLabelFont { get; private set; }
-        protected Font AxisTitleFont { get; private set; }
-        protected float AxisLineThickness { get; private set; }
+        private string AxisLabelFontDescriptor { get; set; }
+        private string AxisTitleFontDescriptor { get; set; }
+        private string LabelFontDescriptor { get; set; }
+        private string LegendFontDescriptor { get; set; }
+        private string TitleFontDescriptor { get; set; }
+
+        private FontMap fontMap = new FontMap();
+        private Font AxisLabelFont => fontMap[AxisLabelFontDescriptor];
+        private Font AxisTitleFont => fontMap[AxisTitleFontDescriptor];
+        private Font LabelFont => fontMap[LabelFontDescriptor];
+        private Font LegendFont => fontMap[LegendFontDescriptor];
+        private Font TitleFont => fontMap[TitleFontDescriptor];
+
+        private float AxisLineThickness { get; set; }
         protected Pen AxisPen { get; private set; }
         private Brush axisBrush;
-        private const double AXIS_LITTLE_TICK = 4;
-        protected const double AXIS_BIG_TICK = 7;
-        private Font TitleFont { get; set; }
-        private Font LegendFont { get; set; }
         protected bool BoxAxes { get; } = ChartPreferences.DefaultBoxAxes;
 
-        private Font LabelFont { get; set; }
 
         private bool isXAxisReversed;
         private bool isYAxisReversed;
@@ -68,20 +85,10 @@ namespace StatsDirect.Charting.Renderer
         protected double DivY { get; set; }
         protected double OffY { get; set; }
 
-        private const int DEFAULT_METAFILE_HEIGHT = 800;
-        private const int DEFAULT_METAFILE_WIDTH = 1132;
-        protected const double DEFAULT_X_GAP = 80;
-        protected const double DEFAULT_Y_GAP = 80;
         protected int imageHeight = DEFAULT_METAFILE_HEIGHT;
         protected int imageWidth = DEFAULT_METAFILE_WIDTH;
-        protected const int LABEL_TO_AXIS_LABEL_GAP = 3;
 
         protected string[] TextCanvas { get; set; }
-
-        protected const int ASCII_YTxt = 3;
-        protected const int ASCII_XTxt = 15;
-        private const int ASCII_XExt = 60;
-
 
         ///  <summary>
         ///  Several methods take a colour, not a pen.  This caches the most recent pen used by those methods, so that it can be re-used rather than regenerated each time.
@@ -201,12 +208,17 @@ namespace StatsDirect.Charting.Renderer
 
         private bool ReconstituteFonts()
         {
-            AxisLabelFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultAxisLabelFont);
-            AxisTitleFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultAxisTitleFont);
-            LabelFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLabelFont);
-            LegendFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultLegendFont);
-            TitleFont = ChartPreferences.FontFromSaveString(ChartPreferences.DefaultTitleFont);
-            return null != AxisLabelFont && null != AxisTitleFont && null != LabelFont && null != LegendFont && null != TitleFont;
+            AxisLabelFontDescriptor = ChartPreferences.DefaultAxisLabelFont;
+            AxisTitleFontDescriptor = ChartPreferences.DefaultAxisTitleFont;
+            LabelFontDescriptor = ChartPreferences.DefaultLabelFont;
+            LegendFontDescriptor = ChartPreferences.DefaultLegendFont;
+            TitleFontDescriptor = ChartPreferences.DefaultTitleFont;
+            return
+                null != fontMap[ChartPreferences.DefaultAxisLabelFont]
+                && null != fontMap[ChartPreferences.DefaultAxisTitleFont]
+                && null != fontMap[ChartPreferences.DefaultLabelFont]
+                && null != fontMap[ChartPreferences.DefaultLegendFont]
+                && null != fontMap[ChartPreferences.DefaultTitleFont];
         }
 
         ///  <summary>
@@ -215,23 +227,9 @@ namespace StatsDirect.Charting.Renderer
         ///  <remarks></remarks>
         protected void EndVectorPlot()
         {
-            //  Series are kept in case of redoing a preview.  TODO: Is this appropriate?  Isn't a new renderer used each time?
-
-            if (null != AxisPen)
-            {
-                AxisPen.Dispose();
-                AxisPen = null;
-            }
-            if (null != axisBrush)
-            {
-                axisBrush.Dispose();
-                axisBrush = null;
-            }
-            if (null != mostRecentPen)
-            {
-                mostRecentPen.Dispose();
-                mostRecentPen = null;
-            }
+            AxisPen?.Dispose();
+            axisBrush?.Dispose();
+            mostRecentPen?.Dispose();
         }
 
         /// <summary>
@@ -824,7 +822,6 @@ namespace StatsDirect.Charting.Renderer
             return new CategoryAxisScale(labels.Count);
         }
 
-
         private double CalculateXSeriesHeight(IList<string> labels)
         {
             double maxHeight = 0;
@@ -884,9 +881,21 @@ namespace StatsDirect.Charting.Renderer
         }
 
         ///  <summary>
+        ///  Draw axis text aligned to the centre
+        ///  </summary>
+        protected void AxisDrawStringAtAngleLT(string txt, double x1, double y1, LabelDirection direction)
+        {
+            using (StringFormat alignTxt = new StringFormat())
+            {
+                alignTxt.Alignment = StringAlignment.Near;
+                alignTxt.LineAlignment = StringAlignment.Near;
+                statsDirectCanvas.DrawStringAtAngle(txt, AxisLabelFont, axisBrush, x1, y1, alignTxt, direction);
+            }
+        }
+
+        ///  <summary>
         ///  Draw legend text aligned to the left
         ///  </summary>
-        ///  <remarks></remarks>
         protected void DrawStringLegendL(string txt, double x, double y)
         {
             DrawStringLegend(txt, x, y, StringAlignment.Near);
@@ -904,7 +913,6 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Draw legend text
         ///  </summary>
-        ///  <remarks></remarks>
         protected void DrawStringLegend(string txt, double x, double y, StringAlignment alignment)
         {
             using (StringFormat alignTxt = new StringFormat())
@@ -917,7 +925,6 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Draw label text
         ///  </summary>
-        ///  <remarks></remarks>
         protected void DrawStringLabel(string txt, double x, double y, StringAlignment alignment)
         {
             using (StringFormat alignTxt = new StringFormat())
@@ -1529,51 +1536,11 @@ namespace StatsDirect.Charting.Renderer
 
         protected virtual void Dispose(bool disposing)
         {
-            if (null != axisBrush)
-            {
-                axisBrush.Dispose();
-                axisBrush = null;
-            }
-            if (null != AxisPen)
-            {
-                AxisPen.Dispose();
-                AxisPen = null;
-            }
-            if (null != statsDirectCanvas)
-            {
-                statsDirectCanvas.Dispose();
-                statsDirectCanvas = null;
-            }
-            if (null != mostRecentPen)
-            {
-                mostRecentPen.Dispose();
-                mostRecentPen = null;
-            }
-            if (null != AxisLabelFont)
-            {
-                AxisLabelFont.Dispose();
-                AxisLabelFont = null;
-            }
-            if (null != AxisTitleFont)
-            {
-                AxisTitleFont.Dispose();
-                AxisTitleFont = null;
-            }
-            if (null != LabelFont)
-            {
-                LabelFont.Dispose();
-                LabelFont = null;
-            }
-            if (null != LegendFont)
-            {
-                LegendFont.Dispose();
-                LegendFont = null;
-            }
-            if (null != TitleFont)
-            {
-                TitleFont.Dispose();
-                TitleFont = null;
-            }
+            axisBrush?.Dispose();
+            AxisPen?.Dispose();
+            statsDirectCanvas?.Dispose();
+            mostRecentPen?.Dispose();
+            fontMap.Dispose();
         }
 
         public double ImageWidth => statsDirectCanvas.Width;
@@ -1646,13 +1613,13 @@ namespace StatsDirect.Charting.Renderer
         private void SetFontsAndThicknessesFromOptions(GenericOptions o)
         {
             if (o.UsesAxisLabelFontDescriptor && !string.IsNullOrEmpty(o.AxisLabelFontDescriptor))
-                AxisLabelFont = ChartPreferences.FontFromSaveString(o.AxisLabelFontDescriptor);
+                AxisLabelFontDescriptor = o.AxisLabelFontDescriptor;
             if (o.UsesAxisTitleFontDescriptor && !string.IsNullOrEmpty(o.AxisTitleFontDescriptor))
-                AxisTitleFont = ChartPreferences.FontFromSaveString(o.AxisTitleFontDescriptor);
+                AxisTitleFontDescriptor = o.AxisTitleFontDescriptor;
             if (o.UsesLegendFontDescriptor && !string.IsNullOrEmpty(o.LegendFontDescriptor))
-                LegendFont = ChartPreferences.FontFromSaveString(o.LegendFontDescriptor);
+                LegendFontDescriptor = o.LegendFontDescriptor;
             if (o.UsesTitleFontDescriptor && !string.IsNullOrEmpty(o.TitleFontDescriptor))
-                TitleFont = ChartPreferences.FontFromSaveString(o.TitleFontDescriptor);
+                TitleFontDescriptor = o.TitleFontDescriptor;
 
             if (o.UsesAxisLineThickness)
             {
@@ -2064,6 +2031,45 @@ namespace StatsDirect.Charting.Renderer
                 float xDiff = x.X - y.X;
                 return xDiff == 0 ? Math.Sign(x.Y - y.Y) : Math.Sign(xDiff);
             }
+        }
+
+        private class FontMap: IDisposable
+        {
+            private Dictionary<string, Font> fonts = new Dictionary<string, Font>();
+
+            public Font this[string fontDescriptor]
+            {
+                get
+                {
+                    if (fonts.TryGetValue(fontDescriptor, out Font found))
+                        return found;
+                    fonts.Add(fontDescriptor, ChartPreferences.FontFromSaveString(fontDescriptor));
+                    return fonts[fontDescriptor];
+                }
+            }
+
+            #region IDisposable Support
+            private bool disposedValue = false;
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    if (disposing)
+                    {
+                        foreach (Font f in fonts.Values)
+                            f.Dispose();
+                    }
+
+                    disposedValue = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                Dispose(true);
+            }
+            #endregion
         }
     }
 }

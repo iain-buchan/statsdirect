@@ -162,66 +162,56 @@ namespace StatsDirect.Charting.Renderer
 
             DrawTitle(pOptions.Title);
 
-            using (StringFormat rightFormat = new StringFormat())
+            double ystep = YExtCanvas / nmale;
+            if (title[0].Length > 0)
             {
-                rightFormat.Alignment = StringAlignment.Far;
-                double ystep = YExtCanvas / nmale;
-                if (title[0].Length > 0)
+                for (int i = 0; i < nmale; i++)
                 {
-                    double txh = AxisLabelHeightInCanvasCoordinates(title[0]);
-                    for (int i = 0; i < nmale; i++)
+                    double yc = YAxisCanvas + (nmale - i) * ystep - ystep / 2;
+                    AxisDrawStringAtAngleRM(title[i], XAxisCanvas - 15, yc, LabelDirection.Across);
+                }
+            }
+
+            double xstep = XExtCanvas / 2;
+            double xc = XAxisCanvas + xstep;
+            using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
+            {
+                for (int i = 0; i < nmale; i++)
+                {
+                    double yt = YAxisCanvas + (nmale - i) * ystep;
+                    double yb = YAxisCanvas + (nmale - i - 1) * ystep;
+                    double xl = XAxisCanvas + xstep - male[i] / scaleMax * xstep;
+                    double xr = XAxisCanvas + xstep + female[i] / scaleMax * xstep;
+                    if (mode == PyramidMode.Pairs)
                     {
-                        double yc = YAxisCanvas + (nmale - i) * ystep - ystep / 2;
-                        DrawStringInCanvasCoordinates(title[i], AxisLabelFont, Brushes.Black, XAxisCanvas - 15, yc + txh / 2, rightFormat);
+                        //  Male/female
+                        if (maleBrush != null)
+                            FillRectangleInCanvasCoordinates(maleBrush, xl, yt, xc - xl, yt - yb);
+                        if (femaleBrush != null)
+                            FillRectangleInCanvasCoordinates(femaleBrush, xc, yt, xr - xc, yt - yb);
                     }
+                    else
+                    {
+                        //  Just the one
+                        if (maleBrush != null)
+                            FillRectangleInCanvasCoordinates(maleBrush, xl, yt, xr - xl, yt - yb);
+                    }
+                    DrawRectangleInCanvasCoordinates(blackPen, xl, yt, xr - xl, yt - yb);
+                }
+                maleBrush?.Dispose();
+                femaleBrush?.Dispose();
+
+                if (mode == PyramidMode.Pairs)
+                {
+                    DrawLineInCanvasCoordinates(blackPen, xc, YAxisCanvas, XAxisCanvas + xstep, YAxisCanvas + nmale * ystep);
+                    AxisDrawStringAtAngleCT("male", XExtCanvas / 4 + XAxisCanvas, YAxisCanvas - 12, LabelDirection.Across);
+                    AxisDrawStringAtAngleCT("female", XExtCanvas / 4 + XExtCanvas / 2 + XAxisCanvas, YAxisCanvas - 12, LabelDirection.Across);
                 }
 
-                double xstep = XExtCanvas / 2;
-                double xc = XAxisCanvas + xstep;
-                using (Pen blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
-                {
-                    for (int i = 0; i < nmale; i++)
-                    {
-                        double yt = YAxisCanvas + (nmale - i) * ystep;
-                        double yb = YAxisCanvas + (nmale - i - 1) * ystep;
-                        double xl = XAxisCanvas + xstep - male[i] / scaleMax * xstep;
-                        double xr = XAxisCanvas + xstep + female[i] / scaleMax * xstep;
-                        if (mode == PyramidMode.Pairs)
-                        {
-                            //  Male/female
-                            if (maleBrush != null)
-                                FillRectangleInCanvasCoordinates(maleBrush, xl, yt, xc - xl, yt - yb);
-                            if (femaleBrush != null)
-                                FillRectangleInCanvasCoordinates(femaleBrush, xc, yt, xr - xc, yt - yb);
-                        }
-                        else
-                        {
-                            //  Just the one
-                            if (maleBrush != null)
-                                FillRectangleInCanvasCoordinates(maleBrush, xl, yt, xr - xl, yt - yb);
-                        }
-                        DrawRectangleInCanvasCoordinates(blackPen, xl, yt, xr - xl, yt - yb);
-                    }
-                    maleBrush?.Dispose();
-                    femaleBrush?.Dispose();
+                AxisDrawStringAtAngleLT("Scale maximum = " + scaleMax, 40, YAxisCanvas - 40, LabelDirection.Across);
 
-                    using (StringFormat leftFormat = new StringFormat())
-                    {
-                        leftFormat.Alignment = StringAlignment.Near;
-
-                        if (mode == PyramidMode.Pairs)
-                        {
-                            DrawLineInCanvasCoordinates(blackPen, xc, YAxisCanvas, XAxisCanvas + xstep, YAxisCanvas + nmale * ystep);
-                            DrawStringInCanvasCoordinates("male", AxisLabelFont, Brushes.Black, XExtCanvas / 4 + XAxisCanvas, YAxisCanvas - 12, leftFormat);
-                            DrawStringInCanvasCoordinates("female", AxisLabelFont, Brushes.Black, XExtCanvas / 4 + XExtCanvas / 2 + XAxisCanvas, YAxisCanvas - 12, leftFormat);
-                        }
-
-                        DrawStringInCanvasCoordinates("Scale maximum = " + scaleMax, AxisLabelFont, Brushes.Black, 40, YAxisCanvas - 40, leftFormat);
-
-                        EndVectorPlot();
-                        return new ParameterBag();
-                    }
-                }
+                EndVectorPlot();
+                return new ParameterBag();
             }
         }
     }
