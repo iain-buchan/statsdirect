@@ -26,7 +26,14 @@ namespace StatsDirect.UI
 
         private void cmdOK_Click(object sender, EventArgs e)
         {
-            SaveData();
+            try
+            {
+                SaveData();
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't save tool data", ex, false);
+            }
             Close();
         }
 
@@ -35,9 +42,7 @@ namespace StatsDirect.UI
             StringCollection names = Properties.Settings.Default.ToolsNames;
             StringCollection paths = Properties.Settings.Default.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
-            {
                 grid.Rows.Add(names[i], paths[i]);
-            }
         }
 
         private void DefaultData()
@@ -48,9 +53,7 @@ namespace StatsDirect.UI
             StringCollection paths = ParseXmlToStringCollection(xPaths);
             grid.Rows.Clear();
             for (int i = 0; i < names.Count; i++)
-            {
                 grid.Rows.Add(names[i], paths[i]);
-            }
         }
 
         private static StringCollection ParseXmlToStringCollection(string rawXml)
@@ -63,9 +66,7 @@ namespace StatsDirect.UI
             XmlNodeList elements = doc.GetElementsByTagName("string");
             StringCollection coll = new StringCollection();
             foreach (XmlNode element in elements)
-            {
                 coll.Add(element.InnerText);
-            }
             return coll;
         }
 
