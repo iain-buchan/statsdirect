@@ -28,7 +28,7 @@
 					<same-length-as>testData</same-length-as>
 					<clear-selection-first>true</clear-selection-first>
 				</frame>
-        <options>
+        <multiple-options>
           <name>methods</name>
           <prompt>Regression Methods</prompt>
           <lifetime>SessionForThisOperation</lifetime>
@@ -44,7 +44,7 @@
             <option name="do.pabalarge" selected="false">Approximate Passing-Bablok (bootstrap CI)</option>
             <option name="do.pabalarge.nestedbootstrap" selected="false">Approximate Passing-Bablok (nested boostrap CI) [may take several minutes to run]</option>
           </options>
-        </options>
+        </multiple-options>
         <confidence-interval>
           <name>ci</name>
         </confidence-interval>
@@ -56,7 +56,7 @@
           <minimum-value>0</minimum-value>
           <default-value>1</default-value>
         </double>
-        <options>
+        <multiple-options>
           <name>desired-charts</name>
           <prompt>Charts</prompt>
           <lifetime>SessionForThisOperation</lifetime>
@@ -68,7 +68,7 @@
             <option name="plot.residuals" selected="false">Residuals</option>
             <option name="plot.bias" selected="false">Bias</option>
           </options>
-        </options>
+        </multiple-options>
         <boolean>
           <name>saveRScript</name>
           <prompt>Save R script</prompt>

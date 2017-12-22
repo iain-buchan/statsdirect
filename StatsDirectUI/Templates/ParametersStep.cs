@@ -27,7 +27,7 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "grouped-covariance", Type = typeof(GroupedCovarianceParameter))]
         [XmlElement(ElementName = "integer", Type = typeof(IntegerParameter))]
         [XmlElement(ElementName = "option", Type = typeof(OptionParameter))]
-        [XmlElement(ElementName = "options", Type = typeof(OptionsParameter))]
+        [XmlElement(ElementName = "multiple-options", Type = typeof(OptionsParameter))]
         [XmlElement(ElementName = "pick-from-list", Type = typeof(PickFromListParameter))]
         [XmlElement(ElementName = "pick-variables", Type = typeof(PickVariablesParameter))]
         [XmlElement(ElementName = "special", Type = typeof(SpecialParameter))]

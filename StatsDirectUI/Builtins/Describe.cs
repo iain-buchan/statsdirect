@@ -569,15 +569,11 @@ namespace StatsDirect.Builtins
             if (shouldSave)
             {
                 // Find how many columns have been selected
-                int lc = 1;
+                int lc = 0;
                 foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                     if (shouldOutput[s])
-                        lc += 1;
+                        lc++;
 
-                if (centxl > 0)
-                    lc += 1;
-                if (centxu > 0)
-                    lc += 1;
                 // prevchk2 = true; 
                 if (lc > 0)
                 {

@@ -6,7 +6,7 @@
   <steps>
 		<builtin function-name="rptPoissonRegressionFit" />
       <parameters>
-        <options>
+        <multiple-options>
           <prompt>Save fits and residuals to a worksheet</prompt>
           <options>
             <option selected="true" name="expectedEvents">Expected events</option>
@@ -18,7 +18,7 @@
             <option selected="true" name="leverage">Leverage</option>
             <option selected="true" name="stdPearsonResidual">Std Pearson residual</option>
           </options>
-        </options>
+        </multiple-options>
       </parameters>
 		<builtin function-name="gridPoissonRegressionFit" />
 		<output-frame frame-name="results" />

@@ -16,7 +16,7 @@
       <confidence-interval>
         <name>gamma</name>
       </confidence-interval>
-      <options>
+      <multiple-options>
         <prompt>Select the results to include in the report</prompt>
         <options>
           <option name="report-valid-data" selected="true">Valid data</option>
@@ -41,7 +41,7 @@
           <option name="report-range" selected="true">Range</option>
           <option name="report-udc" selected="true">User defined centiles</option>
         </options>
-      </options>
+      </multiple-options>
       <option>
         <name>report-centile-type</name>
         <default-value>1</default-value>

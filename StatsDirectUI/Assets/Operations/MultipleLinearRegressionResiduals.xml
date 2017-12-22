@@ -6,7 +6,7 @@
   <prerequisite-operation>MultipleLinearRegression</prerequisite-operation>
   <steps>
 			<parameters>
-				<options>
+        <multiple-options>
 					<name>options</name>
 					<prompt>Save values to worksheet</prompt>
           <must-request>true</must-request>
@@ -15,7 +15,7 @@
 						<option name="saveStudentised">Studentised residual, leverage and Cook's distance</option>
 						<option name="saveJackknife">Jackknife residual and DFIT</option>
 					</options>
-				</options>
+				</multiple-options>
 			</parameters>
 		<builtin function-name="rptMultipleLinearRegressionResiduals" />
 		<test>

@@ -23,7 +23,7 @@
       </iftrue>
     </test>
       <parameters>
-        <options>
+        <multiple-options>
           <prompt>Save fits and residuals to a worksheet</prompt>
           <options>
             <option selected="true" name="trials">Trials</option>
@@ -38,7 +38,7 @@
             <option selected="true" name="deltaDeviance">Delta deviance</option>
             <option selected="true" name="deltaChiSquare">Delta chi-square</option>
           </options>
-        </options>
+        </multiple-options>
       </parameters>
     <builtin function-name="rptLogisticRegressionFit" />
     <builtin function-name="gridLogisticRegressionFit" />
