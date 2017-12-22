@@ -241,7 +241,8 @@ namespace StatsDirect.UI
 
         public void Visit(OptionsParameter parameter)
         {
-            TableLayoutPanel optionsPanel = (TableLayoutPanel)Control;
+            GroupBox groupBox = (GroupBox)Control;
+            TableLayoutPanel optionsPanel = (TableLayoutPanel)groupBox.Controls[0];
             foreach (Control c in optionsPanel.Controls)
             {
                 CheckBox chk = (CheckBox)c;

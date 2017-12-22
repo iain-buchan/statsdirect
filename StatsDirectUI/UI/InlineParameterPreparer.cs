@@ -402,19 +402,14 @@ namespace StatsDirect.UI
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
             string prompt = parameter.Prompt(Processor, Context);
-            if (!string.IsNullOrEmpty(prompt))
+            GroupBox groupBox = new SDGroupBox
             {
-                Label lbl = new Label
-                {
-                    Tag = parameter,
-                    Padding = new Padding(0, 6, 0, 3),
-                    AutoSize = true,
-                    MaximumSize = new Size(500, 500),
-                    Text = prompt
-                };
-                tlp.Controls.Add(lbl);
-                tlp.SetColumnSpan(lbl, 2);
-            }
+                Tag = parameter,
+                Padding = new Padding(3, 3, 3, 3),
+                AutoSize = true,
+                Text = prompt
+            };
+            // Add later so that autosizing can size the contained controls as well
 
             TableLayoutPanel panelOptions = new TableLayoutPanel
             {
@@ -424,9 +419,7 @@ namespace StatsDirect.UI
                 AutoSize = true
             };
             for (int column = 0; column < parameter.Columns; column++)
-            {
                 panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            }
 
             foreach (OptionsOption optionsOption in parameter.Options)
             {
@@ -445,8 +438,11 @@ namespace StatsDirect.UI
                 panelOptions.Controls.Add(chk);
             }
 
-            tlp.Controls.Add(panelOptions);
-            tlp.SetColumnSpan(panelOptions, 2);
+            panelOptions.Height = panelOptions.PreferredSize.Height;
+            panelOptions.Location = new Point(7, 20);
+            groupBox.Controls.Add(panelOptions);
+            tlp.Controls.Add(groupBox);
+            tlp.SetColumnSpan(groupBox, 2);
         }
 
         public void Visit(PickVariablesParameter parameter)
@@ -936,9 +932,7 @@ namespace StatsDirect.UI
                             AutoSize = true
                         };
                         for (int column = 0; column < parameter.Columns; column++)
-                        {
                             panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-                        }
 
                         string defaultValue = null;
                         if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter)
