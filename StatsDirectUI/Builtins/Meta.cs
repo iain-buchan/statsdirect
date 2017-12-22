@@ -2785,7 +2785,7 @@ namespace StatsDirect.Builtins
                 llY = new double[rawRows];
                 ulY = new double[rawRows];
 
-                for (int i = 1; i <= rawRows; i++)
+                for (int i = 0; i < rawRows; i++)
                 {
                     if (useRatio)
                     {
