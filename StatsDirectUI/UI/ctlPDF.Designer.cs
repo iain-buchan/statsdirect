@@ -114,6 +114,7 @@ namespace StatsDirect.UI
             this.txtLp.TabIndex = 3;
             this.txtLp.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
             this.txtLp.Enter += new System.EventHandler(this.EnterTextbox);
+            this.txtLp.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NoteDirty);
             this.txtLp.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // txtUp
@@ -124,6 +125,7 @@ namespace StatsDirect.UI
             this.txtUp.TabIndex = 4;
             this.txtUp.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
             this.txtUp.Enter += new System.EventHandler(this.EnterTextbox);
+            this.txtLp.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NoteDirty);
             this.txtUp.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // txt2p
@@ -134,6 +136,7 @@ namespace StatsDirect.UI
             this.txt2p.TabIndex = 5;
             this.txt2p.DoubleClick += new System.EventHandler(this.DoubleClickTextbox);
             this.txt2p.Enter += new System.EventHandler(this.EnterTextbox);
+            this.txtLp.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NoteDirty);
             this.txt2p.Leave += new System.EventHandler(this.LeaveTextbox);
             // 
             // cboCl
