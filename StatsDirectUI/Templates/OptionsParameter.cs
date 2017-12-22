@@ -24,7 +24,6 @@ namespace StatsDirect.Templates
     public sealed class OptionsParameter: Parameter
     {
         private readonly IList<OptionsOption> options;
-        private int columns = 2;
 
         public OptionsParameter()
         {
@@ -36,14 +35,10 @@ namespace StatsDirect.Templates
         /// </summary>
         /// <value>Defaults to 2</value>
         [XmlElement(ElementName = "columns")]
-        public int Columns
-        {
-            get { return columns; }
-            set { columns = value; }
-        }
+        public int Columns { get; set; } = 2;
 
-        [XmlArray(ElementName = "options"),
-            XmlArrayItem(ElementName = "option")]
+        [XmlArray(ElementName = "options")]
+        [XmlArrayItem(ElementName = "option")]
         public OptionsOption[] OptionsForXML
         {
             get
