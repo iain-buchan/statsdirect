@@ -246,8 +246,15 @@ namespace StatsDirect.UI
             foreach (Control c in optionsPanel.Controls)
             {
                 CheckBox chk = (CheckBox)c;
-                OptionsOption oo = (OptionsOption)chk.Tag;
-                OutputParameters[oo.Name] = new FilledParameter(FilledParameterDirection.Input, chk.Checked);
+                if (chk.Tag is MultipleOptionsAllTag)
+                {
+                    // Found the "all"
+                }
+                else
+                {
+                    OptionsOption oo = (OptionsOption)chk.Tag;
+                    OutputParameters[oo.Name] = new FilledParameter(FilledParameterDirection.Input, chk.Checked);
+                }
             }
         }
 

@@ -10,6 +10,7 @@
 					<name>options</name>
 					<prompt>Save values to worksheet</prompt>
           <must-request>true</must-request>
+          <columns>1</columns>
           <options>
 						<option name="saveFittedY">Fitted Y, SD of fitted Y and residual</option>
 						<option name="saveStudentised">Studentised residual, leverage and Cook's distance</option>

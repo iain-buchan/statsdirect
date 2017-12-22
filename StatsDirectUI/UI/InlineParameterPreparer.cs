@@ -415,12 +415,13 @@ namespace StatsDirect.UI
             {
                 Tag = parameter,
                 RowCount = (parameter.Options.Count + 1) / 2,
-                ColumnCount = parameter.Columns,
-                AutoSize = true
+                ColumnCount = parameter.Columns + 1,
+                AutoSize = true,
             };
             for (int column = 0; column < parameter.Columns; column++)
                 panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
+            int count = 0;
             foreach (OptionsOption optionsOption in parameter.Options)
             {
                 bool isChecked = optionsOption.Selected;
@@ -435,7 +436,10 @@ namespace StatsDirect.UI
                     Tag = optionsOption,
                     UseVisualStyleBackColor = true
                 };
+                chk.CheckedChanged += MultipleOptionsOptionCheckedChanged;
                 panelOptions.Controls.Add(chk);
+                panelOptions.SetCellPosition(chk, new TableLayoutPanelCellPosition(count % parameter.Columns, count / parameter.Columns));
+                count++;
             }
 
             panelOptions.Height = panelOptions.PreferredSize.Height;
@@ -443,6 +447,89 @@ namespace StatsDirect.UI
             groupBox.Controls.Add(panelOptions);
             tlp.Controls.Add(groupBox);
             tlp.SetColumnSpan(groupBox, 2);
+
+            // "All" tristate checkbox
+            CheckBox chkAll = new CheckBox
+            {
+                AutoSize = true,
+                Text = "All",
+                Tag = new MultipleOptionsAllTag(),
+                UseVisualStyleBackColor = true,
+                Location = new Point(groupBox.Size.Width - 12, 0)
+            };
+            chkAll.CheckStateChanged += MultipleOptionsOptionCheckAllChanged;
+            panelOptions.Controls.Add(chkAll);
+            panelOptions.SetCellPosition(chkAll, new TableLayoutPanelCellPosition(parameter.Columns, 0));
+            SetAllCheckedState(panelOptions);
+        }
+
+        private void MultipleOptionsOptionCheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox chkMe = (CheckBox)sender;
+            TableLayoutPanel tlp = (TableLayoutPanel)chkMe.Parent;
+            SetAllCheckedState(tlp);
+        }
+
+        private void SetAllCheckedState(TableLayoutPanel tlp)
+        {
+            foreach (Control candidate in tlp.Controls)
+            {
+                if (candidate.Tag is MultipleOptionsAllTag tag)
+                {
+                    // This one's the "all"
+                    if (tag.Changing)
+                        return;
+                    try
+                    {
+                        tag.Changing = true;
+                        CheckBox chkAll = (CheckBox)candidate;
+                        bool atLeastOneSet = false;
+                        bool atLeastOneClear = false;
+                        foreach (Control probe in tlp.Controls)
+                        {
+                            if (probe != chkAll)
+                            {
+                                if (((CheckBox)probe).Checked)
+                                    atLeastOneSet = true;
+                                else
+                                    atLeastOneClear = true;
+                            }
+                        }
+                        if (atLeastOneClear && !atLeastOneSet)
+                            chkAll.CheckState = CheckState.Unchecked;
+                        else if (atLeastOneSet && !atLeastOneClear)
+                            chkAll.CheckState = CheckState.Checked;
+                        else
+                            chkAll.CheckState = CheckState.Indeterminate;
+                    }
+                    finally
+                    {
+                        tag.Changing = false;
+                    }
+                }
+            }
+        }
+
+        private void MultipleOptionsOptionCheckAllChanged(object sender, EventArgs e)
+        {
+            CheckBox chkAll = (CheckBox)sender;
+            MultipleOptionsAllTag tag = (MultipleOptionsAllTag)chkAll.Tag;
+            if (tag.Changing)
+                return;
+            if (chkAll.CheckState == CheckState.Indeterminate)
+                return;
+            try
+            {
+                tag.Changing = true;
+                TableLayoutPanel tlp = (TableLayoutPanel)chkAll.Parent;
+                foreach (Control candidate in tlp.Controls)
+                    if (candidate != chkAll)
+                        ((CheckBox)candidate).CheckState = chkAll.CheckState;
+            }
+            finally
+            {
+                tag.Changing = false;
+            }
         }
 
         public void Visit(PickVariablesParameter parameter)
@@ -1567,5 +1654,10 @@ namespace StatsDirect.UI
                 Control = new ctlChartOptions(chartDefinition);
             }
         }
+    }
+
+    public class MultipleOptionsAllTag
+    {
+        public bool Changing { get; set; }
     }
 }
