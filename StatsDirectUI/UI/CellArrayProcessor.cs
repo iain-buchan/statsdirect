@@ -696,7 +696,7 @@ namespace StatsDirect.UI
                         break;
 
                 int r = 0;
-                DateVariable variable = new DateVariable(lrow + 1, ccs.ColumnTitle);
+                GenericVariable<DateTime> variable = new DateVariable(lrow + 1, ccs.ColumnTitle);
                 for (int row = 0; row <= lrow; row++)
                     variable.Data[r++] = values[row];
                 variable.Origin = ccs.GetWorksheetOrigin(mode, ccs.TitleIsInData, originGroup);

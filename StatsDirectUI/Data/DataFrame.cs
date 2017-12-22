@@ -32,10 +32,12 @@ namespace StatsDirect.Data
         public IList<IVariable> Variables { get; set; }
 
         [XmlArray("variables")]
+        [XmlArrayItem("boolean-variable", typeof(BooleanVariable))]
         [XmlArrayItem("classifier-variable", typeof(ClassifierVariable))]
         [XmlArrayItem("date-variable", typeof(DateVariable))]
         [XmlArrayItem("double-variable", typeof(DoubleVariable))]
         [XmlArrayItem("string-variable", typeof(StringVariable))]
+        [XmlArrayItem("variant-variable", typeof(VariantVariable))]
         public IVariable[] VariablesForXml
         {
             get

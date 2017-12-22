@@ -134,7 +134,7 @@ namespace StatsDirect.R
         {
             public StringBuilder Sb { get; set; }
 
-            public void Visit(BooleanVariable variable)
+            public void Visit(GenericVariable<bool> variable)
             {
                 bool[] data = variable.Data;
                 Sb.Append("c(");
@@ -166,7 +166,7 @@ namespace StatsDirect.R
                 Sb.Append(")");
             }
 
-            public void Visit(VariantVariable variable)
+            public void Visit(GenericVariable<object> variable)
             {
                 object[] data = variable.Data;
                 Sb.Append("c(");
@@ -198,7 +198,7 @@ namespace StatsDirect.R
                 Sb.Append(")");
             }
 
-            public void Visit(DateVariable variable)
+            public void Visit(GenericVariable<DateTime> variable)
             {
                 DateTime[] data = variable.Data;
                 Sb.Append("c(");

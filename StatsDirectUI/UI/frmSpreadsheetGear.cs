@@ -363,7 +363,7 @@ namespace StatsDirect.UI
             public int OffsetForTitles { get; set; }
             public IValues Values { get; set; }
 
-            public void Visit(BooleanVariable variable)
+            public void Visit(GenericVariable<bool> variable)
             {
                 bool[] data = variable.Data;
                 if (null != data)
@@ -386,7 +386,7 @@ namespace StatsDirect.UI
                 }
             }
 
-            public void Visit(VariantVariable variable)
+            public void Visit(GenericVariable<object> variable)
             {
                 object[] data = variable.Data;
                 if (null != data)
@@ -433,7 +433,7 @@ namespace StatsDirect.UI
                 }
             }
 
-            public void Visit(DateVariable variable)
+            public void Visit(GenericVariable<DateTime> variable)
             {
                 DateTime[] data = variable.Data;
                 if (null != data)
@@ -576,9 +576,9 @@ namespace StatsDirect.UI
             func();
 #if !WATCH_EXCEPTIONS
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: It'd be nice to know that the exception happened for our diagnostic purposes.
+                SdApplication.WriteToBlackbox("Unexpected exception in spreadsheet form", ex);
             }
 #endif
         }

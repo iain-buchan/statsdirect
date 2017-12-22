@@ -1199,7 +1199,7 @@ namespace StatsDirect.Builtins
             // If deleting rows, knock out any that have been detected.
             if (deletingRows)
             {
-                foreach (VariantVariable vv in outputFrame.Variables)
+                foreach (GenericVariable<object> vv in outputFrame.Variables)
                 {
                     int outputLocation = 0;
                     for (int i = 0; i < vv.Length; i++)
@@ -1399,7 +1399,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag ShtDates(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            DateVariable inputVariable = (DateVariable)data.Variables[0];
+            GenericVariable<DateTime> inputVariable = (GenericVariable<DateTime>)data.Variables[0];
 
             string interval = parameters["interval"].AsString;
             DateTime indate = parameters["indate"].AsDate;
@@ -2730,7 +2730,7 @@ namespace StatsDirect.Builtins
                     // Add covariates.
                     foreach (IVariable inputCovariant in covariatesOrNull.Variables)
                     {
-                        VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
+                        GenericVariable<object> outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
                         for (int i = 0; i < nextDifferentValue; i++)
                             outputCovariant.Data[i] = inputCovariant.DataAsObject(countMap[differenceValuesInOrder[i]].RowIndex);
                         outputFrame.Variables.Add(outputCovariant);
@@ -2922,10 +2922,10 @@ namespace StatsDirect.Builtins
                 outputResponses = null;
 
             // Add covariates if we have them
-            VariantVariable[] outputCovariates = new VariantVariable[covariatesCount];
+            GenericVariable<object>[] outputCovariates = new GenericVariable<object>[covariatesCount];
             for (int i = 0; i < covariatesCount; i++)
             {
-                VariantVariable v = new VariantVariable(totalOutputRows, covariatesOrNull.Variables[i].Title);
+                GenericVariable<object> v = new VariantVariable(totalOutputRows, covariatesOrNull.Variables[i].Title);
                 outputFrame.Variables.Add(v);
                 outputCovariates[i] = v;
             }
@@ -2943,7 +2943,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        private static int FillExtractOutputRow(DataFrame covariatesOrNull, StringVariable labelsOrNull, int copies, int response, bool hasResponses, bool hasLabels, int covariatesCount, StringVariable outputLabels, DoubleVariable outputResponses, VariantVariable[] outputCovariates, int nextOutputOffset, int srcRow)
+        private static int FillExtractOutputRow(DataFrame covariatesOrNull, StringVariable labelsOrNull, int copies, int response, bool hasResponses, bool hasLabels, int covariatesCount, StringVariable outputLabels, DoubleVariable outputResponses, GenericVariable<object>[] outputCovariates, int nextOutputOffset, int srcRow)
         {
             for (int copy = 0; copy < copies; copy++)
             {
