@@ -490,18 +490,15 @@ namespace StatsDirect.Numerics
             return taufrompReturn;
         }
 
-        public static void transpose_cr_rc(double[,] x, out double[,] z)
+        public static T[,] Transpose<T>(T[,] x)
         {
             int cols = x.GetUpperBound(0);
             int rows = x.GetUpperBound(1);
-            z = new double[rows + 1, cols + 1];
+            T[,] z = new T[rows + 1, cols + 1];
             for (int c = 1; c <= cols; c++)
-            {
                 for (int r = 1; r <= rows; r++)
-                {
                     z[r, c] = x[c, r];
-                }
-            }
+            return z;
         }
 
         ///  <summary>

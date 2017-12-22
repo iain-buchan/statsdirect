@@ -1558,7 +1558,7 @@ namespace StatsDirect.Builtins
                 }
                 Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
-                    throw new InvalidDataException("Montel Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
                 double k = 0.0;
                 double sek = 0;
                 double sekci = 0;
@@ -2036,7 +2036,7 @@ namespace StatsDirect.Builtins
             Namevar[] ycat = new Namevar[ycats + 1];
             string ylab = c1Variable.Title;
             int cnt = 0;
-            for (int i = 0; i <= ycats - 1; i++)
+            for (int i = 0; i < ycats; i++)
             {
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
@@ -2285,7 +2285,7 @@ namespace StatsDirect.Builtins
                     columnsParameters.AddOutput("*chirxc", chirxcList);
                     if (tot > 0.0)
                     {
-                        MathDbl.transpose_cr_rc(xt, out double[,] w);
+                        double[,] w = MathDbl.Transpose(xt);
                         bool doExact = parameters["doExact"].AsBoolean;
                         bool doMonteCarlo = parameters["doMonteCarlo"].AsBoolean;
                         bool pc = parameters["show_pc"].AsBoolean;

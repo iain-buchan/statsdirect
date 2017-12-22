@@ -783,7 +783,7 @@ namespace StatsDirect.Builtins
                 }
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
-                    throw new InvalidDataException("Montel Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
                 x2rep = Chi2Trend(x, wt, nrow);
                 if (x2rep > x2 || Math.Abs(x2rep-x2)<tol)
                 {
@@ -909,27 +909,19 @@ namespace StatsDirect.Builtins
                 }
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
-                    throw new InvalidDataException("Montel Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
                 ChiRC(x,  nrow, ncol, rowScore, colScore, out x2rep, out x2Trendrep, out x2Eqrep, out g2rep, out faultrep);
                 if (!faultrep)
                 {
-                    actualIterations += 1;
+                    actualIterations++;
                     if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
-                    {
-                        rx2 += 1;
-                    }
+                        rx2++;
                     if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
-                    {
-                        rg2 += 1;
-                    }
+                        rg2++;
                     if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
-                    {
-                        rx2Eq += 1;
-                    }
+                        rx2Eq++;
                     if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
-                    {
-                        rx2Trend += 1;
-                    }
+                        rx2Trend++;
                 }
             }
             host.FinishProgress();
@@ -969,7 +961,7 @@ namespace StatsDirect.Builtins
                     rtot[r] += x[r, c];
                     ctot[c] += x[r, c];
                     gtot += x[r, c];
-                    sumWeighted = sumWeighted + x[r, c] * rowscore[r] * colscore[c];
+                    sumWeighted += x[r, c] * rowscore[r] * colscore[c];
                 }
             }
 
@@ -989,12 +981,10 @@ namespace StatsDirect.Builtins
             int nzCols = 0;
             for (int c = 1; c <= cols; c++)
             {
-                sumWtCol = sumWtCol + ctot[c] * colscore[c];
-                sumWtSqCol = sumWtSqCol + ctot[c] * colscore[c] * colscore[c];
+                sumWtCol += ctot[c] * colscore[c];
+                sumWtSqCol += ctot[c] * colscore[c] * colscore[c];
                 if (ctot[c] > 0.0)
-                {
-                    nzCols = nzCols + 1;
-                }
+                    nzCols++;
             }
 
             double sumWtRow = 0.0;
@@ -1002,37 +992,29 @@ namespace StatsDirect.Builtins
             int nzRows = 0;
             for (int r = 1; r <= rows; r++)
             {
-                sumWtRow = sumWtRow + rtot[r] * rowscore[r];
-                sumWtSqRow = sumWtSqRow + rtot[r] * rowscore[r] * rowscore[r];
+                sumWtRow += rtot[r] * rowscore[r];
+                sumWtSqRow += rtot[r] * rowscore[r] * rowscore[r];
                 if (rtot[r] > 0.0)
-                {
-                    nzRows = nzRows + 1;
-                }
+                    nzRows++;
             }
 
             double dsrs = 0.0;
-            double ef;
-            double xi;
             for (int c = 1; c <= cols; c++)
             {
-                xi = 0.0;
+                double xi = 0.0;
                 for (int r = 1; r <= rows; r++)
                 {
-                    xi = xi + rowscore[r] * Convert.ToDouble(x[r, c]);
-                    ef = rtot[r] * ctot[c] / gtot;
+                    xi += rowscore[r] * x[r, c];
+                    double ef = rtot[r] * ctot[c] / gtot;
                     if (ef != 0.0)
                     {
-                        x2 += Math.Pow(Convert.ToDouble(x[r, c]) - ef, 2.0) / ef;
+                        x2 += Math.Pow(x[r, c] - ef, 2.0) / ef;
                         if (x[r, c] != 0)
-                        {
-                            g2 += Convert.ToDouble(x[r, c]) * Math.Log(Convert.ToDouble(x[r, c]) / ef);
-                        }
+                            g2 += x[r, c] * Math.Log(x[r, c] / ef);
                     }
                 }
                 if (ctot[c] != 0.0)
-                {
-                    dsrs = dsrs + xi * xi / ctot[c];
-                }
+                    dsrs += xi * xi / ctot[c];
             }
 
             //  ANOVA style equality of variance test
