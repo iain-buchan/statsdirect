@@ -19,7 +19,7 @@ namespace StatsDirect.Charting
         public override bool Equals(object obj)
         {
             return obj is FontDescriptor other
-                && ((null == FontFamily && null == other.FontFamily) || FontFamily.Equals(other.FontFamily))
+                && (null == FontFamily && null == other.FontFamily || FontFamily.Equals(other.FontFamily))
                 && Style == other.Style
                 && SizeInPoints == other.SizeInPoints;
         }

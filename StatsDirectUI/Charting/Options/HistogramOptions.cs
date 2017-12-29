@@ -46,10 +46,7 @@ namespace StatsDirect.Charting
 
         public bool ShowRelativeFrequencies
         {
-            get
-            {
-                return showRelativeFrequencies;
-            }
+            get => showRelativeFrequencies;
             set
             {
                 bool changed = value != showRelativeFrequencies;

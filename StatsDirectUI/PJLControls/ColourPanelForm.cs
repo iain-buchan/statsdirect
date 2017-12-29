@@ -129,86 +129,44 @@ namespace StatsDirect.PJLControls
         // Forward properties to contained panel
         public BorderStyle PanelBorderStyle
         {
-            get
-            {
-                return colorPanel.BorderStyle;
-            }
-            set
-            {
-                colorPanel.BorderStyle = value;
-            }
+            get => colorPanel.BorderStyle;
+            set => colorPanel.BorderStyle = value;
         }
 
         public Color Color
         {
-            get
-            {
-                return colorPanel.Color;
-            }
-            set
-            {
-                colorPanel.Color = value;
-            }
+            get => colorPanel.Color;
+            set => colorPanel.Color = value;
         }
 
         public ColorSet ColorSet
         {
-            get
-            {
-                return colorPanel.ColorSet;
-            }
-            set
-            {
-                colorPanel.ColorSet = value;
-            }
+            get => colorPanel.ColorSet;
+            set => colorPanel.ColorSet = value;
         }
 
         public Size ColorWellSize
         {
-            get
-            {
-                return colorPanel.ColorWellSize;
-            }
-            set
-            {
-                colorPanel.ColorWellSize = value;
-            }
+            get => colorPanel.ColorWellSize;
+            set => colorPanel.ColorWellSize = value;
         }
 
         public ColorSortOrder ColorSortOrder
         {
-            get
-            {
-                return colorPanel.ColorSortOrder;
-            }
-            set
-            {
-                colorPanel.ColorSortOrder = value;
-            }
+            get => colorPanel.ColorSortOrder;
+            set => colorPanel.ColorSortOrder = value;
         }
 
         public int Columns
         {
-            get
-            {
-                return colorPanel.Columns;
-            }
-            set
-            {
-                colorPanel.Columns = value;
-            }
+            get => colorPanel.Columns;
+            set => colorPanel.Columns = value;
         }
 
         public Color[] CustomColors
         {
-            get
-            {
-                return colorPanel.CustomColors;
-            }
-            set
-            {
-                colorPanel.CustomColors = value;
-            }
+            get => colorPanel.CustomColors;
+            set => colorPanel.CustomColors = value;
         }
 
         /// <summary>
@@ -217,10 +175,7 @@ namespace StatsDirect.PJLControls
         /// </summary>
         internal int ParentWidth
         {
-            set
-            {
-                colorPanel.ParentWidth = value;
-            }
+            set => colorPanel.ParentWidth = value;
         }
     }
 }

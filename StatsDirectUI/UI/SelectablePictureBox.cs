@@ -16,7 +16,7 @@ namespace StatsDirect.UI
         [Description("Is the PictureBox selected?")]
         public bool Selected
         {
-            get { return selected; }
+            get => selected;
             set
             {
                 bool oldSelected = selected;

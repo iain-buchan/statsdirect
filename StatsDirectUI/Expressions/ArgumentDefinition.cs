@@ -2,10 +2,10 @@
 {
     public class ArgumentDefinition
     {
-        public string Name { get; private set; }
-        public bool IsOptional { get; private set; }
-        public string Default { get; private set; }
-        public DataType DataType { get; private set; }
+        public string Name { get; }
+        public bool IsOptional { get; }
+        public string Default { get; }
+        public DataType DataType { get; }
 
         public ArgumentDefinition(string name, DataType dataType, bool isOptional = false, string parameterDefault = null)
         {
@@ -23,7 +23,7 @@
 
             // Optional parameters show different strings depending on whether or not they have a default.
             if (null != Default)
-                return string.Format("{0}:={1} (default)", Name, Default);
+                return $"{Name}:={Default} (default)";
             return Name + " (optional)";
         }
     }

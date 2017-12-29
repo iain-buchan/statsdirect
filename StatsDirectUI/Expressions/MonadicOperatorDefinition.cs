@@ -5,9 +5,9 @@ namespace StatsDirect.Expressions
 {
     public class MonadicOperatorDefinition
     {
-        public MonadicOperator Operator { get; private set; }
-        public string ClrName { get; private set; }
-        public List<InOutDataTypeDefinition> InOutDataTypeDefinitions { get; private set; }
+        public MonadicOperator Operator { get; }
+        public string ClrName { get; }
+        public List<InOutDataTypeDefinition> InOutDataTypeDefinitions { get; }
 
         public MonadicOperatorDefinition(MonadicOperator op, string clrName, IEnumerable<InOutDataTypeDefinition> inOutDataTypeDefinitions)
         {

@@ -18,8 +18,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "available-if")]
         public string AvailableIfExpressionForXml
         {
-            get { return AvailableIfExpression?.Body; }
-            set { AvailableIfExpression = new Expression(value); }
+            get => AvailableIfExpression?.Body;
+            set => AvailableIfExpression = new Expression(value);
         }
 
         public bool AvailableIf(ITemplateProcessor processor, ParameterBag parameters)

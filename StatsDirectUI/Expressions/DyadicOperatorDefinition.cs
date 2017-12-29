@@ -5,9 +5,9 @@ namespace StatsDirect.Expressions
 {
     public class DyadicOperatorDefinition
     {
-        public DyadicOperator Operator { get; private set; }
-        public string ClrFormat { get; private set; }
-        public List<InOutDataTypeDefinition> InOutDataTypeDefinitions { get; private set; }
+        public DyadicOperator Operator { get; }
+        public string ClrFormat { get; }
+        public List<InOutDataTypeDefinition> InOutDataTypeDefinitions { get; }
 
         public DyadicOperatorDefinition(DyadicOperator op, string clrFormat, IEnumerable<InOutDataTypeDefinition> inOutDataTypeDefinitions)
         {

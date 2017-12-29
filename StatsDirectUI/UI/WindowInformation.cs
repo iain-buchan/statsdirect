@@ -24,18 +24,15 @@ namespace StatsDirect.UI
                     return null;
                 return (StatsDirectForm)window.Target;
             }
-            set
-            {
-                window = new WeakReference(value);
-            }
+            set => window = new WeakReference(value);
         }
 
         internal bool HasWindow => null != window && window.IsAlive;
 
         internal TabPage TabPage
         {
-            get { return tabPage; }
-            set { tabPage = value; }
+            get => tabPage;
+            set => tabPage = value;
         }
 
         internal bool IsNew => null == path;

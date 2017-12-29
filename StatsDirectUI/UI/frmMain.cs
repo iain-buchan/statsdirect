@@ -945,7 +945,7 @@ namespace StatsDirect.UI
 
         public bool CanSelectMultipleRows
         {
-            set { lblNonAdjoined.Visible = value; }
+            set => lblNonAdjoined.Visible = value;
         }
 
         public bool CanSelectGroupMethod
@@ -2452,7 +2452,7 @@ namespace StatsDirect.UI
             return FindGridOrNull(GetUserInputTable());
         }
 
-        private WorkbookView FindGridOrNull(Control root)
+        private static WorkbookView FindGridOrNull(Control root)
         {
             foreach (Control child in root.Controls)
             {
@@ -4188,8 +4188,8 @@ namespace StatsDirect.UI
 
         internal bool IntegratedConfidenceIntervalControlVisible
         {
-            get { return pnlConfidenceInterval.Visible; }
-            set { pnlConfidenceInterval.Visible = value; }
+            get => pnlConfidenceInterval.Visible;
+            set => pnlConfidenceInterval.Visible = value;
         }
 
         internal ContextMenuStrip InlineGridContextMenuStrip => contextMenuStrip;

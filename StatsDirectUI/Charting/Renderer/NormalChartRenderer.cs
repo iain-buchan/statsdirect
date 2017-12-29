@@ -22,7 +22,7 @@ namespace StatsDirect.Charting.Renderer
             int rows = xs0.Points;
 
             double[] x = new double[rows];
-            ExFortran.Rank(xs0.Data, x, 0, rows, 0, out double xf);
+            ExFortran.Rank(xs0.Data, x, 0, rows, 0, out double _);
 
             if (method == NormalOptions.ScoreMethod.ExpectedNormalOrder)
                 if (rows > 4000)
@@ -99,7 +99,7 @@ namespace StatsDirect.Charting.Renderer
             double sdy = Math.Sqrt(vary);
 
             double[] x = new double[rows];
-            ExFortran.Rank(y, x, 0, rows, 0, out double scrap);
+            ExFortran.Rank(y, x, 0, rows, 0, out double _);
 
             if (method == NormalOptions.ScoreMethod.ExpectedNormalOrder)
                 if (rows > 4000)

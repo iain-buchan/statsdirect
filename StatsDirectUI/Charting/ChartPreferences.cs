@@ -39,10 +39,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultBoxAxes;
             }
-            set
-            {
-                defaultBoxAxes = value;
-            }
+            set => defaultBoxAxes = value;
         }
 
         public static bool DefaultAllBlack
@@ -53,10 +50,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultAllBlack;
             }
-            set
-            {
-                defaultAllBlack = value;
-            }
+            set => defaultAllBlack = value;
         }
 
         public static FontDescriptor DefaultAxisLabelFont
@@ -67,10 +61,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultAxisLabelFont;
             }
-            set
-            {
-                defaultAxisLabelFont = value;
-            }
+            set => defaultAxisLabelFont = value;
         }
 
         public static FontDescriptor DefaultSeriesLabelFont => DefaultAxisLabelFont;
@@ -83,10 +74,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultAxisTitleFont;
             }
-            set
-            {
-                defaultAxisTitleFont = value;
-            }
+            set => defaultAxisTitleFont = value;
         }
 
         public static FontDescriptor DefaultLabelFont
@@ -97,10 +85,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultLabelFont;
             }
-            set
-            {
-                defaultLabelFont = value;
-            }
+            set => defaultLabelFont = value;
         }
 
         public static FontDescriptor DefaultLegendFont
@@ -111,10 +96,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultLegendFont;
             }
-            set
-            {
-                defaultLegendFont = value;
-            }
+            set => defaultLegendFont = value;
         }
 
         public static FontDescriptor DefaultTitleFont
@@ -125,10 +107,7 @@ namespace StatsDirect.Charting
                     InitSharedValues();
                 return defaultTitleFont;
             }
-            set
-            {
-                defaultTitleFont = value;
-            }
+            set => defaultTitleFont = value;
         }
 
         public static MarkerType[] MarkerTypes

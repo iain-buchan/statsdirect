@@ -21,7 +21,7 @@ namespace StatsDirect.UI
 
         public bool ShowMarkerStyle
         {
-            get { return showMarkerStyle; }
+            get => showMarkerStyle;
             set
             {
                 showMarkerStyle = value;
@@ -31,7 +31,7 @@ namespace StatsDirect.UI
 
         public bool ShowMarkerSize
         {
-            get { return showMarkerSize; }
+            get => showMarkerSize;
             set
             {
                 showMarkerSize = value;
@@ -41,7 +41,7 @@ namespace StatsDirect.UI
 
         public bool ShowMarkerColour
         {
-            get { return showMarkerColour; }
+            get => showMarkerColour;
             set
             {
                 showMarkerColour = value;
@@ -51,7 +51,7 @@ namespace StatsDirect.UI
 
         public bool ShowLineColour
         {
-            get { return showLineColour; }
+            get => showLineColour;
             set
             {
                 showLineColour = value;
@@ -61,7 +61,7 @@ namespace StatsDirect.UI
 
         public bool ShowLineThickness
         {
-            get { return showLineThickness; }
+            get => showLineThickness;
             set 
             {
                 showLineThickness = value;
@@ -71,7 +71,7 @@ namespace StatsDirect.UI
 
         public bool ShowDashStyle
         {
-            get { return showDashStyle; }
+            get => showDashStyle;
             set
             {
                 showDashStyle = value;
@@ -81,7 +81,7 @@ namespace StatsDirect.UI
 
         public bool ShowFillStyle
         {
-            get { return showFillStyle; }
+            get => showFillStyle;
             set
             {
                 showFillStyle = value;
@@ -92,7 +92,7 @@ namespace StatsDirect.UI
 
         public Charting.MarkerType MarkerType
         {
-            get { return markerType; }
+            get => markerType;
             set
             {
                 markerType = value;

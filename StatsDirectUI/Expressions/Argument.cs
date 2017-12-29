@@ -4,9 +4,5 @@
     {
         public string ExplicitParameterName { get; set; }
         public INode Node { get; set; }
-
-        public Argument()
-        {
-        }
     }
 }

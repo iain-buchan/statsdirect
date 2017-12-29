@@ -55,7 +55,7 @@ namespace StatsDirect.UI
             {
                 SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to fetch R update", ex, false);
             }
-            ((Form)this.TopLevelControl).Close(); // See #1031; no point leaving the form here.
+            ((Form)TopLevelControl).Close(); // See #1031; no point leaving the form here.
         }
     }
 }

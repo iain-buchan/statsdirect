@@ -6,7 +6,6 @@ namespace StatsDirect.Data
     public sealed class StringVariable : GenericVariable<string>
     {
         public StringVariable()
-            : base()
         {
         }
 

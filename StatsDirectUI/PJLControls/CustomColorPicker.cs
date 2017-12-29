@@ -715,14 +715,8 @@ namespace StatsDirect.PJLControls
         [Description("Enable/disable continuous z-axis color."), DefaultValue(defaultContinuousScroll)]
         public bool EnableContinuousScrollZ
         {
-            get
-            {
-                return bContinuousScrollZAxis;
-            }
-            set
-            {
-                bContinuousScrollZAxis = value;
-            }
+            get => bContinuousScrollZAxis;
+            set => bContinuousScrollZAxis = value;
         }
 
         /// <summary>

@@ -56,7 +56,7 @@ namespace StatsDirect.TemplateProcessing
         /// <param name="rawRtf">The RTF to examine for inclusions</param>
         /// <param name="knownInclusions"></param>
         /// <returns>The RTF with inclusions replaced</returns>
-        private string ResolveTemplates(string rawRtf, List<string> knownInclusions)
+        private static string ResolveTemplates(string rawRtf, List<string> knownInclusions)
         {
             StringBuilder sb = new StringBuilder();
             int sourcePosition = 0;

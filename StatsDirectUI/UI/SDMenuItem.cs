@@ -16,29 +16,29 @@ namespace StatsDirect.UI
         [XmlArray(ElementName = "sub-items")]
         public SDMenuItem[] SubItems
         {
-            get { return subItems; }
-            set { subItems = value; }
+            get => subItems;
+            set => subItems = value;
         }
 
         [XmlAttribute(AttributeName="label")]
         public string Label
         {
-            get { return label; }
-            set { label = value; }
+            get => label;
+            set => label = value;
         }
 
         [XmlAttribute(AttributeName = "operation")]
         public string Operation
         {
-            get { return operation; }
-            set { operation = value; }
+            get => operation;
+            set => operation = value;
         }
 
         [XmlAttribute(AttributeName = "tooltip")]
         public string Tooltip
         {
-            get { return tooltip; }
-            set { tooltip = value; }
+            get => tooltip;
+            set => tooltip = value;
         }
 
         [XmlElement(ElementName = "help")]

@@ -8,12 +8,6 @@ namespace StatsDirect.Templates
     {
         private Expression defaultValue;
 
-        public BooleanParameter()
-        {
-            // By default, remember value per operation.  Deserialization can override this.
-            // Lifetime = ParameterLifetime.SessionForThisOperation;
-        }
-
         public bool? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
             if (null == defaultValue || null == defaultValue.Body)
@@ -32,8 +26,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "default-value")]
         public Expression DefaultValueExpression
         {
-            get { return defaultValue; }
-            set { defaultValue = value; }
+            get => defaultValue;
+            set => defaultValue = value;
         }
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)

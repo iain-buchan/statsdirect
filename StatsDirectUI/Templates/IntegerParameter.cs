@@ -9,12 +9,6 @@ namespace StatsDirect.Templates
         private int minimumValue = int.MinValue;
         private int maximumValue = int.MaxValue;
 
-        public IntegerParameter()
-        {
-            // By default, remember value per operation.  Deserialization can override this.
-            // Lifetime = ParameterLifetime.SessionForThisOperation;
-        }
-
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
@@ -40,15 +34,15 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "minimum-value")]
         public int MinimumValue
         {
-            get { return minimumValue; }
-            set { minimumValue = value; }
+            get => minimumValue;
+            set => minimumValue = value;
         }
 
         [XmlElement(ElementName = "maximum-value")]
         public int MaximumValue
         {
-            get { return maximumValue; }
-            set { maximumValue = value; }
+            get => maximumValue;
+            set => maximumValue = value;
         }
 
         public override void Accept(IParameterVisitor visitor)

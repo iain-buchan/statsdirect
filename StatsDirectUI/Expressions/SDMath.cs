@@ -195,7 +195,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double Poissonp(double mean, double k)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double _, out double _, out double term, out int fault);
             return fault != 0 ? Constant.MISSING : term;
         }
 
@@ -207,13 +207,13 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double PoissonTail(double mean, double k)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double _, out double _, out int fault);
             return fault != 0 ? Constant.MISSING : phi;
         }
 
         public static double InvPoissonTail(double mean, double p)
         {
-            ExFortran.poissonNl(1, p, mean, out double term, out double phi, out double plo, out int nl, out int fault);
+            ExFortran.poissonNl(1, p, mean, out double _, out double _, out double _, out int nl, out int fault);
             return fault != 0 ? Constant.MISSING : nl;
         }
 
@@ -226,7 +226,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double Binomial(double n, double r, double p)
         {
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double _, out double dplo, out double _, out int fault);
             return fault != 0 ? Constant.MISSING : dplo;
         }
 
@@ -239,7 +239,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double Binomialp(double n, double r, double p)
         {
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double _, out double _, out int fault);
             return fault != 0 ? Constant.MISSING : dterm;
         }
 
@@ -252,7 +252,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double BinomialTail(double n, double r, double p)
         {
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double _, out double _, out double dphi, out int fault);
             return fault != 0 ? Constant.MISSING : dphi;
         }
 
@@ -331,7 +331,7 @@ namespace StatsDirect.Expressions
 
         public static double Dpois(double k, double mean, bool logP)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double _, out double _, out double term, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             if (logP)
@@ -341,7 +341,7 @@ namespace StatsDirect.Expressions
 
         public static double Ppois(double k, double mean, bool lowerTail, bool logP)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double term, out int fault);
+            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double _, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             double p = lowerTail ? plo : phi;
@@ -356,7 +356,7 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            ExFortran.poissonNl(1, p, mean, out double term, out double phi, out double plo, out int nl, out int fault);
+            ExFortran.poissonNl(1, p, mean, out double _, out double _, out double _, out int nl, out int fault);
             return fault != 0 ? Constant.MISSING : nl;
         }
 
@@ -364,7 +364,7 @@ namespace StatsDirect.Expressions
         {
             if (logP)
                 p = Math.Exp(p);
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double _, out double dplo, out double dphi, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             double pOut = lowerTail ? dplo : dphi;
@@ -377,7 +377,7 @@ namespace StatsDirect.Expressions
         {
             if (logP)
                 p = Math.Exp(p);
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double dplo, out double dphi, out int fault);
+            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double _, out double _, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
             if (logP)

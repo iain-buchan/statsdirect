@@ -156,7 +156,7 @@ namespace StatsDirect.Numerics
             //  ------------------------------------------------------------
             //  compute critical value d by the modified regula falsi method
             //  ------------------------------------------------------------
-            mrgfls(PDF.gha1, k, PDF.glv, cc, dhigh, dlow, out double w, dnu, -1.0, dstop, eps, itmax, out int iflag, out int iter, out ifault, dinfnu, a, b, c);
+            ModifiedRegulaFalsi(PDF.gha1, k, PDF.glv, cc, dhigh, dlow, out double w, dnu, -1.0, dstop, eps, itmax, out int _, out int _, out ifault, dinfnu, a, b, c);
             d = w;
         }
 
@@ -224,7 +224,7 @@ namespace StatsDirect.Numerics
             bdmcc2(k, cc, nu, dnu, out double dhigh, out double dlow, dinfnu);
 
             //  compute critical value d by the modified regula falsi method
-            mrgfls(PDF.ghc1, k, PDF.glv, cc, dhigh, dlow, out double w, dnu, -1.0, dstop, eps, itmax, out int iflag, out int iter, out ifault, dinfnu, a, b, c);
+            ModifiedRegulaFalsi(PDF.ghc1, k, PDF.glv, cc, dhigh, dlow, out double w, dnu, -1.0, dstop, eps, itmax, out int _, out int _, out ifault, dinfnu, a, b, c);
             d = w;
         }
 
@@ -307,7 +307,7 @@ namespace StatsDirect.Numerics
         ///  The modified regula falsi method linearly interpolates between the points (a,fa) and (b,fb), with fa*fb &lt; 0, to get a new point (w,f(w)) which replaces one of these in
         ///  such a way that again fa*fb &lt; 0.  In addition, the ordinate of a point staying in the game for more than one step is cut in half at each subsequent step.
         ///  </remarks>
-        private static void mrgfls(PDF.ffunDelegate ffun, int k, PDF.fDelegate f, double c, double a, double b, out double w, double dnu, double sup, double xtol, double ftol, int ntol, out int iflag, out int iter, out int ifault, double dinfnu, double[] av, double[] bv, double[] cv)
+        private static void ModifiedRegulaFalsi(PDF.ffunDelegate ffun, int k, PDF.fDelegate f, double c, double a, double b, out double w, double dnu, double sup, double xtol, double ftol, int ntol, out int iflag, out int iter, out int ifault, double dinfnu, double[] av, double[] bv, double[] cv)
         {
             iter = 0;
             ifault = 0;

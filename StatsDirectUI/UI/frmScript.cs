@@ -319,14 +319,14 @@ namespace StatsDirect.UI
 
         public string RtfText
         {
-            get { return rtbDoc.Rtf; }
-            set { rtbDoc.Rtf = value; }
+            get => rtbDoc.Rtf;
+            set => rtbDoc.Rtf = value;
         }
 
         public string TextInRtfBox
         {
-            get { return rtbDoc.Text; }
-            set { rtbDoc.Text = value; }
+            get => rtbDoc.Text;
+            set => rtbDoc.Text = value;
         }
 
         public void AppendRtfText(string rtf)
@@ -391,7 +391,7 @@ namespace StatsDirect.UI
             rtbOutput.AppendText("======== End of run ========\n");
         }
 
-        private void DumpParameterBag(RichTextBox rtb, ParameterBag output, int depth)
+        private static void DumpParameterBag(RichTextBox rtb, ParameterBag output, int depth)
         {
             foreach (KeyValuePair<string, FilledParameter> pair in output.Pairs)
             {

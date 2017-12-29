@@ -5,12 +5,12 @@ namespace StatsDirect.Templates
 {
     public class LinearAxisScale: ILinearAxisScale
     {
-        public double MinimumDataValue { get; private set; }
-        public double MaximumDataValue { get; private set; }
-        public double MinimumScaleValue { get; private set; }
-        public double MaximumScaleValue { get; private set; }
+        public double MinimumDataValue { get; }
+        public double MaximumDataValue { get; }
+        public double MinimumScaleValue { get; }
+        public double MaximumScaleValue { get; }
         /// The number of intervals between tics (one less than the number of tics).  20 intervals = 21 tics - one extra at the end.
-        public int Intervals { get; private set; }
+        public int Intervals { get; }
         public double Interval => (MaximumScaleValue - MinimumScaleValue) / Intervals;
 
         public double FirstMajorTicValue => MinimumScaleValue + Interval;
@@ -27,9 +27,6 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Returns a linear list of tics constructed according to the parameters.
         /// </summary>
-        /// <param name="min">The value of the first tic</param>
-        /// <param name="interval">The interval between minor tics</param>
-        /// <returns></returns>
         public IList<Tic> Tics()
         {
             string msk = LinearAxisMasker.AxisMask(this);
@@ -45,7 +42,7 @@ namespace StatsDirect.Templates
 
         public override string ToString()
         {
-            return string.Format("LinearAxisScale({0}, {2} * {3}, {1})", MinimumScaleValue, MaximumScaleValue, Intervals, Interval);
+            return $"LinearAxisScale({MinimumScaleValue}, {Intervals} * {Interval}, {MaximumScaleValue})";
         }
 
         void IAxisScale.Accept(IAxisScaleVisitor visitor)

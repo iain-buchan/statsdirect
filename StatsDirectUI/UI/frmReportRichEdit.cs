@@ -344,7 +344,7 @@ namespace StatsDirect.UI
 
         public string RtfText
         {
-            get { return richEditControl1.Document.RtfText; }
+            get => richEditControl1.Document.RtfText;
             set
             {
                 Document document = richEditControl1.Document;
@@ -756,7 +756,7 @@ namespace StatsDirect.UI
             DoOrSwallow(EditCopy);
         }
 
-        private void ClearEventAndSet(object item, string eventName, Delegate handler)
+        private static void ClearEventAndSet(object item, string eventName, Delegate handler)
         {
             FieldInfo fieldInfo = GetEventField(item.GetType(), eventName);
             if (null == fieldInfo)

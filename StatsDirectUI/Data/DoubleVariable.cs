@@ -12,7 +12,6 @@ namespace StatsDirect.Data
         private bool hasSummaries;
 
         public DoubleVariable()
-            : base()
         {
         }
 

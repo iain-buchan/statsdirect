@@ -13,7 +13,7 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "suggest-if")]
         public string SuggestIfBodyForXml
         {
-            get { return null == SuggestIf ? null : SuggestIf.Body; }
+            get => null == SuggestIf ? null : SuggestIf.Body;
             set
             {
                 if (null == SuggestIf)
@@ -25,7 +25,7 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "suggest-if-language")]
         public string SuggestIfLanguageForXml
         {
-            get { return null == SuggestIf ? null : SuggestIf.Language; }
+            get => null == SuggestIf ? null : SuggestIf.Language;
             set
             {
                 if (null == SuggestIf)

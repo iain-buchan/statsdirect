@@ -23,17 +23,17 @@ namespace StatsDirect.R
             }
         }
 
-        private string PathToName(string path)
+        private static string PathToName(string path)
         {
             return Path.GetFileNameWithoutExtension(path);
         }
 
-        private string ToStringBody(string rawParsedString)
+        private static string ToStringBody(string rawParsedString)
         {
             return rawParsedString.Substring(1, rawParsedString.Length - 2).Replace("\\\"", "\"");
         }
 
-        private Dictionary<string, object> CoalesceNamesAndValues(List<string> names, List<object> values, List<string> titles)
+        private static Dictionary<string, object> CoalesceNamesAndValues(List<string> names, List<object> values, List<string> titles)
         {
             Dictionary<string, object> coalesced = new Dictionary<string,object>();
             for (int i = 0; i < names.Count; i++)

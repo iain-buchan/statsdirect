@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using DevExpress.Office.Utils;
 using DevExpress.Office.Services;
 using DevExpress.Office.Services.Implementation;
@@ -18,8 +19,8 @@ namespace StatsDirect.UI
 
         public static string GetHtmlClipboardFormat(string html)
         {
-            int startBodyTagPos = html.IndexOf(bodyTag);
-            int bodyEndTagPos = html.LastIndexOf(bodyTagClose);
+            int startBodyTagPos = html.IndexOf(bodyTag, StringComparison.InvariantCulture);
+            int bodyEndTagPos = html.LastIndexOf(bodyTagClose, StringComparison.InvariantCulture);
 
             int contentBeforeFramentLength = startBodyTagPos + bodyTag.Length;
             string contentBeforeFragment = html.Substring(0, contentBeforeFramentLength);

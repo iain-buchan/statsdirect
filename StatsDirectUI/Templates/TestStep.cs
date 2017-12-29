@@ -74,11 +74,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "condition")]
         public Expression Condition
         {
-            get { return condition; }
-            set
-            {
-                condition = value;
-            }
+            get => condition;
+            set => condition = value;
         }
 
         /// <summary>

@@ -9,7 +9,6 @@ namespace StatsDirect.Data
     public sealed class VariantVariable : GenericVariable<object>
     {
         public VariantVariable()
-            : base()
         {
         }
 

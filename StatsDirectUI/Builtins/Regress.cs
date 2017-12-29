@@ -1281,8 +1281,7 @@ namespace StatsDirect.Builtins
                     }
                     vif2[i] = context.VIF[i];
                 }
-                int iv;
-                iv = context.DoC ? context.P - 1 : context.P;
+                int iv = context.DoC ? context.P - 1 : context.P;
                 double meanv = sumv / iv;
                 // TODO: bubble sort - use something else!
                 bool bsorted = false;

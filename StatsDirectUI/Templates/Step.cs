@@ -44,8 +44,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "name")]
         public string Name
         {
-            get { return name; }
-            set { name = value; }
+            get => name;
+            set => name = value;
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "copy-input-parameters")]
         public bool ShouldCopyInputParameters
         {
-            get { return shouldCopyInputParameters; }
-            set { shouldCopyInputParameters = value; }
+            get => shouldCopyInputParameters;
+            set => shouldCopyInputParameters = value;
         }
 
         /// <summary>

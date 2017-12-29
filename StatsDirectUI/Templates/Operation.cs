@@ -16,11 +16,11 @@ namespace StatsDirect.Templates
        XmlRoot(Namespace = "http://www.statsdirect.com/schemas/Operation.xsd", ElementName = "operation")]
     public class Operation : IMightRequireInput
     {
-        private IList<Step> steps;
-        private IList<string> prerequisiteOperationNames;
-        private List<SuggestedOperation> suggestedOperations;
-        private List<CustomValidator> customValidators;
-        private List<Precondition> preconditions;
+        private readonly IList<Step> steps;
+        private readonly IList<string> prerequisiteOperationNames;
+        private readonly List<SuggestedOperation> suggestedOperations;
+        private readonly List<CustomValidator> customValidators;
+        private readonly List<Precondition> preconditions;
 
         public Operation()
         {

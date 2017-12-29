@@ -71,7 +71,7 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        private object RunR(ITemplateHost host, string code, ParameterBag parameters)
+        private static object RunR(ITemplateHost host, string code, ParameterBag parameters)
         {
             StringBuilder sb = new StringBuilder();
             if (null != parameters)
@@ -118,7 +118,7 @@ namespace StatsDirect.TemplateProcessing
         /// Runs the script's step entry point.  If it doesn't have one, throws an exception.
         /// </summary>
         /// <returns></returns>
-        private object RunDotNet(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, Parameter parameter, string entryPoint)
+        private static object RunDotNet(string scriptLanguage, string code, ScriptType scriptType, ITemplateHost host, ParameterBag parameters, Parameter parameter, string entryPoint)
         {
             CompiledScript compiledScript = null;
             // Look aside to the cache - do we already have this one?

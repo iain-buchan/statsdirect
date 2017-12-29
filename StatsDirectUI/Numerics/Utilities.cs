@@ -9,6 +9,7 @@
         /// <param name="inputBase">The lowest index of each array in inputs.  Typically 0 or 1.</param>
         /// <param name="inputLength">The number of valid rows in each array in inputs.  Precondition: inputLength + inputBase &lt;= inputs[i].Length for all valid i</param>
         /// <param name="outputBase">The index at which the first row with non-missing data will be emitted in the returns.  Typically 0 or 1; often used for re-basing 0-based inputs from the UI to 1-based outputs for SD functions.</param>
+        /// <param name="extraOutputElementsAtEnd">If specified, adds this number of extra elements at the end of each returned array</param>
         /// <returns></returns>
         public static DoubleArraysAndBooleans RemoveMissingRows(double[][] inputs, int inputBase, int inputLength, int outputBase, int extraOutputElementsAtEnd = 0)
         {
@@ -56,8 +57,8 @@
 
     public class DoubleArraysAndBooleans
     {
-        public double[][] ArraysWithMissingRowsRemoved { get; private set; }
-        public bool[] ValidRowsInOriginal { get; private set; }
+        public double[][] ArraysWithMissingRowsRemoved { get; }
+        public bool[] ValidRowsInOriginal { get; }
 
         public DoubleArraysAndBooleans(double[][] arraysWithMissingRowsRemoved, bool[] validRowsInOriginal)
         {

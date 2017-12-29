@@ -154,7 +154,7 @@ namespace StatsDirect.Builtins
             string userText = parameters.ContainsKey("missing-text") && parameters["missing-text"].AsString.Trim().Length > 0
                                   ? parameters["missing-text"].AsString
                                   : string.Empty;
-            for (int c = 0; c <= totcols - 1; c++)
+            for (int c = 0; c < totcols; c++)
             {
                 StringVariable v = (StringVariable)data.Variables[c];
                 int rx = 0;
@@ -170,13 +170,11 @@ namespace StatsDirect.Builtins
 
             //  Set up the output
             DataFrame outputFrame = new DataFrame();
-            for (int c = 0; c <= totcols - 1; c++)
+            for (int c = 0; c < totcols; c++)
             {
                 string outputName = ((StringVariable)data.Variables[c]).Title;
                 if (outputName.Length > 0)
-                {
                     outputName += " [no gaps]";
-                }
                 StringVariable outputVariable = new StringVariable(totrows, outputName);
                 outputFrame.Variables.Add(outputVariable);
             }
@@ -187,15 +185,15 @@ namespace StatsDirect.Builtins
                 for (r = 1; r <= totrows; r++)
                 {
                     int ctrx = 0;
-                    for (int c = 0; c <= totcols - 1; c++)
+                    for (int c = 0; c < totcols; c++)
                     {
                         if (hold[r, c].Length > 0)
                             ctrx++;
                     }
                     if (ctrx == totcols)
                     {
-                        ctr = ctr + 1;
-                        for (int c = 0; c <= totcols - 1; c++)
+                        ctr++;
+                        for (int c = 0; c < totcols; c++)
                         {
                             if (ctr > maxctr)
                                 maxctr = ctr;
@@ -203,19 +201,19 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                for (int c = 0; c <= totcols - 1; c++)
+                for (int c = 0; c < totcols; c++)
                     outputFrame.Variables[c].EnsureLength(ctr);
             }
             else
             {
-                for (int c = 0; c <= totcols - 1; c++)
+                for (int c = 0; c < totcols; c++)
                 {
                     ctr = 0;
                     for (r = 1; r <= totrows; r++)
                     {
                         if (hold[r, c].Length > 0)
                         {
-                            ctr = ctr + 1;
+                            ctr++;
                             if (ctr > maxctr)
                                 maxctr = ctr;
                             ((StringVariable)outputFrame.Variables[c]).SetData(ctr - 1, hold[r, c]);
@@ -228,7 +226,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
         }
-
 
         public static bool IsMissing(string value, double userNumber, string userText)
         {
@@ -365,14 +362,10 @@ namespace StatsDirect.Builtins
             DoubleVariable inputVariable = (DoubleVariable)data.Variables[0];
             double cons = Constant.MISSING;
             if (parameters.ContainsKey("c"))
-            {
                 cons = parameters["c"].AsDouble;
-            }
             bool skipMissing = cons == Constant.MISSING;
             if (skipMissing)
-            {
                 cons = 0;
-            }
             string titleCore = inputVariable.Title;
             string logTitle = "ln(" + titleCore + ")";
             if (cons != 0)
@@ -395,7 +388,7 @@ namespace StatsDirect.Builtins
             DoubleVariable squaredVariable = new DoubleVariable(inputVariable.Length, titleCore + "^2");
             outputFrame.Variables.Add(squaredVariable);
 
-            for (int n = 0; n <= inputVariable.Length - 1; n++)
+            for (int n = 0; n < inputVariable.Length; n++)
             {
                 if (inputVariable.Data[n] == Constant.MISSING)
                 {
@@ -1454,70 +1447,44 @@ namespace StatsDirect.Builtins
             ClassifierVariable gidsVariable = (ClassifierVariable)gidsFrame.Variables[0];
             int rows = gidsVariable.Length;
             int ng = gidsVariable.GroupCount;
-            double[] gid = new double[rows + 1];
-            string[] glabel = new string[ng + 1];
-            double[] g = new double[ng + 1];
-            for (int c = 1; c <= ng; c++)
+            string[] glabel = new string[ng];
+            double[] g = new double[ng];
+            for (int group = 0; group < ng; group++)
             {
-                if (gidsVariable.Title == "Group ID")
-                    glabel[c] = gidsVariable.Groups[c - 1].Label;
-                else
-                    glabel[c] = gidsVariable.Title + "=" + gidsVariable.Groups[c - 1].Label;
-                if (gidsVariable.Groups[c - 1].Label == Formatting.MISSINGLABEL)
-                    g[c] = Constant.MISSING;
-                else
-                    g[c] = c - 1;
+                glabel[group] = gidsVariable.Title == "Group ID" 
+                    ? gidsVariable.Groups[group].Label 
+                    : gidsVariable.Title + "=" + gidsVariable.Groups[group].Label;
+                g[group] = gidsVariable.Groups[group].Label == Formatting.MISSINGLABEL 
+                    ? Constant.MISSING 
+                    : group;
             }
-            for (int c = 1; c <= rows; c++)
-                gid[c] = gidsVariable.Data[c - 1];
 
             DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
-            double[,] x = new double[cols + 1, rows + 1];
-            // Transfer data to working arrays, padding with MISSING as necessary
-            for (int i = 1; i <= rows; i++)
-            {
-                for (int j = 1; j <= cols; j++)
-                {
-                    if (i > data.Variables[j - 1].Length)
-                    {
-                        x[j, i] = Constant.MISSING;
-                    }
-                    else
-                    {
-                        x[j, i] = ((DoubleVariable)data.Variables[j - 1]).Data[i - 1];
-                    }
-                }
-            }
 
             DataFrame outputFrame = new DataFrame();
             int lc = 0;
-            for (int j = 1; j <= ng; j++)
+            for (int j = 0; j < ng; j++)
             {
-                for (int c = 1; c <= cols; c++)
+                for (int c = 0; c < cols; c++)
                 {
-                    string variableName;
-                    if (data.Variables[c - 1].Title == "Data")
-                    {
-                        variableName = glabel[j];
-                    }
-                    else
-                    {
-                        variableName = data.Variables[c - 1].Title + "~" + glabel[j];
-                    }
-                    DoubleVariable v = new DoubleVariable(0, variableName); // TODO: Efficiency: This will reallocate the data array many times.  Can we be more sensible?
-                    outputFrame.Variables.Add(v);
+                    string variableName = data.Variables[c].Title == "Data" ? glabel[j] : data.Variables[c].Title + "~" + glabel[j];
+                    outputFrame.Variables.Add(new DoubleVariable(rows, variableName));
                 }
-                int rw = 0;
-                for (int r = 1; r <= rows; r++)
+                int outputRow = 0;
+                for (int r = 0; r < rows; r++)
                 {
-                    if (gid[r] == g[j])
+                    if (gidsVariable.Data[r] == g[j])
                     {
-                        for (int c = 1; c <= cols; c++)
-                            ((DoubleVariable)outputFrame.Variables[lc + c - 1]).SetData(rw, x[c, r]);
-                        rw++;
+                        for (int c = 0; c < cols; c++)
+                            ((DoubleVariable)outputFrame.Variables[lc + c]).Data[outputRow] = r >= data.Variables[c].Length
+                                ? Constant.MISSING
+                                : ((DoubleVariable)data.Variables[c]).Data[r];
+                        outputRow++;
                     }
                 }
+                for (int c = 0; c < cols; c++)
+                    outputFrame.Variables[lc + c].TruncateDataToLength(outputRow);
                 lc += cols;
             }
 

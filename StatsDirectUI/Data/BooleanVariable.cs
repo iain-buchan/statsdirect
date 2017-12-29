@@ -6,7 +6,6 @@ namespace StatsDirect.Data
     public class BooleanVariable : GenericVariable<bool>
     {
         public BooleanVariable()
-            : base()
         {
         }
 

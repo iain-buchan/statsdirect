@@ -9,7 +9,7 @@ namespace StatsDirect.Charting
     {
         public LegendPosition Position { get; set; }
 
-        public IList<LegendEntry> LegendEntries { get; private set; }
+        public IList<LegendEntry> LegendEntries { get; }
 
         public Legend()
         {

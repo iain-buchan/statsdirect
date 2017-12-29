@@ -32,7 +32,7 @@ namespace StatsDirect.UI
                 return;
             }
             string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
-            int versionsEndPos = latestVersionLine.IndexOf("<br");
+            int versionsEndPos = latestVersionLine.IndexOf("<br", StringComparison.InvariantCulture);
             if (versionsEndPos < 0)
             {
                 UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/update.aspx");
@@ -49,11 +49,11 @@ namespace StatsDirect.UI
             // isNewer = true; // useful for testing without updating the web site!
             if (installedVersion < availableVersion)
             {
-                UpdateStatus(true, true, true, "You are presently running StatsDirect version " + installedVersion + ". Version " + availableVersion.ToString() + " is available. Would you like to close StatsDirect and install the new version?");
+                UpdateStatus(true, true, true, $"You are presently running StatsDirect version {installedVersion}. Version {availableVersion} is available. Would you like to close StatsDirect and install the new version?");
             }
             else
             {
-                UpdateStatus(true, true, false, "You are presently running StatsDirect version " + installedVersion + ". You have the latest version of StatsDirect.");
+                UpdateStatus(true, true, false, $"You are presently running StatsDirect version {installedVersion}. You have the latest version of StatsDirect.");
             }
         }
 
@@ -61,7 +61,7 @@ namespace StatsDirect.UI
         {
             Regex versionSpotter = new Regex("[0-9]+\\.[0-9]+\\.[0-9]+");
             MatchCollection matches = versionSpotter.Matches(latestVersionLine);
-            if (null == matches || matches.Count == 0)
+            if (matches.Count == 0)
                 return null;
             foreach (Match m in matches)
             {

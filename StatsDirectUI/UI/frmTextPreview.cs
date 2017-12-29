@@ -17,11 +17,8 @@ namespace StatsDirect.UI
 
         public string Rtf
         {
-            get { return rtb.Rtf; }
-            set
-            {
-                rtb.Rtf = value;
-            }
+            get => rtb.Rtf;
+            set => rtb.Rtf = value;
         }
     }
 }

@@ -48,36 +48,36 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "lower-bound")]
         public int? LowerBound
         {
-            get { return lowerBound; }
-            set { lowerBound = value; }
+            get => lowerBound;
+            set => lowerBound = value;
         }
 
         [XmlElement(ElementName = "upper-bound")]
         public int? UpperBound
         {
-            get { return upperBound; }
-            set { upperBound = value; }
+            get => upperBound;
+            set => upperBound = value;
         }
 
         [XmlElement(ElementName = "lower-bound-parameter")]
         public string LowerBoundParameterName
         {
-            get { return lowerBoundParameterName; }
-            set { lowerBoundParameterName = value; }
+            get => lowerBoundParameterName;
+            set => lowerBoundParameterName = value;
         }
 
         [XmlElement(ElementName = "upper-bound-parameter")]
         public string UpperBoundParameterName
         {
-            get { return upperBoundParameterName; }
-            set { upperBoundParameterName = value; }
+            get => upperBoundParameterName;
+            set => upperBoundParameterName = value;
         }
 
         [XmlElement(ElementName = "loop-variable-name")]
         public string LoopVariableName
         {
-            get { return loopVariableName; }
-            set { loopVariableName = value; }
+            get => loopVariableName;
+            set => loopVariableName = value;
         }
 
         /// <summary>

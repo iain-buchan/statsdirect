@@ -13,8 +13,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "requires-grid")]
         public bool RequiresGridForXml 
         {
-            get { return requiresGrid; }
-            set { requiresGrid = value; }
+            get => requiresGrid;
+            set => requiresGrid = value;
         }
 
         [XmlAttribute(AttributeName = "entry-point")]
@@ -31,8 +31,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "requires-input")]
         public InputDuringStep RequiresInputForXml
         {
-            get { return requiresInput; }
-            set { requiresInput = value; }
+            get => requiresInput;
+            set => requiresInput = value;
         }
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)

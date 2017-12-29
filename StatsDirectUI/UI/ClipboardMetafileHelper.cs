@@ -32,7 +32,7 @@ namespace StatsDirect.UI
         }
 
         // Metafile mf is set to a state that is not valid inside this function.
-        static public bool PutEnhMetafileOnClipboard(IntPtr hWnd, Metafile mf)
+        public static bool PutEnhMetafileOnClipboard(IntPtr hWnd, Metafile mf)
         {
             bool bResult = false;
             IntPtr hEMF = mf.GetHenhmetafile();

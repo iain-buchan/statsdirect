@@ -33,11 +33,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "sub-prompt")]
         public Expression SubPromptExpression
         {
-            get { return subPrompt; }
-            set
-            {
-                subPrompt = value;
-            }
+            get => subPrompt;
+            set => subPrompt = value;
         }
 
         /// <summary>
@@ -47,8 +44,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName="same-length")]
         public bool ColumnsAreSameLength
         {
-            get { return columnsAreSameLength; }
-            set { columnsAreSameLength = value; }
+            get => columnsAreSameLength;
+            set => columnsAreSameLength = value;
         }
 
         /// <summary>
@@ -57,8 +54,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "mode")]
         public DataAcquisitionMode2D DataAcquisitionMode
         {
-            get { return dataAcquisitionMode; }
-            set { dataAcquisitionMode = value; }
+            get => dataAcquisitionMode;
+            set => dataAcquisitionMode = value;
         }
 
         /// <summary>
@@ -80,11 +77,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "length")]
         public Expression LengthExpression
         {
-            get { return length; }
-            set
-            {
-                length = value;
-            }
+            get => length;
+            set => length = value;
         }
 
         /// <summary>
@@ -103,11 +97,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "min-columns")]
         public Expression MinimumColumnsExpression
         {
-            get { return minimumColumns; }
-            set
-            {
-                minimumColumns = value;
-            }
+            get => minimumColumns;
+            set => minimumColumns = value;
         }
 
         /// <summary>
@@ -125,11 +116,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "max-columns")]
         public Expression MaximumColumnsExpression
         {
-            get { return maximumColumns; }
-            set
-            {
-                maximumColumns = value;
-            }
+            get => maximumColumns;
+            set => maximumColumns = value;
         }
 
         /// <summary>
@@ -139,8 +127,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "clear-selection-first")]
         public bool ShouldClearSelectionFirst
         {
-            get { return shouldClearSelectionFirst; }
-            set { shouldClearSelectionFirst = value; }
+            get => shouldClearSelectionFirst;
+            set => shouldClearSelectionFirst = value;
         }
 
         /// <summary>
@@ -150,8 +138,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "ask-for-group-id")]
         public bool ShouldAskForGroupId
         {
-            get { return shouldAskForGroupId; }
-            set { shouldAskForGroupId = value; }
+            get => shouldAskForGroupId;
+            set => shouldAskForGroupId = value;
         }
 
         /// <summary>
@@ -161,8 +149,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "should-square")]
         public bool ShouldSquare
         {
-            get { return shouldSquare; }
-            set { shouldSquare = value; }
+            get => shouldSquare;
+            set => shouldSquare = value;
         }
 
         public override bool RequiresGrid => true;

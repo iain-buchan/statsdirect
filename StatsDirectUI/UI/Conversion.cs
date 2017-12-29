@@ -2,9 +2,9 @@
 {
     class Conversion
     {
-        public string Expression { get; private set; }
-        public string ResultUnit { get; private set; }
-        public string Label { get; private set; }
+        public string Expression { get; }
+        public string ResultUnit { get; }
+        public string Label { get; }
 
         public Conversion(string expression, string resultUnit, string label)
         {

@@ -10,7 +10,7 @@ namespace StatsDirect.Templates
         public double MaximumScaleValue => Categories;
 
         /// The number of intervals between tics (one less than the number of tics).  20 intervals = 21 tics - one extra at the end.
-        private int Categories { get; set; }
+        private int Categories { get; }
 
         public CategoryAxisScale(int categories)
         {
@@ -20,9 +20,6 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Returns a linear list of tics constructed according to the parameters.
         /// </summary>
-        /// <param name="min">The value of the first tic</param>
-        /// <param name="interval">The interval between minor tics</param>
-        /// <returns></returns>
         public IList<Tic> Tics()
         {
             List<Tic> tics = new List<Tic>(Categories + 1);
@@ -33,7 +30,7 @@ namespace StatsDirect.Templates
 
         public override string ToString()
         {
-            return string.Format("CategoryAxisScale({0})", Categories);
+            return $"CategoryAxisScale({Categories})";
         }
 
         void IAxisScale.Accept(IAxisScaleVisitor visitor)

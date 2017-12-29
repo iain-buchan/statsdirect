@@ -18,7 +18,7 @@ namespace StatsDirect.UI
 
         public Font UserFont
         {
-            get { return userFont; }
+            get => userFont;
             set
             {
                 userFont = value;
@@ -30,8 +30,8 @@ namespace StatsDirect.UI
         [Description("The name that will be used to describe why the font is being requested")]
         public string Purpose
         {
-            get { return lblPurpose.Text; }
-            set { lblPurpose.Text = value; }
+            get => lblPurpose.Text;
+            set => lblPurpose.Text = value;
         }
 
         private void cmdChange_Click(object sender, EventArgs e)

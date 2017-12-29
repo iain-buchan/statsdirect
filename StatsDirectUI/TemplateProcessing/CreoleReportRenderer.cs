@@ -133,7 +133,7 @@ namespace StatsDirect.TemplateProcessing
                         if (!wasInTable)
                         {
                             // The contents of each cell will end with "\cell " - note the space at the end.  We can drop some marker text into the first cell by finding the first occurrence and adding that marker.
-                            int pos = line.IndexOf(@"\cell ");
+                            int pos = line.IndexOf(@"\cell ", StringComparison.InvariantCulture);
                             if (pos >= 0)
                                 line = line.Substring(0, pos) + "!!FIRSTCELLOFTABLE!!" + line.Substring(pos);
                         }

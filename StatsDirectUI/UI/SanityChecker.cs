@@ -86,7 +86,7 @@ namespace StatsDirect.UI
 
         private class ParameterChecker : IParameterVisitor
         {
-            private void CheckCommon(Parameter parameter)
+            private static void CheckCommon(Parameter parameter)
             {
                 CheckAllDynamicContentCompiles(parameter.AcquireIfTrueExpression, ".AcquireIfTrueExpression");
                 CheckAllDynamicContentCompiles(parameter.PromptExpression, ".PromptExpression");

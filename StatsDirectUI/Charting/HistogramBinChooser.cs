@@ -263,7 +263,7 @@ namespace StatsDirect.Charting
                 int nonEmptyBins = 0;
                 for (int c = 1; c <= betterBinCount; c++)
                 {
-                    double high = betterMinimumMidpoint + (betterMidpointInterval * (c - 1)) + betterMidpointInterval / 2.0;
+                    double high = betterMinimumMidpoint + betterMidpointInterval * (c - 1) + betterMidpointInterval / 2.0;
                     int firstIndexPastHigh;
                     for (firstIndexPastHigh = firstIndexThisBin; firstIndexPastHigh < length; firstIndexPastHigh++)
                     {
@@ -321,7 +321,7 @@ namespace StatsDirect.Charting
             int c2 = length - 1;
             for (int c = bestBins - 1; c >= 0; --c)
             {
-                double binLeft = minimumMidpoint + (midpointInterval * c) - midpointInterval / 2.0;
+                double binLeft = minimumMidpoint + midpointInterval * c - midpointInterval / 2.0;
                 bool thisBinHasData = false;
                 for (int c1 = c2; c1 >= 0; c1--)
                 {
@@ -343,7 +343,7 @@ namespace StatsDirect.Charting
             c2 = 0;
             for (int c = 0; c < bestBins; c++)
             {
-                double binRight = minimumMidpoint + (midpointInterval * c) + midpointInterval / 2.0;
+                double binRight = minimumMidpoint + midpointInterval * c + midpointInterval / 2.0;
                 bool thisBinHasData = false;
                 for (int c1 = c2; c1 < length; c1++)
                 {

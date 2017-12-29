@@ -1186,10 +1186,7 @@ namespace StatsDirect.PJLControls
         [DefaultValue(defaultBorderStyle), Description("Indicates the color panel's border style.")]
         public new BorderStyle BorderStyle
         {
-            get
-            {
-                return borderStyle;
-            }
+            get => borderStyle;
             set
             {
                 Utils.CheckValidEnumValue("BorderStyle", value, typeof(BorderStyle));
@@ -1334,10 +1331,7 @@ namespace StatsDirect.PJLControls
         [Description("Get/set the palette of colors to be displayed.")]
         public ColorSet ColorSet
         {
-            get
-            {
-                return colorSet;
-            }
+            get => colorSet;
             set
             {
                 Utils.CheckValidEnumValue("ColorSet", value, typeof(ColorSet));
@@ -1419,10 +1413,7 @@ namespace StatsDirect.PJLControls
         [Description("If true, the last custom element's colour can be changed by the user.")]
         public bool LastWellIsCustom
         {
-            get
-            {
-                return lastWellIsCustom;
-            }
+            get => lastWellIsCustom;
             set
             {
                 lastWellIsCustom = value;
@@ -1458,10 +1449,7 @@ namespace StatsDirect.PJLControls
         [Description("Get/set the order that the colors in the color palette are displayed.")]
         public ColorSortOrder ColorSortOrder
         {
-            get
-            {
-                return colorSortOrder;
-            }
+            get => colorSortOrder;
             set
             {
                 Utils.CheckValidEnumValue("ColorSortOrder", value, typeof(ColorSortOrder));
@@ -1491,10 +1479,7 @@ namespace StatsDirect.PJLControls
         [Description("Set/get the number of preferred columns.  If set to 0 the control can be manually resized.")]
         public int Columns
         {
-            get
-            {
-                return preferredColumns;
-            }
+            get => preferredColumns;
             set
             {
                 if (value > 0)
@@ -1518,10 +1503,7 @@ namespace StatsDirect.PJLControls
         [Description("Set/get the custom color palette.")]
         public Color[] CustomColors
         {
-            get
-            {
-                return customColors;
-            }
+            get => customColors;
             set
             {
                 if (value == null || value.Length < 1)

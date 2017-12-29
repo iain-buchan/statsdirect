@@ -8,8 +8,8 @@ namespace StatsDirect.UI
     /// </summary>
     internal class DialogAndAction
     {
-        public Form Form { get; private set; }
-        public Action<Form, DialogResult> PostCloseAction { get; private set; }
+        public Form Form { get; }
+        public Action<Form, DialogResult> PostCloseAction { get; }
 
         public DialogAndAction(Form form, Action<Form, DialogResult> postCloseAction)
         {

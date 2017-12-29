@@ -205,10 +205,7 @@ namespace StatsDirect.PJLControls
         /// </summary>
         public ZAxis ZAxis
         {
-            get
-            {
-                return zaxis;
-            }
+            get => zaxis;
             set
             {
                 Utils.CheckValidEnumValue("ZAxis", value, typeof(ZAxis));
@@ -314,10 +311,7 @@ namespace StatsDirect.PJLControls
         [Browsable(true), Category("ColorPanel")]
         public new BorderStyle BorderStyle
         {
-            get
-            {
-                return borderStyle;
-            }
+            get => borderStyle;
             set
             {
                 Utils.CheckValidEnumValue("BorderStyle", value, typeof(BorderStyle));

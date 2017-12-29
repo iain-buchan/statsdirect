@@ -64,7 +64,7 @@ namespace StatsDirect.Expressions
 
         private class AccumulateErrors : IAntlrErrorListener<IToken>
         {
-            private StringBuilder sb;
+            private readonly StringBuilder sb;
 
             public AccumulateErrors(StringBuilder sb)
             {

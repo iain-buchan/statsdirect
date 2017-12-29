@@ -105,7 +105,7 @@ namespace StatsDirect.Charting.Renderer
                 StartAsciiPlot(5 + y); // 5 = Title, top axis title, bottom axis, bottom scale, bottom axis title
 
                 // Draw the scale
-                AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
+                LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                     false, false);

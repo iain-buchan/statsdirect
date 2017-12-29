@@ -7,8 +7,8 @@ namespace StatsDirect.UI
         private bool axisLabelsAreSwapped;
         private bool xIsVisible = true;
         private bool yIsVisible = true;
-        private TabPage tab0;
-        private TabPage tab1;
+        private readonly TabPage tab0;
+        private readonly TabPage tab1;
 
         public ctlAxisOptions()
         {
@@ -23,7 +23,7 @@ namespace StatsDirect.UI
 
         public bool ShowX
         {
-            get { return xIsVisible; }
+            get => xIsVisible;
             set
             {
                 xIsVisible = value;
@@ -33,7 +33,7 @@ namespace StatsDirect.UI
 
         public bool ShowY
         {
-            get { return yIsVisible; }
+            get => yIsVisible;
             set
             {
                 yIsVisible = value;
@@ -43,10 +43,7 @@ namespace StatsDirect.UI
 
         public bool AxisLabelsAreSwapped
         {
-            get
-            {
-                return axisLabelsAreSwapped;
-            }
+            get => axisLabelsAreSwapped;
             set
             {
                 axisLabelsAreSwapped = value;

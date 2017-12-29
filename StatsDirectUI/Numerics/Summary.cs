@@ -371,7 +371,7 @@ namespace StatsDirect.Numerics
                 v[i - 1] = wt[k, i];
             }
             CentileType = 1;
-            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, nvSum, out VarAndWeight[] xsrt);
+            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, nvSum, out VarAndWeight[] _);
         }
 
         public bool FullSummaryFromXSort(double[] x, out double[] xSorted, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
@@ -397,7 +397,7 @@ namespace StatsDirect.Numerics
             for (int i = 0; i < rows; i++)
                 v[i] = 1.0;
             CentileType = CentileDef;
-            return FullSummary(x, v, 0, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out VarAndWeight[] xs);
+            return FullSummary(x, v, 0, rows, UserCL, UserCentL, UserCentU, Constant.MISSING, out VarAndWeight[] _);
         }
 
         public bool FullSummaryFromXK(int k, double[,] x, int rows, string ti, double userCL, double userCentL, double userCentU, int centileDef)
@@ -411,7 +411,7 @@ namespace StatsDirect.Numerics
                 v[i - 1] = 1.0;
             }
             CentileType = centileDef;
-            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, Constant.MISSING, out VarAndWeight[] xs);
+            return FullSummary(z, v, 0, rows, userCL, userCentL, userCentU, Constant.MISSING, out VarAndWeight[] _);
         }
 
     }

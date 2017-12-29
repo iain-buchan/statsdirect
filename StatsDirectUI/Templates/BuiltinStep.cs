@@ -11,8 +11,8 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName = "function-name")]
         public string FunctionName
         {
-            get { return functionName; }
-            set { functionName = value; }
+            get => functionName;
+            set => functionName = value;
         }
 
         public override void Accept(IStepVisitor visitor)

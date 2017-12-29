@@ -17,8 +17,8 @@ namespace StatsDirect.PJLControls
 
         public Color CustomColor
         {
-            get { return picker.Color; }
-            set { picker.Color = value; }
+            get => picker.Color;
+            set => picker.Color = value;
         }
 
         private void cmdOK_Click(object sender, EventArgs e)

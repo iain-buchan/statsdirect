@@ -13,22 +13,22 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "preselect-variables")]
         public bool PreSelectVariables
         {
-            get { return preSelectVariables; }
-            set { preSelectVariables = value; }
+            get => preSelectVariables;
+            set => preSelectVariables = value;
         }
 
         [XmlElement(ElementName = "minimum-variables")]
         public int MinimumVariables
         {
-            get { return minimumVariables; }
-            set { minimumVariables = value; }
+            get => minimumVariables;
+            set => minimumVariables = value;
         }
 
         [XmlElement(ElementName = "maximum-variables")]
         public int MaximumVariables
         {
-            get { return maximumVariables; }
-            set { maximumVariables = value; }
+            get => maximumVariables;
+            set => maximumVariables = value;
         }
 
         [XmlElement(ElementName = "parameter-name")]

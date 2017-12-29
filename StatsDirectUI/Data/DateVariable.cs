@@ -5,7 +5,6 @@ namespace StatsDirect.Data
     public sealed class DateVariable : GenericVariable<DateTime>
     {
         public DateVariable()
-            : base()
         {
         }
 

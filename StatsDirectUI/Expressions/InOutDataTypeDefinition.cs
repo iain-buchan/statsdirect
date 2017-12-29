@@ -5,8 +5,8 @@ namespace StatsDirect.Expressions
 {
     public class InOutDataTypeDefinition
     {
-        public DataType ReturnType { get; private set; }
-        public DataType[] InputTypes { get; private set; }
+        public DataType ReturnType { get; }
+        public DataType[] InputTypes { get; }
 
         public InOutDataTypeDefinition(DataType returnType, IEnumerable<DataType> inputTypes)
         {

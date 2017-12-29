@@ -75,7 +75,6 @@ namespace StatsDirect.UI
             }
 
             string xlsxTempFileName = Path.Combine(tempPath, "xlsx.xlsx");
-            string tempDir = Path.GetTempPath();
             string excelCnvPath = FindExcelCnv();
             if (null == excelCnvPath)
                 throw new Exception("Cannot find an installed Excel converter. Please ensure Microsoft Office is installed, and ensure the Office format conversion is ticked in the installer.");

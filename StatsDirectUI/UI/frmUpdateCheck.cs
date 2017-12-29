@@ -21,7 +21,7 @@ namespace StatsDirect.UI
 
         void ctlUpdateStatsDirectCheck1_NewerVersionAvailable(object sender, EventArgs e)
         {
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterScreen;
             SdApplication.SoleInstance.ShowOrQueueDialog(this, null);
         }
 

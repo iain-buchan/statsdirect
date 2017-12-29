@@ -215,7 +215,7 @@ namespace StatsDirect.UI
 
         public string RtfText
         {
-            get { return richEditControl1.Document.RtfText; }
+            get => richEditControl1.Document.RtfText;
             set
             {
                 Document document = richEditControl1.Document;

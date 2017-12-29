@@ -16,7 +16,7 @@ namespace StatsDirect.UI
             string InstallOrUpgrade = isUpgrade ? "Upgrade" : "Install";
             string installedOrUpgraded = isUpgrade ? "upgraded" : "installed";
             lblRubric.Text = string.Format(lblRubric.Text, reason, installOrUpgrade, installedOrUpgraded);
-            this.Text = string.Format(this.Text, InstallOrUpgrade);
+            Text = string.Format(Text, InstallOrUpgrade);
         }
 
         private void lnkInstallR_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

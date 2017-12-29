@@ -15,7 +15,7 @@ namespace StatsDirect.Templates
     public sealed class ParameterBag
         : IDictionary<string, FilledParameter>
     {
-        private IDictionary<string, FilledParameter> filledParameters;
+        private readonly IDictionary<string, FilledParameter> filledParameters;
 
         public ParameterBag()
         {
@@ -91,10 +91,7 @@ namespace StatsDirect.Templates
                     throw new ArgumentException("Cannot find parameter '" + key + "'");
                 return filledParameters[key];
             }
-            set
-            {
-                filledParameters[key] = value;
-            }
+            set => filledParameters[key] = value;
         }
 
         #endregion
@@ -239,7 +236,7 @@ namespace StatsDirect.Templates
             [XmlIgnore]
             public FilledParameter Value
             {
-                get { return new FilledParameter(Direction, Data); }
+                get => new FilledParameter(Direction, Data);
                 set
                 {
                     Direction = value.Direction;

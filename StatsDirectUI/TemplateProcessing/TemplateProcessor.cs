@@ -503,7 +503,7 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        private void TryToRecallSavedParameterFromBag(ParameterBag savedParameters, ParameterBag filledParameters, string name)
+        private static void TryToRecallSavedParameterFromBag(ParameterBag savedParameters, ParameterBag filledParameters, string name)
         {
             if (savedParameters.TryGetValue(name, out FilledParameter savedParameter))
             {

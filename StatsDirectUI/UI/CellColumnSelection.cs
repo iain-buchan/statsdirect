@@ -31,7 +31,7 @@ namespace StatsDirect.UI
         private int dataRows;
         private int gridFirstDataRow;
         private bool titleIsInData;
-        private IGetCells cellGetter;
+        private readonly IGetCells cellGetter;
 
         // Things that are calculated at the same time as knowing how long the column really is
         private int nonHiddenRowCount = -1;

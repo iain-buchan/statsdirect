@@ -34,7 +34,7 @@ namespace StatsDirect.UI
         [Browsable(true)]
         public RelativePosition WritePosition
         {
-            get { return writePosition; }
+            get => writePosition;
             set
             {
                 switch (value)
@@ -99,15 +99,15 @@ namespace StatsDirect.UI
         [Browsable(true)]
         public bool ShowLabel
         {
-            get { return lblSelectWindow.Visible; }
-            set { lblSelectWindow.Visible = value; }
+            get => lblSelectWindow.Visible;
+            set => lblSelectWindow.Visible = value;
         }
 
         [Browsable(true)]
         public OutputType OutputType
         {
-            get { return outputType; }
-            set { outputType = value; }
+            get => outputType;
+            set => outputType = value;
         }
 
         internal void SetWindows(IList<PaneAndPosition> info, string newName, Pane defaultSelection)
@@ -137,14 +137,8 @@ namespace StatsDirect.UI
 
         public event KeyPressEventHandler InsideKeyPress
         {
-            add
-            {
-                cboWindows.KeyPress += value;
-            }
-            remove
-            {
-                cboWindows.KeyPress -= value;
-            }
+            add => cboWindows.KeyPress += value;
+            remove => cboWindows.KeyPress -= value;
         }
 
         protected override void Select(bool directed, bool forward)

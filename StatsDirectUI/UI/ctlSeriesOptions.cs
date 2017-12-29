@@ -81,13 +81,13 @@ namespace StatsDirect.UI
 
         public IList<MarkerType> MarkerTypes
         {
-            get { return markerTypes; }
-            set { markerTypes = value; }
+            get => markerTypes;
+            set => markerTypes = value;
         }
 
         public IList<SeriesOptionsDescriptor> SeriesOptionsDescriptors
         {
-            get { return seriesOptionsDescriptors; }
+            get => seriesOptionsDescriptors;
             set
             {
                 seriesOptionsDescriptors = value;

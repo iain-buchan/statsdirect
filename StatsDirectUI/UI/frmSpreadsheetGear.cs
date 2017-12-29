@@ -1599,7 +1599,7 @@ namespace StatsDirect.UI
             DoOrWarn(ImportData, "Import data failed");
         }
 
-        private void ImportData()
+        private static void ImportData()
         {
             DoOperation("ImportWorksheet");
         }
@@ -1614,7 +1614,7 @@ namespace StatsDirect.UI
             DoOrWarn(ExportData, "Export data failed");
         }
 
-        private void ExportData()
+        private static void ExportData()
         {
             DoOperation("ExportWorksheet");
         }

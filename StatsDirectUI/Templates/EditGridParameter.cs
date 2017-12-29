@@ -19,8 +19,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "key-variable")]
         public string KeyVariable
         {
-            get { return keyVariable; }
-            set { keyVariable = value; }
+            get => keyVariable;
+            set => keyVariable = value;
         }
 
         /// <summary>
@@ -29,8 +29,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "value-variable")]
         public string ValueVariable
         {
-            get { return valueVariable; }
-            set { valueVariable = value; }
+            get => valueVariable;
+            set => valueVariable = value;
         }
 
         /// <summary>
@@ -39,8 +39,8 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "source")]
         public string Source
         {
-            get { return source; }
-            set { source = value; }
+            get => source;
+            set => source = value;
         }
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)

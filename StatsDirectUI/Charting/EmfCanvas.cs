@@ -22,7 +22,7 @@ namespace StatsDirect.Charting
 
         private Metafile metafile;
         private Graphics metafileGraphics;
-        private FontMap fontMap;
+        private readonly FontMap fontMap;
         private Stream outputStream;
         private double width;
         private double height;
@@ -52,7 +52,6 @@ namespace StatsDirect.Charting
                     metafile = new Metafile(outputStream, hdc, new RectangleF(0, 0, (float)width, (float)height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
                     newGraphics.ReleaseHdc(hdc);
 
-                    MetafileHeader header = metafile.GetMetafileHeader();
                     metafileGraphics = Graphics.FromImage(metafile);
                     metafileGraphics.SmoothingMode = SmoothingMode.AntiAlias;
                 }

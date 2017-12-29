@@ -462,13 +462,13 @@ namespace StatsDirect.UI
 
         internal int ActiveHelpTopic
         {
-            get { return sActiveHelpTopic; }
+            get => sActiveHelpTopic;
             set { sActiveHelpTopic = value; activeHelpUrl = null; }
         }
 
         internal string ActiveHelpUrl
         {
-            get { return activeHelpUrl; }
+            get => activeHelpUrl;
             set { sActiveHelpTopic = 0; activeHelpUrl = value; }
         }
 
@@ -1078,134 +1078,68 @@ namespace StatsDirect.UI
         {
             public bool UseScientificNotationForSmallPValues
             {
-                get
-                {
-                    return Properties.Settings.Default.UseScientificNotationForSmallPValues;
-                }
-                set
-                {
-                    Properties.Settings.Default.UseScientificNotationForSmallPValues = value;
-                }
+                get => Properties.Settings.Default.UseScientificNotationForSmallPValues;
+                set => Properties.Settings.Default.UseScientificNotationForSmallPValues = value;
             }
 
             public bool CanDefaultConfidenceInterval
             {
-                get
-                {
-                    return Properties.Settings.Default.CanDefaultConfidenceInterval;
-                }
-                set
-                {
-                    Properties.Settings.Default.CanDefaultConfidenceInterval = value;
-                }
+                get => Properties.Settings.Default.CanDefaultConfidenceInterval;
+                set => Properties.Settings.Default.CanDefaultConfidenceInterval = value;
             }
 
             public double DefaultConfidenceInterval
             {
-                get
-                {
-                    return Properties.Settings.Default.DefaultConfidenceInterval;
-                }
-                set
-                {
-                    Properties.Settings.Default.DefaultConfidenceInterval = value;
-                }
+                get => Properties.Settings.Default.DefaultConfidenceInterval;
+                set => Properties.Settings.Default.DefaultConfidenceInterval = value;
             }
 
             public bool SelectGroupsByIdentifier
             {
-                get
-                {
-                    return Properties.Settings.Default.SelectGroupsByIdentifier;
-                }
-                set
-                {
-                    Properties.Settings.Default.SelectGroupsByIdentifier = value;
-                }
+                get => Properties.Settings.Default.SelectGroupsByIdentifier;
+                set => Properties.Settings.Default.SelectGroupsByIdentifier = value;
             }
 
             public double MetaCC
             {
-                get
-                {
-                    return Properties.Settings.Default.MetaCC;
-                }
-                set
-                {
-                    Properties.Settings.Default.MetaCC = value;
-                }
+                get => Properties.Settings.Default.MetaCC;
+                set => Properties.Settings.Default.MetaCC = value;
             }
 
             public bool MetaExact
             {
-                get
-                {
-                    return Properties.Settings.Default.MetaExact;
-                }
-                set
-                {
-                    Properties.Settings.Default.MetaExact = value;
-                }
+                get => Properties.Settings.Default.MetaExact;
+                set => Properties.Settings.Default.MetaExact = value;
             }
 
             public bool DelayContinuityCorrection
             {
-                get
-                {
-                    return Properties.Settings.Default.DelayContinuityCorrection;
-                }
-                set
-                {
-                    Properties.Settings.Default.DelayContinuityCorrection = value;
-                }
+                get => Properties.Settings.Default.DelayContinuityCorrection;
+                set => Properties.Settings.Default.DelayContinuityCorrection = value;
             }
 
             public int DisplayDecimalPlaces
             {
-                get
-                {
-                    return Properties.Settings.Default.DisplayDecimalPlaces;
-                }
-                set
-                {
-                    Properties.Settings.Default.DisplayDecimalPlaces = value;
-                }
+                get => Properties.Settings.Default.DisplayDecimalPlaces;
+                set => Properties.Settings.Default.DisplayDecimalPlaces = value;
             }
 
             public int PDecimalPlaces
             {
-                get
-                {
-                    return Properties.Settings.Default.PDecimalPlaces;
-                }
-                set
-                {
-                    Properties.Settings.Default.PDecimalPlaces = value;
-                }
+                get => Properties.Settings.Default.PDecimalPlaces;
+                set => Properties.Settings.Default.PDecimalPlaces = value;
             }
 
             public int MetaPlotMethod
             {
-                get
-                {
-                    return Properties.Settings.Default.MetaPlotMethod;
-                }
-                set
-                {
-                    Properties.Settings.Default.MetaPlotMethod = value;
-                }
+                get => Properties.Settings.Default.MetaPlotMethod;
+                set => Properties.Settings.Default.MetaPlotMethod = value;
             }
 
             public bool MetaPlotCI
             {
-                get
-                {
-                    return Properties.Settings.Default.MetaPlotCI;
-                }
-                set
-                {
-                    Properties.Settings.Default.MetaPlotCI = value;
-                }
+                get => Properties.Settings.Default.MetaPlotCI;
+                set => Properties.Settings.Default.MetaPlotCI = value;
             }
 
             public string DECP_CHAR => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
@@ -1216,14 +1150,14 @@ namespace StatsDirect.UI
 
             public bool ShouldKeepData
             {
-                get { return Properties.Settings.Default.ShouldKeepData; }
-                set { Properties.Settings.Default.ShouldKeepData = value; }
+                get => Properties.Settings.Default.ShouldKeepData;
+                set => Properties.Settings.Default.ShouldKeepData = value;
             }
 
             public bool ShouldUseColour
             {
-                get { return Properties.Settings.Default.ShouldUseColour; }
-                set { Properties.Settings.Default.ShouldUseColour = value; }
+                get => Properties.Settings.Default.ShouldUseColour;
+                set => Properties.Settings.Default.ShouldUseColour = value;
             }
         }
 
@@ -1500,18 +1434,18 @@ namespace StatsDirect.UI
 
         public static bool IsRunningOnMono => Type.GetType("Mono.Runtime") != null;
 
-        public Form DialogOwner { get { return MainWindow; } }
+        public Form DialogOwner => MainWindow;
 
-        public bool InOperation { get { return MainWindow.InOperation; } }
+        public bool InOperation => MainWindow.InOperation;
 
         internal void DoOperation(string operationName)
         {
             MainWindow.DoOperation(operationName);
         }
 
-        internal bool IsSelecting { get { return MainWindow.IsSelecting; } }
+        internal bool IsSelecting => MainWindow.IsSelecting;
 
-        public Form ActiveMdiChild { get { return MainWindow.ActiveMdiChild; } }
+        public Form ActiveMdiChild => MainWindow.ActiveMdiChild;
 
         internal void OpenFileOnUiThread(string path)
         {

@@ -5,10 +5,10 @@ namespace StatsDirect.Expressions
 {
     public class FunctionDefinition
     {
-        public string Name { get; private set; }
-        public string ClrName { get; private set; }
-        public List<ArgumentDefinition> ArgumentDefinitions { get; private set; }
-        public DataType DataType { get; private set; }
+        public string Name { get; }
+        public string ClrName { get; }
+        public List<ArgumentDefinition> ArgumentDefinitions { get; }
+        public DataType DataType { get; }
 
         public FunctionDefinition(string name, DataType dataType, string clrName, IEnumerable<ArgumentDefinition> argumentDefinitions)
         {

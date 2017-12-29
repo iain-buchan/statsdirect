@@ -21,7 +21,7 @@ namespace StatsDirect.UI
 
         public Image Image
         {
-            get { return pic.Image; }
+            get => pic.Image;
             set
             {
                 pic.Image = value;

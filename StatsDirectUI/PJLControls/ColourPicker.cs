@@ -385,10 +385,7 @@ namespace StatsDirect.PJLControls
         [DefaultValue(defaultBorderStyle)]
         public new BorderStyle BorderStyle
         {
-            get
-            {
-                return borderStyle;
-            }
+            get => borderStyle;
             set
             {
                 Size bs = new Size();
@@ -440,14 +437,8 @@ namespace StatsDirect.PJLControls
         [Description("Set/get the drop-down panel's border style.")]
         public BorderStyle PanelBorderStyle
         {
-            get
-            {
-                return panel_PanelBorderStyle;
-            }
-            set
-            {
-                panel_PanelBorderStyle = value;
-            }
+            get => panel_PanelBorderStyle;
+            set => panel_PanelBorderStyle = value;
         }
 
         /// <summary>
@@ -456,10 +447,7 @@ namespace StatsDirect.PJLControls
         [Browsable(true), Category("ColorPicker"), Description("Get/set the pick color.")]
         public Color Color
         {
-            get
-            {
-                return panel_color;
-            }
+            get => panel_color;
             set
             {
                 panel_color = value;
@@ -493,14 +481,8 @@ namespace StatsDirect.PJLControls
         [Description("Get/set the palette of colors to be displayed by the drop-down panel.")]
         public ColorSet ColorSet
         {
-            get
-            {
-                return panel_colorSet;
-            }
-            set
-            {
-                panel_colorSet = value;
-            }
+            get => panel_colorSet;
+            set => panel_colorSet = value;
         }
 
         /// <summary>
@@ -510,14 +492,8 @@ namespace StatsDirect.PJLControls
         [Description("Set/get the size of the color wells displayed in the drop-down color panel.")]
         public Size ColorWellSize
         {
-            get
-            {
-                return panel_colorWellSize;
-            }
-            set
-            {
-                panel_colorWellSize = value;
-            }
+            get => panel_colorWellSize;
+            set => panel_colorWellSize = value;
         }
 
         /// <summary>
@@ -546,14 +522,8 @@ namespace StatsDirect.PJLControls
         [Description("Get/set the order that the colors in the color palette are displayed.")]
         public ColorSortOrder ColorSortOrder
         {
-            get
-            {
-                return panel_colorSortOrder;
-            }
-            set
-            {
-                panel_colorSortOrder = value;
-            }
+            get => panel_colorSortOrder;
+            set => panel_colorSortOrder = value;
         }
 
         /// <summary>
@@ -634,15 +604,8 @@ namespace StatsDirect.PJLControls
         [Description("If true, the height of the control is fixed and depends on the font.")]
         public new bool AutoSize
         {
-            get
-            {
-                return autoSize;
-            }
-            set
-            {
-                autoSize = value;
-                // no need to refresh
-            }
+            get => autoSize;
+            set => autoSize = value;
         }
 
         /// <summary>
@@ -670,14 +633,8 @@ namespace StatsDirect.PJLControls
         [Description("Set/get the number of preferred columns in the drop-down panel.  If set to 0 then the panel will have the same width as the picker.")]
         public int Columns
         {
-            get
-            {
-                return panel_columns;
-            }
-            set
-            {
-                panel_columns = value <= 0 ? 0 : value;
-            }
+            get => panel_columns;
+            set => panel_columns = value <= 0 ? 0 : value;
         }
 
         /// <summary>

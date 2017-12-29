@@ -48,7 +48,7 @@ namespace StatsDirect.Templates
                 DateTime candidate = new DateTime(minimumScaleDate.Year, minimumScaleDate.Month, minimumScaleDate.Day, minimumScaleDate.Hour, minimumScaleDate.Minute, 0);
                 if (minimumScaleDate.Second > 0)
                     candidate = candidate.AddMinutes(1);
-                while ((candidate.Minute) % 5 != 0)
+                while (candidate.Minute % 5 != 0)
                     candidate = candidate.AddMinutes(1);
                 while (candidate <= maximumScaleDate)
                 {
@@ -62,7 +62,7 @@ namespace StatsDirect.Templates
                 DateTime candidate = new DateTime(minimumScaleDate.Year, minimumScaleDate.Month, minimumScaleDate.Day, minimumScaleDate.Hour, minimumScaleDate.Minute, 0);
                 if (minimumScaleDate.Second > 0)
                     candidate = candidate.AddMinutes(1);
-                while ((candidate.Minute) % 15 != 0)
+                while (candidate.Minute % 15 != 0)
                     candidate = candidate.AddMinutes(1);
                 while (candidate <= maximumScaleDate)
                 {
@@ -127,7 +127,7 @@ namespace StatsDirect.Templates
                 DateTime candidate = new DateTime(minimumScaleDate.Year, minimumScaleDate.Month, 1, 0, 0, 0);
                 if (minimumScaleDate.Day > 1 || minimumScaleDate.Hour > 0 || minimumScaleDate.Minute > 0 || minimumScaleDate.Second > 0)
                     candidate = candidate.AddMonths(1);
-                while ((candidate.Month) % 3 != 1)
+                while (candidate.Month % 3 != 1)
                     candidate = candidate.AddMonths(1);
                 while (candidate <= maximumScaleDate)
                 {
@@ -153,7 +153,7 @@ namespace StatsDirect.Templates
                 DateTime candidate = new DateTime(minimumScaleDate.Year, 1, 1, 0, 0, 0);
                 if (minimumScaleDate.DayOfYear > 1 || minimumScaleDate.Hour > 0 || minimumScaleDate.Minute > 0 || minimumScaleDate.Second > 0)
                     candidate = candidate.AddYears(1);
-                while ((candidate.Year) % 10 != 0)
+                while (candidate.Year % 10 != 0)
                     candidate = candidate.AddYears(1);
                 while (candidate <= maximumScaleDate)
                 {
@@ -167,9 +167,9 @@ namespace StatsDirect.Templates
                 DateTime candidate = new DateTime(minimumScaleDate.Year, 1, 1, 0, 0, 0);
                 if (minimumScaleDate.DayOfYear > 1 || minimumScaleDate.Hour > 0 || minimumScaleDate.Minute > 0 || minimumScaleDate.Second > 0)
                     candidate = candidate.AddYears(1);
-                while ((candidate.Year) % 10 != 0)
+                while (candidate.Year % 10 != 0)
                     candidate = candidate.AddYears(1);
-                while ((candidate.Year) % 100 != 0)
+                while (candidate.Year % 100 != 0)
                     candidate = candidate.AddYears(10);
                 while (candidate <= maximumScaleDate)
                 {
