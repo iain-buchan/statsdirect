@@ -482,8 +482,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_a2", c);
             outputParameters.AddOutput("tab_b2", d);
 
-            double eor = 0;
-            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
+            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
             double odr = ExactBB.OddsRatio(a, b, c, d);
             outputParameters.AddOutput("odds", odr);
 

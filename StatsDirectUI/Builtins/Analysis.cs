@@ -13,9 +13,9 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
-            DoubleVariable datV2 = datFrame.Variables[2]as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable) datFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable) datFrame.Variables[1];
+            DoubleVariable datV2 = (DoubleVariable) datFrame.Variables[2];
             int rows = datFrame.MaxRows;
             double[] idxy = new double[rows + 1];
             double[] idxn = new double[rows + 1];
@@ -458,7 +458,6 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptMiscRetroRisk(ITemplateHost host, ParameterBag parameters)
         {
-            double eor = 0;
             double pe = Constant.MISSING;
 
             double a = parameters["a"].AsDouble;
@@ -555,7 +554,7 @@ namespace StatsDirect.Builtins
             //    p1M = Constant.MISSING;
             //    p2M = Constant.MISSING;
             //}
-            ExactBB.OddsRatioCMLE(host, gamma, a, b, c, d, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out fault);
+            ExactBB.OddsRatioCMLE(host, gamma, a, b, c, d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out fault);
             outputParameters.AddOutput("eor", eor);
             outputParameters.AddOutput("pc", Formatting.XRound(gamma * 100.0, 2));
             outputParameters.AddOutput("llf", llf);
@@ -869,14 +868,14 @@ namespace StatsDirect.Builtins
 
 
             // diagnostic odds ratio
-            double eor = 0;
+            double odr;
             if (b * c > 0.0 && a * d > 0.0)
-                eor = a * d / (b * c);
+                odr = a * d / (b * c);
             else
-                eor = Constant.MISSING;
-            outputParameters.AddOutput("odr", eor);
+                odr = Constant.MISSING;
+            outputParameters.AddOutput("odr", odr);
 
-            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int fault);
+            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, out double eor, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
             outputParameters.AddOutput("cmle", eor);
             outputParameters.AddOutput("cmle_from", llf);
             outputParameters.AddOutput("cmle_to", ulf);
@@ -889,14 +888,10 @@ namespace StatsDirect.Builtins
         {
             double pt = parameters["pt"].AsDouble;
             if (Math.Abs(pt - 0.5) >= 0.5)
-            {
                 throw new InvalidDataException();
-            }
             double pf = parameters["pf"].AsDouble;
             if (Math.Abs(pf - 0.5) >= 0.5)
-            {
                 throw new InvalidDataException();
-            }
 
             double pd = 1.0 / parameters["pd"].AsDouble;
 
@@ -945,7 +940,7 @@ namespace StatsDirect.Builtins
 
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < cols; j++)
-                    o[i, j] = (datFrame.Variables[j] as DoubleVariable).Data[i];
+                    o[i, j] = ((DoubleVariable) datFrame.Variables[j]).Data[i];
 
             switch (wtype)
             {
@@ -953,7 +948,7 @@ namespace StatsDirect.Builtins
                     DataFrame weights = parameters["weights"].AsDataFrame;
                     for (int i = 0; i < weights.VariableCount; i++)
                     {
-                        DoubleVariable v = weights.Variables[i] as DoubleVariable;
+                        DoubleVariable v = (DoubleVariable) weights.Variables[i];
                         for (int j = 0; j < v.Length; j++)
                         {
                             w[i, j] = v.Data[j];
@@ -1043,7 +1038,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*deci", deciList);
             if (g == 2)
             {
-                Tables.XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out double ka, out double lwr, out double upr, out fault);
+                Tables.XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out double _, out double lwr, out double upr, out fault);
                 if (fault == 0)
                 {
                     ParameterBag deciParameters = new ParameterBag();
@@ -1097,8 +1092,8 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptMiscLikely(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable) datFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable) datFrame.Variables[1];
             int rows = datFrame.MaxRows;
 
             double[] c1 = new double[rows + 1];
@@ -1124,7 +1119,7 @@ namespace StatsDirect.Builtins
             if (zl <= 0.0 || zl >= 1.0)
                 zl = 0.95;
             double zc = 1.0 - (1.0 - zl) / 2.0;
-            zc = PDF.gauinv(zc, out int fault);
+            zc = PDF.gauinv(zc);
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", (100 * zl).ToString());
@@ -1158,7 +1153,6 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptMiscNumberNeededToTreat(ITemplateHost host, ParameterBag parameters)
         {
             double tmp;
-            double eor = 0;
             double nt = parameters["nt"].AsDouble;
             double xt = parameters["xt"].AsDouble;
             double nc = parameters["nc"].AsDouble;
@@ -1190,7 +1184,7 @@ namespace StatsDirect.Builtins
                 zl = 0.95;
 
             double zc = 1.0 - (1.0 - zl) / 2.0;
-            zc = PDF.gauinv(zc, out int ifault);
+            zc = PDF.gauinv(zc);
             if (xc > nc)
             {
                 tmp = xc;
@@ -1263,7 +1257,7 @@ namespace StatsDirect.Builtins
             //bool useLogScale = false;
             //new ExactBB().Exact22K(host,1, 1, tabl, zl, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             double oor = ExactBB.OddsRatio(t1, t2, t3, t4);
-            ExactBB.OddsRatioCMLE(host, zl, t1, t2, t3, t4, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
+            ExactBB.OddsRatioCMLE(host, zl, t1, t2, t3, t4, out double _, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
             //if (ierr != 0)
             //    eor = Constant.MISSING;
             //double oor = t2 * t3 == 0.0 ? Constant.MISSING : (t1 * t4) / (t2 * t3);

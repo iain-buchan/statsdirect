@@ -47,20 +47,20 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void GatherUniversalAgreementData(ITemplateHost host, ParameterBag parameters, out int n, out int b, out int c, out double[, ,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
+        private static void GatherUniversalAgreementData(ITemplateHost host, ParameterBag parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = dataFrame.Variables[0]as DoubleVariable;
+            DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
             DataFrame ratersFrame = parameters["raters"].AsDataFrame;
-            ClassifierVariable ratersVariable = ratersFrame.Variables[0] as ClassifierVariable;
+            ClassifierVariable ratersVariable = (ClassifierVariable)ratersFrame.Variables[0];
             DataFrame objectsFrame = parameters["objects"].AsDataFrame;
-            ClassifierVariable objectsVariable = objectsFrame.Variables[0] as ClassifierVariable;
+            ClassifierVariable objectsVariable = (ClassifierVariable)objectsFrame.Variables[0];
             bool hasCategories = parameters.ContainsKey("categories") && parameters["categories"] != null;
             ClassifierVariable categoriesVariable = null;
             if (hasCategories)
             {
                 DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
-                categoriesVariable = categoriesFrame.Variables[0] as ClassifierVariable;
+                categoriesVariable = (ClassifierVariable)categoriesFrame.Variables[0];
             }
 
             n = objectsVariable.GroupCount;
@@ -262,26 +262,26 @@ namespace StatsDirect.Builtins
         ///  <param name="gam">skewness of the delta distribution</param>
         ///  <param name="r">delta-based agreement coefficient</param>
         ///  <param name="p">probability of agreement coefficient</param>
-        public static void Agree(int n, int b, int c, double[, ,] data, out double delta, out double edel, out double var, out double gam, out double r, out double p)
+        public static void Agree(int n, int b, int c, double[,,] data, out double delta, out double edel, out double var, out double gam, out double r, out double p)
         {
             int i, j, k;
             int ix, ir, irr;
             int jss, iss;
-            double[,] d = new double[n * b + 1, n * b + 1 ];
-            double[, ,] sj = new double[n + 1, b + 1, b + 1 ];
-            double[, ,] sj2 = new double[n + 1, b + 1, b + 1 ];
-            double[,] vi = new double[b + 1, b + 1 ];
-            double[, ,] sj3 = new double[n + 1, b + 1, b + 1 ];
-            double[, ,] uj = new double[n + 1, b + 1, b + 1 ];
-            double[, ,] wi = new double[b + 1, b + 1, b + 1 ];
-            double[, ,] yij = new double[b + 1, b + 1, b + 1 ];
-            double[,] uij = new double[b + 1, b + 1 ];
-            double[, ,] zijk = new double[b + 1, b + 1, b + 1 ];
-            double[,] sij = new double[b + 1, b + 1 ];
-            double[,] sij2 = new double[b + 1, b + 1 ];
-            double[,] sij3 = new double[b + 1, b + 1 ];
-            double[,] tij2 = new double[b + 1, b + 1 ];
-            double[,] tij3 = new double[b + 1, b + 1 ];
+            double[,] d = new double[n * b + 1, n * b + 1];
+            double[,,] sj = new double[n + 1, b + 1, b + 1];
+            double[,,] sj2 = new double[n + 1, b + 1, b + 1];
+            double[,] vi = new double[b + 1, b + 1];
+            double[,,] sj3 = new double[n + 1, b + 1, b + 1];
+            double[,,] uj = new double[n + 1, b + 1, b + 1];
+            double[,,] wi = new double[b + 1, b + 1, b + 1];
+            double[,,] yij = new double[b + 1, b + 1, b + 1];
+            double[,] uij = new double[b + 1, b + 1];
+            double[,,] zijk = new double[b + 1, b + 1, b + 1];
+            double[,] sij = new double[b + 1, b + 1];
+            double[,] sij2 = new double[b + 1, b + 1];
+            double[,] sij3 = new double[b + 1, b + 1];
+            double[,] tij2 = new double[b + 1, b + 1];
+            double[,] tij3 = new double[b + 1, b + 1];
 
             const double zero = 0.0;
             for (i = 1; i <= n; i++)
@@ -454,7 +454,7 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="t">standardized test statistic</param>
         ///  <param name="gam">skewness of the delta distribution</param>
-        ///  <param name="prob">probability of the test statistic</param>
+        ///  <return>probability of the test statistic</return>
         private static double Pgamt(double t, double gam)
         {
             double w;
@@ -466,11 +466,8 @@ namespace StatsDirect.Builtins
 
                 double r = 2.0 / Math.Abs(gam);
                 double d = r * r;
-                int i;
-                for (i = 1; i <= 9; i++)
-                {
+                for (int i = 1; i <= 9; i++)
                     d = d * (r * r + i);
-                }
                 double f = r * r + 10.0;
                 double u = (2.0 * f - 1.0) * Math.Log(f) / 2.0 - f + Math.Log(2.0 * pi) / 2.0 - Math.Log(d) + 1.0 / (12.0 * f) - 1.0 / (360.0 * f * f * f);
                 const double g1 = 0.045;
@@ -493,7 +490,7 @@ namespace StatsDirect.Builtins
                         return zero;
                     x = t;
                     y = t + 9.0;
-                    for (i = 1; i <= 99; i++)
+                    for (int i = 1; i <= 99; i++)
                     {
                         h1 = h1 + Math.Exp(a * Math.Log(r + x + g1 * (2.0 * i - 1.0)) - r * (x + g1 * (2.0 * i - 1.0)) + b);
                         h2 = h2 + Math.Exp(a * Math.Log(r + x + g2 * i) - r * (x + g2 * i) + b);
@@ -509,7 +506,7 @@ namespace StatsDirect.Builtins
                     return 1.0;
                 x = t - 9.0;
                 y = t;
-                for (i = 1; i <= 99; i++)
+                for (int i = 1; i <= 99; i++)
                 {
                     h1 = h1 + Math.Exp(a * Math.Log(r - x - g1 * (2.0 * i - 1.0)) + r * (x + g1 * (2.0 * i - 1.0)) + b);
                     h2 = h2 + Math.Exp(a * Math.Log(r - x - g2 * i) + r * (x + g2 * i) + b);
@@ -546,19 +543,19 @@ namespace StatsDirect.Builtins
         ///  <param name="gam">skewness of the delta distribution</param>
         ///  <param name="rho">delta-based agreement coefficient</param>
         ///  <param name="prob">probability of agreement coefficient</param>
-        private static void AgreeStandard(int kn, int km, int kr, double[, ,] tdata, out double delta, out double edel, out double var, out double gam, out double rho, out double prob)
+        private static void AgreeStandard(int kn, int km, int kr, double[,,] tdata, out double delta, out double edel, out double var, out double gam, out double rho, out double prob)
         {
             int i, j;
-            double[] c1 = new double[km + 1 ];
-            double[] c2 = new double[km + 1 ];
-            double[] c3 = new double[km + 1 ];
+            double[] c1 = new double[km + 1];
+            double[] c2 = new double[km + 1];
+            double[] c3 = new double[km + 1];
             double[,] d = new double[2 * kn + 1, 2 * kn + 1];
-            double[, ,] data = new double[kn + 1, 3, kr + 1];
-            double[] del = new double[km + 1 ];
-            double[, ,] sj1 = new double[kn + 1, 3, 3];
-            double[, ,] sj2 = new double[kn + 1, 3, 3];
-            double[, ,] sj3 = new double[kn + 1, 3, 3];
-            double[, ,] uj = new double[kn + 1, 3, 3];
+            double[,,] data = new double[kn + 1, 3, kr + 1];
+            double[] del = new double[km + 1];
+            double[,,] sj1 = new double[kn + 1, 3, 3];
+            double[,,] sj2 = new double[kn + 1, 3, 3];
+            double[,,] sj3 = new double[kn + 1, 3, 3];
+            double[,,] uj = new double[kn + 1, 3, 3];
 
             for (i = 1; i <= kn; i++)
             {
@@ -606,7 +603,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void AgreeStdCalc(int kn, int kr, double[,] d, double[, ,] data, double[, ,] sj1, double[, ,] sj2, double[, ,] sj3, double[, ,] uj, out double cum1, out double cum2, out double cum3, out double delta)
+        private static void AgreeStdCalc(int kn, int kr, double[,] d, double[,,] data, double[,,] sj1, double[,,] sj2, double[,,] sj3, double[,,] uj, out double cum1, out double cum2, out double cum3, out double delta)
         {
             int i;
             int irr, ix, j, jss;
@@ -732,12 +729,10 @@ namespace StatsDirect.Builtins
             int nobs = 0;
             string title = null;
             string refIdent = null;
-            GatherUniversalAgreementData(host, parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref nobs, ref title, ref refIdent);
+            GatherUniversalAgreementData(host, parameters, out int n, out int b, out int c, out double[,,] data, out bool _, ref nobs, ref title, ref refIdent);
 
-            double prob;
-
-            Agree(n, b, c, data, out double delta, out double edel, out double var, out double gam, out double r, out double t);
-            prob = Pgamt(t, gam);
+            // Agree(n, b, c, data, out double delta, out double edel, out double var, out double gam, out double r, out double t);
+            // double prob = Pgamt(t, gam);
 
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
@@ -759,7 +754,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void Rmrbp(ITemplateHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[, ,] data, int h, int iseed, int ms, out int mp, out int mpd)
+        private static void Rmrbp(ITemplateHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
         {
 
             //          THIS FORTRAN PROGRAM COMPUTES THE TEST STATISTIC AND ASSOCIATED
@@ -796,9 +791,9 @@ namespace StatsDirect.Builtins
             //    ALIGNMENT, IC = 1 IMPLIES COMMENSURATION, AND LR = 1 IMPLIES C(G,H)
             //    RANKS TEST.   NOTE: ASSOCIATE G, B AND R WITH KG, KB AND KR IN PROGRAM.
 
-            double[] ad = new double[kr + 1 ];
+            double[] ad = new double[kr + 1];
             double[,] xm = new double[kb + 1, kr + 1];
-            double[, ,] x = new double[kg + 1, kb + 1, kr + 1];
+            double[,,] x = new double[kg + 1, kb + 1, kr + 1];
             double dm1 = 0;
             double dm2 = 0;
             double a2 = 0;
@@ -903,10 +898,10 @@ namespace StatsDirect.Builtins
             Calc(host, v, kg, kb, kr, iseed, ms, data, out mp, out mpd);
         }
 
-        private static void Rank(int kg, int kb, int kr, int h, ref double[, ,] data)
+        private static void Rank(int kg, int kb, int kr, int h, ref double[,,] data)
         {
 
-            double[] rks = new double[kg + 1 ];
+            double[] rks = new double[kg + 1];
             int j;
 
             double ym = 1.0 * (kg + 1) / 2;
@@ -983,7 +978,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void Calc(ITemplateHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[, ,] data, out int mp, out int mpd)
+        private static void Calc(ITemplateHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[,,] data, out int mp, out int mpd)
         {
 
             double[,] d = new double[kb * (kg - 1) + kb + 1, kb * (kg - 1) + kb + 1];

@@ -898,7 +898,6 @@ namespace StatsDirect.Builtins
 
             if (proc != 3)
             {
-
                 // single effect analysis
                 double[] d = new double[k + 1];
                 double[] gj = new double[k + 1];
@@ -2288,8 +2287,7 @@ namespace StatsDirect.Builtins
                     odr[i] = a * d / (b * c);
                     if (host.Preferences.MetaExact)
                     {
-                        double eor = 0;
-                        ExactBB.OddsRatioCI(host, cco, a, b, c, d, ref eor, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
+                        ExactBB.OddsRatioCI(host, cco, a, b, c, d, out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
                     }
                     else
                     {
@@ -3021,7 +3019,7 @@ namespace StatsDirect.Builtins
                 y[i] = rVariable.Data[i - 1];
                 pg[i] = CorrelationRowType.Study;
                 if (y[i] < -1.0 || y[i] > 1.0)
-                    throw new Exception("r(" + i + ") must be between -1 and 1");
+                    throw new Exception($"r({i}) must be between -1 and 1");
             }
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = CorrelationRowType.Pooled;
@@ -3036,9 +3034,8 @@ namespace StatsDirect.Builtins
             {
                 double sampleSize = nVariable.Data[i - 1];
                 if (sampleSize < 3)
-                {
-                    throw new Exception("All values of n must be at least 3. n(" + i + ") is less than 3");
-                }
+                    throw new Exception($"All values of n must be at least 3. n({i}) is less than 3");
+
                 ss[i] = sampleSize;
                 seY[i] = Math.Sqrt(1 / (sampleSize - 3));
                 llY[i] = MathDbl.ztor(MathDbl.rtoz(y[i]) - cit * seY[i]);
@@ -3056,9 +3053,7 @@ namespace StatsDirect.Builtins
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)
-                        {
                             buf = buf.Substring(0, 50);
-                        }
                         title[i] = buf;
                     }
                     else

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
@@ -13,8 +14,6 @@ namespace StatsDirect.Builtins
     {
         public static ParameterBag RptChi2By2(ITemplateHost host, ParameterBag parameters)
         {
-            double eor = 0;
-
             double cco = parameters["cco"].AsDouble;
             string studyType = parameters["study_type"].AsString;
             bool isCaseControl = "casecontrol".Equals(studyType);
@@ -36,9 +35,8 @@ namespace StatsDirect.Builtins
             double n = p + q;
             ParameterBag outputParameters = new ParameterBag();
             if (!(fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && p * q * r * s > 0))
-            {
                 throw new InvalidDataException();
-            }
+
             outputParameters.AddOutput("tab3_a1", host.RoundU(a));
             outputParameters.AddOutput("tab3_b1", host.RoundU(b));
             outputParameters.AddOutput("tab3_c1", host.RoundU(p));
@@ -99,7 +97,7 @@ namespace StatsDirect.Builtins
                 ParameterBag oddsParameters = new ParameterBag();
                 oddsList.Add(oddsParameters);
                 // Woolf/logit CI
-                double odr=ExactBB.OddsRatio(a, b, c, d);
+                double odr = ExactBB.OddsRatio(a, b, c, d);
                 double yodr;
                 double xodr;
                 if (b * c > 0 && a * d > 0)
@@ -112,14 +110,10 @@ namespace StatsDirect.Builtins
                 {
                     yodr = Constant.MISSING;
                     xodr = Constant.MISSING;
-                    if ((a == 0) | (d == 0))
-                    {
+                    if (a == 0 || d == 0)
                         yodr = 0;
-                    }
-                    else if ((b == 0) | (c == 0))
-                    {
+                    else if (b == 0 || c == 0)
                         xodr = double.PositiveInfinity;
-                    }
                 }
                 oddsParameters.AddOutput("odds", host.RoundU(odr));
                 oddsParameters.AddOutput("woolf_ci", host.RoundU(cco * 100.0));
@@ -135,10 +129,10 @@ namespace StatsDirect.Builtins
                 //tabl[1].Informative = (a * d != 0) | (b * c != 0);
                 //bool useLogScale = false;
                 //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-                ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, ref eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
+                ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, out double _, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
                 if (ierr != 0)
                 //{
-                    // eor = Constant.MISSING; 
+                // eor = Constant.MISSING; 
                 //    ulf = Constant.MISSING;
                 //    llf = Constant.MISSING;
                 //    ulm = Constant.MISSING;
@@ -210,7 +204,7 @@ namespace StatsDirect.Builtins
             return RptChi2ByN(host, parameters, Chi2ByNTrend.WithTrend);
         }
 
-        private static ParameterBag RptChi2ByN(ITemplateHost host, ParameterBag parameters, Chi2ByNTrend z)
+        private static ParameterBag RptChi2ByN(ITemplateHost _, ParameterBag parameters, Chi2ByNTrend z)
         {
             double k4 = 0;
             double k2 = 0;
@@ -223,16 +217,16 @@ namespace StatsDirect.Builtins
             DataFrame datFrame = parameters["data"].AsDataFrame;
             if (datFrame.VariableCount < (z == Chi2ByNTrend.WithTrend ? 3 : 2))
                 throw new InvalidDataException("Invalid data: Please fill in the same number of rows in each column without gaps");
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable)datFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable)datFrame.Variables[1];
             DoubleVariable datV2 = null;
             if (z == Chi2ByNTrend.WithTrend)
-                datV2 = datFrame.Variables[2]as DoubleVariable;
+                datV2 = (DoubleVariable)datFrame.Variables[2];
             int rows = datFrame.MaxRows;
-            double[] f = new double[rows + 1 ];
-            double[] g = new double[rows + 1 ];
-            double[] h = new double[rows + 1 ];
-            double[] s = new double[rows + 1 ];
+            double[] f = new double[rows + 1];
+            double[] g = new double[rows + 1];
+            double[] h = new double[rows + 1];
+            double[] s = new double[rows + 1];
 
             ParameterBag outputParameters = new ParameterBag();
             for (int r = 1; r <= rows; r++)
@@ -357,8 +351,8 @@ namespace StatsDirect.Builtins
             int r;
             int i;
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable)datFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable)datFrame.Variables[1];
             int rows = datFrame.MaxRows;
 
             if (rows <= 0)
@@ -366,18 +360,18 @@ namespace StatsDirect.Builtins
 
             int k = rows / 2;
             double[,] o = new double[k + 1, 4 + 1];
-            double[] odr = new double[k + 1 ];
-            double[] odw = new double[k + 1 ];
-            double[] dswt = new double[k + 1 ];
-            double[] odrl = new double[k + 1 ];
-            double[] odru = new double[k + 1 ];
-            double[] odx = new double[k + 1 ];
-            bool[] lerr = new bool[k + 1 ];
+            double[] odr = new double[k + 1];
+            double[] odw = new double[k + 1];
+            double[] dswt = new double[k + 1];
+            double[] odrl = new double[k + 1];
+            double[] odru = new double[k + 1];
+            double[] odx = new double[k + 1];
+            bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
-            string[] title = new string[k + 1 ];
-            bool[] cced = new bool[k + 1 ];
-            double[] axll = new double[k + 1 ];
-            double[] axul = new double[k + 1 ];
+            string[] title = new string[k + 1];
+            bool[] cced = new bool[k + 1];
+            double[] axll = new double[k + 1];
+            double[] axul = new double[k + 1];
             for (r = 1; r <= rows; r += 2)
             {
                 int strat = 1 + r / 2;
@@ -399,7 +393,7 @@ namespace StatsDirect.Builtins
             }
 
             bool plotForest = parameters["plot_forest"].AsBoolean;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
             Meta.Mantel(host, false, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
             if (ierr != 0)
@@ -464,7 +458,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
                 orParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
-                orParameters.AddOutput("vi", Meta.VarianceFromCI(odrl[i], odru[i], cit,true));
+                orParameters.AddOutput("vi", Meta.VarianceFromCI(odrl[i], odru[i], cit, true));
                 orParameters.AddOutput("lci", odrl[i]);
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
@@ -591,7 +585,7 @@ namespace StatsDirect.Builtins
             {
                 for (int c = 1; c <= cols; c++)
                 {
-                    double a1 = (dataFrame.Variables[c - 1] as DoubleVariable).Data[r - 1];
+                    double a1 = ((DoubleVariable)dataFrame.Variables[c - 1]).Data[r - 1];
                     a[r, c] = a1;
                     t += a1;
                 }
@@ -624,8 +618,8 @@ namespace StatsDirect.Builtins
             int rc;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable)datFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable)datFrame.Variables[1];
             int rows = datFrame.MaxRows;
             if (rows <= 0)
             {
@@ -636,7 +630,7 @@ namespace StatsDirect.Builtins
             if (cco <= 0.0 | cco >= 1.0)
                 cco = 0.95;
 
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
 
@@ -656,7 +650,7 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out bool ierr);
+            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out bool _);
         }
 
         public static ParameterBag RptChi2ByNWithTrendSimulateExactP(ITemplateHost host, ParameterBag parameters)
@@ -668,30 +662,21 @@ namespace StatsDirect.Builtins
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
             bool hasSpecifiedTrend = datFrame.VariableCount == 3;
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable)datFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable)datFrame.Variables[1];
             DoubleVariable datV2 = null;
             if (hasSpecifiedTrend)
-            {
-                datV2 = datFrame.Variables[2]as DoubleVariable;
-            }
+                datV2 = (DoubleVariable)datFrame.Variables[2];
             int rows = datFrame.MaxRows;
             const int cols = 2;
 
             int[,] x = new int[rows + 1, 3];
-            double[] wt = new double[rows + 1 ];
+            double[] wt = new double[rows + 1];
             for (int row = 1; row <= rows; row++)
             {
                 x[row, 1] = Convert.ToInt32(datV0.Data[row - 1]);
                 x[row, 2] = Convert.ToInt32(datV1.Data[row - 1]);
-                if (hasSpecifiedTrend)
-                {
-                    wt[row] = datV2.Data[row - 1];
-                }
-                else
-                {
-                    wt[row] = row;
-                }
+                wt[row] = hasSpecifiedTrend ? datV2.Data[row - 1] : row;
             }
 
             int ierror = 0;
@@ -736,7 +721,7 @@ namespace StatsDirect.Builtins
         private static void Chi2TrendResample(ITemplateHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1];
-            int[] nrowt = new int[nrow + 1 ];
+            int[] nrowt = new int[nrow + 1];
             int ntotal = 0;
             int i;
             int j;
@@ -764,11 +749,10 @@ namespace StatsDirect.Builtins
             int maxtot = 5000000;
             bool primed = false;
 
-            double[] fact = new double[ncol+1];
-            int[] jwork = new int[ncol+1];
+            double[] fact = new double[ncol + 1];
+            int[] jwork = new int[ncol + 1];
 
-            double x2rep;
-            double tol = Constant.EPSILON * 100.0;
+            const double tol = Constant.EPSILON * 100.0;
 
             r = 0;
             for (i = 1; i <= iter; i++)
@@ -784,11 +768,9 @@ namespace StatsDirect.Builtins
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                x2rep = Chi2Trend(x, wt, nrow);
-                if (x2rep > x2 || Math.Abs(x2rep-x2)<tol)
-                {
+                double x2Rep = Chi2Trend(x, wt, nrow);
+                if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
                     r += 1;
-                }
             }
             actualIterations = i - 1;
             host.FinishProgress();
@@ -848,12 +830,11 @@ namespace StatsDirect.Builtins
         ///  <param name="actualIterations">The number of Monte Carlo iterations actually performed</param>
         ///  <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
-        ///  <remarks></remarks>
         public static void ChiRCResample(ITemplateHost host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, double x2, out int rx2, double x2Eq, out int rx2Eq, double x2Trend, out int rx2Trend, double g2, out int rg2, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1];
-            int[] nrowt = new int[nrow + 1 ];
-            int[,] x = new int[nrow +1, ncol+1];
+            int[] nrowt = new int[nrow + 1];
+            int[,] x = new int[nrow + 1, ncol + 1];
             int ntotal = 0;
             int i;
             int j;
@@ -873,7 +854,7 @@ namespace StatsDirect.Builtins
             {
                 for (i = 1; i <= ncol; i++)
                 {
-                    x[j,i]=Convert.ToInt32(o[j,i]);
+                    x[j, i] = Convert.ToInt32(o[j, i]);
                     nrowt[j] += x[j, i];
                     ncolt[i] += x[j, i];
                 }
@@ -882,19 +863,14 @@ namespace StatsDirect.Builtins
             int maxtot = 5000000;
             bool primed = false;
 
-            double[] fact = new double[ncol + 1 ];
-            int[] jwork = new int[ncol + 1 ];
+            double[] fact = new double[ncol + 1];
+            int[] jwork = new int[ncol + 1];
 
             rx2 = 0;
             rg2 = 0;
             rx2Eq = 0;
             rx2Trend = 0;
-            double x2rep = 0;
-            double g2rep = 0;
-            double x2Eqrep = 0;
-            double x2Trendrep = 0;
-            bool faultrep = false;
-            double tol = Constant.EPSILON * 100.0;
+            const double tol = Constant.EPSILON * 100.0;
             actualIterations = 0;
 
             for (i = 1; i <= iter; i++)
@@ -910,7 +886,7 @@ namespace StatsDirect.Builtins
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                ChiRC(x,  nrow, ncol, rowScore, colScore, out x2rep, out x2Trendrep, out x2Eqrep, out g2rep, out faultrep);
+                ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
                 if (!faultrep)
                 {
                     actualIterations++;
@@ -929,21 +905,17 @@ namespace StatsDirect.Builtins
 
         public static string MCResultString(ITemplateHost host, int ierror, int r, int its, int seed, double cco)
         {
-            double p = 0.0;
-            double ll = 0.0;
-            double ul = 0.0;
-            string warn = string.Empty;
             string res = string.Empty;
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
             {
-                p = Convert.ToDouble(r) / Convert.ToDouble(its);
+                double p = Convert.ToDouble(r) / Convert.ToDouble(its);
                 res += "  Monte Carlo " + host.pval(p);
-                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(its), out ll, out ul, cco, out warn);
+                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(its), out double ll, out double ul, cco, out string warn);
                 res += " (" + Formatting.XRound(100.0 * cco, 2) + "% CI: ";
                 res += host.RoundU(ll) + " to ";
                 res += host.RoundU(ul) + warn;
                 res += "; iterations: " + its.ToString("N0");
-                res += "; seed: " + seed.ToString() + ")";
+                res += "; seed: " + seed.ToString(CultureInfo.CurrentCulture) + ")";
             }
             return res;
         }
@@ -1028,9 +1000,8 @@ namespace StatsDirect.Builtins
 
             // Chi-square and G-square for independence
             g2 = 2.0 * g2;
-
         }
-        
+
         ///  <remarks>
         ///     WM Patefield,
         ///     Algorithm AS 159:
@@ -1087,13 +1058,9 @@ namespace StatsDirect.Builtins
                 int ncolsum = 0;
                 int nrowsum = 0;
                 for (int i = lowerBound; i <= nrow - 1 + lowerBound; i++)
-                {
                     nrowsum += nrowt[i];
-                }
                 for (int j = lowerBound; j <= ncol - 1 + lowerBound; j++)
-                {
                     ncolsum += ncolt[j];
-                }
                 if (ncolsum != nrowsum)
                 {
                     ierror = 6;
@@ -1105,7 +1072,7 @@ namespace StatsDirect.Builtins
                     ierror = 5;
                     return;
                 }
-                fact = new double[ntotal + 2 ];
+                fact = new double[ntotal + 2];
                 //   Calculate log-factorials.
                 double x = 0.0;
                 fact[1] = 0.0;
@@ -1119,9 +1086,7 @@ namespace StatsDirect.Builtins
             //   Construct a random matrix.
 
             for (int j = lowerBound; j <= ncol - 2 + lowerBound; j++)
-            {
                 jwork[j] = ncolt[j];
-            }
 
             int jc = ntotal;
             int ib = 0;
@@ -1149,14 +1114,11 @@ namespace StatsDirect.Builtins
                     {
                         ia = 0;
                         for (int j = lowerBound; j <= ncol - 1 + lowerBound; j++)
-                        {
                             matrix[l, j] = 0;
-                        }
                         break;
                     }
 
                     //   Generate a pseudo-random number.
-
                     double r = rng.NextDouble();
 
                     //   Compute the conditional expected value of MATRIX(L,M).
@@ -1167,7 +1129,6 @@ namespace StatsDirect.Builtins
                     int nlm;
                     do
                     {
-
                         nlm = (int)Math.Floor(Convert.ToDouble(ia * id) / Convert.ToDouble(ie) + 0.5);
 
                         int iap = ia + 1;
@@ -1179,9 +1140,7 @@ namespace StatsDirect.Builtins
                         double x = Math.Exp(fact[iap] + fact[ib + 1] + fact[ic + 1] + fact[idp] - fact[ie + 1] - fact[nlmp] - fact[igp] - fact[ihp] - fact[iip]);
 
                         if (r <= x)
-                        {
                             break;
-                        }
 
                         double sumprb = x;
                         double y = x;
@@ -1240,23 +1199,15 @@ namespace StatsDirect.Builtins
                                 }
 
                                 if (lsp == false)
-                                {
                                     break;
-                                }
-
                             }
 
                             if (done2)
-                            {
                                 break;
-                            }
-
                         }
 
                         if (done1 || done2)
-                        {
                             break;
-                        }
 
                         r = rng.NextDouble();
                         r = sumprb * r;
@@ -1271,14 +1222,11 @@ namespace StatsDirect.Builtins
                 }
 
                 matrix[l, ncol - 1 + lowerBound] = ia;
-
             }
 
             //   Compute the last row.
             for (int m = lowerBound; m <= ncol - 2 + lowerBound; m++)
-            {
                 matrix[nrow - 1 + lowerBound, m] = jwork[m];
-            }
             matrix[nrow - 1 + lowerBound, ncol - 1 + lowerBound] = ib - matrix[nrow - 1 + lowerBound, ncol - 2 + lowerBound];
         }
     }

@@ -1374,7 +1374,7 @@ namespace StatsDirect.Builtins
             return Math.Exp(z);
         }
 
-        public static void OddsRatioCI(ITemplateHost host, double cco, double a, double b, double c, double d, ref double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
+        public static void OddsRatioCI(ITemplateHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
         {
             if (a == 0 && b == 0 || c == 0 && d == 0)
             {
@@ -1386,7 +1386,7 @@ namespace StatsDirect.Builtins
             {
                 if (a * d != 0 || b * c != 0)
                 {
-                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
+                    Rec2X2[] tabl = new Rec2X2[1 + 1];
                     tabl[1].Freq = 1;
                     tabl[1].A = a;
                     tabl[1].M1 = a + b;
@@ -1394,7 +1394,7 @@ namespace StatsDirect.Builtins
                     tabl[1].N0 = b + d;
                     tabl[1].Informative = a * d != 0 || b * c != 0;
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out int ierr);
+                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out double _, out double _, out double _, out double _, out double _, out double _, ref useLogScale, out int _);
                 }
                 else
                 {
@@ -1416,7 +1416,7 @@ namespace StatsDirect.Builtins
             lerr = llf == Constant.MISSING;
             uerr = ulf == Constant.MISSING;
         }
-        public static void OddsRatioCMLE(ITemplateHost host, double cco, double a, double b, double c, double d, ref double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
+        public static void OddsRatioCMLE(ITemplateHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
         {
             eor = Constant.MISSING;
             llf = Constant.MISSING;
@@ -1438,7 +1438,7 @@ namespace StatsDirect.Builtins
             {
                 if (a * d != 0 || b * c != 0)
                 {
-                    ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1 + 1];
+                    Rec2X2[] tabl = new Rec2X2[1 + 1];
                     tabl[1].Freq = 1;
                     tabl[1].A = a;
                     tabl[1].M1 = a + b;

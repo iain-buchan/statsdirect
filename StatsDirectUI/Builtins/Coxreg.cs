@@ -144,7 +144,7 @@ namespace StatsDirect.Builtins
 
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
+            DoubleVariable timesVariable = (DoubleVariable) timesFrame.Variables[0];
             ic++;
             int irt = ic;
             int rows = timesVariable.Length;
@@ -646,6 +646,9 @@ namespace StatsDirect.Builtins
             coxest(nRow, nCol, ref x, ref ldx, ref irt, ref IFRQ, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref iwk, ref ifault);
         }
 
+        /// <summary>
+        /// ESTIMATES FOR PARAMETERS IN PROPORTIONAL HAZARDS MODEL
+        /// </summary>
         private static void coxest(int nRow, int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
         smg, ref double[] smh, ref int[] iptr, ref int[] idt, ref int[] iwk, ref int ifault)
         {
@@ -653,31 +656,20 @@ namespace StatsDirect.Builtins
             int i;
             double xx = 0;
 
-            //   ESTIMATES FOR PARAMETERS IN PROPORTIONAL HAZARDS MODEL
             int[] indkey = new int[3 + 1];
             if (nRow >= 1)
             {
                 if (ldx < nRow)
-                {
                     ifault = 1;
-                }
                 if (ldcase < nRow)
-                {
                     ifault = 2;
-                }
             }
             if (eps < 0.0)
-            {
                 ifault = 3;
-            }
-            if (ratio < 0.0 & ratio != -1.0)
-            {
+            if (ratio < 0.0 && ratio != -1.0)
                 ifault = 4;
-            }
             if (ifault != 0)
-            {
                 return;
-            }
             int ntrm = 0;
             for (i = 1; i <= nef; i++)
             {
@@ -724,9 +716,7 @@ namespace StatsDirect.Builtins
                         ifault = 15;
                         ier = ier + 1;
                         if (ier > 10)
-                        {
                             return;
-                        }
                     }
                     else if (x[mf + i] == 0.0)
                     {
@@ -736,9 +726,7 @@ namespace StatsDirect.Builtins
                 if (ifix > 0)
                 {
                     if (x[mi + i] == Constant.MISSING)
-                    {
                         igrp[i] = -1;
-                    }
                     if (icen > 0)
                     {
                         if (x[mc + i] == Constant.MISSING)
@@ -750,9 +738,7 @@ namespace StatsDirect.Builtins
                             ifault = 10;
                             ier = ier + 1;
                             if (ier > 10)
-                            {
                                 return;
-                            }
                         }
                         else if (Convert.ToInt64(x[mc + i]) > 1)
                         {
@@ -760,15 +746,12 @@ namespace StatsDirect.Builtins
                         }
                     }
                     if (x[mr + i] == Constant.MISSING)
-                    {
                         igrp[i] = -1;
-                    }
                 }
             }
             if (ier > 0)
-            {
                 return;
-            }
+
             genregs(nCol, x, 1, nef, nvef, indef, -2, ref ncoef, OBS, ref nrmiss, ref ifault);
             if (ncoef <= 0)
             {
@@ -777,18 +760,13 @@ namespace StatsDirect.Builtins
             else
             {
                 if (ldcoef < ncoef)
-                {
                     ifault = 15;
-                }
                 if (ldcov < ncoef)
-                {
                     ifault = 16;
-                }
             }
             if (ifault > 0)
-            {
                 return;
-            }
+
             MXPOSE(ldx, nCol, x, out ifault);
             if (itie != 1)
             {
@@ -821,9 +799,7 @@ namespace StatsDirect.Builtins
                 if (icen > 0)
                 {
                     for (ik = icen; ik <= nRow * nCol; ik += nCol)
-                    {
                         x[ik] = -1.0 * x[ik];
-                    }
                 }
             }
             else
@@ -893,15 +869,12 @@ namespace StatsDirect.Builtins
             if (ncoef > 0)
             {
                 for (ik = 1; ik <= ncoef; ik++)
-                {
                     coef[ik, 1] = 0.0;
-                }
             }
             coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
             if (ifault != 0)
-            {
                 return;
-            }
+
             MXPOSE(nCol, ldx, x, out ifault);
         }
 
@@ -912,7 +885,7 @@ namespace StatsDirect.Builtins
             int icncd; int icnn;
             int iq;
             int irank; int j; int kk; int k;
-            int iter; int J1;
+            int iter; int j1;
             double div;
             double xcen;
             double xfix; double xfrq; double xlt; double xpar; double xrt; double xx;
@@ -989,7 +962,7 @@ namespace StatsDirect.Builtins
                 igr = 0;
                 icnn = 0;
                 icncd = 1;
-                J1 = 0;
+                j1 = 0;
                 int itdt = 0;
                 for (int i = 1; i <= nobs; i++)
                 {
@@ -1001,15 +974,15 @@ namespace StatsDirect.Builtins
                             icnn = Convert.ToInt32(x[icen + (j - 1) * nCol]);
                         }
                         double dtn = x[irt + (j - 1) * nCol];
-                        if (J1 != 0)
+                        if (j1 != 0)
                         {
-                            idt[J1] = 0;
+                            idt[j1] = 0;
                         }
                         if (dtn != dt | igrp[j] != igr | icncd != icnn)
                         {
                             if (icncd == 0)
                             {
-                                idt[J1] = itdt;
+                                idt[j1] = itdt;
                             }
                             itdt = 1;
                             icncd = icnn;
@@ -1020,16 +993,16 @@ namespace StatsDirect.Builtins
                         {
                             itdt = itdt + 1;
                         }
-                        J1 = j;
+                        j1 = j;
                     }
                 }
                 if (icnn == 0)
                 {
-                    idt[J1] = itdt;
+                    idt[j1] = itdt;
                 }
                 else
                 {
-                    idt[J1] = 0;
+                    idt[j1] = 0;
                 }
             }
             else
@@ -1415,8 +1388,8 @@ namespace StatsDirect.Builtins
                         {
                             smh[j] = 0.0;
                         }
-                        J1 = idt[k];
-                        for (j = 1; j <= J1; j++)
+                        j1 = idt[k];
+                        for (j = 1; j <= j1; j++)
                         {
                             caze[k, 1] = Math.Exp(-smd[1]);
                             caze[k, 3] = caze[k, 5] * smd[1];
@@ -1447,7 +1420,7 @@ namespace StatsDirect.Builtins
                                 zdot = zdot + OBS[iq] * OBS[iq];
                             }
                             caze[k, 2] = zdot;
-                            if (j != J1)
+                            if (j != j1)
                             {
                                 do
                                 {
@@ -1713,18 +1686,15 @@ namespace StatsDirect.Builtins
                         k = iptr[i];
                         if (igrp[k] >= 0 & Convert.ToInt64(caze[k, 4]) == 0)
                         {
-                            if (igr != igrp[k])
-                            {
-                                igr = igrp[k];
-                            }
+                            igr = igrp[k];
                             j = i;
-                            bool OK = true;
+                            bool ok = true;
                             do
                             {
-                                j = j + 1;
+                                j++;
                                 if (j > nobs)
                                 {
-                                    OK = false;
+                                    ok = false;
                                     break;
                                 }
                                 kk = iptr[j];
@@ -1732,9 +1702,9 @@ namespace StatsDirect.Builtins
                             while (igrp[kk] < 0 | Convert.ToInt64(caze[kk, 4]) != 0);
                             if (igrp[kk] != igr)
                             {
-                                OK = false;
+                                ok = false;
                             }
-                            if (OK)
+                            if (ok)
                             {
                                 if (caze[kk, 3] > ratio * caze[k, 2])
                                 {
@@ -2423,7 +2393,7 @@ namespace StatsDirect.Builtins
         {
             bool[] selectedGroups = (bool[])parameters["group"].Data;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
-            StringVariable subgroupsVariable = subgroupsFrame.Variables[0]as StringVariable;
+            StringVariable subgroupsVariable = (StringVariable) subgroupsFrame.Variables[0];
             for (int i = 0; i <= selectedGroups.Length - 1; i++)
             {
                 if (selectedGroups[i])
@@ -2839,7 +2809,7 @@ namespace StatsDirect.Builtins
                 xp[i - 1] = z[i].Time;
             }
 
-            ExFortran.Rank(xp, xr, 0, ictr, 1, out double xf);
+            ExFortran.Rank(xp, xr, 0, ictr, 1, out double _);
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2896,7 +2866,7 @@ namespace StatsDirect.Builtins
             ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].Data;
 
             double GAMMA = parameters["gamma"].AsDouble;
-            MathDbl.civ(0, out double cit, GAMMA, out double P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double _);
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("pc", Formatting.XRound(100 * GAMMA, 2));
             outputParameters.AddOutput("pc2", Formatting.XRound(100 * GAMMA, 2));
