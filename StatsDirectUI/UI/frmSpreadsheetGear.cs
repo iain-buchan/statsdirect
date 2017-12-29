@@ -75,12 +75,12 @@ namespace StatsDirect.UI
 
         private void workbookView_CellEndEdit(object sender, CellEndEditEventArgs e)
         {
-            dirty = true;
+            Dirty = true;
         }
 
         private void workbookView_RangeChanged(object sender, RangeChangedEventArgs e)
         {
-            dirty = true;
+            Dirty = true;
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace StatsDirect.UI
             return workbookView.WithLock(() =>
             {
                 workbookView.ActiveWorkbook.Save();
-                dirty = false;
+                Dirty = false;
                 return true;
             });
         }
@@ -142,7 +142,7 @@ namespace StatsDirect.UI
             return workbookView.WithLock(() =>
             {
                 workbookView.ActiveWorkbook.SaveAs(path, format);
-                dirty = false;
+                Dirty = false;
                 SdApplication.SoleInstance.NoteRecentFile(path, true);
                 return true;
             });
@@ -165,7 +165,7 @@ namespace StatsDirect.UI
             });
         }
 
-        bool IGrid.Dirty => dirty;
+        bool IGrid.Dirty => Dirty;
 
         object[,] IGrid.GetValues(int top, int left, int bottom, int right)
         {
@@ -196,10 +196,10 @@ namespace StatsDirect.UI
 
         void IGrid.SetValues(int top, int left, object[,] values)
         {
-            int RowsMinusOne = values.GetUpperBound(0) - values.GetLowerBound(0);
-            int ColsMinusOne = values.GetUpperBound(1) - values.GetLowerBound(1);
-            workbookView.WithLock(() => workbookView.ActiveWorksheet.Cells[top, left, top + RowsMinusOne, left + ColsMinusOne].Value = values);
-            dirty = true;
+            int rowsMinusOne = values.GetUpperBound(0) - values.GetLowerBound(0);
+            int colsMinusOne = values.GetUpperBound(1) - values.GetLowerBound(1);
+            workbookView.WithLock(() => workbookView.ActiveWorksheet.Cells[top, left, top + rowsMinusOne, left + colsMinusOne].Value = values);
+            Dirty = true;
         }
 
         void IGrid.Refill(List<IVariable> variables)
@@ -493,7 +493,7 @@ namespace StatsDirect.UI
                 insertedRange.Select();
                 insertedRange.NumberFormat = string.Empty;
                 insertedRange.Columns.AutoFit();
-                dirty = true;
+                Dirty = true;
             });
         }
 
@@ -501,7 +501,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                return workbookView.WithLock<Area>(() =>
+                return workbookView.WithLock(() =>
                 {
                     IRange rawRange = workbookView.ActiveWorksheet.UsedRange;
                     return IRangeToArea(this, rawRange);
@@ -812,7 +812,6 @@ namespace StatsDirect.UI
         /// <param name="column">The grid column (indexed from 0) from which to obtain the values</param>
         /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
-        /// <param name="nonHiddenRowCount">The number of non-hidden objects in the array.  Note that raw retrieved values will have been copied down the array to obscure hidden objects in this case; the top end of the array will NOT have been null-filled, so the values in return[nonHiddenRowCount] and above should be considered unknown.</param>
         /// <returns></returns>
         public (object[,], int) GetCellObjects(int column, int firstRow, int lastRow)
         {

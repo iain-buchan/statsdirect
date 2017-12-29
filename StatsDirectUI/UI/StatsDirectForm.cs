@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -10,10 +11,6 @@ namespace StatsDirect.UI
     /// </summary>
     public /* abstract */ class StatsDirectForm: Form, IForm
     {
-        /// <summary>
-        /// If true, changes have been made to the form since it was last saved.
-        /// </summary>
-        protected bool dirty;
         /// <summary>
         /// The path from which the form was loaded, or null if unknown.
         /// </summary>
@@ -28,11 +25,11 @@ namespace StatsDirect.UI
         /// </summary>
         private readonly string id;
 
-        private static int nextId = 1;
+        private static int NEXT_ID = 1;
 
         protected StatsDirectForm()
         {
-            id = "StatsDirectForm:" + nextId++.ToString();
+            id = "StatsDirectForm:" + NEXT_ID++.ToString(CultureInfo.InvariantCulture);
             // Add this in the StatsDirectForm constructor so that it's earlier in the call chain than the subclass' close, and can therefore set variables before the subclass does anything.
             Closing += StatsDirectForm_Closing;
         }
@@ -54,9 +51,12 @@ namespace StatsDirect.UI
         /// <returns>true if the content was saved, false if not</returns>
         internal /* abstract */ virtual bool SaveAsContents() { throw new NotSupportedException(); }
 
-        internal bool Dirty => dirty;
+        /// <summary>
+        /// If true, changes have been made to the form since it was last saved.
+        /// </summary>
+        public bool Dirty { get; protected set; }
 
-        internal bool SafeToClose => dirtyButSafeToClose || !dirty;
+        internal bool SafeToClose => dirtyButSafeToClose || !Dirty;
 
         /// <summary>
         /// Return true if the form is allowed to close, false if it is not
@@ -64,7 +64,7 @@ namespace StatsDirect.UI
         /// <returns></returns>
         protected bool AllowClose()
         {
-            if (!dirty)
+            if (!Dirty)
                 return true;
 
             DialogResult result = SdApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
@@ -95,19 +95,19 @@ namespace StatsDirect.UI
         /// </summary>
         internal string Path
         {
-            get { return path; }
+            get => path;
             set
             {
                 path = value;
                 // Alert our info, as we may need to update our tab and title
                 if (null != Tag)
-                {
                     ((WindowInformation)Tag).Path = path;
-                }
             }
         }
 
+        /// <param name="isTempFile"></param>
         /// <param name="nameToDisplay">If null or isTempFile is false (the normal case), use the filename.  If non-null and isTempFile is true, use this as the name to be shown for the file.</param>
+        /// <param name="filename"></param>
         public /* abstract */ virtual bool OpenFile(string filename, bool isTempFile, string nameToDisplay) { throw new NotImplementedException("Subclass should have implemented"); }
 
         internal virtual void ShowHelp()
@@ -116,15 +116,9 @@ namespace StatsDirect.UI
             SdApplication.SoleInstance.ShowCurrentHelp();
         }
 
-        public /* abstract */ virtual IList<Pane> AvailablePanes
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public /* abstract */ virtual IList<Pane> AvailablePanes => throw new NotSupportedException();
 
-        public /* abstract */ virtual Pane SelectedPane
-        {
-            get { throw new NotSupportedException(); }
-        }
+        public /* abstract */ virtual Pane SelectedPane => throw new NotSupportedException();
 
         /// <summary>
         /// Helper function for subclasses who want to implement IForm.EnsureActive - they can simply call this.

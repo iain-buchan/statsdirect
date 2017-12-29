@@ -50,7 +50,7 @@ namespace StatsDirect.UI
 
         private void frmReport_TextChanged(object sender, EventArgs e)
         {
-            dirty = true;
+            Dirty = true;
         }
 
         public override bool OpenFile(string filename, bool isTempFile, string nameToDisplay)
@@ -944,7 +944,7 @@ namespace StatsDirect.UI
 
         private void richEditControl1_ModifiedChanged(object sender, EventArgs e)
         {
-            dirty = richEditControl1.Modified;
+            Dirty = richEditControl1.Modified;
         }
 
         private void tbrSimple_Click(object sender, EventArgs e)

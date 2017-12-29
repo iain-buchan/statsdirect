@@ -65,7 +65,7 @@ namespace StatsDirect.UI
 
         private void frmScript_TextChanged(object sender, EventArgs e)
         {
-            dirty = true;
+            Dirty = true;
         }
 
         #region Menu Methods
