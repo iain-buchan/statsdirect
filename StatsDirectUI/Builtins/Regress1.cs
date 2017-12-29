@@ -6,52 +6,44 @@ namespace StatsDirect.Builtins
 {
     public class Regress1
     {
-
-        public static void X_Comat(out double xc, out double XR, ref double[,] x, ref int nx, ref int idx, ref int idy)
+        public static void X_Comat(out double xc, out double xr, double[,] x, int nx, int idx, int idy)
         {
-            int i;
-            double co = 0;
-            x_avsd(x, nx, idx, out double avx, out double SDX);
+            x_avsd(x, nx, idx, out double avx, out double sdx);
             x_avsd(x, nx, idy, out double avy, out double sdy);
-            for (i = 1; i <= nx; i++)
-            {
-                co = co + (x[idx, i] - avx) * (x[idy, i] - avy);
-            }
-            XR = co / (Convert.ToDouble(nx - 1) * SDX * sdy);
-            xc = co / Convert.ToDouble(nx - 1);
+            double co = 0;
+            for (int i = 1; i <= nx; i++)
+                co += (x[idx, i] - avx) * (x[idy, i] - avy);
+            xr = co / ((nx - 1.0) * sdx * sdy);
+            xc = co / (nx - 1.0);
         }
-
 
         public static void x_avsd(double[,] x, int nx, int id, out double av, out double sd)
         {
-            int j;
-            double ep = 0; double var = 0;
-
             double sum = 0.0;
-            for (j = 1; j <= nx; j++)
-            {
-                sum = sum + x[id, j];
-            }
-            av = sum / Convert.ToDouble(nx);
-            for (j = 1; j <= nx; j++)
+            for (int j = 1; j <= nx; j++)
+                sum += x[id, j];
+            av = sum / nx;
+            double ep = 0;
+            double var = 0;
+            for (int j = 1; j <= nx; j++)
             {
                 double s = x[id, j] - av;
-                double P = s * s;
-                ep = ep + s;
-                var = var + P;
+                double p = s * s;
+                ep += s;
+                var += p;
             }
-            var = (var - ep * ep / Convert.ToDouble(nx)) / Convert.ToDouble(nx - 1);
+            var = (var - ep * ep / nx) / (nx - 1.0);
             sd = Math.Sqrt(var);
         }
 
 
-        public static void X_SVDCP(ref double[,] ad, ref int nx, ref int P, ref double[] wd, ref double[,] vd, ref int ifault)
+        public static void X_SVDCP(double[,] ad, int nx, int p, double[] wd, double[,] vd, ref int ifault)
         {
-            int i; int j; int k; int L = 0;
+            int i; int j; int k; int l = 0;
             double s; double f; double h;
 
-            double[] rv1 = new double[P + 1];
-            if (nx < P)
+            double[] rv1 = new double[p + 1];
+            if (nx < p)
             {
                 ifault = 1;
                 return;
@@ -60,9 +52,9 @@ namespace StatsDirect.Builtins
             double g = 0.0;
             double sca = 0.0;
             double anorm = 0.0;
-            for (i = 1; i <= P; i++)
+            for (i = 1; i <= p; i++)
             {
-                L = i + 1;
+                l = i + 1;
                 rv1[i] = sca * g;
                 g = 0.0;
                 s = 0.0;
@@ -70,9 +62,7 @@ namespace StatsDirect.Builtins
                 if (i <= nx)
                 {
                     for (k = i; k <= nx; k++)
-                    {
                         sca = sca + Math.Abs(ad[k, i]);
-                    }
                     if (sca != 0.0)
                     {
                         for (k = i; k <= nx; k++)
@@ -81,112 +71,77 @@ namespace StatsDirect.Builtins
                             s = s + ad[k, i] * ad[k, i];
                         }
                         f = ad[i, i];
-                        if (f >= 0.0)
-                        {
-                            g = -Math.Abs(Math.Sqrt(s));
-                        }
-                        else { g = Math.Abs(Math.Sqrt(s)); }
+                        g = f >= 0.0 ? -Math.Abs(Math.Sqrt(s)) : Math.Abs(Math.Sqrt(s));
                         h = f * g - s;
                         ad[i, i] = f - g;
-                        for (j = L; j <= P; j++)
+                        for (j = l; j <= p; j++)
                         {
                             s = 0.0;
                             for (k = i; k <= nx; k++)
-                            {
                                 s = s + ad[k, i] * ad[k, j];
-                            }
                             f = s / h;
                             for (k = i; k <= nx; k++)
-                            {
                                 ad[k, j] = ad[k, j] + f * ad[k, i];
-                            }
                         }
                         for (k = i; k <= nx; k++)
-                        {
                             ad[k, i] = sca * ad[k, i];
-                        }
                     }
                 }
                 wd[i] = sca * g;
                 g = 0.0;
                 s = 0.0;
                 sca = 0.0;
-                if (i <= nx & i != P)
+                if (i <= nx & i != p)
                 {
-                    for (k = L; k <= P; k++)
-                    {
+                    for (k = l; k <= p; k++)
                         sca = sca + Math.Abs(ad[i, k]);
-                    }
                     if (sca != 0.0)
                     {
-                        for (k = L; k <= P; k++)
+                        for (k = l; k <= p; k++)
                         {
                             ad[i, k] = ad[i, k] / sca;
                             s = s + ad[i, k] * ad[i, k];
                         }
-                        f = ad[i, L];
-                        if (f >= 0.0)
-                        {
-                            g = -Math.Abs(Math.Sqrt(s));
-                        }
-                        else
-                        {
-                            g = Math.Abs(Math.Sqrt(s));
-                        }
+                        f = ad[i, l];
+                        g = f >= 0.0 ? -Math.Abs(Math.Sqrt(s)) : Math.Abs(Math.Sqrt(s));
                         h = f * g - s;
-                        ad[i, L] = f - g;
-                        for (k = L; k <= P; k++)
-                        {
+                        ad[i, l] = f - g;
+                        for (k = l; k <= p; k++)
                             rv1[k] = ad[i, k] / h;
-                        }
-                        for (j = L; j <= nx; j++)
+                        for (j = l; j <= nx; j++)
                         {
                             s = 0.0;
-                            for (k = L; k <= P; k++)
-                            {
+                            for (k = l; k <= p; k++)
                                 s = s + ad[j, k] * ad[i, k];
-                            }
-                            for (k = L; k <= P; k++)
-                            {
+                            for (k = l; k <= p; k++)
                                 ad[j, k] = ad[j, k] + s * rv1[k];
-                            }
                         }
-                        for (k = L; k <= P; k++)
-                        {
+                        for (k = l; k <= p; k++)
                             ad[i, k] = sca * ad[i, k];
-                        }
                     }
                 }
                 if (Math.Abs(wd[i]) + Math.Abs(rv1[i]) > anorm)
-                {
                     anorm = Math.Abs(wd[i]) + Math.Abs(rv1[i]);
-                }
             }
 
-            for (i = P; i >= 1; i--)
+            for (i = p; i >= 1; i--)
             {
-                if (i < P)
+                if (i < p)
                 {
                     if (g != 0.0)
                     {
-                        for (j = L; j <= P; j++)
-                        {
-                            vd[j, i] = ad[i, j] / ad[i, L] / g;
-                        }
-                        for (j = L; j <= P; j++)
+                        for (j = l; j <= p; j++)
+                            vd[j, i] = ad[i, j] / ad[i, l] / g;
+                        for (j = l; j <= p; j++)
                         {
                             s = 0.0;
-                            for (k = L; k <= P; k++)
-                            {
+                            for (k = l; k <= p; k++)
                                 s = s + ad[i, k] * vd[k, j];
-                            }
-                            for (k = L; k <= P; k++)
-                            {
+                            for (k = l; k <= p; k++)
                                 vd[k, j] = vd[k, j] + s * vd[k, i];
-                            }
                         }
                     }
-                    for (j = L; j <= P; j++)
+                    for (j = l; j <= p; j++)
                     {
                         vd[i, j] = 0.0;
                         vd[j, i] = 0.0;
@@ -194,99 +149,87 @@ namespace StatsDirect.Builtins
                 }
                 vd[i, i] = 1.0;
                 g = rv1[i];
-                L = i;
+                l = i;
             }
-            for (i = P; i >= 1; i--)
+            for (i = p; i >= 1; i--)
             {
-                L = i + 1;
+                l = i + 1;
                 g = wd[i];
-                for (j = L; j <= P; j++)
+                for (j = l; j <= p; j++)
                 {
                     ad[i, j] = 0.0;
                 }
                 if (g != 0.0)
                 {
                     g = 1.0 / g;
-                    for (j = L; j <= P; j++)
+                    for (j = l; j <= p; j++)
                     {
                         s = 0.0;
-                        for (k = L; k <= nx; k++)
-                        {
+                        for (k = l; k <= nx; k++)
                             s = s + ad[k, i] * ad[k, j];
-                        }
                         f = s / ad[i, i] * g;
                         for (k = i; k <= nx; k++)
-                        {
                             ad[k, j] = ad[k, j] + f * ad[k, i];
-                        }
                     }
                     for (j = i; j <= nx; j++)
-                    {
                         ad[j, i] = ad[j, i] * g;
-                    }
                 }
                 else
                 {
                     for (j = i; j <= nx; j++)
-                    {
                         ad[j, i] = 0.0;
-                    }
                 }
                 ad[i, i] = ad[i, i] + 1.0;
             }
-            for (k = P; k >= 1; k--)
+            for (k = p; k >= 1; k--)
             {
                 int its;
                 for (its = 1; its <= maxit; its++)
                 {
                     int nm;
                     double z;
-                    double C;
+                    double c;
                     double y;
-                    for (L = k; L >= 1; L--)
+                    for (l = k; l >= 1; l--)
                     {
-                        nm = L - 1;
-                        if (Math.Abs(rv1[L]) + anorm == anorm)
+                        nm = l - 1;
+                        if (Math.Abs(rv1[l]) + anorm == anorm)
                         {
                             break;
                         }
                         if (Math.Abs(wd[nm]) + anorm == anorm)
                         {
                             s = 1.0;
-                            for (i = L; i <= k; i++)
+                            for (i = l; i <= k; i++)
                             {
                                 f = s * rv1[i];
                                 if (Math.Abs(f) + anorm != anorm)
-                                {
                                     break;
-                                }
                                 g = wd[i];
                                 h = X_PYTHAG(f, g);
                                 wd[i] = h;
                                 h = 1.0 / h;
-                                C = g * h;
+                                c = g * h;
                                 s = -(f * h);
                                 for (j = 1; j <= nx; j++)
                                 {
                                     y = ad[j, nm];
                                     z = ad[j, i];
-                                    ad[j, nm] = y * C + z * s;
-                                    ad[j, i] = -(y * s) + z * C;
+                                    ad[j, nm] = y * c + z * s;
+                                    ad[j, i] = -(y * s) + z * c;
                                 }
                             }
                             break;
                         }
                     }
                     z = wd[k];
-                    if (L == k)
+                    if (l == k)
                     {
                         if (z < 0.0)
                         {
                             wd[k] = -z;
-                            for (j = 1; j <= P; j++)
-                            {
+                            for (j = 1; j <= p; j++)
                                 vd[j, k] = -vd[j, k];
-                            }
                         }
                         break;
                     }
@@ -295,73 +238,64 @@ namespace StatsDirect.Builtins
                         ifault = 2;
                         return;
                     }
-                    double x = wd[L];
+                    double x = wd[l];
                     nm = k - 1;
                     y = wd[nm];
                     g = rv1[nm];
                     h = rv1[k];
                     f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
                     g = X_PYTHAG(f, 1.0);
-                    double temp;
-                    if (f >= 0)
-                    {
-                        temp = Math.Abs(g);
-                    }
-                    else
-                    {
-                        temp = -Math.Abs(g);
-                    }
+                    var temp = f >= 0 ? Math.Abs(g) : -Math.Abs(g);
                     f = ((x - z) * (x + z) + h * (y / (f + temp) - h)) / x;
-                    C = 1.0;
+                    c = 1.0;
                     s = 1.0;
-                    for (j = L; j <= nm; j++)
+                    for (j = l; j <= nm; j++)
                     {
                         i = j + 1;
                         g = rv1[i];
                         y = wd[i];
                         h = s * g;
-                        g = C * g;
+                        g = c * g;
                         z = X_PYTHAG(f, h);
                         rv1[j] = z;
-                        C = f / z;
+                        c = f / z;
                         s = h / z;
-                        f = x * C + g * s;
-                        g = -(x * s) + g * C;
+                        f = x * c + g * s;
+                        g = -(x * s) + g * c;
                         h = y * s;
-                        y = y * C;
+                        y = y * c;
                         int jj;
-                        for (jj = 1; jj <= P; jj++)
+                        for (jj = 1; jj <= p; jj++)
                         {
                             x = vd[jj, j];
                             z = vd[jj, i];
-                            vd[jj, j] = x * C + z * s;
-                            vd[jj, i] = -(x * s) + z * C;
+                            vd[jj, j] = x * c + z * s;
+                            vd[jj, i] = -(x * s) + z * c;
                         }
                         z = X_PYTHAG(f, h);
                         wd[j] = z;
                         if (z != 0.0)
                         {
                             z = 1.0 / z;
-                            C = f * z;
+                            c = f * z;
                             s = h * z;
                         }
-                        f = C * g + s * y;
-                        x = -(s * g) + C * y;
+                        f = c * g + s * y;
+                        x = -(s * g) + c * y;
                         for (jj = 1; jj <= nx; jj++)
                         {
                             y = ad[jj, j];
                             z = ad[jj, i];
-                            ad[jj, j] = y * C + z * s;
-                            ad[jj, i] = -(y * s) + z * C;
+                            ad[jj, j] = y * c + z * s;
+                            ad[jj, i] = -(y * s) + z * c;
                         }
                     }
-                    rv1[L] = 0.0;
+                    rv1[l] = 0.0;
                     rv1[k] = f;
                     wd[k] = x;
                 }
             }
         }
-
 
         private static double X_PYTHAG(double a, double b)
         {
@@ -374,157 +308,122 @@ namespace StatsDirect.Builtins
             return absb * Math.Sqrt(1.0 + absa / absb * (absa / absb));
         }
 
-
-        public static void X_Eigsrt(ref double[] D, ref double[,] v, int N)
+        public static void X_Eigsrt(double[] d, double[,] v, int n)
         {
-            for (int i = 1; i <= N - 1; i++)
+            for (int i = 1; i < n; i++)
             {
                 int k = i;
-                double P = D[i];
+                double p = d[i];
                 int j;
-                for (j = i + 1; j <= N; j++)
+                for (j = i + 1; j <= n; j++)
                 {
-                    if (D[j] >= P)
+                    if (d[j] >= p)
                     {
                         k = j;
-                        P = D[j];
+                        p = d[j];
                     }
                 }
                 if (k != i)
                 {
-                    D[k] = D[i];
-                    D[i] = P;
-                    for (j = 1; j <= N; j++)
+                    d[k] = d[i];
+                    d[i] = p;
+                    for (j = 1; j <= n; j++)
                     {
-                        P = v[j, i];
+                        p = v[j, i];
                         v[j, i] = v[j, k];
-                        v[j, k] = P;
+                        v[j, k] = p;
                     }
                 }
             }
         }
 
-
-        private static void X_SVDBKD(double[,] ud, double[] wd, double[,] vd, int nx, int P, double[] yd, double[] sig, double[] bd)
+        private static void X_SVDBKD(double[,] ud, double[] wd, double[,] vd, int nx, int p, double[] yd, double[] sig, double[] bd)
         {
-            double[] t = new double[P + 1];
-            for (int j = 1; j <= P; j++)
+            double[] t = new double[p + 1];
+            for (int j = 1; j <= p; j++)
             {
                 double s = 0.0;
                 if (wd[j] != 0.0)
                 {
                     for (int i = 1; i <= nx; i++)
-                    {
                         s += ud[i, j] * yd[i] / sig[i];
-                    }
                     s /= wd[j];
                 }
                 t[j] = s;
             }
-            for (int j = 1; j <= P; j++)
+            for (int j = 1; j <= p; j++)
             {
                 double s = 0.0;
-                for (int k = 1; k <= P; k++)
-                {
+                for (int k = 1; k <= p; k++)
                     s += vd[j, k] * t[k];
-                }
                 bd[j] = s;
             }
         }
 
-
         public static void X_SVDVRD(double[,] x, double[,] v, double[] w, int nx, int P, double[,] xtxi, double[] cn, double[] hi)
         {
-            int i; int j; int k;
-            double sum;
-
             double[] owt = new double[P + 1];
             double wmax = w[1];
-            for (i = 1; i <= P; i++)
+            for (int i = 1; i <= P; i++)
             {
                 owt[i] = 0.0;
                 if (w[i] != 0.0)
-                {
                     owt[i] = 1.0 / (w[i] * w[i]);
-                }
                 if (w[i] > wmax)
-                {
                     wmax = w[i];
-                }
             }
-            for (i = 1; i <= P; i++)
-            {
+            for (int i = 1; i <= P; i++)
                 cn[i] = wmax * w[i] * owt[i];
-            }
-            for (j = 1; j <= P; j++)
+            for (int j = 1; j <= P; j++)
             {
-                for (i = j; i <= P; i++)
+                for (int i = j; i <= P; i++)
                 {
-                    sum = 0.0;
-                    for (k = 1; k <= P; k++)
-                    {
+                    double sum = 0.0;
+                    for (int k = 1; k <= P; k++)
                         sum = sum + v[j, k] * v[i, k] * owt[k];
-                    }
                     xtxi[j, i] = sum;
                     xtxi[i, j] = sum;
                 }
             }
-            for (j = 1; j <= nx; j++)
+            for (int j = 1; j <= nx; j++)
             {
                 hi[j] = 0.0;
-                for (i = 1; i <= P; i++)
+                for (int i = 1; i <= P; i++)
                 {
-                    sum = 0.0;
-                    for (k = 1; k <= P; k++)
-                    {
+                    double sum = 0.0;
+                    for (int k = 1; k <= P; k++)
                         sum = sum + xtxi[i, k] * x[j, k];
-                    }
                     hi[j] = hi[j] + x[j, i] * sum;
                 }
             }
         }
 
-
-        public static void X_SVGO(double[,] xd, double[] yd, double[] sig, int nx, int P, double[] bd, double[,] ud, double[,] vd, double[] wd, double[] yfit, double[] er, out int ifault)
+        public static void X_SVGO(double[,] xd, double[] yd, double[] sig, int nx, int p, double[] bd, double[,] ud, double[,] vd, double[] wd, double[] yfit, double[] er, out int ifault)
         {
-            int i; int j;
-
-            for (i = 1; i <= nx; i++)
+            for (int i = 1; i <= nx; i++)
             {
                 double osig = 1.0 / sig[i];
-                for (j = 1; j <= P; j++)
-                {
+                for (int j = 1; j <= p; j++)
                     ud[i, j] = xd[i, j] * osig;
-                }
             }
             // X_SVDCP ud(), nx, p, wd(), vd(), ifault
-            double[] rv1 = new double[P + 1];
-            svd(nx, P, wd, ud, vd, out ifault, rv1);
+            double[] rv1 = new double[p + 1];
+            SingularValueDecomposition(nx, p, wd, ud, vd, out ifault, rv1);
             double wmax = wd[1];
-            for (j = 1; j <= P; j++)
-            {
+            for (int j = 1; j <= p; j++)
                 if (wmax < wd[j])
-                {
                     wmax = wd[j];
-                }
-            }
             // tol = WMAX * EPSNEG
             const double tol = Constant.EPSNEG;
-            for (j = 1; j <= P; j++)
-            {
+            for (int j = 1; j <= p; j++)
                 if (wd[j] < tol)
-                {
                     wd[j] = 0.0;
-                }
-            }
-            X_SVDBKD(ud, wd, vd, nx, P, yd, sig, bd);
-            for (i = 1; i <= nx; i++)
+            X_SVDBKD(ud, wd, vd, nx, p, yd, sig, bd);
+            for (int i = 1; i <= nx; i++)
             {
                 double sum = 0.0;
-                for (j = 1; j <= P; j++)
-                {
+                for (int j = 1; j <= p; j++)
                     sum = sum + bd[j] * xd[i, j];
-                }
                 yfit[i] = sum;
                 er[i] = yd[i] - yfit[i];
             }
@@ -532,9 +431,6 @@ namespace StatsDirect.Builtins
 
         public static void glsqr(int ido, int intcep, int isub, int nrow, int nvar, double[,] x, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, double[] b, double[,] r, double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, double[] xmin, double[] xmax, double[] wk, ref int ifault)
         {
-            int i, j, iobs, nobs;
-            int irow;
-
             double[] sparam = new double[5 + 1];
             double frq = 0, temp, wt = 0;
 
@@ -562,21 +458,13 @@ namespace StatsDirect.Builtins
             {
                 nrmiss = 0;
                 dfe = 0.0;
-                for (i = 1; i <= ncoef; i++)
-                {
-                    for (j = 1; j <= ncoef; j++)
-                    {
+                for (int i = 1; i <= ncoef; i++)
+                    for (int j = 1; j <= ncoef; j++)
                         r[j, i] = 0.0;
-                    }
-                }
-                for (i = 1; i <= ndep; i++)
-                {
-                    for (j = 1; j <= ncoef; j++)
-                    {
+                for (int i = 1; i <= ndep; i++)
+                    for (int j = 1; j <= ncoef; j++)
                         b2[j, i] = 0.0;
-                    }
-                }
-                for (j = 1; j <= ncoef; j++)
+                for (int j = 1; j <= ncoef; j++)
                 {
                     d[j] = 1.0;
                     xmin[j] = Constant.MISSING;
@@ -585,6 +473,8 @@ namespace StatsDirect.Builtins
                 scpe = 0.0;
             }
 
+            int nobs;
+            int irow;
             if (nrow < 0)
             {
                 nobs = -nrow;
@@ -597,27 +487,19 @@ namespace StatsDirect.Builtins
             }
             int i1 = isub == 0 ? 1 : 2;
 
-            for (iobs = 1; iobs <= nobs; iobs++)
+            for (int iobs = 1; iobs <= nobs; iobs++)
             {
-                checkobs(ido, x, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
+                CheckObs(ido, x, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
                 if (igo == 3)
-                {
                     return;
-                }
-                if (igo != 2 & igo != 1)
+                if (igo != 2 && igo != 1)
                 {
                     if (intcep == 1)
-                    {
                         wk[1] = 1.0;
-                    }
-                    for (i = 1; i <= iind; i++)
-                    {
+                    for (int i = 1; i <= iind; i++)
                         wk[intcep + i] = x[iobs, indind[i]];
-                    }
-                    for (i = 1; i <= -iind; i++)
-                    {
+                    for (int i = 1; i <= -iind; i++)
                         wk[intcep + i] = x[iobs, i];
-                    }
                     if (ixnan(nind, wk, intp1) > 0)
                     {
                         nrmiss = nrmiss + irow;
@@ -625,12 +507,12 @@ namespace StatsDirect.Builtins
                     else
                     {
                         int jdepx = idepx;
-                        for (i = 1; i <= idep; i++)
+                        for (int i = 1; i <= idep; i++)
                         {
                             wk[jdepx] = x[iobs, inddep[i]];
                             jdepx = jdepx + 1;
                         }
-                        for (i = idep + 1; i <= 0; i++)
+                        for (int i = idep + 1; i <= 0; i++)
                         {
                             wk[jdepx] = x[iobs, nvar + i];
                             jdepx = jdepx + 1;
@@ -648,39 +530,31 @@ namespace StatsDirect.Builtins
                                 {
                                     if (xmin[1] == Constant.MISSING)
                                     {
-                                        for (j = 1; j <= ncoef; j++)
+                                        for (int j = 1; j <= ncoef; j++)
                                         {
                                             xmin[j] = wk[j];
                                             xmax[j] = wk[j];
                                         }
                                     }
                                 }
-                                for (i = 1; i <= ncoef; i++)
+                                for (int i = 1; i <= ncoef; i++)
                                 {
                                     temp = wk[i];
                                     if (temp < xmin[i])
-                                    {
                                         xmin[i] = temp;
-                                    }
                                     if (temp > xmax[i])
-                                    {
                                         xmax[i] = temp;
-                                    }
                                 }
                             }
                             else
                             {
-                                for (i = intp1; i <= ncoef; i++)
+                                for (int i = intp1; i <= ncoef; i++)
                                 {
                                     temp = wk[i];
                                     if (temp == xmin[i])
-                                    {
                                         ifault = 10;
-                                    }
                                     if (temp == xmax[i])
-                                    {
                                         ifault = 11;
-                                    }
                                 }
                             }
                             if (wt != 0.0)
@@ -692,56 +566,42 @@ namespace StatsDirect.Builtins
                                     r[1, 1] = sumwt + sd2;
                                     if (nind > 0)
                                     {
-                                        for (i = 2; i <= nind + 1; i++)
-                                        {
+                                        for (int i = 2; i <= nind + 1; i++)
                                             r[1, i] = r[1, i] + sd2 * wk[i];
-                                        }
                                     }
-                                    for (i = 1; i <= ndep; i++)
-                                    {
+                                    for (int i = 1; i <= ndep; i++)
                                         b2[1, i] = b2[1, i] + sd2 * wk[idepx - 1 + i];
-                                    }
                                     skip = false;
                                     if (r[1, 1] != 0.0)
                                     {
                                         d[1] = 1.0 / r[1, 1];
                                         if (nind > 0)
-                                        {
-                                            for (i = 2; i <= nind + 1; i++)
-                                            {
+                                            for (int i = 2; i <= nind + 1; i++)
                                                 wk[i] = wk[i] - d[1] * r[1, i];
-                                            }
-                                        }
-                                        j = idepx;
-                                        for (i = 1; i <= ndep; i++)
+                                        int j = idepx;
+                                        for (int i = 1; i <= ndep; i++)
                                         {
                                             wk[j] = wk[j] - d[1] * b2[1, i];
-                                            j = j + 1;
+                                            j++;
                                         }
                                         if (sumwt == 0.0)
-                                        {
                                             skip = true;
-                                        }
                                         else
-                                        {
                                             sd2 = sd2 * r[1, 1] / sumwt;
-                                        }
                                     }
                                     else
                                     {
                                         skip = true;
                                     }
                                 }
-                                if (skip == false)
+                                if (!skip)
                                 {
-                                    for (i = i1; i <= ncoef; i++)
+                                    for (int i = i1; i <= ncoef; i++)
                                     {
                                         drotmg(ref d[i], ref sd2, ref r[i, i], wk[i], sparam);
                                         drotm_21(ndep, b2, i, 1, wk, idepx, sparam);
                                         if (i != ncoef)
-                                        {
                                             drotm_21(ncoef - i, r, i, i + 1, wk, i + 1, sparam);
-                                        }
                                     }
                                     int jdepjx = idepx;
                                     int jdepix = idepx;
@@ -756,10 +616,10 @@ namespace StatsDirect.Builtins
             }
 
             // drop collinear variables
-            if (ido == 0 | ido == 3)
+            if (ido == 0 || ido == 3)
             {
                 int nconst = 0;
-                for (i = 1; i <= ncoef; i++)
+                for (int i = 1; i <= ncoef; i++)
                 {
                     int ldep = 0;
                     int k;
@@ -773,79 +633,54 @@ namespace StatsDirect.Builtins
                         {
                             nconst = nconst + 1;
                             if (nconst > 1)
-                            {
                                 ldep = 1;
-                            }
                         }
                     }
                     else if (i > intp1)
                     {
                         temp = 0.0;
                         k = intp1;
-                        for (j = 1; j <= i - intcep; j++)
+                        for (int j = 1; j <= i - intcep; j++)
                         {
                             temp = temp + r[k, i] * d[k] * r[k, i];
                             k = k + 1;
                         }
                         if (d[i] * r[i, i] * r[i, i] <= tolsq * temp)
-                        {
                             ldep = 1;
-                        }
                     }
                     if (ldep == 1)
                     {
-                        for (j = i + 1; j <= ncoef; j++)
+                        for (int j = i + 1; j <= ncoef; j++)
                         {
                             drotmg(ref d[j], ref d[i], ref r[j, j], r[i, j], sparam);
                             drotm_22(ndep, b2, j, 1, b2, i, 1, sparam);
                             if (j != ncoef)
-                            {
                                 drotm_22(ncoef - j, r, j, j + 1, r, i, j + 1, sparam);
-                            }
                         }
                         scpe = scpe + b2[i, 1] * d[i] * b2[i, 1];
                         for (k = 1; k <= ndep; k++)
-                        {
                             b2[i, k] = 0.0;
-                        }
                         for (k = 0; k <= ncoef - i; k++)
-                        {
                             r[i, i + k] = 0.0;
-                        }
                     }
                 }
 
                 // calculate b by back-substitution
-                for (i = 1; i <= ncoef; i++)
-                {
+                for (int i = 1; i <= ncoef; i++)
                     b[i] = b2[i, 1];
-                }
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
                 dfe = dfe - irank;
                 if (dfe <= 0.0)
-                {
                     ifault = 12;
-                }
-                for (i = 1; i <= ncoef; i++)
-                {
+                for (int i = 1; i <= ncoef; i++)
                     d[i] = dsign(Math.Sqrt(d[i]), r[i, i]);
-                }
-                for (i = 1; i <= ncoef; i++)
-                {
-                    for (j = 0; j <= ncoef - i; j++)
-                    {
+                for (int i = 1; i <= ncoef; i++)
+                    for (int j = 0; j <= ncoef - i; j++)
                         r[i, i + j] = r[i, i + j] * d[i];
-                    }
-                }
-                for (i = 1; i <= ncoef; i++)
-                {
+                for (int i = 1; i <= ncoef; i++)
                     d[i] = 1.0;
-                }
-
             }
-
         }
-
 
         public static void glsqr1(int ido, int intcep, int isub, int nrow, int nvar, double[] x, int ldx, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, ref double[] b, ref double[,] r, ref double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, ref double[] xmin, ref double[] xmax, ref double[] wk, ref int ifault)
         {
@@ -858,9 +693,7 @@ namespace StatsDirect.Builtins
             bool skip = false;
 
             if (ifault != 0)
-            {
                 return;
-            }
 
             int ndep = Math.Abs(idep);
             int nind = Math.Abs(iind);
@@ -879,19 +712,11 @@ namespace StatsDirect.Builtins
                 nrmiss = 0;
                 dfe = 0.0;
                 for (i = 1; i <= ncoef; i++)
-                {
                     for (j = 1; j <= ncoef; j++)
-                    {
                         r[j, i] = 0.0;
-                    }
-                }
                 for (i = 1; i <= ndep; i++)
-                {
                     for (j = 1; j <= ncoef; j++)
-                    {
                         b2[j, i] = 0.0;
-                    }
-                }
                 for (j = 1; j <= ncoef; j++)
                 {
                     d[j] = 1.0;
@@ -915,25 +740,17 @@ namespace StatsDirect.Builtins
 
             for (iobs = 1; iobs <= nobs; iobs++)
             {
-                checkobs1(ido, x, ldx, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
+                CheckObs1(ido, x, ldx, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
                 if (igo == 3)
-                {
                     return;
-                }
-                if (igo != 2 & igo != 1)
+                if (igo != 2 && igo != 1)
                 {
                     if (intcep == 1)
-                    {
                         wk[1] = 1.0;
-                    }
                     for (i = 1; i <= iind; i++)
-                    {
                         wk[intcep + i] = x[iobs + (indind[i] - 1) * ldx];
-                    }
                     for (i = 1; i <= -iind; i++)
-                    {
                         wk[intcep + i] = x[iobs + (i - 1) * ldx];
-                    }
                     if (ixnan(nind, wk, intp1) > 0)
                     {
                         nrmiss = nrmiss + irow;
@@ -975,13 +792,9 @@ namespace StatsDirect.Builtins
                                 {
                                     temp = wk[i];
                                     if (temp < xmin[i])
-                                    {
                                         xmin[i] = temp;
-                                    }
                                     if (temp > xmax[i])
-                                    {
                                         xmax[i] = temp;
-                                    }
                                 }
                             }
                             else
@@ -990,13 +803,9 @@ namespace StatsDirect.Builtins
                                 {
                                     temp = wk[i];
                                     if (temp == xmin[i])
-                                    {
                                         ifault = 10;
-                                    }
                                     if (temp == xmax[i])
-                                    {
                                         ifault = 11;
-                                    }
                                 }
                             }
                             if (wt != 0.0)
@@ -1009,14 +818,10 @@ namespace StatsDirect.Builtins
                                     if (nind > 0)
                                     {
                                         for (i = 2; i <= nind + 1; i++)
-                                        {
                                             r[1, i] = r[1, i] + sd2 * wk[i];
-                                        }
                                     }
                                     for (i = 1; i <= ndep; i++)
-                                    {
                                         b2[1, i] = b2[1, i] + sd2 * wk[idepx - 1 + i];
-                                    }
                                     skip = false;
                                     if (r[1, 1] != 0.0)
                                     {
@@ -1024,9 +829,7 @@ namespace StatsDirect.Builtins
                                         if (nind > 0)
                                         {
                                             for (i = 2; i <= nind + 1; i++)
-                                            {
                                                 wk[i] = wk[i] - d[1] * r[1, i];
-                                            }
                                         }
                                         j = idepx;
                                         for (i = 1; i <= ndep; i++)
@@ -1048,16 +851,14 @@ namespace StatsDirect.Builtins
                                         skip = true;
                                     }
                                 }
-                                if (skip == false)
+                                if (!skip)
                                 {
                                     for (i = i1; i <= ncoef; i++)
                                     {
                                         drotmg(ref d[i], ref sd2, ref r[i, i], wk[i], sparam);
                                         drotm_21(ndep, b2, i, 1, wk, idepx, sparam);
                                         if (i != ncoef)
-                                        {
                                             drotm_21(ncoef - i, r, i, i + 1, wk, i + 1, sparam);
-                                        }
                                     }
                                     int jdepjx = idepx;
                                     int jdepix = idepx;
@@ -1072,7 +873,7 @@ namespace StatsDirect.Builtins
             }
 
             // drop collinear variables
-            if (ido == 0 | ido == 3)
+            if (ido == 0 || ido == 3)
             {
                 int nconst = 0;
                 for (i = 1; i <= ncoef; i++)
@@ -1089,9 +890,7 @@ namespace StatsDirect.Builtins
                         {
                             nconst = nconst + 1;
                             if (nconst > 1)
-                            {
                                 ldep = 1;
-                            }
                         }
                     }
                     else if (i > intp1)
@@ -1104,9 +903,7 @@ namespace StatsDirect.Builtins
                             k = k + 1;
                         }
                         if (d[i] * r[i, i] * r[i, i] <= tolsq * temp)
-                        {
                             ldep = 1;
-                        }
                     }
                     if (ldep == 1)
                     {
@@ -1115,48 +912,30 @@ namespace StatsDirect.Builtins
                             drotmg(ref d[j], ref d[i], ref r[j, j], r[i, j], sparam);
                             drotm_22(ndep, b2, j, 1, b2, i, 1, sparam);
                             if (j != ncoef)
-                            {
                                 drotm_22(ncoef - j, r, j, j + 1, r, i, j + 1, sparam);
-                            }
                         }
                         scpe = scpe + b2[i, 1] * d[i] * b2[i, 1];
                         for (k = 1; k <= ndep; k++)
-                        {
                             b2[i, k] = 0.0;
-                        }
                         for (k = 0; k <= ncoef - i; k++)
-                        {
                             r[i, i + k] = 0.0;
-                        }
                     }
                 }
 
                 // calculate b by back-substitution
                 for (i = 1; i <= ncoef; i++)
-                {
                     b[i] = b2[i, 1];
-                }
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
                 dfe = dfe - irank;
                 if (dfe <= 0.0)
-                {
                     ifault = 12;
-                }
                 for (i = 1; i <= ncoef; i++)
-                {
                     d[i] = dsign(Math.Sqrt(d[i]), r[i, i]);
-                }
                 for (i = 1; i <= ncoef; i++)
-                {
                     for (j = 0; j <= ncoef - i; j++)
-                    {
                         r[i, i + j] = r[i, i + j] * d[i];
-                    }
-                }
                 for (i = 1; i <= ncoef; i++)
-                {
                     d[i] = 1.0;
-                }
 
             }
 
@@ -1167,12 +946,10 @@ namespace StatsDirect.Builtins
         /// </summary>
         private static double dsign(double x, double y)
         {
-            if (y < 0.0)
-                return -Math.Abs(x);
-            return Math.Abs(x);
+            return y < 0.0 ? -Math.Abs(x) : Math.Abs(x);
         }
 
-        private static void checkobs(int ido, double[,] x, int iobs, int irow, int ifrq, int iwt, double xmiss, ref int nmiss, ref double frq, ref double wt, out int igo, ref int ifault)
+        private static void CheckObs(int ido, double[,] x, int iobs, int irow, int ifrq, int iwt, double xmiss, ref int nmiss, ref double frq, ref double wt, out int igo, ref int ifault)
         {
             igo = 0;
             if (ifrq > 0)
@@ -1180,7 +957,7 @@ namespace StatsDirect.Builtins
                 frq = x[iobs, ifrq];
                 if (frq == Constant.MISSING)
                 {
-                    nmiss = nmiss + irow;
+                    nmiss += irow;
                     igo = 2;
                 }
                 else if (frq == 0.0)
@@ -1196,7 +973,7 @@ namespace StatsDirect.Builtins
                 {
                     if (igo != 2)
                     {
-                        nmiss = nmiss + irow;
+                        nmiss += irow;
                         igo = 2;
                     }
                 }
@@ -1218,9 +995,7 @@ namespace StatsDirect.Builtins
                 frq = 1.0;
             }
             if (irow == -1)
-            {
                 frq = -frq;
-            }
             if (iwt > 0)
             {
                 if (wt == Constant.MISSING)
@@ -1229,7 +1004,6 @@ namespace StatsDirect.Builtins
                     {
                         ifault = ido > 0 ? 5 : 6;
                         igo = 3;
-                        return;
                     }
                 }
             }
@@ -1239,8 +1013,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        private static void checkobs1(int ido, double[] x, int ldx, int iobs, int irow, int ifrq, int iwt, double xmiss, ref int nmiss, ref double frq, ref double wt, out int igo, ref int ifault)
+        private static void CheckObs1(int ido, double[] x, int ldx, int iobs, int irow, int ifrq, int iwt, double xmiss, ref int nmiss, ref double frq, ref double wt, out int igo, ref int ifault)
         {
             igo = 0;
             if (ifrq > 0)
@@ -1297,7 +1070,6 @@ namespace StatsDirect.Builtins
                     {
                         ifault = ido > 0 ? 5 : 6;
                         igo = 3;
-                        return;
                     }
                 }
             }
@@ -1320,15 +1092,11 @@ namespace StatsDirect.Builtins
                 while (k <= n)
                 {
                     if (sx[i] == Constant.MISSING)
-                    {
                         iret = k;
-                    }
-                    i = i + 1;
-                    k = k + 1;
+                    i++;
+                    k++;
                     if (iret != 0)
-                    {
                         break;
-                    }
                 }
             }
 
@@ -1401,10 +1169,8 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         private static void drotm_22(int n, double[,] sx, int ix1, int ix2, double[,] sy, int iy1, int iy2, double[] sparam)
         {
-
             //      blas modified givens rotations application
 
             double sflag = sparam[1];
@@ -1419,7 +1185,7 @@ namespace StatsDirect.Builtins
                 {
                     sh12 = sparam[4];
                     sh21 = sparam[3];
-                    for (i = 0; i <= n - 1; i++)
+                    for (i = 0; i < n; i++)
                     {
                         w = sx[ix1, ix2 + i];
                         z = sy[iy1, iy2 + i];
@@ -1435,7 +1201,7 @@ namespace StatsDirect.Builtins
                     {
                         sh11 = sparam[2];
                         sh22 = sparam[5];
-                        for (i = 0; i <= n - 1; i++)
+                        for (i = 0; i < n; i++)
                         {
                             w = sx[ix1, ix2 + i];
                             z = sy[iy1, iy2 + i];
@@ -1449,7 +1215,7 @@ namespace StatsDirect.Builtins
                         sh12 = sparam[4];
                         sh21 = sparam[3];
                         sh22 = sparam[5];
-                        for (i = 0; i <= n - 1; i++)
+                        for (i = 0; i < n; i++)
                         {
                             w = sx[ix1, ix2 + i];
                             z = sy[iy1, iy2 + i];
@@ -1460,7 +1226,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         private static void drotmg(ref double d1, ref double d2, ref double x, double y, double[] p)
         {
@@ -1610,61 +1375,42 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         public static void rcovarb(int ncoef, double[,] r, double s2, double[,] covb, ref int ifault)
         {
-            int i, j, k;
-
-            mxinv2(ncoef, r, null, false, false, true, covb, out int irank, ref ifault);
+            mxinv2(ncoef, r, null, false, false, true, covb, out int _, ref ifault);
 
             if (ifault != 0)
-            {
                 return;
-            }
 
-            for (j = 1; j <= ncoef; j++)
+            for (int j = 1; j <= ncoef; j++)
             {
                 if (covb[j, j] > 0.0)
                 {
                     double t;
-                    for (k = 1; k <= j - 1; k++)
+                    for (int k = 1; k <= j - 1; k++)
                     {
                         t = covb[k, j];
-                        for (i = 1; i <= k; i++)
-                        {
+                        for (int i = 1; i <= k; i++)
                             covb[i, k] = covb[i, k] + covb[i, j] * t;
-                        }
                     }
                     t = covb[j, j];
-                    for (k = 1; k <= j; k++)
-                    {
+                    for (int k = 1; k <= j; k++)
                         covb[k, j] = covb[k, j] * t;
-                    }
                 }
                 else
                 {
-                    for (k = 1; k <= j; k++)
-                    {
+                    for (int k = 1; k <= j; k++)
                         covb[k, j] = 0.0;
-                    }
                 }
             }
 
-            for (j = 1; j <= ncoef; j++)
-            {
-                for (k = 1; k <= j; k++)
-                {
+            for (int j = 1; j <= ncoef; j++)
+                for (int k = 1; k <= j; k++)
                     covb[k, j] = covb[k, j] * s2;
-                }
-            }
 
             // fill in the lower triangle
-            for (i = 1; i <= ncoef - 1; i++)
-            {
-                for (j = i + 1; j <= ncoef; j++)
-                {
+            for (int i = 1; i < ncoef; i++)
+                for (int j = i + 1; j <= ncoef; j++)
                     covb[j, i] = covb[i, j];
-                }
-            }
         }
-
 
         ///  <summary>
         ///  Solve a set of linear systems and/or compute a generalized inverse of upper triangular matrix
@@ -1672,16 +1418,15 @@ namespace StatsDirect.Builtins
         ///  <param name="n"></param>
         ///  <param name="r"></param>
         ///  <param name="b"></param>
-        ///  <param name="use_b">true for all cases of old paths 1-4</param>
-        ///  <param name="transpose_r">true to transpose (old path 2 or 4)</param>
-        ///  <param name="invert_r">true for old paths 3, 4</param>
+        ///  <param name="useB">true for all cases of old paths 1-4</param>
+        ///  <param name="transposeR">true to transpose (old path 2 or 4)</param>
+        ///  <param name="invertR">true for old paths 3, 4</param>
         ///  <param name="rinv"></param>
         ///  <param name="irank"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        public static void mxinv2(int n, double[,] r, double[] b, bool use_b, bool transpose_r, bool invert_r, double[,] rinv, out int irank, ref int ifault)
+        public static void mxinv2(int n, double[,] r, double[] b, bool useB, bool transposeR, bool invertR, double[,] rinv, out int irank, ref int ifault)
         {
-            int k, i, j, ii;
             double xddot, temp1;
 
             if (ifault != 0)
@@ -1689,11 +1434,11 @@ namespace StatsDirect.Builtins
                 irank = 0;
                 return;
             }
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
             {
                 if (r[i, i] == 0.0)
                 {
-                    for (j = i + 1; j <= n; j++)
+                    for (int j = i + 1; j <= n; j++)
                     {
                         if (r[i, j] != 0.0)
                         {
@@ -1711,41 +1456,31 @@ namespace StatsDirect.Builtins
             }
 
             irank = 0;
-            for (i = 1; i <= n; i++)
-            {
+            for (int i = 1; i <= n; i++)
                 if (r[i, i] != 0.0)
-                {
                     irank = irank + 1;
-                }
-            }
 
-            if (transpose_r)
+            if (transposeR)
             {
                 if (irank < n)
                 {
-                    if (use_b)
+                    if (useB)
                     {
-                        for (j = 1; j <= n; j++)
+                        for (int j = 1; j <= n; j++)
                         {
                             xddot = 0.0;
-                            for (k = 1; k <= j - 1; k++)
-                            {
+                            for (int k = 1; k < j; k++)
                                 xddot = xddot + r[k, j] * b[k];
-                            }
                             temp1 = b[j] - xddot;
                             if (r[j, j] == 0.0)
                             {
                                 double absprod = 0.0;
-                                for (ii = 1; ii <= j - 1; ii++)
-                                {
+                                for (int ii = 1; ii < j; ii++)
                                     absprod = absprod + Math.Abs(r[ii, j] * b[ii]);
-                                }
                                 double temp2 = Math.Abs(b[j]) + absprod;
                                 temp2 = temp2 * 200.0 * Constant.EPSILON;
                                 if (Math.Abs(temp1) > temp2)
-                                {
                                     ifault = 2;
-                                }
                                 b[j] = 0.0;
                             }
                             else
@@ -1757,15 +1492,13 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    if (use_b)
+                    if (useB)
                     {
-                        for (j = 1; j <= n; j++)
+                        for (int j = 1; j <= n; j++)
                         {
                             xddot = 0.0;
-                            for (k = 1; k <= j - 1; k++)
-                            {
+                            for (int k = 1; k <= j - 1; k++)
                                 xddot = xddot + r[k, j] * b[k];
-                            }
                             b[j] = b[j] - xddot;
                             b[j] = b[j] / r[j, j];
                         }
@@ -1776,43 +1509,37 @@ namespace StatsDirect.Builtins
             {
                 if (irank < n)
                 {
-                    if (use_b)
+                    if (useB)
                     {
-                        for (j = n; j >= 1; j--)
+                        for (int j = n; j >= 1; j--)
                         {
                             if (r[j, j] == 0.0)
                             {
                                 if (b[j] != 0.0)
-                                {
                                     ifault = 1;
-                                }
                                 b[j] = 0.0;
                             }
                             else
                             {
                                 b[j] = b[j] / r[j, j];
                                 temp1 = -b[j];
-                                for (k = 1; k <= j - 1; k++)
-                                {
+                                for (int k = 1; k < j; k++)
                                     b[k] = b[k] + temp1 * r[k, j];
-                                }
                             }
                         }
                     }
                 }
                 else
                 {
-                    if (use_b)
+                    if (useB)
                     {
-                        for (j = n; j >= 1; j--)
+                        for (int j = n; j >= 1; j--)
                         {
                             if (j < n)
                             {
                                 xddot = 0.0;
-                                for (k = 1; k <= n - j; k++)
-                                {
+                                for (int k = 1; k <= n - j; k++)
                                     xddot = xddot + r[j, j + k] * b[j + k];
-                                }
                                 b[j] = b[j] - xddot;
                             }
                             b[j] = b[j] / r[j, j];
@@ -1821,135 +1548,73 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            if (invert_r)
+            if (invertR)
             {
-                for (j = 1; j <= n; j++)
-                {
-                    for (k = 1; k <= j; k++)
-                    {
+                for (int j = 1; j <= n; j++)
+                    for (int k = 1; k <= j; k++)
                         rinv[k, j] = r[k, j];
-                    }
-                }
-                for (k = 1; k <= n; k++)
+                for (int k = 1; k <= n; k++)
                 {
                     if (rinv[k, k] == 0.0)
                     {
-                        for (i = 1; i <= k; i++)
-                        {
+                        for (int i = 1; i <= k; i++)
                             rinv[i, k] = 0.0;
-                        }
                         if (n != k)
-                        {
-                            for (i = 1; i <= n - k; i++)
-                            {
+                            for (int i = 1; i <= n - k; i++)
                                 rinv[k, k + i] = 0.0;
-                            }
-                        }
                     }
                     else
                     {
                         rinv[k, k] = 1.0 / rinv[k, k];
                         temp1 = -rinv[k, k];
-                        for (i = 1; i <= k - 1; i++)
-                        {
+                        for (int i = 1; i < k; i++)
                             rinv[i, k] = rinv[i, k] * temp1;
-                        }
                         if (k < n)
                         {
-                            for (j = 1; j <= n - k; j++)
-                            {
-                                for (i = 1; i <= k - 1; i++)
-                                {
+                            for (int j = 1; j <= n - k; j++)
+                                for (int i = 1; i < k; i++)
                                     rinv[i, k + j] = rinv[i, k + j] + rinv[k, k + j] * rinv[i, k];
-                                }
-                            }
-                            for (i = 1; i <= n - k; i++)
-                            {
+                            for (int i = 1; i <= n - k; i++)
                                 rinv[k, k + i] = rinv[k, k + i] * rinv[k, k];
-                            }
                         }
                     }
                 }
-                for (i = 1; i <= n - 1; i++)
-                {
-                    for (ii = i + 1; ii <= n; ii++)
-                    {
+                for (int i = 1; i < n; i++)
+                    for (int ii = i + 1; ii <= n; ii++)
                         rinv[ii, i] = 0.0;
-                    }
-                }
             }
-
         }
 
-
-        private static void svd(int m, int n, double[] w, double[,] u, double[,] v, out int ierr, double[] rv1)
+        /// <summary>
+        /// Determines the singular value decomposition a=usv  of a real m by n rectangular matrix.  householder bidiagonalization and a variant of the qr algorithm are used.
+        /// </summary>
+        /// <param name="m">number of rows of a (and u)</param>
+        /// <param name="n">number of columns of a (and u) and the order of v</param>
+        /// <param name="w">Postcondition: w contains the n (non-negative) singular values of a (the diagonal elements of s).  they are unordered.  if an error exit is made, the singular values should be correct for indices ierr+1,ierr+2,...,n.</param>
+        /// <param name="u">u contains the matrix u (orthogonal column vectors) of the decomposition if matu has been set to true otherwise u is used as a temporary array.  u may coincide with a.  if an error exit is made, the columns of u corresponding to indices of correct singular values should be correct.</param>
+        /// <param name="v">v contains the matrix v (orthogonal) of the decomposition if matv has been set to true otherwise v is not referenced.  v may also coincide with a if u is not needed.  if an error exit is made, the columns of v corresponding to indices of correct singular values should be correct.</param>
+        /// <param name="ierr">set to zero for normal return, k if the k-th singular value has not been determined after 30 iterations</param>
+        /// <param name="rv1">a temporary storage array</param>
+        /// <remarks>This subroutine is a translation of the algol procedure svd, num. math. 14, 403-420(1970) by golub and reinsch. handbook for auto. comp., vol ii-linear algebra, 134-151(1971).
+        /// Questions and comments should be directed to burton s. garbow,  mathematics and computer science div, argonne national laboratory. this version dated august 1983.</remarks>
+        private static void SingularValueDecomposition(int m, int n, double[] w, double[,] u, double[,] v, out int ierr, double[] rv1)
         {
-            int i, j, k, l = 0, ii;
-            int kk;
-            int l1 = 0;
-
+            int l = 0, l1 = 0;
             double f, h, s;
 
-            //      this subroutine is a translation of the algol procedure svd,
-            //      num. math. 14, 403-420(1970) by golub and reinsch.
-            //      handbook for auto. comp., vol ii-linear algebra, 134-151(1971).
-
-            //      this subroutine determines the singular value decomposition
-
-            //      a=usv  of a real m by n rectangular matrix.  householder
-            //      bidiagonalization and a variant of the qr algorithm are used.
-
-            //      on input
-
-            //         m is the number of rows of a (and u).
-
-            //         n is the number of columns of a (and u) and the order of v.
 
             //         a contains the rectangular input matrix to be decomposed.
 
             //      on output
-
             //         a is unaltered (unless overwritten by u or v).
 
-            //         w contains the n (non-negative) singular values of a (the
-            //           diagonal elements of s).  they are unordered.  if an
-            //           error exit is made, the singular values should be correct
-            //           for indices ierr+1,ierr+2,...,n.
-
-            //         u contains the matrix u (orthogonal column vectors) of the
-            //           decomposition if matu has been set to  true   otherwise
-            //           u is used as a temporary array.  u may coincide with a.
-            //           if an error exit is made, the columns of u corresponding
-            //           to indices of correct singular values should be correct.
-
-            //         v contains the matrix v (orthogonal) of the decomposition if
-            //           matv has been set to  true   otherwise v is not referenced.
-            //           v may also coincide with a if u is not needed.  if an error
-            //           exit is made, the columns of v corresponding to indices of
-            //           correct singular values should be correct.
-
-            //         ierr is set to
-            //           zero       for normal return,
-            //           k          if the k-th singular value has not been
-            //                      determined after 30 iterations.
-
-            //         rv1 is a temporary storage array.
-
             //      calls pythag for  dsqrt(a*a + b*b) .
-
-            //      questions and comments should be directed to burton s. garbow,
-            //      mathematics and computer science div, argonne national laboratory
-
-            //      this version dated august 1983.
-
-            //      ------------------------------------------------------------------
-
             ierr = 0;
-            //      .......... householder reduction to bidiagonal form ..........
+            // Householder reduction to bidiagonal form
             double g = 0.0;
             double scale = 0.0;
             double x = 0.0;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
             {
                 l = i + 1;
                 rv1[i] = scale * g;
@@ -1958,13 +1623,11 @@ namespace StatsDirect.Builtins
                 scale = 0.0;
                 if (i <= m)
                 {
-                    for (k = i; k <= m; k++)
-                    {
+                    for (int k = i; k <= m; k++)
                         scale = scale + Math.Abs(u[k, i]);
-                    }
                     if (scale != 0.0)
                     {
-                        for (k = i; k <= m; k++)
+                        for (int k = i; k <= m; k++)
                         {
                             u[k, i] = u[k, i] / scale;
                             s = s + Math.Pow(u[k, i], 2.0);
@@ -1975,24 +1638,18 @@ namespace StatsDirect.Builtins
                         u[i, i] = f - g;
                         if (i != n)
                         {
-                            for (j = l; j <= n; j++)
+                            for (int j = l; j <= n; j++)
                             {
                                 s = 0.0;
-                                for (k = i; k <= m; k++)
-                                {
+                                for (int k = i; k <= m; k++)
                                     s = s + u[k, i] * u[k, j];
-                                }
                                 f = s / h;
-                                for (k = i; k <= m; k++)
-                                {
+                                for (int k = i; k <= m; k++)
                                     u[k, j] = u[k, j] + f * u[k, i];
-                                }
                             }
                         }
-                        for (k = i; k <= m; k++)
-                        {
+                        for (int k = i; k <= m; k++)
                             u[k, i] = scale * u[k, i];
-                        }
                     }
                 }
                 w[i] = scale * g;
@@ -2001,13 +1658,13 @@ namespace StatsDirect.Builtins
                 scale = 0.0;
                 if (i <= m & i != n)
                 {
-                    for (k = l; k <= n; k++)
+                    for (int k = l; k <= n; k++)
                     {
                         scale = scale + Math.Abs(u[i, k]);
                     }
                     if (scale != 0.0)
                     {
-                        for (k = l; k <= n; k++)
+                        for (int k = l; k <= n; k++)
                         {
                             u[i, k] = u[i, k] / scale;
                             s = s + Math.Pow(u[i, k], 2.0);
@@ -2016,61 +1673,51 @@ namespace StatsDirect.Builtins
                         g = -dsign(Math.Sqrt(s), f);
                         h = f * g - s;
                         u[i, l] = f - g;
-                        for (k = l; k <= n; k++)
+                        for (int k = l; k <= n; k++)
                         {
                             rv1[k] = u[i, k] / h;
                         }
                         if (i != m)
                         {
-                            for (j = l; j <= m; j++)
+                            for (int j = l; j <= m; j++)
                             {
                                 s = 0.0;
-                                for (k = l; k <= n; k++)
-                                {
+                                for (int k = l; k <= n; k++)
                                     s = s + u[j, k] * u[i, k];
-                                }
-                                for (k = l; k <= n; k++)
-                                {
+                                for (int k = l; k <= n; k++)
                                     u[j, k] = u[j, k] + s * rv1[k];
-                                }
                             }
                         }
-                        for (k = l; k <= n; k++)
-                        {
+                        for (int k = l; k <= n; k++)
                             u[i, k] = scale * u[i, k];
-                        }
                     }
                 }
                 x = Math.Max(x, Math.Abs(w[i]) + Math.Abs(rv1[i]));
             }
-            //      .......... accumulation of right-hand transformations ..........
+            // Accumulation of right-hand transformations
             //      .......... for i=n step -1 until 1 do -- ..........
-            for (ii = 1; ii <= n; ii++)
+            for (int ii = 1; ii <= n; ii++)
             {
-                i = n + 1 - ii;
+                int i = n + 1 - ii;
                 if (i != n)
                 {
                     if (g != 0.0)
                     {
-                        for (j = l; j <= n; j++)
+                        for (int j = l; j <= n; j++)
                         {
                             //          .......... double division avoids possible underflow ..........
                             v[j, i] = u[i, j] / u[i, l] / g;
                         }
-                        for (j = l; j <= n; j++)
+                        for (int j = l; j <= n; j++)
                         {
                             s = 0.0;
-                            for (k = l; k <= n; k++)
-                            {
+                            for (int k = l; k <= n; k++)
                                 s = s + u[i, k] * v[k, j];
-                            }
-                            for (k = l; k <= n; k++)
-                            {
+                            for (int k = l; k <= n; k++)
                                 v[k, j] = v[k, j] + s * v[k, i];
-                            }
                         }
                     }
-                    for (j = l; j <= n; j++)
+                    for (int j = l; j <= n; j++)
                     {
                         v[i, j] = 0.0;
                         v[j, i] = 0.0;
@@ -2080,114 +1727,93 @@ namespace StatsDirect.Builtins
                 g = rv1[i];
                 l = i;
             }
-            //      .......... accumulation of left-hand transformations ..........
+            // Accumulation of left-hand transformations
             //      ..........for i=min(m,n) step -1 until 1 do -- ..........
             int mn = n;
             if (m < n)
-            {
                 mn = m;
-            }
-            for (ii = 1; ii <= mn; ii++)
+            for (int ii = 1; ii <= mn; ii++)
             {
-                i = mn + 1 - ii;
+                int i = mn + 1 - ii;
                 l = i + 1;
                 g = w[i];
                 if (i != n)
-                {
-                    for (j = l; j <= n; j++)
-                    {
+                    for (int j = l; j <= n; j++)
                         u[i, j] = 0.0;
-                    }
-                }
                 if (g != 0.0)
                 {
                     if (i != mn)
                     {
-                        for (j = l; j <= n; j++)
+                        for (int j = l; j <= n; j++)
                         {
                             s = 0.0;
-                            for (k = l; k <= m; k++)
-                            {
+                            for (int k = l; k <= m; k++)
                                 s = s + u[k, i] * u[k, j];
-                            }
-                            //          .......... double division avoids possible underflow ..........
+                            // Double division avoids possible underflow
                             f = s / u[i, i] / g;
-                            for (k = i; k <= m; k++)
-                            {
+                            for (int k = i; k <= m; k++)
                                 u[k, j] = u[k, j] + f * u[k, i];
-                            }
                         }
                     }
-                    for (j = i; j <= m; j++)
-                    {
+                    for (int j = i; j <= m; j++)
                         u[j, i] = u[j, i] / g;
-                    }
                 }
                 else
                 {
-                    for (j = i; j <= m; j++)
-                    {
+                    for (int j = i; j <= m; j++)
                         u[j, i] = 0.0;
-                    }
                 }
                 u[i, i] = u[i, i] + 1.0;
             }
-            //      .......... diagonalization of the bidiagonal form ..........
+            // Diagonalization of the bidiagonal form
             double tst1 = x;
             //      .......... for k=n step -1 until 1 do -- ..........
-            for (kk = 1; kk <= n; kk++)
+            for (int kk = 1; kk <= n; kk++)
             {
                 int k1 = n - kk;
-                k = k1 + 1;
+                int k = k1 + 1;
                 int its = 0;
-                //      .......... test for splitting.
+                // Test for splitting.
                 //                 for l=k step -1 until 1 do -- ..........
                 double z;
                 do
                 {
                     bool skip = false;
-                    int ll;
-                    double tst2;
-                    for (ll = 1; ll <= k; ll++)
+                    for (int ll = 1; ll <= k; ll++)
                     {
                         l1 = k - ll;
                         l = l1 + 1;
-                        tst2 = tst1 + Math.Abs(rv1[l]);
+                        double tst2 = tst1 + Math.Abs(rv1[l]);
                         if (tst2 == tst1)
                         {
                             skip = true;
                             break;
                         }
-                        //      .......... rv1(1) is always zero, so there is no exit
-                        //                 through the bottom of the loop ..........
+                        // rv1(1) is always zero, so there is no exit through the bottom of the loop
                         tst2 = tst1 + Math.Abs(w[l1]);
                         if (tst2 == tst1)
-                        {
                             break;
-                        }
                     }
                     double c;
                     double y;
-                    if (skip == false)
+                    if (!skip)
                     {
-                        //      .......... cancellation of rv1(l) if l greater than 1 ..........
+                        // Cancellation of rv1(l) if l greater than 1
                         c = 0.0;
                         s = 1.0;
-                        for (i = l; i <= k; i++)
+                        for (int i = l; i <= k; i++)
                         {
                             f = s * rv1[i];
                             rv1[i] = c * rv1[i];
-                            tst2 = tst1 + Math.Abs(f);
+                            double tst2 = tst1 + Math.Abs(f);
                             if (tst2 == tst1)
-                            {
                                 break;
-                            }
                             g = w[i];
-                            h = pythag(f, g);
+                            h = Pythag(f, g);
                             w[i] = h;
                             c = g / h;
                             s = -f / h;
-                            for (j = 1; j <= m; j++)
+                            for (int j = 1; j <= m; j++)
                             {
                                 y = u[j, l1];
                                 z = u[j, i];
@@ -2196,101 +1822,90 @@ namespace StatsDirect.Builtins
                             }
                         }
                     }
-                    //      .......... test for convergence ..........
+                    // Test for convergence
                     z = w[k];
-                    if (l != k)
+                    if (l == k)
+                        break;
+
+                    // Shift from bottom 2 by 2 minor
+                    if (its >= 30)
                     {
-                        //      .......... shift from bottom 2 by 2 minor ..........
-                        if (its >= 30)
+                        // set error -- no convergence to a singular value after 30 iterations
+                        ierr = k;
+                        return;
+                    }
+                    its++;
+                    x = w[l];
+                    y = w[k1];
+                    g = rv1[k1];
+                    h = rv1[k];
+                    f = 0.5 * ((g + z) / h * ((g - z) / y) + y / h - h / y);
+                    g = Pythag(f, 1.0);
+                    f = x - z / x * z + h / x * (y / (f + dsign(g, f)) - h);
+                    // Next qr transformation
+                    c = 1.0;
+                    s = 1.0;
+                    int i1;
+                    for (i1 = l; i1 <= k1; i1++)
+                    {
+                        int i = i1 + 1;
+                        g = rv1[i];
+                        y = w[i];
+                        h = s * g;
+                        g = c * g;
+                        z = Pythag(f, h);
+                        rv1[i1] = z;
+                        c = f / z;
+                        s = h / z;
+                        f = x * c + g * s;
+                        g = -x * s + g * c;
+                        h = y * s;
+                        y = y * c;
+                        for (int j = 1; j <= n; j++)
                         {
-                            //      .......... set error -- no convergence to a
-                            //                 singular value after 30 iterations ..........
-                            ierr = k;
-                            return;
+                            x = v[j, i1];
+                            z = v[j, i];
+                            v[j, i1] = x * c + z * s;
+                            v[j, i] = -x * s + z * c;
                         }
-                        its = its + 1;
-                        x = w[l];
-                        y = w[k1];
-                        g = rv1[k1];
-                        h = rv1[k];
-                        f = 0.5 * ((g + z) / h * ((g - z) / y) + y / h - h / y);
-                        g = pythag(f, 1.0);
-                        f = x - z / x * z + h / x * (y / (f + dsign(g, f)) - h);
-                        //      .......... next qr transformation ..........
-                        c = 1.0;
-                        s = 1.0;
-                        int i1;
-                        for (i1 = l; i1 <= k1; i1++)
+                        z = Pythag(f, h);
+                        w[i1] = z;
+                        // Rotation can be arbitrary if z is zero
+                        if (z != 0.0)
                         {
-                            i = i1 + 1;
-                            g = rv1[i];
-                            y = w[i];
-                            h = s * g;
-                            g = c * g;
-                            z = pythag(f, h);
-                            rv1[i1] = z;
                             c = f / z;
                             s = h / z;
-                            f = x * c + g * s;
-                            g = -x * s + g * c;
-                            h = y * s;
-                            y = y * c;
-                            for (j = 1; j <= n; j++)
-                            {
-                                x = v[j, i1];
-                                z = v[j, i];
-                                v[j, i1] = x * c + z * s;
-                                v[j, i] = -x * s + z * c;
-                            }
-                            z = pythag(f, h);
-                            w[i1] = z;
-                            //      .......... rotation can be arbitrary if z is zero ..........
-                            if (z != 0.0)
-                            {
-                                c = f / z;
-                                s = h / z;
-                            }
-                            f = c * g + s * y;
-                            x = -s * g + c * y;
-                            for (j = 1; j <= m; j++)
-                            {
-                                y = u[j, i1];
-                                z = u[j, i];
-                                u[j, i1] = y * c + z * s;
-                                u[j, i] = -y * s + z * c;
-                            }
                         }
-                        rv1[l] = 0.0;
-                        rv1[k] = f;
-                        w[k] = x;
+                        f = c * g + s * y;
+                        x = -s * g + c * y;
+                        for (int j = 1; j <= m; j++)
+                        {
+                            y = u[j, i1];
+                            z = u[j, i];
+                            u[j, i1] = y * c + z * s;
+                            u[j, i] = -y * s + z * c;
+                        }
                     }
-                    else
-                    {
-                        break;
-                    }
+                    rv1[l] = 0.0;
+                    rv1[k] = f;
+                    w[k] = x;
                 }
                 while (true);
-                //      .......... convergence ..........
+                // Convergence
                 if (z < 0.0)
                 {
-                    //      .......... w(k) is made non-negative ..........
+                    // w(k) is made non-negative
                     w[k] = -z;
-                    for (j = 1; j <= n; j++)
-                    {
+                    for (int j = 1; j <= n; j++)
                         v[j, k] = -v[j, k];
-                    }
                 }
             }
-
         }
 
         /// <summary>
-        /// finds dsqrt(a**2+b**2) without overflow or destructive underflow
+        /// Finds dsqrt(a**2+b**2) without overflow or destructive underflow.
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        private static double pythag(double a, double b)
+        private static double Pythag(double a, double b)
         {
             double p = Math.Max(Math.Abs(a), Math.Abs(b));
             if (p != 0.0)
@@ -2300,9 +1915,7 @@ namespace StatsDirect.Builtins
                 {
                     double t = 4.0 + r;
                     if (t == 4.0)
-                    {
                         break;
-                    }
                     double s = r / t;
                     double u = 1.0 + 2.0 * s;
                     p = u * p;
@@ -2891,7 +2504,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         ///  <summary>
         ///  Get starting values for linear predictor and fitted values for Poisson regression
@@ -3697,7 +3309,7 @@ namespace StatsDirect.Builtins
                 izb = iax - iax / m * m + k - 1;
                 iz2b = iax / m + 1 + k + 1;
                 X_SVD_Rotation_Angle(ref a[k, k + 1], ref a[izb, iz2b], out super_diag[k + 1], out diag[k + 1]);
-                X_SVD_Roatation_Transform(n - k, 1, n - k, super_diag, diag, a, m, k);
+                X_SVD_Rotation_Transform(n - k, 1, n - k, super_diag, diag, a, m, k);
                 if (ncoly > 0)
                 {
                     if (Math.Min(n, k + 1) >= 1 & n > k + 1)
@@ -3743,9 +3355,7 @@ namespace StatsDirect.Builtins
             bool wantz = ncolz > 0;
             double max = Math.Abs(diag[1]);
             for (i1 = 2; i1 <= n; i1++)
-            {
                 max = Max3(max, Math.Abs(diag[i1]), Math.Abs(super_diag[i1 - 1]));
-            }
             if (max > 0)
             {
                 X_SVD_Vector_by_Scalar(n, 1.0 / max, diag);
@@ -3788,7 +3398,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        if (split_row > 0 & split_row < i0)
+                        if (split_row > 0 && split_row < i0)
                         {
                             i1 = split_row;
                             temp = super_diag[i1];
@@ -3799,7 +3409,7 @@ namespace StatsDirect.Builtins
                                 wrk0[i1] = ctemp;
                                 wrk1[i1] = -stemp;
                             }
-                            for (i1 = split_row + 1; i1 <= i0 - 1; i1++)
+                            for (i1 = split_row + 1; i1 < i0; i1++)
                             {
                                 temp = -stemp * super_diag[i1];
                                 super_diag[i1] = ctemp * super_diag[i1];
@@ -3819,7 +3429,7 @@ namespace StatsDirect.Builtins
                                 {
                                     ctemp = wrk0[i2 - 1];
                                     stemp = wrk1[i2 - 1];
-                                    if (ctemp != 1.0 | stemp != 0.0)
+                                    if (ctemp != 1.0 || stemp != 0.0)
                                     {
                                         temp = b[i2];
                                         b[i2] = ctemp * temp - stemp * b[split_row];
@@ -3843,9 +3453,9 @@ namespace StatsDirect.Builtins
                     {
                         if (Math.Min(n, i3) >= 1 && i0 > i3 && i0 <= n)
                         {
-                            for (i2 = i3; i2 <= i0 - 1; i2++)
+                            for (i2 = i3; i2 < i0; i2++)
                             {
-                                if (wrk0[i2] != 1.0 | wrk1[i2] != 0.0)
+                                if (wrk0[i2] != 1.0 || wrk1[i2] != 0.0)
                                 {
                                     ctemp = wrk0[i2];
                                     stemp = wrk1[i2];
@@ -3860,7 +3470,7 @@ namespace StatsDirect.Builtins
                     {
                         if (Min3(n, ncolz, i3) >= 1 || i0 > i3 || i0 <= n)
                         {
-                            for (i2 = i3; i2 <= i0 - 1; i2++)
+                            for (i2 = i3; i2 < i0; i2++)
                             {
                                 if (wrk2[i2] != 1.0 || wrk3[i2] != 0.0)
                                 {
@@ -4236,9 +3846,7 @@ namespace StatsDirect.Builtins
                         }
                         zeta = Math.Sqrt((beta + Math.Abs(alpha)) / beta);
                         if (alpha > 0.0)
-                        {
                             beta = -beta;
-                        }
                         i1 = iz1;
                         i2 = iz2;
                         for (int ix = 1; ix <= n; ix++)
@@ -4258,7 +3866,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void X_SVD_Roatation_Transform(int n, int k1, int k2, double[] c, double[] s, double[,] a, int m, int ist)
+        private static void X_SVD_Rotation_Transform(int n, int k1, int k2, double[] c, double[] s, double[,] a, int m, int ist)
         {
             for (int j = k2 - 1; j >= k1; j--)
             {
@@ -4279,9 +3887,9 @@ namespace StatsDirect.Builtins
             }
             for (int j = n; j >= k1 + 1; j--)
             {
-                int I1 = Math.Min(k2, j);
-                double aij = a[I1 + ist, j + ist];
-                for (int i = I1 - 1; i >= k1; i--)
+                int i1 = Math.Min(k2, j);
+                double aij = a[i1 + ist, j + ist];
+                for (int i = i1 - 1; i >= k1; i--)
                 {
                     double temp = a[i + ist, j + ist];
                     a[i + 1 + ist, j + ist] = c[i + ist] * aij - s[i + ist] * temp;
@@ -4311,7 +3919,13 @@ namespace StatsDirect.Builtins
             }
         }
 
-
+        /// <summary>
+        /// Multiplies elements 1..n in x by alpha.
+        /// </summary>
+        /// <param name="n">Number of elements in x</param>
+        /// <param name="alpha">The scalar by which to multiply each element.</param>
+        /// <param name="x">1-based vector.  Postcondition: Elements 1..n are multiplied by alpha.</param>
+        /// <remarks>Contains special cases for alpha in {-1.0, 0.0, 1.0} to preserve fidelity.</remarks>
         private static void X_SVD_Vector_by_Scalar(int n, double alpha, double[] x)
         {
             if (n > 0)
@@ -4319,29 +3933,23 @@ namespace StatsDirect.Builtins
                 if (alpha == 0.0)
                 {
                     for (int ix = 1; ix <= n; ix++)
-                    {
                         x[ix] = 0.0;
-                    }
                 }
                 else if (alpha == -1.0)
                 {
                     for (int ix = 1; ix <= n; ix++)
-                    {
                         x[ix] = -x[ix];
-                    }
                 }
                 else if (alpha != 1.0)
                 {
                     for (int ix = 1; ix <= n; ix++)
-                    {
                         x[ix] = alpha * x[ix];
-                    }
                 }
+                // else alpha == 1.0, so do nothing.
             }
         }
 
-
-        public static void X_SVD_Test_Bidiagonal_Split(int n, double[] diag, double[] super_diag, out bool force, out int row_split)
+        public static void X_SVD_Test_Bidiagonal_Split(int n, double[] diag, double[] superDiag, out bool force, out int rowSplit)
         {
             const double eps = Constant.EPSNEG;
             const double tiny = Constant.SPREAL / eps;
@@ -4352,19 +3960,19 @@ namespace StatsDirect.Builtins
                 if (Math.Abs(diag[n]) < tiny)
                 {
                     force = true;
-                    row_split = i;
+                    rowSplit = i;
                     return;
                 }
             }
             else
             {
-                double abs_diag = Math.Abs(diag[n]);
-                double abs_super_diag = Math.Abs(super_diag[n - 1]);
-                double max = Math.Max(abs_diag, abs_super_diag);
-                if ((abs_diag <= eps * max) | (max < tiny))
+                double absDiag = Math.Abs(diag[n]);
+                double absSuperDiag = Math.Abs(superDiag[n - 1]);
+                double max = Math.Max(absDiag, absSuperDiag);
+                if (absDiag <= eps * max || max < tiny)
                 {
                     force = true;
-                    row_split = i;
+                    rowSplit = i;
                     return;
                 }
                 double maxdi;
@@ -4372,65 +3980,64 @@ namespace StatsDirect.Builtins
                 for (i = n - 1; i >= 2; i--)
                 {
                     absdi = Math.Abs(diag[i]);
-                    maxdi = Math.Max(absdi, abs_diag);
-                    max = Math.Max(maxdi, abs_super_diag);
-                    if ((abs_super_diag <= eps * maxdi) | (max < tiny))
+                    maxdi = Math.Max(absdi, absDiag);
+                    max = Math.Max(maxdi, absSuperDiag);
+                    if (absSuperDiag <= eps * maxdi || max < tiny)
                     {
-                        row_split = i;
+                        rowSplit = i;
                         return;
                     }
-                    double absei = Math.Abs(super_diag[i - 1]);
-                    double emax = Math.Max(abs_super_diag, absei);
+                    double absei = Math.Abs(superDiag[i - 1]);
+                    double emax = Math.Max(absSuperDiag, absei);
                     max = Math.Max(emax, absdi);
-                    if ((absdi <= eps * emax) | (max < tiny))
+                    if (absdi <= eps * emax || max < tiny)
                     {
                         force = true;
-                        row_split = i;
+                        rowSplit = i;
                         return;
                     }
-                    abs_diag = absdi;
-                    abs_super_diag = absei;
+                    absDiag = absdi;
+                    absSuperDiag = absei;
                 }
                 absdi = Math.Abs(diag[1]);
-                maxdi = Math.Max(absdi, abs_diag);
-                max = Math.Max(maxdi, abs_super_diag);
-                if ((abs_super_diag <= eps * maxdi) | (max < tiny))
+                maxdi = Math.Max(absdi, absDiag);
+                max = Math.Max(maxdi, absSuperDiag);
+                if (absSuperDiag <= eps * maxdi || max < tiny)
                 {
-                    row_split = i;
+                    rowSplit = i;
                     return;
                 }
-                max = Math.Max(abs_super_diag, absdi);
-                if ((absdi <= eps * abs_super_diag) | (max < tiny))
+                max = Math.Max(absSuperDiag, absdi);
+                if (absdi <= eps * absSuperDiag || max < tiny)
                 {
                     force = true;
-                    row_split = i;
+                    rowSplit = i;
                     return;
                 }
             }
             i = 0;
-            row_split = i;
+            rowSplit = i;
         }
 
-
-        private static void X_SVD_Plane_Rotate(int n, double[] diag, double[] super_diag, bool do_cs, double[] c, double[] s)
+        private static void X_SVD_Plane_Rotate(int n, double[] diag, double[] superDiag, bool doCs, double[] c, double[] s)
         {
             if (n > 1)
             {
                 int i = n - 1;
-                double temp = super_diag[i];
-                super_diag[i] = 0;
+                double temp = superDiag[i];
+                superDiag[i] = 0;
                 X_SVD_Rotation_Angle(ref diag[i], ref temp, out double cs, out double sn);
-                if (do_cs)
+                if (doCs)
                 {
                     c[i] = cs;
                     s[i] = sn;
                 }
                 for (i = n - 2; i >= 1; i--)
                 {
-                    temp = -sn * super_diag[i];
-                    super_diag[i] = cs * super_diag[i];
+                    temp = -sn * superDiag[i];
+                    superDiag[i] = cs * superDiag[i];
                     X_SVD_Rotation_Angle(ref diag[i], ref temp, out cs, out sn);
-                    if (do_cs)
+                    if (doCs)
                     {
                         c[i] = cs;
                         s[i] = sn;
@@ -4439,26 +4046,25 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        private static void X_SVD_QR_Shift_Parameters(double diag, double super_diag, double diag_m1, double diag_n, double super_diag_m2, double super_diag_m1, out double c, out double s)
+        private static void X_SVD_QR_Shift_Parameters(double diag, double superDiag, double diagM1, double diagN, double superDiagM2, double superDiagM1, out double c, out double s)
         {
             double a; double b; double q;
 
-            double top = Math.Pow(diag_n * super_diag_m1, 2.0);
+            double top = Math.Pow(diagN * superDiagM1, 2.0);
             if (top == 0.0)
             {
                 q = 0.0;
             }
             else
             {
-                double f = ((diag_m1 - diag_n) * (diag_m1 + diag_n) + Math.Pow(super_diag_m1, 2.0)) / 2.0;
+                double f = ((diagM1 - diagN) * (diagM1 + diagN) + Math.Pow(superDiagM1, 2.0)) / 2.0;
                 double bottom = f + dsign(1, f) * Math.Sqrt(top + Math.Pow(f, 2.0));
                 q = X_SVD_Divide_Safely(top, bottom);
             }
             if (diag != 0.0)
             {
-                a = (1.0 - diag_n / diag) * (diag + diag_n) + q / diag;
-                b = super_diag;
+                a = (1.0 - diagN / diag) * (diag + diagN) + q / diag;
+                b = superDiag;
             }
             else
             {
@@ -4467,7 +4073,6 @@ namespace StatsDirect.Builtins
             }
             X_SVD_Rotation_Angle(ref a, ref b, out c, out s);
         }
-
 
         private static void X_SVD_QR_Rotate(int m, int n, double[] diag, double[] super_diag, double c, double s, bool want_left, double[] c_left, double[] s_left, bool want_right, double[] c_right, double[] s_right)
         {
@@ -4523,116 +4128,85 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Return Cos(theta) and Sin(theta) for Tan(theta).
         ///  </summary>
-        private static void X_SVD_Cos_Sin_Tan(double tan_theta, out double cos_theta, out double sin_theta)
+        private static void X_SVD_Cos_Sin_Tan(double tanTheta, out double cosTheta, out double sinTheta)
         {
-            double sqr_eps = Math.Sqrt(Constant.EPSNEG);
-            double r_sqr_eps = 1.0 / sqr_eps;
-            double abs_t = Math.Abs(tan_theta);
-            if (abs_t < sqr_eps)
+            double sqrEps = Math.Sqrt(Constant.EPSNEG);
+            double rSqrEps = 1.0 / sqrEps;
+            double absTan = Math.Abs(tanTheta);
+            if (absTan < sqrEps)
             {
-                cos_theta = 1.0;
-                sin_theta = tan_theta;
+                cosTheta = 1.0;
+                sinTheta = tanTheta;
             }
-            else if (abs_t > r_sqr_eps)
+            else if (absTan > rSqrEps)
             {
-                cos_theta = 1.0 / abs_t;
-                sin_theta = dsign(1, tan_theta);
+                cosTheta = 1.0 / absTan;
+                sinTheta = dsign(1, tanTheta);
             }
             else
             {
-                cos_theta = 1.0 / Math.Sqrt(1.0 + abs_t * abs_t);
-                sin_theta = cos_theta * tan_theta;
+                cosTheta = 1.0 / Math.Sqrt(1.0 + absTan * absTan);
+                sinTheta = cosTheta * tanTheta;
             }
         }
 
-
         private static double X_SVD_Divide_Safely(double a, double b)
         {
-            double div;
-
             if (a == 0.0)
             {
-                div = 0.0;
+                return 0.0;
                 // err if b is zero
             }
-            else
+
+            const double flmin = Constant.SPREAL;
+            const double flmax = 1.0 / flmin;
+            if (b == 0.0)
             {
-                const double flmin = Constant.SPREAL;
-                const double flmax = 1.0 / flmin;
-                if (b == 0.0)
-                {
-                    div = dsign(flmax, a);
-                    //err averted
-                }
-                else
-                {
-                    double absb = Math.Abs(b);
-                    if (absb >= 1.0)
-                    {
-                        if (Math.Abs(a) >= absb * flmin)
-                        {
-                            div = a / b;
-                        }
-                        else
-                        {
-                            div = 0.0;
-                        }
-                    }
-                    else
-                    {
-                        if (Math.Abs(a) <= absb * flmax)
-                        {
-                            div = a / b;
-                        }
-                        else
-                        {
-                            // err averted
-                            div = flmax;
-                            if (a < 0.0 && b > 0.0 || a > 0.0 && b < 0.0)
-                            {
-                                div = -div;
-                            }
-                        }
-                    }
-                }
+                return dsign(flmax, a);
+                //err averted
             }
+
+            double absb = Math.Abs(b);
+            if (absb >= 1.0)
+                return Math.Abs(a) >= absb * flmin ? a / b : 0.0;
+
+            if (Math.Abs(a) <= absb * flmax)
+                return a / b;
+
+            // err averted
+            double div = flmax;
+            if (a < 0.0 && b > 0.0 || a > 0.0 && b < 0.0)
+                div = -div;
             return div;
         }
 
 
-        private static int IsRank(int N, double[] x)
+        private static int IsRank(int n, double[] x)
         {
             int k = 0;
-            if (N >= 1)
+            if (n >= 1)
             {
                 int ix = 1;
                 const double tl = Constant.EPSNEG;
                 double xMax = Math.Abs(x[ix]);
-                while (k < N)
+                while (k < n)
                 {
                     if (Math.Abs(x[ix]) <= tl * xMax)
-                    {
                         break;
-                    }
                     if (Math.Abs(x[ix]) > xMax)
-                    {
                         xMax = Math.Abs(x[ix]);
-                    }
-                    k = k + 1;
-                    ix = ix + 1;
+                    k++;
+                    ix++;
                 }
             }
             return k;
-
         }
-
 
         private static double Max3(double a, double b, double c)
         {
             double x = a > b ? a : b;
             return c > x ? c : x;
         }
-
 
         private static int Min3(int ia, int ib, int ic)
         {
