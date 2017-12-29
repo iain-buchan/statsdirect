@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace StatsDirect.Charting
+﻿namespace StatsDirect.Charting
 {
     /// <summary>
     /// Similar to CSS box model: defines space that won't be drawn in.

@@ -354,7 +354,7 @@ namespace StatsDirect.Builtins
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0)
                 throw new TemplateOperationCancelledException();
-            MathDbl.civ(0, out double cit, GAMMA, out double P0);
+            MathDbl.civ(0, out double cit, GAMMA, out double _);
 
             // bool OK = false; 
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;

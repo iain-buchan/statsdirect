@@ -328,7 +328,7 @@ namespace StatsDirect.Builtins
             {
                 cco = 0.95;
             }
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
+            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
 

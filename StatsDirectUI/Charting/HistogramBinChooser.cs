@@ -1,7 +1,5 @@
 ﻿using System;
 using StatsDirect.Numerics;
-using System.Collections.Generic;
-using System.Diagnostics;
 using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
@@ -243,7 +241,7 @@ namespace StatsDirect.Charting
                 v_axis(minimumDataValue, maximumDataValue, alternativeBins - 1, out double alternativeMinimumMidpoint, out double alternativeMidpointInterval);
 
                 // Use whichever gives the "neater" axis (defined as shorter strings)
-                int betterBinCount = 0;
+                int betterBinCount;
                 double betterMidpointInterval;
                 double betterMinimumMidpoint;
                 if (alternativeMidpointInterval.ToString().Length + alternativeMinimumMidpoint.ToString().Length < candidateMidpointInterval.ToString().Length + candidateMinimumMidpoint.ToString().Length)
@@ -292,8 +290,8 @@ namespace StatsDirect.Charting
             for (int c = 1; c <= 2; c++)
             {
                 int nmp = bestBins - c;
-                double nzmin = 0;
-                double nzint = 0;
+                double nzmin;
+                double nzint;
                 if (nmp > 3)
                 {
                     v_axis(minimumDataValue, maximumDataValue, nmp - 1, out nzmin, out nzint);

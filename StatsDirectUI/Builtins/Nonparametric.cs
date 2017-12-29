@@ -278,13 +278,13 @@ namespace StatsDirect.Builtins
                 {
                     llId = 0.0;
                     capLower = true;
-                    ExFortran.bino(rx, qc, Convert.ToInt32(llId), out double scrapTerm, out llPlox, out double scrapPhi, out fault);
+                    ExFortran.bino(rx, qc, Convert.ToInt32(llId), out double _, out llPlox, out double _, out fault);
                 }
                 if (ulId + 1.0 > rxs)
                 {
                     ulId = rxs - 1.0;
                     capUpper = true;
-                    ExFortran.bino(rx, qc, Convert.ToInt32(ulId), out double scrapTerm, out ulPlox, out double scrapPhi, out fault);
+                    ExFortran.bino(rx, qc, Convert.ToInt32(ulId), out double _, out ulPlox, out double _, out fault);
                 }
                 ll = r[(int)Math.Floor(llId) + 1];
                 ul = r[(int)Math.Floor(ulId) + 1];
@@ -550,7 +550,7 @@ namespace StatsDirect.Builtins
             {
                 double n1S = Convert.ToDouble(n1);
                 double n2S = Convert.ToDouble(n2);
-                double transTemp0 = PDF.gauinv(alphat, out int ifault) * Math.Sqrt(n1S * n2S * (n1S + n2S) / 12.0);
+                double transTemp0 = PDF.gauinv(alphat) * Math.Sqrt(n1S * n2S * (n1S + n2S) / 12.0);
                 k = Convert.ToInt32(n1S * (n1S + n2S + 1.0) / 2.0) + (int)Math.Floor(transTemp0);
                 k = k - Convert.ToInt32(n1S * ((n1S + 1.0) / 2.0));
                 lev = alphat;
@@ -1701,7 +1701,7 @@ namespace StatsDirect.Builtins
         private static double ThetaLl(double u, int m, int n, double gamma)
         {
             double alpha = (1.0 - gamma) / 2.0;
-            double z = PDF.gauinv(1.0 - alpha, out int ifault);
+            double z = PDF.gauinv(1.0 - alpha);
 
             double t = u / (m * n);
 
@@ -1736,7 +1736,7 @@ namespace StatsDirect.Builtins
         private static double ThetaUl(double u, int m, int n, double gamma)
         {
             double alpha = (1.0 - gamma) / 2.0;
-            double z = PDF.gauinv(1.0 - alpha, out int ifault);
+            double z = PDF.gauinv(1.0 - alpha);
 
             double t = u / (m * n);
 
@@ -1803,7 +1803,7 @@ namespace StatsDirect.Builtins
             }
             double corr = nx * Math.Pow((nx + 1.0) / 2.0, 2.0);
             double sr = (srksq - corr) / (Math.Sqrt(srksqa - corr) * Math.Sqrt(srksqb - corr));
-            double cit = PDF.gauinv(gamma + (1 - gamma) / 2, out int ifault);
+            double cit = PDF.gauinv(gamma + (1 - gamma) / 2);
             int nnx = nx;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("sample_1", v0.Title);
@@ -2743,7 +2743,7 @@ namespace StatsDirect.Builtins
 
                 bool capLower = false; bool capUpper = false;
                 double cover = 0; double xq = 0;
-                XQci(qc, rx, r, ref xq, gamma, out double ll, out double ul, ref cover, doConservative, ref capUpper, ref capLower, out int fault);
+                XQci(qc, rx, r, ref xq, gamma, out double ll, out double ul, ref cover, doConservative, ref capUpper, ref capLower, out int _);
 
                 ParameterBag variableParameters = new ParameterBag();
                 variableParameters.AddOutput("sample", v.Title);
@@ -3402,7 +3402,7 @@ namespace StatsDirect.Builtins
             double[] w1 = new double[lx + 1];
             double t = 0;
             int cols = frame.VariableCount;
-            XPreprocessKwt(x, lx, l, cols, ref t, ref w1, out int ifault);
+            XPreprocessKwt(x, lx, l, cols, ref t, ref w1, out int _);
 
             //  Without ties
             double actualha = 0; //  With ties
@@ -3575,7 +3575,7 @@ namespace StatsDirect.Builtins
             double[] w1 = new double[lx + 1];
             double ha = 0;
             double t = 0;
-            XKwt(x, lx, l, frame.VariableCount, out double h, ref ha, ref t, ref w1, out int ifault);
+            XKwt(x, lx, l, frame.VariableCount, out double h, ref ha, ref t, ref w1, out int _);
             //  End copy from rpt_kruskal
 
             // Conover-Iman method
@@ -3808,7 +3808,7 @@ namespace StatsDirect.Builtins
             int boots = parameters["boots"].AsInt32;
             int bootsDivisor = Math.Max(1, boots / 1000);
 
-            MathDbl.civ(0, out double cit, gamma, out double p0);
+            MathDbl.civ(0, out double cit, gamma, out double _);
 
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> outputList = new List<ParameterBag>();

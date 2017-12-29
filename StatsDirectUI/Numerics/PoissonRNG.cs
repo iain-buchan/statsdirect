@@ -111,9 +111,7 @@ namespace StatsDirect.Numerics
 
             bool big_mu = mu >= 10.0;
             if (big_mu)
-            {
                 new_big_mu = false;
-            }
 
             if (!(big_mu && mu == MUPREV))
             { // /* maybe compute new persistent par.s */

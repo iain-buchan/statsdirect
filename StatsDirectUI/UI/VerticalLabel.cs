@@ -12,9 +12,6 @@ namespace StatsDirect.UI
     public class VerticalLabel : Control
     {
         private string labelText;
-        private VerticalLabelDrawMode _dm = VerticalLabelDrawMode.BottomUp;
-        private bool _transparentBG;
-        System.Drawing.Text.TextRenderingHint _renderMode = System.Drawing.Text.TextRenderingHint.SystemDefault;
 
         private readonly Container components = new Container();
 
@@ -36,10 +33,7 @@ namespace StatsDirect.UI
         {
             if (disposing)
             {
-                if (components != null)
-                {
-                    components.Dispose();
-                }
+                components?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -57,18 +51,18 @@ namespace StatsDirect.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             Color controlBackColor = BackColor;
-            using (Pen labelBorderPen = new Pen(_transparentBG ? Color.Empty : controlBackColor, 0))
+            using (Pen labelBorderPen = new Pen(TransparentBackground ? Color.Empty : controlBackColor, 0))
             {
-                using (SolidBrush labelBackColorBrush = new SolidBrush(_transparentBG ? Color.Empty : controlBackColor))
+                using (SolidBrush labelBackColorBrush = new SolidBrush(TransparentBackground ? Color.Empty : controlBackColor))
                 {
-                    using (SolidBrush labelForeColorBrush = new SolidBrush(base.ForeColor))
+                    using (SolidBrush labelForeColorBrush = new SolidBrush(ForeColor))
                     {
                         base.OnPaint(e);
                         float vlblControlWidth = Size.Width;
                         float vlblControlHeight = Size.Height;
                         e.Graphics.DrawRectangle(labelBorderPen, 0, 0, vlblControlWidth, vlblControlHeight);
                         e.Graphics.FillRectangle(labelBackColorBrush, 0, 0, vlblControlWidth, vlblControlHeight);
-                        e.Graphics.TextRenderingHint = _renderMode;
+                        e.Graphics.TextRenderingHint = RenderingMode;
                         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
                         if (TextDrawMode == VerticalLabelDrawMode.BottomUp)
@@ -112,21 +106,15 @@ namespace StatsDirect.UI
         /// Graphics rendering mode. Supprot for antialiasing.
         /// </summary>
         [Category("Properties"), Description("Rendering mode.")]
-        public System.Drawing.Text.TextRenderingHint RenderingMode
-        {
-            get { return _renderMode; }
-            set { _renderMode = value; }
-        }
+        public System.Drawing.Text.TextRenderingHint RenderingMode { get; set; } = System.Drawing.Text.TextRenderingHint.SystemDefault;
+
         /// <summary>
         /// The text to be displayed in the control
         /// </summary>
         [Category("VerticalLabel"), Description("Text is displayed vertically in container.")]
         public override string Text
         {
-            get
-            {
-                return labelText;
-            }
+            get => labelText;
             set
             {
                 labelText = value;
@@ -137,17 +125,10 @@ namespace StatsDirect.UI
         /// 
         /// </summary>
         [Category("Properties"), Description("Whether the text will be drawn from Bottom or from Top.")]
-        public VerticalLabelDrawMode TextDrawMode
-        {
-            get { return _dm; }
-            set { _dm = value; }
-        }
+        public VerticalLabelDrawMode TextDrawMode { get; set; } = VerticalLabelDrawMode.BottomUp;
+
         [Category("Properties"), Description("Whether the text will be drawn with transparent background or not.")]
-        public bool TransparentBackground
-        {
-            get { return _transparentBG; }
-            set { _transparentBG = value; }
-        }
+        public bool TransparentBackground { get; set; }
     }
     /// <summary>
     /// Text Drawing Mode

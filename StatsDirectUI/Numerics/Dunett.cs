@@ -556,9 +556,7 @@ namespace StatsDirect.Numerics
             {
                 t = 0.25 - 0.5 * (PDF.alnorm(b) - 0.5);
                 if (z < 0.0)
-                {
                     t = -t;
-                }
                 return 0.0; //  TODO: Should be t?
             }
             double hsqb = 0.5 * b * b;

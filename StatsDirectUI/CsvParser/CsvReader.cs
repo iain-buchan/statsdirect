@@ -19,7 +19,7 @@ namespace StatsDirect.CsvParser
                 parser.AddErrorListener(new AccumulateErrors(errorBuilder));
                 CsvParser.FileContext fileContext = parser.file();
                 if (parser.NumberOfSyntaxErrors > 0)
-                    throw new Exception("Invalid CSV file: " + errorBuilder.ToString());
+                    throw new Exception("Invalid CSV file: " + errorBuilder);
 
                 // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
                 if (!"<EOF>".Equals(parser.CurrentToken.Text))

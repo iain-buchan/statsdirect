@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Diagnostics;
 using StatsDirect.UI.Properties;
 using System.Reflection;
 

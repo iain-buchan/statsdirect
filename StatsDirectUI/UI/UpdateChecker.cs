@@ -70,7 +70,7 @@ namespace StatsDirect.UI
         /// </summary>
         protected abstract void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e);
 
-        private bool disposedValue = false; // To detect redundant calls
+        private bool disposedValue;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -78,8 +78,7 @@ namespace StatsDirect.UI
             {
                 if (disposing)
                 {
-                    if (null != webClient)
-                        webClient.Dispose();
+                    webClient?.Dispose();
                 }
 
                 disposedValue = true;

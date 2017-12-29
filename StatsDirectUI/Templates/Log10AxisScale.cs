@@ -37,7 +37,7 @@ namespace StatsDirect.Templates
                 double basePower = Math.Pow(10, power);
                 if (basePower >= MinimumScaleValue && basePower <= MaximumScaleValue)
                     tics.Add(new Tic(basePower, basePower.ToString("G")));
-                foreach (double multiplier in MinorTicMultipliers)
+                foreach (int multiplier in MinorTicMultipliers)
                 {
                     double ticValue = basePower * multiplier;
                     if (ticValue >= MinimumScaleValue && ticValue <= MaximumScaleValue)

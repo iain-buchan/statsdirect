@@ -15,7 +15,7 @@ namespace StatsDirect.Charting
         public IAxisScale Q_Axis(double _, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
         {
             if (minimumDataValueGreaterThanZero <= 0)
-                throw new System.Exception("Cannot create a log axis with a minimum value less than or equal to zero");
+                throw new Exception("Cannot create a log axis with a minimum value less than or equal to zero");
 
             //  Start at the first power of 10 smaller than or equal to minimumDataValueGreaterThanZero, stop at the first power of 10 greater than or equal to maximumDataValue.
             int minPower = (int)Math.Floor(Math.Log10(minimumDataValueGreaterThanZero));

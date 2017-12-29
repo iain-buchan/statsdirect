@@ -144,7 +144,7 @@ namespace StatsDirect.UI
         private static UserInfo GetBestUserInfo()
         {
             UserInfo ui = License.GetUserInfo(true);
-            bool machineOk = License.Check(ui, out bool scrap);
+            bool machineOk = License.Check(ui, out bool _);
             if (machineOk)
                 return ui;
             return License.GetUserInfo(false);

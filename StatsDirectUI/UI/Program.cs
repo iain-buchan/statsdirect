@@ -322,7 +322,7 @@ namespace StatsDirect.UI
         private static void CheckLicense()
         {
             UserInfo machineUi = License.GetUserInfo(true);
-            bool machineOk = License.Check(machineUi, out bool scrap);
+            bool machineOk = License.Check(machineUi, out bool _);
             if (machineOk)
                 return;
             while (true)

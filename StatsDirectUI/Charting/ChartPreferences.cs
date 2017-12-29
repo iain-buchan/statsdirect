@@ -5,7 +5,6 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Text;
 using StatsDirect.UI.Properties;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting
 {

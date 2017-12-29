@@ -162,7 +162,7 @@ namespace StatsDirect.Charting.Renderer
             if (shouldScaleZ)
                 Select_MinMaxY = DataMinMax.XY_CalcTogether;
             MarkerType mt = ChartPreferences.MarkerTypes[0];
-            if (null != nOptions && null != nOptions.MarkerTypes && nOptions.MarkerTypes.Count >= 1)
+            if (null != nOptions.MarkerTypes && nOptions.MarkerTypes.Count >= 1)
                 mt = nOptions.MarkerTypes[0];
             PlotXYInternal(x, y, lab, "Observed (" + Definition.XSeries[0].Title + ")", nOptions.Title, false, Select_MinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
             if (shouldScaleZ)

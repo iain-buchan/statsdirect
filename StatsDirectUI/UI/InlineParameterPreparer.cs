@@ -470,7 +470,7 @@ namespace StatsDirect.UI
             SetAllCheckedState(tlp);
         }
 
-        private void SetAllCheckedState(TableLayoutPanel tlp)
+        private static void SetAllCheckedState(TableLayoutPanel tlp)
         {
             foreach (Control candidate in tlp.Controls)
             {
@@ -510,7 +510,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void MultipleOptionsOptionCheckAllChanged(object sender, EventArgs e)
+        private static void MultipleOptionsOptionCheckAllChanged(object sender, EventArgs e)
         {
             CheckBox chkAll = (CheckBox)sender;
             MultipleOptionsAllTag tag = (MultipleOptionsAllTag)chkAll.Tag;

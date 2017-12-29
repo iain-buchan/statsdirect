@@ -425,7 +425,7 @@ namespace StatsDirect.Charting
             }
 
             #region IDisposable Support
-            private bool disposedValue = false;
+            private bool disposedValue;
 
             protected virtual void Dispose(bool disposing)
             {
@@ -449,7 +449,7 @@ namespace StatsDirect.Charting
         }
 
         #region IDisposable Support
-        private bool disposedValue = false;
+        private bool disposedValue;
 
         protected virtual void Dispose(bool disposing)
         {

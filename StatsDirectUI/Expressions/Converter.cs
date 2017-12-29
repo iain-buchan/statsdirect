@@ -26,7 +26,7 @@ namespace StatsDirect.Expressions
             parser.AddErrorListener(new AccumulateErrors(errorBuilder));
             StatsDirectExpressionParser.RContext retval = parser.r();
             if (parser.NumberOfSyntaxErrors > 0)
-                throw new Exception("Couldn't parse your expression: " + errorBuilder.ToString());
+                throw new Exception("Couldn't parse your expression: " + errorBuilder);
 
             // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
             if (!"<EOF>".Equals(parser.CurrentToken.Text))

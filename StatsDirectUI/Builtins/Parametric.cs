@@ -150,7 +150,7 @@ namespace StatsDirect.Builtins
                 host.Error("Coverage not possible.", "Reference Range");
                 throw new TemplateOperationCancelledException();
             }
-            MathDbl.civ(0, out double z, GAMMA, out double P0);
+            MathDbl.civ(0, out double z, GAMMA, out double _);
             Para(data, mean, ss, var, sd, sem, tnx);
             double xbar = mean[0];
             double s = sd[(int)Math.Floor(o)];
@@ -1325,7 +1325,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("n", nx);
             outputParameters.AddOutput("sd", sd);
             outputParameters.AddOutput("sem", sem);
-            double z = PDF.gauinv(1.0 - P0 / 2.0, out int ifault);
+            double z = PDF.gauinv(1.0 - P0 / 2.0);
             double lla = mean - z * sd;
             double ula = mean + z * sd;
             outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - P0), 2));

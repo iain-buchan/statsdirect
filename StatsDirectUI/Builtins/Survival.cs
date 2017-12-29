@@ -1020,7 +1020,7 @@ namespace StatsDirect.Builtins
             //   MULTIVARIATE STATISTICS CHIOMB (FOR OMNIBUS TEST) AND
             //   NRSTOC (FOR TEST OF STOCHASTIC ORDERING)  (SEE EQN 7)
             int nullty = 0;
-            Syminv(sigma, nr, nn, siginv, ref nullty, out int ifail);
+            Syminv(sigma, nr, nn, siginv, ref nullty, out int _);
             double chiomb = 0.0;
             double tsum = 0.0;
             double sigsum = 0.0;
@@ -1163,7 +1163,7 @@ namespace StatsDirect.Builtins
         private static void Plsave(DataFrame resultsFrame, double[,] stime, int[] nat, int[,] dead, double[,] s, double[,] h, double[] vs, double[] vh, int nx, int lap, double gamma, int[] allcens, double[] alltime)
         {
             double p = (1.0 - gamma) / 2;
-            double cit = PDF.gauinv(1.0 - p, out int ifault);
+            double cit = PDF.gauinv(1.0 - p);
             int r = 0;
             double sumn = 0.0;
             double sumd = 0.0;
@@ -1348,7 +1348,7 @@ namespace StatsDirect.Builtins
                 throw new ArgumentException("gamma must be >= 0");
 
             double p = (1.0 - gamma) / 2.0;
-            cit = PDF.gauinv(1.0 - p, out int iifault);
+            cit = PDF.gauinv(1.0 - p);
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
@@ -1540,7 +1540,7 @@ namespace StatsDirect.Builtins
             // string lifetab = "Life table"; 
             double gamma = parameters["gamma"].AsDouble;
             double p0 = (1.0 - gamma) / 2.0;
-            double cit = PDF.gauinv(1.0 - p0, out int ifault);
+            double cit = PDF.gauinv(1.0 - p0);
 
             DataFrame intervalsFrame = parameters["intervals"].AsDataFrame;
             DoubleVariable intervalsVariable = intervalsFrame.Variables[0]as DoubleVariable;

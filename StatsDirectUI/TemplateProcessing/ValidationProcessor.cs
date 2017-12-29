@@ -91,9 +91,9 @@ namespace StatsDirect.TemplateProcessing
         private static string ValidatePersonTimeSize(DataFrame dataFrame)
         {
             // Assumes no missing data, no data < 0
-            DoubleVariable datV0 = dataFrame.Variables[0] as DoubleVariable;
-            DoubleVariable datV1 = dataFrame.Variables[1] as DoubleVariable;
-            DoubleVariable datV2 = dataFrame.Variables[2] as DoubleVariable;
+            DoubleVariable datV0 = (DoubleVariable)dataFrame.Variables[0];
+            DoubleVariable datV1 = (DoubleVariable)dataFrame.Variables[1];
+            DoubleVariable datV2 = (DoubleVariable)dataFrame.Variables[2];
             int rows = dataFrame.MaxRows;
 
             double refntot = 0.0;
@@ -179,7 +179,7 @@ namespace StatsDirect.TemplateProcessing
                 for (int col = 0; col < dataFrame.Variables.Count - 1; col++)
                 {
                     IVariable variable = dataFrame.Variables[col];
-                    double x = (variable as DoubleVariable).Data[row];
+                    double x = ((DoubleVariable)variable).Data[row];
                     if (!(x == Constant.MISSING || double.IsInfinity(x)))
                         sum += x;
                 }
@@ -201,7 +201,7 @@ namespace StatsDirect.TemplateProcessing
                 double sum = 0;
                 foreach (IVariable variable in dataFrame.Variables)
                 {
-                    double x = (variable as DoubleVariable).Data[row];
+                    double x = ((DoubleVariable)variable).Data[row];
                     if (!(x == Constant.MISSING || double.IsInfinity(x)))
                         sum += x;
                 }
@@ -302,7 +302,7 @@ namespace StatsDirect.TemplateProcessing
         private static string ValidateSquareBins(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure the number of bins is the square root of the number of values
-            DoubleVariable variable = dataFrame.Variables[0] as DoubleVariable;
+            DoubleVariable variable = (DoubleVariable)dataFrame.Variables[0];
             ClassifierVariable cv = TemplateProcessor.gidx_bins(variable);
             if (Math.Sqrt(variable.Length) != cv.GroupCount)
                 return failedValidationMessage ?? "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes";
@@ -312,7 +312,7 @@ namespace StatsDirect.TemplateProcessing
         private static string ValidateSquare(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure the number of values is a square number
-            DoubleVariable variable = dataFrame.Variables[0] as DoubleVariable;
+            DoubleVariable variable = (DoubleVariable)dataFrame.Variables[0];
             if (Math.Sqrt(variable.Length) != Math.Floor(Math.Sqrt(variable.Length)))
                 return failedValidationMessage ?? "Number of observations can not be arranged as a square (i.e. integer square root)";
             return null;
@@ -321,7 +321,7 @@ namespace StatsDirect.TemplateProcessing
         private static string ValidatePooling(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are in {-1, 0, 1}
-            DoubleVariable variable = dataFrame.Variables[0] as DoubleVariable;
+            DoubleVariable variable = (DoubleVariable)dataFrame.Variables[0];
             foreach (double value in variable.Data)
                 if (0 != value && -1 != value && 1 != value)
                     return failedValidationMessage ?? "Pooling indicator must be 0 (not pooled), 1 (subgroup) or -1 (pooled) only";

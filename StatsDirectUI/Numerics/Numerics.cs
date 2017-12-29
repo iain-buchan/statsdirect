@@ -242,7 +242,7 @@ namespace StatsDirect.Numerics
         /// </remarks>
         public static double gauinv(double p)
         {
-            return gauinv(p, out int ifault);
+            return gauinv(p, out int _);
         }
 
         /// <summary>

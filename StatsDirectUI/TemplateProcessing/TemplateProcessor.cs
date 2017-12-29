@@ -62,10 +62,6 @@ namespace StatsDirect.TemplateProcessing
                 {
                     filledParameters = Execute(step, filledParameters, isRedo);
                 }
-                catch (InvalidDataException)
-                {
-                    throw;
-                }
                 catch (TemplateOperationCancelledException)
                 {
                     // The user cancelled the operation

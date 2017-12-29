@@ -83,7 +83,7 @@ namespace StatsDirect.Templates
                     {
                         if (!double.TryParse(l[column], NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
                             value = Constant.MISSING;
-                        (outputFrame.Variables[column] as DoubleVariable).Data[outputRow] = value;
+                        ((DoubleVariable)outputFrame.Variables[column]).Data[outputRow] = value;
                     }
                     outputRow++;
                 }

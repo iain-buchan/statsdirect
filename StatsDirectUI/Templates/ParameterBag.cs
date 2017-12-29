@@ -283,8 +283,6 @@ namespace StatsDirect.Templates
         public static ParameterBag DeserializeAndRefillForRedo(StringReader xr, IRefillSource refillSource)
         {
             string strippedString = xr.ReadToEnd();
-            if (null == strippedString)
-                return null;
             byte[] strippedBytes = Convert.FromBase64String(strippedString);
             using (MemoryStream ms = new MemoryStream(strippedBytes))
             {

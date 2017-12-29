@@ -940,7 +940,7 @@ namespace StatsDirect.Builtins
 
         private static double zcvalue(double alph)
         {
-            return -PDF.gauinv(alph, out int fault);
+            return -PDF.gauinv(alph);
         }
 
 

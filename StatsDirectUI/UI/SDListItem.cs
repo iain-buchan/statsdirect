@@ -13,9 +13,9 @@ namespace StatsDirect.UI
             Operation = operation;
         }
 
-        public string Label { get; set; }
+        public string Label { get; }
 
-        public string Operation { get; set; }
+        public string Operation { get; }
 
         public override string ToString()
         {
