@@ -2364,7 +2364,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static bool x_qromb(double a, double b, ref double ss, double[] bd, int P)
+        private static bool x_qromb(double a, double b, ref double ss, double[] bd, int p)
         {
             double ds = 0;
             const double eps = 100.0 * Constant.EPSNEG;
@@ -2378,7 +2378,7 @@ namespace StatsDirect.Builtins
             int j;
             for (j = 1; j <= jmax; j++)
             {
-                Regress1.trapzd(a, b, ref s[j], j, bd, P);
+                s[j] = Regress1.trapzd(a, b, s[j], j, bd, p);
                 if (j >= k)
                 {
                     int ifault = 0;
@@ -2394,7 +2394,6 @@ namespace StatsDirect.Builtins
             return j < jmax;
         }
 
-
         private static double x_giabaldi(int nx, double[] y, double[] x)
         {
             double ss = 0.0;
@@ -2403,20 +2402,19 @@ namespace StatsDirect.Builtins
             return ss;
         }
 
-
         public static ParameterBag RptPolynomialRegressionConfidence(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
             int nx = context.N;
-            int P = context.P;
+            int p = context.P;
             double[,] xtxi = context.H;
             double[] yfit = context.FV;
             double[,] x = context.X;
             double rss = context.SSY - context.SSREG;
-            double rdf = Convert.ToDouble(nx - 1 - (P - 1));
+            double rdf = Convert.ToDouble(nx - 1 - (p - 1));
             double rms = rss / rdf;
             double GAMMA = parameters["gamma"].AsDouble;
-            MathDbl.civ(nx - P, out double cit, GAMMA, out double P0);
+            MathDbl.civ(nx - p, out double cit, GAMMA, out double P0);
             DoubleVariable vYFit = new DoubleVariable(nx, "Fitted Y");
             DoubleVariable vsey = new DoubleVariable(nx, "SE of Y fit");
             DoubleVariable vcl = new DoubleVariable(nx, Formatting.XRound(100.0 * (1.0 - P0), 1) + "% Conf Limit");
@@ -2425,10 +2423,10 @@ namespace StatsDirect.Builtins
             {
                 double xcx = 0;
                 double s;
-                for (int i = 1; i <= P; i++)
+                for (int i = 1; i <= p; i++)
                 {
                     s = 0;
-                    for (int j = 1; j <= P; j++)
+                    for (int j = 1; j <= p; j++)
                         s += xtxi[i, j] * x[k, j];
                     xcx += s * x[k, i];
                 }

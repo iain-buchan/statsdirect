@@ -1,5 +1,5 @@
 using System;
-
+using System.Globalization;
 using StatsDirect.Numerics;
 
 namespace StatsDirect.Builtins
@@ -360,11 +360,11 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static void X_SVDVRD(double[,] x, double[,] v, double[] w, int nx, int P, double[,] xtxi, double[] cn, double[] hi)
+        public static void X_SVDVRD(double[,] x, double[,] v, double[] w, int nx, int p, double[,] xtxi, double[] cn, double[] hi)
         {
-            double[] owt = new double[P + 1];
+            double[] owt = new double[p + 1];
             double wmax = w[1];
-            for (int i = 1; i <= P; i++)
+            for (int i = 1; i <= p; i++)
             {
                 owt[i] = 0.0;
                 if (w[i] != 0.0)
@@ -372,15 +372,15 @@ namespace StatsDirect.Builtins
                 if (w[i] > wmax)
                     wmax = w[i];
             }
-            for (int i = 1; i <= P; i++)
+            for (int i = 1; i <= p; i++)
                 cn[i] = wmax * w[i] * owt[i];
-            for (int j = 1; j <= P; j++)
+            for (int j = 1; j <= p; j++)
             {
-                for (int i = j; i <= P; i++)
+                for (int i = j; i <= p; i++)
                 {
                     double sum = 0.0;
-                    for (int k = 1; k <= P; k++)
-                        sum = sum + v[j, k] * v[i, k] * owt[k];
+                    for (int k = 1; k <= p; k++)
+                        sum += v[j, k] * v[i, k] * owt[k];
                     xtxi[j, i] = sum;
                     xtxi[i, j] = sum;
                 }
@@ -388,12 +388,12 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= nx; j++)
             {
                 hi[j] = 0.0;
-                for (int i = 1; i <= P; i++)
+                for (int i = 1; i <= p; i++)
                 {
                     double sum = 0.0;
-                    for (int k = 1; k <= P; k++)
-                        sum = sum + xtxi[i, k] * x[j, k];
-                    hi[j] = hi[j] + x[j, i] * sum;
+                    for (int k = 1; k <= p; k++)
+                        sum += xtxi[i, k] * x[j, k];
+                    hi[j] += x[j, i] * sum;
                 }
             }
         }
@@ -406,14 +406,11 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= p; j++)
                     ud[i, j] = xd[i, j] * osig;
             }
-            // X_SVDCP ud(), nx, p, wd(), vd(), ifault
-            double[] rv1 = new double[p + 1];
-            SingularValueDecomposition(nx, p, wd, ud, vd, out ifault, rv1);
+            SingularValueDecomposition(nx, p, wd, ud, vd, out ifault);
             double wmax = wd[1];
             for (int j = 1; j <= p; j++)
                 if (wmax < wd[j])
                     wmax = wd[j];
-            // tol = WMAX * EPSNEG
             const double tol = Constant.EPSNEG;
             for (int j = 1; j <= p; j++)
                 if (wd[j] < tol)
@@ -432,7 +429,7 @@ namespace StatsDirect.Builtins
         public static void glsqr(int ido, int intcep, int isub, int nrow, int nvar, double[,] x, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, double[] b, double[,] r, double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, double[] xmin, double[] xmax, double[] wk, ref int ifault)
         {
             double[] sparam = new double[5 + 1];
-            double frq = 0, temp, wt = 0;
+            double frq = 0, wt = 0;
 
             bool skip = false;
 
@@ -500,7 +497,7 @@ namespace StatsDirect.Builtins
                         wk[intcep + i] = x[iobs, indind[i]];
                     for (int i = 1; i <= -iind; i++)
                         wk[intcep + i] = x[iobs, i];
-                    if (ixnan(nind, wk, intp1) > 0)
+                    if (IndexNaN(nind, wk, intp1) > 0)
                     {
                         nrmiss = nrmiss + irow;
                     }
@@ -510,16 +507,16 @@ namespace StatsDirect.Builtins
                         for (int i = 1; i <= idep; i++)
                         {
                             wk[jdepx] = x[iobs, inddep[i]];
-                            jdepx = jdepx + 1;
+                            jdepx++;
                         }
                         for (int i = idep + 1; i <= 0; i++)
                         {
                             wk[jdepx] = x[iobs, nvar + i];
-                            jdepx = jdepx + 1;
+                            jdepx++;
                         }
-                        if (ixnan(ndep, wk, idepx) > 0)
+                        if (IndexNaN(ndep, wk, idepx) > 0)
                         {
-                            nrmiss = nrmiss + irow;
+                            nrmiss += irow;
                         }
                         else
                         {
@@ -539,7 +536,7 @@ namespace StatsDirect.Builtins
                                 }
                                 for (int i = 1; i <= ncoef; i++)
                                 {
-                                    temp = wk[i];
+                                    double temp = wk[i];
                                     if (temp < xmin[i])
                                         xmin[i] = temp;
                                     if (temp > xmax[i])
@@ -550,7 +547,7 @@ namespace StatsDirect.Builtins
                             {
                                 for (int i = intp1; i <= ncoef; i++)
                                 {
-                                    temp = wk[i];
+                                    double temp = wk[i];
                                     if (temp == xmin[i])
                                         ifault = 10;
                                     if (temp == xmax[i])
@@ -567,27 +564,27 @@ namespace StatsDirect.Builtins
                                     if (nind > 0)
                                     {
                                         for (int i = 2; i <= nind + 1; i++)
-                                            r[1, i] = r[1, i] + sd2 * wk[i];
+                                            r[1, i] += sd2 * wk[i];
                                     }
                                     for (int i = 1; i <= ndep; i++)
-                                        b2[1, i] = b2[1, i] + sd2 * wk[idepx - 1 + i];
+                                        b2[1, i] += sd2 * wk[idepx - 1 + i];
                                     skip = false;
                                     if (r[1, 1] != 0.0)
                                     {
                                         d[1] = 1.0 / r[1, 1];
                                         if (nind > 0)
                                             for (int i = 2; i <= nind + 1; i++)
-                                                wk[i] = wk[i] - d[1] * r[1, i];
+                                                wk[i] -= d[1] * r[1, i];
                                         int j = idepx;
                                         for (int i = 1; i <= ndep; i++)
                                         {
-                                            wk[j] = wk[j] - d[1] * b2[1, i];
+                                            wk[j] -= d[1] * b2[1, i];
                                             j++;
                                         }
                                         if (sumwt == 0.0)
                                             skip = true;
                                         else
-                                            sd2 = sd2 * r[1, 1] / sumwt;
+                                            sd2 *= r[1, 1] / sumwt;
                                     }
                                     else
                                     {
@@ -631,19 +628,19 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            nconst = nconst + 1;
+                            nconst++;
                             if (nconst > 1)
                                 ldep = 1;
                         }
                     }
                     else if (i > intp1)
                     {
-                        temp = 0.0;
+                        double temp = 0.0;
                         k = intp1;
                         for (int j = 1; j <= i - intcep; j++)
                         {
-                            temp = temp + r[k, i] * d[k] * r[k, i];
-                            k = k + 1;
+                            temp += r[k, i] * d[k] * r[k, i];
+                            k++;
                         }
                         if (d[i] * r[i, i] * r[i, i] <= tolsq * temp)
                             ldep = 1;
@@ -657,7 +654,7 @@ namespace StatsDirect.Builtins
                             if (j != ncoef)
                                 drotm_22(ncoef - j, r, j, j + 1, r, i, j + 1, sparam);
                         }
-                        scpe = scpe + b2[i, 1] * d[i] * b2[i, 1];
+                        scpe += b2[i, 1] * d[i] * b2[i, 1];
                         for (k = 1; k <= ndep; k++)
                             b2[i, k] = 0.0;
                         for (k = 0; k <= ncoef - i; k++)
@@ -669,14 +666,14 @@ namespace StatsDirect.Builtins
                 for (int i = 1; i <= ncoef; i++)
                     b[i] = b2[i, 1];
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
-                dfe = dfe - irank;
+                dfe -= irank;
                 if (dfe <= 0.0)
                     ifault = 12;
                 for (int i = 1; i <= ncoef; i++)
                     d[i] = dsign(Math.Sqrt(d[i]), r[i, i]);
                 for (int i = 1; i <= ncoef; i++)
                     for (int j = 0; j <= ncoef - i; j++)
-                        r[i, i + j] = r[i, i + j] * d[i];
+                        r[i, i + j] *= d[i];
                 for (int i = 1; i <= ncoef; i++)
                     d[i] = 1.0;
             }
@@ -684,13 +681,7 @@ namespace StatsDirect.Builtins
 
         public static void glsqr1(int ido, int intcep, int isub, int nrow, int nvar, double[] x, int ldx, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, ref double[] b, ref double[,] r, ref double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, ref double[] xmin, ref double[] xmax, ref double[] wk, ref int ifault)
         {
-            int i, j, iobs, nobs;
-            int irow;
-
             double[] sparam = new double[5 + 1];
-            double frq = 0, temp, wt = 0;
-
-            bool skip = false;
 
             if (ifault != 0)
                 return;
@@ -711,13 +702,13 @@ namespace StatsDirect.Builtins
             {
                 nrmiss = 0;
                 dfe = 0.0;
-                for (i = 1; i <= ncoef; i++)
-                    for (j = 1; j <= ncoef; j++)
+                for (int i = 1; i <= ncoef; i++)
+                    for (int j = 1; j <= ncoef; j++)
                         r[j, i] = 0.0;
-                for (i = 1; i <= ndep; i++)
-                    for (j = 1; j <= ncoef; j++)
+                for (int i = 1; i <= ndep; i++)
+                    for (int j = 1; j <= ncoef; j++)
                         b2[j, i] = 0.0;
-                for (j = 1; j <= ncoef; j++)
+                for (int j = 1; j <= ncoef; j++)
                 {
                     d[j] = 1.0;
                     xmin[j] = Constant.MISSING;
@@ -726,6 +717,8 @@ namespace StatsDirect.Builtins
                 scpe = 0.0;
             }
 
+            int nobs;
+            int irow;
             if (nrow < 0)
             {
                 nobs = -nrow;
@@ -738,7 +731,9 @@ namespace StatsDirect.Builtins
             }
             int i1 = isub == 0 ? 1 : 2;
 
-            for (iobs = 1; iobs <= nobs; iobs++)
+            double frq = 0;
+            double wt = 0;
+            for (int iobs = 1; iobs <= nobs; iobs++)
             {
                 CheckObs1(ido, x, ldx, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
                 if (igo == 3)
@@ -747,50 +742,50 @@ namespace StatsDirect.Builtins
                 {
                     if (intcep == 1)
                         wk[1] = 1.0;
-                    for (i = 1; i <= iind; i++)
+                    for (int i = 1; i <= iind; i++)
                         wk[intcep + i] = x[iobs + (indind[i] - 1) * ldx];
-                    for (i = 1; i <= -iind; i++)
+                    for (int i = 1; i <= -iind; i++)
                         wk[intcep + i] = x[iobs + (i - 1) * ldx];
-                    if (ixnan(nind, wk, intp1) > 0)
+                    if (IndexNaN(nind, wk, intp1) > 0)
                     {
-                        nrmiss = nrmiss + irow;
+                        nrmiss += irow;
                     }
                     else
                     {
                         int jdepx = idepx;
-                        for (i = 1; i <= idep; i++)
+                        for (int i = 1; i <= idep; i++)
                         {
                             wk[jdepx] = x[iobs + (inddep[i] - 1) * ldx];
-                            jdepx = jdepx + 1;
+                            jdepx++;
                         }
-                        for (i = idep + 1; i <= 0; i++)
+                        for (int i = idep + 1; i <= 0; i++)
                         {
                             wk[jdepx] = x[iobs + (nvar + i - 1) * ldx];
-                            jdepx = jdepx + 1;
+                            jdepx++;
                         }
-                        if (ixnan(ndep, wk, idepx) > 0)
+                        if (IndexNaN(ndep, wk, idepx) > 0)
                         {
-                            nrmiss = nrmiss + irow;
+                            nrmiss += irow;
                         }
                         else
                         {
-                            dfe = dfe + frq;
+                            dfe += frq;
                             if (irow == 1)
                             {
                                 if (ncoef > 0)
                                 {
                                     if (xmin[1] == Constant.MISSING)
                                     {
-                                        for (j = 1; j <= ncoef; j++)
+                                        for (int j = 1; j <= ncoef; j++)
                                         {
                                             xmin[j] = wk[j];
                                             xmax[j] = wk[j];
                                         }
                                     }
                                 }
-                                for (i = 1; i <= ncoef; i++)
+                                for (int i = 1; i <= ncoef; i++)
                                 {
-                                    temp = wk[i];
+                                    double temp = wk[i];
                                     if (temp < xmin[i])
                                         xmin[i] = temp;
                                     if (temp > xmax[i])
@@ -799,9 +794,9 @@ namespace StatsDirect.Builtins
                             }
                             else
                             {
-                                for (i = intp1; i <= ncoef; i++)
+                                for (int i = intp1; i <= ncoef; i++)
                                 {
-                                    temp = wk[i];
+                                    double temp = wk[i];
                                     if (temp == xmin[i])
                                         ifault = 10;
                                     if (temp == xmax[i])
@@ -811,31 +806,32 @@ namespace StatsDirect.Builtins
                             if (wt != 0.0)
                             {
                                 double sd2 = wt * frq;
+                                bool skip = false;
                                 if (isub == 1)
                                 {
                                     double sumwt = r[1, 1];
                                     r[1, 1] = sumwt + sd2;
                                     if (nind > 0)
                                     {
-                                        for (i = 2; i <= nind + 1; i++)
-                                            r[1, i] = r[1, i] + sd2 * wk[i];
+                                        for (int i = 2; i <= nind + 1; i++)
+                                            r[1, i] += sd2 * wk[i];
                                     }
-                                    for (i = 1; i <= ndep; i++)
-                                        b2[1, i] = b2[1, i] + sd2 * wk[idepx - 1 + i];
+                                    for (int i = 1; i <= ndep; i++)
+                                        b2[1, i] += sd2 * wk[idepx - 1 + i];
                                     skip = false;
                                     if (r[1, 1] != 0.0)
                                     {
                                         d[1] = 1.0 / r[1, 1];
                                         if (nind > 0)
                                         {
-                                            for (i = 2; i <= nind + 1; i++)
-                                                wk[i] = wk[i] - d[1] * r[1, i];
+                                            for (int i = 2; i <= nind + 1; i++)
+                                                wk[i] -= d[1] * r[1, i];
                                         }
-                                        j = idepx;
-                                        for (i = 1; i <= ndep; i++)
+                                        int j = idepx;
+                                        for (int i = 1; i <= ndep; i++)
                                         {
-                                            wk[j] = wk[j] - d[1] * b2[1, i];
-                                            j = j + 1;
+                                            wk[j] -= d[1] * b2[1, i];
+                                            j++;
                                         }
                                         if (sumwt == 0.0)
                                         {
@@ -843,7 +839,7 @@ namespace StatsDirect.Builtins
                                         }
                                         else
                                         {
-                                            sd2 = sd2 * r[1, 1] / sumwt;
+                                            sd2 *= r[1, 1] / sumwt;
                                         }
                                     }
                                     else
@@ -853,7 +849,7 @@ namespace StatsDirect.Builtins
                                 }
                                 if (!skip)
                                 {
-                                    for (i = i1; i <= ncoef; i++)
+                                    for (int i = i1; i <= ncoef; i++)
                                     {
                                         drotmg(ref d[i], ref sd2, ref r[i, i], wk[i], sparam);
                                         drotm_21(ndep, b2, i, 1, wk, idepx, sparam);
@@ -876,7 +872,7 @@ namespace StatsDirect.Builtins
             if (ido == 0 || ido == 3)
             {
                 int nconst = 0;
-                for (i = 1; i <= ncoef; i++)
+                for (int i = 1; i <= ncoef; i++)
                 {
                     int ldep = 0;
                     int k;
@@ -888,33 +884,33 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            nconst = nconst + 1;
+                            nconst++;
                             if (nconst > 1)
                                 ldep = 1;
                         }
                     }
                     else if (i > intp1)
                     {
-                        temp = 0.0;
+                        double temp = 0.0;
                         k = intp1;
-                        for (j = 1; j <= i - intcep; j++)
+                        for (int j = 1; j <= i - intcep; j++)
                         {
-                            temp = temp + r[k, i] * d[k] * r[k, i];
-                            k = k + 1;
+                            temp += r[k, i] * d[k] * r[k, i];
+                            k++;
                         }
                         if (d[i] * r[i, i] * r[i, i] <= tolsq * temp)
                             ldep = 1;
                     }
                     if (ldep == 1)
                     {
-                        for (j = i + 1; j <= ncoef; j++)
+                        for (int j = i + 1; j <= ncoef; j++)
                         {
                             drotmg(ref d[j], ref d[i], ref r[j, j], r[i, j], sparam);
                             drotm_22(ndep, b2, j, 1, b2, i, 1, sparam);
                             if (j != ncoef)
                                 drotm_22(ncoef - j, r, j, j + 1, r, i, j + 1, sparam);
                         }
-                        scpe = scpe + b2[i, 1] * d[i] * b2[i, 1];
+                        scpe += b2[i, 1] * d[i] * b2[i, 1];
                         for (k = 1; k <= ndep; k++)
                             b2[i, k] = 0.0;
                         for (k = 0; k <= ncoef - i; k++)
@@ -923,22 +919,20 @@ namespace StatsDirect.Builtins
                 }
 
                 // calculate b by back-substitution
-                for (i = 1; i <= ncoef; i++)
+                for (int i = 1; i <= ncoef; i++)
                     b[i] = b2[i, 1];
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
                 dfe = dfe - irank;
                 if (dfe <= 0.0)
                     ifault = 12;
-                for (i = 1; i <= ncoef; i++)
+                for (int i = 1; i <= ncoef; i++)
                     d[i] = dsign(Math.Sqrt(d[i]), r[i, i]);
-                for (i = 1; i <= ncoef; i++)
-                    for (j = 0; j <= ncoef - i; j++)
+                for (int i = 1; i <= ncoef; i++)
+                    for (int j = 0; j <= ncoef - i; j++)
                         r[i, i + j] = r[i, i + j] * d[i];
-                for (i = 1; i <= ncoef; i++)
+                for (int i = 1; i <= ncoef; i++)
                     d[i] = 1.0;
-
             }
-
         }
 
         /// <summary>
@@ -1021,7 +1015,7 @@ namespace StatsDirect.Builtins
                 frq = x[iobs + (ifrq - 1) * ldx];
                 if (frq == Constant.MISSING)
                 {
-                    nmiss = nmiss + irow;
+                    nmiss += irow;
                     igo = 2;
                 }
                 else if (frq == 0.0)
@@ -1037,7 +1031,7 @@ namespace StatsDirect.Builtins
                 {
                     if (igo != 2)
                     {
-                        nmiss = nmiss + irow;
+                        nmiss += irow;
                         igo = 2;
                     }
                 }
@@ -1059,9 +1053,7 @@ namespace StatsDirect.Builtins
                 frq = 1.0;
             }
             if (irow == -1)
-            {
                 frq = -frq;
-            }
             if (iwt > 0)
             {
                 if (wt == Constant.MISSING)
@@ -1079,28 +1071,20 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        private static int ixnan(int n, double[] sx, int ix)
+        /// <summary>
+        /// Returns the smallest index of sx[ix..n] = nan, or 0 if none found.
+        /// </summary>
+        /// <param name="n">The last index to be searched</param>
+        /// <param name="sx">The vector to be searched</param>
+        /// <param name="ix">First index to be searched</param>
+        /// <returns></returns>
+        private static int IndexNaN(int n, double[] sx, int ix)
         {
-            //   smallest index of vector element = nan
-
-            int iret = 0;
             if (n >= 0)
-            {
-                int i = ix;
-                int k = ix;
-                while (k <= n)
-                {
+                for (int i = ix; i <= n; i++)
                     if (sx[i] == Constant.MISSING)
-                        iret = k;
-                    i++;
-                    k++;
-                    if (iret != 0)
-                        break;
-                }
-            }
-
-            return iret;
+                        return i;
+            return 0;
         }
 
         /// <summary>
@@ -1116,7 +1100,7 @@ namespace StatsDirect.Builtins
         private static void drotm_21(int n, double[,] sx, int ix1, int ix2, double[] sy, int iy, double[] sparam)
         {
             double sflag = sparam[1];
-            if (n > 0 & sflag != -2.0)
+            if (n > 0 && sflag != -2.0)
             {
                 int i;
                 double sh12;
@@ -1169,56 +1153,50 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// blas modified givens rotations application
+        /// </summary>
         private static void drotm_22(int n, double[,] sx, int ix1, int ix2, double[,] sy, int iy1, int iy2, double[] sparam)
         {
-            //      blas modified givens rotations application
-
             double sflag = sparam[1];
             if (n > 0 & sflag != -2.0)
             {
-                double sh12;
-                int i;
-                double z;
-                double w;
-                double sh21;
                 if (sflag == 0.0)
                 {
-                    sh12 = sparam[4];
-                    sh21 = sparam[3];
-                    for (i = 0; i < n; i++)
+                    double sh12 = sparam[4];
+                    double sh21 = sparam[3];
+                    for (int i = 0; i < n; i++)
                     {
-                        w = sx[ix1, ix2 + i];
-                        z = sy[iy1, iy2 + i];
+                        double w = sx[ix1, ix2 + i];
+                        double z = sy[iy1, iy2 + i];
                         sx[ix1, ix2 + i] = w + z * sh12;
                         sy[iy1, iy2 + i] = w * sh21 + z;
                     }
                 }
                 else
                 {
-                    double sh11;
-                    double sh22;
                     if (sflag > 0.0)
                     {
-                        sh11 = sparam[2];
-                        sh22 = sparam[5];
-                        for (i = 0; i < n; i++)
+                        double sh11 = sparam[2];
+                        double sh22 = sparam[5];
+                        for (int i = 0; i < n; i++)
                         {
-                            w = sx[ix1, ix2 + i];
-                            z = sy[iy1, iy2 + i];
+                            double w = sx[ix1, ix2 + i];
+                            double z = sy[iy1, iy2 + i];
                             sx[ix1, ix2 + i] = w * sh11 + z;
                             sy[iy1, iy2 + i] = -w + sh22 * z;
                         }
                     }
                     else if (sflag < 0.0)
                     {
-                        sh11 = sparam[2];
-                        sh12 = sparam[4];
-                        sh21 = sparam[3];
-                        sh22 = sparam[5];
-                        for (i = 0; i < n; i++)
+                        double sh11 = sparam[2];
+                        double sh12 = sparam[4];
+                        double sh21 = sparam[3];
+                        double sh22 = sparam[5];
+                        for (int i = 0; i < n; i++)
                         {
-                            w = sx[ix1, ix2 + i];
-                            z = sy[iy1, iy2 + i];
+                            double w = sx[ix1, ix2 + i];
+                            double z = sy[iy1, iy2 + i];
                             sx[ix1, ix2 + i] = w * sh11 + z * sh12;
                             sy[iy1, iy2 + i] = w * sh21 + z * sh22;
                         }
@@ -1361,7 +1339,6 @@ namespace StatsDirect.Builtins
                 p[2] = h11;
                 p[5] = h22;
             }
-
         }
 
         ///  <summary>
@@ -1427,8 +1404,6 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         public static void mxinv2(int n, double[,] r, double[] b, bool useB, bool transposeR, bool invertR, double[,] rinv, out int irank, ref int ifault)
         {
-            double xddot, temp1;
-
             if (ifault != 0)
             {
                 irank = 0;
@@ -1468,17 +1443,17 @@ namespace StatsDirect.Builtins
                     {
                         for (int j = 1; j <= n; j++)
                         {
-                            xddot = 0.0;
+                            double xddot = 0.0;
                             for (int k = 1; k < j; k++)
-                                xddot = xddot + r[k, j] * b[k];
-                            temp1 = b[j] - xddot;
+                                xddot += r[k, j] * b[k];
+                            double temp1 = b[j] - xddot;
                             if (r[j, j] == 0.0)
                             {
                                 double absprod = 0.0;
                                 for (int ii = 1; ii < j; ii++)
                                     absprod = absprod + Math.Abs(r[ii, j] * b[ii]);
                                 double temp2 = Math.Abs(b[j]) + absprod;
-                                temp2 = temp2 * 200.0 * Constant.EPSILON;
+                                temp2 *= 200.0 * Constant.EPSILON;
                                 if (Math.Abs(temp1) > temp2)
                                     ifault = 2;
                                 b[j] = 0.0;
@@ -1496,7 +1471,7 @@ namespace StatsDirect.Builtins
                     {
                         for (int j = 1; j <= n; j++)
                         {
-                            xddot = 0.0;
+                            double xddot = 0.0;
                             for (int k = 1; k <= j - 1; k++)
                                 xddot = xddot + r[k, j] * b[k];
                             b[j] = b[j] - xddot;
@@ -1522,7 +1497,7 @@ namespace StatsDirect.Builtins
                             else
                             {
                                 b[j] = b[j] / r[j, j];
-                                temp1 = -b[j];
+                                double temp1 = -b[j];
                                 for (int k = 1; k < j; k++)
                                     b[k] = b[k] + temp1 * r[k, j];
                             }
@@ -1537,7 +1512,7 @@ namespace StatsDirect.Builtins
                         {
                             if (j < n)
                             {
-                                xddot = 0.0;
+                                double xddot = 0.0;
                                 for (int k = 1; k <= n - j; k++)
                                     xddot = xddot + r[j, j + k] * b[j + k];
                                 b[j] = b[j] - xddot;
@@ -1566,7 +1541,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         rinv[k, k] = 1.0 / rinv[k, k];
-                        temp1 = -rinv[k, k];
+                        double temp1 = -rinv[k, k];
                         for (int i = 1; i < k; i++)
                             rinv[i, k] = rinv[i, k] * temp1;
                         if (k < n)
@@ -1594,10 +1569,9 @@ namespace StatsDirect.Builtins
         /// <param name="u">u contains the matrix u (orthogonal column vectors) of the decomposition if matu has been set to true otherwise u is used as a temporary array.  u may coincide with a.  if an error exit is made, the columns of u corresponding to indices of correct singular values should be correct.</param>
         /// <param name="v">v contains the matrix v (orthogonal) of the decomposition if matv has been set to true otherwise v is not referenced.  v may also coincide with a if u is not needed.  if an error exit is made, the columns of v corresponding to indices of correct singular values should be correct.</param>
         /// <param name="ierr">set to zero for normal return, k if the k-th singular value has not been determined after 30 iterations</param>
-        /// <param name="rv1">a temporary storage array</param>
         /// <remarks>This subroutine is a translation of the algol procedure svd, num. math. 14, 403-420(1970) by golub and reinsch. handbook for auto. comp., vol ii-linear algebra, 134-151(1971).
         /// Questions and comments should be directed to burton s. garbow,  mathematics and computer science div, argonne national laboratory. this version dated august 1983.</remarks>
-        private static void SingularValueDecomposition(int m, int n, double[] w, double[,] u, double[,] v, out int ierr, double[] rv1)
+        private static void SingularValueDecomposition(int m, int n, double[] w, double[,] u, double[,] v, out int ierr)
         {
             int l = 0, l1 = 0;
             double f, h, s;
@@ -1614,6 +1588,7 @@ namespace StatsDirect.Builtins
             double g = 0.0;
             double scale = 0.0;
             double x = 0.0;
+            double[] rv1 = new double[n + 1];
             for (int i = 1; i <= n; i++)
             {
                 l = i + 1;
@@ -1943,7 +1918,6 @@ namespace StatsDirect.Builtins
             dw = sum1 / sum2;
         }
 
-
         private static void x_difd(double[] xd, double[] yd, int nx, int idif, ref int nd)
         {
             if (idif <= 0)
@@ -1957,7 +1931,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         public static void x_ciyp(double[] XV, double[,] xtxi, int P, double rms, double cit, out double cl, out double pl)
         {
             double xcx = 0;
@@ -1966,9 +1939,7 @@ namespace StatsDirect.Builtins
             {
                 double sLoop = 0.0;
                 for (int j = 1; j <= P; j++)
-                {
                     sLoop += xtxi[i, j] * XV[j];
-                }
                 xcx += sLoop * XV[i];
             }
             double sey = Math.Sqrt(rms * xcx);
@@ -1976,8 +1947,6 @@ namespace StatsDirect.Builtins
             double s = Math.Sqrt(rms * (1.0 + xcx));
             pl = cit * s;
         }
-
-
 
         ///  <summary>
         ///  trapezoidal numerical recipies p 131
@@ -1989,28 +1958,23 @@ namespace StatsDirect.Builtins
         ///  <param name="bd"></param>
         ///  <param name="ip"></param>
         ///  <remarks></remarks>
-        public static void trapzd(double a, double b, ref double s, int n, double[] bd, int ip)
+        public static double trapzd(double a, double b, double s, int n, double[] bd, int ip)
         {
             if (n == 1)
-            {
-                s = 0.5 * (b - a) * (polyfunc(a, bd, ip) + polyfunc(b, bd, ip));
-            }
-            else
-            {
-                int it = Convert.ToInt32(Math.Pow(2, n - 2));
-                double tnm = it;
-                double del = (b - a) / tnm;
-                double x = a + 0.5 * del;
-                double sum = 0.0;
-                for (int j = 1; j <= it; j++)
-                {
-                    sum += polyfunc(x, bd, ip);
-                    x += del;
-                }
-                s = 0.5 * (s + (b - a) * sum / tnm);
-            }
-        }
+                return 0.5 * (b - a) * (polyfunc(a, bd, ip) + polyfunc(b, bd, ip));
 
+            int it = 1 << (n - 2); //Convert.ToInt32(Math.Pow(2, n - 2));
+            double tnm = it;
+            double del = (b - a) / tnm;
+            double x = a + 0.5 * del;
+            double sum = 0.0;
+            for (int j = 1; j <= it; j++)
+            {
+                sum += polyfunc(x, bd, ip);
+                x += del;
+            }
+            return 0.5 * (s + (b - a) * sum / tnm);
+        }
 
         ///  <summary>
         ///  expand a polynomial
@@ -2047,29 +2011,29 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="xa"></param>
         ///  <param name="ya"></param>
-        /// <param name="StartIndex"></param>
+        /// <param name="startIndex"></param>
         /// <param name="n"></param>
         ///  <param name="x"></param>
         ///  <param name="y"></param>
         ///  <param name="dy"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        public static void polint(double[] xa, double[] ya, int StartIndex, int n, double x, out double y, ref double dy, ref int ifault)
+        public static void polint(double[] xa, double[] ya, int startIndex, int n, double x, out double y, ref double dy, ref int ifault)
         {
             const int nmax = 10;
             double[] c = new double[nmax + 1];
             double[] d = new double[nmax + 1];
             int ns = 1;
-            double dif = Math.Abs(x - xa[StartIndex]);
+            double dif = Math.Abs(x - xa[startIndex]);
             for (int i = 1; i <= n; i++)
             {
-                double dift = Math.Abs(x - xa[i + StartIndex - 1]);
+                double dift = Math.Abs(x - xa[i + startIndex - 1]);
                 if (dift < dif)
                 {
                     ns = i;
                     dif = dift;
                 }
-                c[i] = ya[i + StartIndex - 1];
+                c[i] = ya[i + startIndex - 1];
                 d[i] = c[i];
             }
             y = ya[ns];
@@ -2078,8 +2042,8 @@ namespace StatsDirect.Builtins
             {
                 for (int i = 1; i <= n - m; i++)
                 {
-                    double ho = xa[i + StartIndex - 1] - x;
-                    double hp = xa[i + m + StartIndex - 1] - x;
+                    double ho = xa[i + startIndex - 1] - x;
+                    double hp = xa[i + m + startIndex - 1] - x;
                     double w = c[i + 1] - d[i];
                     double den = ho - hp;
                     if (den == 0.0)
@@ -2098,12 +2062,11 @@ namespace StatsDirect.Builtins
                 else
                 {
                     dy = d[ns];
-                    ns = ns - 1;
+                    --ns;
                 }
-                y = y + dy;
+                y += dy;
             }
         }
-
 
         ///  <summary>
         ///  Poisson GLM by t QR SVD method for iterative least squares solution
@@ -2111,7 +2074,7 @@ namespace StatsDirect.Builtins
         ///  Link function: log
         ///  </summary>
         /// <param name="selectX">If the nth element is true, include the nth predictor in the regression; if false, exclude it.</param>
-        public static void X_Poisson_Regression(bool use_intercept, bool use_offset, ref bool use_weights, int records, double[,] x, int predictors, bool[] selectX, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fits, double[] deviance_residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
+        public static void X_Poisson_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int predictors, bool[] selectX, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] seBeta, double[] covariance, double accuracy, int maxIterations, double[] fits, double[] devianceResidual, double[] leverage, double[] offset, out int errLevel, ref string dropped, ref string errMsg)
         {
             double ti = 0;
 
@@ -2121,7 +2084,7 @@ namespace StatsDirect.Builtins
             double[] wwt = new double[records + 1];
             double[] tmp = new double[records * 2 + 1];
 
-            max_iterations = max_iterations == 0 ? 10 : Math.Abs(max_iterations);
+            maxIterations = maxIterations == 0 ? 10 : Math.Abs(maxIterations);
             accuracy = accuracy < Constant.EPSNEG ? Constant.EPSNEG * 20.0 : Math.Abs(accuracy);
 
             //err_level 0 no errors
@@ -2129,31 +2092,31 @@ namespace StatsDirect.Builtins
             //err_level 2 calculation errors critical
             //err_level 3 calculation errors carry on
 
-            err_level = 0;
+            errLevel = 0;
             if (records < 2)
             {
-                err_level = 1;
-                err_msg = "insufficient observations";
+                errLevel = 1;
+                errMsg = "insufficient observations";
                 return;
             }
             if (predictors < 1 || parameters < 1)
             {
-                err_level = 1;
-                err_msg = "insufficient predictors";
+                errLevel = 1;
+                errMsg = "insufficient predictors";
                 return;
             }
 
             int i;
             int observations;
-            if (use_weights)
+            if (useWeights)
             {
                 observations = 0;
                 for (i = 1; i <= records; i++)
                 {
                     if (weight[i] < 0.0)
                     {
-                        err_level = 1;
-                        err_msg = "negative weights";
+                        errLevel = 1;
+                        errMsg = "negative weights";
                         return;
                     }
                     if (weight[i] > 0.0)
@@ -2168,29 +2131,23 @@ namespace StatsDirect.Builtins
             }
             int count = 0;
             for (i = 1; i <= predictors; i++)
-            {
                 if (selectX[i])
-                {
                     count++;
-                }
-            }
-            if (use_intercept)
-            {
+            if (useIntercept)
                 count = count + 1;
-            }
             if (parameters != count)
             {
-                err_level = 1;
-                err_msg = "misspecified predictors";
+                errLevel = 1;
+                errMsg = "misspecified predictors";
                 return;
             }
             if (parameters > observations)
             {
-                err_level = 1;
-                err_msg = "more predictors than observations";
+                errLevel = 1;
+                errMsg = "more predictors than observations";
                 return;
             }
-            if (use_weights)
+            if (useWeights)
             {
                 for (i = 1; i <= records; i++)
                 {
@@ -2198,8 +2155,8 @@ namespace StatsDirect.Builtins
                     {
                         if (y[i] < 0.0)
                         {
-                            err_level = 1;
-                            err_msg = "misspecified response variable";
+                            errLevel = 1;
+                            errMsg = "misspecified response variable";
                             return;
                         }
                     }
@@ -2211,51 +2168,41 @@ namespace StatsDirect.Builtins
                 {
                     if (y[i] < 0.0)
                     {
-                        err_level = 1;
-                        err_msg = "misspecified response variable";
+                        errLevel = 1;
+                        errMsg = "misspecified response variable";
                         return;
                     }
                 }
             }
-            if (use_offset == false)
-            {
+            if (!useOffset)
                 for (i = 1; i <= records; i++)
-                {
                     offset[i] = 0.0;
-                }
-            }
             // get starting values for linear predictor (eta) and fitted values (fvl)
             X_Poisson_Starting_Values(records, y, fits, eta, weight, observations);
             // iteratively re-weighted least squares by SVD
-            X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out int iter, tmp, ref err_level, ref dropped, ref err_msg);
+            XIterativeWeightedLeastSquares(2, useIntercept, ref useWeights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, maxIterations, out int iter, tmp, ref errLevel, ref dropped, ref errMsg);
             // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
             if (dropped.Length > 0)
-            {
-                X_Iterative_Weighted_Least_Squares(2, use_intercept, ref use_weights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
-            }
-            if (err_level == 2)
-            {
+                XIterativeWeightedLeastSquares(2, useIntercept, ref useWeights, records, x, predictors, selectX, y, t, weight, ref observations, ref deviance, out rank, beta, parameters, fits, eta, vstd, wwt, offset, decomposition, accuracy, maxIterations, out iter, tmp, ref errLevel, ref dropped, ref errMsg);
+            if (errLevel == 2)
                 return;
-            }
             df = observations - rank;
             if (df <= 0)
             {
-                err_level = 3;
+                errLevel = 3;
             }
             else
             {
                 // get leverages from matrix of derivatives
-                X_Legerage_From_Derivative(use_intercept, records, predictors, x, selectX, parameters, decomposition, rank, wwt, leverage, tmp);
+                LeverageFromDerivative(useIntercept, records, predictors, x, selectX, parameters, decomposition, rank, wwt, leverage, tmp);
             }
-            if (use_weights == false)
+            if (useWeights == false)
             {
                 for (i = 1; i <= records; i++)
                 {
-                    deviance_residual[i] = Math.Sqrt(X_Poisson_Deviance(fits[i], y[i], ref ti));
-                    if (y[i] < fits[i] | y[i] == 0.0)
-                    {
-                        deviance_residual[i] = -deviance_residual[i];
-                    }
+                    devianceResidual[i] = Math.Sqrt(PoissonDeviance(fits[i], y[i], ref ti));
+                    if (y[i] < fits[i] || y[i] == 0.0)
+                        devianceResidual[i] = -devianceResidual[i];
                 }
             }
             else
@@ -2264,33 +2211,21 @@ namespace StatsDirect.Builtins
                 {
                     if (weight[i] > 0.0)
                     {
-                        deviance_residual[i] = Math.Sqrt(weight[i] * X_Poisson_Deviance(fits[i], y[i], ref ti));
-                        if (y[i] < fits[i] | y[i] == 0.0)
-                        {
-                            deviance_residual[i] = -deviance_residual[i];
-                        }
+                        devianceResidual[i] = Math.Sqrt(weight[i] * PoissonDeviance(fits[i], y[i], ref ti));
+                        if (y[i] < fits[i] || y[i] == 0.0)
+                            devianceResidual[i] = -devianceResidual[i];
                     }
                     else
                     {
-                        deviance_residual[i] = 0.0;
+                        devianceResidual[i] = 0.0;
                     }
                 }
             }
             // get variance-covariance matrix from SVD
             X_Covariance_From_SVD(parameters, rank, decomposition, covariance, tmp);
             for (i = 1; i <= parameters; i++)
-            {
-                if (covariance[(int)Math.Floor((i * i + i) / 2.0)] > 0.0)
-                {
-                    se_beta[i] = Math.Sqrt(covariance[(int)Math.Floor((i * i + i) / 2.0)]);
-                }
-                else
-                {
-                    se_beta[i] = 0.0;
-                }
-            }
+                seBeta[i] = covariance[(int)Math.Floor((i * i + i) / 2.0)] > 0.0 ? Math.Sqrt(covariance[(int)Math.Floor((i * i + i) / 2.0)]) : 0.0;
         }
-
 
         ///  <summary>
         ///  Logistic GLM by QR SVD method for iterative least squares solution
@@ -2427,12 +2362,10 @@ namespace StatsDirect.Builtins
             X_Logistic_Starting_Values(records, y_r, y_t, fit, eta, weight, observations);
 
             // iteratively re-weighted least squares by SVD
-            X_Iterative_Weighted_Least_Squares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out int iter, tmp, ref err_level, ref dropped, ref err_msg);
+            XIterativeWeightedLeastSquares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out int iter, tmp, ref err_level, ref dropped, ref err_msg);
             // IEB July 2009: Call again if boundaries hit so that completely determined observations have zero weight   
             if (dropped.Length > 0)
-            {
-                X_Iterative_Weighted_Least_Squares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
-            }
+                XIterativeWeightedLeastSquares(1, useIntercept, ref useWeights, records, x, xVariables, selectX, y_r, y_t, weight, ref observations, ref deviance, out rank, beta, parameters, fit, eta, vstd, wwt, offset, decomposition, accuracy, max_iterations, out iter, tmp, ref err_level, ref dropped, ref err_msg);
             if (err_level == 2)
                 return;
 
@@ -2444,7 +2377,7 @@ namespace StatsDirect.Builtins
             else
             {
                 // get leverages from matrix of derivatives
-                X_Legerage_From_Derivative(useIntercept, records, xVariables, x, selectX, parameters, decomposition, rank, wwt, leverage, tmp);
+                LeverageFromDerivative(useIntercept, records, xVariables, x, selectX, parameters, decomposition, rank, wwt, leverage, tmp);
             }
             if (useWeights == false)
             {
@@ -2452,11 +2385,9 @@ namespace StatsDirect.Builtins
                 {
                     if (y_t[i] > 0.0)
                     {
-                        residual[i] = Math.Sqrt(X_Logistic_Deviance(fit[i], y_r[i], y_t[i]));
+                        residual[i] = Math.Sqrt(LogisticDeviance(fit[i], y_r[i], y_t[i]));
                         if (y_r[i] < fit[i] || y_r[i] == 0.0)
-                        {
                             residual[i] = -residual[i];
-                        }
                     }
                     else
                     {
@@ -2472,11 +2403,9 @@ namespace StatsDirect.Builtins
                     {
                         if (y_t[i] > 0.0)
                         {
-                            residual[i] = Math.Sqrt(weight[i] * X_Logistic_Deviance(fit[i], y_r[i], y_t[i]));
+                            residual[i] = Math.Sqrt(weight[i] * LogisticDeviance(fit[i], y_r[i], y_t[i]));
                             if (y_r[i] < fit[i] | y_r[i] == 0.0)
-                            {
                                 residual[i] = -residual[i];
-                            }
                         }
                         else
                         {
@@ -2494,14 +2423,7 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= parameters; i++)
             {
                 int idx = (int)Math.Floor((i * i + i) / 2.0);
-                if (covariance[idx] > 0.0)
-                {
-                    se_beta[i] = Math.Sqrt(covariance[idx]);
-                }
-                else
-                {
-                    se_beta[i] = 0.0;
-                }
+                se_beta[i] = covariance[idx] > 0.0 ? Math.Sqrt(covariance[idx]) : 0.0;
             }
         }
 
@@ -2553,18 +2475,17 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  get starting values for linear predictor (eta) and fitted values (fvl) for logistic regression
         ///  </summary>
-        private static void X_Logistic_Starting_Values(int records, double[] y_r, double[] y_t, double[] fitted_value, double[] linear_predictor, double[] weight, int observations)
+        private static void X_Logistic_Starting_Values(int records, double[] y_r, double[] y_t, double[] fitted_value, double[] linearPredictor, double[] weight, int observations)
         {
             if (records == observations)
             {
                 for (int i = 1; i <= records; i++)
                 {
                     fitted_value[i] = y_t[i] * (y_r[i] + 0.5) / (y_t[i] + 1.0);
-                    linear_predictor[i] = Math.Log(fitted_value[i] / (y_t[i] - fitted_value[i]));
+                    linearPredictor[i] = Math.Log(fitted_value[i] / (y_t[i] - fitted_value[i]));
                 }
             }
             else
@@ -2574,19 +2495,18 @@ namespace StatsDirect.Builtins
                     if (weight[i] == 0.0 || y_t[i] == 0.0)
                     {
                         fitted_value[i] = 0.0;
-                        linear_predictor[i] = 0.0;
+                        linearPredictor[i] = 0.0;
                     }
                     else
                     {
                         fitted_value[i] = y_t[i] * (y_r[i] + 0.5) / (y_t[i] + 1.0);
-                        linear_predictor[i] = Math.Log(fitted_value[i] / (y_t[i] - fitted_value[i]));
+                        linearPredictor[i] = Math.Log(fitted_value[i] / (y_t[i] - fitted_value[i]));
                     }
                 }
             }
         }
 
-
-        private static void X_Iterative_Weighted_Least_Squares(int model, bool use_intercept, ref bool use_weights, int records, double[,] x, int predictors, bool[] select_x, double[] y, double[] t, double[] weight, ref int observations, ref double deviance, out int rank, double[] beta, int parameters, double[] fit, double[] eta, double[] variance_std, double[] working_weight, double[] offset, double[,] decomposition, double accuracy, int max_iterations, out int iterations, double[] s_diagonals, ref int err_level, ref string dropped, ref string err_msg)
+        private static void XIterativeWeightedLeastSquares(int model, bool useIntercept, ref bool useWeights, int records, double[,] x, int predictors, bool[] select_x, double[] y, double[] t, double[] weight, ref int observations, ref double deviance, out int rank, double[] beta, int parameters, double[] fit, double[] eta, double[] variance_std, double[] working_weight, double[] offset, double[,] decomposition, double accuracy, int max_iterations, out int iterations, double[] s_diagonals, ref int err_level, ref string dropped, ref string err_msg)
         {
             int i; int k;
             int j; int rank1 = 0;
@@ -2600,7 +2520,7 @@ namespace StatsDirect.Builtins
             int indqy = 1;
             iterations = 0;
             // setup x matrix
-            if (use_intercept)
+            if (useIntercept)
             {
                 for (i = 1; i <= records; i++)
                 {
@@ -2652,7 +2572,7 @@ namespace StatsDirect.Builtins
                 {
                     working_weight[i] = variance_std[i] * working_weight[i];
                 }
-                if (use_weights)
+                if (useWeights)
                 {
                     if (final)
                     {
@@ -2687,7 +2607,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                X_QR_Factorization(records, parameters, decomposition, s_diagonals);
+                QRFactorization(records, parameters, decomposition, s_diagonals);
                 if (final == false)
                 {
                     X_Householder_QR_Transformation(records, parameters, decomposition, s_diagonals, fit);
@@ -2734,7 +2654,7 @@ namespace StatsDirect.Builtins
                             beta[i] += fit[j] * decomposition[j, i];
                     }
                 }
-                if (use_intercept)
+                if (useIntercept)
                 {
                     k = 1;
                     for (i = 1; i <= parameters; i++)
@@ -2778,15 +2698,15 @@ namespace StatsDirect.Builtins
                 switch (model)
                 {
                     case 1:
-                        X_Logistic_Response(records, eta, fit, t, weight, ref observations, ref use_weights, ref dropped);
+                        X_Logistic_Response(records, eta, fit, t, weight, ref observations, ref useWeights, ref dropped);
                         break;
                     case 2:
-                        X_Log_Poisson_Response(records, eta, fit, weight, ref observations, ref use_weights, ref dropped);
+                        X_Log_Poisson_Response(records, eta, fit, weight, ref observations, ref useWeights, ref dropped);
                         break;
                 }
 
                 deviance = 0.0;
-                if (use_weights)
+                if (useWeights)
                 {
                     //  calculate deviance
                     switch (model)
@@ -2796,7 +2716,7 @@ namespace StatsDirect.Builtins
                             {
                                 if (weight[i] > 0.0)
                                 {
-                                    deviance = deviance + weight[i] * X_Logistic_Deviance(fit[i], y[i], t[i]);
+                                    deviance = deviance + weight[i] * LogisticDeviance(fit[i], y[i], t[i]);
                                     if (t[i] < 0.0)
                                     {
                                         err_level = 2;
@@ -2811,7 +2731,7 @@ namespace StatsDirect.Builtins
                             {
                                 if (weight[i] > 0.0)
                                 {
-                                    deviance = deviance + weight[i] * X_Poisson_Deviance(fit[i], y[i], ref t[i]);
+                                    deviance = deviance + weight[i] * PoissonDeviance(fit[i], y[i], ref t[i]);
                                     if (t[i] < 0.0)
                                     {
                                         err_level = 2;
@@ -2831,7 +2751,7 @@ namespace StatsDirect.Builtins
                         case 1:
                             for (i = 1; i <= records; i++)
                             {
-                                deviance = deviance + X_Logistic_Deviance(fit[i], y[i], t[i]);
+                                deviance = deviance + LogisticDeviance(fit[i], y[i], t[i]);
                                 if (t[i] < 0.0)
                                 {
                                     err_level = 2;
@@ -2843,7 +2763,7 @@ namespace StatsDirect.Builtins
                         case 2:
                             for (i = 1; i <= records; i++)
                             {
-                                deviance = deviance + X_Poisson_Deviance(fit[i], y[i], ref t[i]);
+                                deviance = deviance + PoissonDeviance(fit[i], y[i], ref t[i]);
                                 if (t[i] < 0.0)
                                 {
                                     err_level = 2;
@@ -2887,15 +2807,14 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void X_Legerage_From_Derivative(bool mean, int n, int m, double[,] x, bool[] isx, int ip, double[,] q, int rank, double[] working_weight, double[] h, double[] work)
+        private static void LeverageFromDerivative(bool mean, int n, int m, double[,] x, bool[] isx, int ip, double[,] q, int rank, double[] workingWeight, double[] h, double[] work)
         {
             int im = mean ? 1 : 0;
             work[1] = 1.0;
             for (int i = 1; i <= n; i++)
             {
                 int k = im;
-                int j;
-                for (j = 1; j <= m; j++)
+                for (int j = 1; j <= m; j++)
                 {
                     if (isx[j])
                     {
@@ -2904,60 +2823,40 @@ namespace StatsDirect.Builtins
                     }
                 }
                 for (int ix = 1; ix <= rank; ix++)
-                {
                     work[ip + ix] = 0.0;
-                }
-                for (j = 1; j <= ip + 1; j++)
+                for (int j = 1; j <= ip + 1; j++)
                 {
                     double temp = work[j];
                     if (temp != 0.0)
                     {
                         for (int ix = 1; ix <= rank; ix++)
-                        {
                             work[ip + ix] = work[ip + ix] + temp * q[ix, j];
-                        }
                     }
                 }
                 if (rank > 0)
                 {
                     h[i] = 0.0;
-                    for (j = ip + 1; j <= rank + ip; j++)
-                    {
+                    for (int j = ip + 1; j <= rank + ip; j++)
                         h[i] = h[i] + work[j] * work[j];
-                    }
                 }
-                h[i] = h[i] * working_weight[i] * working_weight[i];
+                h[i] = h[i] * workingWeight[i] * workingWeight[i];
             }
         }
-
 
         ///  <summary>
         ///  log Poisson deviance
         ///  </summary>
-        ///  <param name="fit"></param>
-        ///  <param name="y"></param>
-        ///  <param name="t"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        private static double X_Poisson_Deviance(double fit, double y, ref double t)
+        private static double PoissonDeviance(double fit, double y, ref double t)
         {
             double dev = 0.0;
             if (fit <= 0.0)
-            {
                 t = -1.0;
-            }
             else if (y > 0.0)
-            {
                 dev = y * Math.Log(y / fit) - (y - fit);
-            }
             else
-            {
                 dev = fit;
-            }
             if (dev < 0.0)
-            {
                 dev = 0.0;
-            }
             return 2.0 * dev;
         }
 
@@ -2965,12 +2864,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  logistic binary deviance
         ///  </summary>
-        ///  <param name="fit"></param>
-        ///  <param name="y"></param>
-        ///  <param name="t"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        private static double X_Logistic_Deviance(double fit, double y, double t)
+        private static double LogisticDeviance(double fit, double y, double t)
         {
             double dev = 0.0;
             //  Hosmer and Lemeshow p 138
@@ -2984,18 +2878,13 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                if (y > 0.0 & y < t)
-                {
+                if (y > 0.0 && y < t)
                     dev = y * Math.Log(y / fit) + (t - y) * Math.Log((t - y) / (t - fit));
-                }
             }
             if (dev < 0.0)
-            {
                 dev = 0.0;
-            }
             return 2.0 * dev;
         }
-
 
         private static void X_Covariance_From_SVD(int p, int rank, double[,] q, double[] covariance, double[] work)
         {
@@ -3005,26 +2894,20 @@ namespace StatsDirect.Builtins
                 if (rank > 0)
                 {
                     for (int iy = 1; iy <= rank; iy++)
-                    {
                         work[iy] = q[iy, i];
-                    }
                 }
                 for (int k = 1; k <= i; k++)
-                {
                     covariance[ij - 1 + k] = 0.0;
-                }
                 for (int j = 1; j <= rank; j++)
                 {
                     double temp = work[j];
                     if (temp != 0.0)
                     {
                         for (int k = 1; k <= i; k++)
-                        {
                             covariance[ij - 1 + k] = covariance[ij - 1 + k] + temp * q[j, k];
-                        }
                     }
                 }
-                ij = ij + i;
+                ij += i;
             }
         }
 
@@ -3034,31 +2917,17 @@ namespace StatsDirect.Builtins
         ///  </summary>
         private static void X_Poisson_Derivative(int records, double[] eta, double[] derivative, double[] weight, int observations)
         {
-            int i;
-
             if (records == observations)
             {
-                for (i = 1; i <= records; i++)
-                {
+                for (int i = 1; i <= records; i++)
                     derivative[i] = Math.Exp(eta[i]);
-                }
             }
             else
             {
-                for (i = 1; i <= records; i++)
-                {
-                    if (weight[i] > 0.0)
-                    {
-                        derivative[i] = Math.Exp(eta[i]);
-                    }
-                    else
-                    {
-                        derivative[i] = 0.0;
-                    }
-                }
+                for (int i = 1; i <= records; i++)
+                    derivative[i] = weight[i] > 0.0 ? Math.Exp(eta[i]) : 0.0;
             }
         }
-
 
         ///  <summary>
         ///  binomial logistic derivative
@@ -3093,7 +2962,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  Poisson variance
         ///  </summary>
@@ -3102,26 +2970,14 @@ namespace StatsDirect.Builtins
             if (records != observations)
             {
                 for (int i = 1; i <= records; i++)
-                {
-                    if (weight[i] == 0.0)
-                    {
-                        variance_std[i] = 0.0;
-                    }
-                    else
-                    {
-                        variance_std[i] = 1.0 / Math.Sqrt(fit[i]);
-                    }
-                }
+                    variance_std[i] = weight[i] == 0.0 ? 0.0 : 1.0 / Math.Sqrt(fit[i]);
             }
             else
             {
                 for (int i = 1; i <= records; i++)
-                {
                     variance_std[i] = 1.0 / Math.Sqrt(fit[i]);
-                }
             }
         }
-
 
         ///  <summary>
         ///  binomial variance
@@ -3131,32 +2987,20 @@ namespace StatsDirect.Builtins
             if (records != observations)
             {
                 for (int i = 1; i <= records; i++)
-                {
-                    if (weight[i] == 0.0 | t[i] == 0.0)
-                    {
-                        variance_std[i] = 0.0;
-                    }
-                    else
-                    {
-                        variance_std[i] = Math.Sqrt(t[i] / (fit[i] * (t[i] - fit[i])));
-                    }
-                }
+                    variance_std[i] = weight[i] == 0.0 || t[i] == 0.0 ? 0.0 : Math.Sqrt(t[i] / (fit[i] * (t[i] - fit[i])));
             }
             else
             {
                 for (int i = 1; i <= records; i++)
-                {
                     variance_std[i] = Math.Sqrt(t[i] / (fit[i] * (t[i] - fit[i])));
-                }
             }
         }
-
 
         ///  <summary>
         ///  This routine finds the QR factorization of matrix A (m by n, where m>=n) such that the maxtrix is is reduced to upper triangular form by orthogonal transformations.
         ///  Householder reduction method.
         ///  </summary>
-        private static void X_QR_Factorization(int m, int n, double[,] a, double[] zeta)
+        private static void QRFactorization(int m, int n, double[,] a, double[] zeta)
         {
             for (int i1 = 1; i1 <= Math.Min(m - 1, n); i1++)
             {
@@ -3166,9 +3010,7 @@ namespace StatsDirect.Builtins
                     double temp_1 = a[i1, i1];
                     a[i1, i1] = zeta[i1];
                     for (int i = 1; i <= n - i1; i++)
-                    {
                         zeta[i1 + i] = 0.0;
-                    }
                     int iz1 = i1;
                     int iz2 = i1;
                     for (int i2 = 1; i2 <= m - i1 + 1; i2++)
@@ -3183,9 +3025,7 @@ namespace StatsDirect.Builtins
                         if (temp_2 != 0.0)
                         {
                             for (int i3 = 1; i3 <= n - i1; i3++)
-                            {
                                 zeta[i1 + i3] = zeta[i1 + i3] + temp_2 * a[i1 - 1 + i2, i1 + i3];
-                            }
                         }
                     }
                     for (int i2 = 1; i2 <= n - i1; i2++)
@@ -3210,11 +3050,8 @@ namespace StatsDirect.Builtins
                 }
             }
             if (m == n)
-            {
                 zeta[n] = 0.0;
-            }
         }
-
 
         ///  <summary>
         ///  B := Q*B transform of real matrix (row, col) B where Q is an orthogonal (row, row) matrix. 
@@ -3235,9 +3072,7 @@ namespace StatsDirect.Builtins
                     for (int i2 = 1; i2 <= m - i1 + 1; i2++)
                     {
                         if (a[iz1, iz2] != 0.0)
-                        {
                             hold = hold + a[iz1, iz2] * b[i2 + i1 - 1];
-                        }
                         iz1 = iz1 + 1;
                         if (iz1 > m)
                         {
@@ -3253,16 +3088,13 @@ namespace StatsDirect.Builtins
                             b[iz1] = b[iz1] + a[i2 + i1 - 1, i1] * -hold;
                             iz1 = iz1 + 1;
                             if (iz1 > m)
-                            {
                                 iz1 = 1;
-                            }
                         }
                     }
                     a[i1, i1] = temp;
                 }
             }
         }
-
 
         ///  <summary>
         ///  Singular value decomposition of a real upper triangular matrix (n by n) factorized as R = Q*S*P'.
@@ -3316,7 +3148,7 @@ namespace StatsDirect.Builtins
                     {
                         for (int j = n - 1; j >= k + 1; j--)
                         {
-                            if (super_diag[j] != 1.0 | diag[j] != 0.0)
+                            if (super_diag[j] != 1.0 || diag[j] != 0.0)
                             {
                                 double etemp = super_diag[j];
                                 double dtemp = diag[j];
@@ -3341,11 +3173,6 @@ namespace StatsDirect.Builtins
         ///  </summary>
         private static void X_SVD_of_Bidiagonal(int n, double[] diag, double[] super_diag, int ncolb, double[] b, int ncolz, double[,] z, int m, out int ifail)
         {
-            double temp;
-            int i1;
-            int i2;
-            int i3;
-
             double[] wrk0 = new double[n + 1];
             double[] wrk1 = new double[n + 1];
             double[] wrk2 = new double[n + 1];
@@ -3354,7 +3181,7 @@ namespace StatsDirect.Builtins
             bool wantb = ncolb > 0;
             bool wantz = ncolz > 0;
             double max = Math.Abs(diag[1]);
-            for (i1 = 2; i1 <= n; i1++)
+            for (int i1 = 2; i1 <= n; i1++)
                 max = Max3(max, Math.Abs(diag[i1]), Math.Abs(super_diag[i1 - 1]));
             if (max > 0)
             {
@@ -3367,7 +3194,7 @@ namespace StatsDirect.Builtins
             while (i0 > 1 && iter <= maxit)
             {
                 X_SVD_Test_Bidiagonal_Split(i0, diag, super_diag, out bool force, out int split_row);
-                i3 = split_row + 1;
+                int i3 = split_row + 1;
                 double ctemp;
                 double stemp;
                 if (force)
@@ -3377,17 +3204,17 @@ namespace StatsDirect.Builtins
                         X_SVD_Plane_Rotate(i0, diag, super_diag, wantz, wrk2, wrk3);
                         if (wantz)
                         {
-                            if (Math.Min(n, ncolz) >= 1 & i0 > 1 & i0 <= n)
+                            if (Math.Min(n, ncolz) >= 1 && i0 > 1 && i0 <= n)
                             {
-                                for (i2 = i0 - 1; i2 >= 1; i2--)
+                                for (int i2 = i0 - 1; i2 >= 1; i2--)
                                 {
-                                    if (wrk2[i2] != 1.0 | wrk3[i2] != 0.0)
+                                    if (wrk2[i2] != 1.0 || wrk3[i2] != 0.0)
                                     {
                                         ctemp = wrk2[i2];
                                         stemp = wrk3[i2];
-                                        for (i1 = 1; i1 <= ncolz; i1++)
+                                        for (int i1 = 1; i1 <= ncolz; i1++)
                                         {
-                                            temp = z[i2, i1];
+                                            double temp = z[i2, i1];
                                             z[i2, i1] = stemp * z[i0, i1] + ctemp * temp;
                                             z[i0, i1] = ctemp * z[i0, i1] - stemp * temp;
                                         }
@@ -3400,8 +3227,8 @@ namespace StatsDirect.Builtins
                     {
                         if (split_row > 0 && split_row < i0)
                         {
-                            i1 = split_row;
-                            temp = super_diag[i1];
+                            int i1 = split_row;
+                            double temp = super_diag[i1];
                             super_diag[i1] = 0.0;
                             X_SVD_Rotation_Angle(ref diag[i1 + 1], ref temp, out ctemp, out stemp);
                             if (wantb)
@@ -3425,13 +3252,13 @@ namespace StatsDirect.Builtins
                         {
                             if (Math.Min(n, split_row) >= 1 & i0 > split_row & i0 <= n)
                             {
-                                for (i2 = split_row + 1; i2 <= i0; i2++)
+                                for (int i2 = split_row + 1; i2 <= i0; i2++)
                                 {
                                     ctemp = wrk0[i2 - 1];
                                     stemp = wrk1[i2 - 1];
                                     if (ctemp != 1.0 || stemp != 0.0)
                                     {
-                                        temp = b[i2];
+                                        double temp = b[i2];
                                         b[i2] = ctemp * temp - stemp * b[split_row];
                                         b[split_row] = stemp * temp + ctemp * b[split_row];
                                     }
@@ -3453,13 +3280,13 @@ namespace StatsDirect.Builtins
                     {
                         if (Math.Min(n, i3) >= 1 && i0 > i3 && i0 <= n)
                         {
-                            for (i2 = i3; i2 < i0; i2++)
+                            for (int i2 = i3; i2 < i0; i2++)
                             {
                                 if (wrk0[i2] != 1.0 || wrk1[i2] != 0.0)
                                 {
                                     ctemp = wrk0[i2];
                                     stemp = wrk1[i2];
-                                    temp = b[i2 + 1];
+                                    double temp = b[i2 + 1];
                                     b[i2 + 1] = ctemp * temp - stemp * b[i2];
                                     b[i2] = stemp * temp + ctemp * b[i2];
                                 }
@@ -3470,15 +3297,15 @@ namespace StatsDirect.Builtins
                     {
                         if (Min3(n, ncolz, i3) >= 1 || i0 > i3 || i0 <= n)
                         {
-                            for (i2 = i3; i2 < i0; i2++)
+                            for (int i2 = i3; i2 < i0; i2++)
                             {
                                 if (wrk2[i2] != 1.0 || wrk3[i2] != 0.0)
                                 {
                                     ctemp = wrk2[i2];
                                     stemp = wrk3[i2];
-                                    for (i1 = 1; i1 <= ncolz; i1++)
+                                    for (int i1 = 1; i1 <= ncolz; i1++)
                                     {
-                                        temp = z[i2 + 1, i1];
+                                        double temp = z[i2 + 1, i1];
                                         z[i2 + 1, i1] = ctemp * temp - stemp * z[i2, i1];
                                         z[i2, i1] = stemp * temp + ctemp * z[i2, i1];
                                     }
@@ -3486,7 +3313,7 @@ namespace StatsDirect.Builtins
                             }
                         }
                     }
-                    iter = iter + 1;
+                    iter++;
                 }
             }
             if (max > 0.0)
@@ -3494,7 +3321,7 @@ namespace StatsDirect.Builtins
                 X_SVD_Vector_by_Scalar(n, max, diag);
                 X_SVD_Vector_by_Scalar(n - 1, max, super_diag);
             }
-            for (i1 = i0; i1 <= n; i1++)
+            for (int i1 = i0; i1 <= n; i1++)
             {
                 if (diag[i1] < 0.0)
                 {
@@ -3502,21 +3329,19 @@ namespace StatsDirect.Builtins
                     if (wantb)
                     {
                         if (ncolb > 0)
-                        {
                             b[i1] = -b[i1];
-                        }
                     }
                 }
             }
-            for (i2 = 1; i2 <= i0 - 1; i2++)
+            for (int i2 = 1; i2 <= i0 - 1; i2++)
             {
                 wrk0[i2] = Convert.ToDouble(i2) + 0.25;
             }
-            for (i2 = i0; i2 <= n; i2++)
+            for (int i2 = i0; i2 <= n; i2++)
             {
                 double bmax = diag[i2];
-                i3 = i2;
-                for (i1 = i2 + 1; i1 <= n; i1++)
+                int i3 = i2;
+                for (int i1 = i2 + 1; i1 <= n; i1++)
                 {
                     if (diag[i1] > bmax)
                     {
@@ -3527,19 +3352,19 @@ namespace StatsDirect.Builtins
                 wrk0[i2] = Convert.ToDouble(i3) + 0.25;
                 if (i3 > i2)
                 {
-                    temp = diag[i2];
+                    double temp = diag[i2];
                     diag[i2] = diag[i3];
                     diag[i3] = temp;
                 }
             }
             if (wantb)
             {
-                for (i1 = 1; i1 <= n; i1++)
+                for (int i1 = 1; i1 <= n; i1++)
                 {
-                    i3 = Convert.ToInt32(wrk0[i1]);
+                    int i3 = Convert.ToInt32(wrk0[i1]);
                     if (i3 != i1)
                     {
-                        temp = b[i1];
+                        double temp = b[i1];
                         b[i1] = b[i3];
                         b[i3] = temp;
                     }
@@ -3547,14 +3372,14 @@ namespace StatsDirect.Builtins
             }
             if (wantz)
             {
-                for (i1 = 1; i1 <= n; i1++)
+                for (int i1 = 1; i1 <= n; i1++)
                 {
-                    i3 = Convert.ToInt32(wrk0[i1]);
+                    int i3 = Convert.ToInt32(wrk0[i1]);
                     if (i3 != i1)
                     {
-                        for (i2 = 1; i2 <= ncolz; i2++)
+                        for (int i2 = 1; i2 <= ncolz; i2++)
                         {
-                            temp = z[i1, i2];
+                            double temp = z[i1, i2];
                             z[i1, i2] = z[i3, i2];
                             z[i3, i2] = temp;
                         }
@@ -3622,17 +3447,16 @@ namespace StatsDirect.Builtins
             a[1, 1] = 1.0;
         }
 
-
+        /// <summary>
+        /// For a rectangular matrix x[1..i, 1..p] where i >= n and a vector b[1..p], return the sum of x[n, j] * b[j] where j in 1..p.
+        /// </summary>
         private static double X_SUMPROD(int p, double[] b, double[,] x, int n)
         {
             double sum = 0.0;
             for (int j = 1; j <= p; j++)
-            {
                 sum += b[j] * x[n, j];
-            }
             return sum;
         }
-
 
         ///  <summary>
         ///  log Poisson response fitted from linear predictors
@@ -3648,13 +3472,9 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= records; i++)
                 {
                     if (Math.Abs(linear_predictor[i]) > b)
-                    {
                         BinBound(ref dropped, i, out weighted, ref observations, weight);
-                    }
                     else
-                    {
                         fitted_value[i] = Math.Exp(linear_predictor[i]);
-                    }
                 }
             }
             else
@@ -3664,13 +3484,9 @@ namespace StatsDirect.Builtins
                     if (weight[i] != 0.0)
                     {
                         if (Math.Abs(linear_predictor[i]) > b)
-                        {
                             BinBound(ref dropped, i, out weighted, ref observations, weight);
-                        }
                         else
-                        {
                             fitted_value[i] = Math.Exp(linear_predictor[i]);
-                        }
                     }
                     else
                     {
@@ -3680,24 +3496,23 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  logistic binomial response fitted from linear predictors
         ///  </summary>
         ///  <remarks>IEB July 2009: updated to auto-drop observations at the boundary (complete prediction of outcome)</remarks>
-        private static void X_Logistic_Response(int records, double[] linear_predictor, double[] fitted_value, double[] y_n, double[] weight, ref int observations, ref bool weighted, ref string dropped)
+        private static void X_Logistic_Response(int records, double[] linearPredictor, double[] fittedValue, double[] y_n, double[] weight, ref int observations, ref bool weighted, ref string dropped)
         {
             double b = -Math.Log(Constant.EPSNEG);
             if (records == observations)
             {
                 for (int i = 1; i <= records; i++)
                 {
-                    if (Math.Abs(linear_predictor[i]) >= b)
+                    if (Math.Abs(linearPredictor[i]) >= b)
                         BinBound(ref dropped, i, out weighted, ref observations, weight);
                     else
                     {
-                        double e = Math.Exp(linear_predictor[i]);
-                        fitted_value[i] = y_n[i] * e / (1.0 + e);
+                        double e = Math.Exp(linearPredictor[i]);
+                        fittedValue[i] = y_n[i] * e / (1.0 + e);
                     }
                 }
             }
@@ -3706,25 +3521,24 @@ namespace StatsDirect.Builtins
                 b = -Math.Log(Constant.EPSNEG);
                 for (int i = 1; i <= records; i++)
                 {
-                    if (weight[i] != 0.0 & y_n[i] != 0.0)
+                    if (weight[i] != 0.0 && y_n[i] != 0.0)
                     {
-                        if (Math.Abs(linear_predictor[i]) >= b)
+                        if (Math.Abs(linearPredictor[i]) >= b)
                             BinBound(ref dropped, i, out weighted, ref observations, weight);
                         else
                         {
-                            double e = Math.Exp(linear_predictor[i]);
-                            fitted_value[i] = y_n[i] * e / (1.0 + e);
+                            double e = Math.Exp(linearPredictor[i]);
+                            fittedValue[i] = y_n[i] * e / (1.0 + e);
                         }
                     }
                     else
                     {
-                        fitted_value[i] = 0.0;
-                        linear_predictor[i] = 0.0;
+                        fittedValue[i] = 0.0;
+                        linearPredictor[i] = 0.0;
                     }
                 }
             }
         }
-
 
         ///  <remarks>IEB July 2009: updated to auto-drop observations at the boundary (complete prediction of outcome)</remarks>
         private static void BinBound(ref string dropped, int i, out bool weighted, ref int observations, double[] weights)
@@ -3735,9 +3549,9 @@ namespace StatsDirect.Builtins
                 weights[i] = 0.0;
                 --observations;
                 if (dropped.Length == 0)
-                    dropped = "The following observations were dropped due to complete determination of the outcome: " + i.ToString();
+                    dropped = "The following observations were dropped due to complete determination of the outcome: " + i.ToString(CultureInfo.CurrentCulture);
                 else
-                    dropped += ", " + i.ToString();
+                    dropped += ", " + i.ToString(CultureInfo.CurrentCulture);
             }
         }
 
@@ -3747,7 +3561,7 @@ namespace StatsDirect.Builtins
             {
                 zeta = 0.0;
             }
-            else if (n == 1 & a[iz1, iz2] == 0.0)
+            else if (n == 1 && a[iz1, iz2] == 0.0)
             {
                 zeta = 0.0;
             }
@@ -3787,7 +3601,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    double sum_squares = 1.0;
+                    double sumSquares = 1.0;
                     double scale = 0.0;
                     int i1 = iz1;
                     int i2 = iz2;
@@ -3798,29 +3612,29 @@ namespace StatsDirect.Builtins
                             double absxi = Math.Abs(a[i1, i2]);
                             if (scale < absxi)
                             {
-                                sum_squares = 1 + sum_squares * Math.Pow(scale / absxi, 2.0);
+                                sumSquares = 1 + sumSquares * Math.Pow(scale / absxi, 2.0);
                                 scale = absxi;
                             }
                             else
                             {
-                                sum_squares = sum_squares + Math.Pow(absxi / scale, 2.0);
+                                sumSquares = sumSquares + Math.Pow(absxi / scale, 2.0);
                             }
                         }
-                        i1 = i1 + 1;
+                        i1++;
                         if (i1 > m)
                         {
                             i1 = 1;
-                            i2 = i2 + 1;
+                            i2++;
                         }
                     }
-                    if (scale == 0.0 | scale <= Constant.EPSNEG * Math.Abs(alpha))
+                    if (scale == 0.0 || scale <= Constant.EPSNEG * Math.Abs(alpha))
                     {
                         zeta = 0.0;
                     }
                     else if (alpha == 0.0)
                     {
                         zeta = 1.0;
-                        alpha = scale * Math.Sqrt(sum_squares);
+                        alpha = scale * Math.Sqrt(sumSquares);
                         i1 = iz1;
                         i2 = iz2;
                         for (int ix = 1; ix <= n; ix++)
@@ -3830,20 +3644,16 @@ namespace StatsDirect.Builtins
                             if (i1 > m)
                             {
                                 i1 = 1;
-                                i2 = i2 + 1;
+                                i2++;
                             }
                         }
                     }
                     else
                     {
                         if (scale < Math.Abs(alpha))
-                        {
-                            beta = Math.Abs(alpha) * Math.Sqrt(1.0 + sum_squares * Math.Pow(scale / alpha, 2.0));
-                        }
+                            beta = Math.Abs(alpha) * Math.Sqrt(1.0 + sumSquares * Math.Pow(scale / alpha, 2.0));
                         else
-                        {
-                            beta = scale * Math.Sqrt(sum_squares + Math.Pow(alpha / scale, 2.0));
-                        }
+                            beta = scale * Math.Sqrt(sumSquares + Math.Pow(alpha / scale, 2.0));
                         zeta = Math.Sqrt((beta + Math.Abs(alpha)) / beta);
                         if (alpha > 0.0)
                             beta = -beta;
@@ -3856,7 +3666,7 @@ namespace StatsDirect.Builtins
                             if (i1 > m)
                             {
                                 i1 = 1;
-                                i2 = i2 + 1;
+                                i2++;
                             }
                         }
                         alpha = beta;
@@ -3864,7 +3674,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         private static void X_SVD_Rotation_Transform(int n, int k1, int k2, double[] c, double[] s, double[,] a, int m, int ist)
         {
@@ -4179,7 +3988,6 @@ namespace StatsDirect.Builtins
                 div = -div;
             return div;
         }
-
 
         private static int IsRank(int n, double[] x)
         {
