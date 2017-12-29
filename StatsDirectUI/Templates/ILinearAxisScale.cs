@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace StatsDirect.Templates
+﻿namespace StatsDirect.Templates
 {
     public interface ILinearAxisScale: IAxisScale
     {

@@ -34,7 +34,7 @@ namespace StatsDirect.Charting
          * \deflang[N]	- The default language. \deflang1033 specifies US English.
          */
         private const string RTF_HEADER = @"{\rtf1\ansi\ansicpg1252\deff0\deflang1033";
-        private const string RTF_FOOTER = @"}";
+        private const string RTF_FOOTER = "}";
 
 
         public static string MetastreamToRtf(Stream metaStream, int widthInPixels, int heightInPixels)
@@ -76,7 +76,7 @@ namespace StatsDirect.Charting
                 int i = metaStream.ReadByte();
                 if (-1 == i)
                     break;
-                rtf.Append(string.Format("{0:X2}", i));
+                rtf.Append($"{i:X2}");
             }
 
             // Close the RTF image control string
@@ -97,25 +97,25 @@ namespace StatsDirect.Charting
                     if (s.StartsWith("wmetafile"))
                     {
                         imageFormat = ImageFormat.Emf;
-                        int.TryParse(s.Substring(9), out int wmetafileVersion);
+                        int.TryParse(s.Substring(9), out int _);
                     }
                     else if (s.StartsWith("pngblip"))
                         imageFormat = ImageFormat.Png;
                     else if (s.StartsWith("picwgoal"))
                     {
-                        int.TryParse(s.Substring(8), out int wGoal);
+                        int.TryParse(s.Substring(8), out int _);
                     }
                     else if (s.StartsWith("pichgoal"))
                     {
-                        int.TryParse(s.Substring(8), out int hGoal);
+                        int.TryParse(s.Substring(8), out int _);
                     }
                     else if (s.StartsWith("picw"))
                     {
-                        int.TryParse(s.Substring(4), out int w);
+                        int.TryParse(s.Substring(4), out int _);
                     }
                     else if (s.StartsWith("pich"))
                     {
-                        int.TryParse(s.Substring(4), out int h);
+                        int.TryParse(s.Substring(4), out int _);
                     }
                     else if (s.StartsWith("emfblip"))
                     {

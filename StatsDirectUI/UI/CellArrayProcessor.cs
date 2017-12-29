@@ -4,7 +4,6 @@ using StatsDirect.Numerics;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -278,7 +277,6 @@ namespace StatsDirect.UI
         /// <param name="titleWasInData"></param>
         /// <param name="topRow"></param>
         /// <param name="hold"></param>
-        /// <param name="wasFiltered"></param>
         /// <returns>False if the user cancelled in response to a question (implying selection should not proceed), true otherwise.</returns>
         private static bool PreprocessCellArrayGroupsOrText(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, out int topRow, out string[,] hold)
         {

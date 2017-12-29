@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StatsDirect.Numerics
+﻿namespace StatsDirect.Numerics
 {
     public static class Utilities
     {

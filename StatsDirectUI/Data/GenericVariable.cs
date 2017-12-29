@@ -1,5 +1,4 @@
 using System;
-using StatsDirect.Numerics;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Data
@@ -9,23 +8,23 @@ namespace StatsDirect.Data
     {
         private T[] data;
 
-        public GenericVariable()
+        protected GenericVariable()
         {
             //  Do nothing
         }
 
-        public GenericVariable(T[] data)
+        protected GenericVariable(T[] data)
         {
             this.data = data;
         }
 
-        public GenericVariable(T[] data, string title)
+        protected GenericVariable(T[] data, string title)
         {
             this.data = data;
             Title = title;
         }
 
-        public GenericVariable(int length, string title)
+        protected GenericVariable(int length, string title)
         {
             EnsureLength(length);
             Title = title;
@@ -46,14 +45,8 @@ namespace StatsDirect.Data
         [XmlElement("worksheet-origin", typeof(WorksheetOrigin))]
         public object OriginForXml
         {
-            get
-            {
-                return Origin;
-            }
-            set
-            {
-                Origin = (IOrigin)value;
-            }
+            get => Origin;
+            set => Origin = (IOrigin)value;
         }
 
         ///  <summary>
@@ -64,10 +57,7 @@ namespace StatsDirect.Data
         ///  <remarks></remarks>
         public T[] Data
         {
-            get
-            {
-                return data;
-            }
+            get => data;
             set
             {
                 data = value;

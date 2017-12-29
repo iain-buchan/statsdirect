@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
@@ -18,7 +16,7 @@ namespace StatsDirect.Templates
         /// <returns>true if there is no body or the body evaluates to a true bool, false if the body evaluates to a non-bool or false.</returns>
         public bool Check(ITemplateProcessor processor, ParameterBag parameters)
         {
-            if (null == Condition || null == Condition.Body)
+            if (Condition?.Body == null)
                 return true;
             object o = processor.Evaluate(Condition, parameters);
             if (o is bool)

@@ -11,8 +11,8 @@ namespace StatsDirect.Templates
     {
         private static IDictionary<string, Operation> operations;
         private static IList<Operation> userOperations;
-        private static object lockObject = new object();
-        private static bool loading = false;
+        private static readonly object lockObject = new object();
+        private static bool loading;
 
         public static IDictionary<string, Operation> Operations
         {
@@ -64,7 +64,7 @@ namespace StatsDirect.Templates
                 Dictionary<string, Exception> loadErrors = new Dictionary<string, Exception>();
                 operations = new Dictionary<string, Operation>();
                 System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(Operation));
-                DirectoryInfo di = new DirectoryInfo(Path.Combine(Configuration.SDConfiguration.InstallationDirectory, UI.Properties.Settings.Default.OperationsDirectory));
+                DirectoryInfo di = new DirectoryInfo(Path.Combine(SDConfiguration.InstallationDirectory, UI.Properties.Settings.Default.OperationsDirectory));
                 FileInfo[] knownOperations = di.GetFiles();
                 foreach (FileInfo info in knownOperations)
                 {

@@ -2,9 +2,6 @@
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI

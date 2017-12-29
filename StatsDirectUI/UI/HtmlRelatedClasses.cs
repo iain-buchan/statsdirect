@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using DevExpress.Office.Utils;
 using DevExpress.Office.Services;
 using DevExpress.Office.Services.Implementation;

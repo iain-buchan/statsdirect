@@ -30,7 +30,7 @@ namespace StatsDirect.UI
                 return;
             }
             string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
-            int versionsEndPos = latestVersionLine.IndexOf("-win");
+            int versionsEndPos = latestVersionLine.IndexOf("-win", StringComparison.InvariantCulture);
             if (versionsEndPos < 0)
             {
                 UpdateStatus(true, false, false, "Could not locate R version on download page. Please check manually at http://cran.r-project.org");
@@ -51,7 +51,7 @@ namespace StatsDirect.UI
             }
             if (downloadableIsNewer)
             {
-                string currentR = null == latestInstalledVersion ? "You do not have R installed." : "You are presently running R version " + latestInstalledVersion.ToString() + ".";
+                string currentR = null == latestInstalledVersion ? "You do not have R installed." : "You are presently running R version " + latestInstalledVersion + ".";
                 currentR += " Version " + latestVersionLine + " is available. Would you like to download it?";
                 UpdateStatus(true, true, true, currentR);
             }

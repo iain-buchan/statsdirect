@@ -11,10 +11,7 @@ namespace StatsDirect.Charting
             using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd))
             {
                 ParameterBag results = ch.Plot(host);
-                if (cd.IsAscii)
-                    rtf = ch.GetAsciiRTF();
-                else
-                    rtf = ImageStreamToRtf(ch.GetImageStream(), (int)ch.ImageWidth, (int)ch.ImageHeight);
+                rtf = cd.IsAscii ? ch.GetAsciiRTF() : ImageStreamToRtf(ch.GetImageStream(), (int)ch.ImageWidth, (int)ch.ImageHeight);
                 return results;
             }
         }

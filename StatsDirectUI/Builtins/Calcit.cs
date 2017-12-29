@@ -1,4 +1,3 @@
-using StatsDirect.Expressions;
 using System;
 using System.CodeDom.Compiler;
 using System.Diagnostics;
@@ -6,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Microsoft.CSharp;
+using StatsDirect.Expressions;
 
 namespace StatsDirect.Builtins
 {
@@ -13,8 +14,7 @@ namespace StatsDirect.Builtins
     {
         private object instance;
         private MethodInfo methodInfo;
-        private readonly bool compiledForVariants;
-        public DataType OutputType { get; private set; }
+        public DataType OutputType { get; }
 
         /// <summary>
         /// 
@@ -24,7 +24,7 @@ namespace StatsDirect.Builtins
         /// <param name="assumeVariants">If true, </param>
         public Calcit(string equation, DataType[] passedVariableTypes, bool assumeVariants)
         {
-            OutputType = SetEquation(equation, passedVariableTypes, assumeVariants, out compiledForVariants);
+            OutputType = SetEquation(equation, passedVariableTypes, assumeVariants, out bool _);
         }
 
         private DataType SetEquation(string equation, DataType[] passedVariableTypes, bool assumeVariants, out bool compiledForVariants)
@@ -60,7 +60,7 @@ namespace StatsDirect.Builtins
             Debug.Assert(null != assemblyPath);
             compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.exe"));
             compilerParameters.GenerateInMemory = true;
-            using (CodeDomProvider codeProvider = new Microsoft.CSharp.CSharpCodeProvider())
+            using (CodeDomProvider codeProvider = new CSharpCodeProvider())
             {
                 CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, cSharpFunction);
                 if (compilerResults.Errors.HasErrors)
@@ -96,7 +96,7 @@ namespace StatsDirect.Builtins
         {
             try
             {
-                object[] parameters = new object[] { values};
+                object[] parameters = { values};
                 object output = methodInfo.Invoke(instance, parameters);
                 return (T)Convert.ChangeType(output, typeof(T));
             }
@@ -112,7 +112,7 @@ namespace StatsDirect.Builtins
         {
             try
             {
-                object[] parameters = new object[] { values };
+                object[] parameters = { values };
                 return (T)methodInfo.Invoke(instance, parameters);
             }
             catch (TargetInvocationException tie)

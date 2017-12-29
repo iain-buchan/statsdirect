@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace StatsDirect.Templates
+﻿namespace StatsDirect.Templates
 {
     /// <summary>
     /// The signature of any function that can be called as a builtin.

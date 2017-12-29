@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StatsDirect.Expressions
+﻿namespace StatsDirect.Expressions
 {
     public class BooleanConstantNode : INode
     {

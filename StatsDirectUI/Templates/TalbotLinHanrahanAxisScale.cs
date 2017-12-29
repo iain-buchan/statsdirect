@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Layout;
-using StatsDirect.Templates;
 
 namespace StatsDirect.Templates
 {
     public class TalbotLinHanrahanAxisScale : ILinearAxisScale
     {
-        private Axis TlhAxis { get; set; }
-        private double QMin { get; set; }
-        private double QMax { get; set; }
+        private Axis TlhAxis { get; }
+        private double QMin { get; }
+        private double QMax { get; }
 
         public TalbotLinHanrahanAxisScale(Axis tlhAxis, double qmin, double qmax)
         {

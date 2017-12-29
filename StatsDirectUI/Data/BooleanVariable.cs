@@ -1,5 +1,4 @@
 using System;
-using StatsDirect.Numerics;
 
 namespace StatsDirect.Data
 {
