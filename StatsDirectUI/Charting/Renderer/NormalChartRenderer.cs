@@ -6,10 +6,10 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class NormalChartRenderer: AbstractChartRenderer, IChartRenderer
+    internal class NormalChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public NormalChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base (cd, canvasFactory)
+            : base(cd, canvasFactory)
         {
         }
 
@@ -46,10 +46,12 @@ namespace StatsDirect.Charting.Renderer
                         if (ifault != 0)
                             x[j] = Constant.MISSING;
                         break;
-                    default:
+                    case NormalOptions.ScoreMethod.ExpectedNormalOrder:
                         //  expected normal order
                         x[j] = PDF.expnos(Convert.ToInt32(x[j]), nn);
                         break;
+                    default:
+                        throw new Exception("Unexpected score method");
                 }
             }
 
@@ -62,12 +64,9 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-
         ///  <summary>
         ///  Plot normal scores for a single variable in XSeries.
         ///  </summary>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
         ParameterBag IChartRenderer.Plot(ITemplateHost host)
         {
             return PlotNormal(Definition.XSeries[0].AsDoubleSeries.Data);
@@ -119,9 +118,11 @@ namespace StatsDirect.Charting.Renderer
                     case NormalOptions.ScoreMethod.Blom:
                         lab = "Normal scores (Blom)";
                         break;
-                    default:
+                    case NormalOptions.ScoreMethod.ExpectedNormalOrder:
                         lab = "Expected normal order scores";
                         break;
+                    default:
+                        throw new Exception("Unexpected score method");
                 }
             }
 
@@ -146,10 +147,12 @@ namespace StatsDirect.Charting.Renderer
                                 x[j] = Constant.MISSING;
                             break;
                         }
-                    default:
+                    case NormalOptions.ScoreMethod.ExpectedNormalOrder:
                         //  expected normal order
                         x[j] = PDF.expnos(Convert.ToInt32(x[j]), nn);
                         break;
+                    default:
+                        throw new Exception("Unexpected score method");
                 }
                 if (shouldScaleZ && x[j] != Constant.MISSING)
                     x[j] = x[j] * sdy + ybar;
@@ -158,13 +161,13 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot(nOptions);
             AssignMarkersToSeries(Definition.XSeries, nOptions);
 
-            DataMinMax Select_MinMaxY = DataMinMax.XCalc_YCalc;
+            DataMinMax selectMinMaxY = DataMinMax.XCalc_YCalc;
             if (shouldScaleZ)
-                Select_MinMaxY = DataMinMax.XY_CalcTogether;
+                selectMinMaxY = DataMinMax.XY_CalcTogether;
             MarkerType mt = ChartPreferences.MarkerTypes[0];
             if (null != nOptions.MarkerTypes && nOptions.MarkerTypes.Count >= 1)
                 mt = nOptions.MarkerTypes[0];
-            PlotXYInternal(x, y, lab, "Observed (" + Definition.XSeries[0].Title + ")", nOptions.Title, false, Select_MinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
+            PlotXYInternal(x, y, lab, "Observed (" + Definition.XSeries[0].Title + ")", nOptions.Title, false, selectMinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
             if (shouldScaleZ)
                 DrawLineInCanvasCoordinates(AxisPen, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
             EndVectorPlot();
