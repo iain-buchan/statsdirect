@@ -9,7 +9,7 @@ namespace StatsDirect.UI
 {
     public partial class frmExportGraphic : Form
     {
-        const int IMAGE_TO_EXPORT_SCALE = 2;
+        private const int IMAGE_TO_EXPORT_SCALE = 2;
         private readonly double scaleFactor;
         private readonly Image originalImage;
         private readonly byte[] originalBytes;
@@ -34,6 +34,8 @@ namespace StatsDirect.UI
             if (chkKeepAspectRatio.Checked && int.TryParse(txtWidth.Text, out int width) && !updating)
             {
                 int newHeight = Convert.ToInt32(width / scaleFactor);
+                if (newHeight < 1)
+                    newHeight = 1;
                 updating = true;
                 txtHeight.Text = newHeight.ToString();
                 updating = false;
@@ -45,6 +47,8 @@ namespace StatsDirect.UI
             if (chkKeepAspectRatio.Checked && int.TryParse(txtHeight.Text, out int height) && !updating)
             {
                 int newWidth = Convert.ToInt32(height * scaleFactor);
+                if (newWidth < 1)
+                    newWidth = 1;
                 updating = true;
                 txtWidth.Text = newWidth.ToString();
                 updating = false;
@@ -58,73 +62,65 @@ namespace StatsDirect.UI
 
         private void cmdExport_Click(object sender, EventArgs e)
         {
-            const string cfp = "PNG|*.png";
-            const string cfj = "JPEG|*.jpg;*.jpeg";
-            const string cfb = "Windows Bitmap|*.bmp";
-            const string cfw = "Windows Metafile|*.emf;*.wmf";
-            const string cfa = "All formats|*.png;*.jpeg;*.jpg;*.bmp;*.wmf;*.emf";
-
-            int width = int.MinValue;
-            int height = int.MinValue;
-            if (!rdoMetafile.Checked)
+            try
             {
-                if (!int.TryParse(txtWidth.Text, out width)
-                    || !int.TryParse(txtHeight.Text, out height)
-                    || width < 1
-                    || height < 1)
+                const string cfp = "PNG|*.png";
+                const string cfj = "JPEG|*.jpg;*.jpeg";
+                const string cfb = "Windows Bitmap|*.bmp";
+                const string cfw = "Windows Metafile|*.emf;*.wmf";
+                const string cfa = "All formats|*.png;*.jpeg;*.jpg;*.bmp;*.wmf;*.emf";
+
+                int width = int.MinValue;
+                int height = int.MinValue;
+                if (!rdoMetafile.Checked)
                 {
-                    SdApplication.SoleInstance.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
-                    return;
+                    if (!int.TryParse(txtWidth.Text, out width)
+                        || !int.TryParse(txtHeight.Text, out height)
+                        || width < 1
+                        || height < 1)
+                    {
+                        SdApplication.SoleInstance.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
+                        return;
+                    }
+                }
+
+                // Setup and open save dialog
+                saveFileDialog.Title = "Save graphic as";
+                // C_FD.Name = vbNullString
+                if (rdoPng.Checked)
+                {
+                    saveFileDialog.Filter = cfp + "|" + cfj + "|" + cfb + "|" + cfw + "|" + cfa;
+                    saveFileDialog.DefaultExt = "png";
+                }
+                else if (rdoJpeg.Checked)
+                {
+                    saveFileDialog.Filter = cfj + "|" + cfp + "|" + cfb + "|" + cfw + "|" + cfa;
+                    saveFileDialog.DefaultExt = "jpg";
+                }
+                else if (rdoBitmap.Checked)
+                {
+                    saveFileDialog.Filter = cfb + "|" + cfp + "|" + cfj + "|" + cfw + "|" + cfa;
+                    saveFileDialog.DefaultExt = "bmp";
+                }
+                else
+                {
+                    saveFileDialog.Filter = cfw + "|" + cfp + "|" + cfj + "|" + cfb + "|" + cfa;
+                    saveFileDialog.DefaultExt = "emf";
+                }
+                DialogResult result = saveFileDialog.ShowDialog(this);
+                if (result == DialogResult.OK || result == DialogResult.Yes)
+                {
+                    if (SaveImage(saveFileDialog.FileName, width, height))
+                        Close();
                 }
             }
-
-            // Setup and open save dialog
-            saveFileDialog.Title = "Save graphic as";
-            // C_FD.Name = vbNullString
-            if (rdoPng.Checked)
+            catch (Exception ex)
             {
-                saveFileDialog.Filter = cfp + "|" + cfj + "|" + cfb + "|" + cfw + "|" + cfa;
-                saveFileDialog.DefaultExt = "png";
-            }
-            else if (rdoJpeg.Checked)
-            {
-                saveFileDialog.Filter = cfj + "|" + cfp + "|" + cfb + "|" + cfw + "|" + cfa;
-                saveFileDialog.DefaultExt = "jpg";
-            }
-            else if (rdoBitmap.Checked)
-            {
-                saveFileDialog.Filter = cfb + "|" + cfp + "|" + cfj + "|" + cfw + "|" + cfa;
-                saveFileDialog.DefaultExt = "bmp";
-            }
-            else
-            {
-                saveFileDialog.Filter = cfw + "|" + cfp + "|" + cfj + "|" + cfb + "|" + cfa;
-                saveFileDialog.DefaultExt = "emf";
-            }
-            DialogResult result = saveFileDialog.ShowDialog(this);
-            if (result == DialogResult.OK || result == DialogResult.Yes)
-            {
-                if (SaveImage(saveFileDialog.FileName, width, height))
-                    Close();
+                SdApplication.SoleInstance.FriendlyError("Couldn't export this graphic", ex, false);
             }
         }
 
-        private void rdoPng_CheckedChanged(object sender, EventArgs e)
-        {
-            SetUi();
-        }
-
-        private void rdoJpeg_CheckedChanged(object sender, EventArgs e)
-        {
-            SetUi();
-        }
-
-        private void rdoBitmap_CheckedChanged(object sender, EventArgs e)
-        {
-            SetUi();
-        }
-
-        private void rdoMetafile_CheckedChanged(object sender, EventArgs e)
+        private void FormatChanged(object sender, EventArgs e)
         {
             SetUi();
         }
@@ -135,9 +131,16 @@ namespace StatsDirect.UI
             grpSize.Enabled = !rdoMetafile.Checked;
         }
 
-        private void saveFileDialog_HelpRequest(object sender, EventArgs e)
+        private void HelpRequest(object sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ShowHelp(this, "220554");
+            try
+            {
+                SdApplication.SoleInstance.ShowHelp(this, "220554");
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError("Couldn't show help", ex, false);
+            }
         }
 
         private bool SaveImage(string path, int width, int height)

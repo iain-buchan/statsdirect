@@ -102,7 +102,7 @@
             this.rdoPng.TabStop = true;
             this.rdoPng.Text = "PNG";
             this.rdoPng.UseVisualStyleBackColor = true;
-            this.rdoPng.CheckedChanged += new System.EventHandler(this.rdoPng_CheckedChanged);
+            this.rdoPng.CheckedChanged += new System.EventHandler(this.FormatChanged);
             // 
             // rdoJpeg
             // 
@@ -113,7 +113,7 @@
             this.rdoJpeg.TabIndex = 1;
             this.rdoJpeg.Text = "JPEG";
             this.rdoJpeg.UseVisualStyleBackColor = true;
-            this.rdoJpeg.CheckedChanged += new System.EventHandler(this.rdoJpeg_CheckedChanged);
+            this.rdoJpeg.CheckedChanged += new System.EventHandler(this.FormatChanged);
             // 
             // rdoBitmap
             // 
@@ -124,7 +124,7 @@
             this.rdoBitmap.TabIndex = 2;
             this.rdoBitmap.Text = "Bitmap";
             this.rdoBitmap.UseVisualStyleBackColor = true;
-            this.rdoBitmap.CheckedChanged += new System.EventHandler(this.rdoBitmap_CheckedChanged);
+            this.rdoBitmap.CheckedChanged += new System.EventHandler(this.FormatChanged);
             // 
             // rdoMetafile
             // 
@@ -135,7 +135,7 @@
             this.rdoMetafile.TabIndex = 3;
             this.rdoMetafile.Text = "Metafile";
             this.rdoMetafile.UseVisualStyleBackColor = true;
-            this.rdoMetafile.CheckedChanged += new System.EventHandler(this.rdoMetafile_CheckedChanged);
+            this.rdoMetafile.CheckedChanged += new System.EventHandler(this.FormatChanged);
             // 
             // grpCompression
             // 
@@ -258,7 +258,7 @@
             // saveFileDialog
             // 
             this.saveFileDialog.ShowHelp = true;
-            this.saveFileDialog.HelpRequest += new System.EventHandler(this.saveFileDialog_HelpRequest);
+            this.saveFileDialog.HelpRequest += new System.EventHandler(this.HelpRequest);
             // 
             // frmExportGraphic
             // 
