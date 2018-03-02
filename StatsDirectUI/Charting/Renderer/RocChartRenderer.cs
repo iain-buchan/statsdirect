@@ -86,7 +86,7 @@ namespace StatsDirect.Charting.Renderer
                 new AxisDefinition("1-Specificity", AxisMode.Scale, ScaleType.Linear),
                 new AxisDefinition("Sensitivity", AxisMode.Scale, ScaleType.Linear),
                 true, false,
-                legend, true);
+                legend, ChartAreaShape.Square);
 
             // null effect diagonal
             using (Pen tenPenDiagonal = new Pen(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness))

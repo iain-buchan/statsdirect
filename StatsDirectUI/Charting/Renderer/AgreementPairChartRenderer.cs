@@ -78,7 +78,7 @@ namespace StatsDirect.Charting.Renderer
                     string ytxt = Definition.ChartOptions.YAxisTitle;
                     if (string.IsNullOrEmpty(ytxt))
                         ytxt = "difference";
-                    axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                    axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot (" + Formatting.XRound(100 * (1 - aOptions.P0), 2) + "% limits of agreement)", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, ChartAreaShape.Default, 0, 0, mxdMin, mxdMax);
                 }
                 else
                 {

@@ -59,7 +59,7 @@ namespace StatsDirect.Charting.Renderer
                 AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                    BoxAxes, false,
+                    ChartPreferences.DefaultBoxAxes, false,
                     legend);
 
                 if (showLegend)
@@ -128,7 +128,7 @@ namespace StatsDirect.Charting.Renderer
                     // Work through the rows
                     for (int r = 0; r < xdat.Length; r++)
                         if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
-                            ASCII_PlotPointInChartCoordinates(xdat[r], ydat[r]);
+                            AsciiPlotPointInChartCoordinates(xdat[r], ydat[r]);
                 }
             }
             return new ParameterBag();

@@ -8,7 +8,7 @@ using StatsDirect.Charting.Scales;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class HistogramChartRenderer : AbstractChartRenderer, IChartRenderer
+    internal class HistogramChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public HistogramChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -145,8 +145,8 @@ namespace StatsDirect.Charting.Renderer
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             true);
                         DefaultAxes(null, extraSpaceForAxes);
-                        YAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DEFAULT_Y_GAP);
-                        YExtCanvas = heightPerChart - Math.Min(heightPerChart / 4.0, 2 * DEFAULT_Y_GAP);
+                        YAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DefaultYGap);
+                        YExtCanvas = heightPerChart - Math.Min(heightPerChart / 4.0, 2 * DefaultYGap);
 
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
@@ -206,22 +206,22 @@ namespace StatsDirect.Charting.Renderer
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
                             int barLength = Convert.ToInt32(descriptor.Counts[c] * proportionScaler / DataMaxY * 60);
-                            WriteAsciiYX(c + ASCII_YTxt, ASCII_XTxt + 5, new string('=', barLength));
+                            WriteAsciiYX(c + AsciiYTxt, AsciiXTxt + 5, new string('=', barLength));
                             if (descriptor.Counts[c] > 0 && barLength == 0)
-                                WriteAsciiYX(c + ASCII_YTxt, ASCII_XTxt + 5, ":");
+                                WriteAsciiYX(c + AsciiYTxt, AsciiXTxt + 5, ":");
 
                             double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
                             string buf = midpoint.ToString(mask);
-                            WriteAsciiYX(c + ASCII_YTxt, ASCII_XTxt - buf.Length + 4, buf);
+                            WriteAsciiYX(c + AsciiYTxt, AsciiXTxt - buf.Length + 4, buf);
 
                             buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
-                            WriteAsciiYX(c + ASCII_YTxt, 1, buf);
+                            WriteAsciiYX(c + AsciiYTxt, 1, buf);
                         }
 
-                        WriteAsciiYX(0, ASCII_XTxt, options.HistoSeriesOptions[seriesIndex].XAxisTitle);
+                        WriteAsciiYX(0, AsciiXTxt, options.HistoSeriesOptions[seriesIndex].XAxisTitle);
 
-                        WriteAsciiYX(descriptor.Bins + ASCII_YTxt, 16, "Mid-points");
-                        WriteAsciiYX(descriptor.Bins + ASCII_YTxt, 1, "Counts");
+                        WriteAsciiYX(descriptor.Bins + AsciiYTxt, 16, "Mid-points");
+                        WriteAsciiYX(descriptor.Bins + AsciiYTxt, 1, "Counts");
                         TextCanvas[2] = "     " + TextCanvas[2].Substring(0, Math.Min(TextCanvas[2].Length, 85));
                         TextCanvas[1] = "     " + TextCanvas[1].Substring(0, Math.Min(TextCanvas[1].Length, 85));
                         TextCanvas[0] = "     " + TextCanvas[0].Substring(0, Math.Min(TextCanvas[0].Length, 85));

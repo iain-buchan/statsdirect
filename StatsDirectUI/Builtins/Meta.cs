@@ -2814,7 +2814,7 @@ namespace StatsDirect.Builtins
 
             string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool hasUserSuppliedLabels);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
-            title[k + 1] = Charting.Renderer.AbstractChartRenderer.combo_ti(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractChartRenderer.ComboTi(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3068,7 +3068,7 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= k; i++)
                     title[i] = "study " + i;
             }
-            title[k + 1] = Charting.Renderer.AbstractChartRenderer.combo_ti(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractChartRenderer.ComboTi(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3482,7 +3482,7 @@ namespace StatsDirect.Builtins
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
-            title[k + 1] = Charting.Renderer.AbstractChartRenderer.combo_ti(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractChartRenderer.ComboTi(string.Empty);
 
             bool allRZero = true;
             bool allREqualN = true;

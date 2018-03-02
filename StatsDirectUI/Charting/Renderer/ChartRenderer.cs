@@ -283,7 +283,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                BoxAxes, false);
+                ChartPreferences.DefaultBoxAxes, false);
 
             // plot points
             DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;
@@ -366,7 +366,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                BoxAxes, false);
+                ChartPreferences.DefaultBoxAxes, false);
 
             // plot points
             DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;
@@ -580,17 +580,17 @@ namespace StatsDirect.Charting.Renderer
             return Math.Exp(calcY * 2.0) / (1.0 + Math.Exp(calcY * 2.0));
         }
 
-        public void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
+        public void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition, ChartAreaShape chartAreaShape)
         {
             StartVectorPlot();
-            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition);
+            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, chartAreaShape);
             EndVectorPlot();
         }
 
-        public void PlotXY0To1(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
+        public void PlotXY0To1(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition, ChartAreaShape chartAreaShape)
         {
             StartVectorPlot();
-            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, 0, 1, 0, 1);
+            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, chartAreaShape, 0, 1, 0, 1);
             EndVectorPlot();
         }
 
@@ -1420,16 +1420,16 @@ namespace StatsDirect.Charting.Renderer
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            double w = LegendWidthInCanvasCoordinates(combo_ti(cap)) + 30;
+            double w = LegendWidthInCanvasCoordinates(ComboTi(cap)) + 30;
             if (w > xtra + XAxisCanvas)
-                xtra = w - XAxisCanvas - AXIS_BIG_TICK;
+                xtra = w - XAxisCanvas - AxisBigTick;
             for (int i = 1; i <= k; i++)
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
                     w = LegendWidthInCanvasCoordinates(title[i]) + 30;
                     if (w > xtra + XAxisCanvas)
-                        xtra = w - XAxisCanvas - AXIS_BIG_TICK;
+                        xtra = w - XAxisCanvas - AxisBigTick;
                     w = LegendWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")");
                     if (w > rgap)
                         rgap = w;
@@ -1560,7 +1560,7 @@ namespace StatsDirect.Charting.Renderer
                     // pooled effect marker
                     DrawLineInCanvasCoordinates(pooledEffectPen, ToCanvasX(rmh), saveYc, ToCanvasX(rmh), yt);
                     // pool label
-                    DrawStringLabel(combo_ti(cap), XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
+                    DrawStringLabel(ComboTi(cap), XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                     DrawStringLabel(Formatting.RoundMeta(rmh, absmin) + " (" + Formatting.RoundMeta(ll, absmin) + ", " + Formatting.RoundMeta(ul, absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
                     // xaxis label
                 }
@@ -1746,7 +1746,7 @@ namespace StatsDirect.Charting.Renderer
                     // pooled effect marker
                     DrawLineInCanvasCoordinates(tenPenFalse, ToCanvasX(rmh), saveYc, ToCanvasX(rmh), yt);
                     // pool label
-                    DrawStringLabel(combo_ti(cap), XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
+                    DrawStringLabel(ComboTi(cap), XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                     DrawStringLabel(Formatting.RoundMeta(rmh, absMin) + " (" + Formatting.RoundMeta(ll, absMin) + ", " + Formatting.RoundMeta(ul, absMin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
                     // x axis text
                 }

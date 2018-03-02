@@ -10,7 +10,7 @@ namespace StatsDirect.Charting
 
         ScaleParameters GetScaleParameters();
 
-        string GetAsciiRTF();
+        string GetAsciiRtf();
 
         Stream GetImageStream();
 

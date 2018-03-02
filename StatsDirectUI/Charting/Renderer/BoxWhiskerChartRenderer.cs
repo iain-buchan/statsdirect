@@ -376,7 +376,7 @@ namespace StatsDirect.Charting.Renderer
                         PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool _);
 
                         // Plot graphic
-                        double xctr = (c + 0.5) / DivX * XExtCanvas;
+                        double xctr = ToCanvasWidth(c + 0.5);
 
                         double halfBoxWidth = ToCanvasWidth(0.5 * BOX_FRACTION_OF_SPACE);
                         double xc = OffX + xctr;
@@ -616,12 +616,12 @@ namespace StatsDirect.Charting.Renderer
             StartAsciiPlot(seriesToUse.Count * 2 + 4);
 
             // Draw the scale
-            AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
+            LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = seriesToUse.Select(s => s.Title).ToList() },
                 false, false);
             DivY = seriesToUse.Count + 1;
-            OffY = ASCII_YTxt;
+            OffY = AsciiYTxt;
 
             if (TextCanvas[0].Length > bwOptions.XAxisTitle.Length)
             {

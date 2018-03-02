@@ -1,6 +1,7 @@
 ﻿using System;
 using Layout;
 using StatsDirect.Builtins;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 
@@ -167,9 +168,9 @@ namespace StatsDirect.Charting.Renderer
             MarkerType mt = ChartPreferences.MarkerTypes[0];
             if (null != nOptions.MarkerTypes && nOptions.MarkerTypes.Count >= 1)
                 mt = nOptions.MarkerTypes[0];
-            PlotXYInternal(x, y, lab, "Observed (" + Definition.XSeries[0].Title + ")", nOptions.Title, false, selectMinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true);
+            AxisScales axisScales = PlotXYInternal(x, y, lab, "Observed (" + Definition.XSeries[0].Title + ")", nOptions.Title, false, selectMinMaxY, mt.MarkerSize, mt.MarkerShape, mt.IsMarkerFilled, GetMarkerPen(mt), true, ChartAreaShape.Square);
             if (shouldScaleZ)
-                DrawLineInCanvasCoordinates(AxisPen, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
+                DrawLineInChartCoordinates(AxisPen, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
             EndVectorPlot();
 
             // Regression results

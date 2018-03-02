@@ -624,7 +624,7 @@ namespace StatsDirect.UI
                     }
                     using (frmTextPreview textPreview = new frmTextPreview())
                     {
-                        string rtf = "{\\rtf1\\ansi " + renderer.GetAsciiRTF() + "}";
+                        string rtf = "{\\rtf1\\ansi " + renderer.GetAsciiRtf() + "}";
                         textPreview.Rtf = rtf;
                         textPreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                     }

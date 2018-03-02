@@ -109,12 +109,12 @@ namespace StatsDirect.Charting.Renderer
             LayoutChartAndDrawAxes(eOptions.Title,
                 new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                BoxAxes, false,
+                ChartPreferences.DefaultBoxAxes, false,
                 legend);
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
             Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new Dictionary<int, List<MultiDoublePoint>>();
-            double aboutALineWidth = DivX / XExtCanvas;
+            double aboutALineWidth = ToCanvasWidth(1);
 
             // Work through the series
             for (int seriesIndex = 0; seriesIndex < eOptions.Series.Count; seriesIndex++)

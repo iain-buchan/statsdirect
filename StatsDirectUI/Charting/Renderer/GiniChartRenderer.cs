@@ -3,7 +3,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class GiniChartRenderer: AbstractChartRenderer, IChartRenderer
+    internal class GiniChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public GiniChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)

@@ -6,7 +6,7 @@ using System;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class PyramidChartRenderer: AbstractChartRenderer, IChartRenderer
+    internal class PyramidChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public PyramidChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)

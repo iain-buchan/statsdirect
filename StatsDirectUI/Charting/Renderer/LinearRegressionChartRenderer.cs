@@ -47,7 +47,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(lrOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(lrOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                BoxAxes, false);
+                ChartPreferences.DefaultBoxAxes, false);
 
             // plot points
             DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;
@@ -117,7 +117,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra },
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, ScaleType.Linear),
-                BoxAxes, false);
+                ChartPreferences.DefaultBoxAxes, false);
 
             // plot points
             DoubleSeries xs = Definition.XSeries[0].AsDoubleSeries;

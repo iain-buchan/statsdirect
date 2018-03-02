@@ -5,7 +5,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class SpreadChartRenderer: AbstractChartRenderer, IChartRenderer
+    internal class SpreadChartRenderer: AbstractChartRenderer, IChartRenderer
     {
         public SpreadChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)

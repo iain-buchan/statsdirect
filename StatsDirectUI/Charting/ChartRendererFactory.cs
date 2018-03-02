@@ -15,12 +15,12 @@ namespace StatsDirect.Charting
     public static class ChartRendererFactory
     {
         // Configuration as to what canvas we're using, and hence the kind of image that will result from a chart being plotted.
-        private static readonly ICanvasFactory canvasFactory = new EmfCanvasFactory();
+        private static readonly ICanvasFactory CANVAS_FACTORY = new EmfCanvasFactory();
 
         public static string PlotBiasMAAndReturnRtf(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.Plot_Bias_MA(host, x, yy, yw, rows, xtxt, cl, cu, cco, cit, rmh, xform, diagonal);
                 return Render(ch);
@@ -30,7 +30,7 @@ namespace StatsDirect.Charting
         public static string PlotCorrelationAndReturnRtf(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(Transformation.Log == xform ? ScaleType.Log10 : ScaleType.Linear, ScaleType.Linear) };
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.PlotCorrelation(k, title, odr, odrl, odru, gn, pg, cap, qid, xform, isDifference);
                 return Render(ch);
@@ -42,7 +42,7 @@ namespace StatsDirect.Charting
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
             cd.AddXSeries(xp, null);
             cd.AddYSeries(yp, null);
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.PlotCox2(gn, igroups, xp, yp, cdat1, groupid);
                 return Render(ch);
@@ -52,7 +52,7 @@ namespace StatsDirect.Charting
         public static string PlotEffectAndReturnRtf(ITemplateHost host, int k, double[] cn, double[] en, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.PlotEffect(host, k, cn, en, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
                 return Render(ch);
@@ -61,7 +61,7 @@ namespace StatsDirect.Charting
 
         public static string PlotLAbbeAndReturnRtf(int k, double[,] o, double rmh)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
                 ch.PlotLAbbe(k, o, rmh);
                 return Render(ch);
@@ -75,7 +75,7 @@ namespace StatsDirect.Charting
             cd.AddXSeries(xData, xAxisTitle);
             AgreementOptions aOptions = new AgreementOptions(shouldUseColour) { mxd = yData, av = xData };
             cd.ChartOptions = aOptions;
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.PlotLinearizedEstimation(title, model, a, b, xAxisTitle, yAxisTitle);
                 return Render(ch);
@@ -119,7 +119,7 @@ namespace StatsDirect.Charting
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(useLogScale ? ScaleType.Log10 : ScaleType.Linear, ScaleType.Linear) };
             cd.AddYSeries(y, yAxisTitle);
             cd.AddXSeries(x, xAxisTitle);
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.PlotLogit(title, model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, useLogScale);
                 return Render(ch);
@@ -129,7 +129,7 @@ namespace StatsDirect.Charting
         public static string PlotMHAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
         {
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Log10, ScaleType.Linear) };
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.Plot_MH(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid);
                 return Render(ch);
@@ -138,7 +138,7 @@ namespace StatsDirect.Charting
 
         public static string PlotMHRDAndReturnRtf(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
                 ch.Plot_MHRiskDifference(k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, cap, pbias, qid);
                 return Render(ch);
@@ -164,16 +164,16 @@ namespace StatsDirect.Charting
             ChartDefinition cd = new ChartDefinition { ChartOptions = aOptions, ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
             cd.AddYSeries(yData, yAxisTitle);
             cd.AddXSeries(xData, xAxisTitle);
-            using (ChartRenderer ch = new ChartRenderer(cd, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
             {
                 ch.PlotPolynomialRegression(title, mode, xtxi, bd, rss, nx, p, gamma, xAxisTitle, yAxisTitle);
                 return Render(ch);
             }
         }
 
-        public static string PlotTiesAndReturnMetafile(double[] x, double[] y, int nx, double lla, double ula, double gamma, string v0Title, string v1Title, double mean)
+        public static string PlotTiesAndReturnRtf(double[] x, double[] y, int nx, double lla, double ula, double gamma, string v0Title, string v1Title, double mean)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
                 ch.PlotTies(x, y, nx, lla, ula, gamma, v0Title, v1Title, mean);
                 return Render(ch);
@@ -182,25 +182,25 @@ namespace StatsDirect.Charting
 
         public static string PlotXYAndReturnRtf(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
-                ch.PlotXY(x, y, xtxt, ytxt, title, zPlot, minMaxY, useCalculatedScalesEvenWithDefinition);
+                ch.PlotXY(x, y, xtxt, ytxt, title, zPlot, minMaxY, useCalculatedScalesEvenWithDefinition, ChartAreaShape.Default);
                 return Render(ch);
             }
         }
 
         public static string PlotXY0To1AndReturnRtf(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
-                ch.PlotXY0To1(x, y, xtxt, ytxt, title, zPlot, minMaxY, useCalculatedScalesEvenWithDefinition);
+                ch.PlotXY0To1(x, y, xtxt, ytxt, title, zPlot, minMaxY, useCalculatedScalesEvenWithDefinition, ChartAreaShape.Default);
                 return Render(ch);
             }
         }
 
         public static string PlotXYRAndReturnRtf(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, MinMax minMax)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
                 ch.PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam, minMax.MinX, minMax.MaxX, minMax.MinY, minMax.MaxY);
                 return Render(ch);
@@ -209,7 +209,7 @@ namespace StatsDirect.Charting
 
         public static string PlotXYZAndReturnRtf(double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
                 ch.PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = false, MarkerColor = AbstractChartRenderer.GrBlack });
                 return Render(ch);
@@ -218,7 +218,7 @@ namespace StatsDirect.Charting
 
         public static string SurvivalOrHazardPlot(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] arr3, ColumnData[] cdat1, bool useTic, bool useMarker, int[] gn)
         {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
             {
                 ch.PlotCox1(z, iobs, istrata, plotMode, igroups, groupid, grouped, stratified, arr3, cdat1, useTic, useMarker, gn);
                 return Render(ch);
@@ -317,7 +317,7 @@ namespace StatsDirect.Charting
                     cnx[k] = nx;
                 }
                 // Plot the results
-                using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, canvasFactory))
+                using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
                 {
                     ch.x_plGraphInternal(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title);
                     outputImages.Add(Render(ch));
@@ -331,44 +331,44 @@ namespace StatsDirect.Charting
             switch (chartDefinition.ChartType)
             {
                 case ChartType.AgreementPair:
-                    return new AgreementPairChartRenderer(chartDefinition, canvasFactory);
+                    return new AgreementPairChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Bar:
-                    return new BarChartRenderer(chartDefinition, canvasFactory);
+                    return new BarChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.BoxWhisker:
-                    return new BoxWhiskerChartRenderer(chartDefinition, canvasFactory);
+                    return new BoxWhiskerChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Control:
-                    return new ControlChartRenderer(chartDefinition, canvasFactory);
+                    return new ControlChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.ErrorBar:
-                    return new ErrorBarChartRenderer(chartDefinition, canvasFactory);
+                    return new ErrorBarChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Forest:
-                    return new ForestChartRenderer(chartDefinition, canvasFactory);
+                    return new ForestChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Gini:
-                    return new GiniChartRenderer(chartDefinition, canvasFactory);
+                    return new GiniChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Histogram:
-                    return new HistogramChartRenderer(chartDefinition, canvasFactory);
+                    return new HistogramChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Ladder:
-                    return new LadderChartRenderer(chartDefinition, canvasFactory);
+                    return new LadderChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.LinearRegression:
-                    return new LinearRegressionChartRenderer(chartDefinition, canvasFactory);
+                    return new LinearRegressionChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.LineXY:
-                    return new ScatterChartRenderer(chartDefinition, canvasFactory);
+                    return new ScatterChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Normal:
-                    return new NormalChartRenderer(chartDefinition, canvasFactory);
+                    return new NormalChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Pyramid:
-                    return new PyramidChartRenderer(chartDefinition, canvasFactory);
+                    return new PyramidChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.ROC:
-                    return new RocChartRenderer(chartDefinition, canvasFactory);
+                    return new RocChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.ScatterXY:
-                    return new ScatterChartRenderer(chartDefinition, canvasFactory);
+                    return new ScatterChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Spread:
-                    return new SpreadChartRenderer(chartDefinition, canvasFactory);
+                    return new SpreadChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
-                    return new BarChartRenderer(chartDefinition, canvasFactory);
+                    return new BarChartRenderer(chartDefinition, CANVAS_FACTORY);
                 case ChartType.Survival:
-                    return new SurvivalChartRenderer(chartDefinition, canvasFactory);
+                    return new SurvivalChartRenderer(chartDefinition, CANVAS_FACTORY);
                 default:
-                    return new NotSetChartRenderer(chartDefinition, canvasFactory);
+                    return new NotSetChartRenderer(chartDefinition, CANVAS_FACTORY);
             }
         }
 
