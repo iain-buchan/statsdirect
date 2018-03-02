@@ -43,6 +43,9 @@
     <Compile Include="AxisLayout.cs" />
     <Compile Include="Formatters\IFormatter.cs" />
     <Compile Include="Formatters\Format.cs" />
+    <Compile Include="Formatters\NumericFormat.cs" />
+    <Compile Include="Formatters\ScientificFormat.cs" />
+    <Compile Include="Formatters\UnitFormat.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Formatters\QuantitativeFormatter.cs" />
     <Compile Include="Range.cs" />

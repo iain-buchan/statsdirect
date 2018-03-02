@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace Layout
+namespace Layout.AxisLabelers
 {
     public abstract class AxisLabeler
     {

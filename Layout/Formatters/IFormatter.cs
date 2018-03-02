@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using Layout.AxisLabelers;
 
 namespace Layout.Formatters
 {
-    interface IFormatter
+    internal interface IFormatter
     {
-        Axis Format(List<Axis> list, List<Format> formats, AxisLabeler.Options options, Func<Axis, double> ScoreAxis, double bestScore = double.NegativeInfinity);
+        Axis Format(List<Axis> list, List<Format> formats, AxisLabeler.Options options, Func<Axis, double> scoreAxis, double bestScore = double.NegativeInfinity);
     }
 
 }

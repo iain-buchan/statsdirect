@@ -1,41 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Layout.Formatters;
 using System.Drawing;
+using System.Linq;
+// using Layout.Formatters;
 
-namespace Layout
+namespace Layout.AxisLabelers
 {
     /// <remarks>Implements the axis labeling routine described in 
     /// Talbot, Lin, and Hanrahan. An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes, Infovis 2010.
     /// </remarks>
-    class ExtendedAxisLabeler : AxisLabeler
+    internal class ExtendedAxisLabeler : AxisLabeler
     {
         private static readonly List<decimal> Q = new List<decimal> { 1m, 5m, 2m, 2.5m, 4m, 3m };
-        private static readonly int qCount = Q.Count;
-        private static readonly List<double> w = new List<double> { 0.25, 0.2, 0.5, 0.05 };
-        private static readonly List<Format> formats;
+        private static readonly int Q_COUNT = Q.Count;
+        private static readonly List<double> W = new List<double> { 0.25, 0.2, 0.5, 0.05 };
+        // private static readonly List<Format> FORMATS;
 
-        QuantitativeFormatter formatter;
+        // private QuantitativeFormatter formatter;
 
+        /*
         private static void AddUnitFormat(decimal unit, string name, Range logRange, double weight, double factoredWeight)
         {
-            formats.Add(new UnitFormat(unit, name, logRange, false, false, weight));
-            formats.Add(new UnitFormat(unit, name, logRange, false, true, weight));
-            formats.Add(new UnitFormat(unit, name, logRange, true, false, factoredWeight));
-            formats.Add(new UnitFormat(unit, name, logRange, true, true, factoredWeight));
+            FORMATS.Add(new UnitFormat(unit, name, logRange, false, false, weight));
+            FORMATS.Add(new UnitFormat(unit, name, logRange, false, true, weight));
+            FORMATS.Add(new UnitFormat(unit, name, logRange, true, false, factoredWeight));
+            FORMATS.Add(new UnitFormat(unit, name, logRange, true, true, factoredWeight));
         }
 
         private static void AddUnitFormat(decimal unit, string name, Range logRange, double factoredWeight)
         {
-            formats.Add(new UnitFormat(unit, name, logRange, true, false, factoredWeight));
-            formats.Add(new UnitFormat(unit, name, logRange, true, true, factoredWeight));
+            FORMATS.Add(new UnitFormat(unit, name, logRange, true, false, factoredWeight));
+            FORMATS.Add(new UnitFormat(unit, name, logRange, true, true, factoredWeight));
         }
 
         static ExtendedAxisLabeler()
         {
-            formats = new List<Format>();
-            formats.Add(new UnitFormat(1m, "", new Range(-4, 6), false, false, 1));
+            FORMATS = new List<Format>();
+            FORMATS.Add(new UnitFormat(1m, "", new Range(-4, 6), false, false, 1));
             AddUnitFormat(1000m, "K", new Range(3, 6), 0.75, 0.4);
             AddUnitFormat(1000000m, "M", new Range(6, 9), 0.75, 0.4);
             AddUnitFormat(1000000000m, "B", new Range(9, 12), 0.75, 0.4);
@@ -47,15 +48,16 @@ namespace Layout
             AddUnitFormat(0.001m, "thousandth", new Range(-3, -6), 0.5);
             AddUnitFormat(0.000001m, "millionth", new Range(-6, -9), 0.5);
             AddUnitFormat(0.000000001m, "billionth", new Range(-9, -12), 0.5);
-            formats.Add(new ScientificFormat(true, false, 0.3));
-            formats.Add(new ScientificFormat(true, true, 0.3));
-            formats.Add(new ScientificFormat(false, false, 0.25));
-            formats.Add(new ScientificFormat(false, true, 0.25));
+            FORMATS.Add(new ScientificFormat(true, false, 0.3));
+            FORMATS.Add(new ScientificFormat(true, true, 0.3));
+            FORMATS.Add(new ScientificFormat(false, false, 0.25));
+            FORMATS.Add(new ScientificFormat(false, true, 0.25));
         }
+        */
 
         public ExtendedAxisLabeler(Graphics g)
         {
-            formatter = new QuantitativeFormatter(g);
+            // formatter = new QuantitativeFormatter(g);
         }
 
         protected decimal FlooredMod(decimal a, decimal n)
@@ -75,8 +77,8 @@ namespace Layout
 
         protected double Simplicity(decimal q, int j, decimal lmin, decimal lmax, decimal lstep)
         {
-            decimal eps = 1e-10m;
-            double n = qCount;
+            const decimal eps = 1e-10m;
+            double n = Q_COUNT;
             double i = Q.IndexOf(q) + 1; // Assume 1-based index for scoring
             double v = FlooredMod(lmin, lstep) < eps && lmin <= 0 && lmax >= 0 ? 1 : 0;
             return 1 - i / n - j + v;
@@ -84,9 +86,9 @@ namespace Layout
 
         protected double MaxSimplicity(decimal q, int j)
         {
-            double n = qCount;
+            double n = Q_COUNT;
             double i = Q.IndexOf(q) + 1; // Assume 1-based index for scoring
-            double v = 1;
+            const double v = 1;
             return 1 - i / n - j + v;
         }
 
@@ -117,7 +119,7 @@ namespace Layout
 
         private static double Weight(double simplicity, double coverage, double density, double legibility)
         {
-            return w[0] * simplicity + w[1] * coverage + w[2] * density + w[3] * legibility;
+            return W[0] * simplicity + W[1] * coverage + W[2] * density + W[3] * legibility;
         }
 
         public override Axis Generate(Options options, double density)
@@ -162,12 +164,12 @@ namespace Layout
                             if (Weight(sm, cm, dm, 1) < bestScore)
                                 break;
 
-                            int min_start = (int)Math.Floor(dmax / step) * j - (k - 1) * j;
-                            int max_start = (int)Math.Ceiling(dmin / step) * j;
-                            if (min_start > max_start)
+                            int minStart = (int)Math.Floor(dmax / step) * j - (k - 1) * j;
+                            int maxStart = (int)Math.Ceiling(dmin / step) * j;
+                            if (minStart > maxStart)
                                 continue;
 
-                            for (int start = min_start; start <= max_start; start++)
+                            for (int start = minStart; start <= maxStart; start++)
                             {
                                 decimal lmin = start * step / j;
                                 decimal lmax = lmin + step * (k - 1);

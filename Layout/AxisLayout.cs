@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using Layout.AxisLabelers;
 
 namespace Layout
 {
@@ -8,17 +9,17 @@ namespace Layout
         public static double AxisDensity = 1.0 / 150;
         public static double AxisFontSize = 12.0;
 
-        public AxisLabeler.Options options;
+        public AxisLabeler.Options Options;
 
-        public AxisLayout(bool isYAxis, Range dataRange, Range visibleRange, Func<string, decimal, Axis, RectangleF> ComputeLabelRect, RectangleF screen)
+        public AxisLayout(bool isYAxis, Range dataRange, Range visibleRange, Func<string, decimal, Axis, RectangleF> computeLabelRect, RectangleF screen)
         {
-            options = new AxisLabeler.Options
+            Options = new AxisLabeler.Options
             {
                 Direction = isYAxis ? AxisDirection.Vertical : AxisDirection.Horizontal,
                 DataRange = dataRange,
                 VisibleRange = visibleRange,
                 FontSize = (int)AxisFontSize,
-                ComputeLabelRect = ComputeLabelRect,
+                ComputeLabelRect = computeLabelRect,
                 Screen = screen
             };
         }
@@ -26,7 +27,7 @@ namespace Layout
         public Axis LayoutAxis(Graphics g)
         {
             AxisLabeler labeler = new ExtendedAxisLabeler(g);
-            return labeler.Generate(options, AxisDensity);
+            return labeler.Generate(Options, AxisDensity);
         }
     }
 }

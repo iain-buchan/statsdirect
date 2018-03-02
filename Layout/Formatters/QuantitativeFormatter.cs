@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Drawing;
+using Layout.AxisLabelers;
 
 namespace Layout.Formatters
 {
-    class QuantitativeFormatter : IFormatter
+    internal class QuantitativeFormatter : IFormatter
     {
-        static int[] fontSizes = { 7, 8, 9, 10, 12, 14, 18, 20, 24 }; // LaTeX default font sizes
-        Dictionary<int, float> ems; // In the paper we had a minimum font size of 5, but that's pretty stinking tiny. 7 is probably a better minimum size.
+        private static readonly int[] FONT_SIZES = { 7, 8, 9, 10, 12, 14, 18, 20, 24 }; // LaTeX default font sizes
+        private readonly Dictionary<int, float> ems; // In the paper we had a minimum font size of 5, but that's pretty stinking tiny. 7 is probably a better minimum size.
 
         public QuantitativeFormatter(Graphics g)
         {
-            ems = (from x in fontSizes select new { x, size=new Font("Verdana", x).GetHeight(g) }).ToDictionary(a=>a.x, a=>a.size);
+            ems = (from x in FONT_SIZES select new { x, size=new Font("Verdana", x).GetHeight(g) }).ToDictionary(a=>a.x, a=>a.size);
         }
 
-        public Axis Format(List<Axis> list, List<Format> formats, AxisLabeler.Options options, Func<Axis, double> ScoreAxis, double bestScore = double.NegativeInfinity)
+        public Axis Format(List<Axis> list, List<Format> formats, AxisLabeler.Options options, Func<Axis, double> scoreAxis, double bestScore = double.NegativeInfinity)
         {
             Axis result = options.DefaultAxis();
             foreach (Axis data in list)
@@ -26,13 +27,13 @@ namespace Layout.Formatters
                     f.FormatStyle = format;
                     f.Legibility = LegibilityScoreMax(f, options);
 
-                    if (ScoreAxis(f) >= bestScore)
+                    if (scoreAxis(f) >= bestScore)
                     {
                         Tuple<IEnumerable<string>, string> labels = f.FormatStyle.FormalLabels(f.Labels.Select(x => x.Item1));
                         f.Labels = f.Labels.Select(x => x.Item1).Zip(labels.Item1, (a, b) => new Tuple<decimal, string>(a, b)).ToList();
                         f.AxisTitleExtension = labels.Item2;
                         f.Legibility = LegibilityScore(f, options);
-                        f.Score = ScoreAxis(f);
+                        f.Score = scoreAxis(f);
                         if (f.Score >= bestScore)
                         {
                             bestScore = f.Score;
@@ -51,11 +52,12 @@ namespace Layout.Formatters
 
         protected double LegibilityFontSize(Axis data, AxisLabeler.Options options)
         {
-            double fsmin = fontSizes.Min();
-            return (data.FontSize > options.FontSize || data.FontSize < fsmin) ? double.NegativeInfinity :
-                        ((data.FontSize == options.FontSize) ? 1 :
-                            0.2 * ((data.FontSize - fsmin + 1) / (options.FontSize - fsmin)));
-
+            double fsmin = FONT_SIZES.Min();
+            return data.FontSize > options.FontSize || data.FontSize < fsmin
+                ? double.NegativeInfinity
+                : (data.FontSize == options.FontSize
+                    ? 1
+                    : 0.2 * ((data.FontSize - fsmin + 1) / (options.FontSize - fsmin)));
         }
 
         protected double LegibilityOrientation(Axis data, AxisLabeler.Options options)
@@ -72,8 +74,8 @@ namespace Layout.Formatters
             double overlap = rects.Take(rects.Count - 1).Zip(rects.Skip(1), 
                 (a, b) =>
                 {
-                    double dist = (options.Direction == AxisDirection.Horizontal) ? b.Left - a.Right : a.Top - b.Bottom;
-                    return Math.Min(1, 2 - (1.5 * em) / Math.Max(0, dist));
+                    double dist = options.Direction == AxisDirection.Horizontal ? b.Left - a.Right : a.Top - b.Bottom;
+                    return Math.Min(1, 2 - 1.5 * em / Math.Max(0, dist));
                 } ).Min();
             return overlap;
         }
@@ -98,7 +100,7 @@ namespace Layout.Formatters
         {
             List<Axis> possibilities = new List<Axis>();
             // Reverse to produce the font sizes in decreasing order of goodness
-            foreach (int size in fontSizes.Where(s => s <= options.FontSize).Reverse())
+            foreach (int size in FONT_SIZES.Where(s => s <= options.FontSize).Reverse())
             {
                 foreach (Axis data in list)
                 {
