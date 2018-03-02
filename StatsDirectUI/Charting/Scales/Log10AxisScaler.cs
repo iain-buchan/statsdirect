@@ -1,7 +1,7 @@
 using System;
 using StatsDirect.Templates;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Scales
 {
     public class Log10AxisScaler: IAxisScaler
     {
@@ -12,7 +12,7 @@ namespace StatsDirect.Charting
         ///  <param name="minimumDataValueGreaterThanZero">The smallest value greater than zero likely to be plotted on the axis. Used for log scales; may be zero if scaleType is known to be Linear.</param>
         ///  <param name="maximumDataValue">The largest value likely to be plotted on the axis.</param>
         /// <param name="isYAxis"></param>
-        public IAxisScale Q_Axis(double _, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
+        public IAxisScale QAxis(double _, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
         {
             if (minimumDataValueGreaterThanZero <= 0)
                 throw new Exception("Cannot create a log axis with a minimum value less than or equal to zero");

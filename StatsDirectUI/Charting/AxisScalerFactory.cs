@@ -1,4 +1,5 @@
 ﻿using System;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Templates;
 
 namespace StatsDirect.Charting

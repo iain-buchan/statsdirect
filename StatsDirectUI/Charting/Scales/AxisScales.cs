@@ -1,6 +1,6 @@
 ﻿using StatsDirect.Templates;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Scales
 {
     public class AxisScales
     {

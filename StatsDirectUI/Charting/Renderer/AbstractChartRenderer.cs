@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Layout;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -594,7 +595,7 @@ namespace StatsDirect.Charting.Renderer
                     return asp.AxisScale;
             }
             //  If we get here, there was no prior definition - calculate it ourselves.
-            return AxisScalerFactory.AxisScalerFor(scaleType).Q_Axis(qmin, qMinGreaterThanZero, qmax, isY, false);
+            return AxisScalerFactory.AxisScalerFor(scaleType).QAxis(qmin, qMinGreaterThanZero, qmax, isY, false);
         }
 
         /// <summary>

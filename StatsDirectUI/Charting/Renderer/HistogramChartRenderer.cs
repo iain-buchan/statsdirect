@@ -4,6 +4,7 @@ using System.Globalization;
 using Layout;
 using StatsDirect.Templates;
 using System.Drawing;
+using StatsDirect.Charting.Scales;
 
 namespace StatsDirect.Charting.Renderer
 {

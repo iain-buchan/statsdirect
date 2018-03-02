@@ -6,7 +6,7 @@ using StatsDirect.Numerics;
 using StatsDirect.Utilities;
 using StatsDirect.Data;
 using StatsDirect.Builtins;
-using StatsDirect.Charting;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Templates;
 
 namespace StatsDirect.UI

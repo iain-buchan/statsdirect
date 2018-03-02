@@ -209,7 +209,7 @@ namespace StatsDirect.UI
                     maximumValue = v;
             }
             ScaleType selectedScaleType = ScaleType;
-            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).Q_Axis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
+            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).QAxis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
             MinimumScaleValue = axisScale.MinimumScaleValue;
             MaximumScaleValue = axisScale.MaximumScaleValue;
             settingValues = true;

@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 

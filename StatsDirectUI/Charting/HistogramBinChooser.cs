@@ -1,4 +1,5 @@
 ﻿using System;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 
@@ -94,8 +95,8 @@ namespace StatsDirect.Charting
         /// </remarks>
         private static BinsDescriptor ChooseBinsShimazaki(double[] sortedX, int length)
         {
-            const int N_MIN = 4;   // Minimum number of bins (integer), N_MIN must be more than 1 (N_MIN > 1).
-            const int N_MAX = 20;  // Maximum number of bins (integer)
+            const int nMin = 4;   // Minimum number of bins (integer), N_MIN must be more than 1 (N_MIN > 1).
+            const int nMax = 20;  // Maximum number of bins (integer)
 
             double xMin = sortedX[0];
             double xMax = sortedX[length - 1];
@@ -103,7 +104,7 @@ namespace StatsDirect.Charting
             double minCost = double.MaxValue;
             double[] bestCandidate = null;
             int[] bestCounts = null;
-            for (int candidate = N_MIN; candidate <= N_MAX; candidate++)
+            for (int candidate = nMin; candidate <= nMax; candidate++)
             {
                 double[] edges = Linspace(xMin, xMax, candidate + 1); //  Bin edges
                 int[] ki = SortedHist(sortedX, length, edges); //  Count # of events in bins

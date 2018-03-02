@@ -64,7 +64,7 @@ namespace StatsDirect.Charting
             }
 
             //  Work out a reasonable axis value
-            IAxisScale axisScale = AxisScalerFactory.AxisScalerFor(ScaleType.Linear).Q_Axis(0, 0, maxRow, false, false);
+            IAxisScale axisScale = AxisScalerFactory.AxisScalerFor(ScaleType.Linear).QAxis(0, 0, maxRow, false, false);
             ScaleMaximum = axisScale.MaximumScaleValue;
         }
 

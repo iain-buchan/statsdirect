@@ -2,11 +2,11 @@
 using Layout;
 using StatsDirect.Templates;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Scales
 {
-    class TalbotLinHanrahanAxisScaler : IAxisScaler
+    internal class TalbotLinHanrahanAxisScaler : IAxisScaler
     {
-        public IAxisScale Q_Axis(double minimumDataValue, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
+        public IAxisScale QAxis(double minimumDataValue, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
         {
             Range dataRange = new Range(minimumDataValue, maximumDataValue);
             RectangleF todoScreen = new RectangleF(0, 0, 1100, 800);

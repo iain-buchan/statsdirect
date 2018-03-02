@@ -2,7 +2,7 @@ using System;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Scales
 {
     public class LinearAxisScaler: IAxisScaler
     {
@@ -19,7 +19,7 @@ namespace StatsDirect.Charting
         ///  <param name="maximumDataValue">The largest value likely to be plotted on the axis.</param>
         /// <param name="isYAxis"></param>
         /// <remarks></remarks>
-        public IAxisScale Q_Axis(double minimumDataValue, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
+        public IAxisScale QAxis(double minimumDataValue, double minimumDataValueGreaterThanZero, double maximumDataValue, bool isYAxis, bool useDataValuesAsScaleValues)
         {
             //  If we have no points at all, the choice is irrelevant so we might as well do it the easy way.
             if (minimumDataValue > maximumDataValue)

@@ -6,6 +6,7 @@ using Layout;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System.Linq;
+using StatsDirect.Charting.Scales;
 
 namespace StatsDirect.Charting.Renderer
 {

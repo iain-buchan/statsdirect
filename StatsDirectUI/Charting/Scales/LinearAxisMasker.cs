@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using StatsDirect.Templates;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Scales
 {
     public static class LinearAxisMasker
     {
