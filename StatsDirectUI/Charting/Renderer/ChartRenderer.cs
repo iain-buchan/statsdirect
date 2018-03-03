@@ -137,7 +137,7 @@ namespace StatsDirect.Charting.Renderer
                         legendMarker.MarkerShape = MarkerShape.SurvivalTic;
                     }
                     string vq = cdat1[groupid].Title.Substring(0, Math.Min(20, cdat1[groupid].Title.Length)) + "=" + cdat1[groupid].Groups[k - 1].Label;
-                    legend.LegendEntries.Add(new LegendEntry {Label = vq, MarkerType = legendMarker});
+                    legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = legendMarker });
                 }
             }
             if (stratified)
@@ -1844,8 +1844,6 @@ namespace StatsDirect.Charting.Renderer
                         yc = OffY + yctr;
                         yt = OffY + yctr + y2;
                         double yb = OffY + yctr - y2;
-                        // ytop = yctr + ( ytop - yctr ) * 0.1 + ( ytop - yctr ) * 0.9 * ( gn[ i ] / max_gn ); 
-                        // ytop = yctr + ( ytop - yctr ) * 0.8; 
                         // CI line
                         DrawLineInCanvasCoordinates(linePen, xl, yc, xr, yc);
                         // Weight blob
@@ -1863,27 +1861,19 @@ namespace StatsDirect.Charting.Renderer
                 if (pbias == 1)
                 {
                     double saveYc = yc;
-                    double yctr = 0.5 / DivY * YExtCanvas;
-                    double ytop = 1 / DivY * YExtCanvas;
-                    double xm = ToCanvasX(rmh);
-                    double xl = ToCanvasX(ll);
-                    double xr = ToCanvasX(ul);
-                    double y2 = (ytop - yctr) / 1.5;
-                    yc = OffY + yctr;
-                    yt = OffY + yctr + y2;
-                    // yb = offy + yctr - y2; 
-                    DrawDiamondInCanvasCoordinates(linePen, xm, yc, y2 * 2, false);
-                    DrawLineInCanvasCoordinates(linePen, xr, yc, xl, yc);
+                    double yctr = ToCanvasHeight(0.5);
+                    double diamondHalfSize = yctr / 1.5;
+                    yc = ToCanvasY(0.5);
+                    yt = OffY + yctr + diamondHalfSize;
+                    DrawDiamondInCanvasCoordinates(linePen, ToCanvasX(rmh), yc, diamondHalfSize * 2, false);
+                    DrawLineInCanvasCoordinates(linePen, ToCanvasX(ul), yc, ToCanvasX(ll), yc);
                     // pooled effect marker
                     using (Pen pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false))
-                    {
-                        DrawLineInCanvasCoordinates(pooledEffectPen, xm, saveYc, xm, yt);
-                    }
+                        DrawLineInCanvasCoordinates(pooledEffectPen, ToCanvasX(rmh), saveYc, ToCanvasX(rmh), yt);
                     string lab = "pooled " + qid + " = " + host.RoundU(rmh) + "  (" + Formatting.XRound(cco * 100, 1) + "% CI = " + host.RoundU(ll) + " to " + host.RoundU(ul) + ")";
                     string xlab = cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";
-                    //  If hSS <> -99 Then Lab = xlab & Lab
                     lab = xlab + lab;
-                    DrawStringLabel(lab, XAxisCanvas + XExtCanvas / 2, 50, StringAlignment.Center);
+                    DrawStringLabel(lab, XAxisCanvas + XExtCanvas / 2.0, 50, StringAlignment.Center);
                 }
             }
             EndVectorPlot();
