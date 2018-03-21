@@ -470,7 +470,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        internal static ParameterBag RptZanthro(ITemplateHost host, ParameterBag parameters)
+        internal static ParameterBag RptChildGrowth(ITemplateHost host, ParameterBag parameters)
         {
             const double DEFAULT_GESTATIONAL_AGE_WEEKS = 40.0;
 
@@ -482,20 +482,20 @@ namespace StatsDirect.Builtins
             string ageUnit = parameters.ContainsKey("age-unit") ? parameters["age-unit"].AsString : null;
             string sexCoding = parameters["sex-coding"].AsString;
             string zCorrectionString = parameters["z-correction"].AsString;
-            ZanthroZCorrectionMode zCorrectionMode;
+            ChildGrowthZCorrectionMode zCorrectionMode;
             switch (zCorrectionString)
             {
                 case "all":
-                    zCorrectionMode = ZanthroZCorrectionMode.All;
+                    zCorrectionMode = ChildGrowthZCorrectionMode.All;
                     break;
                 case "censor-5sd":
-                    zCorrectionMode = ZanthroZCorrectionMode.Censor5Sd;
+                    zCorrectionMode = ChildGrowthZCorrectionMode.Censor5Sd;
                     break;
                 case "censor-3sd":
-                    zCorrectionMode = ZanthroZCorrectionMode.Censor3Sd;
+                    zCorrectionMode = ChildGrowthZCorrectionMode.Censor3Sd;
                     break;
                 case "who":
-                    zCorrectionMode = ZanthroZCorrectionMode.Who;
+                    zCorrectionMode = ChildGrowthZCorrectionMode.Who;
                     break;
                 default:
                     throw new Exception("Unknown z correction '" + zCorrectionString + "'");
@@ -613,13 +613,13 @@ namespace StatsDirect.Builtins
             }
 
             // Data preparation: Where ages aren't in years, standardise to years.
-            double[] t = new double[xvar.Length];
-            double[] tday = new double[xvar.Length];
+            double[] ageInYears = new double[xvar.Length];
+            double[] tenThousandthsOfDay = new double[xvar.Length];
             if (null == ageUnit)
             {
-                t = xvar;
+                ageInYears = xvar;
                 for (int i = 0; i < xvar.Length; i++)
-                    tday[i] = xvar[i] * 10000;
+                    tenThousandthsOfDay[i] = xvar[i] * 10000;
             }
             else
             {
@@ -628,29 +628,29 @@ namespace StatsDirect.Builtins
                     case "year":
                         for (int i = 0; i < xvar.Length; i++)
                         {
-                            t[i] = xvar[i];
-                            tday[i] = xvar[i] * 365.25 * 10000;
+                            ageInYears[i] = xvar[i];
+                            tenThousandthsOfDay[i] = xvar[i] * 365.25 * 10000;
                         }
                         break;
                     case "month":
                         for (int i = 0; i < xvar.Length; i++)
                         {
-                            t[i] = xvar[i] / 12.0;
-                            tday[i] = xvar[i] * (365.25 / 12.0) * 10000;
+                            ageInYears[i] = xvar[i] / 12.0;
+                            tenThousandthsOfDay[i] = xvar[i] * (365.25 / 12.0) * 10000;
                         }
                         break;
                     case "week":
                         for (int i = 0; i < xvar.Length; i++)
                         {
-                            t[i] = xvar[i] / (365.25 / 7.0);
-                            tday[i] = xvar[i] * 7.0 * 10000;
+                            ageInYears[i] = xvar[i] / (365.25 / 7.0);
+                            tenThousandthsOfDay[i] = xvar[i] * 7.0 * 10000;
                         }
                         break;
                     case "day":
                         for (int i = 0; i < xvar.Length; i++)
                         {
-                            t[i] = xvar[i] / 365.25;
-                            tday[i] = xvar[i] * 10000;
+                            ageInYears[i] = xvar[i] / 365.25;
+                            tenThousandthsOfDay[i] = xvar[i] * 10000;
                         }
                         break;
                     default:
@@ -661,12 +661,12 @@ namespace StatsDirect.Builtins
             if (hasGestationalAge)
             {
                 double maxGestationalAge = double.MinValue;
-                for (int i = 0; i < t.Length; i++)
+                for (int i = 0; i < ageInYears.Length; i++)
                 {
                     double gestationalAgeInWeeks = gestationalAge[i];
                     if (gestationalAgeInWeeks > maxGestationalAge)
                         maxGestationalAge = gestationalAgeInWeeks;
-                    t[i] += (gestationalAgeInWeeks - DEFAULT_GESTATIONAL_AGE_WEEKS) * 7.0 / 365.0;
+                    ageInYears[i] += (gestationalAgeInWeeks - DEFAULT_GESTATIONAL_AGE_WEEKS) * 7.0 / 365.0;
                 }
                 if (maxGestationalAge > 42)
                     host.Warning("Maximum value in your gestational age variable is " + maxGestationalAge + " weeks", "Anthropometric standardisation");
@@ -722,14 +722,12 @@ namespace StatsDirect.Builtins
                     continue;
                 }
 
-                uncorrectedZ[i] = ZanthroCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], t[i], tday[i], out double lambda, out double mu, out double sigma);
-                correctedZ[i] = ZanthroCorrectZ(uncorrectedZ[i], zCorrectionMode, measure[i], lambda, mu, sigma);
+                uncorrectedZ[i] = ChildGrowthCalculateUncorrectedZ(isMale[i] ? maleTables : femaleTables, measure[i], ageInYears[i], tenThousandthsOfDay[i], out double lambda, out double mu, out double sigma);
+                correctedZ[i] = ChildGrowthCorrectZ(uncorrectedZ[i], zCorrectionMode, measure[i], lambda, mu, sigma);
                 if (includeCentiles)
                     centile[i] = Constant.MISSING == correctedZ[i] ? Constant.MISSING : PDF.alnorm(correctedZ[i]) * 100.0;
                 if (includeBmi)
-                {
-                    bmiCategory[i] = ZanthroCalculateBmiCategory(isMale[i] ? maleBmiCategories : femaleBmiCategories, measure[i], t[i]);
-                }
+                    bmiCategory[i] = ChildGrowthCalculateBmiCategory(isMale[i] ? maleBmiCategories : femaleBmiCategories, measure[i], ageInYears[i]);
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -743,7 +741,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        private static string ZanthroCalculateBmiCategory(BmiCategoryTable table, double bmi, double age)
+        private static string ChildGrowthCalculateBmiCategory(BmiCategoryTable table, double bmi, double age)
         {
             // Use a row if the value being considered is at least the row's age and less than the next row's age.
             // The -1 is deliberate here; the last row of the table isn't usable, it merely provides an upper age.
@@ -751,13 +749,13 @@ namespace StatsDirect.Builtins
             {
                 BmiCategoryTableRow candidate = table.Rows[i];
                 if (candidate.Age <= age && table.Rows[i + 1].Age >= age)
-                    return ZanthroCalculateBmiCategory(table.Rows[i], bmi, age);
+                    return ChildGrowthCalculateBmiCategory(table.Rows[i], bmi, age);
             }
             // If we get here, no row matched
             return Formatting.MISSINGLABEL;
         }
 
-        private static string ZanthroCalculateBmiCategory(BmiCategoryTableRow tableRow, double bmi, double age)
+        private static string ChildGrowthCalculateBmiCategory(BmiCategoryTableRow tableRow, double bmi, double age)
         {
             if (bmi < Interpolate(age, tableRow.Q16))
                 return "Grade 3 thinness";
@@ -776,7 +774,7 @@ namespace StatsDirect.Builtins
         {
             // Assumption: Columns are xmrg, 4 x xvar, 4 x l, 4 x m, 4 x s.
             // Assumption: l, m, s all have _pre, unnamed, _nx, _nx2 in that order.
-            LmsTable table = new LmsTable { Rows = new LmsTableRow[frame.MinRows] };
+            LmsTable table = new LmsTable { Rows = new LambdaMuSigmaTableRow[frame.MinRows] };
             double[] variable0 = ((DoubleVariable)frame.Variables[0]).Data;
             double[] variable1 = ((DoubleVariable)frame.Variables[1]).Data;
             double[] variable2 = ((DoubleVariable)frame.Variables[2]).Data;
@@ -796,36 +794,36 @@ namespace StatsDirect.Builtins
             double[] variable16 = ((DoubleVariable)frame.Variables[16]).Data;
             for (int row = 0; row < frame.MinRows; row++)
             {
-                table.Rows[row] = new LmsTableRow
+                table.Rows[row] = new LambdaMuSigmaTableRow
                 {
                     Xmrg = variable0[row],
                     Xvars =
                     {
-                        Pre = variable1[row],
+                        Previous = variable1[row],
                         Value = variable2[row],
-                        Nx = variable3[row],
-                        Nx2 = variable4[row]
+                        Next = variable3[row],
+                        NextNext = variable4[row]
                     },
                     Lambdas =
                     {
-                        Pre = variable5[row],
+                        Previous = variable5[row],
                         Value = variable6[row],
-                        Nx = variable7[row],
-                        Nx2 = variable8[row]
+                        Next = variable7[row],
+                        NextNext = variable8[row]
                     },
                     Mus =
                     {
-                        Pre = variable9[row],
+                        Previous = variable9[row],
                         Value = variable10[row],
-                        Nx = variable11[row],
-                        Nx2 = variable12[row]
+                        Next = variable11[row],
+                        NextNext = variable12[row]
                     },
                     Sigmas =
                     {
-                        Pre = variable13[row],
+                        Previous = variable13[row],
                         Value = variable14[row],
-                        Nx = variable15[row],
-                        Nx2 = variable16[row]
+                        Next = variable15[row],
+                        NextNext = variable16[row]
                     }
                 };
             }
@@ -865,58 +863,58 @@ namespace StatsDirect.Builtins
                     Age = variable0[row],
                     Q16 =
                     {
-                        Pre = variable1[row],
+                        Previous = variable1[row],
                         Value = variable2[row],
-                        Nx = variable3[row],
-                        Nx2 = variable4[row]
+                        Next = variable3[row],
+                        NextNext = variable4[row]
                     },
                     Q17 =
                     {
-                        Pre = variable5[row],
+                        Previous = variable5[row],
                         Value = variable6[row],
-                        Nx = variable7[row],
-                        Nx2 = variable8[row]
+                        Next = variable7[row],
+                        NextNext = variable8[row]
                     },
                     Q18_5 =
                     {
-                        Pre = variable9[row],
+                        Previous = variable9[row],
                         Value = variable10[row],
-                        Nx = variable11[row],
-                        Nx2 = variable12[row]
+                        Next = variable11[row],
+                        NextNext = variable12[row]
                     },
                     Q25 =
                     {
-                        Pre = variable13[row],
+                        Previous = variable13[row],
                         Value = variable14[row],
-                        Nx = variable15[row],
-                        Nx2 = variable16[row]
+                        Next = variable15[row],
+                        NextNext = variable16[row]
                     },
                     Q30 =
                     {
-                        Pre = variable17[row],
+                        Previous = variable17[row],
                         Value = variable18[row],
-                        Nx = variable19[row],
-                        Nx2 = variable20[row]
+                        Next = variable19[row],
+                        NextNext = variable20[row]
                     }
                 };
             }
             return table;
         }
 
-        private static double ZanthroCorrectZ(double rawZ, ZanthroZCorrectionMode zCorrectionMode, double y, double lambda, double mu, double sigma)
+        private static double ChildGrowthCorrectZ(double rawZ, ChildGrowthZCorrectionMode zCorrectionMode, double y, double lambda, double mu, double sigma)
         {
             if (Constant.MISSING == rawZ)
                 return rawZ;
 
             switch (zCorrectionMode)
             {
-                case ZanthroZCorrectionMode.All:
+                case ChildGrowthZCorrectionMode.All:
                     return rawZ;
-                case ZanthroZCorrectionMode.Censor3Sd:
+                case ChildGrowthZCorrectionMode.Censor3Sd:
                     return Math.Abs(rawZ) > 3.0 ? Constant.MISSING : rawZ;
-                case ZanthroZCorrectionMode.Censor5Sd:
+                case ChildGrowthZCorrectionMode.Censor5Sd:
                     return Math.Abs(rawZ) > 5.0 ? Constant.MISSING : rawZ;
-                case ZanthroZCorrectionMode.Who:
+                case ChildGrowthZCorrectionMode.Who:
                     // For -3 <= z <= 3, use the uncorrected score
                     if (Math.Abs(rawZ) <= 3)
                         return rawZ;
@@ -945,7 +943,7 @@ namespace StatsDirect.Builtins
             return mu * Math.Pow(1 + lambda * sigma * z, 1.0 / lambda);
         }
 
-        private enum ZanthroZCorrectionMode
+        private enum ChildGrowthZCorrectionMode
         {
             All = 0,
             Censor5Sd = 1,
@@ -957,10 +955,10 @@ namespace StatsDirect.Builtins
         {
             public double XmrgLowerBound => Rows[0].Xmrg;
             public double XmrgUpperBound => Rows[Rows.Length - 1].Xmrg;
-            public LmsTableRow[] Rows { get; set; }
+            public LambdaMuSigmaTableRow[] Rows { get; set; }
         }
 
-        public class LmsTableRow
+        public class LambdaMuSigmaTableRow
         {
             public double Xmrg;
             public InterpolationQuad Xvars;
@@ -986,38 +984,38 @@ namespace StatsDirect.Builtins
 
         public struct InterpolationQuad
         {
-            public double Pre;
+            public double Previous;
             public double Value;
-            public double Nx;
-            public double Nx2;
+            public double Next;
+            public double NextNext;
         }
 
-        private static double ZanthroCalculateUncorrectedZ(ICollection<LmsTable> tables, double measure, double t, double tday, out double lambda, out double mu, out double sigma)
+        private static double ChildGrowthCalculateUncorrectedZ(ICollection<LmsTable> tables, double measure, double t, double tenThousandthsOfDay, out double lambda, out double mu, out double sigma)
         {
             // Find the correct table to use. Tables are passed in order of preference, so simply use the first one that matches.
             foreach (LmsTable table in tables)
-                if (table.XmrgLowerBound <= tday && table.XmrgUpperBound >= tday)
-                    return ZanthroCalculateUncorrectedZ(table, measure, t, tday, out lambda, out mu, out sigma);
+                if (table.XmrgLowerBound <= tenThousandthsOfDay && table.XmrgUpperBound >= tenThousandthsOfDay)
+                    return ChildGrowthCalculateUncorrectedZ(table, measure, t, tenThousandthsOfDay, out lambda, out mu, out sigma);
             // If we get here, no table matched.
             lambda = mu = sigma = Constant.MISSING;
             return Constant.MISSING;
         }
 
-        private static double ZanthroCalculateUncorrectedZ(LmsTable table, double measure, double t, double tday, out double lambda, out double mu, out double sigma)
+        private static double ChildGrowthCalculateUncorrectedZ(LmsTable table, double measure, double t, double tenThousandthsOfDay, out double lambda, out double mu, out double sigma)
         {
             // We already know the value is within the bounds of this table; it's just a case of finding which row.
             // Use a row if the value being considered is at least the row's xmrg and less than the next row's xmrg.
             for (int i = 0; i < table.Rows.Length; i++)
             {
-                LmsTableRow candidate = table.Rows[i];
-                if (candidate.Xmrg <= tday && (i == table.Rows.Length - 1 || table.Rows[i + 1].Xmrg >= tday))
-                    return ZanthroCalculateUncorrectedZ(table.Rows[i], measure, t, out lambda, out mu, out sigma);
+                LambdaMuSigmaTableRow candidate = table.Rows[i];
+                if (candidate.Xmrg <= tenThousandthsOfDay && (i == table.Rows.Length - 1 || table.Rows[i + 1].Xmrg >= tenThousandthsOfDay))
+                    return ChildGrowthCalculateUncorrectedZ(table.Rows[i], measure, t, out lambda, out mu, out sigma);
             }
             // If we get here, no row matched despite the table having rows that must match.  Assume the final row.
-            return ZanthroCalculateUncorrectedZ(table.Rows[table.Rows.Length - 1], measure, t, out lambda, out mu, out sigma);
+            return ChildGrowthCalculateUncorrectedZ(table.Rows[table.Rows.Length - 1], measure, t, out lambda, out mu, out sigma);
         }
 
-        private static double ZanthroCalculateUncorrectedZ(LmsTableRow tableRow, double measure, double t, out double lambda, out double mu, out double sigma)
+        private static double ChildGrowthCalculateUncorrectedZ(LambdaMuSigmaTableRow tableRow, double measure, double t, out double lambda, out double mu, out double sigma)
         {
             // t is the corrected xvar - turned into years for any age, TODO: Not sure for ht/wt.
             lambda = Interpolate(t, tableRow.Xvars, tableRow.Lambdas);
@@ -1031,10 +1029,10 @@ namespace StatsDirect.Builtins
         private static double Interpolate(double age, InterpolationQuad quad)
         {
             // If we have all values, cubic interpolation is appropriate.
-            if (quad.Pre != Constant.MISSING && quad.Value != Constant.MISSING && quad.Nx != Constant.MISSING && quad.Nx2 != Constant.MISSING)
+            if (quad.Previous != Constant.MISSING && quad.Value != Constant.MISSING && quad.Next != Constant.MISSING && quad.NextNext != Constant.MISSING)
                 return CubicInterpolate(age, quad);
             // If we have current and next, linear interpolation is appropriate.
-            if (quad.Value != Constant.MISSING && quad.Nx != Constant.MISSING)
+            if (quad.Value != Constant.MISSING && quad.Next != Constant.MISSING)
                 return LinearInterpolate(age, quad);
             // If we're missing even these, there's not a lot we can do.
             throw new NotImplementedException("The table you're aiming to use has an error for value " + age + ": there's not enough data for a cubic or linear interpolation.");
@@ -1047,7 +1045,7 @@ namespace StatsDirect.Builtins
             double halfYearAge = ageInWholeYears + (age - ageInWholeYears >= 0.5 ? 0.5 : 0);
 
             double agefrac = (age - halfYearAge) / ROW_AGE_SPAN;
-            return quad.Value + agefrac * (quad.Nx - quad.Value);
+            return quad.Value + agefrac * (quad.Next - quad.Value);
         }
 
         private static double CubicInterpolate(double age, InterpolationQuad quad)
@@ -1060,9 +1058,9 @@ namespace StatsDirect.Builtins
             double agefrac = (age - halfYearAge) / ROW_AGE_SPAN;
             double agefrac2 = agefrac * agefrac;
 
-            double a0 = (0.0 - quad.Pre) / 6.0 + quad.Value / 2.0 - quad.Nx / 2.0 + quad.Nx2 / 6.0;
-            double a1 = quad.Pre / 2.0 - quad.Value + quad.Nx / 2.0;
-            double a2 = (0.0 - quad.Pre) / 3.0 - quad.Value / 2.0 + quad.Nx - quad.Nx2 / 6.0;
+            double a0 = (0.0 - quad.Previous) / 6.0 + quad.Value / 2.0 - quad.Next / 2.0 + quad.NextNext / 6.0;
+            double a1 = quad.Previous / 2.0 - quad.Value + quad.Next / 2.0;
+            double a2 = (0.0 - quad.Previous) / 3.0 - quad.Value / 2.0 + quad.Next - quad.NextNext / 6.0;
             double a3 = quad.Value;
             return a0 * agefrac * agefrac2 + a1 * agefrac2 + a2 * agefrac + a3;
         }
@@ -1070,12 +1068,12 @@ namespace StatsDirect.Builtins
         private static double Interpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
             // If we have all values, cubic interpolation is appropriate.
-            if (xvar.Pre != Constant.MISSING && xvar.Value != Constant.MISSING && xvar.Nx != Constant.MISSING && xvar.Nx2 != Constant.MISSING
-                && lms.Pre != Constant.MISSING && lms.Value != Constant.MISSING && lms.Nx != Constant.MISSING && lms.Nx2 != Constant.MISSING)
+            if (xvar.Previous != Constant.MISSING && xvar.Value != Constant.MISSING && xvar.Next != Constant.MISSING && xvar.NextNext != Constant.MISSING
+                && lms.Previous != Constant.MISSING && lms.Value != Constant.MISSING && lms.Next != Constant.MISSING && lms.NextNext != Constant.MISSING)
                 return CubicInterpolate(t, xvar, lms);
             // If we have current and next, linear interpolation is appropriate.
-            if (xvar.Value != Constant.MISSING && xvar.Nx != Constant.MISSING
-                && lms.Value != Constant.MISSING && lms.Nx != Constant.MISSING)
+            if (xvar.Value != Constant.MISSING && xvar.Next != Constant.MISSING
+                && lms.Value != Constant.MISSING && lms.Next != Constant.MISSING)
                 return LinearInterpolate(t, xvar, lms);
             // If we're missing even these, there's not a lot we can do.
             throw new NotImplementedException("The table you're aiming to use has an error for value " + t + ": there's not enough data for a cubic or linear interpolation.");
@@ -1083,16 +1081,16 @@ namespace StatsDirect.Builtins
 
         private static double CubicInterpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
-            return lms.Pre * (t - xvar.Value) * (t - xvar.Nx) * (t - xvar.Nx2) / ((xvar.Pre - xvar.Value) * (xvar.Pre - xvar.Nx) * (xvar.Pre - xvar.Nx2))
-                + lms.Value * (t - xvar.Pre) * (t - xvar.Nx) * (t - xvar.Nx2) / ((xvar.Value - xvar.Pre) * (xvar.Value - xvar.Nx) * (xvar.Value - xvar.Nx2))
-                + lms.Nx * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx2) / ((xvar.Nx - xvar.Pre) * (xvar.Nx - xvar.Value) * (xvar.Nx - xvar.Nx2))
-                + lms.Nx2 * (t - xvar.Pre) * (t - xvar.Value) * (t - xvar.Nx) / ((xvar.Nx2 - xvar.Pre) * (xvar.Nx2 - xvar.Value) * (xvar.Nx2 - xvar.Nx));
+            return lms.Previous * (t - xvar.Value) * (t - xvar.Next) * (t - xvar.NextNext) / ((xvar.Previous - xvar.Value) * (xvar.Previous - xvar.Next) * (xvar.Previous - xvar.NextNext))
+                + lms.Value * (t - xvar.Previous) * (t - xvar.Next) * (t - xvar.NextNext) / ((xvar.Value - xvar.Previous) * (xvar.Value - xvar.Next) * (xvar.Value - xvar.NextNext))
+                + lms.Next * (t - xvar.Previous) * (t - xvar.Value) * (t - xvar.NextNext) / ((xvar.Next - xvar.Previous) * (xvar.Next - xvar.Value) * (xvar.Next - xvar.NextNext))
+                + lms.NextNext * (t - xvar.Previous) * (t - xvar.Value) * (t - xvar.Next) / ((xvar.NextNext - xvar.Previous) * (xvar.NextNext - xvar.Value) * (xvar.NextNext - xvar.Next));
         }
 
         private static double LinearInterpolate(double t, InterpolationQuad xvar, InterpolationQuad lms)
         {
-            double xvarfrac = (t - xvar.Value) / (xvar.Nx - xvar.Value);
-            return lms.Value + xvarfrac * (lms.Nx - lms.Value);
+            double xvarfrac = (t - xvar.Value) / (xvar.Next - xvar.Value);
+            return lms.Value + xvarfrac * (lms.Next - lms.Value);
         }
 
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)

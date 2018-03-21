@@ -80,7 +80,7 @@
                 <menu-item label="&amp;Screen Data" operation="ConvertUnitsScreen"/>
               </sub-items>
             </menu-item>
-            <menu-item label="&amp;Anthropometric Standardization" operation="Zanthro" />
+            <menu-item label="&amp;Anthropometric Standardization" operation="ChildGrowth" />
           </sub-items>
         </menu-item>
         <menu-item label="&amp;Organizing">
@@ -250,7 +250,7 @@
               </sub-items>
             </menu-item>
             <menu-item label="Screening &amp;Test Errors" operation="MiscFalseResult" />
-            <menu-item label="&amp;Growth Charts" operation="Zanthro" />
+            <menu-item label="&amp;Growth Charts" operation="ChildGrowth" />
           </sub-items>
         </menu-item>
         <menu-item label="-" />

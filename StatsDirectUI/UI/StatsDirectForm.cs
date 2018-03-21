@@ -36,7 +36,7 @@ namespace StatsDirect.UI
 
         void StatsDirectForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            DoOrSwallow(() -> SdApplication.SoleInstance.NoteASubformCloseIsStarting());
+            DoOrSwallow(() => SdApplication.SoleInstance.NoteASubformCloseIsStarting());
         }
 
         private static void DoOrSwallow(Action func)
