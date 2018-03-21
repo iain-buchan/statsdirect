@@ -13200,7 +13200,7 @@ age,16Previous,16,16Next,16NextNext,17Previous,17,17Next,17NextNext,18.5Previous
         </validators>
       </frame>
       <frame>
-        <name>ageInYears</name>
+        <name>x</name>
         <prompt>="Select data for " + parameters["standardisation"].AsString.Split(new char[] { '|' })[1].Replace("-", " ") + ("age".Equals(parameters["standardisation"].AsString.Split(new char[] { '|' })[1]) ? " (" + parameters["age-unit"].AsString + "s)" : "")</prompt>
         <mode>NumericReplaceMissing</mode>
         <clear-selection-first>true</clear-selection-first>

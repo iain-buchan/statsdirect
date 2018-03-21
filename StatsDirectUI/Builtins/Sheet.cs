@@ -503,7 +503,7 @@ namespace StatsDirect.Builtins
             bool includeCentiles = parameters["include-centiles"].AsBoolean;
             DataFrame measureFrame = parameters["measure"].AsDataFrame;
             DoubleVariable measureVariable = (DoubleVariable)measureFrame.Variables[0];
-            DataFrame xvarFrame = parameters["xvar"].AsDataFrame;
+            DataFrame xvarFrame = parameters["x"].AsDataFrame;
             DoubleVariable xvarVariable = (DoubleVariable)xvarFrame.Variables[0];
             DataFrame sexFrame = parameters["sex"].AsDataFrame;
             StringVariable sexVariable = (StringVariable)sexFrame.Variables[0];
