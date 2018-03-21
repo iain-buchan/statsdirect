@@ -36,7 +36,23 @@ namespace StatsDirect.UI
 
         void StatsDirectForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            SdApplication.SoleInstance.NoteASubformCloseIsStarting();
+            DoOrSwallow(() -> SdApplication.SoleInstance.NoteASubformCloseIsStarting());
+        }
+
+        private static void DoOrSwallow(Action func)
+        {
+#if !WATCH_EXCEPTIONS
+            try
+            {
+#endif
+            func();
+#if !WATCH_EXCEPTIONS
+            }
+            catch (Exception ex)
+            {
+                SdApplication.WriteToBlackbox("Unexpected exception in spreadsheet form", ex);
+            }
+#endif
         }
 
         /// <summary>

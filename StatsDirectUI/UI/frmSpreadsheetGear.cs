@@ -56,14 +56,17 @@ namespace StatsDirect.UI
 
         private void frmSpreadsheetGear_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!AllowClose())
+            DoOrWarn(() =>
             {
-                e.Cancel = true;
-                return;
-            }
-            SdApplication.SoleInstance.NoteFormClosing(this, e);
-            Visible = false;
-            MdiParent = null;
+                if (!AllowClose())
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                SdApplication.SoleInstance.NoteFormClosing(this, e);
+                Visible = false;
+                MdiParent = null;
+            }, "Couldn't close form");
         }
 
         private void frmSpreadsheetGear_Activated(object sender, EventArgs e)

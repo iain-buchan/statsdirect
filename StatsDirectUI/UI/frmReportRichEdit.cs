@@ -37,15 +37,18 @@ namespace StatsDirect.UI
 
         private void frmReport_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!AllowClose())
+            DoOrWarn(() =>
             {
-                e.Cancel = true;
-                return;
-            }
-            UnmergeToolStrip();
-            SdApplication.SoleInstance.NoteFormClosing(this, e);
-            Visible = false;
-            MdiParent = null;
+                if (!AllowClose())
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                UnmergeToolStrip();
+                SdApplication.SoleInstance.NoteFormClosing(this, e);
+                Visible = false;
+                MdiParent = null;
+            }, "Couldn't close form");
         }
 
         private void frmReport_TextChanged(object sender, EventArgs e)
@@ -66,9 +69,7 @@ namespace StatsDirect.UI
             else
             {
                 using (StreamReader txtReader = new StreamReader(filename))
-                {
                     richEditControl1.Text = txtReader.ReadToEnd();
-                }
             }
             if (!isTempFile)
             {
@@ -84,7 +85,7 @@ namespace StatsDirect.UI
             try
             {
 #endif
-                func();
+            func();
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
@@ -100,7 +101,7 @@ namespace StatsDirect.UI
             try
             {
 #endif
-                func();
+            func();
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception)
@@ -460,7 +461,7 @@ namespace StatsDirect.UI
             });
         }
 
-        public override IList<Pane> AvailablePanes => new List<Pane> {((IForm) this).SelectedPane};
+        public override IList<Pane> AvailablePanes => new List<Pane> { ((IForm)this).SelectedPane };
 
         public override Pane SelectedPane => new Pane(Text, WindowInformation, 0);
 
@@ -789,7 +790,7 @@ namespace StatsDirect.UI
             try
             {
 #endif
-                ExportSelectedImage();
+            ExportSelectedImage();
 #if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
@@ -1019,7 +1020,7 @@ namespace StatsDirect.UI
             int startPos = doc.Range.Start.ToInt();
             int length = doc.Range.End.ToInt() - startPos;
             DocumentRange range = doc.CreateRange(startPos, length);
-            ISearchResult searchResult = doc.StartSearch("!!FIRSTCELLOFTABLE!!" , SearchOptions.None, SearchDirection.Forward, range);
+            ISearchResult searchResult = doc.StartSearch("!!FIRSTCELLOFTABLE!!", SearchOptions.None, SearchDirection.Forward, range);
             // StartSearch merely sets up the search; use FindNext to find the first result.
             while (searchResult.FindNext())
                 FixupTableAt(searchResult.CurrentResult);

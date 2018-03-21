@@ -53,14 +53,18 @@ namespace StatsDirect.UI
 
         private void frmScript_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!AllowClose())
+            DoOrWarn(() =>
             {
-                e.Cancel = true;
-                return;
-            }
-            SdApplication.SoleInstance.NoteFormClosing(this, e);
-            Visible = false;
-            MdiParent = null;
+                if (!AllowClose())
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                SdApplication.SoleInstance.NoteFormClosing(this, e);
+                Visible = false;
+                MdiParent = null;
+            }, "Couldn't close form");
+
         }
 
         private void frmScript_TextChanged(object sender, EventArgs e)
@@ -364,31 +368,34 @@ namespace StatsDirect.UI
 
         private void cmdRun_Click(object sender, EventArgs e)
         {
-            rtbOutput.AppendText("\n======== Start of run ========\n");
-            try
+            DoOrWarn(() =>
             {
-                string script = rtbDoc.Text;
-                IScriptEngine engine = new ScriptEngine();
-                string Language = ScriptLanguageForScript();
-                object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);
-                if (null != output)
+                rtbOutput.AppendText("\n======== Start of run ========\n");
+                try
                 {
-                    if (output is ParameterBag)
+                    string script = rtbDoc.Text;
+                    IScriptEngine engine = new ScriptEngine();
+                    string Language = ScriptLanguageForScript();
+                    object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);
+                    if (null != output)
                     {
-                        DumpParameterBag(rtbOutput, (ParameterBag)output, 0);
-                    }
-                    else
-                    {
-                        rtbOutput.AppendText(output.ToString());
-                        rtbOutput.AppendText("\n");
+                        if (output is ParameterBag)
+                        {
+                            DumpParameterBag(rtbOutput, (ParameterBag)output, 0);
+                        }
+                        else
+                        {
+                            rtbOutput.AppendText(output.ToString());
+                            rtbOutput.AppendText("\n");
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                rtbOutput.AppendText("Error: " + ex.Message + "\n");
-            }
-            rtbOutput.AppendText("======== End of run ========\n");
+                catch (Exception ex)
+                {
+                    rtbOutput.AppendText("Error: " + ex.Message + "\n");
+                }
+                rtbOutput.AppendText("======== End of run ========\n");
+            }, "Couldn't run script");
         }
 
         private static void DumpParameterBag(RichTextBox rtb, ParameterBag output, int depth)
@@ -485,6 +492,22 @@ namespace StatsDirect.UI
         {
             // Nothing to save
             return true;
+        }
+
+        private static void DoOrWarn(Action func, string explanation)
+        {
+#if !WATCH_EXCEPTIONS
+            try
+            {
+#endif
+            func();
+#if !WATCH_EXCEPTIONS
+            }
+            catch (Exception ex)
+            {
+                SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
+            }
+#endif
         }
     }
 }
