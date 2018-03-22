@@ -73,7 +73,7 @@ Global
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x86.ActiveCfg = Debug|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Debug|x86.Build.0 = Debug|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|Any CPU.ActiveCfg = DebugWatchExceptions|x86
-		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = DebugWatchExceptions|x86
+		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = DebugWatchExceptions|Any CPU
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|x64.ActiveCfg = DebugWatchExceptions|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.DebugWatchExceptions|x86.ActiveCfg = DebugWatchExceptions|x86
 		{E078706D-AAFB-4C68-A06A-165B039FB3A4}.Release|Any CPU.ActiveCfg = Release|x86
@@ -249,12 +249,12 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_BuildAction = Both
-		BuildVersion_ConfigurationName = ReleaseWithSigning
-		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
-		BuildVersion_UpdateAssemblyVersion = False
-		BuildVersion_UpdateFileVersion = False
 		SolutionGuid = {2FDBC1DF-95AE-4E49-BA6E-9D86691DEE8D}
+		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
+		BuildVersion_ConfigurationName = ReleaseWithSigning
+		BuildVersion_BuildAction = Both
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal
