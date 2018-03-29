@@ -1358,7 +1358,8 @@ namespace StatsDirect.Charting.Renderer
                     y1 = y2;
                 }
             }
-            DrawLegend(legend);
+            if (null != legend)
+                DrawLegend(legend);
             EndVectorPlot();
         }
 
