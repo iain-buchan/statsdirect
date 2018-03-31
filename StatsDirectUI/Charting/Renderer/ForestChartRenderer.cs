@@ -17,11 +17,17 @@ namespace StatsDirect.Charting.Renderer
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             ForestOptions fOptions = (ForestOptions)Definition.ChartOptions;
+            /*
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
             double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
             double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
             int k = odr.Length;
+            */
+            double[] odr = fOptions.OddsRatios;
+            double[] odrl = fOptions.OddsRatioLcis;
+            double[] odru = fOptions.OddsRatioUcis;
+            int k = fOptions.k;
 
             DataMaxX = double.MinValue;
             DataMinX = double.MaxValue;
@@ -40,7 +46,7 @@ namespace StatsDirect.Charting.Renderer
                         DataMinGreaterThanZeroX = odr[i];
 
                     // Swap LCI and UCI if the user's entered them the wrong way round
-                    if (odrl[i] > odru[i])
+                    if (odrl[i] != Constant.MISSING && odru[i] != Constant.MISSING && odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
                         odrl[i] = odru[i];
@@ -92,6 +98,7 @@ namespace StatsDirect.Charting.Renderer
             MarkerType studyMarkerType = fOptions.MarkerTypes[0];
             MarkerType pooledMarkerType = fOptions.MarkerTypes[1];
 
+            /*
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis, fOptions.gn, fOptions.pg }, 0, fOptions.k, 0);
             double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
             double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
@@ -99,8 +106,16 @@ namespace StatsDirect.Charting.Renderer
             double[] gn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
             double[] pg = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[4];
             int k = odr.Length;
-
             string[] title = Numerics.Utilities.CopyValidRows(fOptions.Titles, copiesRemovingMissingRows.ValidRowsInOriginal, 0, fOptions.k, 0, k);
+            */
+            double[] odr = fOptions.OddsRatios;
+            double[] odrl = fOptions.OddsRatioLcis;
+            double[] odru = fOptions.OddsRatioUcis;
+            double[] gn = fOptions.gn;
+            double[] pg = fOptions.pg;
+            int k = fOptions.k;
+
+            string[] title = fOptions.Titles;
 
             ScaleHeight(k);
 
@@ -126,15 +141,19 @@ namespace StatsDirect.Charting.Renderer
                         DataMinX = odr[i];
                     if (odr[i] > 0 && odr[i] < DataMinGreaterThanZeroX)
                         DataMinGreaterThanZeroX = odr[i];
-                    if (odrl[i] > odru[i])
+                    if (odrl[i] != Constant.MISSING && odru[i] != Constant.MISSING && odrl[i] > odru[i])
                     {
                         double tmp = odrl[i];
                         odrl[i] = odru[i];
                         odru[i] = tmp;
                     }
-                    if (odrl[i] < DataMinX && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                    if (odrl[i] == Constant.MISSING)
+                        odrl[i] = double.NegativeInfinity;
+                    if (odru[i] == Constant.MISSING)
+                        odru[i] = double.PositiveInfinity;
+                    if (odrl[i] < DataMinX && odrl[i] > 0 && !double.IsInfinity(odrl[i]))
                         DataMinX = odrl[i];
-                    if (odru[i] > DataMaxX && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                    if (odru[i] > DataMaxX && !double.IsInfinity(odru[i]))
                         DataMaxX = odru[i];
                 }
             }
@@ -144,9 +163,9 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0 && odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                     absmin = Math.Abs(odr[i]);
-                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && !double.IsInfinity(odrl[i]))
                     absmin = Math.Abs(odrl[i]);
-                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && !double.IsInfinity(odru[i]))
                     absmin = Math.Abs(odru[i]);
             }
             DataMinGreaterThanZeroX = DataMinX;
@@ -214,7 +233,7 @@ namespace StatsDirect.Charting.Renderer
                         double ytop = ToCanvasHeight(r + pbias);
                         double xm = ToCanvasX(Math.Max(odr[i], axisScales.X.MinimumScaleValue));
                         double xl = ToCanvasX(Math.Max(odrl[i], axisScales.X.MinimumScaleValue));
-                        double xr = ToCanvasX(odru[i]);
+                        double xr = ToCanvasX(Math.Min(odru[i], axisScales.X.MaximumScaleValue));
                         double y2 = (ytop - yctr) / 1.5;
                         double y3 = (ytop - yctr) / 4;
                         double yc = OffY + yctr;
@@ -230,12 +249,12 @@ namespace StatsDirect.Charting.Renderer
                             // CI line
                             DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
                             // Arrow ends if not plottable
-                            if (odrl[i] < axisScales.X.MinimumScaleValue || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
+                            if (odrl[i] < axisScales.X.MinimumScaleValue || double.IsInfinity(odrl[i]))
                             {
                                 DrawLineInCanvasCoordinates(ciPen, xl + y3, yc + y3, xl, yc);
                                 DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + y3, yc - y3);
                             }
-                            if (odru[i] == Constant.MISSING || double.IsInfinity(odru[i]))
+                            if (odru[i] > axisScales.X.MaximumScaleValue || double.IsInfinity(odru[i]))
                             {
                                 DrawLineInCanvasCoordinates(ciPen, xr - y3, yc + y3, xr, yc);
                                 DrawLineInCanvasCoordinates(ciPen, xr, yc, xr - y3, yc - y3);
@@ -254,6 +273,17 @@ namespace StatsDirect.Charting.Renderer
                             {
                                 // pooled effect marker
                                 DrawLineInCanvasCoordinates(effectTenPen, xm, yt, xm, ToCanvasY(k + pbias - 0.5));
+                            }
+                            // Arrow ends if not plottable
+                            if (odrl[i] < axisScales.X.MinimumScaleValue || double.IsInfinity(odrl[i]))
+                            {
+                                DrawLineInCanvasCoordinates(pooledCiPen, xl + y3, yc + y3, xl, yc);
+                                DrawLineInCanvasCoordinates(pooledCiPen, xl, yc, xl + y3, yc - y3);
+                            }
+                            if (odru[i] > axisScales.X.MaximumScaleValue || double.IsInfinity(odru[i]))
+                            {
+                                DrawLineInCanvasCoordinates(pooledCiPen, xr - y3, yc + y3, xr, yc);
+                                DrawLineInCanvasCoordinates(pooledCiPen, xr, yc, xr - y3, yc - y3);
                             }
 
                         }
