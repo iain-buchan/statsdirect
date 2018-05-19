@@ -715,6 +715,10 @@ namespace StatsDirect.Numerics
                 return Constant.MISSING;
 
             double com = Math.Exp(a * Math.Log(x) - gl - x);
+            if (com == 0.0)
+            {
+                return 0.0;
+            }
             double term = 1.0;
             double sum = 1.0;
             double one = 1.0;
@@ -722,7 +726,7 @@ namespace StatsDirect.Numerics
             {
                 term = term * x / (a + one);
                 sum = sum + term;
-                if (term <= 0.000000000001)
+                if (term <= 0.000000000001) 
                 {
                     break;
                 }
