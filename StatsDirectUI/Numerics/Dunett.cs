@@ -711,6 +711,8 @@ namespace StatsDirect.Numerics
         private static double gamf(double x, double a)
         {
             double gl = PDF.alogam(a + 1.0);
+            if (double.IsNaN(x)||double.IsNaN(a)) // IEB 18 Jul 18: prevent a loop if x is NaN
+                return Constant.MISSING;
             if (gl == Constant.MISSING)
                 return Constant.MISSING;
 

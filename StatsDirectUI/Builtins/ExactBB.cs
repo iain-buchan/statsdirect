@@ -637,7 +637,7 @@ namespace StatsDirect.Builtins
             {
                 double minA = Math.Max(0.0, transTemp3.M1 - transTemp3.N0); // Min val of the "a" cell w/ these margins
                 double maxA = Math.Min(transTemp3.M1, transTemp3.N1); // Max val of the "a" cell w/ these margins
-                degDi = Convert.ToInt32(maxA - minA); // The degree of this table's polynomial
+                degDi = Convert.ToInt32(Math.Floor(maxA - minA)); // The degree of this table's polynomial - IEB 18 Jul 18: can be too large if input cell data are not integer so take floor
 
                 // The polynomial coefficients are scaled so that the first
                 // coef is 1.0. Note the recursive relation between coefficients.
@@ -797,9 +797,9 @@ namespace StatsDirect.Builtins
             ierr = 0;
 
             int polydim = maxSumA - minSumA;
-            double[] poly1 = new double[polydim + 1 ];
+            double[] poly1 = new double[polydim + 1];
             double[] poly2 = new double[polydim + 1];
-            polyD = new double[polydim + 1 ];
+            polyD = new double[polydim + 1];
             polyN = new double[polydim + 1];
 
             switch (dataType)
