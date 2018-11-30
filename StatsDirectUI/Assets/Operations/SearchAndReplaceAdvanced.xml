@@ -38,6 +38,10 @@
         <name>search-expression</name>
         <lifetime>SessionForThisOperation</lifetime>
         <must-request>true</must-request>
+        <validators>
+          <validator>Expression</validator>
+        </validators>
+        <validation-fail-message>Please enter a valid search expression</validation-fail-message>
       </string>
       <!-- Ideally we'd provide a way of comparing case-sensitive or case-insensitive. However, this reaches a long way down the expression renderer due to the way string comparisons work - so we're not.
       <boolean>
@@ -71,6 +75,10 @@
         <lifetime>SessionForThisOperation</lifetime>
         <acquire-if-true>=parameters.ContainsKey("action") &amp;&amp; null != parameters["action"] &amp;&amp; null != parameters["action"].AsString &amp;&amp; parameters["action"].AsString.StartsWith("replace")</acquire-if-true>
         <must-request>true</must-request>
+        <validators>
+          <validator>Expression</validator>
+        </validators>
+        <validation-fail-message>Please enter a valid replace expression</validation-fail-message>
       </string>
     </parameters>
     <test>

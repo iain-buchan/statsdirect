@@ -7,6 +7,35 @@ namespace StatsDirect.Expressions
 {
     public class Converter
     {
+        public static bool IsValid(string expr)
+        {
+            // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.
+            // TODO: This also smashes spaces in strings, which we don't want!
+            if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
+                expr = expr.Replace(" ", string.Empty);
+
+            AntlrInputStream input = new AntlrInputStream(expr);
+            StatsDirectExpressionLexer lexer = new StatsDirectExpressionLexer(input)
+            {
+                Separators = GetSeparatorStructure()
+            };
+            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+            StatsDirectExpressionParser parser = new StatsDirectExpressionParser(tokenStream);
+            StringBuilder errorBuilder = new StringBuilder();
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(new AccumulateErrors(errorBuilder));
+            StatsDirectExpressionParser.RContext retval = parser.r();
+            if (parser.NumberOfSyntaxErrors > 0)
+                return false;
+
+            // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
+            if (!"<EOF>".Equals(parser.CurrentToken.Text))
+                return false;
+            if (null == retval || null == retval.node)
+                return false;
+            return true;
+        }
+
         public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes, bool inputsAreObjects, out DataType resultType)
         {
             // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.

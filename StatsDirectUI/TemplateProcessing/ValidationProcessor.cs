@@ -1,4 +1,5 @@
-﻿using StatsDirect.Data;
+﻿using StatsDirect.Builtins;
+using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -33,11 +34,11 @@ namespace StatsDirect.TemplateProcessing
 
         private static string ValidateGeneric(ITemplateHost host, string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
         {
-            // If we're allowing blank parameters, accept a blank
+            // If we're allowing blank parameters, accept a blank.
             if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
                 return null;
 
-            // If there's no custom validator with that name, use a generic if we have one.
+            // There's no custom validator with that name (or we would never be called), so use a generic if we have one.
             // Note that some of these validators assume a particular frame name - deal with that here.
             string parameterName;
             switch (validatorName)
@@ -50,39 +51,45 @@ namespace StatsDirect.TemplateProcessing
                     break;
             }
 
-            DataFrame dataFrame = filledParameters[parameterName].AsDataFrame;
+            // If the parameter is missing and it has an AcquireIfTrue, assume it was never acquired and that was OK.
+            if (parameter.HasAcquireIfTrue && !filledParameters.ContainsKey(parameterName))
+                return null;
+
+            FilledParameter p = filledParameters[parameterName];
             switch (validatorName)
             {
-                case "Pooling":
-                    return ValidatePooling(failedValidationMessage, dataFrame);
-                case "Square":
-                    return ValidateSquare(failedValidationMessage, dataFrame);
-                case "SquareBins":
-                    return ValidateSquareBins(failedValidationMessage, dataFrame);
-                case "CheckForNonDummiedCategories":
-                    return CheckForNonDummiedCategories(host, dataFrame);
                 case "Boolean":
-                    return ValidateBoolean(failedValidationMessage, dataFrame);
-                case "Positive":
-                    return ValidatePositive(failedValidationMessage, dataFrame);
+                    return ValidateBoolean(failedValidationMessage, p.AsDataFrame);
+                case "CheckForNonDummiedCategories":
+                    return CheckForNonDummiedCategories(host, p.AsDataFrame);
+                case "Expression":
+                    return ValidateExpression(failedValidationMessage, p.AsString);
                 case "Integer":
-                    return ValidateInteger(failedValidationMessage, dataFrame);
-                case "PositiveRows":
-                    return ValidatePositiveRows(failedValidationMessage, dataFrame);
-                case "PositiveRowsExceptLastColumn":
-                    return ValidatePositiveRowsExceptLastColumn(failedValidationMessage, dataFrame);
-                case "NonNegative":
-                    return ValidateNonNegative(failedValidationMessage, dataFrame);
-                case "ZeroToOneExclusive":
-                    return ValidateZeroToOneExclusive(failedValidationMessage, dataFrame);
-                case "ZeroToOneInclusive":
-                    return ValidateZeroToOneInclusive(failedValidationMessage, dataFrame);
-                case "TwoBinsAndNoMissingData":
-                    return ValidateTwoBins(failedValidationMessage, dataFrame);
+                    return ValidateInteger(failedValidationMessage, p.AsDataFrame);
                 case "NoMissingData":
-                    return ValidateNoMissingData(failedValidationMessage, dataFrame);
+                    return ValidateNoMissingData(failedValidationMessage, p.AsDataFrame);
+                case "NonNegative":
+                    return ValidateNonNegative(failedValidationMessage, p.AsDataFrame);
                 case "PersonTimeSize":
-                    return ValidatePersonTimeSize(dataFrame);
+                    return ValidatePersonTimeSize(p.AsDataFrame);
+                case "Pooling":
+                    return ValidatePooling(failedValidationMessage, p.AsDataFrame);
+                case "Positive":
+                    return ValidatePositive(failedValidationMessage, p.AsDataFrame);
+                case "PositiveRows":
+                    return ValidatePositiveRows(failedValidationMessage, p.AsDataFrame);
+                case "PositiveRowsExceptLastColumn":
+                    return ValidatePositiveRowsExceptLastColumn(failedValidationMessage, p.AsDataFrame);
+                case "Square":
+                    return ValidateSquare(failedValidationMessage, p.AsDataFrame);
+                case "SquareBins":
+                    return ValidateSquareBins(failedValidationMessage, p.AsDataFrame);
+                case "TwoBinsAndNoMissingData":
+                    return ValidateTwoBins(failedValidationMessage, p.AsDataFrame);
+                case "ZeroToOneExclusive":
+                    return ValidateZeroToOneExclusive(failedValidationMessage, p.AsDataFrame);
+                case "ZeroToOneInclusive":
+                    return ValidateZeroToOneInclusive(failedValidationMessage, p.AsDataFrame);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(validatorName), validatorName, "No validator with the specified name");
             }
@@ -122,6 +129,13 @@ namespace StatsDirect.TemplateProcessing
                     foreach (double value in doubleVariable.Data)
                         if (value == Constant.MISSING)
                             return failedValidationMessage ?? "Data with missing values cannot be used here";
+            return null;
+        }
+
+        private static string ValidateExpression(string failedValidationMessage, string expression)
+        {
+            if (!Calcit.IsValid(expression))
+                return failedValidationMessage ?? "Please enter a valid expression";
             return null;
         }
 

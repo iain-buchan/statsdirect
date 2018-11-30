@@ -27,6 +27,8 @@ namespace StatsDirect.Builtins
             OutputType = SetEquation(equation, passedVariableTypes, assumeVariants, out bool _);
         }
 
+        public static bool IsValid(string expression) => Converter.IsValid(expression);
+
         private DataType SetEquation(string equation, DataType[] passedVariableTypes, bool assumeVariants, out bool compiledForVariants)
         {
             const string typeName = "Temp1";
