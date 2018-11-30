@@ -141,18 +141,18 @@ namespace StatsDirect.UI
                 ChartPreferences.MarkerTypes[i] = workingMarkerTypes[i];
             ChartPreferences.SaveMarkerTypes();
 
-            ChartPreferences.DefaultAxisLabelFont = EmfCanvas.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.DefaultAxisTitleFont = EmfCanvas.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.DefaultLabelFont = EmfCanvas.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.DefaultLegendFont = EmfCanvas.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.DefaultTitleFont = EmfCanvas.DescriptorFromFont(lblTitleFont.Font);
+            ChartPreferences.DefaultAxisLabelFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultAxisTitleFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultLabelFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultLegendFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            ChartPreferences.DefaultTitleFont = FontCache.DescriptorFromFont(lblTitleFont.Font);
             ChartPreferences.SaveFonts();
         }
 
         private void LoadOptions()
         {
-            lblAxisLabelFont.Font = EmfCanvas.FontFromDescriptor(ChartPreferences.DefaultLabelFont);
-            lblTitleFont.Font = EmfCanvas.FontFromDescriptor(ChartPreferences.DefaultTitleFont);
+            lblAxisLabelFont.Font = FontCache.FontFromDescriptor(ChartPreferences.DefaultLabelFont);
+            lblTitleFont.Font = FontCache.FontFromDescriptor(ChartPreferences.DefaultTitleFont);
 
             chkAllBlack.Checked = !SdApplication.SoleInstance.Preferences.ShouldUseColour;
             chkBoxAxes.Checked = ChartPreferences.DefaultBoxAxes;

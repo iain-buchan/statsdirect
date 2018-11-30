@@ -1,11 +1,10 @@
-﻿using System;
+﻿using StatsDirect.Templates;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
-using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class ErrorBarChartRenderer: AbstractChartRenderer, IChartRenderer
+    class ErrorBarChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public ErrorBarChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
             : base(cd, canvasFactory)
@@ -123,55 +122,53 @@ namespace StatsDirect.Charting.Renderer
                 List<MultiDoublePoint> safesBySeries = new List<MultiDoublePoint>();
 
                 // Draw the error bars first so we don't interfere with connection lines
-                using (Pen p = GetMarkerPen(eOptions.MarkerTypes[seriesIndex]))
+                PenDescriptor p = GetMarkerPen(eOptions.MarkerTypes[seriesIndex]);
+                foreach (MultiDoublePoint pt in s.Data)
                 {
-                    foreach (MultiDoublePoint pt in s.Data)
+                    // Check for overlaps with any existing error bar.  If none, save this one; if there is one, offset by the line width and try again.
+                    MultiDoublePoint safePoint = pt;
+                    if (shouldCheckForOffsets)
                     {
-                        // Check for overlaps with any existing error bar.  If none, save this one; if there is one, offset by the line width and try again.
-                        MultiDoublePoint safePoint = pt;
-                        if (shouldCheckForOffsets)
+                        while (true)
                         {
-                            while (true)
+                            int roughX = (int)Math.Round(ToCanvasX(safePoint.X));
+                            if (!alreadyUsed.TryGetValue(roughX, out List<MultiDoublePoint> barsAtRoughX))
                             {
-                                int roughX = (int)Math.Round(ToCanvasX(safePoint.X));
-                                if (!alreadyUsed.TryGetValue(roughX, out List<MultiDoublePoint> barsAtRoughX))
-                                {
-                                    // this one's the first point at this X; known safe.  Record it and move on.
-                                    alreadyUsed.Add(roughX, new List<MultiDoublePoint> { safePoint });
-                                    break;
-                                }
+                                // this one's the first point at this X; known safe.  Record it and move on.
+                                alreadyUsed.Add(roughX, new List<MultiDoublePoint> { safePoint });
+                                break;
+                            }
 
-                                // If we get here, there's at least one bar at this rough X.  Check for overlaps; if they exist, offset this by 1 and try that instead.
-                                bool atLeastOneOverlap = false;
-                                foreach (MultiDoublePoint existingBar in barsAtRoughX)
+                            // If we get here, there's at least one bar at this rough X.  Check for overlaps; if they exist, offset this by 1 and try that instead.
+                            bool atLeastOneOverlap = false;
+                            foreach (MultiDoublePoint existingBar in barsAtRoughX)
+                            {
+                                if (safePoint.get_Y(1) < existingBar.get_Y(2) && safePoint.get_Y(2) > existingBar.get_Y(1))
                                 {
-                                    if (safePoint.get_Y(1) < existingBar.get_Y(2) && safePoint.get_Y(2) > existingBar.get_Y(1))
-                                    {
-                                        atLeastOneOverlap = true;
-                                        safePoint = safePoint.Clone();
-                                        safePoint.X += aboutALineWidth;
-                                        break;
-                                    }
-                                }
-                                if (!atLeastOneOverlap)
-                                {
-                                    // We've found somewhere to put this point.  Record it and move on.
-                                    alreadyUsed[roughX].Add(safePoint);
+                                    atLeastOneOverlap = true;
+                                    safePoint = safePoint.Clone();
+                                    safePoint.X += aboutALineWidth;
                                     break;
                                 }
                             }
+                            if (!atLeastOneOverlap)
+                            {
+                                // We've found somewhere to put this point.  Record it and move on.
+                                alreadyUsed[roughX].Add(safePoint);
+                                break;
+                            }
                         }
-                        safesBySeries.Add(safePoint);
-
-                        double x = ToCanvasX(safePoint.X);
-                        double yl = ToCanvasY(safePoint.get_Y(1));
-                        double yu = ToCanvasY(safePoint.get_Y(2));
-                        // Draw the endlines
-                        DrawLineInCanvasCoordinates(p, x - 10, yl, x + 10, yl);
-                        DrawLineInCanvasCoordinates(p, x - 10, yu, x + 10, yu);
-                        // Draw the bar
-                        DrawLineInCanvasCoordinates(p, x, yl, x, yu);
                     }
+                    safesBySeries.Add(safePoint);
+
+                    double x = ToCanvasX(safePoint.X);
+                    double yl = ToCanvasY(safePoint.get_Y(1));
+                    double yu = ToCanvasY(safePoint.get_Y(2));
+                    // Draw the endlines
+                    DrawLineInCanvasCoordinates(p, x - 10, yl, x + 10, yl);
+                    DrawLineInCanvasCoordinates(p, x - 10, yu, x + 10, yu);
+                    // Draw the bar
+                    DrawLineInCanvasCoordinates(p, x, yl, x, yu);
                 }
 
                 //  Plot the markers
@@ -187,20 +184,18 @@ namespace StatsDirect.Charting.Renderer
 
                 if (eOptions.JoinMarkersWithLines)
                 {
-                    using (Pen pStyled = GetLinePen(eOptions.MarkerTypes[seriesIndex], false))
-                    {
-                        // set the initial values of x2,y2 to x1,y1
-                        double x2 = ToCanvasX(s.Data[0].X);
-                        double y2 = ToCanvasY(s.Data[0].get_Y(0));
+                    PenDescriptor pStyled = GetLinePen(eOptions.MarkerTypes[seriesIndex], false);
+                    // set the initial values of x2,y2 to x1,y1
+                    double x2 = ToCanvasX(s.Data[0].X);
+                    double y2 = ToCanvasY(s.Data[0].get_Y(0));
 
-                        foreach (MultiDoublePoint pt in safesBySeries)
-                        {
-                            double x1 = ToCanvasX(pt.X);
-                            double y1 = ToCanvasY(pt.get_Y(0));
-                            DrawLineInCanvasCoordinates(pStyled, x1, y1, x2, y2);
-                            x2 = x1;
-                            y2 = y1;
-                        }
+                    foreach (MultiDoublePoint pt in safesBySeries)
+                    {
+                        double x1 = ToCanvasX(pt.X);
+                        double y1 = ToCanvasY(pt.get_Y(0));
+                        DrawLineInCanvasCoordinates(pStyled, x1, y1, x2, y2);
+                        x2 = x1;
+                        y2 = y1;
                     }
                 }
             }

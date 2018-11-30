@@ -39,30 +39,28 @@ namespace StatsDirect.Charting.Renderer
                 false, false,
                 legend);
 
-            using (Pen p = new Pen(GrBlack, 1))
+            PenDescriptor p = new PenDescriptor(GrBlack, 1);
+            int istart = 0;
+            for (int k = 1; k <= 2; k++)
             {
-                int istart = 0;
-                for (int k = 1; k <= 2; k++)
+                PointF[] xys = new PointF[gn[k] + 1];
+                xys[0].X = -1;
+                xys[0].Y = -1;
+                for (int i = 1; i <= gn[k]; i++)
                 {
-                    PointF[] xys = new PointF[gn[k] + 1];
-                    xys[0].X = -1;
-                    xys[0].Y = -1;
-                    for (int i = 1; i <= gn[k]; i++)
+                    if (xp[istart + i] != Constant.MISSING && yp[istart + i] != Constant.MISSING)
                     {
-                        if (xp[istart + i] != Constant.MISSING && yp[istart + i] != Constant.MISSING)
-                        {
-                            xys[i].X = (float)ToCanvasX(xp[istart + i]);
-                            xys[i].Y = (float)ToCanvasY(yp[istart + i]);
-                        }
-                        else
-                        {
-                            xys[i].X = -1;
-                            xys[i].Y = -1;
-                        }
+                        xys[i].X = (float)ToCanvasX(xp[istart + i]);
+                        xys[i].Y = (float)ToCanvasY(yp[istart + i]);
                     }
-                    DrawMarkerSeriesInCanvasCoordinates(xys, 6, (MarkerShape)k, false, p, p, true, true);
-                    istart += gn[k];
+                    else
+                    {
+                        xys[i].X = -1;
+                        xys[i].Y = -1;
+                    }
                 }
+                DrawMarkerSeriesInCanvasCoordinates(xys, 6, (MarkerShape)k, false, p, p, true, true);
+                istart += gn[k];
             }
             DrawLegend(legend);
             EndVectorPlot();
@@ -186,8 +184,8 @@ namespace StatsDirect.Charting.Renderer
             MarkerType mt = ChartPreferences.MarkerTypes[igp % 9];
             MarkerShape shape = mt.MarkerShape;
             bool isFilled = mt.IsMarkerFilled;
-            Pen markerPen = GetMarkerPen(mt);
-            Pen linePen = GetLinePen(mt, true);
+            PenDescriptor markerPen = GetMarkerPen(mt);
+            PenDescriptor linePen = GetLinePen(mt, true);
 
             for (int i = 1; i <= iobs; i++)
             {
@@ -196,8 +194,6 @@ namespace StatsDirect.Charting.Renderer
                     igp = igp + 1;
                     ix1 = ix0;
                     iy1 = iy0;
-                    markerPen.Dispose();
-                    linePen.Dispose();
                     mt = ChartPreferences.MarkerTypes[igp % 9];
                     markerPen = GetMarkerPen(mt);
                     linePen = GetLinePen(mt, true);
@@ -256,8 +252,6 @@ namespace StatsDirect.Charting.Renderer
                 ix1 = ix2;
                 iy1 = iy2;
             }
-            markerPen.Dispose();
-            linePen.Dispose();
             DrawLegend(legend);
             EndVectorPlot();
         }
@@ -309,38 +303,36 @@ namespace StatsDirect.Charting.Renderer
             double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2;
 
             // Plot regression
-            using (Pen p = new Pen(GrBlack, 2))
+            PenDescriptor p = new PenDescriptor(GrBlack, 2);
+            double oldx = Constant.MISSING;
+            double oldy = Constant.MISSING;
+            for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
             {
-                double oldx = Constant.MISSING;
-                double oldy = Constant.MISSING;
-                for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)
+                double calcy;
+                switch (model)
                 {
-                    double calcy;
-                    switch (model)
-                    {
-                        case 0:
-                            calcy = a * Math.Exp(b * calcx);
-                            break;
-                        case 1:
-                            calcy = a * Math.Pow(calcx, b);
-                            break;
-                        case 2:
-                            double denom = a + calcx * b;
-                            if (denom == 0.0)
-                                denom = 0.0000001;
-                            calcy = calcx / denom;
-                            break;
-                        default:
-                            throw new Exception("Unknown mode");
-                    }
-
-                    if (oldx >= axisScales.X.MinimumScaleValue && oldx <= axisScales.X.MaximumScaleValue
-                        && calcy >= axisScales.Y.MinimumScaleValue && calcy <= axisScales.Y.MaximumScaleValue
-                        && oldy >= axisScales.Y.MinimumScaleValue && oldy <= axisScales.Y.MaximumScaleValue)
-                        DrawLineInChartCoordinates(p, calcx, calcy, oldx, oldy);
-                    oldx = calcx;
-                    oldy = calcy;
+                    case 0:
+                        calcy = a * Math.Exp(b * calcx);
+                        break;
+                    case 1:
+                        calcy = a * Math.Pow(calcx, b);
+                        break;
+                    case 2:
+                        double denom = a + calcx * b;
+                        if (denom == 0.0)
+                            denom = 0.0000001;
+                        calcy = calcx / denom;
+                        break;
+                    default:
+                        throw new Exception("Unknown mode");
                 }
+
+                if (oldx >= axisScales.X.MinimumScaleValue && oldx <= axisScales.X.MaximumScaleValue
+                    && calcy >= axisScales.Y.MinimumScaleValue && calcy <= axisScales.Y.MaximumScaleValue
+                    && oldy >= axisScales.Y.MinimumScaleValue && oldy <= axisScales.Y.MaximumScaleValue)
+                    DrawLineInChartCoordinates(p, calcx, calcy, oldx, oldy);
+                oldx = calcx;
+                oldy = calcy;
             }
             EndVectorPlot();
         }
@@ -583,14 +575,14 @@ namespace StatsDirect.Charting.Renderer
         public void PlotXY(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition, ChartAreaShape chartAreaShape)
         {
             StartVectorPlot();
-            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, chartAreaShape);
+            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, PenDescriptor.Black, useCalculatedScalesEvenWithDefinition, chartAreaShape);
             EndVectorPlot();
         }
 
         public void PlotXY0To1(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition, ChartAreaShape chartAreaShape)
         {
             StartVectorPlot();
-            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, Pens.Black, useCalculatedScalesEvenWithDefinition, chartAreaShape, 0, 1, 0, 1);
+            PlotXYInternal(x, y, xtxt, ytxt, title, zPlot, minMaxY, 6, MarkerShape.Circle, false, PenDescriptor.Black, useCalculatedScalesEvenWithDefinition, chartAreaShape, 0, 1, 0, 1);
             EndVectorPlot();
         }
 
@@ -624,8 +616,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
                 MarkerType t = ChartPreferences.MarkerTypes[mkr];
-                using (Pen p = GetMarkerPen(t))
-                {
+                PenDescriptor p = GetMarkerPen(t);
                     double minx = double.MaxValue;
                     double maxx = double.MinValue;
                     double miny = double.MaxValue;
@@ -698,7 +689,6 @@ namespace StatsDirect.Charting.Renderer
                             x2 = ToCanvasX((calcy - a[g]) / b[g]);
                     }
                     DrawLineInCanvasCoordinates(p, x1, y1, x2, ToCanvasY(calcy));
-                }
             }
             DrawLegend(legend);
             EndVectorPlot();
@@ -787,22 +777,19 @@ namespace StatsDirect.Charting.Renderer
                 // null effect diagonal
                 DrawLineInChartCoordinates(GrBlack, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
                 // pooled event rate
-                using (Pen blackFxPen = GetLinePen(ChartPreferences.MarkerTypes[10], false))
+                double x1;
+                double y1;
+                if (rmh >= 1)
                 {
-                    double x1;
-                    double y1;
-                    if (rmh >= 1)
-                    {
-                        y1 = ToCanvasY(axisScales.Y.MaximumScaleValue);
-                        x1 = ToCanvasX(axisScales.Y.MaximumScaleValue / rmh);
-                    }
-                    else
-                    {
-                        x1 = ToCanvasX(axisScales.X.MaximumScaleValue);
-                        y1 = ToCanvasY(rmh * axisScales.X.MaximumScaleValue);
-                    }
-                    DrawLineInCanvasCoordinates(blackFxPen, ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
+                    y1 = ToCanvasY(axisScales.Y.MaximumScaleValue);
+                    x1 = ToCanvasX(axisScales.Y.MaximumScaleValue / rmh);
                 }
+                else
+                {
+                    x1 = ToCanvasX(axisScales.X.MaximumScaleValue);
+                    y1 = ToCanvasY(rmh * axisScales.X.MaximumScaleValue);
+                }
+                DrawLineInCanvasCoordinates(GetLinePen(ChartPreferences.MarkerTypes[10], false), ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
             }
             EndVectorPlot();
         }
@@ -1054,23 +1041,19 @@ namespace StatsDirect.Charting.Renderer
             // Draw the limits
             double x1 = XAxisCanvas + XExtCanvas;
             double y1 = ToCanvasY(ula);
-            using (Pen redPen = new Pen(GrRed, 1))
+            PenDescriptor redPen = new PenDescriptor(GrRed);
+            PenDescriptor blackPen = new PenDescriptor(GrBlack);
+            DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
+            y1 = ToCanvasY(lla);
+            DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
+            y1 = ToCanvasY(mean);
+            DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
+            // Work through the rows
+            for (int r = 1; r <= nx; r++)
             {
-                using (Pen blackPen = new Pen(GrBlack, 1))
-                {
-                    DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                    y1 = ToCanvasY(lla);
-                    DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                    y1 = ToCanvasY(mean);
-                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                    // Work through the rows
-                    for (int r = 1; r <= nx; r++)
-                    {
-                        x1 = ToCanvasX(x[r]);
-                        y1 = ToCanvasY(y[r]);
-                        DrawMarkerInCanvasCoordinates(x1, y1, 6, ChartPreferences.MarkerTypes[0]);
-                    }
-                }
+                x1 = ToCanvasX(x[r]);
+                y1 = ToCanvasY(y[r]);
+                DrawMarkerInCanvasCoordinates(x1, y1, 6, ChartPreferences.MarkerTypes[0]);
             }
             EndVectorPlot();
         }
@@ -1463,11 +1446,10 @@ namespace StatsDirect.Charting.Renderer
                 Width = 1
             };
 
-            using (Pen ciPen = GetLinePen(studyMarkerType, true),
-                dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]),
-                pooledCiPen = GetLinePen(pooledMarkerType, true),
-                pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false))
-            {
+            PenDescriptor ciPen = GetLinePen(studyMarkerType, true);
+            PenDescriptor dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
+            PenDescriptor pooledCiPen = GetLinePen(pooledMarkerType, true);
+            PenDescriptor pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);
                 int r = 0;
                 double txh = LabelHeightInCanvasCoordinates(title[1]);
                 double realamin = axisScales.X.MinimumScaleValue;
@@ -1565,7 +1547,6 @@ namespace StatsDirect.Charting.Renderer
                     DrawStringLabel(Formatting.RoundMeta(rmh, absmin) + " (" + Formatting.RoundMeta(ll, absmin) + ", " + Formatting.RoundMeta(ul, absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
                     // xaxis label
                 }
-            }
 
             EndVectorPlot();
         }
@@ -1636,7 +1617,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (odr[i] != Constant.MISSING)
                 {
-                    float w = LabelWidthInCanvasCoordinates(title[i]) + 30;
+                    double w = LabelWidthInCanvasCoordinates(title[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - 5;
                     w = LabelWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absMin) + " (" + Formatting.RoundMeta(odrl[i], absMin) + ", " + Formatting.RoundMeta(odru[i], absMin) + ")");
@@ -1671,10 +1652,9 @@ namespace StatsDirect.Charting.Renderer
                 Width = 1
             };
 
-            using (Pen tenPenTrue = GetLinePen(ChartPreferences.MarkerTypes[10], true),
-                dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]),
-                tenPenFalse = GetLinePen(ChartPreferences.MarkerTypes[10], false))
-            {
+            PenDescriptor tenPenTrue = GetLinePen(ChartPreferences.MarkerTypes[10], true);
+            PenDescriptor dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
+            PenDescriptor tenPenFalse = GetLinePen(ChartPreferences.MarkerTypes[10], false);
                 int r = 0;
                 double yc = 0;
                 double yt = 0;
@@ -1751,7 +1731,6 @@ namespace StatsDirect.Charting.Renderer
                     DrawStringLabel(Formatting.RoundMeta(rmh, absMin) + " (" + Formatting.RoundMeta(ll, absMin) + ", " + Formatting.RoundMeta(ul, absMin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
                     // x axis text
                 }
-            }
 
             EndVectorPlot();
         }
@@ -1825,8 +1804,7 @@ namespace StatsDirect.Charting.Renderer
             DivY = kok + pbias;
             OffY = YAxisCanvas;
 
-            using (Pen linePen = GetLinePen(ChartPreferences.MarkerTypes[10], true))
-            {
+            PenDescriptor linePen = GetLinePen(ChartPreferences.MarkerTypes[10], true);
                 double yc = 0;
                 double yt = 0;
                 int r = 0;
@@ -1868,15 +1846,14 @@ namespace StatsDirect.Charting.Renderer
                     yt = OffY + yctr + diamondHalfSize;
                     DrawDiamondInCanvasCoordinates(linePen, ToCanvasX(rmh), yc, diamondHalfSize * 2, false);
                     DrawLineInCanvasCoordinates(linePen, ToCanvasX(ul), yc, ToCanvasX(ll), yc);
-                    // pooled effect marker
-                    using (Pen pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false))
+                // pooled effect marker
+                PenDescriptor pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);
                         DrawLineInCanvasCoordinates(pooledEffectPen, ToCanvasX(rmh), saveYc, ToCanvasX(rmh), yt);
                     string lab = "pooled " + qid + " = " + host.RoundU(rmh) + "  (" + Formatting.XRound(cco * 100, 1) + "% CI = " + host.RoundU(ll) + " to " + host.RoundU(ul) + ")";
                     string xlab = cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";
                     lab = xlab + lab;
                     DrawStringLabel(lab, XAxisCanvas + XExtCanvas / 2.0, 50, StringAlignment.Center);
                 }
-            }
             EndVectorPlot();
         }
 
@@ -2069,9 +2046,9 @@ namespace StatsDirect.Charting.Renderer
                 Width = 1
             };
 
-            using (Pen linePen = GetLinePen(ChartPreferences.MarkerTypes[10], true),
-                pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false),
-                dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]))
+            PenDescriptor linePen = GetLinePen(ChartPreferences.MarkerTypes[10], true);
+            PenDescriptor pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);
+            PenDescriptor dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
             {
                 double rmh = -99;
                 int r = 0;

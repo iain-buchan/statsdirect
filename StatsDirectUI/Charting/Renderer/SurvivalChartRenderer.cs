@@ -1,11 +1,11 @@
-﻿using System.Drawing;
-using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class SurvivalChartRenderer: AbstractChartRenderer, IChartRenderer
+    class SurvivalChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public SurvivalChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -152,46 +152,42 @@ namespace StatsDirect.Charting.Renderer
                 double[] ydatU = sOptions.Series[c].YDatU;
 
                 MarkerType mType = sOptions.MarkerTypes[c];
-                using (Pen p = GetMarkerPen(mType))
+                PenDescriptor p = GetMarkerPen(mType);
+                double x1 = ToCanvasX(axisScales.X.MinimumScaleValue);
+                double y1 = ToCanvasY(1.0);
+                double x2 = 0;
+                double y2 = 0;
+                for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                 {
-                    double x1 = ToCanvasX(axisScales.X.MinimumScaleValue);
-                    double y1 = ToCanvasY(1.0);
-                    double x2 = 0;
-                    double y2 = 0;
+                    if (ydat[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
+                    {
+                        x2 = ToCanvasX(xdat[r]);
+                        y2 = ToCanvasY(ydat[r]);
+                        if (useMarker && cdat[r] > 0)
+                            DrawMarkerInCanvasCoordinates(x2, y2, mType.MarkerSize, mType);
+                        // Draw tic if censored
+                        if (cdat[r] == 0 && useTic)
+                            DrawLineInCanvasCoordinates(p, x2, y2, x2, y2 + 7);
+                        // Then the lines
+                        DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);
+                        DrawLineInCanvasCoordinates(p, x2, y1, x2, y2);
+                    }
+                    x1 = x2;
+                    y1 = y2;
+                }
+
+                //  overlay confidence intervals
+                if (doCi)
+                {
+                    Color ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
+                    PenDescriptor ciPen = new PenDescriptor(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle };
                     for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                     {
-                        if (ydat[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
+                        if (ydat[r] != Constant.MISSING && ydatL[r] != Constant.MISSING && ydatU[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
                         {
-                            x2 = ToCanvasX(xdat[r]);
-                            y2 = ToCanvasY(ydat[r]);
-                            if (useMarker && cdat[r] > 0)
-                                DrawMarkerInCanvasCoordinates(x2, y2, mType.MarkerSize, mType);
-                            // Draw tic if censored
-                            if (cdat[r] == 0 && useTic)
-                                DrawLineInCanvasCoordinates(p, x2, y2, x2, y2 + 7);
-                            // Then the lines
-                            DrawLineInCanvasCoordinates(p, x1, y1, x2, y1);
-                            DrawLineInCanvasCoordinates(p, x2, y1, x2, y2);
-                        }
-                        x1 = x2;
-                        y1 = y2;
-                    }
-
-                    //  overlay confidence intervals
-                    if (doCi)
-                    {
-                        Color ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
-                        using (Pen ciPen = new Pen(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle })
-                        {
-                            for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
-                            {
-                                if (ydat[r] != Constant.MISSING && ydatL[r] != Constant.MISSING && ydatU[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)
-                                {
-                                    // Confidence interval
-                                    if (cdat[r] > 0)
-                                        DrawLineInChartCoordinates(ciPen, xdat[r], ydatL[r], xdat[r], ydatU[r]);
-                                }
-                            }
+                            // Confidence interval
+                            if (cdat[r] > 0)
+                                DrawLineInChartCoordinates(ciPen, xdat[r], ydatL[r], xdat[r], ydatU[r]);
                         }
                     }
                 }

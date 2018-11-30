@@ -1,9 +1,8 @@
-﻿using System.Drawing;
-using StatsDirect.Templates;
+﻿using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
-    internal class GiniChartRenderer: AbstractChartRenderer, IChartRenderer
+    internal class GiniChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public GiniChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -50,18 +49,16 @@ namespace StatsDirect.Charting.Renderer
             DrawLineInChartCoordinates(GrRed, 0, 0, 1, 1);
 
             // Draw Lorenz polygon
-            using (Pen greenPen = new Pen(GrGreen))
+            PenDescriptor greenPen = new PenDescriptor(GrGreen);
+            double lastX = OffX;
+            double lastY = OffY;
+            for (int j = 0; j < xs0.Points; j++)
             {
-                double lastX = OffX;
-                double lastY = OffY;
-                for (int j = 0; j < xs0.Points; j++)
-                {
-                    double x = ToCanvasX(xs0.Data[j]);
-                    double y = ToCanvasY(ys0.Data[j]);
-                    DrawLineInCanvasCoordinates(greenPen, lastX, lastY, x, y);
-                    lastX = x;
-                    lastY = y;
-                }
+                double x = ToCanvasX(xs0.Data[j]);
+                double y = ToCanvasY(ys0.Data[j]);
+                DrawLineInCanvasCoordinates(greenPen, lastX, lastY, x, y);
+                lastX = x;
+                lastY = y;
             }
             EndVectorPlot();
             return new ParameterBag();

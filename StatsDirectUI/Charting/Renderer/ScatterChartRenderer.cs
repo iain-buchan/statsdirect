@@ -92,10 +92,8 @@ namespace StatsDirect.Charting.Renderer
                             xys[r].Y = -1;
                         }
                     }
-                    using (Pen markerPen = GetMarkerPen(ys.MarkerType), linePen = GetLinePen(ys.MarkerType, false))
-                    {
-                        DrawMarkerSeriesInCanvasCoordinates(xys, ys.MarkerType.MarkerSize, ys.MarkerType.MarkerShape, ys.MarkerType.IsMarkerFilled, markerPen, linePen, joinMarkersWithLines, shouldDrawMarkers);
-                    }
+                    PenDescriptor markerPen = GetMarkerPen(ys.MarkerType), linePen = GetLinePen(ys.MarkerType, false);
+                    DrawMarkerSeriesInCanvasCoordinates(xys, ys.MarkerType.MarkerSize, ys.MarkerType.MarkerShape, ys.MarkerType.IsMarkerFilled, markerPen, linePen, joinMarkersWithLines, shouldDrawMarkers);
                 }
                 MaybeDrawMarkerLines(axisScales);
                 EndVectorPlot();

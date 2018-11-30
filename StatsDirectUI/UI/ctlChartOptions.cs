@@ -41,13 +41,13 @@ namespace StatsDirect.UI
             FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X, false);
             FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y, true);
             if (options.UsesAxisLabelFontDescriptor)
-                options.AxisLabelFontDescriptor = EmfCanvas.DescriptorFromFont(ctlAxisLabelFont.UserFont);
+                options.AxisLabelFontDescriptor = FontCache.DescriptorFromFont(ctlAxisLabelFont.UserFont);
             if (options.UsesAxisTitleFontDescriptor)
-                options.AxisTitleFontDescriptor = EmfCanvas.DescriptorFromFont(ctlAxisTitleFont.UserFont);
+                options.AxisTitleFontDescriptor = FontCache.DescriptorFromFont(ctlAxisTitleFont.UserFont);
             if (options.UsesTitleFontDescriptor)
-                options.TitleFontDescriptor = EmfCanvas.DescriptorFromFont(ctlTitleFont.UserFont);
+                options.TitleFontDescriptor = FontCache.DescriptorFromFont(ctlTitleFont.UserFont);
             if (options.UsesLegendFontDescriptor)
-                options.LegendFontDescriptor = EmfCanvas.DescriptorFromFont(ctlLegendFont.UserFont);
+                options.LegendFontDescriptor = FontCache.DescriptorFromFont(ctlLegendFont.UserFont);
             if (options.ShowBarOptions)
                 FillBarOptionsFromForm();
             if (options.ShowBoxWhiskerOptions)
@@ -312,23 +312,23 @@ namespace StatsDirect.UI
             {
                 ctlAxisLabelFont.Purpose = options.AxisLabelFontLabel + " Font";
                 if (null != options.AxisLabelFontDescriptor)
-                    ctlAxisLabelFont.UserFont = EmfCanvas.FontFromDescriptor(options.AxisLabelFontDescriptor);
+                    ctlAxisLabelFont.UserFont = FontCache.FontFromDescriptor(options.AxisLabelFontDescriptor);
             }
             if (options.UsesAxisTitleFontDescriptor)
             {
                 if (null != options.AxisTitleFontDescriptor)
-                    ctlAxisTitleFont.UserFont = EmfCanvas.FontFromDescriptor(options.AxisTitleFontDescriptor);
+                    ctlAxisTitleFont.UserFont = FontCache.FontFromDescriptor(options.AxisTitleFontDescriptor);
             }
             if (options.UsesLegendFontDescriptor)
             {
                 ctlLegendFont.Purpose = options.LegendFontLabel + " Font";
                 if (null != options.LegendFontDescriptor)
-                    ctlLegendFont.UserFont = EmfCanvas.FontFromDescriptor(options.LegendFontDescriptor);
+                    ctlLegendFont.UserFont = FontCache.FontFromDescriptor(options.LegendFontDescriptor);
             }
             if (options.UsesTitleFontDescriptor)
             {
                 if (null != options.TitleFontDescriptor)
-                    ctlTitleFont.UserFont = EmfCanvas.FontFromDescriptor(options.TitleFontDescriptor);
+                    ctlTitleFont.UserFont = FontCache.FontFromDescriptor(options.TitleFontDescriptor);
             }
             if (options.UsesAxisLineThickness)
             {

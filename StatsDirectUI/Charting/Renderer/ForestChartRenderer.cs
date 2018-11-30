@@ -1,13 +1,13 @@
-﻿using System;
-using System.Drawing;
-using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using System;
+using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class ForestChartRenderer: AbstractChartRenderer, IChartRenderer
+    class ForestChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public ForestChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -199,11 +199,11 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
-                    float titleWidth = LegendWidthInCanvasCoordinates(title[i]);
+                    double titleWidth = LegendWidthInCanvasCoordinates(title[i]);
                     if (titleWidth > xtra)
                         xtra = titleWidth;
                     string rhs = Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")";
-                    float rhsWidth = LegendWidthInCanvasCoordinates(rhs);
+                    double rhsWidth = LegendWidthInCanvasCoordinates(rhs);
                     if (rhsWidth > rgap)
                         rgap = rhsWidth;
                 }
@@ -218,85 +218,83 @@ namespace StatsDirect.Charting.Renderer
 
             int r = 0;
 
-            using (Pen effectTenPen = GetLinePen(ChartPreferences.MarkerTypes[10], false),
+            PenDescriptor effectTenPen = GetLinePen(ChartPreferences.MarkerTypes[10], false),
                 ciPen = GetLinePen(studyMarkerType, true),
                 dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]),
-                pooledCiPen = GetLinePen(pooledMarkerType, true))
+                pooledCiPen = GetLinePen(pooledMarkerType, true);
+            double yt = 0;
+            for (int i = k - 1; i >= 0; --i)
             {
-                double yt = 0;
-                for (int i = k - 1; i >= 0; --i)
+                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
                 {
-                    if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
+                    r++;
+                    double yctr = ToCanvasHeight(r + pbias - 0.5);
+                    double ytop = ToCanvasHeight(r + pbias);
+                    double xm = ToCanvasX(Math.Max(odr[i], axisScales.X.MinimumScaleValue));
+                    double xl = ToCanvasX(Math.Max(odrl[i], axisScales.X.MinimumScaleValue));
+                    double xr = ToCanvasX(Math.Min(odru[i], axisScales.X.MaximumScaleValue));
+                    double y2 = (ytop - yctr) / 1.5;
+                    double y3 = (ytop - yctr) / 4;
+                    double yc = OffY + yctr;
+                    yt = OffY + yctr + y2;
+                    double yb = OffY + yctr - y2;
+                    if (pg == null || pg[i] == 0)
                     {
-                        r++;
-                        double yctr = ToCanvasHeight(r + pbias - 0.5);
-                        double ytop = ToCanvasHeight(r + pbias);
-                        double xm = ToCanvasX(Math.Max(odr[i], axisScales.X.MinimumScaleValue));
-                        double xl = ToCanvasX(Math.Max(odrl[i], axisScales.X.MinimumScaleValue));
-                        double xr = ToCanvasX(Math.Min(odru[i], axisScales.X.MaximumScaleValue));
-                        double y2 = (ytop - yctr) / 1.5;
-                        double y3 = (ytop - yctr) / 4;
-                        double yc = OffY + yctr;
-                        yt = OffY + yctr + y2;
-                        double yb = OffY + yctr - y2;
-                        if (pg == null || pg[i] == 0)
+                        // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
+                        // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
+                        double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gn[i] / max_gn)) * 0.7;
+                        DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
+
+                        // CI line
+                        DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
+                        // Arrow ends if not plottable
+                        if (odrl[i] < axisScales.X.MinimumScaleValue || double.IsInfinity(odrl[i]))
                         {
-                            // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
-                            // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                            double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gn[i] / max_gn)) * 0.7;
-                            DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
-
-                            // CI line
-                            DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
-                            // Arrow ends if not plottable
-                            if (odrl[i] < axisScales.X.MinimumScaleValue || double.IsInfinity(odrl[i]))
-                            {
-                                DrawLineInCanvasCoordinates(ciPen, xl + y3, yc + y3, xl, yc);
-                                DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + y3, yc - y3);
-                            }
-                            if (odru[i] > axisScales.X.MaximumScaleValue || double.IsInfinity(odru[i]))
-                            {
-                                DrawLineInCanvasCoordinates(ciPen, xr - y3, yc + y3, xr, yc);
-                                DrawLineInCanvasCoordinates(ciPen, xr, yc, xr - y3, yc - y3);
-                            }
-
-                            // Centre mark.  If drawn, draw this last so that it appears in front of the line.  Always black.
-                            if (fOptions.MarkCentres)
-                                DrawMarkerInCanvasCoordinates(xm, yc, 2, MarkerShape.Circle, true, dotPen);
+                            DrawLineInCanvasCoordinates(ciPen, xl + y3, yc + y3, xl, yc);
+                            DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + y3, yc - y3);
                         }
-                        else
+                        if (odru[i] > axisScales.X.MaximumScaleValue || double.IsInfinity(odru[i]))
                         {
-                            // Pooled effect
-                            DrawMarkerInCanvasCoordinates(xm, yc, y2, pooledMarkerType);
-                            DrawLineInCanvasCoordinates(pooledCiPen, xr, yc, xl, yc);
-                            if (pg[i] < 0)
-                            {
-                                // pooled effect marker
-                                DrawLineInCanvasCoordinates(effectTenPen, xm, yt, xm, ToCanvasY(k + pbias - 0.5));
-                            }
-                            // Arrow ends if not plottable
-                            if (odrl[i] < axisScales.X.MinimumScaleValue || double.IsInfinity(odrl[i]))
-                            {
-                                DrawLineInCanvasCoordinates(pooledCiPen, xl + y3, yc + y3, xl, yc);
-                                DrawLineInCanvasCoordinates(pooledCiPen, xl, yc, xl + y3, yc - y3);
-                            }
-                            if (odru[i] > axisScales.X.MaximumScaleValue || double.IsInfinity(odru[i]))
-                            {
-                                DrawLineInCanvasCoordinates(pooledCiPen, xr - y3, yc + y3, xr, yc);
-                                DrawLineInCanvasCoordinates(pooledCiPen, xr, yc, xr - y3, yc - y3);
-                            }
-
+                            DrawLineInCanvasCoordinates(ciPen, xr - y3, yc + y3, xr, yc);
+                            DrawLineInCanvasCoordinates(ciPen, xr, yc, xr - y3, yc - y3);
                         }
-                        AxisDrawStringAtAngleRM(title[i], XAxisCanvas - 15, yc, Definition.ScaleParameters.Y.LabelDirection);
-                        DrawStringLabel(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")", XAxisCanvas + XExtCanvas + 10, yc, StringAlignment.Near, StringAlignment.Center);
+
+                        // Centre mark.  If drawn, draw this last so that it appears in front of the line.  Always black.
+                        if (fOptions.MarkCentres)
+                            DrawMarkerInCanvasCoordinates(xm, yc, 2, MarkerShape.Circle, true, dotPen);
                     }
-                }
+                    else
+                    {
+                        // Pooled effect
+                        DrawMarkerInCanvasCoordinates(xm, yc, y2, pooledMarkerType);
+                        DrawLineInCanvasCoordinates(pooledCiPen, xr, yc, xl, yc);
+                        if (pg[i] < 0)
+                        {
+                            // pooled effect marker
+                            DrawLineInCanvasCoordinates(effectTenPen, xm, yt, xm, ToCanvasY(k + pbias - 0.5));
+                        }
+                        // Arrow ends if not plottable
+                        if (odrl[i] < axisScales.X.MinimumScaleValue || double.IsInfinity(odrl[i]))
+                        {
+                            DrawLineInCanvasCoordinates(pooledCiPen, xl + y3, yc + y3, xl, yc);
+                            DrawLineInCanvasCoordinates(pooledCiPen, xl, yc, xl + y3, yc - y3);
+                        }
+                        if (odru[i] > axisScales.X.MaximumScaleValue || double.IsInfinity(odru[i]))
+                        {
+                            DrawLineInCanvasCoordinates(pooledCiPen, xr - y3, yc + y3, xr, yc);
+                            DrawLineInCanvasCoordinates(pooledCiPen, xr, yc, xr - y3, yc - y3);
+                        }
 
-                if (shouldDrawLine)
-                {
-                    // no effect line, which is effectively part of the axis so uses the axis pen
-                    DrawLineInCanvasCoordinates(AxisPen, ToCanvasX(lineX), yt, ToCanvasX(lineX), ToCanvasY(axisScales.Y.MinimumScaleValue));
+                    }
+                    AxisDrawStringAtAngleRM(title[i], XAxisCanvas - 15, yc, Definition.ScaleParameters.Y.LabelDirection);
+                    DrawStringLabel(Formatting.RoundMeta(odr[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(odrl[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(odru[i], absmin, decimalPlaces) + ")", XAxisCanvas + XExtCanvas + 10, yc, StringAlignment.Near, StringAlignment.Center);
                 }
+            }
+
+            if (shouldDrawLine)
+            {
+                // no effect line, which is effectively part of the axis so uses the axis pen
+                DrawLineInCanvasCoordinates(AxisPen, ToCanvasX(lineX), yt, ToCanvasX(lineX), ToCanvasY(axisScales.Y.MinimumScaleValue));
             }
 
             EndVectorPlot();

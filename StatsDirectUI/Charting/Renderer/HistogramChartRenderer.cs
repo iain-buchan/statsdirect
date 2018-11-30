@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using Layout;
-using StatsDirect.Templates;
-using System.Drawing;
+﻿using Layout;
 using StatsDirect.Charting.Scales;
+using StatsDirect.Templates;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Globalization;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -165,23 +165,21 @@ namespace StatsDirect.Charting.Renderer
                             extraSpaceForAxes);
 
                         // Plot each bar
-                        using (Pen markerPen = GetMarkerPen(s.MarkerType))
+                        PenDescriptor markerPen = GetMarkerPen(s.MarkerType);
+                        for (int c = 0; c < descriptor.Bins; c++)
                         {
-                            for (int c = 0; c < descriptor.Bins; c++)
-                            {
-                                // plot a bar at an absolute position (maxX / 20)
-                                double x1 = ToCanvasX(descriptor.Edges[c]);
-                                double x2 = ToCanvasX(descriptor.Edges[c + 1]);
-                                double value = descriptor.Counts[c] * proportionScaler;
-                                double y1 = ToCanvasY(value);
-                                double y2 = YAxisCanvas;
-                                DrawRectangleInCanvasCoordinates(markerPen, x1, y1, x2 - x1, y1 - y2);
-                            }
-
-                            //  ZInt was calculated at Mp*2
-                            if (overlayNormalCurve)
-                                PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, markerPen);
+                            // plot a bar at an absolute position (maxX / 20)
+                            double x1 = ToCanvasX(descriptor.Edges[c]);
+                            double x2 = ToCanvasX(descriptor.Edges[c + 1]);
+                            double value = descriptor.Counts[c] * proportionScaler;
+                            double y1 = ToCanvasY(value);
+                            double y2 = YAxisCanvas;
+                            DrawRectangleInCanvasCoordinates(markerPen, null, x1, y1, x2 - x1, y1 - y2);
                         }
+
+                        //  ZInt was calculated at Mp*2
+                        if (overlayNormalCurve)
+                            PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, markerPen);
 
                         MaybeDrawMarkerLines(ass);
                     }
@@ -269,7 +267,7 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="s">The series whose data is to be used for the calculation</param>
         /// <param name="p">Draws using p if set; merely returns the maximum value if null</param>
         /// <returns>The maximum value of y</returns>
-        private double PlotNormalCurve(double zmin, double zint, int count, DoubleSeries s, double proportionScaler, Pen p)
+        private double PlotNormalCurve(double zmin, double zint, int count, DoubleSeries s, double proportionScaler, PenDescriptor p)
         {
             // Setup the plotting variables
             double xbar = s.Sum / s.Points;

@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
-using StatsDirect.Numerics;
+﻿using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class RocChartRenderer: AbstractChartRenderer, IChartRenderer
+    class RocChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public RocChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
             : base(cd, canvasFactory)
@@ -72,7 +71,7 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries(rOptions);
             Legend legend = new Legend();
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
-                legend.LegendEntries.Add(new LegendEntry {Label = rOptions.SeriesTitles[cs], MarkerType = Definition.YSeries[cs].AsDoubleSeries.MarkerType });
+                legend.LegendEntries.Add(new LegendEntry { Label = rOptions.SeriesTitles[cs], MarkerType = Definition.YSeries[cs].AsDoubleSeries.MarkerType });
 
             StartVectorPlot(rOptions, legend);
 
@@ -89,10 +88,8 @@ namespace StatsDirect.Charting.Renderer
                 legend, ChartAreaShape.Square);
 
             // null effect diagonal
-            using (Pen tenPenDiagonal = new Pen(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness))
-            {
-                DrawLineInCanvasCoordinates(tenPenDiagonal, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
-            }
+            PenDescriptor tenPenDiagonal = new PenDescriptor(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness);
+            DrawLineInCanvasCoordinates(tenPenDiagonal, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
 
             // get the offsets for the markers
             OffX = XAxisCanvas;
@@ -197,17 +194,15 @@ namespace StatsDirect.Charting.Renderer
                 // Draw lines between markers
                 double lastX2 = x1;
                 double lastY2 = y1;
-                using (Pen linePen = GetLinePen(xs.MarkerType, false))
+                PenDescriptor linePen = GetLinePen(xs.MarkerType, false);
+                for (int r = 0; r < stps; r++)
                 {
-                    for (int r = 0; r < stps; r++)
-                    {
-                        double x2 = OffX + rx[r] * XExtCanvas;
-                        double y2 = OffY + ry[r] * YExtCanvas;
-                        if (r > 0 && (x2 != lastX2 || y2 != lastY2))
-                            DrawLineInCanvasCoordinates(linePen, lastX2, lastY2, x2, y2);
-                        lastX2 = x2;
-                        lastY2 = y2;
-                    }
+                    double x2 = OffX + rx[r] * XExtCanvas;
+                    double y2 = OffY + ry[r] * YExtCanvas;
+                    if (r > 0 && (x2 != lastX2 || y2 != lastY2))
+                        DrawLineInCanvasCoordinates(linePen, lastX2, lastY2, x2, y2);
+                    lastX2 = x2;
+                    lastY2 = y2;
                 }
 
                 // Mark cutoff point.  This is reversed if the chart requires reversal.

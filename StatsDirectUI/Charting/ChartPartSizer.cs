@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 
 using StatsDirect.Charting.Renderer;
 
@@ -7,10 +6,10 @@ namespace StatsDirect.Charting
 {
     class ChartPartSizer : IChartSizableVisitor
     {
-        private SizeF cachedSize;
+        private SizeD cachedSize;
         private readonly AbstractChartRenderer chartRenderer;
 
-        public static SizeF Size(AbstractChartRenderer ch, IChartSizable sizable)
+        public static SizeD Size(AbstractChartRenderer ch, IChartSizable sizable)
         {
             return new ChartPartSizer(ch).SizeInternal(sizable);
         }
@@ -20,7 +19,7 @@ namespace StatsDirect.Charting
             this.chartRenderer = chartRenderer;
         }
 
-        private SizeF SizeInternal(IChartSizable sizable)
+        private SizeD SizeInternal(IChartSizable sizable)
         {
             sizable.Accept(this);
             return cachedSize;
@@ -34,20 +33,20 @@ namespace StatsDirect.Charting
             const int BORDER_WIDTH = 0;
 
             int rows = legend.LegendEntries.Count;
-            float legendFontHeight = chartRenderer.LegendHeightInCanvasCoordinates("M");
-            float rowHeight = Math.Max(LEGEND_MARKER_SIZE, legendFontHeight);
-            float totalHeight = rows * rowHeight + (rows - 1) * INTER_ROW_GAP + BORDER_WIDTH * 2;
+            double legendFontHeight = chartRenderer.LegendHeightInCanvasCoordinates("M");
+            double rowHeight = Math.Max(LEGEND_MARKER_SIZE, legendFontHeight);
+            double totalHeight = rows * rowHeight + (rows - 1) * INTER_ROW_GAP + BORDER_WIDTH * 2;
 
-            float widestLegend = 0;
+            double widestLegend = 0;
             foreach (LegendEntry entry in legend.LegendEntries)
             {
-                float legendWidth = chartRenderer.LegendWidthInCanvasCoordinates(entry.Label);
+                double legendWidth = chartRenderer.LegendWidthInCanvasCoordinates(entry.Label);
                 if (legendWidth > widestLegend)
                     widestLegend = legendWidth;
             }
-            float totalWidth = LEGEND_MARKER_SIZE + MARKER_TO_LEGEND_GAP + widestLegend + 2 * BORDER_WIDTH;
+            double totalWidth = LEGEND_MARKER_SIZE + MARKER_TO_LEGEND_GAP + widestLegend + 2 * BORDER_WIDTH;
 
-            cachedSize = new SizeF(totalWidth, totalHeight);
+            cachedSize = new SizeD(totalWidth, totalHeight);
         }
     }
 }

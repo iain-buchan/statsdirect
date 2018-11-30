@@ -1,6 +1,6 @@
-﻿using System.Drawing;
-using StatsDirect.Numerics;
+﻿using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -65,17 +65,15 @@ namespace StatsDirect.Charting.Renderer
             if (lOptions.MarkerTypes != null && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
                 rungMarkerType = lOptions.MarkerTypes[0];
 
-            using (Pen rungPen = new Pen(Color.Black, rungMarkerType.Width))
+            PenDescriptor rungPen = new PenDescriptor(Color.Black, rungMarkerType.Width);
+            rungPen.DashStyle = rungMarkerType.LineDashStyle;
+            for (int r = 0; r <= s0.Points - 1; r++)
             {
-                rungPen.DashStyle = rungMarkerType.LineDashStyle;
-                for (int r = 0; r <= s0.Points - 1; r++)
+                if (s0.Data[r] != Constant.MISSING && s1.Data[r] != Constant.MISSING)
                 {
-                    if (s0.Data[r] != Constant.MISSING && s1.Data[r] != Constant.MISSING)
-                    {
-                        double y1 = ToCanvasY(s0.Data[r]);
-                        double Y2 = ToCanvasY(s1.Data[r]);
-                        DrawLineInCanvasCoordinates(rungPen, x1, y1, x2, Y2);
-                    }
+                    double y1 = ToCanvasY(s0.Data[r]);
+                    double Y2 = ToCanvasY(s1.Data[r]);
+                    DrawLineInCanvasCoordinates(rungPen, x1, y1, x2, Y2);
                 }
             }
             EndVectorPlot();

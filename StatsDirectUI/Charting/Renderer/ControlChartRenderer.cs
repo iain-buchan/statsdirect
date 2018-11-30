@@ -1,11 +1,11 @@
-﻿using System;
-using System.Drawing;
-using StatsDirect.Numerics;
+﻿using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using System;
+using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
-    internal class ControlChartRenderer: AbstractChartRenderer, IChartRenderer
+    internal class ControlChartRenderer : AbstractChartRenderer, IChartRenderer
     {
         public ControlChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -219,7 +219,7 @@ namespace StatsDirect.Charting.Renderer
                 rgap = RHS_LABEL_GAP + LegendWidthInCanvasCoordinates(Math.Round(ymean + ysd * 3.0, cOptions.RightHandDecimalPlaces) + " (+3 SD)");
             if (useDates)
             {
-                float vshift = AxisLabelWidthInCanvasCoordinates(new DateTime(1899, 12, 30, 0, 0, 0).AddDays(xdat[0]).ToString("d")) + 30;
+                double vshift = AxisLabelWidthInCanvasCoordinates(new DateTime(1899, 12, 30, 0, 0, 0).AddDays(xdat[0]).ToString("d")) + 30;
                 YAxisCanvas += vshift;
                 YExtCanvas -= vshift;
             }
@@ -254,92 +254,84 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            using (Pen markerPen = GetMarkerPen(xs0.MarkerType),
-                linePen = GetLinePen(xs0.MarkerType, true))
-            {
-                DrawMarkerSeriesInCanvasCoordinates(xys, 6, xs0.MarkerType.MarkerShape, xs0.MarkerType.IsMarkerFilled, markerPen, linePen, true, false);
-            }
+            PenDescriptor markerPen = GetMarkerPen(xs0.MarkerType);
+            PenDescriptor linePen = GetLinePen(xs0.MarkerType, true);
+            DrawMarkerSeriesInCanvasCoordinates(xys, 6, xs0.MarkerType.MarkerShape, xs0.MarkerType.IsMarkerFilled, markerPen, linePen, true, false);
 
             int rhDp = cOptions.RightHandDecimalPlaces;
 
-            using (Pen blackPen = new Pen(GrBlack))
+            PenDescriptor blackPen = new PenDescriptor(GrBlack);
+            if (cOptions.HasUserSpecifiedLimits)
             {
-                if (cOptions.HasUserSpecifiedLimits)
+                // user specified control and warning lines
+                double x1 = XAxisCanvas + XExtCanvas;
+                double y1 = ToCanvasY(cOptions.UpperWarningLimit);
+                DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
+                DrawStringLegendLC(Math.Round(cOptions.UpperWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
+                y1 = ToCanvasY(cOptions.LowerWarningLimit);
+                DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
+                DrawStringLegendLC(Math.Round(cOptions.LowerWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
+                PenDescriptor redPen = new PenDescriptor(GrRed);
                 {
-                    // user specified control and warning lines
-                    double x1 = XAxisCanvas + XExtCanvas;
-                    double y1 = ToCanvasY(cOptions.UpperWarningLimit);
-                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                    DrawStringLegendLC(Math.Round(cOptions.UpperWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
-                    y1 = ToCanvasY(cOptions.LowerWarningLimit);
-                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                    DrawStringLegendLC(Math.Round(cOptions.LowerWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
-                    using (Pen redPen = new Pen(GrRed))
-                    {
-                        y1 = ToCanvasY(cOptions.UpperControlLimit);
-                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(cOptions.UpperControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
-                        y1 = ToCanvasY(ymean - ysd * 3.0);
-                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(cOptions.LowerControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
-                        DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
-                    }
+                    y1 = ToCanvasY(cOptions.UpperControlLimit);
+                    DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
+                    DrawStringLegendLC(Math.Round(cOptions.UpperControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
+                    y1 = ToCanvasY(ymean - ysd * 3.0);
+                    DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
+                    DrawStringLegendLC(Math.Round(cOptions.LowerControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
+                    DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
                 }
-                else
+            }
+            else
+            {
+                // draw control lines
+                if (cOptions.UseMean)
                 {
-                    // draw control lines
-                    if (cOptions.UseMean)
+                    double x1 = XAxisCanvas + XExtCanvas;
+                    double y1 = ToCanvasY(ymean);
+                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
+                    DrawStringLegendLC(Math.Round(ymean, rhDp) + " (mean)", x1 + RHS_LABEL_GAP, y1);
+                    if (restricted)
+                        DrawStringLegendL("On first " + kobs + " points:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
+                    else if (external)
+                        DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
+                }
+
+                if (ysd != Constant.MISSING)
+                {
+                    if (cOptions.Use1SD)
+                    {
+                        PenDescriptor greenPen = new PenDescriptor(GrGreen);
+                        double x1 = XAxisCanvas + XExtCanvas;
+                        double y1 = ToCanvasY(ymean + ysd);
+                        DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
+                        DrawStringLegendLC(Math.Round(ymean + ysd, rhDp) + " (+1 SD)", x1 + RHS_LABEL_GAP, y1);
+                        y1 = ToCanvasY(ymean - ysd);
+                        DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
+                        DrawStringLegendLC(Math.Round(ymean - ysd, rhDp) + " (-1 SD)", x1 + RHS_LABEL_GAP, y1);
+                    }
+
+                    if (cOptions.Use2SD)
                     {
                         double x1 = XAxisCanvas + XExtCanvas;
-                        double y1 = ToCanvasY(ymean);
+                        double y1 = ToCanvasY(ymean + ysd * 2.0);
                         DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean, rhDp) + " (mean)", x1 + RHS_LABEL_GAP, y1);
-                        if (restricted)
-                            DrawStringLegendL("On first " + kobs + " points:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
-                        else if (external)
-                            DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
+                        DrawStringLegendLC(Math.Round(ymean + ysd * 2.0, rhDp) + " (+2 SD)", x1 + RHS_LABEL_GAP, y1);
+                        y1 = ToCanvasY(ymean - ysd * 2.0);
+                        DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
+                        DrawStringLegendLC(Math.Round(ymean - ysd * 2.0, rhDp) + " (-2 SD)", x1 + RHS_LABEL_GAP, y1);
                     }
 
-                    if (ysd != Constant.MISSING)
+                    if (cOptions.Use3SD)
                     {
-                        if (cOptions.Use1SD)
-                        {
-                            using (Pen greenPen = new Pen(GrGreen))
-                            {
-                                double x1 = XAxisCanvas + XExtCanvas;
-                                double y1 = ToCanvasY(ymean + ysd);
-                                DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
-                                DrawStringLegendLC(Math.Round(ymean + ysd, rhDp) + " (+1 SD)", x1 + RHS_LABEL_GAP, y1);
-                                y1 = ToCanvasY(ymean - ysd);
-                                DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
-                                DrawStringLegendLC(Math.Round(ymean - ysd, rhDp) + " (-1 SD)", x1 + RHS_LABEL_GAP, y1);
-                            }
-                        }
-
-                        if (cOptions.Use2SD)
-                        {
-                            double x1 = XAxisCanvas + XExtCanvas;
-                            double y1 = ToCanvasY(ymean + ysd * 2.0);
-                            DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                            DrawStringLegendLC(Math.Round(ymean + ysd * 2.0, rhDp) + " (+2 SD)", x1 + RHS_LABEL_GAP, y1);
-                            y1 = ToCanvasY(ymean - ysd * 2.0);
-                            DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                            DrawStringLegendLC(Math.Round(ymean - ysd * 2.0, rhDp) + " (-2 SD)", x1 + RHS_LABEL_GAP, y1);
-                        }
-
-                        if (cOptions.Use3SD)
-                        {
-                            using (Pen redPen = new Pen(GrRed))
-                            {
-                                double x1 = XAxisCanvas + XExtCanvas;
-                                double y1 = ToCanvasY(ymean + ysd * 3.0);
-                                DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                                DrawStringLegendLC(Math.Round(ymean + ysd * 3.0, rhDp) + " (+3 SD)", x1 + RHS_LABEL_GAP, y1);
-                                y1 = ToCanvasY(ymean - ysd * 3.0);
-                                DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                                DrawStringLegendLC(Math.Round(ymean - ysd * 3.0, rhDp) + " (-3 SD)", x1 + RHS_LABEL_GAP, y1);
-                            }
-                        }
+                        PenDescriptor redPen = new PenDescriptor(GrRed);
+                        double x1 = XAxisCanvas + XExtCanvas;
+                        double y1 = ToCanvasY(ymean + ysd * 3.0);
+                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
+                        DrawStringLegendLC(Math.Round(ymean + ysd * 3.0, rhDp) + " (+3 SD)", x1 + RHS_LABEL_GAP, y1);
+                        y1 = ToCanvasY(ymean - ysd * 3.0);
+                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
+                        DrawStringLegendLC(Math.Round(ymean - ysd * 3.0, rhDp) + " (-3 SD)", x1 + RHS_LABEL_GAP, y1);
                     }
                 }
             }

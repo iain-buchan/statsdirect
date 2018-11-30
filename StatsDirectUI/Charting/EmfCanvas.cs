@@ -4,7 +4,6 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using StatsDirect.Templates;
-using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
@@ -13,29 +12,18 @@ namespace StatsDirect.Charting
     /// </summary>
     class EmfCanvas : IStatsDirectCanvas
     {
-        const float PIXELS_PER_INCH = 96.0f;
-        const float POINTS_PER_INCH = 72.0f;
-        const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
-
-        const float SMALLEST_PIXEL_SIZE = 5;
-        const float LARGEST_PIXEL_SIZE = 100;
-
         private Metafile metafile;
         private Graphics metafileGraphics;
-        private readonly FontMap fontMap;
         private Stream outputStream;
-        private double width;
-        private double height;
 
-        public double Width => width;
+        public double Width { get; }
 
-        public double Height => height;
+        public double Height { get; }
 
         public EmfCanvas(double width, double height)
         {
-            this.width = width;
-            this.height = height;
-            fontMap = new FontMap();
+            Width = width;
+            Height = height;
             SetupGraphics();
         }
 
@@ -49,7 +37,7 @@ namespace StatsDirect.Charting
                 {
                     //  Create metafile object to do the recording.
                     IntPtr hdc = newGraphics.GetHdc();
-                    metafile = new Metafile(outputStream, hdc, new RectangleF(0, 0, (float)width, (float)height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
+                    metafile = new Metafile(outputStream, hdc, new RectangleF(0, 0, (float)Width, (float)Height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
                     newGraphics.ReleaseHdc(hdc);
 
                     metafileGraphics = Graphics.FromImage(metafile);
@@ -58,9 +46,9 @@ namespace StatsDirect.Charting
             }
         }
 
-        public void DrawString(string s, FontDescriptor font, Brush brush, double x, double y, StringFormat txtFormat)
+        public void DrawString(string s, FontDescriptor font, BrushDescriptor brush, double x, double y, StringFormat txtFormat)
         {
-            metafileGraphics.DrawString(s, fontMap[font], brush, Convert.ToSingle(x), Convert.ToSingle(height - y), txtFormat);
+            metafileGraphics.DrawString(s, FontCache.Font(font), GetBrush(brush), Convert.ToSingle(x), Convert.ToSingle(Height - y), txtFormat);
         }
 
         ///  <summary>
@@ -77,7 +65,7 @@ namespace StatsDirect.Charting
         ///  <param name="direction"></param>
         ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
-        public void DrawStringAtAngle(string s, FontDescriptor font, Brush brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
+        public void DrawStringAtAngle(string s, FontDescriptor font, BrushDescriptor brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             //  Work out how to fiddle the text alignment
             if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
@@ -113,18 +101,18 @@ namespace StatsDirect.Charting
                 }
             }
             float angle = DirectionToAngle(direction);
-            metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(height - y));
+            metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(Height - y));
             metafileGraphics.RotateTransform(angle);
-            metafileGraphics.DrawString(s, fontMap[font], brush, 0, 0, txtFormat);
+            metafileGraphics.DrawString(s, FontCache.Font(font), GetBrush(brush), 0, 0, txtFormat);
             // Undo the transform
             metafileGraphics.RotateTransform(0f - angle);
-            metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(height - y));
+            metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(Height - y));
         }
 
-        public SizeF MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction)
+        public SizeD MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction)
         { 
-            SizeF uprightSize = metafileGraphics.MeasureString(s, fontMap[font]);
-            SizeF boundingSize = ToBoundingSize(uprightSize, direction);
+            SizeF uprightSize = metafileGraphics.MeasureString(s, FontCache.Font(font));
+            SizeD boundingSize = ToBoundingSize(uprightSize, direction);
             return boundingSize;
         }
 
@@ -147,27 +135,28 @@ namespace StatsDirect.Charting
             return 0;
         }
 
-        public static SizeF ToBoundingSize(SizeF uprightSize, LabelDirection direction)
+        public static SizeD ToBoundingSize(SizeF uprightSize, LabelDirection direction)
         {
             switch (direction)
             {
                 case LabelDirection.Across:
-                    return uprightSize;
+                    return new SizeD(uprightSize.Width, uprightSize.Height);
                 case LabelDirection.Up:
                 case LabelDirection.Down:
-                    return new SizeF(uprightSize.Height, uprightSize.Width);
+                    return new SizeD(uprightSize.Height, uprightSize.Width);
                 case LabelDirection.SlopeDown:
                 case LabelDirection.SlopeUp:
                     float diagonal = Convert.ToSingle((uprightSize.Width + uprightSize.Height) * Math.Sin(Math.PI / 4.0));
-                    return new SizeF(diagonal, diagonal);
+                    return new SizeD(diagonal, diagonal);
             }
 
-            return new SizeF();
+            return SizeD.Empty;
         }
 
-        public SizeF MeasureString(string s, FontDescriptor font)
+        public SizeD MeasureString(string s, FontDescriptor font)
         {
-            return metafileGraphics.MeasureString(s, fontMap[font]);
+            SizeF sizeF = metafileGraphics.MeasureString(s, FontCache.Font(font));
+            return new SizeD(sizeF.Width, sizeF.Height);
         }
 
         public Stream DetachAndReturnImageStream()
@@ -199,20 +188,20 @@ namespace StatsDirect.Charting
         ///  <param name="size"></param>
         ///  <param name="fill">If true, fill the square; if false, merely draw the outline.</param>
         ///  <remarks></remarks>
-        public void DrawSquare(Pen p, double x, double y, double size, bool fill)
+        public void DrawSquare(PenDescriptor p, double x, double y, double size, bool fill)
         {
             double size2 = size / 2;
             PointF[] pt = new PointF[5];
             pt[0].X = Convert.ToSingle(x - size2);
-            pt[0].Y = Convert.ToSingle(height - (y - size2));
+            pt[0].Y = Convert.ToSingle(Height - (y - size2));
             pt[1].X = Convert.ToSingle(x - size2);
-            pt[1].Y = Convert.ToSingle(height - (y + size2));
+            pt[1].Y = Convert.ToSingle(Height - (y + size2));
             pt[2].X = Convert.ToSingle(x + size2);
-            pt[2].Y = Convert.ToSingle(height - (y + size2));
+            pt[2].Y = Convert.ToSingle(Height - (y + size2));
             pt[3].X = Convert.ToSingle(x + size2);
-            pt[3].Y = Convert.ToSingle(height - (y - size2));
+            pt[3].Y = Convert.ToSingle(Height - (y - size2));
             pt[4].X = Convert.ToSingle(x - size2);
-            pt[4].Y = Convert.ToSingle(height - (y - size2));
+            pt[4].Y = Convert.ToSingle(Height - (y - size2));
             DrawAndOrFillPolygon(p, fill, pt);
         }
 
@@ -225,24 +214,24 @@ namespace StatsDirect.Charting
         ///  <param name="size"></param>
         ///  <param name="fill">If true, fill the square; if false, merely draw the outline.</param>
         /// <remarks></remarks>
-        public void DrawDiamond(Pen p, double x, double y, double size, bool fill)
+        public void DrawDiamond(PenDescriptor p, double x, double y, double size, bool fill)
         {
             double size2 = size / 2;
             PointF[] pt = new PointF[5];
             pt[0].X = Convert.ToSingle(x - size2);
-            pt[0].Y = Convert.ToSingle(height - y);
+            pt[0].Y = Convert.ToSingle(Height - y);
             pt[1].X = Convert.ToSingle(x);
-            pt[1].Y = Convert.ToSingle(height - (y - size2));
+            pt[1].Y = Convert.ToSingle(Height - (y - size2));
             pt[2].X = Convert.ToSingle(x + size2);
-            pt[2].Y = Convert.ToSingle(height - y);
+            pt[2].Y = Convert.ToSingle(Height - y);
             pt[3].X = Convert.ToSingle(x);
-            pt[3].Y = Convert.ToSingle(height - (y + size2));
+            pt[3].Y = Convert.ToSingle(Height - (y + size2));
             pt[4].X = Convert.ToSingle(x - size2);
-            pt[4].Y = Convert.ToSingle(height - y);
+            pt[4].Y = Convert.ToSingle(Height - y);
             DrawAndOrFillPolygon(p, fill, pt);
         }
 
-        private void DrawAndOrFillPolygon(Pen p, bool fill, PointF[] pt)
+        private void DrawAndOrFillPolygon(PenDescriptor p, bool fill, PointF[] pt)
         {
             if (fill)
             {
@@ -252,60 +241,39 @@ namespace StatsDirect.Charting
                 }
             }
             // Draw the diamond
-            metafileGraphics.DrawPolygon(p, pt);
+            metafileGraphics.DrawPolygon(GetPen(p), pt);
         }
 
-        public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, Pen p)
+        public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, PenDescriptor p)
         {
             double size2 = size * 2;
+            BrushDescriptor b = isFilled ? new BrushDescriptor(p.Color) : null;
+            PenDescriptor pd = isFilled ? PenDescriptor.White : p;
 
             switch (shape)
             {
                 case MarkerShape.Circle:
-                {
                     if (isFilled)
-                    {
-                        using (Brush b = new SolidBrush(p.Color))
-                        {
-                            FillEllipse(b, x - size, y + size, size2, size2);
-                        }
-                    }
+                        FillEllipse(new BrushDescriptor(p.Color), x - size, y + size, size2, size2);
                     else
-                    {
                         DrawEllipse(p, x - size, y + size, size2, size2);
-                    }
-                }
                     break;
                 case MarkerShape.Square:
-                {
-                    if (isFilled)
-                    {
-                        using (Brush b = new SolidBrush(p.Color))
-                        {
-                            FillRectangle(b, x - size, y + size, size2, size2);
-                        }
-                    }
-                    else
-                    {
-                        DrawRectangle(p, x - size, y + size, size2, size2);
-                    }
-                }
+                    DrawRectangle(p, b, x - size, y + size, size2, size2);
                     break;
                 case MarkerShape.Triangle:
-                {
-                    PointF[] points = { new PointF(Convert.ToSingle(x - size), Convert.ToSingle(height - (y - size))), new PointF(Convert.ToSingle(x), Convert.ToSingle(height - (y + size))), new PointF(Convert.ToSingle(x + size), Convert.ToSingle(height - (y - size))) };
-                    if (isFilled)
                     {
-                        using (Brush b = new SolidBrush(p.Color))
+                        PointF[] points =
                         {
-                            metafileGraphics.FillPolygon(b, points);
-                        }
+                            new PointF(Convert.ToSingle(x - size), Convert.ToSingle(Height - (y - size))),
+                            new PointF(Convert.ToSingle(x), Convert.ToSingle(Height - (y + size))),
+                            new PointF(Convert.ToSingle(x + size), Convert.ToSingle(Height - (y - size)))
+                        };
+                        if (isFilled)
+                            metafileGraphics.FillPolygon(GetBrush(b), points);
+                        else
+                            metafileGraphics.DrawPolygon(GetPen(p), points);
                     }
-                    else
-                    {
-                        metafileGraphics.DrawPolygon(p, points);
-                    }
-                }
                     break;
                 case MarkerShape.Plus:
                     //  Same filled or unfilled
@@ -318,133 +286,71 @@ namespace StatsDirect.Charting
                     DrawLine(p, x - size, y + size, x + size, y - size);
                     break;
                 case MarkerShape.CircleLine:
-                {
                     if (isFilled)
-                    {
-                        using (Brush b = new SolidBrush(p.Color))
-                        {
-                            FillEllipse(b, x - size, y + size, size2, size2);
-                        }
-                        DrawLine(Pens.White, x, y - size, x, y + size);
-                    }
+                        FillEllipse(new BrushDescriptor(p.Color), x - size, y + size, size2, size2);
                     else
-                    {
                         DrawEllipse(p, x - size, y + size, size2, size2);
-                        DrawLine(p, x, y - size, x, y + size);
-                    }
-                }
+                    DrawLine(pd, x, y - size, x, y + size);
                     break;
                 case MarkerShape.SquareLine:
-                    if (isFilled)
-                    {
-                        using (Brush b = new SolidBrush(p.Color))
-                        {
-                            FillRectangle(b, x - size, y + size, size2, size2);
-                        }
-                        DrawLine(Pens.White, x - size, y + size, x + size, y - size);
-                    }
-                    else
-                    {
-                        DrawRectangle(p, x - size, y + size, size2, size2);
-                        DrawLine(p, x - size, y + size, x + size, y - size);
-                    }
+                    DrawRectangle(p, b, x - size, y + size, size2, size2);
+                    DrawLine(pd, x - size, y + size, x + size, y - size);
                     break;
                 case MarkerShape.SquareCross:
-                    if (isFilled)
-                    {
-                        using (Brush b = new SolidBrush(p.Color))
-                        {
-                            FillRectangle(b, x - size, y + size, size2, size2);
-                        }
-                        DrawLine(Pens.White, x - size, y - size, x + size, y + size);
-                        DrawLine(Pens.White, x - size, y + size, x + size, y - size);
-                    }
-                    else
-                    {
-                        DrawRectangle(p, x - size, y + size, size2, size2);
-                        DrawLine(p, x - size, y - size, x + size, y + size);
-                        DrawLine(p, x - size, y + size, x + size, y - size);
-                    }
+                    DrawRectangle(p, b, x - size, y + size, size2, size2);
+                    DrawLine(pd, x - size, y - size, x + size, y + size);
+                    DrawLine(pd, x - size, y + size, x + size, y - size);
                     break;
                 case MarkerShape.Diamond:
                     DrawDiamond(p, x, y, size2, isFilled);
                     break;
                 case MarkerShape.SurvivalTic:
-                        DrawLine(p, x - size, y - size, x + size, y - size);
-                        DrawLine(p, x + size, y - size, x + size, y + size);
+                    DrawLine(p, x - size, y - size, x + size, y - size);
+                    DrawLine(p, x + size, y - size, x + size, y + size);
                     break;
                 default:
                     throw new ArgumentException("Don't know how to draw style's shape", nameof(shape));
             }
         }
 
-        private void FillEllipse(Brush b, double x, double y, double w, double h)
+        private void FillEllipse(BrushDescriptor b, double x, double y, double w, double h)
         {
-            metafileGraphics.FillEllipse(b, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
+            metafileGraphics.FillEllipse(GetBrush(b), Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(Height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
         }
 
-        private void DrawEllipse(Pen p, double x, double y, double w, double h)
+        private void DrawEllipse(PenDescriptor p, double x, double y, double w, double h)
         {
-            metafileGraphics.DrawEllipse(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            metafileGraphics.DrawEllipse(GetPen(p), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        public void FillRectangle(Brush b, double x, double y, double w, double h)
+        private Brush GetBrush(BrushDescriptor b)
         {
-            metafileGraphics.FillRectangle(b, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            // TODO: Cache
+            return ToBrush(b);
         }
 
-        public void DrawRectangle(Pen p, double x, double y, double w, double h)
+        public void DrawRectangle(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h)
         {
-            metafileGraphics.DrawRectangle(p, Convert.ToSingle(x), Convert.ToSingle(height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            if (null != b)
+                metafileGraphics.FillRectangle(GetBrush(b), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            if (null != p)
+                metafileGraphics.DrawRectangle(GetPen(p), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        public void DrawLine(Pen p, double x1, double y1, double x2, double y2)
+        private Pen GetPen(PenDescriptor p)
         {
-            metafileGraphics.DrawLine(p, Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(height - y2, 0)));
+            // TODO: Cache
+            return new Pen(p.Color, (float)p.LineThickness) { DashStyle = p.DashStyle };
+        }
+
+        public void DrawLine(PenDescriptor p, double x1, double y1, double x2, double y2)
+        {
+            metafileGraphics.DrawLine(GetPen(p), Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(Height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(Height - y2, 0)));
         }
 
         public double GetFontHeight(FontDescriptor f)
         {
-            return fontMap[f].GetHeight(metafileGraphics);
-        }
-
-        private class FontMap : IDisposable
-        {
-            private Dictionary<FontDescriptor, Font> fonts = new Dictionary<FontDescriptor, Font>();
-
-            public Font this[FontDescriptor fontDescriptor]
-            {
-                get
-                {
-                    if (fonts.TryGetValue(fontDescriptor, out Font found))
-                        return found;
-                    fonts.Add(fontDescriptor, FontFromDescriptor(fontDescriptor));
-                    return fonts[fontDescriptor];
-                }
-            }
-
-            #region IDisposable Support
-            private bool disposedValue;
-
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!disposedValue)
-                {
-                    if (disposing)
-                    {
-                        foreach (Font f in fonts.Values)
-                            f.Dispose();
-                    }
-
-                    disposedValue = true;
-                }
-            }
-
-            public void Dispose()
-            {
-                Dispose(true);
-            }
-            #endregion
+            return FontCache.Font(f).GetHeight(metafileGraphics);
         }
 
         #region IDisposable Support
@@ -458,7 +364,6 @@ namespace StatsDirect.Charting
                 {
                     metafile?.Dispose();
                     metafileGraphics?.Dispose();
-                    fontMap?.Dispose();
                     outputStream?.Dispose();
                 }
 
@@ -472,45 +377,22 @@ namespace StatsDirect.Charting
         }
         #endregion
 
-        public static FontDescriptor DescriptorFromFont(Font f)
+        private Brush ToBrush(BrushDescriptor b)
         {
-            float emSize;
-            switch (f.Unit)
+            switch (b.FillStyle)
             {
-                case GraphicsUnit.Pixel:
-                    emSize = f.Size / PIXELS_PER_POINT;
-                    break;
-                case GraphicsUnit.Point:
-                    emSize = f.Size;
-                    break;
+                case FillStyle.None:
+                    return null;
+                case FillStyle.Crosshatch:
+                    return new HatchBrush(HatchStyle.DiagonalCross, b.Color, Color.White);
+                case FillStyle.BackwardDiagonal:
+                    return new HatchBrush(HatchStyle.BackwardDiagonal, b.Color, Color.White);
+                case FillStyle.ForwardDiagonal:
+                    return new HatchBrush(HatchStyle.ForwardDiagonal, b.Color, Color.White);
+                case FillStyle.Solid:
+                    return new SolidBrush(b.Color);
                 default:
-                    throw new Exception("Cannot save font - unknown conversion from unit " + f.Unit);
-            }
-            return new FontDescriptor(f.FontFamily.Name, Convert.ToInt32(f.Style), +emSize);
-        }
-
-        /// <summary>
-        /// Returns a font matching the descriptor appropriate for drawing on a metafile, or null if no font can be derived from the descriptor.  #830: To prevent scaling issues, assume the metafile is drawn at 96dpi.
-        /// </summary>
-        public static Font FontFromDescriptor(FontDescriptor descriptor)
-        {
-            if (null == descriptor)
-                return null;
-            FontStyle style = (FontStyle)descriptor.Style;
-            float pixelSize = descriptor.SizeInPoints * PIXELS_PER_POINT;
-
-            // #1380: Prevent crazy font sizes
-            if (pixelSize < SMALLEST_PIXEL_SIZE)
-                pixelSize = SMALLEST_PIXEL_SIZE;
-            if (pixelSize > LARGEST_PIXEL_SIZE)
-                pixelSize = LARGEST_PIXEL_SIZE;
-            try
-            {
-                return new Font(descriptor.FontFamily, pixelSize, style, GraphicsUnit.Pixel);
-            }
-            catch (Exception)
-            {
-                return null;
+                    throw new ArgumentOutOfRangeException(nameof(b), b.FillStyle, "FillStyle Values between 0 and 4 accepted");
             }
         }
     }

@@ -31,8 +31,9 @@ namespace StatsDirect.Charting
 
         public override string ToString()
         {
-            return $"{FontFamily};{Style};{SizeInPoints}";
+            return $"{FontFamily};{Style};{SizeInPoints}pt";
         }
+
         public static bool TryParse(string descriptor, out FontDescriptor fontDescriptor)
         {
             fontDescriptor = null;
