@@ -86,7 +86,7 @@ namespace StatsDirect.Charting.Renderer
                 string ytxt = Definition.ChartOptions.YAxisTitle;
                 if (string.IsNullOrEmpty(ytxt))
                     ytxt = "maximum difference";
-                axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, 0, 0, mxdMin, mxdMax);
+                axisScales = PlotXYInternal(aOptions.av, aOptions.mxd, xtxt, ytxt, "Agreement Plot", false, DataMinMax.XCalc_YPreset, ChartPreferences.MarkerTypes[0].MarkerSize, ChartPreferences.MarkerTypes[0].MarkerShape, ChartPreferences.MarkerTypes[0].IsMarkerFilled, p, false, ChartAreaShape.Default, 0, 0, mxdMin, mxdMax);
             }
 
             // Plot mean

@@ -580,9 +580,10 @@ namespace StatsDirect.Builtins
             for (int r = 0; r < rx; r++)
             {
                 pvalues[r] = PDF.ppchi2(P, df, out int fault);
-                P = P + p_inc;
+                P += p_inc;
             }
             Array.Sort(xxm);
+            outputParameters.AddOutput("df", df);
             outputParameters.AddOutput("pvalues", new DataFrame(new DoubleVariable(pvalues)));
             outputParameters.AddOutput("xxm", new DataFrame(new DoubleVariable(xxm)));
             return outputParameters;
@@ -606,7 +607,7 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING)
                     {
-                        nx += 1;
+                        nx++;
                         sum += val;
                     }
                 }
@@ -620,7 +621,7 @@ namespace StatsDirect.Builtins
                 tlist += v.Title;
             }
 
-            double gm = sumtot / Convert.ToDouble(ntot);
+            double gm = sumtot / ntot;
             double sstot = 0;
             for (int d = 0; d < frame.VariableCount; d++)
             {
@@ -639,7 +640,7 @@ namespace StatsDirect.Builtins
             double sserror = sstot - ssgroup;
             int dferr = ntot - frame.VariableCount;
             double msgroup = ssgroup / dfgroup;
-            double mserr = sserror / Convert.ToDouble(dferr);
+            double mserr = sserror / dferr;
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tlist", tlist);
@@ -655,14 +656,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("t_df", dftot);
 
             outputParameters.AddOutput("f", msgroup / mserr);
-            double P = PDF.fvalp(msgroup / mserr, Convert.ToDouble(dfgroup), Convert.ToDouble(dferr));
+            double P = PDF.fvalp(msgroup / mserr, dfgroup, dferr);
             outputParameters.AddOutput("p", P);
 
             //  For other operations
-            outputParameters.Add("dfres", new FilledParameter(FilledParameterDirection.Input, dferr));
-            outputParameters.Add("msres", new FilledParameter(FilledParameterDirection.Input, mserr));
-            outputParameters.Add("mean", new FilledParameter(FilledParameterDirection.Input, mean));
-            outputParameters.Add("tnx", new FilledParameter(FilledParameterDirection.Input, tnx));
+            outputParameters.AddInput("dfres", dferr);
+            outputParameters.AddInput("msres", mserr);
+            outputParameters.AddInput("mean", mean);
+            outputParameters.AddInput("tnx", tnx);
             return outputParameters;
         }
 

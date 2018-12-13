@@ -15,7 +15,7 @@ namespace StatsDirect.Charting
     public static class ChartRendererFactory
     {
         // Configuration as to what canvas we're using, and hence the kind of image that will result from a chart being plotted.
-        private static readonly ICanvasFactory CANVAS_FACTORY = new SvgCanvasFactory();
+        private static readonly ICanvasFactory CANVAS_FACTORY = new EmfCanvasFactory();
 
         public static string PlotBiasMAAndReturnRtf(ITemplateHost host, double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
