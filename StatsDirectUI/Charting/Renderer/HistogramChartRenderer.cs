@@ -57,8 +57,11 @@ namespace StatsDirect.Charting.Renderer
             return sp;
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
             List<Series> seriesToUse = Definition.YSeries;
             MarkerType[] originalMarkerTypes = null;

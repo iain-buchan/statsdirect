@@ -37,7 +37,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a ROC chart.
         ///  </summary>
         /// <param name="host"></param>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
             ROCOptions rOptions = (ROCOptions)Definition.ChartOptions;
             double gamma = rOptions.GAMMA;

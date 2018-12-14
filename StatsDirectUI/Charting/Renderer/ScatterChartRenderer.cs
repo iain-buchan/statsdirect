@@ -36,8 +36,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             ScatterXYOptions sOptions = (ScatterXYOptions)Definition.ChartOptions;
             bool shouldDrawMarkers = sOptions.PlotMarkers;
             bool joinMarkersWithLines = sOptions.JoinMarkersWithLines;

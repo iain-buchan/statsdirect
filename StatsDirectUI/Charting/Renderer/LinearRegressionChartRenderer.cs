@@ -32,8 +32,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             const int MARKER_SIZE = 6;
 
             LinearRegressionOptions lrOptions = (LinearRegressionOptions)Definition.ChartOptions;

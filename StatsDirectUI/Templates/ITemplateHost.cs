@@ -42,12 +42,12 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
         /// </summary>
-        /// <param name="rtf"></param>
+        /// <param name="renderable">The thing to be rendered as a report. Passed in this way as different template hosts might need to render in different ways.</param>
         /// <param name="operation"></param>
         /// <param name="redoInformation">Any text that should be stored to assist in redoing the operation with new data at a later date</param>
         /// <param name="preferredOutputLocation">If non-null, indicates a possible host-controlled place to put the output</param>
         /// <returns>The host-assigned identity of the report that was used, or null if the report was not output at all.</returns>
-        object OutputReport(string rtf, Operation operation, string redoInformation, object preferredOutputLocation);
+        object OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation);
 
         /// <summary>
         /// The user (or similar decision-maker) should be allowed to amend whatever is deemed appropriate of the options.

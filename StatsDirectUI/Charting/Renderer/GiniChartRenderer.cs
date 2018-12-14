@@ -28,8 +28,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             GiniOptions gOptions = (GiniOptions)Definition.ChartOptions;
             DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
             DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;

@@ -25,8 +25,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
             if (sOptions.Orientation == ChartOrientation.Horizontal)
             {

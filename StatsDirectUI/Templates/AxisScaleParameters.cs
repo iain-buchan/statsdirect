@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StatsDirect.Charting;
+using System;
 using System.Collections.Generic;
 
 namespace StatsDirect.Templates
@@ -18,7 +19,7 @@ namespace StatsDirect.Templates
 
         // Grid lines
         public bool HasGridLines { get; set; }
-        public System.Drawing.Drawing2D.DashStyle GridLineDashStyle { get; set; }
+        public DashStyleDescriptor GridLineDashStyle { get; set; }
 
         // Marker line
         public double? MarkerLineValue { get; set; }

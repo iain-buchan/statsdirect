@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Text;
 using StatsDirect.UI.Properties;
@@ -165,11 +163,11 @@ namespace StatsDirect.Charting
                     MarkerShape shape = (MarkerShape)int.Parse(parameterStrings[0]);
                     //  Colour
                     string[] colourValues = parameterStrings[1].Split(',');
-                    Color col = Color.FromArgb(255, int.Parse(colourValues[0]), int.Parse(colourValues[1]), int.Parse(colourValues[2]));
+                    ColorDescriptor col = ColorDescriptor.FromArgb(int.Parse(colourValues[0]), int.Parse(colourValues[1]), int.Parse(colourValues[2]));
                     //  Width
                     float width = float.Parse(parameterStrings[2]);
                     //  Style
-                    DashStyle style = (DashStyle)int.Parse(parameterStrings[3]);
+                    DashStyleDescriptor style = (DashStyleDescriptor)int.Parse(parameterStrings[3]);
                     //  Filled (1 = yes, missing or 0 = no)
                     bool isFilled = false;
                     if (parameterStrings.Length > 4)
@@ -191,10 +189,10 @@ namespace StatsDirect.Charting
 
                 // fixed style
                 sharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
-                sharedMarkerTypes[10].MarkerColor = Color.Black;
-                sharedMarkerTypes[10].LineColor = Color.Black;
+                sharedMarkerTypes[10].MarkerColor = ColorDescriptor.Black;
+                sharedMarkerTypes[10].LineColor = ColorDescriptor.Black;
                 sharedMarkerTypes[10].Width = 1;
-                sharedMarkerTypes[10].LineDashStyle = DashStyle.Dash;
+                sharedMarkerTypes[10].LineDashStyle = DashStyleDescriptor.Dash;
                 sharedMarkerTypes[10].IsMarkerFilled = false;
                 sharedMarkerTypes[10].MarkerSize = 6;
             }
@@ -230,7 +228,7 @@ namespace StatsDirect.Charting
                 savedSettings.Append(";");
 
                 // Colour.  TODO: Line colour.
-                Color col = sharedMarkerTypes[i].MarkerColor;
+                ColorDescriptor col = sharedMarkerTypes[i].MarkerColor;
                 savedSettings.Append(col.R.ToString(CultureInfo.InvariantCulture));
                 savedSettings.Append(",");
                 savedSettings.Append(col.G.ToString(CultureInfo.InvariantCulture));
@@ -258,60 +256,60 @@ namespace StatsDirect.Charting
         private static void InitFirstMarkerTypes()
         {
             sharedMarkerTypes[0].MarkerShape = MarkerShape.Circle;
-            sharedMarkerTypes[0].MarkerColor = Color.FromArgb(64, 105, 156);
-            sharedMarkerTypes[0].LineColor = Color.FromArgb(64, 105, 156);
-            sharedMarkerTypes[0].LineDashStyle = DashStyle.Solid;
+            sharedMarkerTypes[0].MarkerColor = ColorDescriptor.FromArgb(64, 105, 156);
+            sharedMarkerTypes[0].LineColor = ColorDescriptor.FromArgb(64, 105, 156);
+            sharedMarkerTypes[0].LineDashStyle = DashStyleDescriptor.Solid;
 
             sharedMarkerTypes[1].MarkerShape = MarkerShape.Square;
-            sharedMarkerTypes[1].MarkerColor = Color.FromArgb(158, 65, 62);
-            sharedMarkerTypes[1].LineColor = Color.FromArgb(158, 65, 62);
-            sharedMarkerTypes[1].LineDashStyle = DashStyle.Dash;
+            sharedMarkerTypes[1].MarkerColor = ColorDescriptor.FromArgb(158, 65, 62);
+            sharedMarkerTypes[1].LineColor = ColorDescriptor.FromArgb(158, 65, 62);
+            sharedMarkerTypes[1].LineDashStyle = DashStyleDescriptor.Dash;
 
             sharedMarkerTypes[2].MarkerShape = MarkerShape.Triangle;
-            sharedMarkerTypes[2].MarkerColor = Color.FromArgb(127, 154, 72);
-            sharedMarkerTypes[2].LineColor = Color.FromArgb(127, 154, 72);
-            sharedMarkerTypes[2].LineDashStyle = DashStyle.Dot;
+            sharedMarkerTypes[2].MarkerColor = ColorDescriptor.FromArgb(127, 154, 72);
+            sharedMarkerTypes[2].LineColor = ColorDescriptor.FromArgb(127, 154, 72);
+            sharedMarkerTypes[2].LineDashStyle = DashStyleDescriptor.Dot;
 
             sharedMarkerTypes[3].MarkerShape = MarkerShape.Plus;
-            sharedMarkerTypes[3].MarkerColor = Color.FromArgb(105, 81, 133);
-            sharedMarkerTypes[3].LineColor = Color.FromArgb(105, 81, 133);
-            sharedMarkerTypes[3].LineDashStyle = DashStyle.DashDot;
+            sharedMarkerTypes[3].MarkerColor = ColorDescriptor.FromArgb(105, 81, 133);
+            sharedMarkerTypes[3].LineColor = ColorDescriptor.FromArgb(105, 81, 133);
+            sharedMarkerTypes[3].LineDashStyle = DashStyleDescriptor.DashDot;
 
             sharedMarkerTypes[4].MarkerShape = MarkerShape.Cross;
-            sharedMarkerTypes[4].MarkerColor = Color.FromArgb(60, 141, 163);
-            sharedMarkerTypes[4].LineColor = Color.FromArgb(60, 141, 163);
-            sharedMarkerTypes[4].LineDashStyle = DashStyle.Solid;
+            sharedMarkerTypes[4].MarkerColor = ColorDescriptor.FromArgb(60, 141, 163);
+            sharedMarkerTypes[4].LineColor = ColorDescriptor.FromArgb(60, 141, 163);
+            sharedMarkerTypes[4].LineDashStyle = DashStyleDescriptor.Solid;
 
             sharedMarkerTypes[5].MarkerShape = MarkerShape.CircleLine;
-            sharedMarkerTypes[5].MarkerColor = Color.FromArgb(204, 123, 56);
-            sharedMarkerTypes[5].LineColor = Color.FromArgb(204, 123, 56);
-            sharedMarkerTypes[5].LineDashStyle = DashStyle.Dash;
+            sharedMarkerTypes[5].MarkerColor = ColorDescriptor.FromArgb(204, 123, 56);
+            sharedMarkerTypes[5].LineColor = ColorDescriptor.FromArgb(204, 123, 56);
+            sharedMarkerTypes[5].LineDashStyle = DashStyleDescriptor.Dash;
 
             sharedMarkerTypes[6].MarkerShape = MarkerShape.SquareLine;
-            sharedMarkerTypes[6].MarkerColor = Color.FromArgb(79, 129, 189);
-            sharedMarkerTypes[6].LineColor = Color.FromArgb(79, 129, 189);
-            sharedMarkerTypes[6].LineDashStyle = DashStyle.Dot;
+            sharedMarkerTypes[6].MarkerColor = ColorDescriptor.FromArgb(79, 129, 189);
+            sharedMarkerTypes[6].LineColor = ColorDescriptor.FromArgb(79, 129, 189);
+            sharedMarkerTypes[6].LineDashStyle = DashStyleDescriptor.Dot;
 
             sharedMarkerTypes[7].MarkerShape = MarkerShape.SquareCross;
-            sharedMarkerTypes[7].MarkerColor = Color.FromArgb(192, 80, 77);
-            sharedMarkerTypes[7].LineColor = Color.FromArgb(192, 80, 77);
-            sharedMarkerTypes[7].LineDashStyle = DashStyle.DashDot;
+            sharedMarkerTypes[7].MarkerColor = ColorDescriptor.FromArgb(192, 80, 77);
+            sharedMarkerTypes[7].LineColor = ColorDescriptor.FromArgb(192, 80, 77);
+            sharedMarkerTypes[7].LineDashStyle = DashStyleDescriptor.DashDot;
 
             sharedMarkerTypes[8].MarkerShape = MarkerShape.Circle;
-            sharedMarkerTypes[8].MarkerColor = Color.FromArgb(155, 187, 89);
-            sharedMarkerTypes[8].LineColor = Color.FromArgb(155, 187, 89);
-            sharedMarkerTypes[8].LineDashStyle = DashStyle.Solid;
+            sharedMarkerTypes[8].MarkerColor = ColorDescriptor.FromArgb(155, 187, 89);
+            sharedMarkerTypes[8].LineColor = ColorDescriptor.FromArgb(155, 187, 89);
+            sharedMarkerTypes[8].LineDashStyle = DashStyleDescriptor.Solid;
 
             sharedMarkerTypes[9].MarkerShape = MarkerShape.Square;
-            sharedMarkerTypes[9].MarkerColor = Color.FromArgb(128, 100, 162);
-            sharedMarkerTypes[9].LineColor = Color.FromArgb(128, 100, 162);
-            sharedMarkerTypes[9].LineDashStyle = DashStyle.Dash;
+            sharedMarkerTypes[9].MarkerColor = ColorDescriptor.FromArgb(128, 100, 162);
+            sharedMarkerTypes[9].LineColor = ColorDescriptor.FromArgb(128, 100, 162);
+            sharedMarkerTypes[9].LineDashStyle = DashStyleDescriptor.Dash;
 
             // fixed style
             sharedMarkerTypes[10].MarkerShape = MarkerShape.Circle;
-            sharedMarkerTypes[10].MarkerColor = Color.Black;
-            sharedMarkerTypes[10].LineColor = Color.Black;
-            sharedMarkerTypes[10].LineDashStyle = DashStyle.Dash;
+            sharedMarkerTypes[10].MarkerColor = ColorDescriptor.Black;
+            sharedMarkerTypes[10].LineColor = ColorDescriptor.Black;
+            sharedMarkerTypes[10].LineDashStyle = DashStyleDescriptor.Dash;
 
             foreach (MarkerType mt in sharedMarkerTypes)
             {

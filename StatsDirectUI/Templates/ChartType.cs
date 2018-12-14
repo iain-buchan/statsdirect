@@ -8,8 +8,11 @@
         NotSet = 0,
         AgreementPair,
         Bar,
+        BiasMA,
         BoxWhisker,
         Control,
+        Correlation,
+        CoxSurvivalOrHazard,
         ErrorBar,
         Forest,
         Gini,
@@ -17,6 +20,8 @@
         Ladder,
         LinearRegression,
         LineXY,
+        MH,
+        MHRD,
         Normal,
         Pyramid,
         ROC,
@@ -24,6 +29,7 @@
         Spread,
         StackedBar,
         StackedBar100Percent,
-        Survival
+        Survival,
+        Ties
     };
 }

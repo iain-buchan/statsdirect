@@ -69,8 +69,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             SurvivalOptions sOptions = (SurvivalOptions)Definition.ChartOptions;
 
             // Setup the Min & Max Values
@@ -179,7 +182,7 @@ namespace StatsDirect.Charting.Renderer
                 //  overlay confidence intervals
                 if (doCi)
                 {
-                    Color ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
+                    ColorDescriptor ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
                     PenDescriptor ciPen = new PenDescriptor(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle };
                     for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                     {

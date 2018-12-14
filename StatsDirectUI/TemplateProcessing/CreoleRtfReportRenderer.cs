@@ -6,17 +6,15 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.TemplateProcessing
 {
-    public class CreoleReportRenderer : ReportRenderer
+    public class CreoleRtfReportRenderer : ReportRenderer
     {
         const string RTF_REPORT_START = @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ";
         const string RTF_REPORT_END = @"\par }";
 
-        public string Template { get; set; }
-
-        public override string Render(ITemplateHost host, ParameterBag substitutions)
+        public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
         {
             // Before doing anything else, replace any {...} in the creole with \{...\}.  Do it now because we're about to put a whole load of {...} into the substituted RTF and won't be able to tell the difference later.
-            string protectedTemplate = Template.Replace(@"{", @"\{").Replace(@"}", @"\}");
+            string protectedTemplate = template.Replace(@"{", @"\{").Replace(@"}", @"\}");
 
             string templateWithInclusions = ResolveTemplates(protectedTemplate, new List<string>());
             string templateWithPossibleDeadBlocks = SubstituteInternal(host, templateWithInclusions, substitutions);
@@ -260,14 +258,22 @@ namespace StatsDirect.TemplateProcessing
                         string valueU = string.Empty;
                         if (null != pair.Value && pair.Value.HasData)
                         {
-                            value = pair.Value.Data.ToString();
-                            if (pair.Value.IsDouble)
+                            if (pair.Value.Data is IRenderable renderable)
                             {
-                                valueU = host.RoundU(pair.Value.AsDouble);
-                                valueP = host.pval(pair.Value.AsDouble);
+                                // We know we have to render to RTF, so this is legit
+                                value = new RtfRenderer(host).Render(renderable);
                             }
                             else
-                                valueU = valueP = value;
+                            {
+                                value = pair.Value.Data.ToString();
+                                if (pair.Value.IsDouble)
+                                {
+                                    valueU = host.RoundU(pair.Value.AsDouble);
+                                    valueP = host.pval(pair.Value.AsDouble);
+                                }
+                                else
+                                    valueU = valueP = value;
+                            }
                         }
                         template = template.Replace("<in>" + pair.Key + "</in>", value);
                         template = template.Replace("<inx>" + pair.Key + "</inx>", valueU);

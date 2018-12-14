@@ -20,8 +20,8 @@ namespace StatsDirect.Charting
         ///  <summary>
         ///  If true, the fill style in ForcedFillStyle should be used for all fill styles, overriding the markers' own styles.
         ///  </summary>
-        public bool ShouldForceFillStyle;
-        public FillStyle ForcedFillStyle;
+        public bool ShouldForceFillStyle { get; set; }
+        public FillStyle ForcedFillStyle { get; set; }
 
         protected GenericOptions(bool useColour) : base(useColour)
         {
@@ -37,36 +37,22 @@ namespace StatsDirect.Charting
         }
 
         public virtual bool UsesChartTitle => false;
-
         public virtual bool UsesAutoscale => false;
-
         public virtual bool UsesBoxAxes => false;
-
         public virtual bool UsesSeriesLabels => false;
-
         public virtual bool UsesAxisLabelFontDescriptor => false;
-
         public virtual string AxisLabelFontLabel => "Axis Label";
-
         public virtual bool UsesAxisTitleFontDescriptor => false;
-
         public virtual bool UsesLegendFontDescriptor => false;
-
         public virtual string LegendFontLabel => "Legend";
-
         public virtual string OrientationLabel => "Orientation";
 
         ///  <summary>
         ///  True if the chart can only be drawn in one orientation or if the orientation matches its preferred orientation.
         ///  False if the chart will be drawn in a non-preferred orientation.
         ///  </summary>
-        ///  <value></value>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
         public virtual bool IsNaturalOrientation => true;
-
         public virtual bool UsesTitleFontDescriptor => true;
-
         public virtual bool UsesOrientation => false;
 
         ///  <summary>

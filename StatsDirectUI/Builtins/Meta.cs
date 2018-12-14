@@ -236,7 +236,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Peto odds ratio", odrl, odru, cco, cit, por, Transformation.Log, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Peto odds ratio", odrl, odru, cco, cit, por, Transformation.Log, false)));
             }
 
             chartParameters = new ParameterBag();
@@ -245,13 +245,13 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */)));
 
             if (k > 2)
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true)));
             }
 
             return outputParameters;
@@ -605,16 +605,16 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference"));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [random effects]", 1, "risk difference"));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
 
             return outputParameters;
         }
@@ -764,7 +764,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false)));
             }
 
             chartParameters = new ParameterBag();
@@ -773,11 +773,11 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk"));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk"));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
             return outputParameters;
         }
@@ -1107,7 +1107,7 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false)));
                 }
 
                 chartParameters = new ParameterBag();
@@ -1259,7 +1259,7 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false)));
                 }
 
                 // bool bfault = false; 
@@ -1903,16 +1903,16 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, ptt, rkw, k, "Incidence rate difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false)));
                 }
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHRDAndReturnRtf(k, o, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference")));
             }
             else
             {
@@ -1920,16 +1920,16 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false)));
                 }
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotMHAndReturnRtf(k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio")));
             }
             return outputParameters;
         }
@@ -2164,7 +2164,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false)));
             }
 
             chartParameters = new ParameterBag();
@@ -2173,15 +2173,13 @@ namespace StatsDirect.Builtins
 
             if (sk != 0)
             {
-                string rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
-                rtf = ChartRendererFactory.PlotMHAndReturnRtf(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio");
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return outputParameters;
         }
@@ -2967,7 +2965,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, y, odx, wt, k, stat.ToLower(CultureInfo.CurrentCulture), llY, ulY, cco, cit, rmh, xform, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), odx, wt, k, stat.ToLower(CultureInfo.CurrentCulture), ShallowCopy(llY), ShallowCopy(ulY), cco, cit, rmh, xform, false)));
             }
 
             y[k + 1] = rmh;
@@ -2975,14 +2973,14 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio)));
 
             y[k + 1] = dsrr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio)));
 
             return outputParameters;
         }
@@ -3253,7 +3251,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, y, odx, wt, k, "Correlation", llY, ulY, cco, cit, wmr, Transformation.Z, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), odx, wt, k, "Correlation", ShallowCopy(llY), ShallowCopy(ulY), cco, cit, wmr, Transformation.Z, false)));
             }
 
             y[k + 1] = rmh;
@@ -3261,21 +3259,21 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
             y[k + 1] = dsrr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
             y[k + 1] = wmr;
             llY[k + 1] = wmrLcl;
             ulY[k + 1] = wmrUcl;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
             return outputParameters;
         }
@@ -3666,7 +3664,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotBiasMAAndReturnRtf(host, y, sn, wt, k, "Proportion", llY, ulY, cco, cit, rmh, Transformation.None, false));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), sn, wt, k, "Proportion", ShallowCopy(llY), ShallowCopy(ulY), cco, cit, rmh, Transformation.None, false)));
             }
 
             y[k + 1] = rmh;
@@ -3675,14 +3673,14 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
             y[k + 1] = dspr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotCorrelationAndReturnRtf(k + 1, title, y, llY, ulY, dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
             return outputParameters;
         }
@@ -4179,6 +4177,13 @@ namespace StatsDirect.Builtins
             return logtransform
                 ? Math.Pow((Math.Log(ul) - Math.Log(ll)) / 2 / cit, 2)
                 : Math.Pow((ul - ll) / 2 / cit, 2);
+        }
+
+        private static T[] ShallowCopy<T>(T[] original)
+        {
+            T[] copy = new T[original.Length];
+            Array.Copy(original, copy, original.Length);
+            return copy;
         }
     }
 }

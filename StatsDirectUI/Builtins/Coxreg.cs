@@ -473,11 +473,11 @@ namespace StatsDirect.Builtins
                 predParameters.AddOutput("z", ARR3[1, i, 3]);
                 predParameters.AddOutput("p", MathDbl.zvalp2(ARR3[1, i, 3]));
             }
-            outputParameters.Add("subgroups", new FilledParameter(FilledParameterDirection.Input, new DataFrame(new StringVariable(subgroups.ToArray()))));
-            outputParameters.Add("ARR2", new FilledParameter(FilledParameterDirection.Input, ARR2));
-            outputParameters.Add("ARR3", new FilledParameter(FilledParameterDirection.Input, ARR3));
-            outputParameters.Add("CDAT1", new FilledParameter(FilledParameterDirection.Input, CDAT1));
-            outputParameters.Add("holdx", new FilledParameter(FilledParameterDirection.Input, holdx));
+            outputParameters.AddInput("subgroups", new DataFrame(new StringVariable(subgroups.ToArray())));
+            outputParameters.AddInput("ARR2", ARR2);
+            outputParameters.AddInput("ARR3", ARR3);
+            outputParameters.AddInput("CDAT1", CDAT1);
+            outputParameters.AddInput("holdx", holdx);
             return outputParameters;
         }
 
@@ -2405,7 +2405,6 @@ namespace StatsDirect.Builtins
             return new ParameterBag();
         }
 
-
         private static ParameterBag RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
@@ -2479,10 +2478,8 @@ namespace StatsDirect.Builtins
                 for (int j = i; j <= iobs; j++)
                 {
                     if (z[i].Stratum != z[j].Stratum)
-                    {
                         break;
-                    }
-                    risk_theta = risk_theta + z[j].Exb;
+                    risk_theta += z[j].Exb;
                 }
                 bool erra = false;
                 double alpha_i;
@@ -2511,9 +2508,7 @@ namespace StatsDirect.Builtins
                     for (int j = i; j <= i + iinc; j++)
                     {
                         if (z[j] == null)
-                        {
                             z[j] = new CoxP();
-                        }
                         z[j].S = alpha_product;
                         z[j].H = -Math.Log(alpha_productx);
                     }
@@ -2545,9 +2540,7 @@ namespace StatsDirect.Builtins
 
             // restore the original record order if calling plot function or output to worksheet
             if (plot || createGrid)
-            {
                 Array.Sort(z, 1, iobs, new CoxpByIndex());
-            }
 
             if (plot)
             {
@@ -2655,10 +2648,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn)));
             cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.SurvivalOrHazardPlot(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn)));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)

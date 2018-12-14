@@ -406,12 +406,10 @@ namespace StatsDirect.Builtins
             return RptNormalZ(host, parameters, 1);
         }
 
-
         public static ParameterBag RptZUnpaired(ITemplateHost host, ParameterBag parameters)
         {
             return RptNormalZ(host, parameters, 2);
         }
-
 
         private static ParameterBag RptNormalZ(ITemplateHost host, ParameterBag parameters, int mode)
         {
@@ -558,7 +556,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         public static ParameterBag RptNormality(ITemplateHost host, ParameterBag parameters)
         {
             // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
@@ -651,11 +648,13 @@ namespace StatsDirect.Builtins
                     variableParameters.AddOutput("result", "Error in calculation");
                 }
 
-                variableParameters.AddOutput("chart", ChartRendererFactory.PlotNormalAndReturnRtf(data, v0.Title, host.Preferences.ShouldUseColour));
+                NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
+                ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions, ChartType = ChartType.Normal };
+                cd.XSeries.Add(new DoubleSeries(data, v0.Title));
+                variableParameters.AddOutput("chart", cd);
             }
             return outputParameters;
         }
-
 
         ///  <summary>
         ///  Royston's adjusted D'Agnostio ombibus test of skewness and kurtosis
@@ -1278,8 +1277,6 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptTPaired(ITemplateHost host, ParameterBag parameters)
         {
-            int N;
-
             DataFrame Data = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
             bool DoAgree = Data.VariableCount > 1 && parameters.ContainsKey("doAgreement") && parameters["doAgreement"].AsBoolean;
@@ -1290,12 +1287,12 @@ namespace StatsDirect.Builtins
             string txc;
             if (Data.VariableCount == 1)
             {
-                for (N = 0; N <= v0.Length - 1; N++)
+                for (int n = 0; n <= v0.Length - 1; n++)
                 {
-                    if (v0.Data[N] != Constant.MISSING)
+                    if (v0.Data[n] != Constant.MISSING)
                     {
                         nx++;
-                        arr1[nx] = v0.Data[N];
+                        arr1[nx] = v0.Data[n];
                     }
                 }
                 txc = "differences listed in " + v0.Title;
@@ -1303,12 +1300,12 @@ namespace StatsDirect.Builtins
             else
             {
                 DoubleVariable v1 = Data.Variables[1]as DoubleVariable;
-                for (N = 0; N <= v0.Length - 1; N++)
+                for (int n = 0; n <= v0.Length - 1; n++)
                 {
-                    if (v0.Data[N] != Constant.MISSING & v1.Data[N] != Constant.MISSING)
+                    if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
                     {
                         nx++;
-                        arr1[nx] = v0.Data[N] - v1.Data[N];
+                        arr1[nx] = v0.Data[n] - v1.Data[n];
                     }
                 }
                 txc = "differences between " + v0.Title + " and " + v1.Title;
@@ -1338,9 +1335,7 @@ namespace StatsDirect.Builtins
             double tstat = sem != 0.0 ? mean / sem : Constant.MISSING;
             double P = PDF.tvalp(Math.Abs(tstat), Convert.ToDouble(degf));
             if (P > 1.0 - P)
-            {
                 P = 1.0 - P;
-            }
             outputParameters.AddOutput("tail_1", P);
             outputParameters.AddOutput("tail_2", P * 2.0);
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - GAMMA));
@@ -1361,8 +1356,7 @@ namespace StatsDirect.Builtins
                 x[0] = Constant.MISSING;
                 y[0] = Constant.MISSING;
                 nx = 0;
-                int j;
-                for (j = 0; j <= v0.Length - 1; j++)
+                for (int j = 0; j <= v0.Length - 1; j++)
                 {
                     if (v0.Data[j] != Constant.MISSING & v1.Data[j] != Constant.MISSING)
                     {
@@ -1374,7 +1368,7 @@ namespace StatsDirect.Builtins
 
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotTiesAndReturnRtf(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Ties, new TiesOptions(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean)));
             }
             else
             {

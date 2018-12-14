@@ -447,7 +447,6 @@
   </xs:simpleType>
   <xs:simpleType name="ReportStepType">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="text/rtf" />
       <xs:enumeration value="application/x-statsdirect-creole" />
     </xs:restriction>
   </xs:simpleType>

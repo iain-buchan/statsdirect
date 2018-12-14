@@ -13,6 +13,7 @@ using System.Drawing.Imaging;
 using StatsDirect.Utilities;
 using DevExpress.XtraRichEdit.Services;
 using System.Reflection;
+using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.UI
 {
@@ -355,7 +356,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public void AppendRtfText(string rtf, int helpContextId, Operation operation, string redoInformation)
+        void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, string redoInformation)
         {
             Document document = richEditControl1.Document;
             int initialEnd = document.Range.End.ToInt();
@@ -369,6 +370,8 @@ namespace StatsDirect.UI
                 string safeXml = redoInformation.Replace(@"\", "&#92;");
                 document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!redo!-> " + "\"" + operation.Name + "\" " + safeXml + @" <-!redo!! }}");
             }
+
+            string rtf = new RtfRenderer(SdApplication.SoleInstance).Render(renderable);
             string[] splitInserts = rtf.Split(new[] { "/split/" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string piece in splitInserts)
                 if (piece.StartsWith(@"{\rtf"))

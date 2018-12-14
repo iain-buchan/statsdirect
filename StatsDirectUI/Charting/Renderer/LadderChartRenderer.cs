@@ -30,8 +30,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             // Get the plot title
             LadderOptions lOptions = (LadderOptions)Definition.ChartOptions;
             StartVectorPlot(lOptions);
@@ -65,7 +68,7 @@ namespace StatsDirect.Charting.Renderer
             if (lOptions.MarkerTypes != null && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
                 rungMarkerType = lOptions.MarkerTypes[0];
 
-            PenDescriptor rungPen = new PenDescriptor(Color.Black, rungMarkerType.Width);
+            PenDescriptor rungPen = new PenDescriptor(ColorDescriptor.Black, rungMarkerType.Width);
             rungPen.DashStyle = rungMarkerType.LineDashStyle;
             for (int r = 0; r <= s0.Points - 1; r++)
             {

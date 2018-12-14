@@ -235,13 +235,18 @@ namespace StatsDirect.Charting
         {
             if (fill)
             {
-                using (Brush b = new SolidBrush(p.Color))
+                using (Brush b = new SolidBrush(ToColor(p.Color)))
                 {
                     metafileGraphics.FillPolygon(b, pt);
                 }
             }
             // Draw the diamond
             metafileGraphics.DrawPolygon(GetPen(p), pt);
+        }
+
+        private Color ToColor(ColorDescriptor color)
+        {
+            return Color.FromArgb(color.R, color.G, color.B);
         }
 
         public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, PenDescriptor p)
@@ -340,7 +345,26 @@ namespace StatsDirect.Charting
         private Pen GetPen(PenDescriptor p)
         {
             // TODO: Cache
-            return new Pen(p.Color, (float)p.LineThickness) { DashStyle = p.DashStyle };
+            return new Pen(ToColor(p.Color), (float)p.LineThickness) { DashStyle = ToDashStyle(p.DashStyle) };
+        }
+
+        private DashStyle ToDashStyle(DashStyleDescriptor dashStyle)
+        {
+            switch (dashStyle)
+            {
+                case DashStyleDescriptor.Solid:
+                    return DashStyle.Solid;
+                case DashStyleDescriptor.Dash:
+                    return DashStyle.Dash;
+                case DashStyleDescriptor.Dot:
+                    return DashStyle.Dot;
+                case DashStyleDescriptor.DashDot:
+                    return DashStyle.DashDot;
+                case DashStyleDescriptor.DashDotDot:
+                    return DashStyle.DashDotDot;
+                default:
+                    return DashStyle.Custom;
+            }
         }
 
         public void DrawLine(PenDescriptor p, double x1, double y1, double x2, double y2)
@@ -384,13 +408,13 @@ namespace StatsDirect.Charting
                 case FillStyle.None:
                     return null;
                 case FillStyle.Crosshatch:
-                    return new HatchBrush(HatchStyle.DiagonalCross, b.Color, Color.White);
+                    return new HatchBrush(HatchStyle.DiagonalCross, ToColor(b.Color), Color.White);
                 case FillStyle.BackwardDiagonal:
-                    return new HatchBrush(HatchStyle.BackwardDiagonal, b.Color, Color.White);
+                    return new HatchBrush(HatchStyle.BackwardDiagonal, ToColor(b.Color), Color.White);
                 case FillStyle.ForwardDiagonal:
-                    return new HatchBrush(HatchStyle.ForwardDiagonal, b.Color, Color.White);
+                    return new HatchBrush(HatchStyle.ForwardDiagonal, ToColor(b.Color), Color.White);
                 case FillStyle.Solid:
-                    return new SolidBrush(b.Color);
+                    return new SolidBrush(ToColor(b.Color));
                 default:
                     throw new ArgumentOutOfRangeException(nameof(b), b.FillStyle, "FillStyle Values between 0 and 4 accepted");
             }

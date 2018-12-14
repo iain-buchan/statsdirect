@@ -622,7 +622,7 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
-        object ITemplateHost.OutputReport(string rtf, Operation operation, string redoInformation, object preferredOutputLocation)
+        object ITemplateHost.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
         {
             // Locate the existing report window if it still exists
             IReport report;
@@ -637,7 +637,7 @@ namespace StatsDirect.UI
             }
             if (null == report)
                 throw new TemplateOperationCancelledException();
-            report.AppendRtfText(rtf, ActiveHelpTopic, operation, redoInformation);
+            report.AppendRenderable(renderable, ActiveHelpTopic, operation, redoInformation);
             report.EnsureActive();
             return report.SelectedPane;
         }

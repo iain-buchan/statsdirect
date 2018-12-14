@@ -8,16 +8,19 @@
         <boolean>
           <name>use-tics</name>
           <prompt>Use tics for censored times</prompt>
+          <must-request>true</must-request>
           <default-value>true</default-value>
         </boolean>
         <boolean>
           <name>use-markers</name>
           <prompt>Use markers for all observed times</prompt>
+          <must-request>true</must-request>
           <default-value>true</default-value>
         </boolean>
         <pick-from-list>
           <name>group</name>
           <prompt>Split by</prompt>
+          <must-request>true</must-request>
           <source>subgroups</source>
         </pick-from-list>
       </parameters>

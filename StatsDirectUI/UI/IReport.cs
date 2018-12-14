@@ -10,6 +10,6 @@ namespace StatsDirect.UI
             set;
         }
 
-        void AppendRtfText(string rtf, int helpContextId, Operation operation, string redoInformation);
+        void AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, string redoInformation);
     }
 }

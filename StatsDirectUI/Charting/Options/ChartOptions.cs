@@ -24,10 +24,7 @@ namespace StatsDirect.Charting
         ///  <param name="seriesNumber"></param>
         ///  <returns></returns>
         ///  <remarks>This used to be considerably more complex; Peter has simplified.</remarks>
-        public static int SeriesNumberToMarkerNumber(int seriesNumber)
-        {
-            return seriesNumber % 10;
-        }
+        public static int SeriesNumberToMarkerNumber(int seriesNumber) => seriesNumber % 10;
 
         protected ChartOptions(bool useColour)
         {
@@ -35,17 +32,11 @@ namespace StatsDirect.Charting
         }
 
         public virtual bool UsesAxisLineThickness => true;
-
         public virtual bool UsesColour => true;
-
         public virtual bool UsesShowLegend => true;
-
         public virtual bool UsesXAxisOptions => true;
-
         public virtual bool UsesXAxisTitle => false;
-
         public virtual bool UsesYAxisOptions => true;
-
         public virtual bool UsesYAxisTitle => false;
 
         public abstract void Accept(IChartOptionVisitor visitor);

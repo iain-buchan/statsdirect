@@ -6,7 +6,6 @@ namespace StatsDirect.Charting
     [Serializable]
     public class ROCOptions : GenericOptions
     {
-
         public bool ShowCutOffCalculator;
         public bool ShowOptimumCutOff;
         public double GAMMA;
@@ -64,17 +63,11 @@ namespace StatsDirect.Charting
         }
 
         public override bool UsesChartTitle => true;
-
         public override bool UsesSeriesLabels => true;
-
         public override bool UsesAxisLabelFontDescriptor => true;
-
         public override bool UsesAxisTitleFontDescriptor => true;
-
         public override bool ShowRocOptions => true;
-
         public override bool UsesLegendFontDescriptor => true;
-
         public override bool ShowLegendIsRelevant => showLegendIsRelevant;
 
         public override void Accept(IChartOptionVisitor visitor)

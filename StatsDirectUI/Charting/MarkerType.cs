@@ -1,6 +1,4 @@
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace StatsDirect.Charting
 {
@@ -8,14 +6,14 @@ namespace StatsDirect.Charting
     public class MarkerType
     {
         public MarkerShape MarkerShape { get; set; }
-        public Color MarkerColor { get; set; }
-        public Color LineColor { get; set; }
+        public ColorDescriptor MarkerColor { get; set; }
+        public ColorDescriptor LineColor { get; set; }
         public float Width { get; set; }
 
         /// <summary>
         /// The dash style used for lines (markers always use solid lines)
         /// </summary>
-        public DashStyle LineDashStyle { get; set; }
+        public DashStyleDescriptor LineDashStyle { get; set; }
 
         ///  <summary>
         ///  If true, the marker shape is filled; if false, it is hollow.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using StatsDirect.Charting;
 using StatsDirect.Templates;
 
 namespace StatsDirect.UI
@@ -93,20 +94,20 @@ namespace StatsDirect.UI
             set => txtTitle.Text = value;
         }
 
-        public System.Drawing.Drawing2D.DashStyle GridLineDashStyle
+        public DashStyleDescriptor GridLineDashStyle
         {
             get
             {
                 switch (cboGridLines.SelectedIndex)
                 {
                     case 0:
-                        return System.Drawing.Drawing2D.DashStyle.Solid;
+                        return DashStyleDescriptor.Solid;
                     case 1:
-                        return System.Drawing.Drawing2D.DashStyle.Solid;
+                        return DashStyleDescriptor.Solid;
                     case 2:
-                        return System.Drawing.Drawing2D.DashStyle.Dash;
+                        return DashStyleDescriptor.Dash;
                     default:
-                        return System.Drawing.Drawing2D.DashStyle.Solid;
+                        return DashStyleDescriptor.Solid;
                 }
             }
         }

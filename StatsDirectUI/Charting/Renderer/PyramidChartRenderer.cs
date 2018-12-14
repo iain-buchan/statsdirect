@@ -61,8 +61,11 @@ namespace StatsDirect.Charting.Renderer
             Pairs
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             PyramidOptions pOptions = (PyramidOptions)Definition.ChartOptions;
 
             DataFrame maleFrame = pOptions.MaleFrame;

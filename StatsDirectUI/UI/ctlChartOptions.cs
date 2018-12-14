@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using StatsDirect.Numerics;
 using StatsDirect.Charting;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
@@ -612,11 +613,12 @@ namespace StatsDirect.UI
         {
             ChartOptionProcessor.PostProcessFilledChartOptions(definition);
             definition.IsAscii = PreviewAsAscii;
-            using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(definition))
+            // We're in Windows Forms land, so we know we can use EMF.
+            using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(definition, new EmfCanvasFactory()))
             {
                 if (PreviewAsAscii)
                 {
-                    ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance);
+                    ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance, false);
                     if (null == outputParameters)
                     {
                         // Plot failed
@@ -624,20 +626,20 @@ namespace StatsDirect.UI
                     }
                     using (frmTextPreview textPreview = new frmTextPreview())
                     {
-                        string rtf = "{\\rtf1\\ansi " + renderer.GetAsciiRtf() + "}";
+                        string rtf = "{\\rtf1\\ansi " + renderer.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF) + "}";
                         textPreview.Rtf = rtf;
                         textPreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
                     }
                 }
                 else
                 {
-                    ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance);
+                    ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance, false);
                     if (null == outputParameters)
                     {
                         // Plot failed
                         return;
                     }
-                    Stream imageStream = renderer.GetImageStream();
+                    Stream imageStream = ((EmfCanvas)renderer.Canvas).DetachAndReturnImageStream();
                     Image metaImage = Image.FromStream(imageStream);
                     using (frmImagePreview imagePreview = new frmImagePreview())
                     {

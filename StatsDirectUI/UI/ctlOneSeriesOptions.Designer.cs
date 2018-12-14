@@ -304,7 +304,7 @@
             // dashStyler
             // 
             this.dashStyler.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.dashStyler.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            this.dashStyler.DashStyle = Charting.DashStyleDescriptor.Solid;
             this.dashStyler.Location = new System.Drawing.Point(76, 3);
             this.dashStyler.MaximumSize = new System.Drawing.Size(10000, 21);
             this.dashStyler.MinimumSize = new System.Drawing.Size(100, 21);

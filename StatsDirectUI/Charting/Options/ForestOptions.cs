@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace StatsDirect.Charting
 {
@@ -27,21 +25,21 @@ namespace StatsDirect.Charting
             MarkerTypes = new List<MarkerType>();
             MarkerType studyMarkerType = new MarkerType
                                              {
-                                                 MarkerColor = Color.Gray,
-                                                 LineColor = Color.Black,
+                                                 MarkerColor = ColorDescriptor.Gray,
+                                                 LineColor = ColorDescriptor.Black,
                                                  IsMarkerFilled = true,
                                                  MarkerShape = MarkerShape.Square,
-                                                 LineDashStyle = DashStyle.Solid,
+                                                 LineDashStyle = DashStyleDescriptor.Solid,
                                                  Width = 1
                                              };
             MarkerTypes.Add(studyMarkerType);
             MarkerType pooledMarkerType = new MarkerType
                                               {
-                                                  MarkerColor = Color.Gray,
-                                                  LineColor = Color.Black,
+                                                  MarkerColor = ColorDescriptor.Gray,
+                                                  LineColor = ColorDescriptor.Black,
                                                   IsMarkerFilled = true,
                                                   MarkerShape = MarkerShape.Diamond,
-                                                  LineDashStyle = DashStyle.Solid,
+                                                  LineDashStyle = DashStyleDescriptor.Solid,
                                                   Width = 1
                                               };
             MarkerTypes.Add(pooledMarkerType);

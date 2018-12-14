@@ -80,8 +80,11 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a bar, stacked bar or 100% stacked bar chart.
         ///  </summary>
         ///  <remarks></remarks>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             Definition = Definition.Clone();
 
             IList<Series> seriesToUse = Definition.YSeries;

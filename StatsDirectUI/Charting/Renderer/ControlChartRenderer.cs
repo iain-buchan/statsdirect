@@ -115,8 +115,11 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Plot a control chart.  Expects one X series and one Y series.
         ///  </summary>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
             DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
             int rows = xs0.Points;

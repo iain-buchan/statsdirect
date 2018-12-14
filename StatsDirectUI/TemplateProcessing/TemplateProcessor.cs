@@ -235,17 +235,17 @@ namespace StatsDirect.TemplateProcessing
             if (!string.IsNullOrEmpty(yAxisTitle))
                 definition.ChartOptions.YAxisTitle = yAxisTitle;
 
-            // Plot to metafile if ascii, text otherwise
-            ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, definition, out string rtf);
-            results.Add(step.ChartName, new FilledParameter(FilledParameterDirection.Output, rtf));
+            // Run a plot in case it needs to return some results - TODO: This requires plotting twice, which feels like a potential mess.
+            ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, definition);
+            results.AddOutput(step.ChartName, definition);
             SaveChartDefinition(step, results, definition);
             return results;
         }
 
         private static void SaveChartDefinition(ChartStep step, ParameterBag results, ChartDefinition definition)
         {
-            results.Add(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), new FilledParameter(FilledParameterDirection.Input, definition.ChartOptions));
-            results.Add(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), new FilledParameter(FilledParameterDirection.Input, definition.ScaleParameters));
+            results.AddInput(STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty), definition.ChartOptions);
+            results.AddInput(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), definition.ScaleParameters);
         }
 
         public ParameterBag ExecuteInternal(IterationStep step, ParameterBag parms, bool isRedo)
@@ -581,7 +581,7 @@ namespace StatsDirect.TemplateProcessing
 
         public ParameterBag ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
         {
-            string filledReport = reportStep.Substitute(host, parameters);
+            ReportTemplateAndParameters filledTemplate = new ReportTemplateAndParameters(new ReportTemplate(reportStep.GetContent(), reportStep.MimeType), parameters);
 
             object /* Pane */ preferredPane = null;
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
@@ -597,13 +597,13 @@ namespace StatsDirect.TemplateProcessing
             {
                 // TODO: Log what failed to be serialized so that it's possible to fix the problem.
             }
-            preferredPane = host.OutputReport(filledReport, reportStep.Operation, xml, preferredPane);
+            preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, xml, preferredPane);
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new ParameterBag();
             // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(FilledParameterDirection.Input, reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
-                outputParameters.Add(STATSDIRECT_REPORT_PANE, new FilledParameter(FilledParameterDirection.Input, preferredPane));
+                outputParameters.AddInput(STATSDIRECT_REPORT_PANE, preferredPane);
             return outputParameters;
         }
 

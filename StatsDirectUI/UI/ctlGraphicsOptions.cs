@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using StatsDirect.Charting;
 
@@ -107,7 +108,7 @@ namespace StatsDirect.UI
                 {
                     for (int i = 0; i < picStyles.Length; i++)
                         if (sender == picStyles[i])
-                            mt.LineDashStyle = (System.Drawing.Drawing2D.DashStyle)i;
+                            mt.LineDashStyle = (DashStyleDescriptor)i;
                 }
             }
         }
@@ -174,8 +175,18 @@ namespace StatsDirect.UI
                 picMarkerTypes[(int)mt.MarkerShape - 1].Selected = true;
                 picWidths[(int)mt.Width - 1].Selected = true;
                 picStyles[(int)mt.LineDashStyle].Selected = true;
-                colorPanel.Color = mt.MarkerColor;
+                colorPanel.Color = ToColor(mt.MarkerColor);
             }
+        }
+
+        private Color ToColor(ColorDescriptor color)
+        {
+            return Color.FromArgb(color.R, color.G, color.B);
+        }
+
+        private ColorDescriptor ToColorDescriptor(Color color)
+        {
+            return ColorDescriptor.FromArgb(color.R, color.G, color.B);
         }
 
         private void colorPanel_ColorChanged(object sender, PJLControls.ColorChangedEventArgs e)
@@ -183,8 +194,8 @@ namespace StatsDirect.UI
             MarkerType mt = GetSelectedMarkerType();
             if (null != mt)
             {
-                mt.MarkerColor = colorPanel.Color;
-                mt.LineColor = colorPanel.Color;
+                mt.MarkerColor = ToColorDescriptor(colorPanel.Color);
+                mt.LineColor = ToColorDescriptor(colorPanel.Color);
             }
         }
 

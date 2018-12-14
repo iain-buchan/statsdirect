@@ -55,8 +55,11 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             AgreementOptions aOptions = (AgreementOptions)Definition.ChartOptions;
             StartVectorPlot(aOptions);
             Range mxdRange = GetMinMaxArray(aOptions.mxd, Definition.ScaleParameters.Y.ScaleType);

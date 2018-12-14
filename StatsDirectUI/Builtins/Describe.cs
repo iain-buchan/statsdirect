@@ -1051,7 +1051,8 @@ namespace StatsDirect.Builtins
                     Title = "Normal Plot for AUC",
                     XAxisTitle = "Area Under Curve",
                     YAxisTitle = "Normal scores",
-                    ShouldScaleZ = true
+                    ShouldScaleZ = true,
+                    Method = NormalOptions.ScoreMethod.VanDerWaerden
                 };
                 cd.ChartOptions = options;
                 ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
@@ -1109,7 +1110,7 @@ namespace StatsDirect.Builtins
                 options.SetMarkers();
                 cd.ChartOptions = options;
                 RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
-                outputParameters.AddOutput("meanAucChart", rtf);
+                outputParameters.AddOutput("meanAucChart", cd);
             }
 
             // Group comparison (if two groups)

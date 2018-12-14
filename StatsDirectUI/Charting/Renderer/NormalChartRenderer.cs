@@ -68,16 +68,16 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Plot normal scores for a single variable in XSeries.
         ///  </summary>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
-            return PlotNormal(Definition.XSeries[0].AsDoubleSeries.Data);
+            return PlotNormal(Definition.XSeries[0].AsDoubleSeries.Data, isForReturnedParametersOnly);
         }
 
         ///  <summary>
         ///  Plot normal scores for a single variable in XSeries.
         ///  </summary>
         ///  <remarks></remarks>
-        internal ParameterBag PlotNormal(double[] y)
+        internal ParameterBag PlotNormal(double[] y, bool isForReturnedParametersOnly)
         {
             NormalOptions nOptions = (NormalOptions)Definition.ChartOptions;
             NormalOptions.ScoreMethod method = nOptions.Method;

@@ -5,7 +5,6 @@ using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
@@ -48,8 +47,11 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a box and whisker chart.
         ///  </summary>
         ///  <remarks></remarks>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             //  If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
             if (Definition.XSeries.Count == 0 && Definition.YSeries.Count == 0)
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
@@ -90,7 +92,7 @@ namespace StatsDirect.Charting.Renderer
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse },
                 false, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
-            Color black = Color.Black;
+            ColorDescriptor black = ColorDescriptor.Black;
             MarkerType crossMarker = new MarkerType { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
             MarkerType filledDiamondMarker = new MarkerType { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
             MarkerType hollowCircleMarker = new MarkerType { MarkerShape = MarkerShape.Circle, MarkerColor = black, MarkerSize = 10 };
@@ -98,7 +100,7 @@ namespace StatsDirect.Charting.Renderer
 
             PenDescriptor blackPen = GetMarkerPen(mt);
             PenDescriptor dottedBlackPen = GetMarkerPen(mt);
-            dottedBlackPen.DashStyle = DashStyle.Dot;
+            dottedBlackPen.DashStyle = DashStyleDescriptor.Dot;
 
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)
@@ -361,7 +363,7 @@ namespace StatsDirect.Charting.Renderer
 
             PenDescriptor blackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
             PenDescriptor dottedBlackPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
-            dottedBlackPen.DashStyle = DashStyle.Dot;
+            dottedBlackPen.DashStyle = DashStyleDescriptor.Dot;
 
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)

@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using StatsDirect.Charting;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -115,8 +117,8 @@ namespace StatsDirect.UI
                 lineThickness.LineThickness = (int)markerType.Width;
                 dashStyler.DashStyle = markerType.LineDashStyle;
                 markerShaper.MarkerShape = markerType.MarkerShape;
-                markerColorPanel.Color = markerType.MarkerColor;
-                lineColorPanel.Color = markerType.LineColor;
+                markerColorPanel.Color = ToColor(markerType.MarkerColor);
+                lineColorPanel.Color = ToColor(markerType.LineColor);
                 chkFillMarker.Checked = markerType.IsMarkerFilled;
                 string markerString = markerType.MarkerSize.ToString();
                 cboMarkerSize.Text = markerString;
@@ -130,8 +132,8 @@ namespace StatsDirect.UI
         {
             if (null != markerType)
             {
-                markerType.MarkerColor = markerColorPanel.Color;
-                markerType.LineColor = lineColorPanel.Color;
+                markerType.MarkerColor = ToColorDescriptor(markerColorPanel.Color);
+                markerType.LineColor = ToColorDescriptor(lineColorPanel.Color);
                 markerType.IsMarkerFilled = chkFillMarker.Checked;
                 double.TryParse(cboMarkerSize.Text, out double markerSize);
                 markerType.MarkerSize = markerSize;
@@ -165,6 +167,16 @@ namespace StatsDirect.UI
             ShowMarkerColour = showMarkerOptions;
             ShowMarkerSize = showMarkerOptions;
             ShowMarkerStyle = showMarkerOptions;
+        }
+
+        private Color ToColor(ColorDescriptor color)
+        {
+            return Color.FromArgb(color.R, color.G, color.B);
+        }
+
+        private ColorDescriptor ToColorDescriptor(Color color)
+        {
+            return ColorDescriptor.FromArgb(color.R, color.G, color.B);
         }
     }
 }

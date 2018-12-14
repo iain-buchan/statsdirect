@@ -16,27 +16,7 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName="type")]
         public string MimeType { get; set; }
 
-        /// <summary>
-        /// Fill in the substitutions to this template.
-        /// </summary>
-        /// <param name="substitutions"></param>
-        /// <returns>The template including all substitutions this has made from the substitutions.</returns>
-        public string Substitute(ITemplateHost host, ParameterBag substitutions)
-        {
-            ReportRenderer renderer = GetRenderer();
-            return renderer.Render(host, substitutions);
-        }
-
-        private ReportRenderer GetRenderer()
-        {
-            if (null == MimeType || "text/rtf".Equals(MimeType))
-                return new RtfReportRenderer { Template = GetContent() };
-            if ("application/x-statsdirect-creole".Equals(MimeType))
-                return new CreoleReportRenderer { Template = GetContent() };
-            throw new Exception("Unknown MIME type \"" + MimeType + "\" in report");
-        }
-
-        private string GetContent()
+        public string GetContent()
         {
             if (null != Text)
                 return Text;

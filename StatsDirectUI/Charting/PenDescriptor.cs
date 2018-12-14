@@ -1,22 +1,21 @@
-﻿using System.Drawing;
-
-namespace StatsDirect.Charting
+﻿namespace StatsDirect.Charting
 {
     public class PenDescriptor
     {
-        public static PenDescriptor White { get; } = new PenDescriptor(Color.White);
-        public static PenDescriptor Black { get; } = new PenDescriptor(Color.Black);
+        public static PenDescriptor White { get; } = new PenDescriptor(ColorDescriptor.White);
+        public static PenDescriptor Black { get; } = new PenDescriptor(ColorDescriptor.Black);
 
-        public Color Color { get; set; }
+        public ColorDescriptor Color { get; set; }
         public double LineThickness { get; set; }
-        public System.Drawing.Drawing2D.DashStyle DashStyle { get; set; }
+        public DashStyleDescriptor DashStyle { get; set; }
+        public CapStyle CapStyle { get; set; }
 
-        public PenDescriptor(Color color)
+        public PenDescriptor(ColorDescriptor color)
             : this(color, 1)
         {
         }
 
-        public PenDescriptor(Color color, double lineThickness)
+        public PenDescriptor(ColorDescriptor color, double lineThickness)
         {
             Color = color;
             LineThickness = lineThickness;

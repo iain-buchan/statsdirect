@@ -1774,7 +1774,7 @@ namespace StatsDirect.UI
 
             // TODO: Do we need to clone the list (or, more likely, the FilledParameter and the list) so that operations that are cancelled don't pollute the list of operations that succeed?
             if (!results.ContainsKey(OPERATION_MEMORY_NAME))
-                results.Add(OPERATION_MEMORY_NAME, new FilledParameter(FilledParameterDirection.Input, new List<string>()));
+                results.AddInput(OPERATION_MEMORY_NAME, new List<string>());
             IList<string> operations = results[OPERATION_MEMORY_NAME].AsStringList;
             string operationName = operation.Name;
             if (!operations.Contains(operationName))

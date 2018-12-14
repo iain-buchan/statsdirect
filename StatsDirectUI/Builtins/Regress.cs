@@ -238,7 +238,7 @@ namespace StatsDirect.Builtins
                 notcalcParameters.AddOutput("r", context.R);
             }
 
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             return outputParameters;
         }
 
@@ -532,7 +532,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*table", tableList);
             }
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { X = x, H = xc, R2 = xr, V = v, M = irv, P = n, N = nx };
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             return outputParameters;
         }
 
@@ -1012,7 +1012,7 @@ namespace StatsDirect.Builtins
                     zParameters.AddOutput("z", z);
                 }
             }
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             //  For best subset code
             string[] predictorTitles = new string[p - 2 + 1];
             for (i = 2; i <= p; i++)
@@ -2132,7 +2132,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("r", context.R);
             outputParameters.AddOutput("r2", context.R * context.R);
             outputParameters.AddOutput("ste", context.SeEst);
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             return outputParameters;
         }
 
@@ -2935,7 +2935,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("logit", tx);
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext();
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             context.Se = seBeta;
             context.B = beta;
             context.T = t;
@@ -5031,7 +5031,7 @@ namespace StatsDirect.Builtins
                 X = x,
                 Y = y
             };
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             return outputParameters;
         }
 
@@ -5582,7 +5582,7 @@ namespace StatsDirect.Builtins
             context.Labels[0] = doseVariable.Title;
             context.Labels[1] = subjectsVariable.Title;
             context.Labels[2] = respondersVariable.Title;
-            outputParameters.Add("context", new FilledParameter(FilledParameterDirection.Input, context));
+            outputParameters.AddInput("context", context);
             return outputParameters;
         }
 

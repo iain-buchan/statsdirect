@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StatsDirect.Charting;
+using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 
@@ -6,7 +7,7 @@ namespace StatsDirect.UI
 {
     public partial class ctlDashStyle : UserControl
     {
-        private System.Drawing.Drawing2D.DashStyle dashStyle = System.Drawing.Drawing2D.DashStyle.Custom;
+        private DashStyleDescriptor dashStyle = DashStyleDescriptor.Solid;
 
         [Browsable(true)]
         public EventHandler DashStyleChanged;
@@ -26,7 +27,7 @@ namespace StatsDirect.UI
             cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 4));
         }
 
-        public System.Drawing.Drawing2D.DashStyle DashStyle
+        public DashStyleDescriptor DashStyle
         {
             get
             {
@@ -45,13 +46,12 @@ namespace StatsDirect.UI
 
         protected virtual void OnDashStyleChanged(EventArgs e)
         {
-            if (null != DashStyleChanged)
-                DashStyleChanged(this, e);
+            DashStyleChanged?.Invoke(this, e);
         }
 
         private void cboDashStyle_SelectedIndexChanged(object sender, EventArgs e)
         {
-            DashStyle = (System.Drawing.Drawing2D.DashStyle)cboDashStyle.SelectedIndex;
+            DashStyle = (DashStyleDescriptor)cboDashStyle.SelectedIndex;
         }
     }
 }

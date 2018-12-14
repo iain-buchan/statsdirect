@@ -8,7 +8,7 @@ namespace StatsDirect.Charting
     ///  <summary>
     ///  Holds all the data for a ChartRenderer to be able to render a chart with particular data and options.
     ///  </summary>
-    public class ChartDefinition : IFillable
+    public class ChartDefinition : IFillable, IRenderable
     {
         private ScaleParameters scaleParameters;
 
@@ -105,7 +105,7 @@ namespace StatsDirect.Charting
 
         private ScaleParameters GetScaleParameters()
         {
-            using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(this))
+            using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(this, null))
             {
                 return renderer.GetScaleParameters();
             }
@@ -141,6 +141,11 @@ namespace StatsDirect.Charting
                         DataMaxY = q;
                 }
             }
+        }
+
+        void IRenderable.Accept(IRenderableVisitor visitor)
+        {
+            visitor.Visit(this);
         }
 
         public string FillerToUse => "ChartOptions";

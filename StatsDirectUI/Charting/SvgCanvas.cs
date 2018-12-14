@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
 namespace StatsDirect.Charting
@@ -50,7 +51,7 @@ namespace StatsDirect.Charting
                 new XElement(SvgNamespace + "tspan",
                     s,
                     new XAttribute("dy", ToDy(txtFormat)),
-                    new XAttribute("style", $"{ToCssStyle(font)}{ToCssStyle(brush)}{ToCssStyle(txtFormat)}")
+                    new XAttribute("style", $"{ToCss(font)}{ToCss(brush)}{ToCss(txtFormat)}")
                 )
             ));
         }
@@ -70,12 +71,12 @@ namespace StatsDirect.Charting
             }
         }
 
-        private object ToCssStyle(FontDescriptor font)
+        private object ToCss(FontDescriptor font)
         {
             return $"font-family:{font.FontFamily};font-size:{font.SizeInPoints * PIXELS_PER_POINT}px;";
         }
 
-        private string ToCssStyle(StringFormat txtFormat)
+        private string ToCss(StringFormat txtFormat)
         {
             string textAnchor;
             switch (txtFormat.Alignment)
@@ -154,7 +155,7 @@ namespace StatsDirect.Charting
                     new XElement(SvgNamespace + "tspan",
                         s,
                         new XAttribute("dy", ToDy(txtFormat)),
-                        new XAttribute("style", $"{ToCssStyle(font)}{ToCssStyle(brush)}{ToCssStyle(txtFormat)}")
+                        new XAttribute("style", $"{ToCss(font)}{ToCss(brush)}{ToCss(txtFormat)}")
                     )
                 )
             ));
@@ -255,7 +256,7 @@ namespace StatsDirect.Charting
         {
             root.Add(new XElement(SvgNamespace + "polygon",
                 new XAttribute("points", ToPointsString(pt)),
-                new XAttribute("style", $"{ToCssStyle(p)}{ToCssFill(fill)}")
+                new XAttribute("style", $"{ToCss(p)}{ToCssFill(fill)}")
                 ));
         }
 
@@ -328,7 +329,7 @@ namespace StatsDirect.Charting
                 new XAttribute("cy", Height - y),
                 new XAttribute("rx", w / 2),
                 new XAttribute("ry", h / 2),
-                new XAttribute("style", ToCssStyle(p, b))
+                new XAttribute("style", ToCss(p, b))
                 ));
         }
 
@@ -339,7 +340,7 @@ namespace StatsDirect.Charting
                 new XAttribute("y", Height - y),
                 new XAttribute("width", w),
                 new XAttribute("height", h),
-                new XAttribute("style", $"{ToCssStyle(p, b)}")
+                new XAttribute("style", $"{ToCss(p, b)}")
                 ));
         }
 
@@ -350,26 +351,45 @@ namespace StatsDirect.Charting
                 new XAttribute("y1", Height - y1),
                 new XAttribute("x2", x2),
                 new XAttribute("y2", Height - y2),
-                new XAttribute("style", $"{ToCssStyle(p)}")
+                new XAttribute("style", $"{ToCss(p)}")
                 ));
         }
 
-        private static string ToCssStyle(PenDescriptor p)
+        private static string ToCss(PenDescriptor p)
         {
-            string color = ToCssColour(p.Color);
-            return $"stroke:{color};";
+            StringBuilder sb = new StringBuilder();
+            if (!(p.Color == ColorDescriptor.Black))
+                sb.AppendFormat("stroke:{0};", ToCss(p.Color));
+            if (!(p.CapStyle == CapStyle.Butt))
+                sb.AppendFormat("stroke-linecap:{0};", ToCss(p.CapStyle));
+            return sb.ToString();
         }
 
-        private static string ToCssStyle(BrushDescriptor b)
+        private static object ToCss(CapStyle capStyle)
         {
-            return $"fill:{ToCssColour(b.Color)};";
+            switch (capStyle)
+            {
+                case CapStyle.Butt:
+                    return "butt";
+                case CapStyle.Round:
+                    return "round";
+                case CapStyle.Square:
+                    return "square";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, "Only Butt, Round, Sqaure known.");
+            }
         }
 
-        private static string ToCssStyle(PenDescriptor p, BrushDescriptor b)
+        private static string ToCss(BrushDescriptor b)
+        {
+            return $"fill:{ToCss(b.Color)};";
+        }
+
+        private static string ToCss(PenDescriptor p, BrushDescriptor b)
         {
             if (null == b)
-                return ToCssStyle(p) + "fill:none;";
-            return ToCssStyle(p) + $"fill:{ToCssColour(b.Color)};";
+                return ToCss(p) + "fill:none;";
+            return ToCss(p) + $"fill:{ToCss(b.Color)};";
         }
 
         private object ToCssFill(bool fill)
@@ -377,7 +397,7 @@ namespace StatsDirect.Charting
             return fill ? string.Empty : "fill:none;";
         }
 
-        private static string ToCssColour(Color c)
+        private static string ToCss(ColorDescriptor c)
         {
             return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
         }

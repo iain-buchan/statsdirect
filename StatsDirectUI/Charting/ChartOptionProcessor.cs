@@ -22,6 +22,8 @@ namespace StatsDirect.Charting
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
                     return PreprocessBarOptions(host, step, parameters, definition, dataName);
+                case ChartType.BiasMA:
+                    return PreprocessBiasMAOptions(host, step, definition, dataName);
                 case ChartType.BoxWhisker:
                     return PreprocessBoxWhiskerOptions(host, step, definition, dataName);
                 case ChartType.Control:
@@ -55,6 +57,12 @@ namespace StatsDirect.Charting
                 default:
                     throw new ArgumentOutOfRangeException(nameof(step), step, "step.ChartType: Not all types can be plotted yet");
             }
+        }
+
+        private static ChartOptions PreprocessBiasMAOptions(ITemplateHost host, ChartStep step, ChartDefinition definition, string dataName)
+        {
+            // Nothing required
+            return null;
         }
 
         private static SurvivalOptions PreprocessSurvivalOptions(ITemplateHost host, ParameterBag parameters, string dataName)
@@ -681,6 +689,7 @@ namespace StatsDirect.Charting
                         break;
                     }
                 case ChartType.AgreementPair:
+                case ChartType.BiasMA:
                 case ChartType.Control:
                 case ChartType.ErrorBar:
                 case ChartType.Forest:

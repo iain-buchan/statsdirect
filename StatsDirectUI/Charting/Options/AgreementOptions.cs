@@ -19,7 +19,6 @@ namespace StatsDirect.Charting
         public bool HasLimits;
 
         public override bool ShowLegendIsRelevant => false;
-
         public override bool UsesShowLegend => false;
 
         public override void Accept(IChartOptionVisitor visitor)

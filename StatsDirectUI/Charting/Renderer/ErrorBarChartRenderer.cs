@@ -62,8 +62,11 @@ namespace StatsDirect.Charting.Renderer
         /// Series setup: Y[0] = centre value, Y[1] = lower error bar value, Y[2] = upper error bar value.
         /// </summary>
         /// <returns></returns>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
+            if (isForReturnedParametersOnly)
+                return new ParameterBag();
+
             ErrorBarOptions eOptions = (ErrorBarOptions)Definition.ChartOptions;
             bool shouldCheckForOffsets = eOptions.ShouldCheckForOffsets;
             int seriesCount = eOptions.Series.Count;

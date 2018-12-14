@@ -1,15 +1,13 @@
-﻿using System.Drawing;
-
-namespace StatsDirect.Charting
+﻿namespace StatsDirect.Charting
 {
     public class BrushDescriptor
     {
-        public static BrushDescriptor Black { get; } = new BrushDescriptor(Color.Black);
+        public static BrushDescriptor Black { get; } = new BrushDescriptor(ColorDescriptor.Black);
 
-        public Color Color { get; }
+        public ColorDescriptor Color { get; }
         public FillStyle FillStyle { get; set; } = FillStyle.Solid;
 
-        public BrushDescriptor(Color color)
+        public BrushDescriptor(ColorDescriptor color)
         {
             Color = color;
         }

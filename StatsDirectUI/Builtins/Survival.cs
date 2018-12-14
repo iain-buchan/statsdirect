@@ -433,15 +433,15 @@ namespace StatsDirect.Builtins
                     Plsave(resultsFrame, stime, nat, dead, s, h, vs, vh, nx, lap, gamma, allcens, alltime);
             }
 
-            outputParameters.Add("ARR2", new FilledParameter(FilledParameterDirection.Input, arr2));
-            outputParameters.Add("CDAT1", new FilledParameter(FilledParameterDirection.Input, cdat1));
-            outputParameters.Add("h", new FilledParameter(FilledParameterDirection.Input, h));
-            outputParameters.Add("s", new FilledParameter(FilledParameterDirection.Input, s));
-            outputParameters.Add("stime", new FilledParameter(FilledParameterDirection.Input, stime));
-            outputParameters.Add("dead", new FilledParameter(FilledParameterDirection.Input, dead));
-            outputParameters.Add("ngroups", new FilledParameter(FilledParameterDirection.Input, groups));
-            outputParameters.Add("cnx", new FilledParameter(FilledParameterDirection.Input, cnx));
-            outputParameters.Add("glab", new FilledParameter(FilledParameterDirection.Input, groupLabels));
+            outputParameters.AddInput("ARR2", arr2);
+            outputParameters.AddInput("CDAT1", cdat1);
+            outputParameters.AddInput("h", h);
+            outputParameters.AddInput("s", s);
+            outputParameters.AddInput("stime", stime);
+            outputParameters.AddInput("dead", dead);
+            outputParameters.AddInput("ngroups", groups);
+            outputParameters.AddInput("cnx", cnx);
+            outputParameters.AddInput("glab", groupLabels);
             if (save)
                 outputParameters.AddOutput("results", resultsFrame);
 

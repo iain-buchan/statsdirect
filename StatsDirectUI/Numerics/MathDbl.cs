@@ -1193,82 +1193,6 @@ namespace StatsDirect.Numerics
             return (x1 - n1 * p1tilde) / q1tilde / Math.Sqrt(vtilde);
         }
 
-
-        // Function dmax(ByVal x1 As Double, ByVal x2 As Double) As Double
-        //     
-        //     If x1 > x2 Then dmax = x1 Else dmax = x2
-        // End Function
-
-        // Function dmin(ByVal x1 As Double, ByVal x2 As Double) As Double
-        //     
-        //     If x1 < x2 Then dmin = x1 Else dmin = x2
-        // End Function
-
-        // Function padl(ByVal num As String, ByVal length As Long) As String
-        //     Dim P As String
-        //     
-        //     P = Space(length)
-        //     RSet(P = num)
-        //     padl = P
-        // End Function
-
-        // Function padr(ByVal num As String, ByVal length As Long) As String
-        //     Dim P As String
-        //     
-        //     P = Space(length)
-        //     LSet(P = num)
-        //     padr = P
-        // End Function
-
-        // Function pr15(ByVal Q As Double) As String
-        //     
-        //     If Q < EPSNEG Then
-        //         pr15 = Format(Q, "#.##########E+000")
-        //     Else
-        //         pr15 = Format(Q, "0.000000000000000")
-        //     End If
-        // End Function
-
-        // Function stddev(ByVal Col As Long) As Double
-        //     Dim sum As Double, avg As Double, s As Double, ep As Double, var As Double
-        //     Dim C As Long
-        //     
-        //     'Calculates Standard Deviation for the specified column
-        //     For C = 1 To CDAT1(Col).rows
-        //         sum = sum + ARR2(Col, C)
-        //     Next
-        //     avg = sum / CDbl(CDAT1(Col).rows)
-        //     For C = 1 To CDAT1(Col).rows
-        //         s = ARR2(Col, C) - avg
-        //         ep = ep + s
-        //         var = var + s * s
-        //     Next
-        //     var = (var - ep ^ 2.0 / CDbl(CDAT1(Col).rows)) / CDbl(CDAT1(Col).rows - 1)
-        //     stddev = Sqr(var)
-        // End Function
-
-        // Sub zvalp(ByVal xz As Double)
-        //     Dim P As Double
-        //     
-        //     If xz = MISSING Then
-        //         RTF_InsertField("p_2", ASTERISK)
-        //         RTF_InsertField("p_1", ASTERISK)
-        //     Else
-        //         P = 1.0 - ALNORM(xz)
-        //         If P > 1.0 - P Then P = 1.0 - P
-        //         RTF_InsertField("p_2", pval(P * 2.0))
-        //         RTF_InsertField("p_1", pval(P))
-        //     End If
-        // End Sub
-
-        // Function zvalp1(ByVal xz As Double) As String
-        //     Dim P As Double
-        //     
-        //     P = 1.0 - ALNORM(xz)
-        //     If P > 1.0 - P Then P = 1.0 - P
-        //     zvalp1 = pval(P)
-        // End Function
-
         ///  <summary>
         ///  
         ///  </summary>
@@ -1285,26 +1209,6 @@ namespace StatsDirect.Numerics
             return P * 2.0;
         }
 
-
-        // Function dsum(ByVal x() As Double) As Double
-        //     Dim i As Long
-        //     Dim s As Double
-        //     
-        //     s = 0.0
-        //     For i = LBound(x) To UBound(x)
-        //         If x(i) <> MISSING Then s = s + x(i)
-        //     Next
-        //     dsum = s
-        // End Function
-
-        // Function ASin(ByVal Value As Double) As Double
-        //     
-        //     If Abs(Value) <> 1.0 Then
-        //         ASin = Atn(Value / Sqr(1.0 - Value * Value))
-        //     Else
-        //         ASin = 1.5707963267949 * Sgn(Value)
-        //     End If
-        // End Function
 
         public double vector_max(double[] x, int start, int fin)
         {
@@ -1521,8 +1425,5 @@ namespace StatsDirect.Numerics
                 }
             }
         }
-
-
     }
-
 }

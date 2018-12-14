@@ -156,8 +156,8 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="HtmlAgilityPack, Version=1.8.10.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlAgilityPack.1.8.10\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    <Reference Include="HtmlAgilityPack, Version=1.8.11.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.8.11\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualBasic" />
@@ -240,13 +240,29 @@
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </Compile>
     <Compile Include="Charting\BrushDescriptor.cs" />
+    <Compile Include="Charting\CapStyle.cs" />
     <Compile Include="Charting\ChartPartSizer.cs" />
     <Compile Include="Charting\ChartPreferences.cs" />
+    <Compile Include="Charting\ColorDescriptor.cs" />
+    <Compile Include="Charting\DashStyleDescriptor.cs" />
     <Compile Include="Charting\FontMap.cs" />
+    <Compile Include="Charting\Options\CoxSurvivalOrHazardOptions.cs" />
+    <Compile Include="Charting\Options\TiesOptions.cs" />
+    <Compile Include="Charting\Options\CorrelationOptions.cs" />
+    <Compile Include="Charting\Options\MHOptions.cs" />
+    <Compile Include="Charting\Options\BiasMAOptions.cs" />
     <Compile Include="Charting\PenDescriptor.cs" />
     <Compile Include="Charting\PointD.cs" />
+    <Compile Include="Charting\Renderer\CoxSurvivalOrHazardChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\TiesChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\CorrelationChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\MHRDChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\MHChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\BiasMAChartRenderer.cs" />
     <Compile Include="Charting\SizeD.cs" />
+    <Compile Include="Charting\NullCanvas.cs" />
     <Compile Include="Charting\SvgCanvas.cs" />
+    <Compile Include="Charting\NullCanvasFactory.cs" />
     <Compile Include="Charting\SvgCanvasFactory.cs" />
     <Compile Include="Charting\Enums\ChartAreaShape.cs" />
     <Compile Include="Charting\Enums\CorrelationRowType.cs" />
@@ -259,6 +275,9 @@
     <Compile Include="Data\GenericVariable.cs" />
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
+    <Compile Include="TemplateProcessing\RtfRenderer.cs" />
+    <Compile Include="Templates\IRenderable.cs" />
+    <Compile Include="Templates\IRenderableVisitor.cs" />
     <Compile Include="Templates\IAxisScaleVisitor.cs" />
     <Compile Include="Charting\IChartSizableVisitor.cs" />
     <Compile Include="Charting\Legend.cs" />
@@ -284,6 +303,7 @@
     <Compile Include="Charting\Renderer\NotSetChartRenderer.cs" />
     <Compile Include="Charting\Renderer\RocChartRenderer.cs" />
     <Compile Include="Charting\Renderer\ScatterChartRenderer.cs" />
+    <Compile Include="Templates\ReportTemplate.cs" />
     <Compile Include="Templates\TalbotLinHanrahanAxisScale.cs" />
     <Compile Include="Charting\Scales\TalbotLinHanrahanAxisScaler.cs" />
     <Compile Include="Templates\ChartType.cs" />
@@ -346,6 +366,7 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\Renderer\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\Options\SurvivalOptions.cs" />
+    <Compile Include="Templates\TemplateAndParameters.cs" />
     <Compile Include="Templates\Tic.cs" />
     <Compile Include="Charting\Enums\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
@@ -499,9 +520,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="TemplateProcessing\CreoleReportRenderer.cs" />
+    <Compile Include="TemplateProcessing\CreoleRtfReportRenderer.cs" />
     <Compile Include="TemplateProcessing\ReportRenderer.cs" />
-    <Compile Include="TemplateProcessing\RtfReportRenderer.cs" />
     <Compile Include="Templates\BooleanParameter.cs" />
     <Compile Include="Templates\BuiltinRegistry.cs" />
     <Compile Include="Templates\BuiltinStep.cs" />
@@ -1937,7 +1957,6 @@
     </None>
     <Content Include="UI\sd3.ico" />
     <Content Include="UI\SD7.ICO" />
-    <Content Include="Assets\UserOperations\com.statsdirect.RTest.xml" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -1962,6 +1981,9 @@
       <Name>Layout</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Assets\UserOperations\" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -1985,7 +2007,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

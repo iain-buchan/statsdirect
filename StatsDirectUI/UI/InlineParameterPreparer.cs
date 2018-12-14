@@ -1579,6 +1579,11 @@ namespace StatsDirect.UI
                 Control = null;
             }
 
+            void IChartOptionVisitor.Visit(BiasMAOptions options)
+            {
+                Control = null;
+            }
+
             void IChartOptionVisitor.Visit(BarOptions options)
             {
                 Control = new ctlChartOptions(chartDefinition);
@@ -1592,6 +1597,16 @@ namespace StatsDirect.UI
             void IChartOptionVisitor.Visit(ControlOptions options)
             {
                 Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(CorrelationOptions options)
+            {
+                Control = null;
+            }
+
+            void IChartOptionVisitor.Visit(CoxSurvivalOrHazardOptions options)
+            {
+                Control = null;
             }
 
             void IChartOptionVisitor.Visit(ErrorBarOptions options)
@@ -1624,6 +1639,11 @@ namespace StatsDirect.UI
                 Control = null;
             }
 
+            void IChartOptionVisitor.Visit(MHOptions options)
+            {
+                Control = null;
+            }
+
             void IChartOptionVisitor.Visit(NormalOptions options)
             {
                 Control = new ctlChartOptions(chartDefinition);
@@ -1652,6 +1672,11 @@ namespace StatsDirect.UI
             void IChartOptionVisitor.Visit(SurvivalOptions options)
             {
                 Control = new ctlChartOptions(chartDefinition);
+            }
+
+            void IChartOptionVisitor.Visit(TiesOptions options)
+            {
+                Control = null;
             }
         }
     }
