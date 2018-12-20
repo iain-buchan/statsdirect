@@ -1,9 +1,7 @@
 ﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 using System;
-using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -171,7 +169,6 @@ namespace StatsDirect.Charting.Renderer
                     case CoxPlotMode.Survival:
                         double surv = options.grouped ? Math.Pow(options.z[i].S, Math.Exp(Convert.ToDouble(options.z[i].Id) * options.arr3[1, options.groupid, 1])) : options.z[i].S;
                         iy2 = ToCanvasY(surv);
-                        options.gn[igp + 1] = options.gn[igp + 1] + 1;
                         break;
                     case CoxPlotMode.Hazard:
                         double haz;
@@ -188,7 +185,6 @@ namespace StatsDirect.Charting.Renderer
                             iy2 = ToCanvasY(haz);
                         break;
                 }
-
 
                 if (options.z[i].Censor == 0)
                     iy2 = iy1;

@@ -5,7 +5,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class AgreementPairChartRenderer : AbstractChartRenderer, IChartRenderer
+    class AgreementPairChartRenderer : AbstractXYChartRenderer, IChartRenderer
     {
         public AgreementPairChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)

@@ -241,7 +241,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
@@ -769,7 +769,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
@@ -1112,11 +1112,11 @@ namespace StatsDirect.Builtins
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotEffectAndReturnRtf(host, k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotEffectAndReturnRtf(host, k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size")));
 
                 return outputParameters;
             }
@@ -1265,11 +1265,11 @@ namespace StatsDirect.Builtins
                 // bool bfault = false; 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotEffectAndReturnRtf(host, k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PlotEffectAndReturnRtf(host, k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference"));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference")));
 
                 return outputParameters;
             }
@@ -1934,7 +1934,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptMantel(ITemplateHost host, ParameterBag parameters)
         {
             double p2M = 0; double p1M = 0;
@@ -2169,7 +2168,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             if (sk != 0)
             {
@@ -2183,7 +2182,6 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
 
         public static void Mantel(ITemplateHost host, bool fromSheet, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, ref double cco, ref double[] odr, ref double[] odw, ref double[] dswt, ref double[] odrl, ref double[] odru, ref double[] odx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref bool[] cced, ref double tausq, out int ierr)
         {
@@ -2318,9 +2316,7 @@ namespace StatsDirect.Builtins
                 ul = Math.Exp(Math.Log(rk / sk) + Math.Sqrt(cit * cit * vrbg));
             }
             if (ll > ul)
-            {
                 Utilities.Utilities.Swap(ref ll, ref ul);
-            }
             x2 = Math.Pow(Math.Abs(eai) - 0.5, 2.0) / vari;
 
             // Q (combinability)
@@ -2354,10 +2350,8 @@ namespace StatsDirect.Builtins
                 // <--
                 if (IncludeTable(o, i))
                 {
-                    if (a <= 0 | b <= 0 | c <= 0 | d <= 0)
-                    {
+                    if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                    }
                     n = a + b + c + d;
                     rr = a * d / n;
                     ss = b * c / n;
@@ -2377,17 +2371,11 @@ namespace StatsDirect.Builtins
             }
             // DerSimonian-Laird
             if (sumwt * sumwt - sumsqwt == 0.0)
-            {
                 tausq = 0.0;
-            }
             else
-            {
                 tausq = (qc - Convert.ToDouble(realk - 1)) * sumwt / (sumwt * sumwt - sumsqwt);
-            }
             if (tausq < 0.0)
-            {
                 tausq = 0.0;
-            }
             wlor = 0.0;
             sumwt = 0.0;
             for (i = 1; i <= k; i++)
@@ -2399,9 +2387,7 @@ namespace StatsDirect.Builtins
                 if (IncludeTable(o, i))
                 {
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    {
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                    }
                     n = a + b + c + d;
                     rr = a * d / n;
                     ss = b * c / n;
@@ -2423,12 +2409,9 @@ namespace StatsDirect.Builtins
             dsll = Math.Exp(wlor / sumwt - cit / Math.Sqrt(sumwt));
             dsul = Math.Exp(wlor / sumwt + cit / Math.Sqrt(sumwt));
             if (dsll > dsul)
-            {
                 Utilities.Utilities.Swap(ref dsll, ref dsul);
-            }
             ierr = 0;
         }
-
 
         public static void GetLogitCi(ITemplateHost host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {
@@ -2458,7 +2441,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         public static void GetAproxrrCI(ITemplateHost host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {

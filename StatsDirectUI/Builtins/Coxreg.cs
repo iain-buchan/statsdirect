@@ -2582,8 +2582,6 @@ namespace StatsDirect.Builtins
             bool use_tic = parameters["use-tics"].AsBoolean;
             bool use_marker = parameters["use-markers"].AsBoolean;
 
-            int[] gn = new int[3 + 1];
-
             int ncoef = Convert.ToInt32(ARR2[1, 0]);
             IComparer<CoxP> comparer;
             switch (groupVar.ToLower(CultureInfo.InvariantCulture))
@@ -2648,28 +2646,33 @@ namespace StatsDirect.Builtins
 
             ParameterBag cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn)));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
             cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, gn)));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)
             {
                 double[] xp = new double[iobs + 1];
                 double[] yp = new double[iobs + 1];
+                int[] gn = new int[3 + 1];
                 xp[0] = Constant.MISSING;
                 yp[0] = Constant.MISSING;
+                int igp = 1;
                 for (int i = 1; i <= iobs; i++)
                 {
                     double surv = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
                     xp[i] = Math.Log(z[i].Time);
                     yp[i] = -Math.Log(-Math.Log(surv));
+                    if (i > 1 && z[i].Id != z[i -1].Id)
+                        igp++;
+                    gn[igp]++;
                 }
                 // Plot a metafile version
                 ParameterBag cox2Parameters = new ParameterBag();
                 chartList.Add(cox2Parameters);
-                cox2Parameters.AddOutput("chart", ChartRendererFactory.PlotCox2AndReturnRtf(gn, igroups, xp, yp, CDAT1, groupid));
+                cox2Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Cox2, new Cox2Options(gn, igroups, xp, yp, CDAT1, groupid)));
             }
         }
 
@@ -2809,11 +2812,11 @@ namespace StatsDirect.Builtins
 
             ParameterBag chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotXYAndReturnRtf(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, 0, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, DataMinMax.XCalc_YCalc)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotXYAndReturnRtf(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, 0, false));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, DataMinMax.XCalc_YCalc)));
 
             // save to worksheet if requested
             if (save)

@@ -246,13 +246,31 @@
     <Compile Include="Charting\ColorDescriptor.cs" />
     <Compile Include="Charting\DashStyleDescriptor.cs" />
     <Compile Include="Charting\FontMap.cs" />
+    <Compile Include="Charting\Options\EffectOptions.cs" />
     <Compile Include="Charting\Options\CoxSurvivalOrHazardOptions.cs" />
+    <Compile Include="Charting\Options\KaplanMeierOptions.cs" />
+    <Compile Include="Charting\Enums\KaplanMeierPlotMode.cs" />
+    <Compile Include="Charting\Options\Cox2Options.cs" />
+    <Compile Include="Charting\Options\XyrOptions.cs" />
+    <Compile Include="Charting\Options\XyOptions.cs" />
+    <Compile Include="Charting\Options\XyzOptions.cs" />
+    <Compile Include="Charting\Options\LAbbeOptions.cs" />
     <Compile Include="Charting\Options\TiesOptions.cs" />
     <Compile Include="Charting\Options\CorrelationOptions.cs" />
     <Compile Include="Charting\Options\MHOptions.cs" />
     <Compile Include="Charting\Options\BiasMAOptions.cs" />
     <Compile Include="Charting\PenDescriptor.cs" />
     <Compile Include="Charting\PointD.cs" />
+    <Compile Include="Charting\Renderer\AbstractXYChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\AbstractXYZChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\KaplanMeierChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\Cox2ChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\Xy0To1ChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\XyrChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\XyChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\XyzChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\LAbbeChartRenderer.cs" />
+    <Compile Include="Charting\Renderer\EffectChartRenderer.cs" />
     <Compile Include="Charting\Renderer\CoxSurvivalOrHazardChartRenderer.cs" />
     <Compile Include="Charting\Renderer\TiesChartRenderer.cs" />
     <Compile Include="Charting\Renderer\CorrelationChartRenderer.cs" />
@@ -2007,7 +2025,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

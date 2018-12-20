@@ -1971,8 +1971,10 @@ namespace StatsDirect.UI
 
         private void cboOperation_SelectedIndexChanged(object sender, EventArgs e)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 // If we're merely setting up the list, we still get events.  However, they're not user-triggered and should be ignored.
                 if (settingUpSubOperations)
                     return;
@@ -1980,11 +1982,13 @@ namespace StatsDirect.UI
                 SDListItem selectedItem = (SDListItem)cboOperation.SelectedItem;
                 Operation operation = TemplateFactory.Operations[selectedItem.Operation];
                 MaybeRunSelectedOperation(operation);
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 PuntThroughEventLoop(ex);
             }
+#endif
         }
 
         private void MaybeRunSelectedOperation(Operation operation)

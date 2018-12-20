@@ -462,14 +462,111 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
-            IList<string> imageList = ChartRendererFactory.x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
-            foreach (string rtf in imageList)
+            IList<IRenderable> imageList = x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
+            foreach (IRenderable rtf in imageList)
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", rtf);
             }
             return outputParameters;
+        }
+
+        public static IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
+        {
+            IList<IRenderable> outputImages = new List<IRenderable>();
+            int gx = stime.GetUpperBound(0);
+            foreach (KaplanMeierPlotMode plotMode in new[] { KaplanMeierPlotMode.Survival, KaplanMeierPlotMode.Hazard, KaplanMeierPlotMode.LogHazard, KaplanMeierPlotMode.LognormalSurvival, KaplanMeierPlotMode.HazardRate })
+            {
+                string xAxisTitle;
+                string yAxisTitle;
+                string title;
+                // Reallocate x and y each time; appears less efficient, but we need to keep copies of the values as the charts are rendered quite a while after this is called.
+                double[,] x = new double[gx + 1, groups + 1];
+                double[,] y = new double[gx + 1, groups + 1];
+                switch (plotMode)
+                {
+                    case KaplanMeierPlotMode.Survival:
+                        xAxisTitle = "Times";
+                        yAxisTitle = "Survivor";
+                        title = "Survival Plot (PL estimates)";
+                        break;
+                    case KaplanMeierPlotMode.Hazard:
+                        xAxisTitle = "Times";
+                        yAxisTitle = "Hazard";
+                        title = "Hazard Plot";
+                        break;
+                    case KaplanMeierPlotMode.LogHazard:
+                        xAxisTitle = "Log Times";
+                        yAxisTitle = "Log Hazard";
+                        title = "Log Hazard Plot";
+                        break;
+                    case KaplanMeierPlotMode.LognormalSurvival:
+                        xAxisTitle = "Log Times";
+                        yAxisTitle = "Z (Survivor)";
+                        title = "Lognormal Survival Plot";
+                        break;
+                    case KaplanMeierPlotMode.HazardRate:
+                        xAxisTitle = "Times";
+                        yAxisTitle = "Hazard / Time";
+                        title = "Hazard Rate Plot";
+                        break;
+                    default:
+                        throw new Exception("Unexpected j3");
+                }
+
+                for (int k = 1; k <= groups; k++)
+                {
+                    int nx = 0;
+                    for (int j = 1; j <= cnx[k]; j++)
+                    {
+                        switch (plotMode)
+                        {
+                            case KaplanMeierPlotMode.Survival:
+                                nx++;
+                                x[nx, k] = stime[j, k];
+                                y[nx, k] = s[j, k];
+                                break;
+                            case KaplanMeierPlotMode.Hazard:
+                                if (h[j, k] != Constant.MISSING)
+                                {
+                                    nx++;
+                                    x[nx, k] = stime[j, k];
+                                    y[nx, k] = h[j, k];
+                                }
+                                break;
+                            case KaplanMeierPlotMode.LogHazard:
+                                if (h[j, k] != Constant.MISSING && stime[j, k] > 0 & h[j, k] > 0)
+                                {
+                                    nx++;
+                                    x[nx, k] = Math.Log(stime[j, k]);
+                                    y[nx, k] = Math.Log(h[j, k]);
+                                }
+                                break;
+                            case KaplanMeierPlotMode.LognormalSurvival:
+                                double q = PDF.gauinv(s[j, k], out int fault);
+                                if (fault == 0 && stime[j, k] > 0)
+                                {
+                                    nx++;
+                                    x[nx, k] = Math.Log(stime[j, k]);
+                                    y[nx, k] = q;
+                                }
+                                break;
+                            case KaplanMeierPlotMode.HazardRate:
+                                if (h[j, k] != Constant.MISSING && stime[j, k] != 0)
+                                {
+                                    nx++;
+                                    x[nx, k] = stime[j, k];
+                                    y[nx, k] = h[j, k] / stime[j, k];
+                                }
+                                break;
+                        }
+                    }
+                    cnx[k] = nx;
+                }
+                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title)));
+            }
+            return outputImages;
         }
 
         /// <summary>

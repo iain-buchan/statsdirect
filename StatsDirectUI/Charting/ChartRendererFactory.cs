@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using StatsDirect.Builtins;
 using StatsDirect.Charting.Renderer;
 using StatsDirect.Data;
-using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting
 {
@@ -33,37 +29,6 @@ namespace StatsDirect.Charting
         }
 
         // TODO: Remove all static ...AndReturnRtf from this class.
-        public static string PlotCox2AndReturnRtf(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
-        {
-            ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
-            cd.AddXSeries(xp, null);
-            cd.AddYSeries(yp, null);
-            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
-            {
-                ch.PlotCox2(gn, igroups, xp, yp, cdat1, groupid);
-                return Render(ch);
-            }
-        }
-
-        public static string PlotEffectAndReturnRtf(ITemplateHost host, int k, double[] cn, double[] en, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
-        {
-            ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
-            using (ChartRenderer ch = new ChartRenderer(cd, CANVAS_FACTORY))
-            {
-                ch.PlotEffect(host, k, cn, en, title, rmh, ll, ul, cco, odr, odrl, odru, cap, pbias, qid);
-                return Render(ch);
-            }
-        }
-
-        public static string PlotLAbbeAndReturnRtf(int k, double[,] o, double rmh)
-        {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
-            {
-                ch.PlotLAbbe(k, o, rmh);
-                return Render(ch);
-            }
-        }
-
         public static string PlotLinearizedEstimationAndReturnRtf(double[] xData, double[] yData, string title, int model, double a, double b, string xAxisTitle, string yAxisTitle, bool shouldUseColour)
         {
             ChartDefinition cd = new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) };
@@ -135,143 +100,6 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static string PlotXYAndReturnRtf(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
-        {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
-            {
-                ch.PlotXY(x, y, xtxt, ytxt, title, zPlot, minMaxY, useCalculatedScalesEvenWithDefinition, ChartAreaShape.Default);
-                return Render(ch);
-            }
-        }
-
-        public static string PlotXY0To1AndReturnRtf(double[] x, double[] y, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useCalculatedScalesEvenWithDefinition)
-        {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
-            {
-                ch.PlotXY0To1(x, y, xtxt, ytxt, title, zPlot, minMaxY, useCalculatedScalesEvenWithDefinition, ChartAreaShape.Default);
-                return Render(ch);
-            }
-        }
-
-        public static string PlotXYRAndReturnRtf(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, MinMax minMax)
-        {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
-            {
-                ch.PlotXYR(x, y, ng, gn, nr, b, a, xtxt, ytxt, title, bnam, minMax.MinX, minMax.MaxX, minMax.MinY, minMax.MaxY);
-                return Render(ch);
-            }
-        }
-
-        public static string PlotXYZAndReturnRtf(double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
-        {
-            using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
-            {
-                ch.PlotXYZ(x, y, z, 1, x.Length - 1, xtxt, ytxt, title, zPlot, minMaxY, new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = false, MarkerColor = ColorDescriptor.Black });
-                return Render(ch);
-            }
-        }
-
-        public static IList<string> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
-        {
-            IList<string> outputImages = new List<string>();
-            int gx = stime.GetUpperBound(0);
-            double[,] x = new double[gx + 1, groups + 1];
-            double[,] y = new double[gx + 1, groups + 1];
-            for (int plotMode = 1; plotMode <= 5; plotMode++)
-            {
-                string xAxisTitle;
-                string yAxisTitle;
-                string title;
-                switch (plotMode)
-                {
-                    case 1:
-                        xAxisTitle = "Times";
-                        yAxisTitle = "Survivor";
-                        title = "Survival Plot (PL estimates)";
-                        break;
-                    case 2:
-                        xAxisTitle = "Times";
-                        yAxisTitle = "Hazard";
-                        title = "Hazard Plot";
-                        break;
-                    case 3:
-                        xAxisTitle = "Log Times";
-                        yAxisTitle = "Log Hazard";
-                        title = "Log Hazard Plot";
-                        break;
-                    case 4:
-                        xAxisTitle = "Log Times";
-                        yAxisTitle = "Z (Survivor)";
-                        title = "Lognormal Survival Plot";
-                        break;
-                    case 5:
-                        xAxisTitle = "Times";
-                        yAxisTitle = "Hazard / Time";
-                        title = "Hazard Rate Plot";
-                        break;
-                    default:
-                        throw new Exception("Unexpected j3");
-                }
-
-                for (int k = 1; k <= groups; k++)
-                {
-                    int nx = 0;
-                    for (int j = 1; j <= cnx[k]; j++)
-                    {
-                        switch (plotMode)
-                        {
-                            case 1:
-                                nx++;
-                                x[nx, k] = stime[j, k];
-                                y[nx, k] = s[j, k];
-                                break;
-                            case 2:
-                                if (h[j, k] != Constant.MISSING)
-                                {
-                                    nx++;
-                                    x[nx, k] = stime[j, k];
-                                    y[nx, k] = h[j, k];
-                                }
-                                break;
-                            case 3:
-                                if (h[j, k] != Constant.MISSING && stime[j, k] > 0 & h[j, k] > 0)
-                                {
-                                    nx++;
-                                    x[nx, k] = Math.Log(stime[j, k]);
-                                    y[nx, k] = Math.Log(h[j, k]);
-                                }
-                                break;
-                            case 4:
-                                double q = PDF.gauinv(s[j, k], out int fault);
-                                if (fault == 0 && stime[j, k] > 0)
-                                {
-                                    nx++;
-                                    x[nx, k] = Math.Log(stime[j, k]);
-                                    y[nx, k] = q;
-                                }
-                                break;
-                            case 5:
-                                if (h[j, k] != Constant.MISSING && stime[j, k] != 0)
-                                {
-                                    nx++;
-                                    x[nx, k] = stime[j, k];
-                                    y[nx, k] = h[j, k] / stime[j, k];
-                                }
-                                break;
-                        }
-                    }
-                    cnx[k] = nx;
-                }
-                // Plot the results
-                using (ChartRenderer ch = new ChartRenderer(new ChartDefinition { ScaleParameters = CreateScaleParameters(ScaleType.Linear, ScaleType.Linear) }, CANVAS_FACTORY))
-                {
-                    ch.x_plGraphInternal(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title);
-                    outputImages.Add(Render(ch));
-                }
-            }
-            return outputImages;
-        }
-
         public static IChartRenderer ChartRendererFor(ChartDefinition chartDefinition, ICanvasFactory canvasFactory)
         {
             switch (chartDefinition.ChartType)
@@ -290,6 +118,10 @@ namespace StatsDirect.Charting
                     return new CorrelationChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.CoxSurvivalOrHazard:
                     return new CoxSurvivalOrHazardChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.Cox2:
+                    return new Cox2ChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.Effect:
+                    return new EffectChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.ErrorBar:
                     return new ErrorBarChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Forest:
@@ -298,6 +130,10 @@ namespace StatsDirect.Charting
                     return new GiniChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Histogram:
                     return new HistogramChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.KaplanMeier:
+                    return new KaplanMeierChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.LAbbe:
+                    return new LAbbeChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Ladder:
                     return new LadderChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.LinearRegression:
@@ -325,6 +161,14 @@ namespace StatsDirect.Charting
                     return new SurvivalChartRenderer(chartDefinition, canvasFactory);
                 case ChartType.Ties:
                     return new TiesChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.Xy:
+                    return new XyChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.Xy0To1:
+                    return new Xy0To1ChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.Xyr:
+                    return new XyrChartRenderer(chartDefinition, canvasFactory);
+                case ChartType.Xyz:
+                    return new XyzChartRenderer(chartDefinition, canvasFactory);
                 default:
                     return new NotSetChartRenderer(chartDefinition, canvasFactory);
             }

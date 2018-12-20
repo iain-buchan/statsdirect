@@ -19,7 +19,6 @@ namespace StatsDirect.Charting
         public ColumnData[] cdat1;
         public bool useTic;
         public bool useMarker;
-        public int[] gn;
 
         public override bool ShowLegendIsRelevant => false;
 
@@ -28,7 +27,7 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public CoxSurvivalOrHazardOptions(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] arr3, ColumnData[] cdat1, bool useTic, bool useMarker, int[] gn)
+        public CoxSurvivalOrHazardOptions(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] arr3, ColumnData[] cdat1, bool useTic, bool useMarker)
             : base(true)
         {
             this.z = z;
@@ -43,7 +42,6 @@ namespace StatsDirect.Charting
             this.cdat1 = cdat1;
             this.useTic = useTic;
             this.useMarker = useMarker;
-            this.gn = gn;
         }
     }
 }

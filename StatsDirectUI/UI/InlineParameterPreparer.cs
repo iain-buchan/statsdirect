@@ -1234,9 +1234,7 @@ namespace StatsDirect.UI
             else
             {
                 if (parameter.HasDefaultValue)
-                {
                     txt.Text = parameter.DefaultValue(Processor, Context).ToString("d");
-                }
             }
             AddAppropriateEventHandlersTo(txt);
             MaybeAddHelpTip(txt, parameter);
@@ -1574,110 +1572,34 @@ namespace StatsDirect.UI
                 chartDefinition = definition;
             }
 
-            void IChartOptionVisitor.Visit(AgreementOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(BiasMAOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(BarOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(BoxWhiskerOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(ControlOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(CorrelationOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(CoxSurvivalOrHazardOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(ErrorBarOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(ForestOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(GiniOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(HistogramOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(LadderOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(LinearRegressionOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(MHOptions options)
-            {
-                Control = null;
-            }
-
-            void IChartOptionVisitor.Visit(NormalOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(PyramidOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(ROCOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(ScatterXYOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(SpreadOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(SurvivalOptions options)
-            {
-                Control = new ctlChartOptions(chartDefinition);
-            }
-
-            void IChartOptionVisitor.Visit(TiesOptions options)
-            {
-                Control = null;
-            }
+            void IChartOptionVisitor.Visit(AgreementOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(BiasMAOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(BarOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(BoxWhiskerOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(ControlOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(CorrelationOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(Cox2Options options) => Control = null;
+            void IChartOptionVisitor.Visit(CoxSurvivalOrHazardOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(EffectOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(ErrorBarOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(ForestOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(GiniOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(HistogramOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(KaplanMeierOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(LAbbeOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(LadderOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(LinearRegressionOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(MHOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(NormalOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(PyramidOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(ROCOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(ScatterXYOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(SpreadOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(SurvivalOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(TiesOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(XyOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(XyrOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(XyzOptions options) => Control = null;
         }
     }
 

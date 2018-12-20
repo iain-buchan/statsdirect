@@ -8,11 +8,15 @@
         void Visit(BoxWhiskerOptions options);
         void Visit(ControlOptions options);
         void Visit(CorrelationOptions options);
+        void Visit(Cox2Options options);
         void Visit(CoxSurvivalOrHazardOptions options);
         void Visit(ErrorBarOptions options);
+        void Visit(EffectOptions options);
         void Visit(ForestOptions options);
         void Visit(GiniOptions options);
         void Visit(HistogramOptions options);
+        void Visit(KaplanMeierOptions options);
+        void Visit(LAbbeOptions options);
         void Visit(LadderOptions options);
         void Visit(LinearRegressionOptions options);
         void Visit(MHOptions options);
@@ -23,5 +27,8 @@
         void Visit(SpreadOptions options);
         void Visit(SurvivalOptions options);
         void Visit(TiesOptions options);
+        void Visit(XyOptions options);
+        void Visit(XyrOptions options);
+        void Visit(XyzOptions options);
     }
 }

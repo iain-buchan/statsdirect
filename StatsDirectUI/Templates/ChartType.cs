@@ -12,11 +12,15 @@
         BoxWhisker,
         Control,
         Correlation,
+        Cox2, // TODO: Better name
         CoxSurvivalOrHazard,
+        Effect,
         ErrorBar,
         Forest,
         Gini,
         Histogram,
+        KaplanMeier,
+        LAbbe,
         Ladder,
         LinearRegression,
         LineXY,
@@ -30,6 +34,10 @@
         StackedBar,
         StackedBar100Percent,
         Survival,
-        Ties
+        Ties,
+        Xy,
+        Xy0To1,
+        Xyr,
+        Xyz
     };
 }

@@ -341,7 +341,7 @@ namespace StatsDirect.Builtins
                 }
             }
             string ylab = yrep ? "Y Replicates" : "Y";
-            outputParameters.AddOutput("chart", ChartRendererFactory.PlotXYRAndReturnRtf(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, gcd.minMax));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyr, new XyrOptions(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, gcd.minMax)));
 
             return outputParameters;
         }

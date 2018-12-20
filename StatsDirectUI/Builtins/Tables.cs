@@ -2552,7 +2552,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
@@ -3429,7 +3429,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PlotLAbbeAndReturnRtf(k, o, rmh));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             if (sk != 0)
             {
