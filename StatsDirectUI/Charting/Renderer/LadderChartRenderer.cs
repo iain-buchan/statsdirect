@@ -50,8 +50,8 @@ namespace StatsDirect.Charting.Renderer
             double x2 = XAxisCanvas + XExtCanvas * 0.75;
 
             // Plot the points & join the lines
-            DoubleSeries s0 = Definition.YSeries[0].AsDoubleSeries;
-            DoubleSeries s1 = Definition.YSeries[1].AsDoubleSeries;
+            DoubleSeries s0 = (DoubleSeries)Definition.YSeries[0];
+            DoubleSeries s1 = (DoubleSeries)Definition.YSeries[1];
             //  Points
             for (int r = 0; r <= s0.Points - 1; r++)
             {

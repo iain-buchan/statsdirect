@@ -31,12 +31,12 @@ namespace StatsDirect.UI
                     options.ScaleChanged -= options_ScaleChanged;
                 options = (HistogramOptions)definition.ChartOptions;
                 options.ScaleChanged += options_ScaleChanged;
-                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 // On a new call, series options will exist, but Bins will be set to zero for all.  On a replay, Bins will be set to sane values.  Detect the replay and don't reset the bins on one.
                 if (null != options.HistoSeriesOptions && options.HistoSeriesOptions.Count > 0 && options.HistoSeriesOptions[0].BinsDescriptor.Bins == 0)
                 {
                     for (int i = 0; i < series.Count; i++)
-                        options.Reset(true, 0, i, series[i]);
+                        options.Reset(true, 0, i, (DoubleSeries)series[i]);
                 }
                 FillFormFromOptions();
             }
@@ -73,7 +73,7 @@ namespace StatsDirect.UI
             double minimum = minimumBinMidpoint - midpointInterval / 2.0;
             double maximum = minimum + bins * midpointInterval;
             double[] edges = HistogramBinChooser.Linspace(minimum, maximum, bins);
-            double[] sortedData = HistogramSeriesOptions.ExtractNonMissingDataAndSort(definition.YSeries[currentSeriesIndex], out int actualRows);
+            double[] sortedData = HistogramSeriesOptions.ExtractNonMissingDataAndSort((DoubleSeries)definition.YSeries[currentSeriesIndex], out int actualRows);
             Array.Sort(sortedData, 0, actualRows);
             int[] counts = HistogramBinChooser.SortedHist(sortedData, actualRows, edges);
             seriesOptions.BinsDescriptor = new BinsDescriptor { Edges = edges, Counts = counts };
@@ -95,11 +95,11 @@ namespace StatsDirect.UI
             try
             {
                 cboBinChoiceMethod.SelectedItem = ToDisplayString(options.BinChoiceMethod);
-                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
                 fillingForm = true;
                 if (0 == cboVariable.Items.Count)
                 {
-                    foreach (Series s in series)
+                    foreach (ISeries s in series)
                         cboVariable.Items.Add(s.Title);
                 }
                 chkPoolVariables.Enabled = series.Count > 1;
@@ -182,10 +182,10 @@ namespace StatsDirect.UI
 
         private void DoAutoBins()
         {
-            List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
             options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
             options.PoolVariablesForBins = chkPoolVariables.Checked;
-            options.Reset(true, 0, currentSeriesIndex, series[currentSeriesIndex]);
+            options.Reset(true, 0, currentSeriesIndex, (DoubleSeries)series[currentSeriesIndex]);
             FillFormFromOptions();
         }
 
@@ -195,8 +195,8 @@ namespace StatsDirect.UI
             {
                 int bins = Parsing.Cint_Txt(txtBins.Text);
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
-                List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-                options.Reset(false, bins, currentSeriesIndex, series[currentSeriesIndex]);
+                IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                options.Reset(false, bins, currentSeriesIndex, (DoubleSeries)series[currentSeriesIndex]);
                 FillFormFromOptions();
             }
             catch (FormatException)
@@ -234,7 +234,7 @@ namespace StatsDirect.UI
 
         private void cmdNextVariable_Click(object sender, EventArgs e)
         {
-            List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
             if (currentSeriesIndex < series.Count - 1)
             {
                 if (!FillOptionsFromForm())

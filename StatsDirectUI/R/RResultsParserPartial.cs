@@ -1,4 +1,4 @@
-﻿using StatsDirect.Charting;
+﻿using StatsDirect.TemplateProcessing;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;

@@ -66,9 +66,9 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(options.title,
-                new AxisDefinition(options.xAxisTitle, AxisMode.Scale, ScaleType.Linear),
-                new AxisDefinition(options.yAxisTitle, AxisMode.Scale, ScaleType.Linear),
+            AxisScales axisScales = LayoutChartAndDrawAxes(options.Title,
+                new AxisDefinition(options.XAxisTitle, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(options.YAxisTitle, AxisMode.Scale, ScaleType.Linear),
                 false, false,
                 legend);
 

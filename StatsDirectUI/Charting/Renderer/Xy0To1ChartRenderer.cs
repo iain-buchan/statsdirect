@@ -25,7 +25,7 @@ namespace StatsDirect.Charting.Renderer
 
             XyOptions options = (XyOptions)Definition.ChartOptions;
             StartVectorPlot();
-            PlotXYInternal(options.x, options.y, options.xtxt, options.ytxt, options.title, options.zPlot, options.minMaxY, 6, MarkerShape.Circle, false, PenDescriptor.Black, false, ChartAreaShape.Default, 0, 1, 0, 1);
+            PlotXYInternal(options.x, options.y, options.XAxisTitle, options.YAxisTitle, options.Title, options.zPlot, options.minMaxY, 6, MarkerShape.Circle, false, PenDescriptor.Black, false, ChartAreaShape.Default, 0, 1, 0, 1);
             EndVectorPlot();
             return new ParameterBag();
         }

@@ -1588,9 +1588,13 @@ namespace StatsDirect.UI
             void IChartOptionVisitor.Visit(KaplanMeierOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LAbbeOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LadderOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(LinearizedEstimationOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LinearRegressionOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions options) => Control = null;
+            void IChartOptionVisitor.Visit(LogitOptions options) => Control = null;
             void IChartOptionVisitor.Visit(MHOptions options) => Control = null;
             void IChartOptionVisitor.Visit(NormalOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(PolynomialRegressionOptions options) => Control = null;
             void IChartOptionVisitor.Visit(PyramidOptions options) => Control = new ctlChartOptions(chartDefinition);
             void IChartOptionVisitor.Visit(ROCOptions options) => Control = new ctlChartOptions(chartDefinition);
             void IChartOptionVisitor.Visit(ScatterXYOptions options) => Control = new ctlChartOptions(chartDefinition);

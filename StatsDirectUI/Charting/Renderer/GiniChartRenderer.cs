@@ -34,8 +34,8 @@ namespace StatsDirect.Charting.Renderer
                 return new ParameterBag();
 
             GiniOptions gOptions = (GiniOptions)Definition.ChartOptions;
-            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
-            DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
+            DoubleSeries xs0 = (DoubleSeries)Definition.XSeries[0];
+            DoubleSeries ys0 = (DoubleSeries)Definition.YSeries[0];
             StartVectorPlot(gOptions);
 
             DataMinX = 0.0;

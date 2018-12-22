@@ -1,10 +1,12 @@
 namespace StatsDirect.Charting
 {
-    public class StringSeries : Series 
+    public class StringSeries : ISeries 
     { 
         
-        public string[] Data; 
-        
+        public string[] Data;
+
+        public string Title { get; set; }
+
         public StringSeries() 
         { 
         } 
@@ -15,7 +17,5 @@ namespace StatsDirect.Charting
         } 
         
         public int Length => Data.Length;
-
-        public override StringSeries AsStringSeries => this;
     } 
 } 

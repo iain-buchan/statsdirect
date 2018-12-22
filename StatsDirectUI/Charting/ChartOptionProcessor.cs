@@ -152,7 +152,7 @@ namespace StatsDirect.Charting
                 throw new ArgumentException("Must have at least one series to plot a spread plot");
             if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a spread plot with both X and Y series");
-            IList<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
             SpreadOptions spreadOptions = new SpreadOptions(host.Preferences.ShouldUseColour)
             {
@@ -194,10 +194,10 @@ namespace StatsDirect.Charting
             string dataName = frame.Name;
             double pmn = 1;
             double amn = 1;
-            for (int C = 0; C < definition.XSeries.Count; C++)
+            for (int c = 0; c < definition.XSeries.Count; c++)
             {
-                DoubleSeries xs = definition.XSeries[C].AsDoubleSeries;
-                DoubleSeries ys = definition.YSeries[C].AsDoubleSeries;
+                DoubleSeries xs = (DoubleSeries)definition.XSeries[c];
+                DoubleSeries ys = (DoubleSeries)definition.YSeries[c];
                 pmn = xs.Sum / xs.Points;
                 amn = ys.Sum / ys.Points;
             }
@@ -331,7 +331,7 @@ namespace StatsDirect.Charting
 
         private static HistogramOptions PreprocessHistogramOptions(ITemplateHost host, ChartStep step, ChartDefinition definition)
         {
-            List<Series> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
             HistogramOptions hOptions = new HistogramOptions(host.Preferences.ShouldUseColour)
             {
                 IsAscii = step.IsAscii,
@@ -341,7 +341,7 @@ namespace StatsDirect.Charting
             };
 
             // Series
-            foreach (Series t in series)
+            foreach (ISeries t in series)
             {
                 HistogramSeriesOptions hso = new HistogramSeriesOptions
                 {
@@ -570,7 +570,7 @@ namespace StatsDirect.Charting
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
             if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            IList<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
             bwOptions.Orientation = definition.YSeries.Count > 0 ? ChartOrientation.Horizontal : ChartOrientation.Vertical;
 
             bwOptions.SeriesTitles = new string[seriesToUse.Count];
@@ -652,16 +652,12 @@ namespace StatsDirect.Charting
                 case ChartType.BoxWhisker:
                     {
                         BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
-                        IList<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+                        IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = bwOptions.SeriesTitles[i];
                         // Reverse series before plotting if required
                         if (bwOptions.Orientation == ChartOrientation.Horizontal && definition.XSeries.Count > 0 || bwOptions.Orientation == ChartOrientation.Vertical && definition.YSeries.Count > 0)
-                        {
-                            List<Series> temp = definition.YSeries;
-                            definition.YSeries = definition.XSeries;
-                            definition.XSeries = temp;
-                        }
+                            definition.SwapXAndYSeries();
                         break;
                     }
                 case ChartType.Ladder:
@@ -674,7 +670,7 @@ namespace StatsDirect.Charting
                 case ChartType.Spread:
                     {
                         SpreadOptions spreadOptions = (SpreadOptions)definition.ChartOptions;
-                        IList<Series> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+                        IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = spreadOptions.SeriesTitles[i];
                         break;
@@ -683,7 +679,7 @@ namespace StatsDirect.Charting
                 case ChartType.ScatterXY:
                     {
                         ScatterXYOptions options = (ScatterXYOptions)definition.ChartOptions;
-                        IList<Series> seriesToUse = definition.XSeries;
+                        IList<ISeries> seriesToUse = definition.XSeries;
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = options.SeriesTitles[i];
                         break;

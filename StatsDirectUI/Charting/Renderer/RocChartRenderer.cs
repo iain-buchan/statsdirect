@@ -51,8 +51,8 @@ namespace StatsDirect.Charting.Renderer
             for (int c = 0; c < Definition.XSeries.Count; c++)
             {
                 seriesData[c] = new ROCSeriesRecord();
-                DoubleSeries xs = Definition.XSeries[c].AsDoubleSeries;
-                DoubleSeries ys = Definition.YSeries[c].AsDoubleSeries;
+                DoubleSeries xs = (DoubleSeries)Definition.XSeries[c];
+                DoubleSeries ys = (DoubleSeries)Definition.YSeries[c];
                 seriesData[c].pdata = xs.Data;
                 seriesData[c].adata = ys.Data;
                 seriesData[c].pmn = xs.Sum / Convert.ToDouble(xs.Points);
@@ -71,7 +71,7 @@ namespace StatsDirect.Charting.Renderer
             AssignMarkersToSeries(rOptions);
             Legend legend = new Legend();
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
-                legend.LegendEntries.Add(new LegendEntry { Label = rOptions.SeriesTitles[cs], MarkerType = Definition.YSeries[cs].AsDoubleSeries.MarkerType });
+                legend.LegendEntries.Add(new LegendEntry { Label = rOptions.SeriesTitles[cs], MarkerType = ((DoubleSeries)Definition.YSeries[cs]).MarkerType });
 
             StartVectorPlot(rOptions, legend);
 
@@ -103,8 +103,8 @@ namespace StatsDirect.Charting.Renderer
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
             {
                 ROCSeriesRecord thisData = seriesData[cs];
-                DoubleSeries xs = Definition.XSeries[cs].AsDoubleSeries;
-                DoubleSeries ys = Definition.YSeries[cs].AsDoubleSeries;
+                DoubleSeries xs = (DoubleSeries)Definition.XSeries[cs];
+                DoubleSeries ys = (DoubleSeries)Definition.YSeries[cs];
                 double weight = rOptions.Weight;
                 if (weight <= 0)
                     weight = 1.0;
@@ -188,7 +188,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double x2 = OffX + rx[r] * XExtCanvas;
                     double y2 = OffY + ry[r] * YExtCanvas;
-                    DrawMarkerInCanvasCoordinates(x2, y2, ys.MarkerType.MarkerSize, Definition.YSeries[cs].AsDoubleSeries);
+                    DrawMarkerInCanvasCoordinates(x2, y2, ys.MarkerType.MarkerSize, (DoubleSeries)Definition.YSeries[cs]);
                 }
 
                 // Draw lines between markers

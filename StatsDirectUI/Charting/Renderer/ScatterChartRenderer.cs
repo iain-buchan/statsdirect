@@ -50,8 +50,8 @@ namespace StatsDirect.Charting.Renderer
             if (showLegend)
             {
                 legend = new Legend() { Position = LegendPosition.Left };
-                foreach (Series s in Definition.XSeries)
-                    legend.LegendEntries.Add(new LegendEntry() { MarkerType = s.AsDoubleSeries.MarkerType, Label = s.Title });
+                foreach (ISeries s in Definition.XSeries)
+                    legend.LegendEntries.Add(new LegendEntry() { MarkerType = ((DoubleSeries)s).MarkerType, Label = s.Title });
             }
 
             if (!IsAscii)
@@ -71,8 +71,8 @@ namespace StatsDirect.Charting.Renderer
                 // plot points
                 for (int c = 0; c < Definition.XSeries.Count; c++)
                 {
-                    DoubleSeries xs = Definition.XSeries[c].AsDoubleSeries;
-                    DoubleSeries ys = Definition.YSeries[c].AsDoubleSeries;
+                    DoubleSeries xs = (DoubleSeries)Definition.XSeries[c];
+                    DoubleSeries ys = (DoubleSeries)Definition.YSeries[c];
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
                     PointF[] xys = new PointF[xs.Data.Length];
@@ -122,8 +122,8 @@ namespace StatsDirect.Charting.Renderer
                 // Work through the columns
                 for (int c = 0; c <= Definition.XSeries.Count - 1; c++)
                 {
-                    DoubleSeries xs = Definition.XSeries[c].AsDoubleSeries;
-                    DoubleSeries ys = Definition.YSeries[c].AsDoubleSeries;
+                    DoubleSeries xs = (DoubleSeries)Definition.XSeries[c];
+                    DoubleSeries ys = (DoubleSeries)Definition.YSeries[c];
                     double[] xdat = xs.Data;
                     double[] ydat = ys.Data;
                     // Work through the rows

@@ -24,7 +24,7 @@ namespace StatsDirect.Charting.Renderer
                 return new ParameterBag();
 
             XyzOptions options = (XyzOptions)Definition.ChartOptions;
-            PlotXYZ(options.x, options.y, options.z, 1, options.x.Length - 1, options.xtxt, options.ytxt, options.title, options.zPlot, options.minMaxY, new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = false, MarkerColor = ColorDescriptor.Black });
+            PlotXYZ(options.x, options.y, options.z, 1, options.x.Length - 1, options.XAxisTitle, options.YAxisTitle, options.Title, options.zPlot, options.minMaxY, new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = false, MarkerColor = ColorDescriptor.Black });
             return new ParameterBag();
         }
     }

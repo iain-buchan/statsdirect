@@ -12,8 +12,8 @@ namespace StatsDirect.Charting
     {
         private ScaleParameters scaleParameters;
 
-        public List<Series> XSeries { get; set; }
-        public List<Series> YSeries { get; set; }
+        public IList<ISeries> XSeries { get; private set; }
+        public IList<ISeries> YSeries { get; private set; }
 
         public double DataMinX { get; private set; }
         public double DataMinGreaterThanZeroX { get; private set; }
@@ -33,8 +33,8 @@ namespace StatsDirect.Charting
 
         public ChartDefinition()
         {
-            YSeries = new List<Series>();
-            XSeries = new List<Series>();
+            YSeries = new List<ISeries>();
+            XSeries = new List<ISeries>();
             DataMaxX = double.MinValue;
             DataMinX = double.MaxValue;
             DataMinGreaterThanZeroX = double.MaxValue;
@@ -54,9 +54,9 @@ namespace StatsDirect.Charting
                 ChartType = ChartType,
                 ScaleParameters = ScaleParameters.Clone()
             };
-            foreach (Series s in XSeries)
+            foreach (ISeries s in XSeries)
                 copy.XSeries.Add(s);
-            foreach (Series s in YSeries)
+            foreach (ISeries s in YSeries)
                 copy.YSeries.Add(s);
             return copy;
         }
@@ -66,16 +66,21 @@ namespace StatsDirect.Charting
             DoubleSeries s = new DoubleSeries { Data = new double[data.Length] };
             Array.Copy(data, s.Data, data.Length);
             s.Title = title;
+            AddXSeries(s);
+        }
+
+        public void AddXSeries(ISeries s)
+        {
             XSeries.Add(s);
             CheckXSeriesData(s);
         }
 
-        public void AddXSeriesAt(Series newSeries, int index)
+        public void AddXSeriesAt(ISeries newSeries, int index)
         {
             while (XSeries.Count <= index)
                 XSeries.Add(null);
             XSeries[index] = newSeries;
-            CheckXSeriesData(newSeries.AsDoubleSeries);
+            CheckXSeriesData(newSeries);
         }
 
         public void AddYSeries(double[] data, string title)
@@ -83,16 +88,30 @@ namespace StatsDirect.Charting
             DoubleSeries s = new DoubleSeries { Data = new double[data.Length] };
             Array.Copy(data, s.Data, data.Length);
             s.Title = title;
+            AddYSeries(s);
+        }
+
+        public void AddYSeries(ISeries s)
+        {
             YSeries.Add(s);
             CheckYSeriesData(s);
         }
 
-        public void AddYSeriesAt(Series newSeries, int index)
+        public void AddYSeries(IList<ISeries> ss)
+        {
+            foreach (DoubleSeries s in ss)
+            {
+                YSeries.Add(s);
+                CheckYSeriesData(s);
+            }
+        }
+
+        public void AddYSeriesAt(ISeries newSeries, int index)
         {
             while (YSeries.Count <= index)
                 YSeries.Add(null);
             YSeries[index] = newSeries;
-            CheckYSeriesData(newSeries.AsDoubleSeries);
+            CheckYSeriesData(newSeries);
         }
 
         public bool HasScaleParameters => scaleParameters != null;
@@ -106,39 +125,43 @@ namespace StatsDirect.Charting
         private ScaleParameters GetScaleParameters()
         {
             using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(this, null))
-            {
                 return renderer.GetScaleParameters();
-            }
         }
 
-        private void CheckXSeriesData(DoubleSeries s)
+        private void CheckXSeriesData(ISeries series)
         {
-            foreach (double q in s.Data)
+            if (series is DoubleSeries s)
             {
-                if (q != Constant.MISSING)
+                foreach (double q in s.Data)
                 {
-                    if (q < DataMinX)
-                        DataMinX = q;
-                    if (q < DataMinGreaterThanZeroX && q > 0)
-                        DataMinGreaterThanZeroX = q;
-                    if (q > DataMaxX)
-                        DataMaxX = q;
+                    if (q != Constant.MISSING)
+                    {
+                        if (q < DataMinX)
+                            DataMinX = q;
+                        if (q < DataMinGreaterThanZeroX && q > 0)
+                            DataMinGreaterThanZeroX = q;
+                        if (q > DataMaxX)
+                            DataMaxX = q;
+                    }
                 }
             }
         }
 
-        private void CheckYSeriesData(DoubleSeries s)
+        private void CheckYSeriesData(ISeries series)
         {
-            foreach (double q in s.Data)
+            if (series is DoubleSeries s)
             {
-                if (q != Constant.MISSING)
+                foreach (double q in s.Data)
                 {
-                    if (q < DataMinY)
-                        DataMinY = q;
-                    if (q < DataMinGreaterThanZeroY && q > 0)
-                        DataMinGreaterThanZeroY = q;
-                    if (q > DataMaxY)
-                        DataMaxY = q;
+                    if (q != Constant.MISSING)
+                    {
+                        if (q < DataMinY)
+                            DataMinY = q;
+                        if (q < DataMinGreaterThanZeroY && q > 0)
+                            DataMinGreaterThanZeroY = q;
+                        if (q > DataMaxY)
+                            DataMaxY = q;
+                    }
                 }
             }
         }
@@ -149,5 +172,12 @@ namespace StatsDirect.Charting
         }
 
         public string FillerToUse => "ChartOptions";
+
+        internal void SwapXAndYSeries()
+        {
+            IList<ISeries> temp = YSeries;
+            YSeries = XSeries;
+            XSeries = temp;
+        }
     }
 }

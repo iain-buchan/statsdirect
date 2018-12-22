@@ -11,9 +11,7 @@ namespace StatsDirect.TemplateProcessing
         {
             string path = Path.Combine(SDConfiguration.TemplatePath, name);
             using (TextReader tr = new StreamReader(path, Encoding.ASCII))
-            {
                 return tr.ReadToEnd();
-            }
         }
 
         public abstract string Render(ITemplateHost host, string content, ParameterBag substitutions);

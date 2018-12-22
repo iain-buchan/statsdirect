@@ -18,9 +18,13 @@
         void Visit(KaplanMeierOptions options);
         void Visit(LAbbeOptions options);
         void Visit(LadderOptions options);
+        void Visit(LinearizedEstimationOptions options);
         void Visit(LinearRegressionOptions options);
+        void Visit(LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions options);
+        void Visit(LogitOptions options);
         void Visit(MHOptions options);
         void Visit(NormalOptions options);
+        void Visit(PolynomialRegressionOptions options);
         void Visit(PyramidOptions options);
         void Visit(ROCOptions options);
         void Visit(ScatterXYOptions options);

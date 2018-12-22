@@ -1525,8 +1525,10 @@ namespace StatsDirect.UI
         /// <param name="e"></param>
         private void cmdCalculate_Click(object sender, EventArgs e)
         {
+#if !WATCH_EXCEPTIONS
             try
             {
+#endif
                 // The Calculate button is sometimes visible in place of the OK button.  Deal with this!
                 if (selectingData || inputtingData)
                 {
@@ -1536,11 +1538,13 @@ namespace StatsDirect.UI
                     return;
                 }
                 DoCalculate();
+#if !WATCH_EXCEPTIONS
             }
             catch (Exception ex)
             {
                 PuntThroughEventLoop(ex);
             }
+#endif
         }
 
         internal void DoCalculate()

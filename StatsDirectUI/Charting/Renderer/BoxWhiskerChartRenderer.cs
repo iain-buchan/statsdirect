@@ -29,7 +29,7 @@ namespace StatsDirect.Charting.Renderer
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
             if (Definition.XSeries.Count > 0 && Definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            List<Series> SeriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> SeriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             // sort the array and get the min, max values
             Range dataRangeX = GetMinMaxSort(SeriesToUse);
@@ -57,7 +57,7 @@ namespace StatsDirect.Charting.Renderer
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
             if (Definition.XSeries.Count > 0 && Definition.YSeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)Definition.ChartOptions;
 
@@ -68,7 +68,7 @@ namespace StatsDirect.Charting.Renderer
             return PlotBoxWhiskerVertical(seriesToUse);
         }
 
-        private ParameterBag PlotBoxWhiskerHorizontal(List<Series> seriesToUse)
+        private ParameterBag PlotBoxWhiskerHorizontal(IList<ISeries> seriesToUse)
         {
             ScaleHeight(seriesToUse.Count + 1);
 
@@ -105,7 +105,7 @@ namespace StatsDirect.Charting.Renderer
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)
             {
-                DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                DoubleSeries s = (DoubleSeries)seriesToUse[c];
                 PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxL, out double boxR, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double otherMark, out bool _);
 
                 // Plot graphic
@@ -325,7 +325,7 @@ namespace StatsDirect.Charting.Renderer
             return new ParameterBag();
         }
 
-        private ParameterBag PlotBoxWhiskerVertical(List<Series> seriesToUse)
+        private ParameterBag PlotBoxWhiskerVertical(IList<ISeries> seriesToUse)
         {
             ScaleWidth(seriesToUse.Count + 1);
 
@@ -352,9 +352,7 @@ namespace StatsDirect.Charting.Renderer
             Definition.ScaleParameters.Y = temp;
 
             //  Ensure the X and Y series are where we need them to be for drawing axes
-            List<Series> tempSeries = Definition.YSeries;
-            Definition.YSeries = Definition.XSeries;
-            Definition.XSeries = tempSeries;
+            Definition.SwapXAndYSeries();
 
             AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.X.ScaleType) { Series = seriesToUse },
@@ -368,7 +366,7 @@ namespace StatsDirect.Charting.Renderer
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)
             {
-                DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                DoubleSeries s = (DoubleSeries)seriesToUse[c];
                 PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double centre, out double boxB, out double boxT, out double innerFenceB, out double innerFenceT, bwOptions.UseInnerFence, out double outerFenceB, out double outerFenceT, bwOptions.UseOuterFence, out double otherMark, out bool _);
 
                 // Plot graphic
@@ -594,7 +592,7 @@ namespace StatsDirect.Charting.Renderer
             return new ParameterBag();
         }
 
-        private ParameterBag PlotBoxWhiskerAscii(List<Series> seriesToUse)
+        private ParameterBag PlotBoxWhiskerAscii(IList<ISeries> seriesToUse)
         {
             // sort the array and get the min, max values
             Range dataRangeX = GetMinMaxSort(seriesToUse);
@@ -630,7 +628,7 @@ namespace StatsDirect.Charting.Renderer
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)
             {
-                DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                DoubleSeries s = (DoubleSeries)seriesToUse[c];
                 PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double _, out double _, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double _, out bool _);
 
                 bool gatedl;

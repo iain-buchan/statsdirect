@@ -32,9 +32,8 @@ namespace StatsDirect.Charting.Renderer
             int rows = options.rows;
             double cit = options.cit;
             double cco = options.cco;
-            string xtxt = options.xtxt;
             double[] x = options.x;
-            Get_ma_ordinate(host, out double[] y, options.yy, options.yw, options.cl, options.cu, ref cco, rows, out string title, out string ytxt, xtxt, out int plotMethod, options.xform, out bool reverse, ref useCi);
+            Get_ma_ordinate(host, out double[] y, options.yy, options.yw, options.cl, options.cu, ref cco, rows, out string title, out string ytxt, options.XAxisTitle, out int plotMethod, options.xform, out bool reverse, ref useCi);
 
             double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;
@@ -105,6 +104,7 @@ namespace StatsDirect.Charting.Renderer
                     DataMinX = pool - se * cit;
             }
 
+            string xtxt = options.XAxisTitle;
             switch (options.xform)
             {
                 case Transformation.Log:

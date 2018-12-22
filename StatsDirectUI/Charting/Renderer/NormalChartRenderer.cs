@@ -19,7 +19,7 @@ namespace StatsDirect.Charting.Renderer
             NormalOptions nOptions = (NormalOptions)Definition.ChartOptions;
             NormalOptions.ScoreMethod method = nOptions.Method;
 
-            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries xs0 = (DoubleSeries)Definition.XSeries[0];
             int rows = xs0.Points;
 
             double[] x = new double[rows];
@@ -70,7 +70,7 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
         {
-            return PlotNormal(Definition.XSeries[0].AsDoubleSeries.Data, isForReturnedParametersOnly);
+            return PlotNormal(((DoubleSeries)Definition.XSeries[0]).Data, isForReturnedParametersOnly);
         }
 
         ///  <summary>

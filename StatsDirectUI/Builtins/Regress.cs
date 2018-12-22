@@ -317,7 +317,7 @@ namespace StatsDirect.Builtins
             context.CalcRcia(REGGAMMA);
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(vx.Data, vy.Data, "SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, false));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LinearRegressionAndMaybeSeCiOrPredictionInterval, new LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions("SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, false, host.Preferences.ShouldUseColour), new DoubleSeries(vx.Data, vx.Title), new DoubleSeries(vy.Data, vy.Title)));
             return outputParameters;
         }
 
@@ -333,7 +333,7 @@ namespace StatsDirect.Builtins
             context.CalcRcia(REGGAMMA);
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLinearRegressionAndMaybeSeCiOrPredictionIntervalAndReturnRtf(vx.Data, vy.Data, Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, true));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LinearRegressionAndMaybeSeCiOrPredictionInterval, new LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions(Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YIntercept, true, vx.Title, vy.Title, context.PERT, nx, context.MS, context.SumX, context.SSX, true, host.Preferences.ShouldUseColour), new DoubleSeries(vx.Data, vx.Title), new DoubleSeries(vy.Data, vy.Title)));
             return outputParameters;
         }
 
@@ -2188,7 +2188,7 @@ namespace StatsDirect.Builtins
                 model = Parsing.Cint_Txt(parameters["model"].AsString);
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLinearizedEstimationAndReturnRtf(vX.Data, vY.Data, string.Empty, model, context.A, context.G, vX.Title, vY.Title, host.Preferences.ShouldUseColour));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LinearizedEstimation, new LinearizedEstimationOptions(string.Empty, model, context.A, context.G, vX.Title, vY.Title, host.Preferences.ShouldUseColour), new DoubleSeries(vX.Data, vX.Title), new DoubleSeries(vY.Data, vY.Title)));
             return outputParameters;
         }
 
@@ -2265,8 +2265,8 @@ namespace StatsDirect.Builtins
             double nwx = parameters["newx"].AsDouble;
             if (p > 1)
             {
-                for (int N = 2; N <= p; N++)
-                    newx[N] = Math.Pow(nwx, Convert.ToDouble(N - 1));
+                for (int n = 2; n <= p; n++)
+                    newx[n] = Math.Pow(nwx, n - 1);
             }
             double newy = 0;
             for (int n = 1; n <= p; n++)
@@ -2314,7 +2314,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static string PlotPoly(ITemplateHost host, ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
+        private static IRenderable PlotPoly(ITemplateHost host, ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
@@ -2337,7 +2337,7 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            return ChartRendererFactory.PlotPolynomialRegressionAndReturnRtf(vX.Data, vY.Data, title, mode, xtxi, bd, rss, nx, P, gamma, vX.Title, vY.Title, host.Preferences.ShouldUseColour);
+            return ChartRendererFactory.PrepForLater(ChartType.PolynomialRegression, new PolynomialRegressionOptions(title, mode, xtxi, bd, rss, nx, P, gamma, vX.Title, vY.Title, host.Preferences.ShouldUseColour), new DoubleSeries(vX.Data, vX.Title), new DoubleSeries(vY.Data, vY.Title));
         }
 
         public static ParameterBag RptAreaUnderCurve(ITemplateHost host, ParameterBag parameters)
@@ -6194,7 +6194,7 @@ namespace StatsDirect.Builtins
             x[0] = Constant.MISSING;
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("chart", ChartRendererFactory.PlotLogitAndReturnRtf(x, y, "Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Logit, new LogitOptions("Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog), new DoubleSeries(x, xAxisTitle), new DoubleSeries(y, yAxisTitle)));
             return outputParameters;
         }
 

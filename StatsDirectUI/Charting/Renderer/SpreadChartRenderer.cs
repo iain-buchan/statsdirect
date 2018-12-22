@@ -15,7 +15,7 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
             Range xRange = GetMinMaxSort(seriesToUse);
 
             return new ScaleParameters
@@ -38,9 +38,7 @@ namespace StatsDirect.Charting.Renderer
             if (Definition.XSeries.Count == 0 && Definition.YSeries.Count > 0)
             {
                 Definition = Definition.Clone();
-                List<Series> temp = Definition.XSeries;
-                Definition.XSeries = Definition.YSeries;
-                Definition.YSeries = temp;
+                Definition.SwapXAndYSeries();
                 AxisScaleParameters tempAxisScaleParameters = Definition.ScaleParameters.X;
                 Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
                 Definition.ScaleParameters.Y = tempAxisScaleParameters;
@@ -51,7 +49,7 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotSpreadHorizontal()
         {
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
-            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             ScaleHeight(seriesToUse.Count);
 
@@ -84,7 +82,7 @@ namespace StatsDirect.Charting.Renderer
 
             for (int c = 0; c < seriesToUse.Count; c++)
             {
-                DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                DoubleSeries s = (DoubleSeries)seriesToUse[c];
                 int maxcount = 0;
                 int r;
                 for (r = 0; r < s.Points; r++)
@@ -142,7 +140,7 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotSpreadVertical()
         {
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
-            List<Series> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             ScaleWidth(seriesToUse.Count);
 
@@ -175,7 +173,7 @@ namespace StatsDirect.Charting.Renderer
 
             for (int c = 0; c < seriesToUse.Count; c++)
             {
-                DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                DoubleSeries s = ((DoubleSeries)seriesToUse[c]);
                 int maxcount = 0;
                 int r;
                 for (r = 0; r < s.Points; r++)

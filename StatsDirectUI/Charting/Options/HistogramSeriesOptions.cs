@@ -20,11 +20,10 @@ namespace StatsDirect.Charting
         /// <param name="calculateBinCount">If true, force a full calculation of the number of bins.  If false, use the user-entered number of bins as a hint.</param>
         /// <param name="binsFromUser">The user-entered number of bins</param>
         /// <param name="series"> </param>
-        public void Reset(bool calculateBinCount, int binsFromUser, Series series, BinChoiceMethod binChoiceMethod)
+        public void Reset(bool calculateBinCount, int binsFromUser, DoubleSeries series, BinChoiceMethod binChoiceMethod)
         {
             //  Work out the values
-            DoubleSeries s = series.AsDoubleSeries;
-            BinsDescriptor = Calculate(s, binsFromUser, calculateBinCount, binChoiceMethod);
+            BinsDescriptor = Calculate(series, binsFromUser, calculateBinCount, binChoiceMethod);
         }
 
         ///  <summary>
@@ -34,7 +33,7 @@ namespace StatsDirect.Charting
         ///  <param name="binsFromUser">A user-entered bin count.</param>
         ///  <param name="calculateBinCount">If false, use the user-entered bin count.  If true, calculate from scratch.</param>
         /// <remarks></remarks>
-        public BinsDescriptor Calculate(Series series, int binsFromUser, bool calculateBinCount, BinChoiceMethod binChoiceMethod)
+        public BinsDescriptor Calculate(DoubleSeries series, int binsFromUser, bool calculateBinCount, BinChoiceMethod binChoiceMethod)
         {
             double[] nonMissingData = ExtractNonMissingDataAndSort(series, out int actualRows);
 
@@ -45,9 +44,9 @@ namespace StatsDirect.Charting
             return new BinsDescriptor { Edges = edges, Counts = counts };
         }
 
-        public static double[] ExtractNonMissingDataAndSort(Series series, out int actualRows)
+        public static double[] ExtractNonMissingDataAndSort(DoubleSeries series, out int actualRows)
         {
-            double[] data = series.AsDoubleSeries.Data;
+            double[] data = series.Data;
             double[] nonMissingData = new double[data.Length];
             actualRows = 0;
             for (int c = 0; c < data.Length; c++)

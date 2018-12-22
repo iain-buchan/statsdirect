@@ -736,9 +736,9 @@ namespace StatsDirect.UI
                     if (bOptions.RotateWhenStacked)
                     {
                         // Rotated - add up the values down the series
-                            foreach (Series s in definition.YSeries)
+                            foreach (DoubleSeries s in definition.YSeries)
                             {
-                                double sum = s.AsDoubleSeries.Sum;
+                                double sum = s.Sum;
                                 if (sum < minValue)
                                     minValue = sum;
                                 if (sum > maxValue)
@@ -748,12 +748,12 @@ namespace StatsDirect.UI
                     else
                     {
                         // Straight - add up the values across the series
-                        for (int i = 0; i < definition.YSeries[0].AsDoubleSeries.Points; i++)
+                        for (int i = 0; i < ((DoubleSeries)definition.YSeries[0]).Points; i++)
                         {
                             double totalValue = 0;
-                            foreach (Series s in definition.YSeries)
+                            foreach (DoubleSeries s in definition.YSeries)
                             {
-                                double value = s.AsDoubleSeries.Data[i];
+                                double value = s.Data[i];
                                 if (value != Constant.MISSING)
                                     totalValue += value;
                             }

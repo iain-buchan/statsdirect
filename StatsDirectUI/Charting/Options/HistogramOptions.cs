@@ -36,7 +36,7 @@ namespace StatsDirect.Charting
         /// <param name="calculateBinCount">If true, force a full calculation of the number of bins.  If false, use the user-entered number of bins as a hint.</param>
         /// <param name="binsFromUser">The user-entered number of bins</param>
         /// <param name="series"> </param>
-        public void Reset(bool calculateBinCount, int binsFromUser, int seriesIndex, Series series)
+        public void Reset(bool calculateBinCount, int binsFromUser, int seriesIndex, DoubleSeries series)
         {
             HistoSeriesOptions[seriesIndex].Reset(calculateBinCount, binsFromUser, series, BinChoiceMethod);
 

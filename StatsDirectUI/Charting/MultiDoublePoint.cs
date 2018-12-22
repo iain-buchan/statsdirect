@@ -9,7 +9,7 @@ namespace StatsDirect.Charting
     public class MultiDoublePoint
     {
         public double X { get; set; }
-        private List<double> ys;
+        private IList<double> ys;
 
         public MultiDoublePoint()
         {

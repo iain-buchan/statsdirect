@@ -13,7 +13,7 @@ namespace StatsDirect.Charting
         public ComparisonValue Showopts;
         private readonly bool showLegendIsRelevant;
 
-        public ROCOptions(bool useColour, IList<Series> seriesToUse) : base(useColour)
+        public ROCOptions(bool useColour, IList<ISeries> seriesToUse) : base(useColour)
         {
 
             //  The ROC plot uses two series per ROC series.  Series 1 is the markers, series 2 is the optimum cut-off marker.
@@ -21,7 +21,7 @@ namespace StatsDirect.Charting
             MarkerTypes = new List<MarkerType>();
             for (int markerIndex = 0; markerIndex <= seriesToUse.Count - 1; markerIndex++)
             {
-                Series series = seriesToUse[markerIndex];
+                ISeries series = seriesToUse[markerIndex];
                 int mkr = SeriesNumberToMarkerNumber(markerIndex);
                 MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 markerType.MarkerSize = 6;
@@ -41,7 +41,7 @@ namespace StatsDirect.Charting
             //  Now the cut-offs
             for (int markerIndex = 0; markerIndex <= seriesToUse.Count - 1; markerIndex++)
             {
-                Series series = seriesToUse[markerIndex];
+                ISeries series = seriesToUse[markerIndex];
                 int mkr = SeriesNumberToMarkerNumber(markerIndex);
                 MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 //  Increase the size of the optimum cut-off indicators by default

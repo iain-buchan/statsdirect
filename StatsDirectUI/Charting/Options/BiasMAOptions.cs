@@ -14,7 +14,6 @@ namespace StatsDirect.Charting
         public double[] yy;
         public double[] yw;
         public int rows;
-        public string xtxt;
         public double[] cl;
         public double[] cu;
         public double cco;
@@ -37,7 +36,7 @@ namespace StatsDirect.Charting
             this.yy = yy;
             this.yw = yw;
             this.rows = rows;
-            this.xtxt = xtxt;
+            XAxisTitle = xtxt;
             this.cl = cl;
             this.cu = cu;
             this.cco = cco;

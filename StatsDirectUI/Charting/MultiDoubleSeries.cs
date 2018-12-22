@@ -5,7 +5,7 @@ namespace StatsDirect.Charting
     /// <summary>
     /// Stores one x and one or more y points.  The use of the y points is chart-specific.
     /// </summary>
-    public class MultiDoubleSeries : Series
+    public class MultiDoubleSeries : ISeries
     {
         private MultiDoublePoint min;
         private MultiDoublePoint minGreaterThanZero;
@@ -13,6 +13,8 @@ namespace StatsDirect.Charting
         public MultiDoublePoint[] Data { get; set; }
 
         public MarkerType MarkerType { get; set; }
+
+        public string Title { get; set; }
 
         public int Points => Data.Length;
 
@@ -104,7 +106,5 @@ namespace StatsDirect.Charting
                 }
             }
         }
-
-        public override MultiDoubleSeries AsMultiDoubleSeries => this;
     }
 }

@@ -3,7 +3,7 @@ using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
 {
-    public class DoubleSeries : Series
+    public class DoubleSeries : ISeries
     {
         public double[] Data { get; set; }
 
@@ -102,6 +102,8 @@ namespace StatsDirect.Charting
             }
         }
 
+        public string Title { get; set; }
+
         private void CalcMinMax()
         {
             double mn = double.MaxValue;
@@ -125,7 +127,5 @@ namespace StatsDirect.Charting
             max = mx;
             hasMinMax = true;
         }
-
-        public override DoubleSeries AsDoubleSeries => this;
     }
 }

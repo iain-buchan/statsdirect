@@ -31,7 +31,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double largestSoFar = 0;
 
-                    for (int offset = 0; offset <= Definition.YSeries[0].AsDoubleSeries.Points - 1; offset++)
+                    for (int offset = 0; offset <= ((DoubleSeries)Definition.YSeries[0]).Points - 1; offset++)
                     {
                         double thisTotal = 0;
                         foreach (DoubleSeries s in Definition.YSeries)
@@ -87,7 +87,7 @@ namespace StatsDirect.Charting.Renderer
 
             Definition = Definition.Clone();
 
-            IList<Series> seriesToUse = Definition.YSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries;
             BarOptions bOptions = (BarOptions)Definition.ChartOptions;
 
             string xAxisTitle = bOptions.XAxisTitle;
@@ -104,21 +104,21 @@ namespace StatsDirect.Charting.Renderer
                     newSeriesTitles[i] = seriesToUse[i].Title;
 
                 // One new series for each old title
-                List<Series> newSeriesToUse = new List<Series>(oldSeriesTitles.Length);
+                List<ISeries> newSeriesToUse = new List<ISeries>(oldSeriesTitles.Length);
                 foreach (string t in oldSeriesTitles)
                 {
-                    Series s = new DoubleSeries(new double[seriesToUse.Count], t);
+                    ISeries s = new DoubleSeries(new double[seriesToUse.Count], t);
                     newSeriesToUse.Add(s);
                 }
 
                 // Rotate the data
                 for (int oldSeries = 0; oldSeries < seriesToUse.Count; oldSeries++)
                     for (int oldRow = 0; oldRow < oldSeriesTitles.Length; oldRow++)
-                        newSeriesToUse[oldRow].AsDoubleSeries.Data[oldSeries] = seriesToUse[oldSeries].AsDoubleSeries.Data[oldRow];
+                        ((DoubleSeries)newSeriesToUse[oldRow]).Data[oldSeries] = ((DoubleSeries)seriesToUse[oldSeries]).Data[oldRow];
 
                 // Assign
                 bOptions.SeriesTitles = newSeriesTitles;
-                Definition.YSeries = newSeriesToUse;
+                Definition.AddYSeries(newSeriesToUse);
                 seriesToUse = newSeriesToUse;
 
                 // Ensure we have enough markers
@@ -141,13 +141,13 @@ namespace StatsDirect.Charting.Renderer
                 {
                     //  Add up the bars and scale to that maximum
                     double largestSetOfBars = 0;
-                    for (int barIndex = 0; barIndex <= seriesToUse[0].AsDoubleSeries.Data.Length - 1; barIndex++)
+                    for (int barIndex = 0; barIndex <= ((DoubleSeries)seriesToUse[0]).Data.Length - 1; barIndex++)
                     {
                         //  Missing data leads to missing bars
                         double totalOfAllBars = 0;
                         for (int seriesIndex = 0; seriesIndex <= seriesToUse.Count - 1; seriesIndex++)
                         {
-                            double seriesValue = seriesToUse[seriesIndex].AsDoubleSeries.Data[barIndex];
+                            double seriesValue = ((DoubleSeries)seriesToUse[seriesIndex]).Data[barIndex];
                             if (seriesValue != Constant.MISSING)
                                 totalOfAllBars += seriesValue;
                         }
@@ -166,7 +166,7 @@ namespace StatsDirect.Charting.Renderer
                 legend = new Legend { Position = LegendPosition.Bottom };
                 for (int i = 0; i < Definition.YSeries.Count; i++)
                 {
-                    Series series = Definition.YSeries[i];
+                    ISeries series = Definition.YSeries[i];
                     MarkerType mt = bOptions.MarkerTypes[i].Clone();
                     mt.MarkerShape = MarkerShape.Square;
                     legend.LegendEntries.Add(new LegendEntry { Label = series.Title, MarkerType = mt });
@@ -178,9 +178,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 //  Flip the series, and hence the min/max values
                 Definition = Definition.Clone();
-                List<Series> tempSeries = Definition.XSeries;
-                Definition.XSeries = Definition.YSeries;
-                Definition.YSeries = tempSeries;
+                Definition.SwapXAndYSeries();
                 AxisScaleParameters tempAxisScaleParameters = Definition.ScaleParameters.X;
                 Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
                 Definition.ScaleParameters.Y = tempAxisScaleParameters;
@@ -227,7 +225,7 @@ namespace StatsDirect.Charting.Renderer
                 //  Work through the columns - this plots each series in turn, rather than all the bars in increasing Y-order.  It's easier on pen/brush resources but requires a little more calculation.
                 for (int c = 0; c <= seriesToUse.Count - 1; c++)
                 {
-                    DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                    DoubleSeries s = (DoubleSeries)seriesToUse[c];
                     MarkerType mt = bOptions.MarkerTypes[c];
                     double bottomOffsetInArea;
                     if (bOptions.Stacked)
@@ -251,7 +249,7 @@ namespace StatsDirect.Charting.Renderer
                             {
                                 for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
                                 {
-                                    double probeValue = seriesToUse[probeIndex].AsDoubleSeries.Data[barIndex];
+                                    double probeValue = ((DoubleSeries)seriesToUse[probeIndex]).Data[barIndex];
                                     if (probeValue != Constant.MISSING)
                                     {
                                         if (probeIndex < c)
@@ -361,7 +359,7 @@ namespace StatsDirect.Charting.Renderer
                 // work through the columns - this plots each series in turn, rather than all the bars in increasing X-order
                 for (int c = 0; c <= seriesToUse.Count - 1; c++)
                 {
-                    DoubleSeries s = seriesToUse[c].AsDoubleSeries;
+                    DoubleSeries s = (DoubleSeries)seriesToUse[c];
                     MarkerType mt = bOptions.MarkerTypes[c];
                     double leftOffsetInArea;
                     if (bOptions.Stacked)
@@ -384,7 +382,7 @@ namespace StatsDirect.Charting.Renderer
                                 double totalOfAllBars = 0;
                                 for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
                                 {
-                                    double probeValue = seriesToUse[probeIndex].AsDoubleSeries.Data[barIndex];
+                                    double probeValue = ((DoubleSeries)seriesToUse[probeIndex]).Data[barIndex];
                                     if (probeValue != Constant.MISSING)
                                     {
                                         if (probeIndex < c)

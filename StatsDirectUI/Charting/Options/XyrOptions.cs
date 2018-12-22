@@ -13,9 +13,6 @@ namespace StatsDirect.Charting
         public int[,] nr;
         public double[] b;
         public double[] a;
-        public string xtxt;
-        public string ytxt;
-        public string title;
         public string[] bnam;
         public MinMax minMax;
 
@@ -36,9 +33,9 @@ namespace StatsDirect.Charting
             this.nr = nr;
             this.b = b;
             this.a = a;
-            this.xtxt = xtxt;
-            this.ytxt = ytxt;
-            this.title = title;
+            XAxisTitle = xtxt;
+            YAxisTitle = ytxt;
+            Title = title;
             this.bnam = bnam;
             this.minMax = minMax;
     }

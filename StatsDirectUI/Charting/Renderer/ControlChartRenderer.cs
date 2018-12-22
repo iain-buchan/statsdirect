@@ -14,8 +14,8 @@ namespace StatsDirect.Charting.Renderer
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
-            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys0 = (DoubleSeries)Definition.YSeries[0];
+            DoubleSeries xs0 = (DoubleSeries)Definition.XSeries[0];
             int rows = xs0.Points;
             double[] xdat = new double[rows + 1];
             double[] ydat = new double[rows + 1];
@@ -120,8 +120,8 @@ namespace StatsDirect.Charting.Renderer
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
-            DoubleSeries ys0 = Definition.YSeries[0].AsDoubleSeries;
-            DoubleSeries xs0 = Definition.XSeries[0].AsDoubleSeries;
+            DoubleSeries ys0 = (DoubleSeries)Definition.YSeries[0];
+            DoubleSeries xs0 = (DoubleSeries)Definition.XSeries[0];
             int rows = xs0.Points;
             double[] xdat = new double[rows + 1];
             double[] ydat = new double[rows + 1];

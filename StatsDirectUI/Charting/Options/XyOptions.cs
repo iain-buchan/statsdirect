@@ -5,13 +5,10 @@ namespace StatsDirect.Charting
     [Serializable]
     public class XyOptions : GenericOptions
     {
-        public double[] x;
-        public double[] y;
-        public string xtxt;
-        public string ytxt;
-        public string title;
-        public bool zPlot;
-        public DataMinMax minMaxY;
+        public double[] x { get; }
+        public double[] y { get; }
+        public bool zPlot { get; }
+        public DataMinMax minMaxY { get; }
         public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
@@ -24,9 +21,9 @@ namespace StatsDirect.Charting
         {
             this.x = x;
             this.y = y;
-            this.xtxt = xtxt;
-            this.ytxt = ytxt;
-            this.title = title;
+            XAxisTitle = xtxt;
+            YAxisTitle = ytxt;
+            Title = title;
             this.zPlot = zPlot;
         }
     }

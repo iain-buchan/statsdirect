@@ -43,9 +43,9 @@ namespace StatsDirect.Charting.Renderer
             }
 
             StartVectorPlot(null, legend);
-            LayoutChartAndDrawAxes(options.title,
-                new AxisDefinition(options.xtxt, AxisMode.Scale, ScaleType.Linear),
-                new AxisDefinition(options.ytxt, AxisMode.Scale, ScaleType.Linear),
+            LayoutChartAndDrawAxes(options.Title,
+                new AxisDefinition(options.XAxisTitle, AxisMode.Scale, ScaleType.Linear),
+                new AxisDefinition(options.YAxisTitle, AxisMode.Scale, ScaleType.Linear),
                 false, false,
                 legend);
 

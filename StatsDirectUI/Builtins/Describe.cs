@@ -18,20 +18,14 @@ namespace StatsDirect.Builtins
             private static int Compare(Group x, Group y)
             {
                 if (x.Label.Equals(y.Label))
-                {
                     return 0;
-                }
 
                 //  If both titles are numeric, compare numerically; else, compare as text
                 bool lower;
                 if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
-                {
                     lower = numericX <= numericY;
-                }
                 else
-                {
                     lower = string.CompareOrdinal(x.Label, y.Label) < 0;
-                }
 
                 return lower ? -1 : 1;
             }
@@ -48,20 +42,14 @@ namespace StatsDirect.Builtins
             private static int Compare(Group x, Group y)
             {
                 if (x.Label.Equals(y.Label))
-                {
                     return 0;
-                }
 
                 //  If both titles are numeric, compare numerically; else, compare as text
                 bool lower;
                 if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
-                {
                     lower = numericX <= numericY;
-                }
                 else
-                {
                     lower = string.CompareOrdinal(x.Label, y.Label) < 0;
-                }
 
                 return lower ? 1 : -1;
             }
@@ -1032,18 +1020,17 @@ namespace StatsDirect.Builtins
                 for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
                     options.MarkerTypes[marker] = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
                 cd.ChartOptions = options;
-                RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
-                groupParameters.AddOutput("chart", rtf);
+                groupParameters.AddOutput("chart", cd);
             }
 
             // Normal plots for AUC and log10(AUC) across all groups
+            List<double> values = new List<double>();
+            foreach (TimeSeriesSummaryStore group in groups)
+                foreach (SubjectSummary subject in group.SubjectToSummaryMap.Values)
+                    values.Add(subject.Auc);
+            double[] points = values.ToArray();
             {
-                ChartDefinition cd = new ChartDefinition { ChartType = ChartType.Normal, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
-                List<double> values = new List<double>();
-                foreach (TimeSeriesSummaryStore group in groups)
-                    foreach (SubjectSummary subject in group.SubjectToSummaryMap.Values)
-                        values.Add(subject.Auc);
-                double[] points = values.ToArray();
+                ChartDefinition cd = new ChartDefinition { ChartType = ChartType.Normal };
                 cd.AddXSeries(points, "Area Under Curve");
 
                 NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour)
@@ -1055,18 +1042,27 @@ namespace StatsDirect.Builtins
                     Method = NormalOptions.ScoreMethod.VanDerWaerden
                 };
                 cd.ChartOptions = options;
-                ParameterBag results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
-                outputParameters.AddOutput("aucNormalChart", rtf);
+                ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
+                outputParameters.AddOutput("aucNormalChart", cd);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
 
+            }
+            {
+                ChartDefinition cd = new ChartDefinition { ChartType = ChartType.Normal };
                 for (int i = 0; i < points.Length; i++)
                     points[i] = Math.Log10(points[i]);
-                cd.XSeries.Clear();
                 cd.AddXSeries(points, "Log Area Under Curve");
-                options.Title = "Normal Plot for Log(AUC)";
-                options.XAxisTitle = "Log Area Under Curve";
-                results = RtfImageRenderer.PlotAndReturnRtf(host, cd, out rtf);
-                outputParameters.AddOutput("aucLogNormalChart", rtf);
+                NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour)
+                {
+                    Title = "Normal Plot for Log(AUC)",
+                    XAxisTitle = "Log Area Under Curve",
+                    YAxisTitle = "Normal scores",
+                    ShouldScaleZ = true,
+                    Method = NormalOptions.ScoreMethod.VanDerWaerden
+                };
+                cd.ChartOptions = options;
+                ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
+                outputParameters.AddOutput("aucLogNormalChart", cd);
                 outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
             }
 
@@ -1109,7 +1105,6 @@ namespace StatsDirect.Builtins
                 };
                 options.SetMarkers();
                 cd.ChartOptions = options;
-                RtfImageRenderer.PlotAndReturnRtf(host, cd, out string rtf);
                 outputParameters.AddOutput("meanAucChart", cd);
             }
 

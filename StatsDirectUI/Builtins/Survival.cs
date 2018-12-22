@@ -463,11 +463,11 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
             IList<IRenderable> imageList = x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
-            foreach (IRenderable rtf in imageList)
+            foreach (IRenderable renderable in imageList)
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", rtf);
+                chartParameters.AddOutput("chart", renderable);
             }
             return outputParameters;
         }

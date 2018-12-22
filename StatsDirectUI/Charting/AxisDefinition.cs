@@ -28,7 +28,7 @@ namespace StatsDirect.Charting
         /// <summary>
         /// For ScaleType.Series, this is the series to use for the names
         /// </summary>
-        public IList<Series> Series { get; set; }
+        public IList<ISeries> Series { get; set; }
         public IList<string> Labels { get; set; }
 
         public AxisDefinition(string title, AxisMode mode, ScaleType scaleType)

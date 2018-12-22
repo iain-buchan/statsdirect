@@ -29,7 +29,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 HistogramSeriesOptions so = options.HistoSeriesOptions[i];
                 if (null == so.BinsDescriptor)
-                    so.Reset(true, 0, Definition.YSeries[i], options.BinChoiceMethod);
+                    so.Reset(true, 0, (DoubleSeries)Definition.YSeries[i], options.BinChoiceMethod);
 
                 //  Set up our axis bounds for the X axis - we do this ourselves and don't allow the neatening code to amend it.
                 minX = Math.Min(minX, so.BinsDescriptor.LowestEdge);
@@ -63,7 +63,7 @@ namespace StatsDirect.Charting.Renderer
                 return new ParameterBag();
 
             HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
-            List<Series> seriesToUse = Definition.YSeries;
+            IList<ISeries> seriesToUse = Definition.YSeries;
             MarkerType[] originalMarkerTypes = null;
             //  A space to save drawn ASCII plots until required
             List<string> savedLines = null;
@@ -99,7 +99,7 @@ namespace StatsDirect.Charting.Renderer
 
                 for (int seriesIndex = 0; seriesIndex < seriesToUse.Count; seriesIndex++)
                 {
-                    DoubleSeries s = seriesToUse[seriesIndex].AsDoubleSeries;
+                    DoubleSeries s = (DoubleSeries)seriesToUse[seriesIndex];
                     HistogramSeriesOptions so = options.HistoSeriesOptions[seriesIndex];
                     string title = so.ChartTitle;
 

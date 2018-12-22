@@ -12,7 +12,7 @@ namespace StatsDirect.Charting
         private readonly bool showLegendIsRelevant;
         public bool JoinMarkersWithLines { get; set; }
 
-        public ScatterXYOptions(bool useColour, IList<Series> xSeries, bool useLines)
+        public ScatterXYOptions(bool useColour, IList<ISeries> xSeries, bool useLines)
             : base(useColour)
         {
             JoinMarkersWithLines = useLines;

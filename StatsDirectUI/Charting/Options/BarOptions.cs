@@ -34,7 +34,7 @@ namespace StatsDirect.Charting
         ///  </summary>
         public bool Stacked100Percent { get; set; }
 
-        public void SetMarkers(IList<Series> seriesToUse)
+        public void SetMarkers(IList<ISeries> seriesToUse)
         {
             //  Markers will be calculated automatically as required (though we need to force fills); we just need to set up the option descriptors.
             // ShouldForceIsFilled = True

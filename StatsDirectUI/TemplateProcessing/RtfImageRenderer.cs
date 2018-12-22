@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
+using StatsDirect.Charting;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.TemplateProcessing
 {
     public static class RtfImageRenderer
     {

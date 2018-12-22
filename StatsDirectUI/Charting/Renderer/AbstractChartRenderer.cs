@@ -104,11 +104,11 @@ namespace StatsDirect.Charting.Renderer
         ///  Note and return the global minimum and maximum values.
         ///  </summary>
         /// <param name="seriesToUse"></param>
-        protected static Range GetMinMaxSort(List<Series> seriesToUse)
+        protected static Range GetMinMaxSort(IList<ISeries> seriesToUse)
         {
             double min = double.MaxValue;
             double max = double.MinValue;
-            foreach (Series s in seriesToUse)
+            foreach (ISeries s in seriesToUse)
             {
                 DoubleSeries ds = (DoubleSeries)s;
                 Array.Sort(ds.Data);
@@ -1396,7 +1396,7 @@ namespace StatsDirect.Charting.Renderer
                 AssignMarkersToSeries(Definition.YSeries, opts);
         }
 
-        protected void AssignMarkersToSeries(List<Series> s)
+        protected void AssignMarkersToSeries(IList<ISeries> s)
         {
             for (int i = 0; i < s.Count; i++)
             {
@@ -1413,7 +1413,7 @@ namespace StatsDirect.Charting.Renderer
                 ds.MarkerType.IsMarkerFilled = o.ShouldForceIsFilled ? o.ForcedIsFilled : mt.IsMarkerFilled;
         }
 
-        protected void AssignMarkersToSeries(List<Series> s, GenericOptions opts)
+        protected void AssignMarkersToSeries(IList<ISeries> s, GenericOptions opts)
         {
             if (opts?.MarkerTypes == null || opts.MarkerTypes.Count < 1)
             {

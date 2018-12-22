@@ -4,7 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.TemplateProcessing
 {
     public static class RtfImageConverter
     {
