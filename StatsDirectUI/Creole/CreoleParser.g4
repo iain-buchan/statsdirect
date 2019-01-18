@@ -11,9 +11,9 @@ elements
     ;
 
 element
-	: TAG_OPEN openTag=TAG_NAME attribute* TAG_CLOSE content TAG_OPEN TAG_SLASH closeTag=TAG_NAME TAG_CLOSE {TagsMatch($openTag, $closeTag)}?
-    | TAG_OPEN TAG_NAME attribute* TAG_SLASH_CLOSE
-    | TAG_OPEN TAG_NAME attribute* TAG_CLOSE
+	: TAG_OPEN openTag=TAG_NAME {IsValidTag($openTag)}? attribute* TAG_CLOSE content TAG_OPEN TAG_SLASH closeTag=TAG_NAME TAG_CLOSE {TagsMatch($openTag, $closeTag)}?
+    | TAG_OPEN TAG_NAME {IsValidTag($TAG_NAME)}? attribute* TAG_SLASH_CLOSE
+    | TAG_OPEN TAG_NAME {IsValidTag($TAG_NAME)}? attribute* TAG_CLOSE
     | substitution
     ;
 
