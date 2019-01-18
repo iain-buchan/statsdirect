@@ -1,13 +1,5 @@
 lexer grammar CreoleLexer;
 
-COMMENT
-    : '<!--' .*? '-->'
-    ;
-
-CDATA
-    : '<![CDATA[' .*? ']]>'
-    ;
-
 SUBSTITUTION
     : '<%' .*? '%>'
     ;
@@ -47,6 +39,38 @@ TAG_SLASH
 TAG_EQUALS
     : '=' -> pushMode(ATTVALUE)
     ;
+
+TAG_B          : 'b' ;
+TAG_BLOCK      : 'block' ;
+TAG_CI         : 'ci' ;
+TAG_GRANDTOTAL : 'grandtotal' ;
+TAG_I          : 'i' ;
+TAG_IN         : 'in' ;
+TAG_INCLUDE    : 'include' ;
+TAG_INP        : 'inp' ;
+TAG_INU        : 'inu' ;
+TAG_INX        : 'inx' ;
+TAG_LINE       : 'line' ;
+TAG_MODEL      : 'model' ;
+TAG_PRE        : 'pre' ;
+TAG_PVAL       : 'pval' ;
+TAG_REPORT     : 'report' ;
+TAG_SCORE      : 'score' ;
+TAG_SUB        : 'sub' ;
+TAG_SUBTITLE   : 'subtitle' ;
+TAG_SUBTOTAL   : 'subtotal' ;
+TAG_SUP        : 'sup' ;
+TAG_TABLE      : 'table' ;
+TAG_TD         : 'td' ;
+TAG_TDFIRST    : 'tdfirst' ;
+TAG_TDSPAN     : 'tdspan' ;
+TAG_TH         : 'th' ;
+TAG_THFIRST    : 'thfirst' ;
+TAG_THSPAN     : 'thspan' ;
+TAG_TITLE      : 'title' ;
+TAG_TR         : 'tr' ;
+TAG_U          : 'u' ;
+TAG_WARN       : 'warn' ;
 
 TAG_NAME
     : TAG_NameStartChar TAG_NameChar*

@@ -1,0 +1,22 @@
+﻿namespace StatsDirect.Creole
+{
+    public interface ICreoleVisitor<TResult>
+    {
+        TResult Visit(CreoleAttribute<TResult> victim);
+        TResult Visit(CreoleBlock<TResult> victim);
+        TResult Visit(CreoleFormatting<TResult> victim);
+        TResult Visit(CreoleInclude<TResult> victim);
+        TResult Visit(CreoleLine<TResult> victim);
+        TResult Visit(CreoleList<TResult> victim);
+        TResult Visit(CreoleSubstitution<TResult> victim);
+        TResult Visit(CreoleTable<TResult> victim);
+        TResult Visit(CreoleTableRow<TResult> victim);
+        TResult Visit(CreoleTableDetail<TResult> victim);
+        TResult Visit(CreoleTableDetailFirst<TResult> victim);
+        TResult Visit(CreoleTableDetailSpan<TResult> victim);
+        TResult Visit(CreoleTableHeader<TResult> victim);
+        TResult Visit(CreoleTableHeaderFirst<TResult> victim);
+        TResult Visit(CreoleTableHeaderSpan<TResult> victim);
+        TResult Visit(CreoleText<TResult> victim);
+    }
+}

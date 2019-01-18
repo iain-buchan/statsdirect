@@ -3,55 +3,57 @@ parser grammar CreoleParser;
 options { tokenVocab=CreoleLexer; }
 
 document
-    : (substitution | SEA_WS)* elements* EOF
-    ;
-
-elements
-    : misc* element misc*
+    : SEA_WS* (element SEA_WS*)+ EOF
     ;
 
 element
-	: TAG_OPEN openTag=TAG_NAME {IsValidTag($openTag)}? attribute* TAG_CLOSE content TAG_OPEN TAG_SLASH closeTag=TAG_NAME TAG_CLOSE {TagsMatch($openTag, $closeTag)}?
-    | TAG_OPEN TAG_NAME {IsValidTag($TAG_NAME)}? attribute* TAG_SLASH_CLOSE
-    | TAG_OPEN TAG_NAME {IsValidTag($TAG_NAME)}? attribute* TAG_CLOSE
-    | substitution
+	: TAG_OPEN tag=TAG_B TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_B TAG_CLOSE # formatting
+	| TAG_OPEN TAG_BLOCK name=attribute TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_BLOCK TAG_CLOSE # block
+	| TAG_OPEN tag=TAG_CI TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_CI TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_GRANDTOTAL TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_GRANDTOTAL TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_I TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_I TAG_CLOSE # formatting
+	| TAG_OPEN TAG_IN TAG_CLOSE path=TEXT TAG_OPEN TAG_SLASH TAG_IN TAG_CLOSE # inDefault
+    | TAG_OPEN TAG_INCLUDE attribute TAG_SLASH_CLOSE # include
+	| TAG_OPEN TAG_INP TAG_CLOSE path=TEXT TAG_OPEN TAG_SLASH TAG_INP TAG_CLOSE # inp
+	| TAG_OPEN TAG_INU TAG_CLOSE path=TEXT TAG_OPEN TAG_SLASH TAG_INU TAG_CLOSE # inu
+	| TAG_OPEN TAG_INX TAG_CLOSE path=TEXT TAG_OPEN TAG_SLASH TAG_INX TAG_CLOSE # inx
+	| TAG_OPEN TAG_LINE TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_LINE TAG_CLOSE # line
+	| TAG_OPEN tag=TAG_MODEL TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_MODEL TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_PRE TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_PRE TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_PVAL TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_PVAL TAG_CLOSE # formatting
+	| TAG_OPEN TAG_REPORT TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_REPORT TAG_CLOSE # report
+	| TAG_OPEN tag=TAG_SCORE TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_SCORE TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_SUB TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_SUB TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_SUBTITLE TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_SUBTITLE TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_SUBTOTAL TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_SUBTOTAL TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_SUP TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_SUP TAG_CLOSE # formatting
+	| TAG_OPEN TAG_TABLE TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_TABLE TAG_CLOSE # table
+	| TAG_OPEN TAG_TD TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_TD TAG_CLOSE # tableDetail
+	| TAG_OPEN TAG_TDFIRST TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_TDFIRST TAG_CLOSE # tableDetailFirst
+    | TAG_OPEN TAG_TDSPAN TAG_SLASH_CLOSE # tableDetailSpan
+	| TAG_OPEN TAG_TH TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_TH TAG_CLOSE # tableHeader
+	| TAG_OPEN TAG_THFIRST TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_THFIRST TAG_CLOSE # tableHeaderFirst
+    | TAG_OPEN TAG_THSPAN TAG_SLASH_CLOSE # tableHeaderSpan
+	| TAG_OPEN tag=TAG_TITLE TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_TITLE TAG_CLOSE # formatting
+	| TAG_OPEN TAG_TR TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_TR TAG_CLOSE # tableRow
+	| TAG_OPEN tag=TAG_U TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_U TAG_CLOSE # formatting
+	| TAG_OPEN tag=TAG_WARN TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_WARN TAG_CLOSE # formatting
+    | SUBSTITUTION # substitution
     ;
 
+attributes
+	: attribute+
+	;
+
 content
-    : chardata? ((element | cdata | comment) chardata?)*
+    : chardata? (element chardata?)*
     ;
 
 attribute
-    : attributeName TAG_EQUALS attributeValue
-    | attributeName
-    ;
-
-attributeName
-    : TAG_NAME
-    ;
-
-attributeValue
-    : ATTVALUE_VALUE
+    : name=TAG_NAME TAG_EQUALS value=ATTVALUE_VALUE
     ;
 
 chardata
-    : TEXT
-    | SEA_WS
-    ;
-
-misc
-    : comment
-    | SEA_WS
-    ;
-
-comment
-    : COMMENT
-    ;
-
-cdata
-    : CDATA
-    ;
-
-substitution
-    : SUBSTITUTION
+    : TEXT # significantText
+    | SEA_WS #significantText
     ;

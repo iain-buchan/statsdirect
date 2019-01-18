@@ -16,13 +16,33 @@ namespace StatsDirect.Creole
                 return false;
             }
 
-            if (null == retval /* || null == retval.node */)
+            if (null == retval)
             {
                 errors = "No specific syntax error, but the parser didn't return a node";
                 return false;
             }
             errors = null;
             return true;
+        }
+
+        public static ICreole<TResult> Parse<TResult>(string expr, out string errors)
+        {
+            CreoleParser parser = new CreoleParser(new CommonTokenStream(new CreoleLexer(new AntlrInputStream(expr))));
+            StringBuilder errorBuilder = AccumulateErrors.Wrap(parser);
+            CreoleParser.DocumentContext retval = parser.document();
+            if (parser.NumberOfSyntaxErrors > 0)
+            {
+                errors = errorBuilder.ToString();
+                return null;
+            }
+
+            if (null == retval)
+            {
+                errors = "No specific syntax error, but the parser didn't return a node";
+                return null;
+            }
+            errors = null;
+            return retval.Accept(new CreoleParserVisitor<TResult>());
         }
 
         private class AccumulateErrors : IAntlrErrorListener<IToken>
