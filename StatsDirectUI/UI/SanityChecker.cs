@@ -1,4 +1,5 @@
-﻿using StatsDirect.Templates;
+﻿using StatsDirect.Creole;
+using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
 
@@ -11,18 +12,29 @@ namespace StatsDirect.UI
     {
         public static void Check()
         {
-            CheckAllDynamicContentCompiles();
+            List<Operation> operations = new List<Operation>();
+            operations.AddRange(TemplateFactory.Operations.Values);
+            operations.AddRange(TemplateFactory.UserOperations);
+            CheckAllTemplatesParse(operations);
+            CheckAllDynamicContentCompiles(operations);
         }
 
         /// <summary>
         /// Designed to check that anything that could be compiled and run by our internal compiler at least compiles.
         /// </summary>
-        private static void CheckAllDynamicContentCompiles()
+        private static void CheckAllDynamicContentCompiles(IList<Operation> operations)
         {
-            foreach (Operation operation in TemplateFactory.Operations.Values)
+            foreach (Operation operation in operations)
                 CheckAllDynamicContentCompiles(operation);
-            foreach (Operation operation in TemplateFactory.UserOperations)
-                CheckAllDynamicContentCompiles(operation);
+        }
+
+        /// <summary>
+        /// Designed to check that anything that could be compiled and run by our internal compiler at least compiles.
+        /// </summary>
+        private static void CheckAllTemplatesParse(IList<Operation> operations)
+        {
+            foreach (Operation operation in operations)
+                CheckAllTemplatesParse(operation);
         }
 
         private static void CheckAllDynamicContentCompiles(Operation operation)
@@ -36,16 +48,27 @@ namespace StatsDirect.UI
             CheckAllDynamicContentCompiles(operation.Steps, operation.Name + ".Steps");
         }
 
+        private static void CheckAllTemplatesParse(Operation operation)
+        {
+            CheckAllTemplatesParse(operation.Steps, operation.Name + ".Steps");
+        }
+
         private static void CheckAllDynamicContentCompiles(IList<Step> steps, string prefix)
         {
             for (int i = 0; i < steps.Count; i++)
-                steps[i].Accept(new StepChecker(prefix + "[" + i + "]"));
+                steps[i].Accept(new DynamicContentStepChecker(prefix + "[" + i + "]"));
+        }
+
+        private static void CheckAllTemplatesParse(IList<Step> steps, string prefix)
+        {
+            for (int i = 0; i < steps.Count; i++)
+                steps[i].Accept(new TemplateStepChecker(prefix + "[" + i + "]"));
         }
 
         private static void CheckAllDynamicContentCompiles(IList<Parameter> parameters)
         {
             for (int i = 0; i < parameters.Count; i++)
-                parameters[i].Accept(new ParameterChecker());
+                parameters[i].Accept(new DynamicContentParameterChecker());
         }
 
         private static void CheckAllDynamicContentCompiles(SuggestedOperation suggestedOperation, string prefix)
@@ -84,7 +107,13 @@ namespace StatsDirect.UI
                 throw new Exception(identifier + " failed: " + result);
         }
 
-        private class ParameterChecker : IParameterVisitor
+        private static void CheckTemplateParses(string content, string identifier)
+        {
+            if (!CreoleReader.IsValid(content, out string result))
+                throw new Exception(identifier + " failed: " + result);
+        }
+
+        private class DynamicContentParameterChecker : IParameterVisitor
         {
             private static void CheckCommon(Parameter parameter)
             {
@@ -210,11 +239,11 @@ namespace StatsDirect.UI
             }
         }
 
-        private class StepChecker : IStepVisitor
+        private class DynamicContentStepChecker : IStepVisitor
         {
             private readonly string prefix;
 
-            public StepChecker(string prefix)
+            public DynamicContentStepChecker(string prefix)
             {
                 this.prefix = prefix;
             }
@@ -256,6 +285,56 @@ namespace StatsDirect.UI
             {
                 CheckAllDynamicContentCompiles(step.XAxisTitleExpression, prefix + ".XAxisTitleExpression");
                 CheckAllDynamicContentCompiles(step.YAxisTitleExpression, prefix + ".YAxisTitleExpression");
+            }
+
+            public void Visit(BuiltinStep step)
+            {
+                // Nothing to check
+            }
+        }
+
+        private class TemplateStepChecker : IStepVisitor
+        {
+            private readonly string prefix;
+
+            public TemplateStepChecker(string prefix)
+            {
+                this.prefix = prefix;
+            }
+
+            public void Visit(IterationStep step)
+            {
+                // Nothing to check
+            }
+
+            public void Visit(ParametersStep step)
+            {
+                // Nothing to check
+            }
+
+            public void Visit(ScriptStep step)
+            {
+                // Nothing to check
+            }
+
+            public void Visit(TestStep step)
+            {
+                // Nothing to check
+            }
+
+            public void Visit(ReportStep step)
+            {
+                CheckTemplateParses(step.GetContent(), prefix + " (" + (step.FileName ?? "inline") + ")");
+            }
+
+            public void Visit(OutputFrameStep step)
+            {
+                // Nothing to check
+            }
+
+            public void Visit(ChartStep step)
+            {
+                // Nothing to check
             }
 
             public void Visit(BuiltinStep step)

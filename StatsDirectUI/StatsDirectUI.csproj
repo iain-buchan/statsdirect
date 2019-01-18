@@ -300,8 +300,8 @@
     <Compile Include="Charting\ICanvasFactory.cs" />
     <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\IChartSizable.cs" />
-    <Compile Include="Creole\CreoleLexer.g4.cs" />
-    <Compile Include="Creole\CreoleParser.g4.cs" />
+    <Compile Include="Creole\CreoleReader.cs" />
+    <Compile Include="Creole\CreoleParserPartial.cs" />
     <Compile Include="Data\GenericVariable.cs" />
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
@@ -1467,7 +1467,7 @@
     <None Include="Assets\Template\z_norm2.creole" />
     <Antlr4 Include="Creole\CreoleParser.g4">
       <Generator>MSBuild:Compile</Generator>
-      <CustomToolNamespace>StatsDirect.CreoleParser</CustomToolNamespace>
+      <CustomToolNamespace>StatsDirect.Creole</CustomToolNamespace>
     </Antlr4>
     <Antlr4 Include="Creole\CreoleLexer.g4">
       <Generator>MSBuild:Compile</Generator>
@@ -2044,7 +2044,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
