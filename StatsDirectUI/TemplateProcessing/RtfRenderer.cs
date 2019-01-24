@@ -31,6 +31,8 @@ namespace StatsDirect.TemplateProcessing
         {
             ReportRenderer renderer = GetReportRenderer(victim.Template.MimeType);
             builder.Append(renderer.Render(Host, victim.Template.Content, victim.Parameters));
+            ReportRenderer newRenderer = new PrincipledCreoleRtfReportRenderer();
+            builder.Append(newRenderer.Render(Host, victim.Template.Content, victim.Parameters));
         }
 
         void IRenderableVisitor.Visit(ChartDefinition victim)

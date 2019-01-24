@@ -127,7 +127,6 @@ namespace StatsDirect.TemplateProcessing
                         }
 
                         // If this is the first line of a new table, mark the first table cell so that the RTF inserter can get hold of it later.
-                        // TODO: This whole text-replacement approach is getting increasingly unpleasant; how can we use e.g. ANTLR and island grammars to get a proper parse tree instead?
                         if (!wasInTable)
                         {
                             // The contents of each cell will end with "\cell " - note the space at the end.  We can drop some marker text into the first cell by finding the first occurrence and adding that marker.

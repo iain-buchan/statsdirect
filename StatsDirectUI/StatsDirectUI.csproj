@@ -325,6 +325,7 @@
     <Compile Include="Data\GenericVariable.cs" />
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
+    <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
     <Compile Include="TemplateProcessing\RtfRenderer.cs" />
     <Compile Include="Templates\IRenderable.cs" />
     <Compile Include="Templates\IRenderableVisitor.cs" />
