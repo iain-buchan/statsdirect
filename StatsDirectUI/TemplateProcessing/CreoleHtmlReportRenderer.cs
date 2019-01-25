@@ -7,43 +7,43 @@ using System.Text;
 
 namespace StatsDirect.TemplateProcessing
 {
-    public class PrincipledCreoleRtfReportRenderer : ReportRenderer
+    public class CreoleHtmlReportRenderer : ReportRenderer
     {
-        const string RTF_REPORT_START = @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ";
-        const string RTF_REPORT_END = @"\par }";
+        const string HTML_REPORT_START = @"<html><head><style>body { font-family: Arial; } .ci { color: blue; } .pval { color: green; } .warn {color: red; }</style></head><body>";
+        const string HTML_REPORT_END = @"</body></html>";
 
         public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
         {
             ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
-            return RTF_REPORT_START + creole.Accept(new InnerRtfReportRenderer(host, substitutions)) + RTF_REPORT_END;
+            return HTML_REPORT_START + creole.Accept(new InnerHtmlReportRenderer(host, substitutions)) + HTML_REPORT_END;
         }
 
-        private class InnerRtfReportRenderer : ICreoleVisitor<string>
+        private class InnerHtmlReportRenderer : ICreoleVisitor<string>
         {
-            private static readonly Dictionary<string, string> rtfFormatting = new Dictionary<string, string>
+            private static readonly Dictionary<string, IWrapper> rtfFormatting = new Dictionary<string, IWrapper>
             {
-                // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal).
-                { "b", @"\b" },
-                { "ci", @"\cf4" },
-                { "grandtotal", @"\cf8" },
-                { "i", @"\i" },
-                { "model", @"\cf8" },
-                { "pre", @"\f2" },
-                { "pval", @"\cf5" },
-                { "score", @"\cf3" },
-                { "sub", @"\sub" },
-                { "subtitle", @"\ul" },
-                { "subtotal", @"\cf7" },
-                { "sup", @"\sup" },
-                { "title", @"\ul\b" },
-                { "u", @"\ul" },
-                { "warn", @"\cf6" }
+                // Colour table entries: 1=black, 3=dark cyan, 7=dark red (subtotal), 8=dark blue (model/grandtotal).
+                { "b", new TagRenderer("b") },
+                { "ci", new SpanRenderer("ci") },
+                { "grandtotal", new SpanRenderer("grandtotal") },
+                { "i", new TagRenderer("i") },
+                { "model", new SpanRenderer("model") },
+                { "pre", new TagRenderer("pre") },
+                { "pval", new SpanRenderer("pval") },
+                { "score", new SpanRenderer("score") },
+                { "sub", new TagRenderer("sub") },
+                { "subtitle", new TagRenderer("h2") },
+                { "subtotal", new SpanRenderer("subtotal") },
+                { "sup", new TagRenderer("sup") },
+                { "title", new TagRenderer("h1") },
+                { "u", new TagRenderer("u") },
+                { "warn", new SpanRenderer("warn") }
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
             private readonly ITemplateHost host;
 
-            public InnerRtfReportRenderer(ITemplateHost host, ParameterBag substitutions)
+            public InnerHtmlReportRenderer(ITemplateHost host, ParameterBag substitutions)
             {
                 this.host = host;
                 substitutionStack.Push(substitutions);
@@ -74,12 +74,10 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim)
             {
-                return "{" + ToRtfFormatting(victim.Format) + " " + victim.Contents.Accept(this) + "}";
-            }
-
-            private string ToRtfFormatting(string format)
-            {
-                return rtfFormatting[format];
+                IWrapper wrapper = rtfFormatting[victim.Format];
+                return wrapper.Open
+                    + victim.Contents.Accept(this)
+                    + wrapper.Close;
             }
 
             string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim)
@@ -92,7 +90,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleLine<string> victim)
             {
-                return (null == victim.Contents ? string.Empty : victim.Contents.Accept(this)) + @"\par ";
+                return (null == victim.Contents ? string.Empty : victim.Contents.Accept(this)) + @"<br />";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
@@ -111,7 +109,7 @@ namespace StatsDirect.TemplateProcessing
                 if (value is String stringValue)
                     return stringValue;
                 if (value is IRenderable renderable)
-                    return new RtfRenderer(host).Render(renderable);
+                    return new HtmlRenderer(host).Render(renderable);
                 switch (victim.Format)
                 {
                     case "pval":
@@ -139,99 +137,91 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim)
             {
-                return "{" + victim.Contents.Accept(this) + "}";
+                return "<table>" + victim.Contents.Accept(this) + "</table>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim)
             {
-                return @"\trowd\trgaph135\trleft0\trautofit1"
-                    + ToCellsDefinition(victim.Contents) + " "
+                return @"<tr>"
                     + victim.Contents.Accept(this)
-                    + @"\row ";
-            }
-
-            private string ToCellsDefinition(ICreole<string> contents)
-            {
-                return contents.Accept(new CellsDefinitionRenderer());
+                    + @"</tr>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim)
             {
-                return @"\pard\intbl "
+                return @"<td>"
                     + victim.Contents.Accept(this)
-                    + @"\cell ";
+                    + @"</td>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetailFirst<string> victim)
             {
-                return @"\pard\intbl "
+                return @"<td>"
                     + victim.Contents.Accept(this)
-                    + @"\cell ";
+                    + @"</td>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetailSpan<string> victim)
             {
-                return @"\pard\intbl\cell ";
+                return @"<td></td>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim)
             {
-                return @"\pard\intbl {\ul "
+                return @"<th>"
                     + victim.Contents.Accept(this)
-                    + @"}\cell ";
+                    + @"</th>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableHeaderFirst<string> victim)
             {
-                return @"\pard\intbl {\ul "
+                return @"<th>"
                     + victim.Contents.Accept(this)
-                    + @"}\cell ";
+                    + @"</th>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableHeaderSpan<string> victim)
             {
-                return @"\pard\intbl {\ul}\cell ";
+                return @"<th></th>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleText<string> victim)
             {
                 return victim.Text;
             }
-        }
 
-        private class CellsDefinitionRenderer : ICreoleVisitor<string>
-        {
-            string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
+            private interface IWrapper
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (ICreole<string> v in victim)
-                    sb.Append(v.Accept(this));
-                return sb.ToString();
+                string Open { get; }
+                string Close { get; }
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleAttribute<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleBlock<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleLine<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleSubstitution<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTable<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim) => CellDefinition(false, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailFirst<string> victim) => CellDefinition(true, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailSpan<string> victim) => CellDefinition(false, true);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim) => CellDefinition(false, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderFirst<string> victim) => CellDefinition(true, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderSpan<string> victim) => CellDefinition(false, true);
-            string ICreoleVisitor<string>.Visit(CreoleText<string> victim) => string.Empty;
-
-            private string CellDefinition(bool isFirst, bool isRest)
+            private class TagRenderer: IWrapper
             {
-                if (isFirst)
-                    return @"\clmgf\cellx0";
-                if (isRest)
-                    return @"\clmrg\cellx0";
-                return @"\cellx0";
+                private string Tag { get; }
+
+                string IWrapper.Open => "<" + Tag + ">";
+
+                string IWrapper.Close => "</" + Tag + ">";
+
+                public TagRenderer(string tag)
+                {
+                    Tag = tag;
+                }
+            }
+
+            private class SpanRenderer: IWrapper
+            {
+                private string CssClass;
+
+                public SpanRenderer(string cssClass)
+                {
+                    CssClass = cssClass;
+                }
+
+                string IWrapper.Open => "<span class=\"" + CssClass + "\">";
+
+                string IWrapper.Close => "</span>";
             }
         }
     }

@@ -14,6 +14,7 @@ using StatsDirect.Utilities;
 using DevExpress.XtraRichEdit.Services;
 using System.Reflection;
 using StatsDirect.TemplateProcessing;
+using System.Text;
 
 namespace StatsDirect.UI
 {
@@ -358,6 +359,13 @@ namespace StatsDirect.UI
 
         void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, string redoInformation)
         {
+            string html = new HtmlRenderer(SdApplication.SoleInstance).Render(renderable);
+            using (var s = File.OpenWrite(@"C:\Temp\SD3.html"))
+            using (var w = new StreamWriter(s, Encoding.UTF8))
+            {
+                w.Write(html);
+            }
+
             Document document = richEditControl1.Document;
             int initialEnd = document.Range.End.ToInt();
             document.BeginUpdate();

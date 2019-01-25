@@ -429,7 +429,9 @@ namespace StatsDirect.Charting
 
         public Stream DetachAndReturnImageStream()
         {
-            throw new NotImplementedException();
+            MemoryStream ms = new MemoryStream();
+            new StreamWriter(ms, Encoding.UTF8).Write(root.ToString());
+            return ms;
         }
         #endregion
 

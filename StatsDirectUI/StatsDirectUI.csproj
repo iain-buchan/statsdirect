@@ -156,8 +156,8 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="HtmlAgilityPack, Version=1.8.11.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlAgilityPack.1.8.11\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    <Reference Include="HtmlAgilityPack, Version=1.8.14.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.8.14\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualBasic" />
@@ -325,7 +325,10 @@
     <Compile Include="Data\GenericVariable.cs" />
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
+    <Compile Include="TemplateProcessing\CreoleHtmlReportRenderer.cs" />
     <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
+    <Compile Include="TemplateProcessing\HtmlRenderer.cs" />
+    <Compile Include="TemplateProcessing\HtmlImageRenderer.cs" />
     <Compile Include="TemplateProcessing\RtfRenderer.cs" />
     <Compile Include="Templates\IRenderable.cs" />
     <Compile Include="Templates\IRenderableVisitor.cs" />
@@ -2065,7 +2068,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
