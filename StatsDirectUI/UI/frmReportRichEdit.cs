@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Windows.Forms;
 using System.IO;
-using StatsDirect.Charting;
 using StatsDirect.Templates;
 using DevExpress.XtraRichEdit;
 using DevExpress.XtraRichEdit.API.Native;
@@ -344,18 +343,6 @@ namespace StatsDirect.UI
         }
 
         #region IReport Members
-
-        public string RtfText
-        {
-            get => richEditControl1.Document.RtfText;
-            set
-            {
-                Document document = richEditControl1.Document;
-                document.BeginUpdate();
-                richEditControl1.Document.RtfText = value;
-                document.EndUpdate();
-            }
-        }
 
         void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, string redoInformation)
         {
