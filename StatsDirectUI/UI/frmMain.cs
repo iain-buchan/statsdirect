@@ -545,7 +545,8 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                StatsDirectForm child = new frmReportRichEdit();
+                // StatsDirectForm child = new frmReportRichEdit();
+                StatsDirectForm child = new frmReportDotNetBrowser();
                 string childName = child.Text + " " + SdApplication.SoleInstance.GetReportNumber();
                 child.Text = childName;
                 SetUpForm(child);

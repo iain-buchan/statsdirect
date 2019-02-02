@@ -156,6 +156,15 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
+    <Reference Include="DotNetBrowser, Version=1.19.1.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetBrowser.1.19.1\lib\DotNetBrowser.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetBrowser.Chromium32, Version=1.19.1.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetBrowser.1.19.1\lib\DotNetBrowser.Chromium32.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetBrowser.Chromium64, Version=1.19.1.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
+      <HintPath>..\packages\DotNetBrowser.1.19.1\lib\DotNetBrowser.Chromium64.dll</HintPath>
+    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.8.14.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.8.14\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
@@ -525,6 +534,12 @@
     </Compile>
     <Compile Include="UI\CustomCommands.cs" />
     <Compile Include="UI\DialogAndAction.cs" />
+    <Compile Include="UI\frmReportDotNetBrowser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\frmReportDotNetBrowser.Designer.cs">
+      <DependentUpon>frmReportDotNetBrowser.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\HtmlRelatedClasses.cs" />
     <Compile Include="UI\IGetCells.cs" />
     <Compile Include="UI\ImmediateParameterFiller.cs" />
@@ -1019,6 +1034,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlUpdateRCheck.resx">
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\frmReportDotNetBrowser.resx">
+      <DependentUpon>frmReportDotNetBrowser.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInstallStatsDirect2.resx">
       <DependentUpon>frmInstallStatsDirect2.cs</DependentUpon>
@@ -2016,6 +2034,7 @@
     <None Include="Properties\app.manifest">
       <SubType>Designer</SubType>
     </None>
+    <EmbeddedResource Include="teamdev.licenses" />
     <Content Include="UI\sd3.ico" />
     <Content Include="UI\SD7.ICO" />
   </ItemGroup>
