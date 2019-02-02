@@ -1,7 +1,5 @@
 ﻿using StatsDirect.Creole;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
-using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,20 +7,16 @@ namespace StatsDirect.TemplateProcessing
 {
     public class CreoleHtmlReportRenderer : ReportRenderer
     {
-        const string HTML_REPORT_START = @"<html><head><style>body { font-family: Arial; } .ci { color: blue; } .pval { color: green; } .warn {color: red; }</style></head><body>";
-        const string HTML_REPORT_END = @"</body></html>";
-
         public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
         {
             ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
-            return HTML_REPORT_START + creole.Accept(new InnerHtmlReportRenderer(host, substitutions)) + HTML_REPORT_END;
+            return creole.Accept(new InnerHtmlReportRenderer(host, substitutions));
         }
 
         private class InnerHtmlReportRenderer : ICreoleVisitor<string>
         {
             private static readonly Dictionary<string, IWrapper> rtfFormatting = new Dictionary<string, IWrapper>
             {
-                // Colour table entries: 1=black, 3=dark cyan, 7=dark red (subtotal), 8=dark blue (model/grandtotal).
                 { "b", new TagRenderer("b") },
                 { "ci", new SpanRenderer("ci") },
                 { "grandtotal", new SpanRenderer("grandtotal") },
@@ -106,7 +100,7 @@ namespace StatsDirect.TemplateProcessing
                 object value = FindValue(victim.Path);
                 if (null == value)
                     return string.Empty;
-                if (value is String stringValue)
+                if (value is string stringValue)
                     return stringValue;
                 if (value is IRenderable renderable)
                     return new HtmlRenderer(host).Render(renderable);
@@ -200,19 +194,19 @@ namespace StatsDirect.TemplateProcessing
             {
                 private string Tag { get; }
 
-                string IWrapper.Open => "<" + Tag + ">";
-
-                string IWrapper.Close => "</" + Tag + ">";
-
                 public TagRenderer(string tag)
                 {
                     Tag = tag;
                 }
+
+                string IWrapper.Open => "<" + Tag + ">";
+
+                string IWrapper.Close => "</" + Tag + ">";
             }
 
             private class SpanRenderer: IWrapper
             {
-                private string CssClass;
+                private string CssClass { get; }
 
                 public SpanRenderer(string cssClass)
                 {
