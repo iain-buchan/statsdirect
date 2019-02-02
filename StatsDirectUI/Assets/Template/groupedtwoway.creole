@@ -1,6 +1,6 @@
 <report>
 <block name="a">
-<line><title>Two way randomized block analysis of variance for <in>variableName</in></title></line>
+<title>Two way randomized block analysis of variance for <in>variableName</in></title>
 <line></line>
 <line>Treatments: <in>tlist</in></line>
 <line></line>

@@ -7,7 +7,7 @@
 		<builtin function-name="rptPoissonRegressionModel" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Poisson regression - model analysis</title></line>
+<title>Poisson regression - model analysis</title>
 <line></line>
 <line>Accuracy = <in>acc</in></line>
 <line>Log likelihood with all covariates = <in>ll</in></line>

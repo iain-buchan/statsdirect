@@ -1,5 +1,5 @@
 <report>
-<line><title>General agreement over all (<in>cats</in>) categories with <in>r</in> raters per subject</title></line>
+<title>General agreement over all (<in>cats</in>) categories with <in>r</in> raters per subject</title>
 <line></line>
 <line>Cohen's kappa (Landis-Koch extension):</line>
 <line></line>

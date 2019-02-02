@@ -1,5 +1,5 @@
 <report>
-<line><title>Probit analysis - further statistics</title></line>
+<title>Probit analysis - further statistics</title>
 <line></line>
 <line>Iterations = <in>itr</in></line>
 <line></line>

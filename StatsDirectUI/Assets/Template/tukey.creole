@@ -1,5 +1,5 @@
 <report>
-<line><title><in>method</in> multiple comparisons</title></line>
+<title><in>method</in> multiple comparisons</title>
 <line></line>
 <line>Critical value (Studentized range) = <inu>q</inu>,  |q<sup>*</sup>| = <inu>d</inu></line>
 <line>Pooled standard deviation = <inu>psd</inu></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Incidence rate ratio (IRR) meta-analysis</title></line>
+<title>Incidence rate ratio (IRR) meta-analysis</title>
 <line></line>
 <table>
 <tr><th>Stratum</th><thfirst>Table (a, person-time exposed, b, person-time not exposed)</thfirst><thspan/><thspan/><thspan/><th></th></tr>

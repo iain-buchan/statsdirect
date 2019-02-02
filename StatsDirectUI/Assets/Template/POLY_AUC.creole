@@ -1,5 +1,5 @@
 <report>
-<line><title>Polynomial regression - area under curve</title></line>
+<title>Polynomial regression - area under curve</title>
 <line></line>
 <line>AUC (polynomial function) = <in>poly_auc</in></line>
 <line></line>

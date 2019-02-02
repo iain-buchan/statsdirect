@@ -1,5 +1,5 @@
 <report>
-<line><title>Single sample t test</title></line>
+<title>Single sample t test</title>
 <line></line>
 <line>Sample name: <in>name</in></line>
 <line>Sample mean = <inu>sam_mean</inu></line>

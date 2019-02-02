@@ -1,5 +1,5 @@
 <report>
-<line><title>Polynomial regression - Interpolation</title></line>
+<title>Polynomial regression - Interpolation</title>
 <line></line>
 <block name="table"><line><in>lab</in> = <in>res</in></line></block>
 <line></line>

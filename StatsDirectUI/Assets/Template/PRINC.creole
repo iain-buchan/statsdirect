@@ -1,5 +1,5 @@
 <report>
-<line><title>Principal components (<in>type</in>)</title></line>
+<title>Principal components (<in>type</in>)</title>
 <block name="warn">
 <line></line>
 <line><in>warn</in></line>

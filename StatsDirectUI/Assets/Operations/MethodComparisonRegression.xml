@@ -293,7 +293,7 @@ if (exists("returning.to.statsdirect")) {
     <report type="application/x-statsdirect-creole">
       <![CDATA[
 <report>
-<line><title>Method comparison regression</title></line>
+<title>Method comparison regression</title>
 <line></line>
 <line>Test method: <in>yname</in></line>
 <line>Reference method: <in>xname</in></line>
@@ -301,7 +301,7 @@ if (exists("returning.to.statsdirect")) {
 <line>Error ratio: <inx>error-ratio</inx></line>
 <block name="methodResults">
 <line></line>
-<line><subtitle><in>title</in>:</subtitle></line>
+<subtitle><in>title</in>:</subtitle>
 <line></line>
 <table>
 <tr><th></th><th>Estimate</th><th>Standard Error</th><th><inx>ci100</inx>% CI</th><th>Meaning</th></tr>
@@ -339,7 +339,7 @@ if (exists("returning.to.statsdirect")) {
           <![CDATA[
 <report>
 <line></line>
-<line><title>R script to reproduce this result</title></line>
+<title>R script to reproduce this result</title>
 <line></line>
 <line><in>formattedRScript</in></line>
 </report>

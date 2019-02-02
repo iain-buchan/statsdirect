@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for independent cohort study</title></line>
+<title>Sample size for independent cohort study</title>
 <line></line>
 <line>Probability of event in control group = <inu>pc</inu></line>
 <line>Probability of event in experimental group = <inu>ps</inu></line>

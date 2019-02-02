@@ -1,5 +1,5 @@
 <report>
-<line><title>Cuzick's trend test</title></line>
+<title>Cuzick's trend test</title>
 <line></line>
 <line>Groups = <in>groups</in></line>
 <line>Observations = <in>obs</in></line>

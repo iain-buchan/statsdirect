@@ -1,5 +1,5 @@
 <report>
-<line><title>False result probabilities</title></line>
+<title>False result probabilities</title>
 <line></line>
 <line>For an overall case rate of <in>population</in> per ten thousand population tested:</line>
 <line></line>

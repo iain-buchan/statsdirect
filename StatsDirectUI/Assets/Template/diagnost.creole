@@ -1,5 +1,5 @@
 <report>
-<line><title>Diagnostic test analysis</title></line>
+<title>Diagnostic test analysis</title>
 <line></line>
 <table>
 <tr><td></td><thfirst>Disease / feature</thfirst><thspan/><thspan/></tr>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for paired cohort study</title></line>
+<title>Sample size for paired cohort study</title>
 <line></line>
 <line>Event rate in control group = <inu>pc</inu></line>
 <line>Event rate in experimental group = <inu>ps</inu></line>

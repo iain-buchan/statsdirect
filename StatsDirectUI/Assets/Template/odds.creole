@@ -1,5 +1,5 @@
 <report>
-<line><title>Odds ratio analysis</title></line>
+<title>Odds ratio analysis</title>
 <line></line>
 <line>Odds Ratio = <in>odds</in></line>
 <line></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Poisson rate confidence interval</title></line>
+<title>Poisson rate confidence interval</title>
 <line></line>
 <line>Events observed = <inu>events</inu></line>
 <line>Time spent at risk of event = <inu>time</inu></line>

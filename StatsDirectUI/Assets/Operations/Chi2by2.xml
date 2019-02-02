@@ -46,16 +46,16 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[
 <report>
-<line><title>Chi-square test (2 by 2)</title></line>
+<title>Chi-square test (2 by 2)</title>
 <line></line>
-<line><subtitle>Observed values and totals:</subtitle></line>
+<subtitle>Observed values and totals:</subtitle>
 <table>
 <tr><td><in>tab3_a1</in></td><td><in>tab3_b1</in></td><td><subtotal><in>tab3_c1</in></subtotal></td></tr>
 <tr><td><in>tab3_a2</in></td><td><in>tab3_b2</in></td><td><subtotal><in>tab3_c2</in></subtotal></td></tr>
 <tr><td><subtotal><in>tab3_a3</in></subtotal></td><td><subtotal><in>tab3_b3</in></subtotal></td><td><grandtotal><in>tab3_c3</in></grandtotal></td></tr>
 </table>
 <line></line>
-<line><subtitle>Expected values:</subtitle></line>
+<subtitle>Expected values:</subtitle>
 <table>
 <tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
 <tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>

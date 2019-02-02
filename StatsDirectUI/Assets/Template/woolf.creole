@@ -1,5 +1,5 @@
 <report>
-<line><title>Woolf chi-square analysis of 2 by 2 series</title></line>
+<title>Woolf chi-square analysis of 2 by 2 series</title>
 <block name="table">
 <line></line>
 <line><u>For table <in>table</in></u></line>

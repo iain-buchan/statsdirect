@@ -1,5 +1,5 @@
 <report>
-<line><title>Odds ratio meta-analysis</title></line>
+<title>Odds ratio meta-analysis</title>
 <line></line>
 <table>
 <tr><th>Stratum</th><thfirst>Table (exposed +ve, control +ve, exposed -ve, control -ve)</thfirst><thspan/><thspan/><thspan/><thspan/></tr>

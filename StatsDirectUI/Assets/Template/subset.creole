@@ -1,5 +1,5 @@
 <report>
-<line><title>Multiple regression - best sub-set</title></line>
+<title>Multiple regression - best sub-set</title>
 <line></line>
 <line>Selected variables:</line>
 <block name="selected"><line><in>label</in></line></block>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Probit analysis - interpolation</title></line>
+<title>Probit analysis - interpolation</title>
 <line></line>
 <line>Value for X (<in>x_lab</in>) = <inu>x</inu></line>
 <line>Proportional response = <inu>resp</inu></line>

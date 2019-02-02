@@ -34,7 +34,7 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[
 <report>
-<line><title>Single proportion</title></line>
+<title>Single proportion</title>
 <line></line>
 <line>Total = <in>n</in>,  response = <in>r</in></line>
 <line>Proportion = <in>prop</in></line>

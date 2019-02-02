@@ -1,5 +1,5 @@
 <report>
-<line><title>Two sample Smirnov test for distribution difference</title></line>
+<title>Two sample Smirnov test for distribution difference</title>
 <line></line>
 <line>X sample: <in>x</in></line>
 <line>Y sample: <in>y</in></line>

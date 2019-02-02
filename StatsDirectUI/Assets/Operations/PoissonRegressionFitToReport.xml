@@ -7,7 +7,7 @@
 		<builtin function-name="rptPoissonRegressionFit" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Poisson regression - fits and residuals</title></line>
+<title>Poisson regression - fits and residuals</title>
 <line></line>
 <table>
 <tr><th>Index</th><block name="predictors"><th><in>lab</in></th></block></tr>

@@ -18,7 +18,7 @@
 		<builtin function-name="rptLogisticRegressionBootstrap" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Logistic regression - bootstrap odds ratio estimates</title></line>
+<title>Logistic regression - bootstrap odds ratio estimates</title>
 <line></line>
 <line>Resampled <in>boots</in> times.</line>
 <line></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Kruskal-Wallis test</title></line>
+<title>Kruskal-Wallis test</title>
 <line></line>
 <line>Variables: <in>tlist</in></line>
 <line></line>

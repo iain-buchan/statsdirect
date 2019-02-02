@@ -1,5 +1,5 @@
 <report>
-<line><title>Poisson confidence interval</title></line>
+<title>Poisson confidence interval</title>
 <line></line>
 <block name="sample">
 <table>

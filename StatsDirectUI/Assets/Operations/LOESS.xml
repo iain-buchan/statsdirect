@@ -153,7 +153,7 @@ if (exists("returning.to.statsdirect")) {
     <report type="application/x-statsdirect-creole">
   <![CDATA[
 <report>
-<line><title>LOESS Curve Fitting</title></line>
+<title>LOESS Curve Fitting</title>
 <line></line>
 <line><in>title</in></line>
 <line>Number of Observations: <inx>observations</inx></line>
@@ -183,7 +183,7 @@ if (exists("returning.to.statsdirect")) {
           <![CDATA[
 <report>
 <line></line>
-<line><title>R script to reproduce this result</title></line>
+<title>R script to reproduce this result</title>
 <line></line>
 <line><in>formattedRScript</in></line>
 </report>

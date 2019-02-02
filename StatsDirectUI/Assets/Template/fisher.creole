@@ -1,5 +1,5 @@
 <report>
-<line><title>Fisher's exact test</title></line>
+<title>Fisher's exact test</title>
 <line></line>
 <line><b>Input table:</b></line>
 <table>

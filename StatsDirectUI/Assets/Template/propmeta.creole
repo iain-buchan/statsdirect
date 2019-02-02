@@ -1,5 +1,5 @@
 <report>
-<line><title>Proportion meta-analysis</title></line>
+<title>Proportion meta-analysis</title>
 <line></line>
 <line>Method: <in>methodLabel</in></line>
 <line></line>

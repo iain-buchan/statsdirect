@@ -1,5 +1,5 @@
 <report>
-<line><title>Reference range/interval</title></line>
+<title>Reference range/interval</title>
 <line></line>
 <table>
 <tr><td>Sample name:</td><td><in>name</in></td></tr>

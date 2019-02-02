@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for a population survey</title></line>
+<title>Sample size for a population survey</title>
 <line></line>
 <table>
 <tr><td>Population estimate</td><td><inu>estimate</inu></td></tr>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Universal agreement (Berry-Mielke) R</title></line>
+<title>Universal agreement (Berry-Mielke) R</title>
 <line></line>
 <table>
 <tr><td>Measurement:</td><td><in>name</in></td></tr>

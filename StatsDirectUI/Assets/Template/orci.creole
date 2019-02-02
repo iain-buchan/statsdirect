@@ -1,5 +1,5 @@
 <report>
-<line><title>Exact confidence limits for 2 by 2 odds</title></line>
+<title>Exact confidence limits for 2 by 2 odds</title>
 <line></line>
 <line>Input table:</line>
 <table>

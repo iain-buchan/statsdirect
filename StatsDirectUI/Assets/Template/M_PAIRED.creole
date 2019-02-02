@@ -1,5 +1,5 @@
 <report>
-<line><title>Paired t test</title></line>
+<title>Paired t test</title>
 <line></line>
 <line>For <in>label</in>:</line>
 <line>Mean of differences = <inu>mean</inu>  (n = <in>n</in>)</line>
@@ -18,7 +18,7 @@
 <block name="twosample">
 <line></line>
 <line></line>
-<line><title>Two sample analysis of agreement</title></line>
+<title>Two sample analysis of agreement</title>
 <line></line>
 <line><in>pc</in>% Limits of agreement = <inu>from2</inu> to <inu>to2</inu></line>
 </block>

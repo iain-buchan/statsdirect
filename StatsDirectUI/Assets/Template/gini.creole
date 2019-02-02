@@ -1,8 +1,8 @@
 <report>
-<line><title>Gini coefficient of inequality</title></line>
+<title>Gini coefficient of inequality</title>
 <block name="data">
 <line></line>
-<line><subtitle>Analysis for <in>ti</in>:</subtitle></line>
+<subtitle>Analysis for <in>ti</in>:</subtitle>
 <line></line>
 <line>Positive non-zero observations = <in>n</in>  <warn><in>msg</in></warn></line>
 <line>Variance coefficient = <inu>cv</inu></line>

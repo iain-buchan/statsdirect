@@ -1,5 +1,5 @@
 <report>
-<line><title>Descriptive statistics</title></line>
+<title>Descriptive statistics</title>
 <line></line>
 <table>
 <tr><th>Variables</th><block name="titles"><th><in>title</in></th></block></tr>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Latin square test</title></line>
+<title>Latin square test</title>
 <line></line>
 <line>Column, row and treatment factors: <in>tlist</in></line>
 <line></line>

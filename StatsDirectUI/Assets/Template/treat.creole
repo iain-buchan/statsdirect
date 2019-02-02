@@ -1,5 +1,5 @@
 <report>
-<line><title>Number needed to treat (empirical results using observed counts only)</title></line>
+<title>Number needed to treat (empirical results using observed counts only)</title>
 <line></line>
 <line><ci>Estimates with <in>pc</in>% confidence intervals:</ci></line>
 <line></line>
@@ -20,7 +20,7 @@
 <line></line>
 <block name="adjusted">
 <line></line>
-<line><title>Needed to treat (adjusted for baseline/expected risk)</title></line>
+<title>Needed to treat (adjusted for baseline/expected risk)</title>
 <line></line>
 <line>Expected risk of event without treatment <in>type</in>= <in>brr</in>%</line>
 <line></line>

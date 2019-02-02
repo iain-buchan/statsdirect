@@ -1,5 +1,5 @@
 <report>
-<line><title>Random allocation to groups by preference</title></line>
+<title>Random allocation to groups by preference</title>
 <line></line>
 <line>Groups = <in>groups</in></line>
 <line></line>

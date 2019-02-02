@@ -1,5 +1,5 @@
 <report>
-<line><title>Crossover tests</title></line>
+<title>Crossover tests</title>
 <line></line>
 <table>
 <tr><th></th><th>Period 1</th><th>Period 2</th><th>Difference</th></tr>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Linearized Estimates</title></line>
+<title>Linearized Estimates</title>
 <line></line>
 <line>Model : <in>modelDescription</in></line>
 <line>Method: unweighted least squares</line>

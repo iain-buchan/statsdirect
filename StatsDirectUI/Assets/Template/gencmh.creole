@@ -1,5 +1,5 @@
 <report>
-<line><title>Generalised Cochran-Mantel-Haenszel tests</title></line>
+<title>Generalised Cochran-Mantel-Haenszel tests</title>
 <line></line>
 <table>
 <tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal></b></td></tr>

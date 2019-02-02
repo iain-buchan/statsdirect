@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for Pearson correlation</title></line>
+<title>Sample size for Pearson correlation</title>
 <line></line>
 <line>Alpha = <inu>alpha</inu></line>
 <line>Power = <inu>power</inu></line>

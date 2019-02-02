@@ -1,5 +1,5 @@
 <report>
-<line><title>Conditional logistic regression</title></line>
+<title>Conditional logistic regression</title>
 <block name="counts">
 <line></line>
 <table>

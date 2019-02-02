@@ -1,5 +1,5 @@
 <report>
-<line><title>Scheff&#xe9; multiple comparisons</title></line>
+<title>Scheff&#xe9; multiple comparisons</title>
 <line></line>
 <line>Critical value = <in>critical</in></line>
 <line></line>

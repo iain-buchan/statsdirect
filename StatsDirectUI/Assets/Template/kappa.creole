@@ -1,5 +1,5 @@
 <report>
-<line><title>General agreement over all categories (2 raters)</title></line>
+<title>General agreement over all categories (2 raters)</title>
 <line></line>
 <line><u>Cohen's kappa (unweighted)</u></line>
 <line>Observed agreement = <in>po</in>%</line>
@@ -33,7 +33,7 @@
 <line>AC1 = <inu>gama</inu> (se = <inu>segama</inu>)</line>
 <line><ci><in>pc</in>% confidence interval = <inu>gamacil</inu> to <inu>gamaciu</inu></ci></line>
 <line></line>
-<line><title>Disagreement over any category and asymmetry of disagreement (2 raters)</title></line>
+<title>Disagreement over any category and asymmetry of disagreement (2 raters)</title>
 <line></line>
 <line>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><inp>pmaxwell</inp></pval></line>
 <line></line>

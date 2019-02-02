@@ -1,5 +1,5 @@
 <report>
-<line><title>Grouped linear regression</title></line>
+<title>Grouped linear regression</title>
 <line></line>
 <table>
 <tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th><th></th></tr>

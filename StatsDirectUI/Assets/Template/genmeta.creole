@@ -1,5 +1,5 @@
 <report>
-<line><title>Summary meta-analysis</title></line>
+<title>Summary meta-analysis</title>
 <line></line>
 <table>
 <tr><th>Study</th><th><in>stat</in></th><th>SE</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
@@ -11,21 +11,21 @@
 <block name="studies"><tr><td><in>st</in></td><td><inu>standardized_effect</inu></td><td><inu>se</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
-<line><subtitle>Fixed effects (inverse variance)</subtitle></line>
+<subtitle>Fixed effects (inverse variance)</subtitle>
 <line>Pooled <in>stat_fixed</in> = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from_fixed</inu> to <inu>to_fixed</inu></ci>)</line>
 <line>Z (test <in>task</in>) = <inu>z</inu>  <pval><inp>p_fixed</inp></pval></line>
 <line></line>
-<line><subtitle>Non-combinability of studies</subtitle></line>
+<subtitle>Non-combinability of studies</subtitle>
 <line>Cochran Q = <inu>qc</inu>  (df = <in>df</in>) <pval><inp>xp</inp></pval></line>
 <line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
 <line>I<sub>2</sub> (inconsistency) = <inu>isq</inu>% (<ci><in>pc1</in>% CI = <inu>llisq</inu>% to <inu>ulisq</inu>%</ci>) </line>
 <line></line>
-<line><subtitle>Random effects (DerSimonian-Laird)</subtitle></line>
+<subtitle>Random effects (DerSimonian-Laird)</subtitle>
 <line>Pooled <in>dsstat</in> = <inu>dsrr</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)</line>
 <line>Z (test <in>stat</in>) = <inu>dz</inu>  <pval><inp>dp</inp></pval></line>
 <block name="bias">
 <line></line>
-<line><subtitle>Bias indicators</subtitle></line>
+<subtitle>Bias indicators</subtitle>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
 <line>Egger: bias = <inu>a</inu> (<ci><in>pc</in>% CI = <inu>cl</inu> to <inu>cu</inu></ci>)  <pval><inp>p</inp></pval></line>
 </block>

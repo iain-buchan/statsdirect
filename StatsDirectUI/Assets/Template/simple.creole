@@ -1,5 +1,5 @@
 <report>
-<line><title>Simple linear regression</title></line>
+<title>Simple linear regression</title>
 <line></line>
 <line><b>Equation: </b><in>eq_y</in> <in>eq_x</in></line>
 <line></line>

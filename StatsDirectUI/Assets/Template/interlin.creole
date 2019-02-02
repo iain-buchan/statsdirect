@@ -1,5 +1,5 @@
 <report>
-<line><title>Linearised estimates - Interpolation</title></line>
+<title>Linearised estimates - Interpolation</title>
 <line><in>lab_x</in> = <inu>res_x</inu></line>
 <line><in>lab_y</in> = <inu>res_y</inu></line>
 </report>

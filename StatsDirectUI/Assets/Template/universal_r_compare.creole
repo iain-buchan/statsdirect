@@ -1,5 +1,5 @@
 <report>
-<line><title>Comparison of two universal agreement R statistics</title></line>
+<title>Comparison of two universal agreement R statistics</title>
 <line></line>
 <table>
 <tr><th></th><th>Group 1</th><th>Group 2</th><th>Difference</th></tr>

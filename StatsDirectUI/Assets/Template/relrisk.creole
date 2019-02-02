@@ -1,5 +1,5 @@
 <report>
-<line><title>Risk analysis (prospective)</title></line>
+<title>Risk analysis (prospective)</title>
 <line></line>
 <table>
 <tr><td></td><td><subtotal>Characteristic factor:</subtotal></td><td></td></tr>

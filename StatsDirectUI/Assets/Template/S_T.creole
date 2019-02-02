@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for <in>tt</in> Student t test</title></line>
+<title>Sample size for <in>tt</in> Student t test</title>
 <line></line>
 <line>Alpha = <in>alpha</in></line>
 <line>Power = <in>power</in></line>

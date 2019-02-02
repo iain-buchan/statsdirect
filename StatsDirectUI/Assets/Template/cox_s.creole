@@ -1,5 +1,5 @@
 <report>
-<line><title>Cox regression - baseline survival and hazard estimates</title></line>
+<title>Cox regression - baseline survival and hazard estimates</title>
 <line></line>
 <table>
 <tr><th>Time</th><th>Survival probability</th><th>Cumulative hazard</th><th>Hazard ratio</th></tr>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Two way randomized block analysis of variance with repeated observations</title></line>
+<title>Two way randomized block analysis of variance with repeated observations</title>
 <line></line>
 <line>Variables:<in>tlist</in></line>
 <line></line>

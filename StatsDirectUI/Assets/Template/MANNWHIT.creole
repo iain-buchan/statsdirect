@@ -1,5 +1,5 @@
 <report>
-<line><title>Mann-Whitney U test</title></line>
+<title>Mann-Whitney U test</title>
 <line></line>
 <line>Observations (x) in <in>sample_1</in> = <in>obs_1</in>   median = <inu>median_1</inu>   rank sum = <inu>ranksum</inu></line>
 <line>Observations (y) in <in>sample_2</in> = <in>obs_2</in>   median = <inu>median_2</inu></line>

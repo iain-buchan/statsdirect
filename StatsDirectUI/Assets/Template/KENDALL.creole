@@ -1,5 +1,5 @@
 <report>
-<line><title>Kendall's rank correlation</title></line>
+<title>Kendall's rank correlation</title>
 <line></line>
 <line><in>sample_1</in> vs. <in>sample_2</in></line>
 <line>Observations per sample = <in>obs</in></line>

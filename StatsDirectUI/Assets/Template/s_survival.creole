@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for survival analysis</title></line>
+<title>Sample size for survival analysis</title>
 <line></line>
 <line>median survival time for controls = <inu>ctFmt</inu></line>
 <line>hazard ratio = <inu>hrFmt</inu></line>

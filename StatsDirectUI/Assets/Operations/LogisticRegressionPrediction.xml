@@ -19,7 +19,7 @@
 		<builtin function-name="rptLogisticRegressionPrediction" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Logistic regression - prediction</title></line>
+<title>Logistic regression - prediction</title>
 <line></line>
 <block name="predictors"><line><in>x</in></line></block>
 <line></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Crosstabs</title></line>
+<title>Crosstabs</title>
 <line></line>
 <table>
 <tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal></b></td></tr>

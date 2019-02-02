@@ -1,5 +1,5 @@
 <report>
-<line><title>Multiple linear regression - influential data</title></line>
+<title>Multiple linear regression - influential data</title>
 <line></line>
 <table>
 <tr><th>Index</th><th>Y</th><th>Fitted Y</th><th>Std. Dev. Y fit</th><th>Residual</th></tr>

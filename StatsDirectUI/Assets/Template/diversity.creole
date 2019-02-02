@@ -1,8 +1,8 @@
 <report>
-<line><title>Diversity</title></line>
+<title>Diversity</title>
 <block name="var">
 <line></line>
-<line><subtitle>Analysis for <in>ti</in>:</subtitle></line>
+<subtitle>Analysis for <in>ti</in>:</subtitle>
 <line></line>
 <line>Total number of counts = <in>n</in>  <warn><in>msg</in></warn></line>
 <line>Number of classes observed (richness) = <in>s</in></line>

@@ -7,7 +7,7 @@
 		<builtin function-name="rptLogisticRegressionModel" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Logistic regression - model analysis</title></line>
+<title>Logistic regression - model analysis</title>
 <line></line>
 <line>Accuracy = <in>acc</in></line>
 <line>Log likelihood with all covariates = <in>ll</in></line>

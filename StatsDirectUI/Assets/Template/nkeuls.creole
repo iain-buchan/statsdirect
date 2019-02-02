@@ -1,5 +1,5 @@
 <report>
-<line><title>Newman-Keuls multiple comparisons</title></line>
+<title>Newman-Keuls multiple comparisons</title>
 <line></line>
 <table>
 <tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>|L/SE(L)|</th><th></th></tr>

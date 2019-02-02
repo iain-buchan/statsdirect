@@ -1,5 +1,5 @@
 <report>
-<line><title>Randomized intervention-control pairs</title></line>
+<title>Randomized intervention-control pairs</title>
 <line></line>
 <line>Randomized with seed: <in>seedAndNote</in></line>
 <line></line>

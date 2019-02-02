@@ -1,5 +1,5 @@
 <report>
-<line><title>Normal distribution (z) test - single sample</title></line>
+<title>Normal distribution (z) test - single sample</title>
 <line></line>
 <table>
 <tr><td>Sample name:</td><td><in>name</in></td></tr>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Two independent proportions</title></line>
+<title>Two independent proportions</title>
 <line>Total 1 = <in>n_1</in>,  response 1 = <in>r_1</in></line>
 <line>Proportion 1 = <inu>prop_1</inu></line>
 <line>Total 2 = <in>n_2</in>,  response 2 = <in>r_2</in></line>

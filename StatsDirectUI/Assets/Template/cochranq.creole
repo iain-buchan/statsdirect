@@ -1,5 +1,5 @@
 <report>
-<line><title>Cochran Q test</title></line>
+<title>Cochran Q test</title>
 <line></line>
 <line>Variables: <in>tlist</in></line>
 <line></line>

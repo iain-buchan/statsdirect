@@ -1,5 +1,5 @@
 <report>
-<line><title>Comparison of two directly standardized rates</title></line>
+<title>Comparison of two directly standardized rates</title>
 <line></line>
 <table>
 <tr><th>Stratum</th><thfirst>Table (a, person-time exposed, b, person-time not exposed)</thfirst><thspan/><thspan/><thspan/><td></td></tr>

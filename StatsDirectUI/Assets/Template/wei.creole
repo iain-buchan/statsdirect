@@ -1,8 +1,8 @@
 <report>
-<line><title>Wei-Lachin analysis</title></line>
+<title>Wei-Lachin analysis</title>
 <block name="outer">
 <line></line>
-<line><title><in>title</in></title></line>
+<title><in>title</in></title>
 <line></line>
 <line>total cases = <in>tot</in> (by group = <in>grp_1</in> and <in>grp_2</in>)</line>
 <block name="repeats">
@@ -16,7 +16,7 @@
 </table>
 </block>
 <line></line>
-<line><title><in>title_multi</in></title></line>
+<title><in>title_multi</in></title>
 <line></line>
 <line><u>Covariance matrix</u>:</line>
 <block name="covar"><line><in>mat</in></line></block>

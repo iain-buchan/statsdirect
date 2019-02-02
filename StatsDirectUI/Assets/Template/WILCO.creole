@@ -1,5 +1,5 @@
 <report>
-<line><title>Wilcoxon's signed ranks test</title></line>
+<title>Wilcoxon's signed ranks test</title>
 <line></line>
 <line><in>sample_1</in> vs. <in>sample_2</in></line>
 <line>Number of non-zero differences ranked = <in>non_0</in></line>

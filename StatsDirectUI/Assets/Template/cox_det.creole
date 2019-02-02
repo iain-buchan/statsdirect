@@ -1,5 +1,5 @@
 <report>
-<line><title>Cox regression - hazard ratios</title></line>
+<title>Cox regression - hazard ratios</title>
 <line></line>
 <table>
 <tr><th>Parameter</th><th>Hazard Ratio</th><th><ci><in>pc2</in>% CI</ci></th></tr>

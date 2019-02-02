@@ -1,5 +1,5 @@
 <report>
-<line><title>Risk analysis (retrospective)</title></line>
+<title>Risk analysis (retrospective)</title>
 <line></line>
 <table>
 <tr><th></th><tdfirst><subtotal>Characteristic factor:</subtotal></tdfirst><td></td></tr>

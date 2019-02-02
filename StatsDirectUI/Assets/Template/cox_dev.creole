@@ -1,5 +1,5 @@
 <report>
-<line><title>Cox regression - model analysis</title></line>
+<title>Cox regression - model analysis</title>
 <line></line>
 <line>Log likelihood with no covariates = <inu>ll0</inu></line>
 <line></line>

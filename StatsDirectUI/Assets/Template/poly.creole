@@ -1,5 +1,5 @@
 <report>
-<line><title>Polynomial regression</title></line>
+<title>Polynomial regression</title>
 <block name="warn">
 <line></line>
 <line>WARNING: <in>warn</in></line>

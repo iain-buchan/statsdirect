@@ -1,5 +1,5 @@
 <report>
-<line><title>Quantile confidence interval</title></line>
+<title>Quantile confidence interval</title>
 <block name="variable">
 <line></line>
 <line>Variable: <in>sample</in></line>

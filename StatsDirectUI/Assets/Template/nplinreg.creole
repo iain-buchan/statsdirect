@@ -1,5 +1,5 @@
 <report>
-<line><title>Nonparametric linear regression</title></line>
+<title>Nonparametric linear regression</title>
 <line></line>
 <line><in>ytitle</in> vs. <in>xtitle</in></line>
 <line>Observations per sample = <in>obs</in></line>

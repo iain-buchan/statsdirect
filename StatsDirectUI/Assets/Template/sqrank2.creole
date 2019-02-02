@@ -1,5 +1,5 @@
 <report>
-<line><title>Squared ranks approximate equality of variance test (2 sample)</title></line>
+<title>Squared ranks approximate equality of variance test (2 sample)</title>
 <line></line>
 <line>z = <inu>z</inu></line>
 <line><ci>Two tailed <inp>p2</inp></ci></line>

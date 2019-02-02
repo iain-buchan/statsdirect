@@ -1,5 +1,5 @@
 <report>
-<line><title>ROC Curve Analysis</title></line>
+<title>ROC Curve Analysis</title>
 <line><in>chart</in></line>
 <line></line>
 <block name="datasets">

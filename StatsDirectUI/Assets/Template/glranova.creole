@@ -1,5 +1,5 @@
 <report>
-<line><title>Analysis of variance from regression</title></line>
+<title>Analysis of variance from regression</title>
 <line></line>
 <table>
 <tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>

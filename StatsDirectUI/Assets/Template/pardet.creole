@@ -1,5 +1,5 @@
 <report>
-<line><title>Multiple linear regression - collinearity and parameter detail</title></line>
+<title>Multiple linear regression - collinearity and parameter detail</title>
 <line></line>
 <table>
 <tr><th></th><th>Coefficient</th><th>Standard Error</th><th><ci><in>pc</in>% Confidence Interval</ci></th></tr>

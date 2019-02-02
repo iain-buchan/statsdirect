@@ -1,5 +1,5 @@
 <report>
-<line><title>Incidence rate difference (IRD) meta-analysis</title></line>
+<title>Incidence rate difference (IRD) meta-analysis</title>
 <line></line>
 <table>
 <tr><th>Stratum</th><thfirst>Table (a, person-time exposed, b, person-time not exposed)</thfirst><thspan/><thspan/><thspan/><th></th></tr>
@@ -18,21 +18,21 @@
 <block name="ir"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><in>wt</in></td><td><in>dwt</in></td><td><in>lb</in></td></tr></block>
 </table>
 <line></line>
-<line><subtitle>Fixed effects (inverse variance)</subtitle></line>
+<subtitle>Fixed effects (inverse variance)</subtitle>
 <line>Pooled IRD = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci>)</line>
 <line>Z (test IRD differs from 0) = <inu>z</inu>  <pval><inp>p_z</inp></pval></line>
 <line></line>
-<line><subtitle>Non-combinability of studies</subtitle></line>
+<subtitle>Non-combinability of studies</subtitle>
 <line>Cohran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval></line>
 <line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
 <line>I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
-<line><subtitle>Random effects (DerSimonian-Laird)</subtitle></line>
+<subtitle>Random effects (DerSimonian-Laird)</subtitle>
 <line>Pooled IRD = <inu>dsird</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu>  to  <inu>dsul</inu></ci>)</line>
 <line>Z (test IRD differs from 0) = <inu>dz</inu>  <pval><inp>dp</inp></pval></line>
 <line></line>
 <block name="egger">
-<line><subtitle>Bias indicators</subtitle></line>
+<subtitle>Bias indicators</subtitle>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
 <line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
 </block>

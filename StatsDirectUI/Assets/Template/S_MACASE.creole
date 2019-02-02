@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for matched case-control study</title></line>
+<title>Sample size for matched case-control study</title>
 <line></line>
 <line>case-control correlation = <inu>corr</inu></line>
 <line>probability of exposure in controls = <inu>pc</inu></line>

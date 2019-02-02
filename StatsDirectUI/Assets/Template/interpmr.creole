@@ -1,5 +1,5 @@
 <report>
-<line><title>Multiple linear regression - prediction</title></line>
+<title>Multiple linear regression - prediction</title>
 <block name="x">
 <line><in>x</in></line>
 </block>

@@ -1,8 +1,8 @@
 <report>
-<line><title>Logrank and Wilcoxon tests</title></line>
+<title>Logrank and Wilcoxon tests</title>
 <block name="outer">
 <line></line>
-<line><title><in>title</in><in>strata</in>:</title></line>
+<title><in>title</in><in>strata</in>:</title>
 <block name="groups">
 <line></line>
 <line><u><subtotal>For group <in>grp</in></subtotal></u></line>
@@ -21,7 +21,7 @@
 <block name="trends"><line>Chi-square for trend = <inu>trend</inu> <pval> <inp>p_trend</inp></pval></line></block>
 <block name="strata">
 <line></line>
-<line><title><in>test</in> for COMBINED STRATA</title><subtotal>:</subtotal></line>
+<title><in>test</in> for COMBINED STRATA</title><subtotal>:</subtotal></line>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>Deaths</th><th>Extent of exposure to risk of death</th><th>Relative rate</th></tr>

@@ -17,7 +17,7 @@
 		<builtin function-name="rptEqualityOfVariance" />
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Approximate equality of variance tests and adjusted ANOVA</title></line>
+<title>Approximate equality of variance tests and adjusted ANOVA</title>
 <line></line>
 <line>Levene's (W50) F = <inx>f</inx>  (df = <in>df1</in>, <in>df2</in>)  <pval><inp>pLevene</inp></pval></line>
 <line></line>

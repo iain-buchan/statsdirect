@@ -1,5 +1,5 @@
 <report>
-<line><title>Paired proportions</title></line>
+<title>Paired proportions</title>
 <line></line>
 <line>Total = <in>n_out</in>,  both = <in>r_out</in>,  first only = <in>s_out</in>,  second only = <in>t_out</in></line>
 <line>Proportion 1 = <inu>prop_1</inu></line>

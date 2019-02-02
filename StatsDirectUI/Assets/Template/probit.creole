@@ -1,5 +1,5 @@
 <report>
-<line><title>Probit analysis - <in>title</in></title></line>
+<title>Probit analysis - <in>title</in></title>
 <line>constant = <in>a</in></line>
 <line>slope = <in>b</in></line>
 <line></line>

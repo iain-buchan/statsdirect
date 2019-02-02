@@ -1,6 +1,6 @@
 <report>
 <block name="a">
-<line><title>One way analysis of variance for <in>variableName</in></title></line>
+<title>One way analysis of variance for <in>variableName</in></title>
 <line></line>
 <line>Variables: <in>tlist</in></line>
 <line></line>

@@ -26,7 +26,7 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[
 <report>
-<line><title>Logistic regression - fits and residuals</title></line>
+<title>Logistic regression - fits and residuals</title>
 <block name="grouped">
 <table>
 <line></line>

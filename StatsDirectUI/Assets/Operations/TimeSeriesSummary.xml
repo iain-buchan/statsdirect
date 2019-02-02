@@ -109,10 +109,10 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[
 <report>
-<line><title>Time series summary</title></line>
+<title>Time series summary</title>
 <block name="group">
 <line></line>
-<line><subtitle>Group: <in>groupName</in></subtitle></line>
+<subtitle>Group: <in>groupName</in></subtitle>
 <line></line>
 <table>
 <tr><th>Time</th><th>Observations</th><th>Mean</th><th>SD</th><th>SE</th><th>Median</th><th>IQR</th></tr>
@@ -144,7 +144,7 @@
 <line><in>chart</in></line>
 </block>
 <line></line>
-<line><subtitle>AUC distribution</subtitle></line>
+<subtitle>AUC distribution</subtitle>
 <line></line>
 <line><in>aucNormalChart</in></line>
 <line>R-square for AUC vs. normal scores: <inx>rSquareNormal</inx></line>
@@ -152,7 +152,7 @@
 <line>R-square for log(AUC) vs. normal scores: <inx>rSquareLogNormal</inx></line>
 <block name="groupComparison">
 <line></line>
-<line><subtitle>Group comparison: <in>group1Title</in> vs. <in>group2Title</in></subtitle></line>
+<subtitle>Group comparison: <in>group1Title</in> vs. <in>group2Title</in></subtitle>
 <line></line>
 <line>t (SE): <inx>t</inx> (<inx>se</inx>)</line>
 <line>DF: <inx>df</inx></line>

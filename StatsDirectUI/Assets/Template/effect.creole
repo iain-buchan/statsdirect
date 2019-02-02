@@ -1,5 +1,5 @@
 <report>
-<line><title>Effect size meta-analysis</title></line>
+<title>Effect size meta-analysis</title>
 <line></line>
 <table>
 <tr><th>Stratum</th><th>J(N-2)</th><th>g</th><thfirst><ci>Exact <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
@@ -17,22 +17,22 @@
 </table>
 <block name="poolok">
 <line></line>
-<line><subtitle>Fixed effects (Hedges-Olkin)</subtitle></line>
+<subtitle>Fixed effects (Hedges-Olkin)</subtitle>
 <line>Pooled effect size d+ = <inu>dplus</inu> (<ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci>)</line>
 <line>Z (test d+ differs from 0) = <inu>z</inu>  <pval><inp>p</inp></pval></line>
 <line></line>
-<line><subtitle>Non-combinability of studies</subtitle></line>
+<subtitle>Non-combinability of studies</subtitle>
 <line>Cochran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval></line>
 <line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
 <line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
 <line></line>
-<line><subtitle>Random effects (DerSimonian-Laird)</subtitle></line>
+<subtitle>Random effects (DerSimonian-Laird)</subtitle>
 <line>Pooled d+ = <inu>dsrd</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)</line>
 <line>Z (test d+ differs from 0) = <inu>dz</inu>  <pval><inp>dp</inp></pval></line>
 </block>
 <block name="egger">
 <line></line>
-<line><subtitle>Bias indicators</subtitle></line>
+<subtitle>Bias indicators</subtitle>
 <line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
 <line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
 </block>

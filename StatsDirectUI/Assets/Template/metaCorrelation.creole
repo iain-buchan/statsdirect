@@ -1,5 +1,5 @@
 <report>
-<line><title>Correlation meta-analysis</title></line>
+<title>Correlation meta-analysis</title>
 <line></line>
 <table>
 <tr><th>Study</th><th>Size</th><th><in>stat</in></th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>

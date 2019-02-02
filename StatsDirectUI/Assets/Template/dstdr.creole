@@ -1,5 +1,5 @@
 <report>
-<line><title>Directly Standardized Rates</title></line>
+<title>Directly Standardized Rates</title>
 <line></line>
 <line>Rates are expressed per <in>units</in> of person time:</line>
 <line></line>

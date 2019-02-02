@@ -1,5 +1,5 @@
 <report>
-<line><title>Chi-square goodness of fit</title></line>
+<title>Chi-square goodness of fit</title>
 <line></line>
 <line>Sample: <in>ti</in>:</line>
 <line></line>

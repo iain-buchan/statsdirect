@@ -1,5 +1,5 @@
 <report>
-<line><title>Normality</title></line>
+<title>Normality</title>
 <block name="variable">
 <line></line>
 <table>

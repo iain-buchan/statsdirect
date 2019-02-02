@@ -1,5 +1,5 @@
 <report>
-<line><title>General agreement over all (2) categories with <in>r</in> raters per subject</title></line>
+<title>General agreement over all (2) categories with <in>r</in> raters per subject</title>
 <line></line>
 <line><u>Cohen's kappa (Fleiss-Cuzick extension)</u></line>
 <line>Kappa = <inu>k</inu> (se = <inu>se</inu>)</line>

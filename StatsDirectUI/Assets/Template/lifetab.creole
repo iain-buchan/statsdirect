@@ -1,5 +1,5 @@
 <report>
-<line><title>Follow-up life table</title></line>
+<title>Follow-up life table</title>
 <line></line>
 <table>
 <tr><th>Interval</th><th>Deaths</th><th>Withdrawn</th><th>At risk</th><th>Adj. at risk</th><th>P(death)</th></tr>

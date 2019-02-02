@@ -1,5 +1,5 @@
 <report>
-<line><title>Likelihood ratios</title></line>
+<title>Likelihood ratios</title>
 <line></line>
 <table>
 <tr><th>Result</th><th>+ Feature</th><th>- Feature</th><th>Likelihood Ratio</th><th><ci><in>pc</in>% CI (Koopman)</ci></th></tr>

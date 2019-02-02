@@ -1,5 +1,5 @@
 <report>
-<line><title>Dunnett multiple comparisons with a control</title></line>
+<title>Dunnett multiple comparisons with a control</title>
 <line></line>
 <line>Critical value (|d|) = <inu>d</inu></line>
 <line>Pooled standard deviation = <inu>psd</inu></line>

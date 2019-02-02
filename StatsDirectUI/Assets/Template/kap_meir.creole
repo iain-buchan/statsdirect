@@ -1,5 +1,5 @@
 <report>
-<line><title>Kaplan-Meier survival estimates</title></line>
+<title>Kaplan-Meier survival estimates</title>
 <line></line>
 <block name="group">
 <block name="grp">

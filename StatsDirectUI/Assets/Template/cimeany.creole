@@ -1,5 +1,5 @@
 <report>
-<line><title>Simple regression - intervals for mean Y</title></line>
+<title>Simple regression - intervals for mean Y</title>
 <line></line>
 <line><in>var_x</in></line>
 <line><in>var_y</in></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>McNemar and exact (Liddell) test for a paired fourfold table</title></line>
+<title>McNemar and exact (Liddell) test for a paired fourfold table</title>
 <line></line>
 <line><b>Input table:</b></line>
 <table>

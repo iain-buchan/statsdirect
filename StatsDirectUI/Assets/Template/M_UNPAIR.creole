@@ -1,5 +1,5 @@
 <report>
-<line><title>Unpaired t test</title></line>
+<title>Unpaired t test</title>
 <line></line>
 <line>Mean of <in>title_0</in> = <inu>mean_0</inu>  (n = <in>n0</in>)</line>
 <line>Mean of <in>title_1</in> = <inu>mean_1</inu>  (n = <in>n1</in>)</line>

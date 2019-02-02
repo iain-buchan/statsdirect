@@ -88,7 +88,7 @@
     </script>
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
-<line><title>Variance ratio/F test</title></line>
+<title>Variance ratio/F test</title>
 <line></line>
 <table>
 <tr><th>Variable Name</th><th>DF (n-1)</th><th>Variance</th></tr>

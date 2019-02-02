@@ -1,5 +1,5 @@
 <report>
-<line><title>Multiple linear regression - XXi (hat) matrix</title></line>
+<title>Multiple linear regression - XXi (hat) matrix</title>
 <line></line>
 <table>
 <block name="xxi"><tr><block name="col"><td><in>x</in></td></block></tr></block>

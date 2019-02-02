@@ -1,5 +1,5 @@
 <report>
-<line><title>Two way randomized block analysis of variance</title></line>
+<title>Two way randomized block analysis of variance</title>
 <line></line>
 <line>Treatments: <in>tlist</in></line>
 <line></line>

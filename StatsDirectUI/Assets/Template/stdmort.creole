@@ -1,5 +1,5 @@
 <report>
-<line><title>Indirectly Standardized Rates and SMR</title></line>
+<title>Indirectly Standardized Rates and SMR</title>
 <line></line>
 <table>
 <tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</th><th></th></tr>

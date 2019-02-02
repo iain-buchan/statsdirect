@@ -1,5 +1,5 @@
 <report>
-<line><title>Incidence rate comparison</title></line>
+<title>Incidence rate comparison</title>
 <line></line>
 <table>
 <tr><td></td><td><subtotal>Exposure:</subtotal></td><td></td><td></td></tr>

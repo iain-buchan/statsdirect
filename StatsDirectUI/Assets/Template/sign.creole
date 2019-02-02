@@ -1,5 +1,5 @@
 <report>
-<line><title>Sign test</title></line>
+<title>Sign test</title>
 <line></line>
 <line><b>For <in>sample</in> observations with <in>sample_1</in> on one side:</b></line>
 <line></line>

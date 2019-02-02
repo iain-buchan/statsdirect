@@ -1,5 +1,5 @@
 <report>
-<line><title>Sample size for independent case-control study</title></line>
+<title>Sample size for independent case-control study</title>
 <line></line>
 <line>Probability of exposure in controls = <inu>pc</inu></line>
 <line>Probability of exposure in cases = <inu>ps</inu></line>

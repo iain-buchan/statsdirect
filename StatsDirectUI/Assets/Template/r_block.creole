@@ -1,5 +1,5 @@
 <report>
-<line><title>Random allocation in blocks</title></line>
+<title>Random allocation in blocks</title>
 <line></line>
 <line>Randomized with seed: <in>seed_out</in></line>
 <line></line>

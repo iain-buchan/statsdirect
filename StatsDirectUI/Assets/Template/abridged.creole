@@ -1,5 +1,5 @@
 <report>
-<line><title>Abridged life table</title></line>
+<title>Abridged life table</title>
 <line></line>
 <table>
 <tr><th>Interval</th><th>Population</th><th>Deaths</th><th>Death rate</th></tr>

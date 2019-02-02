@@ -1,5 +1,5 @@
 <report>
-<line><title>Cox (proportional hazards) regression</title></line>
+<title>Cox (proportional hazards) regression</title>
 <line></line>
 <line><in>n</in> subjects with <in>d</in> events</line>
 <line>Deviance (likelihood ratio) chi-square = <inu>x2</inu>   df = <in>df</in>   <pval><inp>p_dev</inp></pval></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Kruskal-Wallis: all pairwise comparisons (Dwass-Steel-Chritchlow-Fligner)</title></line>
+<title>Kruskal-Wallis: all pairwise comparisons (Dwass-Steel-Chritchlow-Fligner)</title>
 <line>Critical q (range) = <inu>q</inu></line>
 <block name="dwass">
 <line></line>

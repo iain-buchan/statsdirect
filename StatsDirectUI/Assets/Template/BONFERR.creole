@@ -1,5 +1,5 @@
 <report>
-<line><title>Bonferroni comparison</title></line>
+<title>Bonferroni comparison</title>
 <line></line>
 <line>Variable A: <in>var_a</in></line>
 <line>Variable B: <in>var_b</in></line>

@@ -1,5 +1,5 @@
 <report>
-<line><title>Squared ranks approximate equality of variance test</title></line>
+<title>Squared ranks approximate equality of variance test</title>
 <line></line>
 <line>Chi-square = <inu>x2</inu>  df = <in>df</in>   <pval><inp>p</inp></pval></line>
 <block name="pairwise"><line></line>
