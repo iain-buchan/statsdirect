@@ -430,7 +430,10 @@ namespace StatsDirect.Charting
         public Stream DetachAndReturnImageStream()
         {
             MemoryStream ms = new MemoryStream();
-            new StreamWriter(ms, Encoding.UTF8).Write(root.ToString());
+            StreamWriter sw = new StreamWriter(ms, Encoding.UTF8);
+            sw.Write(root.ToString());
+            sw.Flush();
+            ms.Position = 0;
             return ms;
         }
         #endregion
