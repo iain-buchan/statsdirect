@@ -358,8 +358,7 @@ namespace StatsDirect.Charting
         private static string ToCss(PenDescriptor p)
         {
             StringBuilder sb = new StringBuilder();
-            if (!(p.Color == ColorDescriptor.Black))
-                sb.AppendFormat("stroke:{0};", ToCss(p.Color));
+            sb.AppendFormat("stroke:{0};", ToCss(p.Color));
             if (!(p.CapStyle == CapStyle.Butt))
                 sb.AppendFormat("stroke-linecap:{0};", ToCss(p.CapStyle));
             return sb.ToString();
@@ -376,7 +375,7 @@ namespace StatsDirect.Charting
                 case CapStyle.Square:
                     return "square";
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, "Only Butt, Round, Sqaure known.");
+                    throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, "Only Butt, Round, Square known.");
             }
         }
 
