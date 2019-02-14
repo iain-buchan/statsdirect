@@ -3,20 +3,20 @@
 <br />
 <table>
 <tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Regression</td><td><in>reg_sum</in></td><td><in>reg_df</in></td><td><in>reg_mean</in></td></tr>
-<tr><td>Residual</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
-<tr><td><grandtotal>Total (corrected)</grandtotal></td><td><grandtotal><in>tot_sum</in></grandtotal></td><td><grandtotal><in>tot_df</in></grandtotal></td><td></td></tr>
+<tr><td>Regression</td><td>@reg_sum</td><td>@reg_df</td><td>@reg_mean</td></tr>
+<tr><td>Residual</td><td>@res_sum</td><td>@res_df</td><td>@res_mean</td></tr>
+<tr><td><grandtotal>Total (corrected)</grandtotal></td><td><grandtotal>@tot_sum</grandtotal></td><td><grandtotal>@tot_df</grandtotal></td><td></td></tr>
 </table>
 
-<p>Root MSE = <in>mse</in></p>
+<p>Root MSE = @mse</p>
 
-<p>F = <in>f</in> <pval><inp>p</inp></pval></p>
+<p>F = @f <pval>@{p:pval}</pval></p>
 
 <table>
-<tr><td>Multiple correlation coefficient</td><td>(R) = <in>r</in></td></tr>
-<tr><td></td><td>R&#xb2;  = <in>r2</in></td></tr>
-<tr><td></td><td>Ra&#xb2; = <in>ra2</in></td></tr>
+<tr><td>Multiple correlation coefficient</td><td>(R) = @r</td></tr>
+<tr><td></td><td>R&#xb2;  = @r2</td></tr>
+<tr><td></td><td>Ra&#xb2; = @ra2</td></tr>
 </table>
 
-<p>Durbin-Watson test statistic = <in>dw</in></p>
+<p>Durbin-Watson test statistic = @dw</p>
 </report>

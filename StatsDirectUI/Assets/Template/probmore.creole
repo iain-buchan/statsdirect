@@ -1,22 +1,22 @@
 <report>
 <title>Probit analysis - further statistics</title>
 
-<p>Iterations = <in>itr</in></p>
+<p>Iterations = @itr</p>
 
-<p>Sxx = <inu>sxx</inu><br />
-Sxy = <inu>sxy</inu><br />
-Syy = <inu>syy</inu></p>
+<p>Sxx = @{sxx:roundu}<br />
+Sxy = @{sxy:roundu}<br />
+Syy = @{syy:roundu}</p>
 
-<p>Variance of B = <inu>var_b</inu><br />
-Standard error of B <in>het</in> = <inu>seb</inu></p>
+<p>Variance of B = @{var_b:roundu}<br />
+Standard error of B @het = @{seb:roundu}</p>
 <block name="natural">
 
-<p>Estimated natural response rate (C) = <inu>c</inu><br />
-Standard error of B <in>het_c</in> = <inu>seb_c</inu></p>
+<p>Estimated natural response rate (C) = @{c:roundu}<br />
+Standard error of B @het_c = @{seb_c:roundu}</p>
 </block>
 <br />
 <table>
 <tr><th>Index</th><th>Subjects</th><th>Responses</th><th>Expected</th><th>Deviation</th></tr>
-<block name="obs"><tr><td><in>obs</in></td><td><inu>sub</inu></td><td><inu>res</inu></td><td><inu>exp</inu></td><td><inu>dev</inu></td></tr></block>
+<block name="obs"><tr><td>@obs</td><td>@{sub:roundu}</td><td>@{res:roundu}</td><td>@{exp:roundu}</td><td>@{dev:roundu}</td></tr></block>
 </table>
 </report>

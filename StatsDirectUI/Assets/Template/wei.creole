@@ -2,31 +2,31 @@
 <title>Wei-Lachin analysis</title>
 <block name="outer">
 <br />
-<title><in>title</in></title>
+<title>@title</title>
 
-<p>total cases = <in>tot</in> (by group = <in>grp_1</in> and <in>grp_2</in>)</p>
+<p>total cases = @tot (by group = @grp_1 and @grp_2)</p>
 <block name="repeats">
 
-<p><u>Repeat time <in>time</in></u></p>
+<p><u>Repeat time @time</u></p>
 <table>
-<tr><td>observed failures by group =</td><td><in>fail_1</in> and <in>fail_2</in></td></tr>
-<tr><td>Wei-Lachin t =</td><td><in>t</in></td></tr>
-<tr><td>Wei-Lachin variance =</td><td><in>var</in></td></tr>
-<tr><td>chi-square =</td><td><in>chi</in></td><td><pval><inp>p</inp></pval></td></tr>
+<tr><td>observed failures by group =</td><td>@fail_1 and @fail_2</td></tr>
+<tr><td>Wei-Lachin t =</td><td>@t</td></tr>
+<tr><td>Wei-Lachin variance =</td><td>@var</td></tr>
+<tr><td>chi-square =</td><td>@chi</td><td><pval>@{p:pval}</pval></td></tr>
 </table>
 </block>
 <br />
-<title><in>title_multi</in></title>
+<title>@title_multi</title>
 
 <p><u>Covariance matrix</u>:</p>
-<block name="covar"><p><in>mat</in></p></block>
+<block name="covar"><p>@mat</p></block>
 
 <p><u>Inverse of covariance matrix</u>:</p>
-<block name="inv_covar"><p><in>mat</in></p></block>
+<block name="inv_covar"><p>@mat</p></block>
 
-<p>repeat times = <in>rep</in><br />
-chi-square omnibus statistic = <in>stat</in>  <pval><inp>p_omnibus</inp></pval></p>
+<p>repeat times = @rep<br />
+chi-square omnibus statistic = @stat  <pval>@{p_omnibus:pval}</pval></p>
 
-<p>stochastic ordering z = <in>z</in>  <pval>one sided <inp>p_1</inp>,  two sided <inp>p_2</inp></pval></p>
+<p>stochastic ordering z = @z  <pval>one sided @{p_1:pval},  two sided @{p_2:pval}</pval></p>
 </block>
 </report>

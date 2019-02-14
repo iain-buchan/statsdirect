@@ -36,19 +36,19 @@
 <report>
 <title>Single proportion</title>
 
-<p>Total = <in>n</in>,  response = <in>r</in><br />
-Proportion = <in>prop</in></p>
+<p>Total = @n,  response = @r<br />
+Proportion = @prop</p>
 
-<p><ci>Exact (Clopper-Pearson) <in>ci_exact</in>% confidence interval = <in>lower_exact</in> to <in>upper_exact</in></ci></p>
+<p><ci>Exact (Clopper-Pearson) @ci_exact% confidence interval = @lower_exact to @upper_exact</ci></p>
 
-<p>Using null hypothesis that the population proportion equals <in>null</in><br />
-<pval><inp>ap_1_exact</inp> one sided <inp>p_1_exact</inp></pval><br />
-<pval><inp>ap_2_exact</inp> two sided <inp>p_2_exact</inp></pval></p>
+<p>Using null hypothesis that the population proportion equals @null<br />
+<pval>@{ap_1_exact:pval} one sided @{p_1_exact:pval}</pval><br />
+<pval>@{ap_2_exact:pval} two sided @{p_2_exact:pval}</pval></p>
 
-<p>Approximate (Wilson) <in>ci_approx</in>% mid-P confidence interval = <in>lower_approx</in> to <in>upper_approx</in></p>
+<p>Approximate (Wilson) @ci_approx% mid-P confidence interval = @lower_approx to @upper_approx</p>
 
-<p><pval><inp>ap_1_approx</inp> one sided mid-<inp>p_1_approx</inp></pval><br />
-<pval><inp>ap_2_approx</inp> two sided mid-<inp>p_2_approx</inp></pval></p>
+<p><pval>@{ap_1_approx:pval} one sided mid-@{p_1_approx:pval}</pval><br />
+<pval>@{ap_2_approx:pval} two sided mid-@{p_2_approx:pval}</pval></p>
 </report>
       ]]>
     </report>

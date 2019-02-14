@@ -3,27 +3,27 @@
 
 <p><b>Input table:</b></p>
 <table>
-<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
-<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+<tr><td>@tab_a1</td><td>@tab_b1</td></tr>
+<tr><td>@tab_a2</td><td>@tab_b2</td></tr>
 </table>
 
 <p><b>Arranged table and totals:</b></p>
 <table>
-<tr><td><in>tab3_a1</in></td><td><in>tab3_b1</in></td><td><subtotal><in>tab3_c1</in></subtotal></td></tr>
-<tr><td><in>tab3_a2</in></td><td><in>tab3_b2</in></td><td><subtotal><in>tab3_c2</in></subtotal></td></tr>
-<tr><subtotal><td><in>tab3_a3</in></td><td><in>tab3_b3</in></td></subtotal><td><grandtotal><in>tab3_c3</in></grandtotal></td></tr>
+<tr><td>@tab3_a1</td><td>@tab3_b1</td><td><subtotal>@tab3_c1</subtotal></td></tr>
+<tr><td>@tab3_a2</td><td>@tab3_b2</td><td><subtotal>@tab3_c2</subtotal></td></tr>
+<tr><subtotal><td>@tab3_a3</td><td>@tab3_b3</td></subtotal><td><grandtotal>@tab3_c3</grandtotal></td></tr>
 </table>
 
-<p>Expectation of A = <in>exp_a</in></p>
+<p>Expectation of A = @exp_a</p>
 
 <table>
 <block name="header"><tr><td><pval>A</pval></td><td><pval>Lower Tail</pval></td><td><pval>Individual P</pval></td><td><pval>Upper Tail</pval></td></tr></block>
-<block name="row"><tr><td><pval><in>a</in></pval></td><td><pval><in>lower</in></pval></td><td><pval><in>ind_p</in></pval></td><td><pval><in>upper</in></pval></td></tr></block>
+<block name="row"><tr><td><pval>@a</pval></td><td><pval>@lower</pval></td><td><pval>@ind_p</pval></td><td><pval>@upper</pval></td></tr></block>
 </table>
 
-<p><pval>One sided <in>tail_1</in> <inp>p_1</inp>   (doubled: <inp>p_1d</inp>)</pval><br />
-<pval>Two sided (by summation) <inp>p_2</inp></pval></p>
+<p><pval>One sided @tail_1 @{p_1:pval}   (doubled: @{p_1d:pval})</pval><br />
+<pval>Two sided (by summation) @{p_2:pval}</pval></p>
 
-<p><pval>One sided mid-<inp>mid_p</inp></pval><br />
-<pval>Two sided mid-<inp>mid_p_2</inp></pval></p>
+<p><pval>One sided mid-@{mid_p:pval}</pval><br />
+<pval>Two sided mid-@{mid_p_2:pval}</pval></p>
 </report>

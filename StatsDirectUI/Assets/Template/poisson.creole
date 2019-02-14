@@ -3,11 +3,11 @@
 <br />
 <block name="sample">
 <table>
-<tr><td>Sample name:</td><td><in>ti</in>    <warn><in>warn</in></warn></td></tr>
-<tr><td>Size =</td><td><in>n</in></td></tr>
-<tr><td>Mean =</td><td><inu>mean</inu></td></tr>
+<tr><td>Sample name:</td><td>@ti    <warn>@warn</warn></td></tr>
+<tr><td>Size =</td><td>@n</td></tr>
+<tr><td>Mean =</td><td>@{mean:roundu}</td></tr>
 </table>
-<p><ci>Approximate two sided <in>pc2</in>% CI =  <inu>lower2</inu>  to  <inu>upper2</inu></ci><br />
-<ci>Approximate one sided <in>pc1</in>% CI =  <inu>lower1</inu>  to  <inu>upper1</inu></ci>  </p>
+<p><ci>Approximate two sided @pc2% CI =  @{lower2:roundu}  to  @{upper2:roundu}</ci><br />
+<ci>Approximate one sided @pc1% CI =  @{lower1:roundu}  to  @{upper1:roundu}</ci>  </p>
 </block>
 </report>

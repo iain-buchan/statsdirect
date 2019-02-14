@@ -2,13 +2,13 @@
 <title>Frequencies</title>
 <block name="variable">
 <br />
-<subtitle>Frequency analysis for <in>ti</in></subtitle>
+<subtitle>Frequency analysis for @ti</subtitle>
 
-<p>Total = <in>n</in></p>
+<p>Total = @n</p>
 
 <table>
 <tr><th>Value</th><th>Frequency</th><th>Relative %</th><th>Cumulative</th><th>Cumulative Relative %</th></tr>
-<block name="bin"><tr><td><in>x</in></td><td><in>fx</in></td><td><inu>pc</inu></td><td><in>cm</in></td><td><inu>pc2</inu></td></tr></block>
+<block name="bin"><tr><td>@x</td><td>@fx</td><td>@{pc:roundu}</td><td>@cm</td><td>@{pc2:roundu}</td></tr></block>
 </table>
 </block>
 </report>

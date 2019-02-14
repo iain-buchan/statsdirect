@@ -21,11 +21,11 @@
       <![CDATA[<report>
 <title>Logistic regression - prediction</title>
 <br />
-<block name="predictors"><p><in>x</in></p></block>
+<block name="predictors"><p>@x</p></block>
 
-<p><in>y</in></p>
+<p>@y</p>
 
-<p><ci><in>pc</in>% Confidence interval = <in>from</in> to <in>to</in></ci></p>
+<p><ci>@pc% Confidence interval = @from to @to</ci></p>
 </report>]]>
     </report>
   </steps>

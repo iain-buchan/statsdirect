@@ -3,21 +3,21 @@
 <br />
 <block name="sample">
 <table>
-<tr><td>Sample name:</td><td><in>name</in></td></tr>
-<tr><td>Mean = </td><td><in>mean</in></td></tr>
-<tr><td>Variance =</td><td><in>var</in></td></tr>
-<tr><td>Size =</td><td><in>size</in></td></tr>
+<tr><td>Sample name:</td><td>@name</td></tr>
+<tr><td>Mean = </td><td>@mean</td></tr>
+<tr><td>Variance =</td><td>@var</td></tr>
+<tr><td>Size =</td><td>@size</td></tr>
 </table>
 <br />
 </block>
-<p>Combined standard error = <in>error</in></p>
+<p>Combined standard error = @error</p>
 
-<p><ci><in>pc</in>% confidence interval for difference between means = <in>from</in> to <in>to</in></ci></p>
+<p><ci>@pc% confidence interval for difference between means = @from to @to</ci></p>
 
-<p>Standard normal deviate (z) = <in>z</in></p>
+<p>Standard normal deviate (z) = @z</p>
 
-<p><pval>One sided <inp>p_1</inp></pval><br />
-<pval>Two sided <inp>p_2</inp></pval></p>
+<p><pval>One sided @{p_1:pval}</pval><br />
+<pval>Two sided @{p_2:pval}</pval></p>
 <block name="warn">
 
 <p><warn>WARNING: numbers too small for this test consider using a Student t test instead</warn></p>

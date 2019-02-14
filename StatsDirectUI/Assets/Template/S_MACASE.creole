@@ -1,12 +1,12 @@
 <report>
 <title>Sample size for matched case-control study</title>
 
-<p>case-control correlation = <inu>corr</inu><br />
-probability of exposure in controls = <inu>pc</inu><br />
-odds ratio = <inu>odds</inu><br />
-controls per case subject = <inu>cpc</inu><br />
-alpha = <inu>alpha</inu><br />
-power = <inu>power</inu></p>
+<p>case-control correlation = @{corr:roundu}<br />
+probability of exposure in controls = @{pc:roundu}<br />
+odds ratio = @{odds:roundu}<br />
+controls per case subject = @{cpc:roundu}<br />
+alpha = @{alpha:roundu}<br />
+power = @{power:roundu}</p>
 <block name="lower">
 
 <p><warn>NB. Assuming power from lower tail is negligible.</warn></p>
@@ -15,14 +15,14 @@ power = <inu>power</inu></p>
 <p>Illegal odds ratio</p>
 </block>
 
-<p>Estimated minimum sample size (cases required) = <in>size</in></p>
+<p>Estimated minimum sample size (cases required) = @size</p>
 <block name="reduction">
 
 <p>Reduction in sample size, relative to paired design,<br />
-when using <in>controls</in> controls per case = <in>reduction</in></p>
+when using @controls controls per case = @reduction</p>
 </block>
 <block name="assumptions">
 
-<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></p>
+<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</warn></p>
 </block>
 </report>

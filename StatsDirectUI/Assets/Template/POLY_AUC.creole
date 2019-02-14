@@ -1,7 +1,7 @@
 <report>
 <title>Polynomial regression - area under curve</title>
 
-<p>AUC (polynomial function) = <in>poly_auc</in></p>
+<p>AUC (polynomial function) = @poly_auc</p>
 
-<p>AUC (by trapezoidal rule) = <in>trap_auc</in></p>
+<p>AUC (by trapezoidal rule) = @trap_auc</p>
 </report>

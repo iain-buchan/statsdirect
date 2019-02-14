@@ -3,57 +3,57 @@
 <br />
 <table>
 <block name="rows">
-<tr><td>Observed</td><block name="obs"><td><inu>obs</inu></td></block><td><subtotal><block name="rtot"><inu>rtot</inu></block></subtotal></td><td><block name="score"><score><inu>score</inu></score></block></td></tr>
-<block name="exps"><tr><td><model>Expected</model></td><block name="exp"><td><model><inu>exp</inu></model></td></block><td></td><td></td></tr></block>
-<block name="chis"><tr><td>DChi&#xb2;</td><block name="chi"><td><inu>chi</inu></td></block><td></td><td></td></tr></block>
+<tr><td>Observed</td><block name="obs"><td>@{obs:roundu}</td></block><td><subtotal><block name="rtot">@{rtot:roundu}</block></subtotal></td><td><block name="score"><score>@{score:roundu}</score></block></td></tr>
+<block name="exps"><tr><td><model>Expected</model></td><block name="exp"><td><model>@{exp:roundu}</model></td></block><td></td><td></td></tr></block>
+<block name="chis"><tr><td>DChi&#xb2;</td><block name="chi"><td>@{chi:roundu}</td></block><td></td><td></td></tr></block>
 <block name="pcrs">
-<tr><td>% of row</td><block name="pcr"><td><in>pcr</in></td></block><td></td><td></td></tr>
-<tr><td>% of col</td><block name="pcc"><td><in>pcc</in></td></block><td></td></tr>
+<tr><td>% of row</td><block name="pcr"><td>@pcr</td></block><td></td><td></td></tr>
+<tr><td>% of col</td><block name="pcc"><td>@pcc</td></block><td></td></tr>
 </block>
 <tr><td></td><td></td><td></td><td></td></tr>
 </block>
-<tr><td><subtotal><b>Total</b></subtotal></td><block name="tot"><td><subtotal><b><inu>tot</inu></b></subtotal></td></block><td></td></tr>
-<block name="pcgs"><tr><td>% of n</td><block name="pcg"><td><in>pcg</in></td></block><td></td><td></td></tr></block>
-<block name="scores"><tr><td></td><block name="score"><td><score><in>score</in></score></td></block><td></td><td></td></tr></block>
+<tr><td><subtotal><b>Total</b></subtotal></td><block name="tot"><td><subtotal><b>@{tot:roundu}</b></subtotal></td></block><td></td></tr>
+<block name="pcgs"><tr><td>% of n</td><block name="pcg"><td>@pcg</td></block><td></td><td></td></tr></block>
+<block name="scores"><tr><td></td><block name="score"><td><score>@score</score></td></block><td></td><td></td></tr></block>
 </table>
 
-<p>TOTAL number of cells = <in>tot</in></p>
+<p>TOTAL number of cells = @tot</p>
 <block name="warn">
 
-<p><warn><in>warn</in></warn></p>
+<p><warn>@warn</warn></p>
 </block>
 <br />
 <subtitle>NOMINAL INDEPENDENCE</subtitle>
 <table>
-<tr><td>Chi-square = <inu>chio</inu></td><td>DF = <inu>dfo</inu></td><td><pval><inp>po</inp></pval></td></tr>
-<tr><td>G-square = <inu>g2</inu></td><td>DF = <inu>dfo</inu></td><td><pval><inp>pog2</inp></pval></td></tr>
-<tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval><inp>p2</inp></pval>  <in>lb</in></td></tr>
+<tr><td>Chi-square = @{chio:roundu}</td><td>DF = @{dfo:roundu}</td><td><pval>@{po:pval}</pval></td></tr>
+<tr><td>G-square = @{g2:roundu}</td><td>DF = @{dfo:roundu}</td><td><pval>@{pog2:pval}</pval></td></tr>
+<tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval>@{p2:pval}</pval>  @lb</td></tr>
 </table>
 <br />
 <subtitle>ANOVA</subtitle>
-<p>Chi-square for equality of mean column scores = <inu>chie</inu><br />
-DF = <in>dfe</in> <pval><inp>pe</inp></pval></p>
+<p>Chi-square for equality of mean column scores = @{chie:roundu}<br />
+DF = @dfe <pval>@{pe:pval}</pval></p>
 
 <subtitle>LINEAR TREND</subtitle>
-<p>Sample correlation (r) = <inu>r</inu><br />
-Chi-square for linear trend (M&#xb2;) = <inu>chit</inu><br />
-DF = 1  <pval><inp>pt</inp></pval></p>
+<p>Sample correlation (r) = @{r:roundu}<br />
+Chi-square for linear trend (M&#xb2;) = @{chit:roundu}<br />
+DF = 1  <pval>@{pt:pval}</pval></p>
 
 <subtitle>NOMINAL ASSOCIATION</subtitle>
-<p>Phi = <inu>phi</inu><br />
-Pearson's contingency = <inu>pearson</inu><br />
-Cram&#xe9;r's <i>V</i> = <inu>cramer</inu></p>
+<p>Phi = @{phi:roundu}<br />
+Pearson's contingency = @{pearson:roundu}<br />
+Cram&#xe9;r's <i>V</i> = @{cramer:roundu}</p>
 
 <subtitle>ORDINAL</subtitle>
-<p>Goodman-Kruskal gamma = <inu>gamma</inu></p>
+<p>Goodman-Kruskal gamma = @{gamma:roundu}</p>
 <table>
-<tr><td>Approximate test of gamma = 0:</td><td>SE = <inu>seg</inu></td><td><pval><inp>pg</inp></pval></td><td><ci><in>pc</in>% CI = <inu>llg</inu> to <inu>ulg</inu></ci></td></tr>
-<tr><td>Approximate test of independence:</td><td>SE = <inu>segi</inu></td><td><pval><inp>pgi</inp></pval></td><td><ci><in>pc</in>% CI = <inu>llgi</inu> to <inu>ulgi</inu></ci></td></tr>
+<tr><td>Approximate test of gamma = 0:</td><td>SE = @{seg:roundu}</td><td><pval>@{pg:pval}</pval></td><td><ci>@pc% CI = @{llg:roundu} to @{ulg:roundu}</ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = @{segi:roundu}</td><td><pval>@{pgi:pval}</pval></td><td><ci>@pc% CI = @{llgi:roundu} to @{ulgi:roundu}</ci></td></tr>
 </table>
 
-<p>Kendall tau-b = <inu>taub</inu></p>
+<p>Kendall tau-b = @{taub:roundu}</p>
 <table>
-<tr><td>Approximate test of tau-b = 0:</td><td>SE = <inu>setaub</inu></td><td><pval><inp>ptaub</inp></pval></td><td><ci><in>pc</in>% CI = <inu>lltaub</inu> to <inu>ultaub</inu></ci></td></tr>
-<tr><td>Approximate test of independence:</td><td>SE = <inu>setaubi</inu></td><td><pval><inp>ptaubi</inp></pval></td><td><ci><in>pc</in>% CI = <inu>lltaubi</inu> to <inu>ultaubi</inu></ci></td></tr>
+<tr><td>Approximate test of tau-b = 0:</td><td>SE = @{setaub:roundu}</td><td><pval>@{ptaub:pval}</pval></td><td><ci>@pc% CI = @{lltaub:roundu} to @{ultaub:roundu}</ci></td></tr>
+<tr><td>Approximate test of independence:</td><td>SE = @{setaubi:roundu}</td><td><pval>@{ptaubi:pval}</pval></td><td><ci>@pc% CI = @{lltaubi:roundu} to @{ultaubi:roundu}</ci></td></tr>
 </table>
 </report>

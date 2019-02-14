@@ -1,22 +1,22 @@
 <report>
 <title>Two independent proportions</title>
-<p>Total 1 = <in>n_1</in>,  response 1 = <in>r_1</in><br />
-Proportion 1 = <inu>prop_1</inu><br />
-Total 2 = <in>n_2</in>,  response 2 = <in>r_2</in><br />
-Proportion 2 = <inu>prop_2</inu></p>
+<p>Total 1 = @n_1,  response 1 = @r_1<br />
+Proportion 1 = @{prop_1:roundu}<br />
+Total 2 = @n_2,  response 2 = @r_2<br />
+Proportion 2 = @{prop_2:roundu}</p>
 
-<p>Proportion difference = <inu>prop_diff</inu></p>
+<p>Proportion difference = @{prop_diff:roundu}</p>
 
-<p><ci>Approximate (Miettinen) <in>ci</in>% confidence interval = <inu>from</inu> to <inu>to</inu></ci></p>
+<p><ci>Approximate (Miettinen) @ci% confidence interval = @{from:roundu} to @{to:roundu}</ci></p>
 <block name="exact2">
 
-<p><pval>Exact two sided (mid) <inp>mp</inp></pval></p>
+<p><pval>Exact two sided (mid) @{mp:pval}</pval></p>
 </block>
 
-<p>Standard error of proportion difference = <inu>se</inu><br />
-Standard normal deviate (z) = <inu>z</inu></p>
+<p>Standard error of proportion difference = @{se:roundu}<br />
+Standard normal deviate (z) = @{z:roundu}</p>
 <block name="approx2">
-<p><pval>Approximate two sided <inp>p_2</inp></pval><br />
-<pval>Approximate one sided <inp>p_1</inp></pval></p>
+<p><pval>Approximate two sided @{p_2:pval}</pval><br />
+<pval>Approximate one sided @{p_1:pval}</pval></p>
 </block>
 </report>

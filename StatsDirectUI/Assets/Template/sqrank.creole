@@ -1,15 +1,15 @@
 <report>
 <title>Squared ranks approximate equality of variance test</title>
 
-<p>Chi-square = <inu>x2</inu>  df = <in>df</in>   <pval><inp>p</inp></pval></p>
+<p>Chi-square = @{x2:roundu}  df = @df   <pval>@{p:pval}</pval></p>
 <block name="pairwise">
 <p>Pair-wise comparisons:<br />
-Critical t (<in>df</in> df) = <inu>t</inu></p>
+Critical t (@df df) = @{t:roundu}</p>
 <block name="pair">
 <br />
 <table>
-<tr><td><in>compare</in></td><td><in>dif</in></td></tr>
-<tr><td>(<in>val</in>)</td><td><inp>p_pair</inp></td></tr>
+<tr><td>@compare</td><td>@dif</td></tr>
+<tr><td>(@val)</td><td>@{p_pair:pval}</td></tr>
 </table>
 </block>
 </block>

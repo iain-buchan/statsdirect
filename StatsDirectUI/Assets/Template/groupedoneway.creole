@@ -1,17 +1,17 @@
 <report>
 <block name="a">
-<title>One way analysis of variance for <in>variableName</in></title>
+<title>One way analysis of variance for @variableName</title>
 
-<p>Variables: <in>tlist</in></p>
+<p>Variables: @tlist</p>
 
 <table>
 <tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Between Groups</td><td><in>b_sum</in></td><td><in>b_df</in></td><td><in>b_mean</in></td></tr>
-<tr><td>Within Groups</td><td><in>w_sum</in></td><td><in>w_df</in></td><td><in>w_mean</in></td></tr>
-<tr><td>Corrected Total</td><td><in>t_sum</in></td><td><in>t_df</in></td></tr>
+<tr><td>Between Groups</td><td>@b_sum</td><td>@b_df</td><td>@b_mean</td></tr>
+<tr><td>Within Groups</td><td>@w_sum</td><td>@w_df</td><td>@w_mean</td></tr>
+<tr><td>Corrected Total</td><td>@t_sum</td><td>@t_df</td></tr>
 </table>
 
-<p>F (variance ratio) = <in>f</in>  <pval><in>p</in></pval></p>
+<p>F (variance ratio) = @f  <pval>@p</pval></p>
 
 <br />
 </block>

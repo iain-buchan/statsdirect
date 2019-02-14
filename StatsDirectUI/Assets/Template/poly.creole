@@ -2,14 +2,14 @@
 <title>Polynomial regression</title>
 <block name="warn">
 
-<p>WARNING: <in>warn</in></p>
+<p>WARNING: @warn</p>
 </block>
 <br />
 <block name="row">
 <table>
-<block name="col"><tr><td><in>label</in></td><td>b<in>b</in>= <in>val_b</in></td><td><in>rp</in></td><td>t = <in>t</in></td><td><pval><inp>p</inp></pval></td></tr></block>
+<block name="col"><tr><td>@label</td><td>b@b= @val_b</td><td>@rp</td><td>t = @t</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 
-<p><in>y</in> = <block name="z"><in>z</in></block></p>
+<p>@y = <block name="z">@z</block></p>
 </block>
 </report>

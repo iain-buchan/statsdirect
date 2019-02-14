@@ -155,11 +155,11 @@ if (exists("returning.to.statsdirect")) {
 <report>
 <title>LOESS Curve Fitting</title>
 
-<p><in>title</in><br />
-Number of Observations: <inx>observations</inx><br />
-Polynomial degree: <inx>degree</inx>, Span: <inx>span</inx><br />
-Equivalent Number of Parameters: <inx>parameters</inx><br />
-Residual Standard Error: <inx>residualse</inx></p>
+<p>@title<br />
+Number of Observations: @{observations:roundx}<br />
+Polynomial degree: @{degree:roundx}, Span: @{span:roundx}<br />
+Equivalent Number of Parameters: @{parameters:roundx}<br />
+Residual Standard Error: @{residualse:roundx}</p>
 </report>
 ]]>
     </report>
@@ -170,7 +170,7 @@ Residual Standard Error: <inx>residualse</inx></p>
           <![CDATA[
 <report>
 
-<p><in>metafile1</in></p>
+<p>@metafile1</p>
 </report>
 ]]>
         </report>
@@ -185,7 +185,7 @@ Residual Standard Error: <inx>residualse</inx></p>
 <br />
 <title>R script to reproduce this result</title>
 
-<p><in>formattedRScript</in></p>
+<p>@formattedRScript</p>
 </report>
 ]]>
         </report>

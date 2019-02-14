@@ -4,21 +4,21 @@
 <table>
 <tr><th></th><th>Successes</th><th>Failures</th><th>Total</th><th>Per cent</th><th>Score</th></tr>
 <block name="row">
-<tr><td>Observed</td><td><in>obs_succ</in></td><td><in>obs_fail</in></td><td><in>obs_tot</in></td><td><in>obs_pc</in></td><td><in>score</in></td></tr>
-<tr><td><model>Expected</model></td><td><model><in>exp_succ</in></model></td><td><model><in>exp_fail</in></model></td><td></td><td></td><td></td></tr>
-</block><tr><th>Total</th><th><in>tot_succ</in></th><th><in>tot_fail</in></th><th><in>tot_tot</in></th><th><in>tot_pc</in></th></tr>
+<tr><td>Observed</td><td>@obs_succ</td><td>@obs_fail</td><td>@obs_tot</td><td>@obs_pc</td><td>@score</td></tr>
+<tr><td><model>Expected</model></td><td><model>@exp_succ</model></td><td><model>@exp_fail</model></td><td></td><td></td><td></td></tr>
+</block><tr><th>Total</th><th>@tot_succ</th><th>@tot_fail</th><th>@tot_tot</th><th>@tot_pc</th></tr>
 </table>
 <block name="warn">
 
-<p><warn>Warning: <in>num</in> out of <in>den</in> cells have expected frequency less than 5</warn></p>
+<p><warn>Warning: @num out of @den cells have expected frequency less than 5</warn></p>
 </block>
 
-<p>Total Chi&#xb2; = <in>chi</in>  |Chi| = <in>chi_abs</in> (<in>totdf</in> DF)  <pval><inp>chi_p</inp></pval></p>
+<p>Total Chi&#xb2; = @chi  |Chi| = @chi_abs (@totdf DF)  <pval>@{chi_p:pval}</pval></p>
 <block name="z">
 
-<p>Chi&#xb2; for linear trend = <in>chi_lin</in>  |Chi| = <in>chi_1df</in> (1 DF)  <pval><inp>chi_lin_p</inp></pval></p>
+<p>Chi&#xb2; for linear trend = @chi_lin  |Chi| = @chi_1df (1 DF)  <pval>@{chi_lin_p:pval}</pval></p>
 
-<p>Remaining Chi&#xb2; (non-linearity) = <in>chi_non</in> (<in>df</in> DF)  <pval><inp>chi_non_p</inp></pval></p>
+<p>Remaining Chi&#xb2; (non-linearity) = @chi_non (@df DF)  <pval>@{chi_non_p:pval}</pval></p>
 </block>
 <br />
 <br />

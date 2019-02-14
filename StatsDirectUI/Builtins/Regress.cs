@@ -1497,11 +1497,11 @@ namespace StatsDirect.Builtins
                 ParameterBag studentisedParameters = new ParameterBag();
                 studentisedList.Add(studentisedParameters);
                 studentisedParameters.AddOutput("index", i.ToString());
-                studentisedParameters.AddOutput("index*", Math.Abs(rstd[i]) > srcrit ? Formatting.ASTERISK : string.Empty);
+                studentisedParameters.AddOutput("index_star", Math.Abs(rstd[i]) > srcrit ? Formatting.ASTERISK : string.Empty);
                 studentisedParameters.AddOutput("stu", host.RoundU(rstd[i]));
-                studentisedParameters.AddOutput("stu*", Math.Abs(hi[i]) > hicrit ? Formatting.ASTERISK : string.Empty);
+                studentisedParameters.AddOutput("stu_star", Math.Abs(hi[i]) > hicrit ? Formatting.ASTERISK : string.Empty);
                 studentisedParameters.AddOutput("hi", host.RoundU(hi[i]));
-                studentisedParameters.AddOutput("hi*", Math.Abs(cd[i]) > cdcrit ? Formatting.ASTERISK : string.Empty);
+                studentisedParameters.AddOutput("hi_star", Math.Abs(cd[i]) > cdcrit ? Formatting.ASTERISK : string.Empty);
                 studentisedParameters.AddOutput("cook", host.RoundU(cd[i]));
             }
             if (shouldSaveStudentisedResidual)
@@ -1528,9 +1528,9 @@ namespace StatsDirect.Builtins
                 ParameterBag jackknifeParameters = new ParameterBag();
                 jackknifeList.Add(jackknifeParameters);
                 jackknifeParameters.AddOutput("index", i.ToString());
-                jackknifeParameters.AddOutput("index*", Math.Abs(rstudent[i]) > jackcrit ? Formatting.ASTERISK : string.Empty);
+                jackknifeParameters.AddOutput("index_star", Math.Abs(rstudent[i]) > jackcrit ? Formatting.ASTERISK : string.Empty);
                 jackknifeParameters.AddOutput("jack", host.RoundU(rstudent[i]));
-                jackknifeParameters.AddOutput("jack*", Math.Abs(dff[i]) > dfcrit ? Formatting.ASTERISK : string.Empty);
+                jackknifeParameters.AddOutput("jack_star", Math.Abs(dff[i]) > dfcrit ? Formatting.ASTERISK : string.Empty);
                 jackknifeParameters.AddOutput("dfit", host.RoundU(dff[i]));
             }
             if (shouldSaveJackknifeResidual)

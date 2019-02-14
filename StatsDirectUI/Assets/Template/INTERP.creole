@@ -1,5 +1,5 @@
 <report>
 <table>
-<tr><td><in>v1</in></td><td><in>v2</in></td></tr>
+<tr><td>@v1</td><td>@v2</td></tr>
 </table>
 </report>

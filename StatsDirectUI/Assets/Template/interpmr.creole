@@ -1,12 +1,12 @@
 <report>
 <title>Multiple linear regression - prediction</title>
 <block name="x">
-<p><in>x</in></p>
+<p>@x</p>
 </block>
 
-<p><in>y</in></p>
+<p>@y</p>
 
-<p><ci><in>ci_pc</in>% Confidence interval = <in>ci_from</in> to <in>ci_to</in></ci></p>
+<p><ci>@ci_pc% Confidence interval = @ci_from to @ci_to</ci></p>
 
-<p><ci><in>pred_pc</in>% Prediction interval = <in>pred_from</in> to <in>pred_to</in></ci></p>
+<p><ci>@pred_pc% Prediction interval = @pred_from to @pred_to</ci></p>
 </report>

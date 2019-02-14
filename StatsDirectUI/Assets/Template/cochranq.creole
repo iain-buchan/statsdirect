@@ -1,18 +1,18 @@
 <report>
 <title>Cochran Q test</title>
 
-<p>Variables: <in>tlist</in></p>
+<p>Variables: @tlist</p>
 
-<p>Number of blocks = <in>nb</in><br />
-Q = <in>t1</in><br />
-df = <in>df</in><br />
-<pval><inp>p</inp></pval></p>
+<p>Number of blocks = @nb<br />
+Q = @t1<br />
+df = @df<br />
+<pval>@{p:pval}</pval></p>
 <block name="message">
 
-<p><in>msg</in></p>
+<p>@msg</p>
 </block>
 <block name="warn">
 
-<p><in>warning</in></p>
+<p>@warning</p>
 </block>
 </report>

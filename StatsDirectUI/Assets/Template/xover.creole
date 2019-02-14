@@ -3,32 +3,32 @@
 <br />
 <table>
 <tr><th></th><th>Period 1</th><th>Period 2</th><th>Difference</th></tr>
-<tr><td>Group 1</td><td><inu>grp1_p1</inu></td><td><inu>grp1_p2</inu></td><td><inu>grp1_diff</inu></td></tr>
-<tr><td>Group 2</td><td><inu>grp2_p1</inu></td><td><inu>grp2_p2</inu></td><td><inu>grp2_diff</inu></td></tr>
+<tr><td>Group 1</td><td>@{grp1_p1:roundu}</td><td>@{grp1_p2:roundu}</td><td>@{grp1_diff:roundu}</td></tr>
+<tr><td>Group 2</td><td>@{grp2_p1:roundu}</td><td>@{grp2_p2:roundu}</td><td>@{grp2_diff:roundu}</td></tr>
 </table>
 
 <p>Test for <b>relative effectiveness</b> of drug / placebo:</p>
 <table>
-<tr><td>combined diff = <inu>relative_diff</inu></td><td>SE = <inu>relative_se</inu></td><td></td></tr>
-<tr><td>t = <inu>relative_t</inu></td><td>DF = <in>relative_df</in></td><td><pval><inp>relative_p</inp></pval></td></tr>
+<tr><td>combined diff = @{relative_diff:roundu}</td><td>SE = @{relative_se:roundu}</td><td></td></tr>
+<tr><td>t = @{relative_t:roundu}</td><td>DF = @relative_df</td><td><pval>@{relative_p:pval}</pval></td></tr>
 </table>
 
 <p>Test for <b>treatment effect</b>:</p>
 <table>
-<tr><td>diff 1 - diff 2  = <inu>treatment_diff</inu></td><td>SE = <inu>treatment_se</inu></td><td></td></tr>
-<tr><td>effect magnitude = <inu>treatment_mag</inu></td><tdfirst><ci><inu>treatment_pc</inu>% CI = <inu>treatment_from</inu> to <inu>treatment_to</inu></ci></tdfirst><tdspan/></tr>
-<tr><td>t = <inu>treatment_t</inu></td><td>DF = <in>treatment_df</in></td><td><pval><inp>treatment_p</inp></pval></td></tr>
+<tr><td>diff 1 - diff 2  = @{treatment_diff:roundu}</td><td>SE = @{treatment_se:roundu}</td><td></td></tr>
+<tr><td>effect magnitude = @{treatment_mag:roundu}</td><td colspan="2"><ci>@{treatment_pc:roundu}% CI = @{treatment_from:roundu} to @{treatment_to:roundu}</ci></td></tr>
+<tr><td>t = @{treatment_t:roundu}</td><td>DF = @treatment_df</td><td><pval>@{treatment_p:pval}</pval></td></tr>
 </table>
 
 <p>Test for <b>period effect</b>:</p>
 <table>
-<tr><td>diff 1 + diff 2 = <inu>period_diff</inu></td><td>SE = <inu>period_se</inu></td><td></td></tr>
-<tr><td>t = <inu>period_t</inu></td><td>DF = <in>period_df</in></td><td><pval><inp>period_p</inp></pval></td></tr>
+<tr><td>diff 1 + diff 2 = @{period_diff:roundu}</td><td>SE = @{period_se:roundu}</td><td></td></tr>
+<tr><td>t = @{period_t:roundu}</td><td>DF = @period_df</td><td><pval>@{period_p:pval}</pval></td></tr>
 </table>
 
 <p>Test for <b>treatment-period interaction</b>:</p>
 <table>
-<tr><td>sum 1 - sum 2 = <in>tpi_sum</in></td><td>SE = <in>tpi_se</in></td><td></td></tr>
-<tr><td>t = <in>tpi_t</in></td><td>DF = <in>tpi_df</in></td><td><pval><inp>tpi_p</inp></pval></td></tr>
+<tr><td>sum 1 - sum 2 = @tpi_sum</td><td>SE = @tpi_se</td><td></td></tr>
+<tr><td>t = @tpi_t</td><td>DF = @tpi_df</td><td><pval>@{tpi_p:pval}</pval></td></tr>
 </table>
 </report>

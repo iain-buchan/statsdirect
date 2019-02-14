@@ -1,20 +1,20 @@
 <report>
 <block name="a">
-<title>Two way randomized block analysis of variance for <in>variableName</in></title>
+<title>Two way randomized block analysis of variance for @variableName</title>
 
-<p>Treatments: <in>tlist</in></p>
+<p>Treatments: @tlist</p>
 
 <table>
 <tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Between blocks (rows)</td><td><in>sub_sum</in></td><td><in>sub_df</in></td><td><in>sub_mean</in></td></tr>
-<tr><td>Between treatments (columns)</td><td><in>grp_sum</in></td><td><in>grp_df</in></td><td><in>grp_mean</in></td></tr>
-<tr><td>Residual (error)</td><td><in>res_sum</in></td><td><in>res_df</in></td><td><in>res_mean</in></td></tr>
-<tr><td>Corrected total</td><td><in>tot_sum</in></td><td><in>tot_df</in></td></tr>
+<tr><td>Between blocks (rows)</td><td>@sub_sum</td><td>@sub_df</td><td>@sub_mean</td></tr>
+<tr><td>Between treatments (columns)</td><td>@grp_sum</td><td>@grp_df</td><td>@grp_mean</td></tr>
+<tr><td>Residual (error)</td><td>@res_sum</td><td>@res_df</td><td>@res_mean</td></tr>
+<tr><td>Corrected total</td><td>@tot_sum</td><td>@tot_df</td></tr>
 </table>
 
-<p>F (VR between blocks) = <in>sub_vr</in>  <pval><inp>sub_p</inp></pval></p>
+<p>F (VR between blocks) = @sub_vr  <pval>@{sub_p:pval}</pval></p>
 
-<p>F (VR between treatments) = <in>grp_vr</in>  <pval><inp>grp_p</inp></pval></p>
+<p>F (VR between treatments) = @grp_vr  <pval>@{grp_p:pval}</pval></p>
 
 <br />
 </block>

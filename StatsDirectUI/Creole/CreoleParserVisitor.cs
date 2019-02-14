@@ -41,6 +41,15 @@ namespace StatsDirect.Creole
             throw new NotImplementedException();
         }
 
+        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitCompoundSubstitution(CreoleParser.CompoundSubstitutionContext context)
+        {
+            return new CreoleSubstitution<TResult>
+            {
+                Path = context.path.Text,
+                Format = context.format.Text.Substring(1) // Token includes the separating colon
+            };
+        }
+
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitContent(CreoleParser.ContentContext context)
         {
             if (0 == context.ChildCount)
@@ -87,40 +96,9 @@ namespace StatsDirect.Creole
             };
         }
 
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitInDefault(CreoleParser.InDefaultContext context)
+        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitInlineContent(CreoleParser.InlineContentContext context)
         {
-            return new CreoleSubstitution<TResult>
-            {
-                Path = context.path.Text,
-                Format = "default"
-            };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitInp(CreoleParser.InpContext context)
-        {
-            return new CreoleSubstitution<TResult>
-            {
-                Path = context.path.Text,
-                Format = "pval"
-            };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitInu(CreoleParser.InuContext context)
-        {
-            return new CreoleSubstitution<TResult>
-            {
-                Path = context.path.Text,
-                Format = "roundu"
-            };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitInx(CreoleParser.InxContext context)
-        {
-            return new CreoleSubstitution<TResult>
-            {
-                Path = context.path.Text,
-                Format = "roundx"
-            };
+            return context.children[0].Accept(this);
         }
 
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitLineBreak(CreoleParser.LineBreakContext context)
@@ -143,6 +121,15 @@ namespace StatsDirect.Creole
             return new CreoleText<TResult> { Text = context.GetText() };
         }
 
+        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitSimpleSubstitution(CreoleParser.SimpleSubstitutionContext context)
+        {
+            return new CreoleSubstitution<TResult>
+            {
+                Path = context.path.Text,
+                Format = "default"
+            };
+        }
+
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitSubstitution(CreoleParser.SubstitutionContext context)
         {
             throw new NotImplementedException();
@@ -155,32 +142,20 @@ namespace StatsDirect.Creole
 
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableDetail(CreoleParser.TableDetailContext context)
         {
-            return new CreoleTableDetail<TResult> { Contents = context.content().Accept(this) };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableDetailFirst(CreoleParser.TableDetailFirstContext context)
-        {
-            return new CreoleTableDetailFirst<TResult> { Contents = context.content().Accept(this) };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableDetailSpan(CreoleParser.TableDetailSpanContext context)
-        {
-            return new CreoleTableDetailSpan<TResult>();
+            return new CreoleTableDetail<TResult>
+            {
+                Contents = context.content().Accept(this),
+                Colspan = (null == context.colspan) ? 1 : int.Parse(((CreoleAttribute<TResult>)context.attribute().Accept(this)).Value)
+            };
         }
 
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableHeader(CreoleParser.TableHeaderContext context)
         {
-            return new CreoleTableHeader<TResult>() { Contents = context.content().Accept(this) };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableHeaderFirst(CreoleParser.TableHeaderFirstContext context)
-        {
-            return new CreoleTableHeaderFirst<TResult> { Contents = context.content().Accept(this) };
-        }
-
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableHeaderSpan(CreoleParser.TableHeaderSpanContext context)
-        {
-            return new CreoleTableHeaderSpan<TResult>();
+            return new CreoleTableHeader<TResult>()
+            {
+                Contents = context.content().Accept(this),
+                Colspan = (null == context.colspan) ? 1 : int.Parse(((CreoleAttribute<TResult>)context.attribute().Accept(this)).Value)
+            };
         }
 
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitTableRow(CreoleParser.TableRowContext context)

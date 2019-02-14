@@ -1,17 +1,17 @@
 <report>
-<title>Probit analysis - <in>title</in></title>
-<p>constant = <in>a</in><br />
-slope = <in>b</in></p>
+<title>Probit analysis - @title</title>
+<p>constant = @a<br />
+slope = @b</p>
 
-<p>Median * Dose = <in>mxd</in><br />
-<ci>Confidence interval <in>het</in> = <in>from</in> to <in>to</in></ci></p>
+<p>Median * Dose = @mxd<br />
+<ci>Confidence interval @het = @from to @to</ci></p>
 
-<p>* Dose for centile <in>centile</in> = <in>doseq</in><br />
-<ci>Confidence interval <in>het_cent</in> = <in>from_cent</in> to <in>to_cent</in></ci></p>
+<p>* Dose for centile @centile = @doseq<br />
+<ci>Confidence interval @het_cent = @from_cent to @to_cent</ci></p>
 
-<p>Chi<sub>2</sub> (heterogeneity of deviations from model) = <in>dev</in>  (<in>df</in> df)  <pval><inp>p</inp></pval></p>
+<p>Chi<sub>2</sub> (heterogeneity of deviations from model) = @dev  (@df df)  <pval>@{p:pval}</pval></p>
 
-<p>t for slope = <in>t_slope</in> (<in>df</in> df_slope)  <pval><inp>p_slope</inp></pval></p>
+<p>t for slope = @t_slope (@df df_slope)  <pval>@{p_slope:pval}</pval></p>
 <block name="warn">
 <p><warn>WARNING: slope not significant</warn></p>
 </block>

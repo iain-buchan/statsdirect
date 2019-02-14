@@ -1,33 +1,33 @@
 <report>
 <title>Kendall's rank correlation</title>
 
-<p><in>sample_1</in> vs. <in>sample_2</in><br />
-Observations per sample = <in>obs</in><br />
-Concordant pairs  =  <in>con</in><br />
-Discordant pairs  =  <in>dis</in><br />
-Tied pairs = <in>tie</in><br />
-Kendall's score = <in>s</in>   (standard error = <inu>ses</inu>)<br />
-Gamma = <inu>gam</inu></p>
+<p>@sample_1 vs. @sample_2<br />
+Observations per sample = @obs<br />
+Concordant pairs  =  @con<br />
+Discordant pairs  =  @dis<br />
+Tied pairs = @tie<br />
+Kendall's score = @s   (standard error = @{ses:roundu})<br />
+Gamma = @{gam:roundu}</p>
 
-<p>Kendall's <in>tb</in>  = <inu>tau</inu><br />
-<ci>Approximate <in>pc</in>% CI = <inu>ll</inu> to <inu>ul</inu></ci></p>
+<p>Kendall's @tb  = @{tau:roundu}<br />
+<ci>Approximate @pc% CI = @{ll:roundu} to @{ul:roundu}</ci></p>
 
-<p><u>Approximate tests<in>adj</in></u></p>
+<p><u>Approximate tests@adj</u></p>
 <block name="smallsample">
 <p><warn>Sample size too small for reliable inference from z, use exact test</warn></p>
 </block>
-<p>z = <inu>kz</inu><br />
-<pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: concordance)<br />
-<pval>Lower side <inp>p_l</inp></pval>  (H<sub>1</sub>: discordance)<br />
-<pval>Two sided <inp>p_2</inp></pval>  (H<sub>1</sub>: dependence)</p>
+<p>z = @{kz:roundu}<br />
+<pval>Upper side @{p_u:pval}</pval>  (H<sub>1</sub>: concordance)<br />
+<pval>Lower side @{p_l:pval}</pval>  (H<sub>1</sub>: discordance)<br />
+<pval>Two sided @{p_2:pval}</pval>  (H<sub>1</sub>: dependence)</p>
 
-<p>z (continuity corrected) = <inu>kzcc</inu><br />
-<pval>Upper side <inp>p_ucc</inp></pval>  (H<sub>1</sub>: concordance)<br />
-<pval>Lower side <inp>p_lcc</inp></pval>  (H<sub>1</sub>: discordance)<br />
-<pval>Two sided <inp>p_2cc</inp></pval>  (H<sub>1</sub>: dependence)</p>
+<p>z (continuity corrected) = @{kzcc:roundu}<br />
+<pval>Upper side @{p_ucc:pval}</pval>  (H<sub>1</sub>: concordance)<br />
+<pval>Lower side @{p_lcc:pval}</pval>  (H<sub>1</sub>: discordance)<br />
+<pval>Two sided @{p_2cc:pval}</pval>  (H<sub>1</sub>: dependence)</p>
 
-<p><u>Exact test<in>adjexact</in></u><br />
-<pval>Upper side <inp>p_uexact</inp></pval>  (H<sub>1</sub>: concordance)<br />
-<pval>Lower side <inp>p_lexact</inp></pval>  (H<sub>1</sub>: discordance)<br />
-<pval>Two sided <inp>p_2exact</inp></pval>  (H<sub>1</sub>: dependence)</p>
+<p><u>Exact test@adjexact</u><br />
+<pval>Upper side @{p_uexact:pval}</pval>  (H<sub>1</sub>: concordance)<br />
+<pval>Lower side @{p_lexact:pval}</pval>  (H<sub>1</sub>: discordance)<br />
+<pval>Two sided @{p_2exact:pval}</pval>  (H<sub>1</sub>: dependence)</p>
 </report>

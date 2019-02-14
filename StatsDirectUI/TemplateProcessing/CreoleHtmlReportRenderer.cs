@@ -70,7 +70,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 IWrapper wrapper = rtfFormatting[victim.Format];
                 return wrapper.Open
-                    + victim.Contents.Accept(this)
+                    + MaybeAccept(victim.Contents)
                     + wrapper.Close;
             }
 
@@ -126,52 +126,34 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim)
             {
-                return "<table>" + victim.Contents.Accept(this) + "</table>";
+                return "<table>"
+                    + MaybeAccept(victim.Contents)
+                    + "</table>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim)
             {
                 return @"<tr>"
-                    + victim.Contents.Accept(this)
+                    + MaybeAccept(victim.Contents)
                     + @"</tr>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim)
             {
-                return @"<td>"
-                    + victim.Contents.Accept(this)
+                return @"<td"
+                    + (victim.Colspan > 1 ? (" colspan=\"" + victim.Colspan + "\"") : string.Empty)
+                    + ">"
+                    + MaybeAccept(victim.Contents)
                     + @"</td>";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailFirst<string> victim)
-            {
-                return @"<td>"
-                    + victim.Contents.Accept(this)
-                    + @"</td>";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailSpan<string> victim)
-            {
-                return @"<td></td>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim)
             {
-                return @"<th>"
-                    + victim.Contents.Accept(this)
+                return @"<th"
+                    + (victim.Colspan > 1 ? (" colspan=\"" + victim.Colspan + "\"") : string.Empty)
+                    + ">"
+                    + MaybeAccept(victim.Contents)
                     + @"</th>";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderFirst<string> victim)
-            {
-                return @"<th>"
-                    + victim.Contents.Accept(this)
-                    + @"</th>";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderSpan<string> victim)
-            {
-                return @"<th></th>";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleText<string> victim)
@@ -186,7 +168,14 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim)
             {
-                return (null == victim.Contents ? string.Empty : @"<p>" + victim.Contents.Accept(this)) + @"</p>";
+                return @"<p>"
+                    + MaybeAccept(victim.Contents)
+                    + @"</p>";
+            }
+
+            private string MaybeAccept(ICreole<string> victimOrNull)
+            {
+                return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
             }
 
             private interface IWrapper

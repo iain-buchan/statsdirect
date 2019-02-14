@@ -19,11 +19,11 @@
       <![CDATA[<report>
 <title>Approximate equality of variance tests and adjusted ANOVA</title>
 
-<p>Levene's (W50) F = <inx>f</inx>  (df = <in>df1</in>, <in>df2</in>)  <pval><inp>pLevene</inp></pval></p>
+<p>Levene's (W50) F = @{f:roundx}  (df = @df1, @df2)  <pval>@{pLevene:pval}</pval></p>
 
-<p>Bartlett's chi-square = <inx>x2</inx>  df = <in>df</in>  <pval><inp>pBartlett</inp></pval></p>
+<p>Bartlett's chi-square = @{x2:roundx}  df = @df  <pval>@{pBartlett:pval}</pval></p>
 
-<p>Welch adjusted ANOVA F = <inx>fWelch</inx>  (df = <in>dfnWelch</in>, <inx>dfdWelch</inx>)  <pval><inp>pWelch</inp></pval></p>
+<p>Welch adjusted ANOVA F = @{fWelch:roundx}  (df = @dfnWelch, @{dfdWelch:roundx})  <pval>@{pWelch:pval}</pval></p>
 </report>]]>
     </report>
 	</steps>

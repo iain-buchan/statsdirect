@@ -3,59 +3,59 @@
 <br />
 <table>
 <tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th><th></th></tr>
-<tr><td>Common slope</td><td><inu>com_ssq</inu></td><td><in>com_df</in></td><td><inu>com_msq</inu></td><td><inu>com_vr</inu></td><td><pval><inp>com_p</inp></pval></td></tr>
-<tr><td>Between slopes</td><td><inu>bet_ssq</inu></td><td><in>bet_df</in></td><td><inu>bet_msq</inu></td><td><inu>bet_vr</inu></td><td><pval><inp>bet_p</inp></pval></td></tr>
-<tr><td>Separate residuals</td><td><inu>res_ssq</inu></td><td><in>res_df</in></td><td><inu>res_msq</inu></td><td></td><td></td></tr>
-<tr><td>Within groups</td><td><inu>grp_ssq</inu></td><td><in>grp_df</in></td><td></td><td></td><td></td></tr>
+<tr><td>Common slope</td><td>@{com_ssq:roundu}</td><td>@com_df</td><td>@{com_msq:roundu}</td><td>@{com_vr:roundu}</td><td><pval>@{com_p:pval}</pval></td></tr>
+<tr><td>Between slopes</td><td>@{bet_ssq:roundu}</td><td>@bet_df</td><td>@{bet_msq:roundu}</td><td>@{bet_vr:roundu}</td><td><pval>@{bet_p:pval}</pval></td></tr>
+<tr><td>Separate residuals</td><td>@{res_ssq:roundu}</td><td>@res_df</td><td>@{res_msq:roundu}</td><td></td><td></td></tr>
+<tr><td>Within groups</td><td>@{grp_ssq:roundu}</td><td>@grp_df</td><td></td><td></td><td></td></tr>
 </table>
 
-<p>Common slope is <b><in>com</in></b>significant<br />
-Difference between slopes is <b><in>diff</in></b>significant</p>
+<p>Common slope is <b>@com</b>significant<br />
+Difference between slopes is <b>@diff</b>significant</p>
 
 <p><i><b>Slope comparisons:</b></i></p>
 <block name="slope">
-<p><i>slope</i> <in>lab1</in> vs.<i> slope</i> <in>lab2</in> = <inu>res1</inu> <i>vs.</i> <inu>res2</inu><br />
-Difference<ci> (<in>pc</in>% CI) = </ci><inu>dif</inu>  <ci>(<inu>from</inu> to <inu>to</inu>)</ci><br />
-t = <inu>t</inu> <pval><inp>p</inp></pval></p>
+<p><i>slope</i> @lab1 vs.<i> slope</i> @lab2 = @{res1:roundu} <i>vs.</i> @{res2:roundu}<br />
+Difference<ci> (@pc% CI) = </ci>@{dif:roundu}  <ci>(@{from:roundu} to @{to:roundu})</ci><br />
+t = @{t:roundu} <pval>@{p:pval}</pval></p>
 </block>
 
 <p><i><b>Covariance analysis</b></i><br />
 <b>Uncorrected:</b></p>
 <table>
 <tr><th>Source of variation</th><th>YY</th><th>xY</th><th>xx</th><th>DF</th></tr>
-<tr><td>Between groups</td><td><inu>uc_bet_yy</inu></td><td><inu>uc_bet_xy</inu></td><td><inu>uc_bet_xx</inu></td><td><in>uc_bet_df</in></td></tr>
-<tr><td>Within</td><td><inu>uc_with_yy</inu></td><td><inu>uc_with_xy</inu></td><td><inu>uc_with_xx</inu></td><td><in>uc_with_df</in></td></tr>
-<tr><td>Total</td><td><inu>uc_tot_yy</inu></td><td><inu>uc_tot_xy</inu></td><td><inu>uc_tot_xx</inu></td><td><in>uc_tot_df</in></td></tr>
+<tr><td>Between groups</td><td>@{uc_bet_yy:roundu}</td><td>@{uc_bet_xy:roundu}</td><td>@{uc_bet_xx:roundu}</td><td>@uc_bet_df</td></tr>
+<tr><td>Within</td><td>@{uc_with_yy:roundu}</td><td>@{uc_with_xy:roundu}</td><td>@{uc_with_xx:roundu}</td><td>@uc_with_df</td></tr>
+<tr><td>Total</td><td>@{uc_tot_yy:roundu}</td><td>@{uc_tot_xy:roundu}</td><td>@{uc_tot_xx:roundu}</td><td>@uc_tot_df</td></tr>
 </table>
 
 <p><b>Corrected:</b></p>
 <table>
 <tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th></tr>
-<tr><td>Between groups</td><td><inu>cr_bet_ssq</inu></td><td><in>cr_bet_df</in></td><td><inu>cr_bet_msq</inu></td><td><inu>cr_bet_vr</inu></td></tr>
-<tr><td>Within</td><td><inu>cr_with_ssq</inu></td><td><in>cr_with_df</in></td><td><inu>cr_with_msq</inu></td></tr>
-<tr><td>Total</td><td><inu>cr_tot_ssq</inu></td><td><in>cr_tot_df</in></td></tr>
+<tr><td>Between groups</td><td>@{cr_bet_ssq:roundu}</td><td>@cr_bet_df</td><td>@{cr_bet_msq:roundu}</td><td>@{cr_bet_vr:roundu}</td></tr>
+<tr><td>Within</td><td>@{cr_with_ssq:roundu}</td><td>@cr_with_df</td><td>@{cr_with_msq:roundu}</td></tr>
+<tr><td>Total</td><td>@{cr_tot_ssq:roundu}</td><td>@cr_tot_df</td></tr>
 </table>
-<p><pval><inp>p</inp></pval></p>
+<p><pval>@{p:pval}</pval></p>
 
-<p><b>Corrected Y means + or - SE for baseline mean predictor of <inu>x_mean</inu>:</b></p>
+<p><b>Corrected Y means + or - SE for baseline mean predictor of @{x_mean:roundu}:</b></p>
 <table>
 <block name="cmy">
-<tr><td>Y' = <inu>y</inu></td><td>+ or - <inu>res</inu></td></tr>
+<tr><td>Y' = @{y:roundu}</td><td>+ or - @{res:roundu}</td></tr>
 </block>
 </table>
 
-<p><b>Line separations (common slope = <inu>slope</inu>):</b><subtotal></subtotal></p>
+<p><b>Line separations (common slope = @{slope:roundu}):</b><subtotal></subtotal></p>
 <block name="notParallel">
 <p>Lines not parallel</p>
 </block>
 <block name="sep">
-<p><i>line</i> <in>lab1</in> vs.<i> line</i> <in>lab2</in> vertical separation = <inu>sep</inu><br />
-<ci><in>pc</in>% CI = <inu>fromSep</inu> to <inu>toSep</inu></ci></p>
+<p><i>line</i> @lab1 vs.<i> line</i> @lab2 vertical separation = @{sep:roundu}<br />
+<ci>@pc% CI = @{fromSep:roundu} to @{toSep:roundu}</ci></p>
 <table>
-<tr><td>t = <inu>t</inu></td><td>(<inu>df</inu> df)</td><td><pval><inp>pSep</inp></pval></td></tr>
+<tr><td>t = @{t:roundu}</td><td>(@{df:roundu} df)</td><td><pval>@{pSep:pval}</pval></td></tr>
 </table>
 </block>
 
-<p><in>chart</in></p>
+<p>@{chart:chart}</p>
 
 </report>

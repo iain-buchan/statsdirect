@@ -1,40 +1,40 @@
 <report>
 <title>Proportion meta-analysis</title>
 
-<p>Method: <in>methodLabel</in></p>
+<p>Method: @methodLabel</p>
 
 <table>
 <tr><th>Stratum</th><th>Responding</th><th>Total</th><th></th></tr>
-<block name="inputs"><tr><td><in>st</in></td><td><in>r</in></td><td><in>n</in></td><td><in>lb</in></td></tr></block>
+<block name="inputs"><tr><td>@st</td><td>@r</td><td>@n</td><td>@lb</td></tr></block>
 </table>
 <br />
 <table>
-<tr><th>Stratum</th><th>Proportion</th><thfirst><ci><in>pc</in>% CI (exact)</ci></thfirst><thspan/><th></th></tr>
-<block name="proportions"><tr><td><in>st</in></td><td><inu>p</inu></td><td><ci><inu>from_y</inu></ci></td><td><ci><inu>to_y</inu></ci></td><td><in>lb</in></td></tr></block>
+<tr><th>Stratum</th><th>Proportion</th><th colspan="2"><ci>@pc% CI (exact)</ci></th><th></th></tr>
+<block name="proportions"><tr><td>@st</td><td>@{p:roundu}</td><td><ci>@{from_y:roundu}</ci></td><td><ci>@{to_y:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
 <br />
 <table>
-<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
-<block name="proportions"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><in>lb</in></td></tr></block>
+<tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th colspan="2">% Weights (fixed, random)</th><th></th></tr>
+<block name="proportions"><tr><td>@st</td><td>@{yi:roundu}</td><td>@{vi:roundu}</td><td>@{wt:roundu}</td><td>@{dwt:roundu}</td><td>@lb</td></tr></block>
 </table>
 
 <p><u>Fixed effects (inverse variance)</u><br />
-Pooled proportion = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci>)</p>
+Pooled proportion = @{rmh:roundu} (<ci>@pc% CI = @{from:roundu} to @{to:roundu}</ci>)</p>
 
 <p><u>Non-combinability of studies</u><br />
-Cochran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval><br />
-Moment-based estimate of between studies variance = <inu>tausq</inu><br />
-I<sub>2</sub> (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </p>
+Cochran Q = @{qc:roundu}  (df = @df)  <pval>@{xp:pval}</pval><br />
+Moment-based estimate of between studies variance = @{tausq:roundu}<br />
+I<sub>2</sub> (inconsistency) = @isq% (<ci>@pc1% CI = @llisq% to @ulisq%</ci>) </p>
 
 <p><u>Random effects (DerSimonian-Laird)</u><br />
-Pooled proportion = <inu>dspr</inu> (<ci><in>pc</in>% CI = <inu>from_ds</inu> to <inu>to_ds</inu></ci>)</p>
+Pooled proportion = @{dspr:roundu} (<ci>@pc% CI = @{from_ds:roundu} to @{to_ds:roundu}</ci>)</p>
 
 <p><u>Bias indicators</u></p>
 <block name="egger">
-<p>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval><br />
-Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></p>
+<p>Begg-Mazumdar: Kendall's @tau  <pval>@{p2:pval}</pval><br />
+Egger: bias = @a (<ci>@pc_egger% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 <block name="harbord">
-<p>Harbord: bias = <in>a</in> (<ci><in>pc_harbord</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></p>
+<p>Harbord: bias = @a (<ci>@pc_harbord% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 </report>

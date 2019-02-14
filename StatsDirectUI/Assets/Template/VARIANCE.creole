@@ -3,12 +3,12 @@
 <br />
 <table>
 <tr><th>Variable Name</th><th>DF (n-1)</th><th>Variance</th></tr>
-<tr><td><in>title_0</in></td><td><in>df_0</in></td><td><in>var_0</in></td></tr>
-<tr><td><in>title_1</in></td><td><in>df_1</in></td><td><in>var_1</in></td></tr>
+<tr><td>@title_0</td><td>@df_0</td><td>@var_0</td></tr>
+<tr><td>@title_1</td><td>@df_1</td><td>@var_1</td></tr>
 </table>
 
-<p>F = <in>f</in></p>
+<p>F = @f</p>
 
-<p>Upper side <in>p_1</in><br />
-Two sided <in>p_2</in></p>
+<p>Upper side @p_1<br />
+Two sided @p_2</p>
 </report>

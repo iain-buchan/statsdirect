@@ -18,9 +18,9 @@
 
 <p><model><u>Model (~NS denotes coefficient P>0.2; ~?NS 0.05&lt;P&lt;0.2)</u></model></p>
 <table>
-<tr><th>Akaike Information</th><th>McFadden R-square</th><th>Significant coefficients</th><thfirst>LR Goodness of Fit</thfirst><thspan/><th></th></tr>
-<block name="parameters"><tr><tdfirst><model><in>model</in></model></tdfirst><tdspan/><tdspan/><tdspan/><tdspan/><tdspan/></tr>
-<tr><td><in>aic</in></td><td><in>r2</in></td><td><in>scoef</in> / <in>ncoef</in></td><td><in>x2dev</in></td><td><pval><inp>p_dev</inp></pval></td><td></td></tr>
+<tr><th>Akaike Information</th><th>McFadden R-square</th><th>Significant coefficients</th><th colspan="2">LR Goodness of Fit</th><th></th></tr>
+<block name="parameters"><tr><td colspan="6"><model>@model</model></td></tr>
+<tr><td>@aic</td><td>@r2</td><td>@scoef / @ncoef</td><td>@x2dev</td><td><pval>@{p_dev:pval}</pval></td><td></td></tr>
 </block>
 </table>
 </report>]]></report>

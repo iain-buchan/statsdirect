@@ -1,4 +1,4 @@
 <report>
 
-<p><in>chart</in></p>
+<p>@{chart:chart}</p>
 </report>

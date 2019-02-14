@@ -1,19 +1,19 @@
 <report>
 <title>Single sample t test</title>
 
-<p>Sample name: <in>name</in><br />
-Sample mean = <inu>sam_mean</inu><br />
-Population mean = <inu>pop_mean</inu><br />
-Sample size n = <in>size</in><br />
-Sample sd = <inu>sd</inu></p>
+<p>Sample name: @name<br />
+Sample mean = @{sam_mean:roundu}<br />
+Population mean = @{pop_mean:roundu}<br />
+Sample size n = @size<br />
+Sample sd = @{sd:roundu}</p>
 
-<p><ci><in>pc</in>% confidence interval <in>for</in> = <inu>from</inu> to <inu>to</inu></ci></p>
+<p><ci>@pc% confidence interval @for = @{from:roundu} to @{to:roundu}</ci></p>
 
-<p>df = <in>df</in><br />
-t  = <inu>t</inu></p>
+<p>df = @df<br />
+t  = @{t:roundu}</p>
 
-<p><pval>One sided <inp>p_1</inp></pval><br />
-<pval>Two sided <inp>p_2</inp></pval></p>
+<p><pval>One sided @{p_1:pval}</pval><br />
+<pval>Two sided @{p_2:pval}</pval></p>
 
-<p>Power <in>pwr</in></p>
+<p>Power @pwr</p>
 </report>

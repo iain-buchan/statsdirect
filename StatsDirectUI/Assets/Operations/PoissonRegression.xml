@@ -106,19 +106,19 @@
       <![CDATA[<report>
 <title>Poisson regression</title>
 <block name="warn">
-<p><warn><in>warn</in></warn></p></block>
+<p><warn>@warn</warn></p></block>
 <br />
 <table>
-<tr><td>Deviance goodness of fit chi-square =</td><td><in>dev</in></td><td>df = <in>df_dev</in></td><td><pval><inp>p_dev</inp></pval> <in>w</in></td></tr>
-<tr><td>Deviance (likelihood ratio) chi-square =</td><td><in>x2</in></td><td>df = <in>df_x2</in></td><td><pval><inp>p_x2</inp></pval></td></tr>
+<tr><td>Deviance goodness of fit chi-square =</td><td>@dev</td><td>df = @df_dev</td><td><pval>@{p_dev:pval}</pval> @w</td></tr>
+<tr><td>Deviance (likelihood ratio) chi-square =</td><td>@x2</td><td>df = @df_x2</td><td><pval>@{p_x2:pval}</pval></td></tr>
 </table>
 <br />
 <table>
-<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci><in>pc</in>% CI</ci></th><th>z</th><th><pval></pval></th></tr>
-<block name="pred"><tr><td><in>lab</in></td><td>b<in>idx</in> = <in>res</in></td><td><in>irr</in></td><td><ci><in>ci</in></ci></td><td><in>z</in></td><td><pval><inp>p</inp></pval></td></tr></block>
+<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@pc% CI</ci></th><th>z</th><th><pval></pval></th></tr>
+<block name="pred"><tr><td>@lab</td><td>b@idx = @res</td><td>@irr</td><td><ci>@ci</ci></td><td>@z</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 
-<p><in>logit</in></p>
+<p>@logit</p>
 </report>]]>
     </report>
   </steps>

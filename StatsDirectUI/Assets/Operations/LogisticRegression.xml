@@ -114,21 +114,21 @@
 <title>Logistic regression</title>
 <block name="warn">
 
-<p><warn><in>warn</in></warn></p>
+<p><warn>@warn</warn></p>
 </block>
 <br />
 <table>
-<tr><td>Deviance goodness of fit chi-square =</td><td><in>dev</in></td><td>df = <in>df</in></td><td><pval><inp>p</inp></pval></td><td><warn><in>w</in></warn></td></tr>
-<tr><td>Deviance (likelihood ratio) chi-square =</td><td><in>x2</in></td><td>df = <in>df_lr</in></td><td><pval><inp>p_lr</inp></pval></td><td></td></tr>
+<tr><td>Deviance goodness of fit chi-square =</td><td>@dev</td><td>df = @df</td><td><pval>@{p:pval}</pval></td><td><warn>@w</warn></td></tr>
+<tr><td>Deviance (likelihood ratio) chi-square =</td><td>@x2</td><td>df = @df_lr</td><td><pval>@{p_lr:pval}</pval></td><td></td></tr>
 </table>
 <br />
 <table>
-<tr><th>Parameter</th><th>Odds Ratio</th><th><ci>(<in>pc</in>% Conf. Int.)</ci></th><th>Z Value</th><th><pval>P (>|Z|)</pval></th></tr>
-<block name="var"><tr><td><in>par</in></td><td><in>or</in></td><td><ci><in>ci</in></ci></td><td><in>z</in></td><td><pval><inp>p_var</inp></pval></td></tr>
+<tr><th>Parameter</th><th>Odds Ratio</th><th><ci>(@pc% Conf. Int.)</ci></th><th>Z Value</th><th><pval>P (>|Z|)</pval></th></tr>
+<block name="var"><tr><td>@par</td><td>@or</td><td><ci>@ci</ci></td><td>@z</td><td><pval>@{p_var:pval}</pval></td></tr>
 </block>
 </table>
 
-<p><in>logit</in></p>
+<p>@logit</p>
 </report>]]></report>
   </steps>
   <suggested-operations>

@@ -1,36 +1,36 @@
 <report>
 <title>ROC Curve Analysis</title>
-<p><in>chart</in></p>
+<p>@{chart:chart}</p>
 
 <block name="datasets">
-<p>Data set: <in>ti</in></p>
+<p>Data set: @ti</p>
 
-<p>Area under ROC curve by extended trapezoidal rule = <in>auc</in></p>
+<p>Area under ROC curve by extended trapezoidal rule = @auc</p>
 
-<p>Wilcoxon estimate of area under ROC curve = <in>theta</in><br />
-DeLong standard error = <in>se</in>:  <ci><in>pc</in>% CI = <in>ll</in> to <in>ul</in></ci></p>
+<p>Wilcoxon estimate of area under ROC curve = @theta<br />
+DeLong standard error = @se:  <ci>@pc% CI = @ll to @ul</ci></p>
 
-<p>Optimum cut-off point selected = <in>cut</in></p>
+<p>Optimum cut-off point selected = @cut</p>
 
 <table>
 <tr><td><ci>Table at cut-off:</ci></td><td>a</td><td>b</td></tr>
-<tr><td></td><td><in>a</in></td><td><in>b</in></td></tr>
+<tr><td></td><td>@a</td><td>@b</td></tr>
 <tr><td></td><td></td><td></td></tr>
 <tr><td></td><td>c</td><td>d</td></tr>
-<tr><td></td><td><in>c</in></td><td><in>d</in></td></tr>
+<tr><td></td><td>@c</td><td>@d</td></tr>
 </table>
 <br />
 
 <p><b>Predictive value of +ve test </b>(post-test likelihood of disease)<br />
-<in>likely</in> <ci>(<in>likely_from</in> to <in>likely_to</in>)</ci>, <in>likely_pc</in>% <ci>(<in>likely_from_pc</in>% to <in>likely_to_pc</in>%)</ci>,  {change = <in>likely_change</in>%}</p>
+@likely <ci>(@likely_from to @likely_to)</ci>, @likely_pc% <ci>(@likely_from_pc% to @likely_to_pc%)</ci>,  {change = @likely_change%}</p>
 
 <p><b>Predictive values of -ve test</b><br />
 (post-test likelihood of no disease)<br />
-<in>likely_negative</in> <ci>(<in>likely_negative_from</in> to <in>likely_negative_to</in>)</ci>, <in>likely_negative_pc</in>% <ci>(<in>likely_negative_from_pc</in>% to <in>likely_negative_to_pc</in>%)</ci>,  {change = <in>likely_negative_change</in>%}<br />
+@likely_negative <ci>(@likely_negative_from to @likely_negative_to)</ci>, @likely_negative_pc% <ci>(@likely_negative_from_pc% to @likely_negative_to_pc%)</ci>,  {change = @likely_negative_change%}<br />
 (post-test disease likelihood despite -ve test)<br />
-<in>likely_despite</in> <ci>(<in>likely_despite_from</in> to <in>likely_despite_to</in>)</ci>, <in>likely_despite_pc</in>% <ci>(<in>likely_despite_from_pc</in>% to <in>likely_despite_to_pc</in>%)</ci>, {change = <in>likely_despite_change</in>%}</p>
+@likely_despite <ci>(@likely_despite_from to @likely_despite_to)</ci>, @likely_despite_pc% <ci>(@likely_despite_from_pc% to @likely_despite_to_pc%)</ci>, {change = @likely_despite_change%}</p>
 
-<p>sensitivity (<in>senspc</in>% CI) = <in>sens</in>  (<in>sensll</in> to <in>sensul</in>)<br />
-<ci>specificity (<in>specpc</in>% CI) = <in>spec</in>  (<in>specll</in> to <in>specul</in>)</ci></p>
+<p>sensitivity (@senspc% CI) = @sens  (@sensll to @sensul)<br />
+<ci>specificity (@specpc% CI) = @spec  (@specll to @specul)</ci></p>
 </block>
 </report>

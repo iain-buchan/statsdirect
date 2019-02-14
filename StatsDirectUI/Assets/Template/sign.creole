@@ -1,23 +1,23 @@
 <report>
 <title>Sign test</title>
 
-<p><b>For <in>sample</in> observations with <in>sample_1</in> on one side:</b></p>
+<p><b>For @sample observations with @sample_1 on one side:</b></p>
 
 <block name="exact">
 <p>Cumulative probability<br />
-<pval>Two sided <inp>prob_2</inp></pval><br />
-<pval>One sided <inp>prob_1</inp></pval></p>
+<pval>Two sided @{prob_2:pval}</pval><br />
+<pval>One sided @{prob_1:pval}</pval></p>
 </block>
 <block name="large"><p><warn>sample is too large for an exact calculation</warn></p></block>
 
-<p>Normal approximate z = <inu>z</inu><br />
-<pval>Two sided <inp>p_2</inp></pval><br />
-<pval>One sided <inp>p_1</inp></pval></p>
+<p>Normal approximate z = @{z:roundu}<br />
+<pval>Two sided @{p_2:pval}</pval><br />
+<pval>One sided @{p_1:pval}</pval></p>
 
-<p><b><ci>Exact (Clopper-Pearson) <in>ci</in>% confidence interval for the proportion:</ci></b></p>
+<p><b><ci>Exact (Clopper-Pearson) @ci% confidence interval for the proportion:</ci></b></p>
 <table>
-<tr><td><ci>Lower Limit =</ci></td><td><ci><inu>lower</inu></ci></td></tr>
-<tr><td><ci>Proportion =</ci></td><td><ci><inu>prop</inu></ci></td></tr>
-<tr><td><ci>Upper Limit =</ci></td><td><ci><in>upper</in></ci></td></tr>
+<tr><td><ci>Lower Limit =</ci></td><td><ci>@{lower:roundu}</ci></td></tr>
+<tr><td><ci>Proportion =</ci></td><td><ci>@{prop:roundu}</ci></td></tr>
+<tr><td><ci>Upper Limit =</ci></td><td><ci>@upper</ci></td></tr>
 </table>
 </report>

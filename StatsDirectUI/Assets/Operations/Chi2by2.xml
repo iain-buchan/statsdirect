@@ -50,26 +50,26 @@
 <br />
 <subtitle>Observed values and totals:</subtitle>
 <table>
-<tr><td><in>tab3_a1</in></td><td><in>tab3_b1</in></td><td><subtotal><in>tab3_c1</in></subtotal></td></tr>
-<tr><td><in>tab3_a2</in></td><td><in>tab3_b2</in></td><td><subtotal><in>tab3_c2</in></subtotal></td></tr>
-<tr><td><subtotal><in>tab3_a3</in></subtotal></td><td><subtotal><in>tab3_b3</in></subtotal></td><td><grandtotal><in>tab3_c3</in></grandtotal></td></tr>
+<tr><td>@tab3_a1</td><td>@tab3_b1</td><td><subtotal>@tab3_c1</subtotal></td></tr>
+<tr><td>@tab3_a2</td><td>@tab3_b2</td><td><subtotal>@tab3_c2</subtotal></td></tr>
+<tr><td><subtotal>@tab3_a3</subtotal></td><td><subtotal>@tab3_b3</subtotal></td><td><grandtotal>@tab3_c3</grandtotal></td></tr>
 </table>
 <br />
 <subtitle>Expected values:</subtitle>
 <table>
-<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
-<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+<tr><td>@tab_a1</td><td>@tab_b1</td></tr>
+<tr><td>@tab_a2</td><td>@tab_b2</td></tr>
 </table>
 
-<p>Uncorrected Chi&#xb2; = <in>chi</in>  <pval><inp>chi_p</inp></pval><br />
-Yates-corrected Chi&#xb2; = <in>yates_chi</in>  <pval><inp>yates_chi_p</inp></pval></p>
+<p>Uncorrected Chi&#xb2; = @chi  <pval>@{chi_p:pval}</pval><br />
+Yates-corrected Chi&#xb2; = @yates_chi  <pval>@{yates_chi_p:pval}</pval></p>
 
 <p>Measures of association:<br />
-Pearson's contingency = <in>pearson</in><br />
-Cram&#xe9;r's <i>V</i> (signed) = <in>vs</in></p>
+Pearson's contingency = @pearson<br />
+Cram&#xe9;r's <i>V</i> (signed) = @vs</p>
 <block name="warn">
 
-<p><warn><in>wrn</in> too small for chi-square, please use Fisher's exact test instead</warn></p>
+<p><warn>@wrn too small for chi-square, please use Fisher's exact test instead</warn></p>
 </block>
 </report>
 <block name="odds"><include src="odds.creole"/></block>

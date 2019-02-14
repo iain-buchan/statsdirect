@@ -23,10 +23,10 @@
 <title>Poisson regression - incidence rate ratios (relative risks)</title>
 <block name="pop">
 
-<p>Inference population: <in>pop</in></p>
+<p>Inference population: @pop</p>
 <table>
-<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci><in>pc</in>% CI</ci></th></tr>
-<block name="par"><tr><td><in>par</in></td><td><in>est</in></td><td><in>irr</in></td><td><ci><in>ci</in></ci></td></tr></block>
+<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@pc% CI</ci></th></tr>
+<block name="par"><tr><td>@par</td><td>@est</td><td>@irr</td><td><ci>@ci</ci></td></tr></block>
 </table>
 </block>
 </report>]]>

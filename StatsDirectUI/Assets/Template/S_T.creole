@@ -1,18 +1,18 @@
 <report>
-<title>Sample size for <in>tt</in> Student t test</title>
+<title>Sample size for @tt Student t test</title>
 
-<p>Alpha = <in>alpha</in><br />
-Power = <in>power</in><br />
-Difference <in>mean</in> = <in>delta</in><br />
-Standard deviation = <in>sd</in></p>
-<block name="controls"><p>Controls per experimental subject <in>con_per</in></p></block>
+<p>Alpha = @alpha<br />
+Power = @power<br />
+Difference @mean = @delta<br />
+Standard deviation = @sd</p>
+<block name="controls"><p>Controls per experimental subject @con_per</p></block>
 
-<p>Estimated minimum sample size = <in>size</in> <block name="pairs">pairs</block><block name="subjects"> experimental subjects and <in>con_tot</in> controls.</block></p>
+<p>Estimated minimum sample size = @size <block name="pairs">pairs</block><block name="subjects"> experimental subjects and @con_tot controls.</block></p>
 
-<p>Degrees of freedom = <in>df</in></p>
+<p>Degrees of freedom = @df</p>
 <block name="assumptions">
 
 <p>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.<br />
-However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</p>
+However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</p>
 </block>
 </report>

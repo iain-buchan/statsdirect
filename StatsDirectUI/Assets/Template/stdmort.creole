@@ -3,14 +3,14 @@
 <br />
 <table>
 <tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</th><th></th></tr>
-<block name="groups"><tr><td><inu>group</inu></td><td><in>observed</in></td><td><inu>expected</inu></td><td><in>lb</in></td></tr></block>
-<tr><td></td><td></td><td>Total = <in>total</in></td><td></td></tr>
+<block name="groups"><tr><td>@{group:roundu}</td><td>@observed</td><td>@{expected:roundu}</td><td>@lb</td></tr></block>
+<tr><td></td><td></td><td>Total = @total</td><td></td></tr>
 </table>
 
-<p>Standardized Mortality Ratio (SMR) = <inu>ratio</inu><br />
-<b>SMR (*100 as integer) = <in>smr</in></b><br />
-<ci>Exact <in>pc</in>% confidence interval = <inu>from</inu> to <inu>to</inu> (<in>from100</in> to <inu>to100</inu>)</ci></p>
+<p>Standardized Mortality Ratio (SMR) = @{ratio:roundu}<br />
+<b>SMR (*100 as integer) = @smr</b><br />
+<ci>Exact @pc% confidence interval = @{from:roundu} to @{to:roundu} (@from100 to @{to100:roundu})</ci></p>
 
-<p><pval>Probability of observing <in>qty</in> or more deaths by chance <inp>p_hi</inp></pval><br />
-<pval>Probability of observing <in>qty</in> or fewer deaths by chance <inp>p_lo</inp></pval></p>
+<p><pval>Probability of observing @qty or more deaths by chance @{p_hi:pval}</pval><br />
+<pval>Probability of observing @qty or fewer deaths by chance @{p_lo:pval}</pval></p>
 </report>

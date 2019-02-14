@@ -2,23 +2,23 @@
 <title>Gini coefficient of inequality</title>
 <block name="data">
 <br />
-<subtitle>Analysis for <in>ti</in>:</subtitle>
+<subtitle>Analysis for @ti:</subtitle>
 
-<p>Positive non-zero observations = <in>n</in>  <warn><in>msg</in></warn><br />
-Variance coefficient = <inu>cv</inu></p>
+<p>Positive non-zero observations = @n  <warn>@msg</warn><br />
+Variance coefficient = @{cv:roundu}</p>
 
-<p>Re-samples = <in>boots</in><br />
-Bias = <inu>bias</inu><br />
-Standard error (bootstrap) = <inu>se</inu></p>
+<p>Re-samples = @boots<br />
+Bias = @{bias:roundu}<br />
+Standard error (bootstrap) = @{se:roundu}</p>
 
-<p>Gini coefficient = <inu>gini</inu><br />
-<ci>Percentile <in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci><br />
-<ci>BCa <in>pc</in>% CI = <inu>BCafrom</inu> to <inu>BCato</inu></ci></p>
+<p>Gini coefficient = @{gini:roundu}<br />
+<ci>Percentile @pc% CI = @{from:roundu} to @{to:roundu}</ci><br />
+<ci>BCa @pc% CI = @{BCafrom:roundu} to @{BCato:roundu}</ci></p>
 
-<p>Unbiased estimator of population Gini coefficient = <inu>gini-unbiased</inu><br />
-<ci>Percentile <in>pc</in>% CI = <inu>from-unbiased</inu> to <inu>to-unbiased</inu></ci><br />
-<ci>BCa <in>pc</in>% CI = <inu>BCafrom-unbiased</inu> to <inu>BCato-unbiased</inu></ci></p>
+<p>Unbiased estimator of population Gini coefficient = @{gini-unbiased:roundu}<br />
+<ci>Percentile @pc% CI = @{from-unbiased:roundu} to @{to-unbiased:roundu}</ci><br />
+<ci>BCa @pc% CI = @{BCafrom-unbiased:roundu} to @{BCato-unbiased:roundu}</ci></p>
 </block>
 
-<p><in>chart</in></p>
+<p>@{chart:chart}</p>
 </report>

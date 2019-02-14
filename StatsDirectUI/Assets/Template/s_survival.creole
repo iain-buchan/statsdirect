@@ -1,16 +1,16 @@
 <report>
 <title>Sample size for survival analysis</title>
 
-<p>median survival time for controls = <inu>ctFmt</inu><br />
-hazard ratio = <inu>hrFmt</inu><br />
-accrual time for recruitment = <inu>atFmt</inu><br />
-additional follow-up time after recruitment = <inu>futFmt</inu><br />
-alpha = <inu>alpha</inu><br />
-power = <inu>power</inu></p>
+<p>median survival time for controls = @{ctFmt:roundu}<br />
+hazard ratio = @{hrFmt:roundu}<br />
+accrual time for recruitment = @{atFmt:roundu}<br />
+additional follow-up time after recruitment = @{futFmt:roundu}<br />
+alpha = @{alpha:roundu}<br />
+power = @{power:roundu}</p>
 
-<p>Estimated minimum sample size = <in>size</in> experimental subjects and <in>controls</in> controls</p>
+<p>Estimated minimum sample size = @size experimental subjects and @controls controls</p>
 <block name="assumptions">
 
-<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></p>
+<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</warn></p>
 </block>
 </report>

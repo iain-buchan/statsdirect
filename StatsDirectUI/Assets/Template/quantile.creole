@@ -2,10 +2,10 @@
 <title>Quantile confidence interval</title>
 <block name="variable">
 
-<p>Variable: <in>sample</in><br />
-Sample size = <in>size</in><br />
-Quantile (<in>quantile_name</in>) = <inu>value</inu><br />
-<ci>Approximate <in>pc</in>% CI <in>type</in> = <in>from</in> to <in>to</in></ci><br />
-Exact confidence level = <in>exact</in></p>
+<p>Variable: @sample<br />
+Sample size = @size<br />
+Quantile (@quantile_name) = @{value:roundu}<br />
+<ci>Approximate @pc% CI @type = @from to @to</ci><br />
+Exact confidence level = @exact</p>
 </block>
 </report>

@@ -3,22 +3,22 @@
 
 <p><b>Input table:</b></p>
 <table>
-<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
-<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+<tr><td>@tab_a1</td><td>@tab_b1</td></tr>
+<tr><td>@tab_a2</td><td>@tab_b2</td></tr>
 </table>
 
 <p><b>Arranged table and totals:</b></p>
 <table>
-<tr><td>\cf8 <in>tab3_a1</in></td><td>\cf8 <in>tab3_b1</in></td><td>\cf7 <in>tab3_c1</in></td></tr>
-<tr><td>\cf8 <in>tab3_a2</in></td><td>\cf8 <in>tab3_b2</in></td><td>\cf7 <in>tab3_c2</in></td></tr>
-<tr><td>\cf7 <in>tab3_a3</in></td><td>\cf7 <in>tab3_b3</in></td><td>\cf6 <in>tab3_c3</in></td></tr>
+<tr><td>@tab3_a1</td><td>@tab3_b1</td><td><subtotal>@tab3_c1</subtotal></td></tr>
+<tr><td>@tab3_a2</td><td>@tab3_b2</td><td><subtotal>@tab3_c2</subtotal></td></tr>
+<tr><td><subtotal>@tab3_a3</subtotal></td><td><subtotal>@tab3_b3</subtotal></td><td><grandtotal>@tab3_c3</grandtotal></td></tr>
 </table>
 
-<p>Expectation of A = <inu>exp_a</inu></p>
+<p>Expectation of A = @{exp_a:roundu}</p>
 
-<p><pval>One sided <in>tail_1</in> <inp>p_1</inp>   (doubled one sided <inp>p_1d</inp>)</pval><br />
-<pval>Two sided <in>tail_2</in> <inp>p_2</inp></pval></p>
+<p><pval>One sided @tail_1 @{p_1:pval}   (doubled one sided @{p_1d:pval})</pval><br />
+<pval>Two sided @tail_2 @{p_2:pval}</pval></p>
 
-<p><pval>One sided mid-<inp>mid_p</inp></pval><br />
-<pval>Two sided mid-<inp>mid_p_2</inp></pval></p>
+<p><pval>One sided mid-@{mid_p:pval}</pval><br />
+<pval>Two sided mid-@{mid_p_2:pval}</pval></p>
 </report>

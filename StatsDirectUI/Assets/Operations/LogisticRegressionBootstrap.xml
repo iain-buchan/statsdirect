@@ -20,11 +20,11 @@
       <![CDATA[<report>
 <title>Logistic regression - bootstrap odds ratio estimates</title>
 
-<p>Resampled <in>boots</in> times.</p>
+<p>Resampled @boots times.</p>
 
 <table>
-<tr><th>Parameter</th><th>Observed OR</th><th>Bias</th><th><in>pc</in>% bias-corrected CI</th></tr>
-<block name="parameters"><tr><td><in>par</in></td><td><in>obs</in></td><td><in>bias</in></td><td><ci><in>ci</in></ci></td></tr></block>
+<tr><th>Parameter</th><th>Observed OR</th><th>Bias</th><th>@pc% bias-corrected CI</th></tr>
+<block name="parameters"><tr><td>@par</td><td>@obs</td><td>@bias</td><td><ci>@ci</ci></td></tr></block>
 </table>
 </report>]]>
     </report>

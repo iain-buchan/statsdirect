@@ -1,7 +1,7 @@
 <report>
-<p><in>type</in> matrix:</p>
+<p>@type matrix:</p>
 <table>
-<tr><th></th><block name="lab1"><th><subtotal><in>lab</in></subtotal></th></block></tr>
-<block name="lab2"><tr><td><subtotal><in>lab</in></subtotal></td><block name="res"><td><in>res</in></td></block></tr></block>
+<tr><th></th><block name="lab1"><th><subtotal>@lab</subtotal></th></block></tr>
+<block name="lab2"><tr><td><subtotal>@lab</subtotal></td><block name="res"><td>@res</td></block></tr></block>
 </table>
 </report>

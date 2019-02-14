@@ -13,11 +13,7 @@
         TResult Visit(CreoleTable<TResult> victim);
         TResult Visit(CreoleTableRow<TResult> victim);
         TResult Visit(CreoleTableDetail<TResult> victim);
-        TResult Visit(CreoleTableDetailFirst<TResult> victim);
-        TResult Visit(CreoleTableDetailSpan<TResult> victim);
         TResult Visit(CreoleTableHeader<TResult> victim);
-        TResult Visit(CreoleTableHeaderFirst<TResult> victim);
-        TResult Visit(CreoleTableHeaderSpan<TResult> victim);
         TResult Visit(CreoleText<TResult> victim);
     }
 }

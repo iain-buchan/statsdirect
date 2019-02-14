@@ -276,10 +276,10 @@ namespace StatsDirect.TemplateProcessing
                                     valueU = valueP = value;
                             }
                         }
-                        template = template.Replace("<in>" + pair.Key + "</in>", value);
-                        template = template.Replace("<inx>" + pair.Key + "</inx>", valueU);
-                        template = template.Replace("<inu>" + pair.Key + "</inu>", valueU);
-                        template = template.Replace("<inp>" + pair.Key + "</inp>", valueP);
+                        template = template.Replace("@" + pair.Key + "", value);
+                        template = template.Replace("@{" + pair.Key + ":roundx}", valueU);
+                        template = template.Replace("@{" + pair.Key + ":roundu}", valueU);
+                        template = template.Replace("@{" + pair.Key + ":pval}", valueP);
                     }
                 }
                 // We may have a nested template, but nothing to put in it.  If this is the case, delete the template.

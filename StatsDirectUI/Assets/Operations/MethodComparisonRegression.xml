@@ -295,40 +295,28 @@ if (exists("returning.to.statsdirect")) {
 <report>
 <title>Method comparison regression</title>
 
-<p>Test method: <in>yname</in><br />
-Reference method: <in>xname</in><br />
-Sample size: <inx>samples</inx><br />
-Error ratio: <inx>error-ratio</inx></p>
+<p>Test method: @yname<br />
+Reference method: @xname<br />
+Sample size: @{samples:roundx}<br />
+Error ratio: @{error-ratio:roundx}</p>
 <block name="methodResults">
 <br />
-<subtitle><in>title</in>:</subtitle>
+<subtitle>@title:</subtitle>
 <br />
 <table>
-<tr><th></th><th>Estimate</th><th>Standard Error</th><th><inx>ci100</inx>% CI</th><th>Meaning</th></tr>
-<tr><td>Slope</td><td><inx>slope</inx></td><td><inx>seslope</inx></td><td><ci><inx>slopelci</inx> to <inx>slopeuci</inx></ci></td><td>Proportional differences</td></tr>
-<tr><td>Intercept</td><td><inx>intercept</inx></td><td><inx>seintercept</inx></td><td><ci><inx>interceptlci</inx> to <inx>interceptuci</inx></ci></td><td>Systematic differences</td></tr>
+<tr><th></th><th>Estimate</th><th>Standard Error</th><th>@{ci100:roundx}% CI</th><th>Meaning</th></tr>
+<tr><td>Slope</td><td>@{slope:roundx}</td><td>@{seslope:roundx}</td><td><ci>@{slopelci:roundx} to @{slopeuci:roundx}</ci></td><td>Proportional differences</td></tr>
+<tr><td>Intercept</td><td>@{intercept:roundx}</td><td>@{seintercept:roundx}</td><td><ci>@{interceptlci:roundx} to @{interceptuci:roundx}</ci></td><td>Systematic differences</td></tr>
 </table>
-<block name="testvsreference">
 
-<p><in>chart</in></p>
-</block>
-<block name="difference">
+<block name="testvsreference"><p>@{chart:chart}</p></block>
+<block name="difference"><p>@{chart:chart}</p></block>
+<block name="residuals"><p>@{chart:chart}</p></block>
+<block name="bias"><p>@{chart:chart}</p></block>
 
-<p><in>chart</in></p>
 </block>
-<block name="residuals">
 
-<p><in>chart</in></p>
-</block>
-<block name="bias">
-
-<p><in>chart</in></p>
-</block>
-</block>
-<block name="comparefit">
-
-<p><in>chart</in></p>
-</block>
+<block name="comparefit"><p>@{chart:chart}</p></block>
 </report>
 ]]>
     </report>
@@ -341,7 +329,7 @@ Error ratio: <inx>error-ratio</inx></p>
 <br />
 <title>R script to reproduce this result</title>
 
-<p><in>formattedRScript</in></p>
+<p>@formattedRScript</p>
 </report>
 ]]>
         </report>

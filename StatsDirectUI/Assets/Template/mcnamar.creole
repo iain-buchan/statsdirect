@@ -3,20 +3,20 @@
 
 <p><b>Input table:</b></p>
 <table>
-<tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
-<tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
+<tr><td>@tab_a1</td><td>@tab_b1</td></tr>
+<tr><td>@tab_a2</td><td>@tab_b2</td></tr>
 </table>
 
-<p>Uncorrected Chi<sub>2</sub> = <inu>chi</inu> (1 DF)  <pval><inp>chi_p</inp></pval><br />
-Yates' continuity corrected Chi<sub>2</sub> = <inu>yates_chi</inu> (1 DF)  <pval><inp>yates_chi_p</inp></pval></p>
+<p>Uncorrected Chi<sub>2</sub> = @{chi:roundu} (1 DF)  <pval>@{chi_p:pval}</pval><br />
+Yates' continuity corrected Chi<sub>2</sub> = @{yates_chi:roundu} (1 DF)  <pval>@{yates_chi_p:pval}</pval></p>
 
 <p><b>After Liddell (1983):</b><br />
-Point estimate of relative risk (R') = <in>risk</in></p>
+Point estimate of relative risk (R') = @risk</p>
 
-<p><ci>Exact <in>pc</in>% confidence interval = <in>from</in> to <in>to</in></ci></p>
+<p><ci>Exact @pc% confidence interval = @from to @to</ci></p>
 
-<p>F = <inu>f</inu><br />
-<pval>Two sided <inp>tail_2</inp></pval></p>
+<p>F = @{f:roundu}<br />
+<pval>Two sided @{tail_2:pval}</pval></p>
 <block name="r_prime">
 
 <p><warn>R' is significantly different from unity</warn></p>

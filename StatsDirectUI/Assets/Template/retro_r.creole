@@ -2,29 +2,29 @@
 <title>Risk analysis (retrospective)</title>
 <br />
 <table>
-<tr><th></th><tdfirst><subtotal>Characteristic factor:</subtotal></tdfirst><td></td></tr>
+<tr><th></th><td colspan="2"><subtotal>Characteristic factor:</subtotal></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>
-<tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td></tr>
-<tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td></tr>
+<tr><td>Positive</td><td>@aa</td><td>@bb</td></tr>
+<tr><td>Negative</td><td>@cc</td><td>@dd</td></tr>
 </table>
 
-<p>Observed odds ratio = <inu>odds</inu><br />
-Approximate power <in>pwr</in></p>
+<p>Observed odds ratio = @{odds:roundu}<br />
+Approximate power @pwr</p>
 <block name="power">
 
-<p><ci>Approximate (Woolf, logit) <inu>ci</inu>% confidence interval = <inu>ci_1</inu>  to  <inu>ci_2</inu> </ci></p>
+<p><ci>Approximate (Woolf, logit) @{ci:roundu}% confidence interval = @{ci_1:roundu}  to  @{ci_2:roundu} </ci></p>
 
 </block>
 <p>Conditional maximum likelihood estimates:<br />
-Conditional estimate of odds ratio = <inu>eor</inu><br />
-<ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu>  to  <inu>ulf</inu></ci><br />
-<pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval><br />
-<ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci><br />
-<pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></p>
+Conditional estimate of odds ratio = @{eor:roundu}<br />
+<ci>Exact Fisher @pc% confidence interval = @{llf:roundu}  to  @{ulf:roundu}</ci><br />
+<pval>Exact Fisher one sided @{p1f:pval}, two sided @{p2f:pval}</pval><br />
+<ci>Exact mid-P @pc% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
+<pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 
 <block name="risk">
-<p>Population exposure % = <inu>pe</inu><br />
-Population attributable risk % = <inu>par</inu><br />
-<ci>Approximate <in>pc</in>% confidence interval = <inu>from</inu>  to  <inu>to</inu></ci></p>
+<p>Population exposure % = @{pe:roundu}<br />
+Population attributable risk % = @{par:roundu}<br />
+<ci>Approximate @pc% confidence interval = @{from:roundu}  to  @{to:roundu}</ci></p>
 </block>
 </report>

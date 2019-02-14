@@ -4,20 +4,20 @@
 <table>
 <tr><td></td><td><subtotal>Characteristic factor:</subtotal></td><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>
-<tr><td>Positive</td><td><in>a_out</in></td><td><in>b_out</in></td></tr>
-<tr><td>Negative</td><td><in>c_out</in></td><td><in>d_out</in></td></tr>
+<tr><td>Positive</td><td>@a_out</td><td>@b_out</td></tr>
+<tr><td>Negative</td><td>@c_out</td><td>@d_out</td></tr>
 </table>
 
-<p>Risk ratio (relative risk in incidence study) = <inu>ratio</inu><br />
-<ci>Approximate (Koopman) <in>pc</in>% confidence interval = <inu>koopman_from</inu> to <inu>koopman_to</inu></ci><br />
-Approximate power <in>pwr</in></p>
+<p>Risk ratio (relative risk in incidence study) = @{ratio:roundu}<br />
+<ci>Approximate (Koopman) @pc% confidence interval = @{koopman_from:roundu} to @{koopman_to:roundu}</ci><br />
+Approximate power @pwr</p>
 
-<p>Risk difference = <inu>dif</inu><br />
-<ci>Approximate (Miettinen) <in>pc</in>% confidence interval = <inu>miettinen_from</inu> to <inu>miettinen_to</inu></ci></p>
+<p>Risk difference = @{dif:roundu}<br />
+<ci>Approximate (Miettinen) @pc% confidence interval = @{miettinen_from:roundu} to @{miettinen_to:roundu}</ci></p>
 <block name="exposure">
 
-<p>Population exposure % = <inu>pe</inu><br />
-Population attributable risk % = <inu>par</inu><br />
-<ci>Approximate (Walter) <in>pc</in>% confidence interval = <inu>walter_from</inu> to <inu>walter_to</inu></ci></p>
+<p>Population exposure % = @{pe:roundu}<br />
+Population attributable risk % = @{par:roundu}<br />
+<ci>Approximate (Walter) @pc% confidence interval = @{walter_from:roundu} to @{walter_to:roundu}</ci></p>
 </block>
 </report>

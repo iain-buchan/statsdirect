@@ -2,40 +2,40 @@
 <title>General agreement over all categories (2 raters)</title>
 
 <p><u>Cohen's kappa (unweighted)</u><br />
-Observed agreement = <in>po</in>%<br />
-Expected agreement = <in>pe</in>%<br />
-Kappa = <inu>kappa</inu> (se_0 = <inu>se</inu>, se = <inu>seci</inu>)<br />
-<ci><inu>pc</inu>% confidence interval = <inu>from</inu> to <inu>to</inu></ci><br />
-z (for k = 0) = <in>z</in><br />
-<pval><inp>p</inp></pval></p>
+Observed agreement = @po%<br />
+Expected agreement = @pe%<br />
+Kappa = @{kappa:roundu} (se_0 = @{se:roundu}, se = @{seci:roundu})<br />
+<ci>@{pc:roundu}% confidence interval = @{from:roundu} to @{to:roundu}</ci><br />
+z (for k = 0) = @z<br />
+<pval>@{p:pval}</pval></p>
 
-<p><u>Cohen's kappa (weighted by <in>methodName</in>)</u><br />
+<p><u>Cohen's kappa (weighted by @methodName)</u><br />
 ratings weighted by:</p>
 <table>
-<block name="weights"><tr><block name="tot"><td><in>tot</in></td></block></tr></block>
+<block name="weights"><tr><block name="tot"><td>@tot</td></block></tr></block>
 </table>
-<p>Observed agreement = <in>pow</in>%<br />
-Expected agreement = <in>pew</in>%<br />
-Kappa = <inu>kappaw</inu> (se_0 = <inu>sekw</inu>, se = <inu>sekwci</inu>)<br />
-<ci><in>pcw</in>% confidence interval for kappa = <inu>fromw</inu> to <inu>tow</inu></ci><br />
-z (for kw = 0) = <inu>zw</inu><br />
-<pval><inp>pw</inp></pval></p>
+<p>Observed agreement = @pow%<br />
+Expected agreement = @pew%<br />
+Kappa = @{kappaw:roundu} (se_0 = @{sekw:roundu}, se = @{sekwci:roundu})<br />
+<ci>@pcw% confidence interval for kappa = @{fromw:roundu} to @{tow:roundu}</ci><br />
+z (for kw = 0) = @{zw:roundu}<br />
+<pval>@{pw:pval}</pval></p>
 
 <p><u>Scott's pi</u><br />
-Observed agreement = <in>pocopy</in>%<br />
-Expected agreement = <in>spe</in>%<br />
-Pi = <inu>spi</inu></p>
-<block name="deci"><p><ci><in>pc</in>% Donner-Eliasziw confidence interval = <inu>lwr</inu> to <inu>upr</inu></ci></p></block>
+Observed agreement = @pocopy%<br />
+Expected agreement = @spe%<br />
+Pi = @{spi:roundu}</p>
+<block name="deci"><p><ci>@pc% Donner-Eliasziw confidence interval = @{lwr:roundu} to @{upr:roundu}</ci></p></block>
 
 <p><u>Gwet's AC1</u><br />
-Observed agreement = <in>gamapc</in>%<br />
-Chance-independent agreement = <in>pegamapc</in>%<br />
-AC1 = <inu>gama</inu> (se = <inu>segama</inu>)<br />
-<ci><in>pc</in>% confidence interval = <inu>gamacil</inu> to <inu>gamaciu</inu></ci></p>
+Observed agreement = @gamapc%<br />
+Chance-independent agreement = @pegamapc%<br />
+AC1 = @{gama:roundu} (se = @{segama:roundu})<br />
+<ci>@pc% confidence interval = @{gamacil:roundu} to @{gamaciu:roundu}</ci></p>
 
 <title>Disagreement over any category and asymmetry of disagreement (2 raters)</title>
 
-<p>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><inp>pmaxwell</inp></pval></p>
+<p>Marginal homogeneity (Maxwell) chi-square = @{x2:roundu}  df = @{df:roundu}  <pval>@{pmaxwell:pval}</pval></p>
 
-<p>Symmetry (generalised McNemar) chi-square = <inu>x2m</inu>  df = <in>dfmcnemar</in>  <pval><inp>pmcnemar</inp></pval></p>
+<p>Symmetry (generalised McNemar) chi-square = @{x2m:roundu}  df = @dfmcnemar  <pval>@{pmcnemar:pval}</pval></p>
 </report>

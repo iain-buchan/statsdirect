@@ -1,5 +1,5 @@
 <report>
-<p><in>residualsVsY</in><br />
-<in>residualsVsPredictor</in><br />
-<in>residualsNormalPlot</in></p>
+<p>@residualsVsY<br />
+@residualsVsPredictor<br />
+@residualsNormalPlot</p>
 </report>

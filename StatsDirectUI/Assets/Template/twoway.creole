@@ -1,17 +1,17 @@
 <report>
 <title>Two way randomized block analysis of variance</title>
 
-<p>Treatments: <in>tlist</in></p>
+<p>Treatments: @tlist</p>
 
 <table>
 <tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Between blocks (rows)</td><td><inu>sub_sum</inu></td><td><in>sub_df</in></td><td><inu>sub_mean</inu></td></tr>
-<tr><td>Between treatments (columns)</td><td><inu>grp_sum</inu></td><td><in>grp_df</in></td><td><inu>grp_mean</inu></td></tr>
-<tr><td>Residual (error)</td><td><inu>res_sum</inu></td><td><in>res_df</in></td><td><inu>res_mean</inu></td></tr>
-<tr><td>Corrected total</td><td><inu>tot_sum</inu></td><td><in>tot_df</in></td><td></td></tr>
+<tr><td>Between blocks (rows)</td><td>@{sub_sum:roundu}</td><td>@sub_df</td><td>@{sub_mean:roundu}</td></tr>
+<tr><td>Between treatments (columns)</td><td>@{grp_sum:roundu}</td><td>@grp_df</td><td>@{grp_mean:roundu}</td></tr>
+<tr><td>Residual (error)</td><td>@{res_sum:roundu}</td><td>@res_df</td><td>@{res_mean:roundu}</td></tr>
+<tr><td>Corrected total</td><td>@{tot_sum:roundu}</td><td>@tot_df</td><td></td></tr>
 </table>
 
-<p>F (VR between blocks) = <inu>sub_vr</inu>  <pval><inp>sub_p</inp></pval></p>
+<p>F (VR between blocks) = @{sub_vr:roundu}  <pval>@{sub_p:pval}</pval></p>
 
-<p>F (VR between treatments) = <inu>grp_vr</inu>  <pval><inp>grp_p</inp></pval></p>
+<p>F (VR between treatments) = @{grp_vr:roundu}  <pval>@{grp_p:pval}</pval></p>
 </report>

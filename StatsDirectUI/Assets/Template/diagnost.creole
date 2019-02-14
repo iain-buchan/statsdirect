@@ -2,38 +2,38 @@
 <title>Diagnostic test analysis</title>
 <br />
 <table>
-<tr><td></td><thfirst>Disease / feature</thfirst><thspan/><thspan/></tr>
+<tr><td></td><th colspan="3">Disease / feature</th></tr>
 <tr><th>Test:</th><td>Present</td><td>Absent</td><td>Totals</td></tr>
-<tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td><td><subtotal><in>ab</in></subtotal></td></tr>
-<tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td><td><subtotal><in>cd</in></subtotal></td></tr>
-<tr><td>Totals</td><td><subtotal><in>ac</in></subtotal></td><td><subtotal><in>bd</in></subtotal></td><td><grandtotal><in>tot</in></grandtotal></td></tr>
+<tr><td>Positive</td><td>@aa</td><td>@bb</td><td><subtotal>@ab</subtotal></td></tr>
+<tr><td>Negative</td><td>@cc</td><td>@dd</td><td><subtotal>@cd</subtotal></td></tr>
+<tr><td>Totals</td><td><subtotal>@ac</subtotal></td><td><subtotal>@bd</subtotal></td><td><grandtotal>@tot</grandtotal></td></tr>
 </table>
 
-<p><ci>Including <in>pc</in>% confidence intervals:</ci></p>
+<p><ci>Including @pc% confidence intervals:</ci></p>
 
 <p><b>Prevalence</b> (pre-test likelihood of disease)<br />
-<inu>prevalence</inu> <ci>(<inu>prevalence_from</inu> to <in>prevalence_to</in>)</ci>, <in>prevalence_pc</in>% <ci>(<in>prevalence_from_pc</in>% to <in>prevalence_to_pc</in>%)</ci></p>
+@{prevalence:roundu} <ci>(@{prevalence_from:roundu} to @prevalence_to)</ci>, @prevalence_pc% <ci>(@prevalence_from_pc% to @prevalence_to_pc%)</ci></p>
 
 <p><b>Predictive value of +ve test </b>(post-test likelihood of disease)<br />
-<inu>likely</inu> <ci>(<inu>likely_from</inu> to <in>likely_to</in>)</ci>, <in>likely_pc</in>% <ci>(<in>likely_from_pc</in>% to <in>likely_to_pc</in>%)</ci>,  {change = <in>likely_change</in>%}</p>
+@{likely:roundu} <ci>(@{likely_from:roundu} to @likely_to)</ci>, @likely_pc% <ci>(@likely_from_pc% to @likely_to_pc%)</ci>,  {change = @likely_change%}</p>
 
 <p><b>Predictive values of -ve test</b><br />
 (post-test likelihood of no disease)<br />
-<inu>likely_negative</inu> <ci>(<inu>likely_negative_from</inu> to <in>likely_negative_to</in>)</ci>, <in>likely_negative_pc</in>% <ci>(<in>likely_negative_from_pc</in>% to <in>likely_negative_to_pc</in>%)</ci>,  {change = <in>likely_negative_change</in>%}<br />
+@{likely_negative:roundu} <ci>(@{likely_negative_from:roundu} to @likely_negative_to)</ci>, @likely_negative_pc% <ci>(@likely_negative_from_pc% to @likely_negative_to_pc%)</ci>,  {change = @likely_negative_change%}<br />
 (post-test disease likelihood despite -ve test)<br />
-<inu>likely_despite</inu> <ci>(<inu>likely_despite_from</inu> to <in>likely_despite_to</in>)</ci>, <in>likely_despite_pc</in>% <ci>(<in>likely_despite_from_pc</in>% to <in>likely_despite_to_pc</in>%)</ci>, {change = <in>likely_despite_change</in>%}</p>
+@{likely_despite:roundu} <ci>(@{likely_despite_from:roundu} to @likely_despite_to)</ci>, @likely_despite_pc% <ci>(@likely_despite_from_pc% to @likely_despite_to_pc%)</ci>, {change = @likely_despite_change%}</p>
 
 <p><b>Sensitivity </b>(true positive rate)<br />
-<inu>sensitive</inu> <ci>(<inu>sensitive_from</inu> to <in>sensitive_to</in>)</ci>, <in>sensitive_pc</in>% <ci>(<in>sensitive_from_pc</in>% to <in>sensitive_to_pc</in>%)</ci></p>
+@{sensitive:roundu} <ci>(@{sensitive_from:roundu} to @sensitive_to)</ci>, @sensitive_pc% <ci>(@sensitive_from_pc% to @sensitive_to_pc%)</ci></p>
 
 <p><b>Specificity </b>(true negative rate)<br />
-<inu>specific</inu> <ci>(<inu>specific_from</inu> to <in>specific_to</in>)</ci>, <in>specific_pc</in>% <ci>(<in>specific_from_pc</in>% to <in>specific_to_pc</in>%)</ci></p>
+@{specific:roundu} <ci>(@{specific_from:roundu} to @specific_to)</ci>, @specific_pc% <ci>(@specific_from_pc% to @specific_to_pc%)</ci></p>
 
 <p><b>Likelihood Ratio</b><br />
-LR (positive test) = <inu>lr_pos</inu>  <ci>(<inu>lr_pos_from</inu> to <inu>lr_pos_to</inu>)</ci><br />
-LR (negative test) = <inu>lr_neg</inu>  <ci>(<inu>lr_neg_from</inu> to <inu>lr_neg_to</inu>)</ci></p>
+LR (positive test) = @{lr_pos:roundu}  <ci>(@{lr_pos_from:roundu} to @{lr_pos_to:roundu})</ci><br />
+LR (negative test) = @{lr_neg:roundu}  <ci>(@{lr_neg_from:roundu} to @{lr_neg_to:roundu})</ci></p>
 
 <p><b>Diagnostic Odds Ratio</b><br />
-<b>Observed odds ratio = <inu>odr</inu></b><br />
-<b>Conditional maximum likelihood estimate = <inu>cmle</inu>  <ci>(<inu>cmle_from</inu> to <inu>cmle_to</inu>)</ci></b></p>
+<b>Observed odds ratio = @{odr:roundu}</b><br />
+<b>Conditional maximum likelihood estimate = @{cmle:roundu}  <ci>(@{cmle_from:roundu} to @{cmle_to:roundu})</ci></b></p>
 </report>

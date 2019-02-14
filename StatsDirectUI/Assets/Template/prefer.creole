@@ -1,15 +1,15 @@
 <report>
 <title>Random allocation to groups by preference</title>
 
-<p>Groups = <in>groups</in></p>
+<p>Groups = @groups</p>
 
-<p>Total group capacity = <in>capacity</in><br />
-Subjects = <in>subjects</in></p>
+<p>Total group capacity = @capacity<br />
+Subjects = @subjects</p>
 
-<p>Randomized with seed: <in>seed</in></p>
+<p>Randomized with seed: @seed</p>
 
 <table>
 <tr><th>Subject</th><th>Group</th></tr>
-<block name="groups"><tr><td><in>sub</in></td><td><in>grp</in></td></tr></block>
+<block name="groups"><tr><td>@sub</td><td>@grp</td></tr></block>
 </table>
 </report>

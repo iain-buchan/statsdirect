@@ -1,15 +1,15 @@
 <report>
 <title>Scheff&#xe9; multiple comparisons</title>
 
-<p>Critical value = <in>critical</in></p>
+<p>Critical value = @critical</p>
 
 <table>
-<tr><th>Comparison</th><th>Mean difference L <ci>(<in>pc</in>% CI)</ci></th><th>|L/SE(L)|</th><th></th></tr>
-<block name="differences"><tr><td><in>cf1</in> vs. <in>cf2</in></td><td><inu>delta</inu><ci>(<inu>lci</inu>  to  <inu>uci</inu>)</ci></td><td><inu>t</inu></td><td><pval><inp>p</inp></pval></td></tr></block>
+<tr><th>Comparison</th><th>Mean difference L <ci>(@pc% CI)</ci></th><th>|L/SE(L)|</th><th></th></tr>
+<block name="differences"><tr><td>@cf1 vs. @cf2</td><td>@{delta:roundu}<ci>(@{lci:roundu}  to  @{uci:roundu})</ci></td><td>@{t:roundu}</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 <br />
 <table>
 <tr><th>Variable</th><th>Mean</th><th>Significant contrasts</th></tr>
-<block name="summary"><tr><td><in>cf1</in></td><td><in>mean</in></td><td><in>sigs</in></td></tr></block>
+<block name="summary"><tr><td>@cf1</td><td>@mean</td><td>@sigs</td></tr></block>
 </table>
 </report>

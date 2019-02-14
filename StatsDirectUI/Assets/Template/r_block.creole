@@ -1,16 +1,16 @@
 <report>
 <title>Random allocation in blocks</title>
 
-<p>Randomized with seed: <in>seed_out</in></p>
+<p>Randomized with seed: @seed_out</p>
 
 <table>
-<tr><td>Subjects:</td><td><in>n_out</in></td></tr>
-<tr><td>Block size:</td><td><in>b_out</in></td></tr>
-<tr><td>Treatments:</td><td><in>t_out</in></td></tr>
+<tr><td>Subjects:</td><td>@n_out</td></tr>
+<tr><td>Block size:</td><td>@b_out</td></tr>
+<tr><td>Treatments:</td><td>@t_out</td></tr>
 </table>
 <br />
 <table>
 <tr><th>Subject</th><th>Treatment</th></tr>
-<block name="subjects"><tr><td><in>id</in></td><td><in>rx</in></td></tr></block>
+<block name="subjects"><tr><td>@id</td><td>@rx</td></tr></block>
 </table>
 </report>

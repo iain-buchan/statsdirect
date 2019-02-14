@@ -151,40 +151,24 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim)
             {
-                return @"\pard\intbl "
-                    + victim.Contents.Accept(this)
-                    + @"\cell ";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailFirst<string> victim)
-            {
-                return @"\pard\intbl "
-                    + victim.Contents.Accept(this)
-                    + @"\cell ";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailSpan<string> victim)
-            {
-                return @"\pard\intbl\cell ";
+                StringBuilder sb = new StringBuilder();
+                sb.Append(@"\pard\intbl ");
+                sb.Append(victim.Contents.Accept(this));
+                sb.Append(@"\cell ");
+                for (int spanner = 1; spanner < victim.Colspan; spanner++)
+                    sb.Append(@"\pard\intbl\cell ");
+                return sb.ToString();
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim)
             {
-                return @"\pard\intbl {\ul "
-                    + victim.Contents.Accept(this)
-                    + @"}\cell ";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderFirst<string> victim)
-            {
-                return @"\pard\intbl {\ul "
-                    + victim.Contents.Accept(this)
-                    + @"}\cell ";
-            }
-
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderSpan<string> victim)
-            {
-                return @"\pard\intbl {\ul}\cell ";
+                StringBuilder sb = new StringBuilder();
+                sb.Append(@"\pard\intbl {\ul ");
+                sb.Append(victim.Contents.Accept(this));
+                sb.Append(@"}\cell ");
+                for (int spanner = 1; spanner < victim.Colspan; spanner++)
+                    sb.Append(@"\pard\intbl {\ul}\cell ");
+                return sb.ToString();
             }
 
             string ICreoleVisitor<string>.Visit(CreoleText<string> victim)
@@ -222,21 +206,19 @@ namespace StatsDirect.TemplateProcessing
             string ICreoleVisitor<string>.Visit(CreoleSubstitution<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim) => CellDefinition(false, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailFirst<string> victim) => CellDefinition(true, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableDetailSpan<string> victim) => CellDefinition(false, true);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim) => CellDefinition(false, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderFirst<string> victim) => CellDefinition(true, false);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeaderSpan<string> victim) => CellDefinition(false, true);
+            string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim) => CellDefinition(victim.Colspan);
+            string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim) => CellDefinition(victim.Colspan);
             string ICreoleVisitor<string>.Visit(CreoleText<string> victim) => string.Empty;
 
-            private string CellDefinition(bool isFirst, bool isRest)
+            private string CellDefinition(int colspan)
             {
-                if (isFirst)
-                    return @"\clmgf\cellx0";
-                if (isRest)
-                    return @"\clmrg\cellx0";
-                return @"\cellx0";
+                if (colspan == 1)
+                    return @"\cellx0";
+                StringBuilder sb = new StringBuilder();
+                sb.Append(@"\clmgf\cellx0");
+                for (int spanner = 1; spanner < colspan; spanner++)
+                    sb.Append(@"\clmrg\cellx0");
+                return sb.ToString();
             }
         }
     }

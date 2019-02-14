@@ -1,5 +1,5 @@
 <report>
 <title>Probability distribution calculations</title>
 
-<p><in>gr</in></p>
+<p>@gr</p>
 </report>

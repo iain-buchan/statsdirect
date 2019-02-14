@@ -3,18 +3,18 @@
 <br />
 <block name="group">
 <block name="grp">
-<p><subtotal><b><in>grp</in></b></subtotal></p>
+<p><subtotal><b>@grp</b></subtotal></p>
 
 </block>
 <table>
 <tr><th>Time</th><th>At risk</th><th>Dead</th><th>Censored</th><th>S</th><th>SE(S)</th><th>H</th><th>SE(H)</th></tr>
-<block name="est"><tr><td><in>time</in></td><td><in>risk</in></td><td><in>dead</in></td><td><in>cen</in></td><td><in>s</in></td><td><in>ses</in></td><td><in>h</in></td><td><in>seh</in></td></tr></block>
+<block name="est"><tr><td>@time</td><td>@risk</td><td>@dead</td><td>@cen</td><td>@s</td><td>@ses</td><td>@h</td><td>@seh</td></tr></block>
 </table>
 
-<p>Median survival time = <in>med</in><br />
-<ci>Andersen <in>pc</in>% CI</ci> for median survival time = <ci><inu>all</inu> to <inu>aul</inu></ci><br />
-<ci>Brookmeyer-Crowley <in>pc</in>% CI</ci> for median survival time = <ci><inu>bll</inu> to <inu>bul</inu></ci></p>
+<p>Median survival time = @med<br />
+<ci>Andersen @pc% CI</ci> for median survival time = <ci>@{all:roundu} to @{aul:roundu}</ci><br />
+<ci>Brookmeyer-Crowley @pc% CI</ci> for median survival time = <ci>@{bll:roundu} to @{bul:roundu}</ci></p>
 
-<p>Mean survival time <ci>(<in>pc</in>% CI)</ci> <in>lim</in>= <in>mu</in>  <ci>(<inu>ll</inu> to <inu>ul</inu>)</ci></p>
+<p>Mean survival time <ci>(@pc% CI)</ci> @lim= @mu  <ci>(@{ll:roundu} to @{ul:roundu})</ci></p>
 </block>
 </report>

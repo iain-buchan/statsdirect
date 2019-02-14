@@ -3,23 +3,23 @@
 <br />
 <table>
 <tr><th>Index</th><th>Y</th><th>Fitted Y</th><th>Std. Dev. Y fit</th><th>Residual</th></tr>
-<block name="yfit"><tr><td><in>index</in></td><td><in>y</in></td><td><in>fit_y</in></td><td><in>std_err</in></td><td><in>res</in></td></tr></block>
+<block name="yfit"><tr><td>@index</td><td>@y</td><td>@fit_y</td><td>@std_err</td><td>@res</td></tr></block>
 </table>
 <br />
 <table>
-<tr><thfirst>Index</thfirst><thspan/><thfirst>Studentized</thfirst><thspan/><thfirst>Leverage</thfirst><thspan/><th>Cook's Distance</th></tr>
-<block name="studentised"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><in>stu</in></td><td><b><in>stu*</in></b></td><td><in>hi</in></td><td><b><in>hi*</in></b></td><td><in>cook</in></td></tr></block>
+<tr><th colspan="2">Index</th><th colspan="2">Studentized</th><th colspan="2">Leverage</th><th>Cook's Distance</th></tr>
+<block name="studentised"><tr><td>@index</td><td><b>@index_star</b></td><td>@stu</td><td><b>@stu_star</b></td><td>@hi</td><td><b>@hi_star</b></td><td>@cook</td></tr></block>
 </table>
 <br />
 <table>
-<tr><thfirst>Index</thfirst><thspan/><thfirst>Jackknife</thfirst><thspan/><th>DFIT</th></tr>
-<block name="jackknife"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><in>jack</in></td><td><warn><in>jack*</in></warn></td><td><in>dfit</in></td></tr></block>
+<tr><th colspan="2">Index</th><th colspan="2">Jackknife</th><th>DFIT</th></tr>
+<block name="jackknife"><tr><td>@index</td><td><b>@index_star</b></td><td>@jack</td><td><warn>@jack_star</warn></td><td>@dfit</td></tr></block>
 </table>
 
 <p><u>Critical levels for unusual observations (marked *)</u><br />
-Leverage > <in>zhi</in>  [min(3p/n,.99)]<br />
-Cook's Distance > <in>zcook</in>  [f(a,p,n-p)]<br />
-Studentized residual > &#xb1; <in>zstu</in>  [t(a,n-p)]<br />
-Jackknife residual > &#xb1; <in>zjack</in>  [t(a,n-p-1)]<br />
-DFIT > &#xb1; <in>zdfit</in>  [(2*sqr(p/n)]</p>
+Leverage > @zhi  [min(3p/n,.99)]<br />
+Cook's Distance > @zcook  [f(a,p,n-p)]<br />
+Studentized residual > &#xb1; @zstu  [t(a,n-p)]<br />
+Jackknife residual > &#xb1; @zjack  [t(a,n-p-1)]<br />
+DFIT > &#xb1; @zdfit  [(2*sqr(p/n)]</p>
 </report>

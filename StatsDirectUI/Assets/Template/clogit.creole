@@ -4,21 +4,21 @@
 <br />
 <table>
 <tr><th>Stratum (match group)</th><th>Cases</th><th>Controls</th></tr>
-<block name="count"><tr><td><in>st</in></td><td><in>ca</in></td><td><in>ct</in></td></tr></block>
+<block name="count"><tr><td>@st</td><td>@ca</td><td>@ct</td></tr></block>
 </table>
 </block>
 
-<p>Deviance (-2 log likelihood) = <inu>dv</inu>   <warn><in>warn</in></warn><br />
-Deviance (likelihood ratio) chi-square = <inu>x2</inu>  <pval><inp>p_dev</inp></pval><br />
-Pseudo (McFadden) R-square = <inu>r2</inu></p>
+<p>Deviance (-2 log likelihood) = @{dv:roundu}   <warn>@warn</warn><br />
+Deviance (likelihood ratio) chi-square = @{x2:roundu}  <pval>@{p_dev:pval}</pval><br />
+Pseudo (McFadden) R-square = @{r2:roundu}</p>
 
 <table>
 <tr><th>Label</th><th>Parameter estimate</th><th>Standard error</th><th></th><th></th></tr>
-<block name="est"><tr><td><in>lab</in></td><td><inu>b</inu></td><td><inu>se</inu></td><td>z = <inu>z</inu></td><td><pval><inp>p</inp></pval></td></tr></block>
+<block name="est"><tr><td>@lab</td><td>@{b:roundu}</td><td>@{se:roundu}</td><td>z = @{z:roundu}</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 <br />
 <table>
-<tr><th>Label</th><th>Odds ratio</th><th><ci><in>pc</in>% confidence interval</ci></th></tr>
-<block name="or"><tr><td><in>lab</in></td><td><inu>or</inu></td><td><ci><inu>from</inu>  to  <inu>to</inu></ci></td></tr></block>
+<tr><th>Label</th><th>Odds ratio</th><th><ci>@pc% confidence interval</ci></th></tr>
+<block name="or"><tr><td>@lab</td><td>@{or:roundu}</td><td><ci>@{from:roundu}  to  @{to:roundu}</ci></td></tr></block>
 </table>
 </report>

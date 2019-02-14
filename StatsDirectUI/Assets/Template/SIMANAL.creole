@@ -3,13 +3,13 @@
 <br />
 <table>
 <tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
-<tr><td>Regression</td><td><inu>reg_sum</inu></td><td><in>reg_df</in></td><td><inu>reg_mean</inu></td></tr>
-<tr><td><ci>Residual</ci></td><td><ci><inu>res_sum</inu></ci></td><td><ci><in>res_df</in></ci></td><td><ci><inu>res_mean</inu></ci></td></tr>
-<tr><td><subtotal>Total, corrected</subtotal></td><td><subtotal><inu>tot_sum</inu></subtotal></td><td><subtotal><in>tot_df</in></subtotal></td><td></td></tr>
+<tr><td>Regression</td><td>@{reg_sum:roundu}</td><td>@reg_df</td><td>@{reg_mean:roundu}</td></tr>
+<tr><td><ci>Residual</ci></td><td><ci>@{res_sum:roundu}</ci></td><td><ci>@res_df</ci></td><td><ci>@{res_mean:roundu}</ci></td></tr>
+<tr><td><subtotal>Total, corrected</subtotal></td><td><subtotal>@{tot_sum:roundu}</subtotal></td><td><subtotal>@tot_df</subtotal></td><td></td></tr>
 </table>
 
-<p>F = <inu>f</inu> <pval><inp>p</inp></pval></p>
+<p>F = @{f:roundu} <pval>@{p:pval}</pval></p>
 
-<p>R square = <inu>r</inu><br />
-Root MSE = <inu>mse</inu></p>
+<p>R square = @{r:roundu}<br />
+Root MSE = @{mse:roundu}</p>
 </report>

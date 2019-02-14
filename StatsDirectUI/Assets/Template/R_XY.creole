@@ -1,10 +1,10 @@
 <report>
 <title>Random allocation of numbers in a series</title>
 
-<p>Randomized with seed: <in>seed</in></p>
+<p>Randomized with seed: @seed</p>
 
 <table>
-<block name="allocations"><tr><td><subtotal><in>index</in></subtotal></td><td><in>random</in></td></tr>
+<block name="allocations"><tr><td><subtotal>@index</subtotal></td><td>@random</td></tr>
 </block>
 </table>
 </report>

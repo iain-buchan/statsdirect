@@ -1,18 +1,18 @@
 <report>
 <title>Two sample Smirnov test for distribution difference</title>
 
-<p>X sample: <in>x</in><br />
-Y sample: <in>y</in></p>
+<p>X sample: @x<br />
+Y sample: @y</p>
 
 <p>Two sided test:<br />
-D = <inu>d</inu><br />
-<pval><inp>p</inp></pval></p>
+D = @{d:roundu}<br />
+<pval>@{p:pval}</pval></p>
 
-<p>One sided test (suspecting <in>sample_1</in> shifted left of <in>sample_2</in>):<br />
-D = <inu>d_l</inu><br />
-<pval><inp>p_l</inp></pval></p>
+<p>One sided test (suspecting @sample_1 shifted left of @sample_2):<br />
+D = @{d_l:roundu}<br />
+<pval>@{p_l:pval}</pval></p>
 
-<p>One sided test (suspecting <in>sample_1</in> shifted right of <in>sample_2</in>):<br />
-D = <inu>d_r</inu><br />
-<pval><inp>p_r</inp></pval></p>
+<p>One sided test (suspecting @sample_1 shifted right of @sample_2):<br />
+D = @{d_r:roundu}<br />
+<pval>@{p_r:pval}</pval></p>
 </report>

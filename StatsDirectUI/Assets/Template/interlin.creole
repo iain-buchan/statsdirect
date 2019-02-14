@@ -1,5 +1,5 @@
 <report>
 <title>Linearised estimates - Interpolation</title>
-<p><in>lab_x</in> = <inu>res_x</inu><br />
-<in>lab_y</in> = <inu>res_y</inu></p>
+<p>@lab_x = @{res_x:roundu}<br />
+@lab_y = @{res_y:roundu}</p>
 </report>

@@ -9,34 +9,34 @@
       <![CDATA[<report>
 <title>Poisson regression - model analysis</title>
 
-<p>Accuracy = <in>acc</in><br />
-Log likelihood with all covariates = <in>ll</in></p>
+<p>Accuracy = @acc<br />
+Log likelihood with all covariates = @ll</p>
 
-<p>Deviance with all covariates = <in>dev</in>   df = <in>idf</in>   rank = <in>rank</in><br />
-Akaike information criterion = <in>aka</in><br />
-Schwartz information criterion = <in>sch</in></p>
+<p>Deviance with all covariates = @dev   df = @idf   rank = @rank<br />
+Akaike information criterion = @aka<br />
+Schwartz information criterion = @sch</p>
 
-<p>Deviance with no covariates = <in>devx</in><br />
-Deviance (likelihood ratio, G&#xb2;) = <in>x2dev</in>   df = <in>x2df</in>   <pval><inp>x2p</inp></pval><br />
-Pseudo (McFadden) R-square = <in>r2</in><br />
-Pseudo (likelihood ratio index) R-square = <in>r2i</in></p>
+<p>Deviance with no covariates = @devx<br />
+Deviance (likelihood ratio, G&#xb2;) = @x2dev   df = @x2df   <pval>@{x2p:pval}</pval><br />
+Pseudo (McFadden) R-square = @r2<br />
+Pseudo (likelihood ratio index) R-square = @r2i</p>
 
-<p>Pearson goodness of fit = <in>x2_pearson</in>   df = <in>idf</in>   <pval><inp>p_pearson</inp></pval><br />
-Deviance goodness of fit = <in>dev</in>   df = <in>idf</in>   <pval><inp>p_dev</inp></pval></p>
+<p>Pearson goodness of fit = @x2_pearson   df = @idf   <pval>@{p_pearson:pval}</pval><br />
+Deviance goodness of fit = @dev   df = @idf   <pval>@{p_dev:pval}</pval></p>
 
-<p>Over-dispersion scale parameter = <in>sp</in><br />
-Scaled G&#xb2; = <in>x2dev_scaled</in>   df = <in>x2df</in>   <pval><inp>x2p_scaled</inp></pval><br />
-Scaled Pearson goodness of fit = <in>x2_scaled</in>   df = <in>idf</in>   <pval><inp>p_p_scaled</inp></pval><br />
-Scaled Deviance goodness of fit = <in>dev_scaled</in>   df = <in>idf</in>   <pval><inp>p_dev_scaled</inp></pval></p>
+<p>Over-dispersion scale parameter = @sp<br />
+Scaled G&#xb2; = @x2dev_scaled   df = @x2df   <pval>@{x2p_scaled:pval}</pval><br />
+Scaled Pearson goodness of fit = @x2_scaled   df = @idf   <pval>@{p_p_scaled:pval}</pval><br />
+Scaled Deviance goodness of fit = @dev_scaled   df = @idf   <pval>@{p_dev_scaled:pval}</pval></p>
 
 <table>
 <tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</th></tr>
-<block name="unscaled"><tr><td><in>par</in></td><td><in>coef</in></td><td><in>err</in></td></tr></block>
+<block name="unscaled"><tr><td>@par</td><td>@coef</td><td>@err</td></tr></block>
 </table>
 <br />
 <table>
 <tr><th>Parameter</th><th>Scaled Standard Error</th><th>Scaled Wald z</th><th></th></tr>
-<block name="scaled"><tr><td><in>par</in></td><td><in>err</in></td><td><in>z</in></td><td><pval><inp>p</inp></pval></td></tr></block>
+<block name="scaled"><tr><td>@par</td><td>@err</td><td>@z</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 </report>]]>
     </report>

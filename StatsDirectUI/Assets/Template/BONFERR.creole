@@ -1,16 +1,16 @@
 <report>
 <title>Bonferroni comparison</title>
 
-<p>Variable A: <in>var_a</in><br />
-Variable B: <in>var_b</in><br />
-Mean A - Mean B = <inu>a-b</inu><br />
-Estimated std. error = <inu>std_err</inu><br />
-Number of groups = <in>groups</in><br />
-<in>pc</in>% confidence interval = <inu>from</inu> to <inu>to</inu></p>
+<p>Variable A: @var_a<br />
+Variable B: @var_b<br />
+Mean A - Mean B = @{a-b:roundu}<br />
+Estimated std. error = @{std_err:roundu}<br />
+Number of groups = @groups<br />
+@pc% confidence interval = @{from:roundu} to @{to:roundu}</p>
 
-<p>t = <inu>t</inu><br />
-df = <in>df</in><br />
-<pval><inp>p</inp></pval></p>
+<p>t = @{t:roundu}<br />
+df = @df<br />
+<pval>@{p:pval}</pval></p>
 
-<p>Bonferroni critical P for <in>comp</in> = <inu>bonf</inu></p>
+<p>Bonferroni critical P for @comp = @{bonf:roundu}</p>
 </report>

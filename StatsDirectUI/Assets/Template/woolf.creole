@@ -2,52 +2,52 @@
 <title>Woolf chi-square analysis of 2 by 2 series</title>
 <block name="table">
 
-<p><u>For table <in>table</in></u><br />
-Percentages:  A = <in>pc_a</in> C = <in>pc_c</in> Total = <in>pc_t</in></p>
+<p><u>For table @table</u><br />
+Percentages:  A = @pc_a C = @pc_c Total = @pc_t</p>
 <block name="warn_small"><p><warn>WARNING: SMALL EXPECTED FREQUENCIES, CHECK BY EXACT METHODS</warn></p></block>
-<p>Uncorrected Chi&#xb2; = <in>table_chi_2</in> Chi = <in>table_chi</in><br />
-Yates' corrected Chi&#xb2; = <in>yates_chi_2</in> Chi = <in>yates_chi</in> <pval><inp>yates_chi_p</inp></pval></p>
+<p>Uncorrected Chi&#xb2; = @table_chi_2 Chi = @table_chi<br />
+Yates' corrected Chi&#xb2; = @yates_chi_2 Chi = @yates_chi <pval>@{yates_chi_p:pval}</pval></p>
 
 <block name="no_haldane">
 <p><b>Without Haldane Correction:</b><br />
-Odds ratio = <in>odds</in>  log odds ratio = <in>log</in><br />
-Variance of log odds ratio = <in>var</in>  standard error = <in>se</in>  weight = <in>weight</in><br />
-Chi&#xb2; = <in>chi_2</in> Chi = <in>chi</in><ci> </ci><pval><inp>chi_p</inp></pval><br />
-<ci>Approximate <in>pc</in>% CI for log odds ratio = <in>ci_from</in> to <in>ci_to</in></ci><br />
-<ci>Giving an odds ratio of <in>odds_from</in> to <in>odds_to</in></ci></p></block>
+Odds ratio = @odds  log odds ratio = @log<br />
+Variance of log odds ratio = @var  standard error = @se  weight = @weight<br />
+Chi&#xb2; = @chi_2 Chi = @chi<ci> </ci><pval>@{chi_p:pval}</pval><br />
+<ci>Approximate @pc% CI for log odds ratio = @ci_from to @ci_to</ci><br />
+<ci>Giving an odds ratio of @odds_from to @odds_to</ci></p></block>
 <block name="warn_no_haldane">
 <p><warn>ODDS RATIO NOT COMPUTABLE WITHOUT HALDANE CORRECTION</warn></p>
 </block>
 <block name="haldane">
 
 <p><b>With Haldane Correction:</b><br />
-Odds ratio = <in>odds</in>  log odds ratio = <in>log</in><br />
-Variance of log odds ratio = <in>var</in>  standard error = <in>se</in>  weight = <in>weight</in><br />
-Chi&#xb2; = <in>chi_2</in>  Chi = <in>chi</in> <pval><inp>chi_p</inp></pval><br />
-<ci>Approximate <in>pc</in>% CI for log odds ratio = <in>ci_from</in> to <in>ci_to</in></ci><br />
-<ci>Giving an odds ratio of <in>odds_from</in> to <in>odds_to</in></ci></p>
+Odds ratio = @odds  log odds ratio = @log<br />
+Variance of log odds ratio = @var  standard error = @se  weight = @weight<br />
+Chi&#xb2; = @chi_2  Chi = @chi <pval>@{chi_p:pval}</pval><br />
+<ci>Approximate @pc% CI for log odds ratio = @ci_from to @ci_to</ci><br />
+<ci>Giving an odds ratio of @odds_from to @odds_to</ci></p>
 </block>
 </block>
 <br />
 <block name="combined_no_haldane">
 <p><b>For combined tables without Haldane correction:</b><br />
-Number of Tables = <in>tables</in><br />
-Mean log odds ratio = <in>mean</in> giving odds ratio = <in>odds</in><br />
-Variance of mean log odds ratio = <in>var</in>  standard error = <in>se</in><br />
-<ci>Approximate <in>pc</in>% CI for mean log odds ratio = <in>ci_from</in> to <in>ci_to</in></ci><br />
-<ci>Giving odds ratio of <in>odds_from</in> to <in>odds_to</in></ci><br />
-Chi&#xb2; for expected log odds ratio = 0 is <in>chi_2</in> Chi = <in>chi</in> <pval><inp>chi_p</inp></pval><br />
-Chi&#xb2; for heterogeneity = <in>het_chi_2</in> DF = <in>df</in> <pval><inp>het_chi_p</inp></pval></p>
+Number of Tables = @tables<br />
+Mean log odds ratio = @mean giving odds ratio = @odds<br />
+Variance of mean log odds ratio = @var  standard error = @se<br />
+<ci>Approximate @pc% CI for mean log odds ratio = @ci_from to @ci_to</ci><br />
+<ci>Giving odds ratio of @odds_from to @odds_to</ci><br />
+Chi&#xb2; for expected log odds ratio = 0 is @chi_2 Chi = @chi <pval>@{chi_p:pval}</pval><br />
+Chi&#xb2; for heterogeneity = @het_chi_2 DF = @df <pval>@{het_chi_p:pval}</pval></p>
 </block>
 <block name="combined_with_haldane">
 
 <p><b>For combined tables with Haldane correction:</b><br />
-Number of tables = <in>tablesx</in><br />
-Mean log odds ratio = <in>meanx</in> giving odds ratio = <in>oddsx</in><br />
-Variance of mean log odds ratio = <in>varx</in>  standard error = <in>sex</in><br />
-<ci>Approximate <in>pc</in>% CI for mean log odds ratio = <in>ci_fromx</in> to <in>ci_tox</in></ci><br />
-<ci>Giving odds ratio of <in>odds_fromx</in> to <in>odds_tox</in></ci><br />
-Chi&#xb2; for expected log odds ratio = 0 is <in>chi_2x</in> Chi = <in>chix</in> <pval><inp>chi_px</inp></pval><br />
-Chi&#xb2; for heterogeneity = <in>het_chi_2x</in> DF = <in>dfx</in> <pval><inp>het_chi_px</inp></pval></p>
+Number of tables = @tablesx<br />
+Mean log odds ratio = @meanx giving odds ratio = @oddsx<br />
+Variance of mean log odds ratio = @varx  standard error = @sex<br />
+<ci>Approximate @pc% CI for mean log odds ratio = @ci_fromx to @ci_tox</ci><br />
+<ci>Giving odds ratio of @odds_fromx to @odds_tox</ci><br />
+Chi&#xb2; for expected log odds ratio = 0 is @chi_2x Chi = @chix <pval>@{chi_px:pval}</pval><br />
+Chi&#xb2; for heterogeneity = @het_chi_2x DF = @dfx <pval>@{het_chi_px:pval}</pval></p>
 </block>
 </report>

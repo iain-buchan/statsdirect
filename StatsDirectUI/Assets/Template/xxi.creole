@@ -2,6 +2,6 @@
 <title>Multiple linear regression - XXi (hat) matrix</title>
 <br />
 <table>
-<block name="xxi"><tr><block name="col"><td><in>x</in></td></block></tr></block>
+<block name="xxi"><tr><block name="col"><td>@x</td></block></tr></block>
 </table>
 </report>

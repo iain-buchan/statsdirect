@@ -1,6 +1,6 @@
 <report>
-<p>For Y = <in>y</in><br />
-Predicted X = <in>x</in></p>
+<p>For Y = @y<br />
+Predicted X = @x</p>
 
 <br />
 </report>

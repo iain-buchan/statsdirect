@@ -1208,7 +1208,7 @@ namespace StatsDirect.Builtins
                             catValues.AddOutput("p", 1.0 - PDF.alnorm(zz));
                             catList.Add(catValues);
                         }
-                        outputParameters.AddOutput("*", catList);
+                        outputParameters.AddOutput("*cats", catList);
                         outputParameters.AddOutput("kc", kbar);
                         //  outputParameters.AddOutput("sec", host.RoundU(sek))
                         outputParameters.AddOutput("zc", z);
@@ -1236,7 +1236,7 @@ namespace StatsDirect.Builtins
                             catValues.AddOutput("p", Formatting.ASTERISK);
                             catList.Add(catValues);
                         }
-                        outputParameters.AddOutput("*", catList);
+                        outputParameters.AddOutput("*cats", catList);
                         outputParameters.AddOutput("kc", kbar);
                         outputParameters.AddOutput("sec", Formatting.ASTERISK);
                         outputParameters.AddOutput("zc", Formatting.ASTERISK);

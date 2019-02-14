@@ -1,26 +1,26 @@
 <report>
 <title>Agreement</title>
 
-<p>Variables: <in>tlist</in></p>
+<p>Variables: @tlist</p>
 <block name="all">
 
-<p><in>pc</in>% Limits of agreement = <inu>from</inu> to <inu>to</inu></p>
+<p>@pc% Limits of agreement = @{from:roundu} to @{to:roundu}</p>
 </block>
 
-<p>Intra-class correlation coefficient (one way random effects) = <inu>icc</inu></p>
+<p>Intra-class correlation coefficient (one way random effects) = @{icc:roundu}</p>
 
-<p>Estimated within-subjects standard deviation = <inu>wssd</inu></p>
+<p>Estimated within-subjects standard deviation = @{wssd:roundu}</p>
 
-<p>For within-subjects sd vs. mean, Kendall's <in>tau</in><pval>  two sided <inp>p2</inp></pval></p>
+<p>For within-subjects sd vs. mean, Kendall's @tau<pval>  two sided @{p2:pval}</pval></p>
 
-<p>Repeatability (for alpha = <in>pc</in>) = <inu>rep</inu></p>
-
-
-<p><in>repeatability</in></p>
+<p>Repeatability (for alpha = @pc) = @{rep:roundu}</p>
 
 
-<p><in>agreement</in></p>
+<p>@repeatability</p>
 
 
-<p><in>qq</in></p>
+<p>@agreement</p>
+
+
+<p>@qq</p>
 </report>

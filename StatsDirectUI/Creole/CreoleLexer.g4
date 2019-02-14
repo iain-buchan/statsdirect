@@ -1,9 +1,5 @@
 lexer grammar CreoleLexer;
 
-SUBSTITUTION
-    : '<%' .*? '%>'
-    ;
-
 SEA_WS
     :  (' '|'\t'|'\r'? '\n')+
     ;
@@ -12,8 +8,16 @@ TAG_OPEN
     : '<' -> pushMode(TAG)
     ;
 
+EXPR_OPEN_COMPOUND
+    : '@{' -> pushMode(EXPR_COMPOUND)
+    ;
+
+EXPR_OPEN_SIMPLE
+    : '@' -> pushMode(EXPR_SIMPLE)
+    ;
+
 TEXT
-    : ~'<'+
+    : ~('<'|'@')+
     ;
 
 //
@@ -46,11 +50,7 @@ TAG_BR         : 'br' ;
 TAG_CI         : 'ci' ;
 TAG_GRANDTOTAL : 'grandtotal' ;
 TAG_I          : 'i' ;
-TAG_IN         : 'in' ;
 TAG_INCLUDE    : 'include' ;
-TAG_INP        : 'inp' ;
-TAG_INU        : 'inu' ;
-TAG_INX        : 'inx' ;
 TAG_MODEL      : 'model' ;
 TAG_P          : 'p' ;
 TAG_PRE        : 'pre' ;
@@ -63,11 +63,7 @@ TAG_SUBTOTAL   : 'subtotal' ;
 TAG_SUP        : 'sup' ;
 TAG_TABLE      : 'table' ;
 TAG_TD         : 'td' ;
-TAG_TDFIRST    : 'tdfirst' ;
-TAG_TDSPAN     : 'tdspan' ;
 TAG_TH         : 'th' ;
-TAG_THFIRST    : 'thfirst' ;
-TAG_THSPAN     : 'thspan' ;
 TAG_TITLE      : 'title' ;
 TAG_TR         : 'tr' ;
 TAG_U          : 'u' ;
@@ -163,4 +159,57 @@ fragment DOUBLE_QUOTE_STRING
     ;
 fragment SINGLE_QUOTE_STRING
     : '\'' ~[<']* '\''
-;
+	;
+
+mode EXPR_SIMPLE;
+
+EXPR_SIMPLE_VARIABLE
+    : EXPR_VariableStartChar EXPR_VariableChar* -> popMode
+    ;
+
+EXPR_SIMPLE_WHITESPACE
+    : [ \t\r\n] -> skip
+    ;
+
+fragment
+EXPR_VariableChar
+    : EXPR_VariableStartChar
+    | '-'
+    | '_'
+    | DIGIT
+    | '\u00B7'
+    | '\u0300'..'\u036F'
+    | '\u203F'..'\u2040'
+    ;
+
+fragment
+EXPR_VariableStartChar
+    : [a-zA-Z]
+    | '\u2070'..'\u218F'
+    | '\u2C00'..'\u2FEF'
+    | '\u3001'..'\uD7FF'
+    | '\uF900'..'\uFDCF'
+    | '\uFDF0'..'\uFFFD'
+    ;
+
+mode EXPR_COMPOUND;
+
+EXPR_COMPOUND_FORMAT
+	: ':' EXPR_COMPOUND_FORMAT_STRING
+	;
+
+EXPR_CLOSE_COMPOUND
+	: '}' -> popMode
+	;
+
+EXPR_COMPOUND_VARIABLE
+    : EXPR_VariableStartChar EXPR_VariableChar*
+    ;
+
+fragment EXPR_COMPOUND_FORMAT_STRING
+	: 'default'
+	| 'chart'
+	| 'pval'
+	| 'roundx'
+	| 'roundu'
+	;
