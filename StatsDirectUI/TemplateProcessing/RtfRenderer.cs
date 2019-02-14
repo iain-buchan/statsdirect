@@ -31,7 +31,7 @@ namespace StatsDirect.TemplateProcessing
         {
             ReportRenderer renderer = GetReportRenderer(victim.Template.MimeType);
             builder.Append(renderer.Render(Host, victim.Template.Content, victim.Parameters));
-            // ReportRenderer newRenderer = new PrincipledCreoleRtfReportRenderer();
+            // ReportRenderer newRenderer = new CreoleRtfReportRenderer();
             // builder.Append(newRenderer.Render(Host, victim.Template.Content, victim.Parameters));
         }
 
@@ -44,7 +44,7 @@ namespace StatsDirect.TemplateProcessing
         private ReportRenderer GetReportRenderer(string mimeType)
         {
             if ("application/x-statsdirect-creole".Equals(mimeType))
-                return new CreoleRtfReportRenderer();
+                return new PrincipledCreoleRtfReportRenderer();
             throw new ArgumentOutOfRangeException(nameof(mimeType), mimeType, "Unknown MIME type when trying to obtain a report renderer. Is this report in a format that StatsDirect can render?");
         }
     }
