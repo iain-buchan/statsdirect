@@ -37,8 +37,7 @@ namespace StatsDirect.Charting
             XlinkNamespace = "http://www.w3.org/1999/xlink";
             root = new XElement(SvgNamespace + "svg",
                 // new XAttribute("xmlns", SvgNamespace.NamespaceName),
-                new XAttribute("width", width),
-                new XAttribute("height", height),
+                new XAttribute("width", "6in"),
                 new XAttribute("viewBox", $"0 0 {width} {height}")
                 );
         }
