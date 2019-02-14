@@ -1,30 +1,30 @@
 <report>
 <title>Risk analysis (retrospective)</title>
-<line></line>
+<br />
 <table>
 <tr><th></th><tdfirst><subtotal>Characteristic factor:</subtotal></tdfirst><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>
 <tr><td>Positive</td><td><in>aa</in></td><td><in>bb</in></td></tr>
 <tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td></tr>
 </table>
-<line></line>
-<line>Observed odds ratio = <inu>odds</inu></line>
-<line>Approximate power <in>pwr</in></line>
+
+<p>Observed odds ratio = <inu>odds</inu><br />
+Approximate power <in>pwr</in></p>
 <block name="power">
-<line></line>
-<line><ci>Approximate (Woolf, logit) <inu>ci</inu>% confidence interval = <inu>ci_1</inu>  to  <inu>ci_2</inu> </ci></line>
-<line></line>
+
+<p><ci>Approximate (Woolf, logit) <inu>ci</inu>% confidence interval = <inu>ci_1</inu>  to  <inu>ci_2</inu> </ci></p>
+
 </block>
-<line>Conditional maximum likelihood estimates:</line>
-<line>Conditional estimate of odds ratio = <inu>eor</inu></line>
-<line><ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu>  to  <inu>ulf</inu></ci></line>
-<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
-<line><ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci></line>
-<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
-<line></line>
+<p>Conditional maximum likelihood estimates:<br />
+Conditional estimate of odds ratio = <inu>eor</inu><br />
+<ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu>  to  <inu>ulf</inu></ci><br />
+<pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval><br />
+<ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci><br />
+<pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></p>
+
 <block name="risk">
-<line>Population exposure % = <inu>pe</inu></line>
-<line>Population attributable risk % = <inu>par</inu></line>
-<line><ci>Approximate <in>pc</in>% confidence interval = <inu>from</inu>  to  <inu>to</inu></ci></line>
+<p>Population exposure % = <inu>pe</inu><br />
+Population attributable risk % = <inu>par</inu><br />
+<ci>Approximate <in>pc</in>% confidence interval = <inu>from</inu>  to  <inu>to</inu></ci></p>
 </block>
 </report>

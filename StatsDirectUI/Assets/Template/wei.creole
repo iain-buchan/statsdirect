@@ -1,13 +1,13 @@
 <report>
 <title>Wei-Lachin analysis</title>
 <block name="outer">
-<line></line>
+<br />
 <title><in>title</in></title>
-<line></line>
-<line>total cases = <in>tot</in> (by group = <in>grp_1</in> and <in>grp_2</in>)</line>
+
+<p>total cases = <in>tot</in> (by group = <in>grp_1</in> and <in>grp_2</in>)</p>
 <block name="repeats">
-<line></line>
-<line><u>Repeat time <in>time</in></u></line>
+
+<p><u>Repeat time <in>time</in></u></p>
 <table>
 <tr><td>observed failures by group =</td><td><in>fail_1</in> and <in>fail_2</in></td></tr>
 <tr><td>Wei-Lachin t =</td><td><in>t</in></td></tr>
@@ -15,18 +15,18 @@
 <tr><td>chi-square =</td><td><in>chi</in></td><td><pval><inp>p</inp></pval></td></tr>
 </table>
 </block>
-<line></line>
+<br />
 <title><in>title_multi</in></title>
-<line></line>
-<line><u>Covariance matrix</u>:</line>
-<block name="covar"><line><in>mat</in></line></block>
-<line></line>
-<line><u>Inverse of covariance matrix</u>:</line>
-<block name="inv_covar"><line><in>mat</in></line></block>
-<line></line>
-<line>repeat times = <in>rep</in></line>
-<line>chi-square omnibus statistic = <in>stat</in>  <pval><inp>p_omnibus</inp></pval></line>
-<line></line>
-<line>stochastic ordering z = <in>z</in>  <pval>one sided <inp>p_1</inp>,  two sided <inp>p_2</inp></pval></line>
+
+<p><u>Covariance matrix</u>:</p>
+<block name="covar"><p><in>mat</in></p></block>
+
+<p><u>Inverse of covariance matrix</u>:</p>
+<block name="inv_covar"><p><in>mat</in></p></block>
+
+<p>repeat times = <in>rep</in><br />
+chi-square omnibus statistic = <in>stat</in>  <pval><inp>p_omnibus</inp></pval></p>
+
+<p>stochastic ordering z = <in>z</in>  <pval>one sided <inp>p_1</inp>,  two sided <inp>p_2</inp></pval></p>
 </block>
 </report>

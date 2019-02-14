@@ -1,29 +1,29 @@
 <report>
 <title>Effect size (weighted mean difference) meta-analysis</title>
-<line></line>
+<br />
 <table>
 <tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>Mean diff.</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
 <block name="approximate"><tr><td><in>st</in></td><td><in>ne</in></td><td><in>nc</in></td><td><inu>d</inu></td><td><ci><inu>lci</inu></ci></td><td><ci><inu>uci</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
 <block name="poolok">
-<line></line>
+<br />
 <subtitle>Fixed effects (Mulrow-Oxman)</subtitle>
-<line>Pooled effect size wmd+ = <inu>dplus</inu> (<ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci>)</line>
-<line>Z (test wmd+ differs from 0) = <inu>z</inu>  <pval><inp>p</inp></pval></line>
-<line></line>
+<p>Pooled effect size wmd+ = <inu>dplus</inu> (<ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci>)<br />
+Z (test wmd+ differs from 0) = <inu>z</inu>  <pval><inp>p</inp></pval></p>
+
 <subtitle>Non-combinability of studies</subtitle>
-<line>Cohran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval></line>
-<line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
-<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
-<line></line>
+<p>Cohran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval><br />
+Moment-based estimate of between studies variance = <inu>tausq</inu><br />
+I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </p>
+
 <subtitle>Random effects (DerSimonian-Laird)</subtitle>
-<line>Pooled wmd+ = <inu>dsrd</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)</line>
-<line>Z (test wmd+ differs from 0) = <inu>dz</inu>  <pval><inp>zp</inp></pval></line>
+<p>Pooled wmd+ = <inu>dsrd</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)<br />
+Z (test wmd+ differs from 0) = <inu>dz</inu>  <pval><inp>zp</inp></pval></p>
 </block>
 <block name="egger">
-<line></line>
+<br />
 <subtitle>Bias indicators</subtitle>
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
+<p>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval><br />
+Egger: bias = <in>a</in> (<ci><in>pc_egger</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></p>
 </block>
 </report>

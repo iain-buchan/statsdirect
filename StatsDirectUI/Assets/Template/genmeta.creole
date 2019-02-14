@@ -1,32 +1,32 @@
 <report>
 <title>Summary meta-analysis</title>
-<line></line>
+<br />
 <table>
 <tr><th>Study</th><th><in>stat</in></th><th>SE</th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
 <block name="studies"><tr><td><in>st</in></td><td><inu>y</inu></td><td><inu>se</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Stratum</th><th>Standardized Effect</th><th>Standard Error</th><thfirst>% Weights (fixed, random)</thfirst><thspan/><th></th></tr>
 <block name="studies"><tr><td><in>st</in></td><td><inu>standardized_effect</inu></td><td><inu>se</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><in>lb</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <subtitle>Fixed effects (inverse variance)</subtitle>
-<line>Pooled <in>stat_fixed</in> = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from_fixed</inu> to <inu>to_fixed</inu></ci>)</line>
-<line>Z (test <in>task</in>) = <inu>z</inu>  <pval><inp>p_fixed</inp></pval></line>
-<line></line>
+<p>Pooled <in>stat_fixed</in> = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from_fixed</inu> to <inu>to_fixed</inu></ci>)<br />
+Z (test <in>task</in>) = <inu>z</inu>  <pval><inp>p_fixed</inp></pval></p>
+
 <subtitle>Non-combinability of studies</subtitle>
-<line>Cochran Q = <inu>qc</inu>  (df = <in>df</in>) <pval><inp>xp</inp></pval></line>
-<line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
-<line>I<sub>2</sub> (inconsistency) = <inu>isq</inu>% (<ci><in>pc1</in>% CI = <inu>llisq</inu>% to <inu>ulisq</inu>%</ci>) </line>
-<line></line>
+<p>Cochran Q = <inu>qc</inu>  (df = <in>df</in>) <pval><inp>xp</inp></pval><br />
+Moment-based estimate of between studies variance = <inu>tausq</inu><br />
+I<sub>2</sub> (inconsistency) = <inu>isq</inu>% (<ci><in>pc1</in>% CI = <inu>llisq</inu>% to <inu>ulisq</inu>%</ci>) </p>
+
 <subtitle>Random effects (DerSimonian-Laird)</subtitle>
-<line>Pooled <in>dsstat</in> = <inu>dsrr</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)</line>
-<line>Z (test <in>stat</in>) = <inu>dz</inu>  <pval><inp>dp</inp></pval></line>
+<p>Pooled <in>dsstat</in> = <inu>dsrr</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)<br />
+Z (test <in>stat</in>) = <inu>dz</inu>  <pval><inp>dp</inp></pval></p>
 <block name="bias">
-<line></line>
+<br />
 <subtitle>Bias indicators</subtitle>
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
-<line>Egger: bias = <inu>a</inu> (<ci><in>pc</in>% CI = <inu>cl</inu> to <inu>cu</inu></ci>)  <pval><inp>p</inp></pval></line>
+<p>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval><br />
+Egger: bias = <inu>a</inu> (<ci><in>pc</in>% CI = <inu>cl</inu> to <inu>cu</inu></ci>)  <pval><inp>p</inp></pval></p>
 </block>
 </report>

@@ -6,8 +6,9 @@
         TResult Visit(CreoleBlock<TResult> victim);
         TResult Visit(CreoleFormatting<TResult> victim);
         TResult Visit(CreoleInclude<TResult> victim);
-        TResult Visit(CreoleLine<TResult> victim);
+        TResult Visit(CreoleLineBreak<TResult> victim);
         TResult Visit(CreoleList<TResult> victim);
+        TResult Visit(CreoleParagraph<TResult> victim);
         TResult Visit(CreoleSubstitution<TResult> victim);
         TResult Visit(CreoleTable<TResult> victim);
         TResult Visit(CreoleTableRow<TResult> victim);

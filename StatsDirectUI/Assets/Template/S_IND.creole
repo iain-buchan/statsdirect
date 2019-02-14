@@ -1,20 +1,20 @@
 <report>
 <title>Sample size for independent cohort study</title>
-<line></line>
-<line>Probability of event in control group = <inu>pc</inu></line>
-<line>Probability of event in experimental group = <inu>ps</inu></line>
-<line>Controls per case subject = <in>cpc</in></line>
-<line>Alpha = <inu>alpha</inu></line>
-<line>Power = <inu>power</inu></line>
-<line></line>
-<line>For uncorrected chi-square test:</line>
-<line>N = <in>case</in> case subjects and <in>controls</in> controls</line>
-<line></line>
-<line><b>For corrected chi-square and Fisher's exact tests:</b></line>
-<line>N = <in>case_corr</in> case subjects and <in>controls_corr</in> controls</line>
+
+<p>Probability of event in control group = <inu>pc</inu><br />
+Probability of event in experimental group = <inu>ps</inu><br />
+Controls per case subject = <in>cpc</in><br />
+Alpha = <inu>alpha</inu><br />
+Power = <inu>power</inu></p>
+
+<p>For uncorrected chi-square test:<br />
+N = <in>case</in> case subjects and <in>controls</in> controls</p>
+
+<p><b>For corrected chi-square and Fisher's exact tests:</b><br />
+N = <in>case_corr</in> case subjects and <in>controls_corr</in> controls</p>
 <block name="assumptions">
-<line></line>
-<line><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</warn></line>
-<line><warn>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></line>
+
+<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</warn><br />
+<warn>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</warn></p>
 </block>
 </report>

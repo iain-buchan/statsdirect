@@ -1,6 +1,6 @@
 <report>
 <title>Universal agreement (Berry-Mielke) R</title>
-<line></line>
+<br />
 <table>
 <tr><td>Measurement:</td><td><in>name</in></td></tr>
 <tr><td>Number of measurements:</td><td><in>nobs</in></td></tr>
@@ -9,14 +9,14 @@
 <tr><td>Number of dimensions:</td><td><in>c</in></td></tr>
 <tr><td>Reference standard:</td><td><in>ref</in></td></tr>
 </table>
-<line></line>
+<br />
 <table>
 <tr><td>Observed (realised) delta: </td><td><inu>delta</inu></td></tr>
 <tr><td>Expected (mean) delta:</td><td><inu>edel</inu></td></tr>
 <tr><td>Variance of delta:</td><td><inu>vardel</inu></td></tr>
 <tr><td>Skewness of delta:</td><td><inu>skewdel</inu></td></tr>
 </table>
-<line></line>
+<br />
 <table>
 <tr><td>Agreement coefficient R:</td><td><inu>R</inu></td></tr>
 <tr><td><pval>Significance:</pval></td><td><pval><inp>p</inp></pval></td></tr>

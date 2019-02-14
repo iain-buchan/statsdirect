@@ -1,12 +1,12 @@
 <report>
 <title>Sample size for a population survey</title>
-<line></line>
+<br />
 <table>
 <tr><td>Population estimate</td><td><inu>estimate</inu></td></tr>
 <tr><td>Population rate</td><td><inu>rate</inu>%</td></tr>
 <tr><td>Maximum deviation</td><td>&#xb1;<inu>deviation</inu>%</td></tr>
 <tr><td>Confidence level</td><td><inu>level</inu></td></tr>
 </table>
-<line></line>
-<line>Estimated minimum sample size = <in>size</in></line>
+
+<p>Estimated minimum sample size = <in>size</in></p>
 </report>

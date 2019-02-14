@@ -1,6 +1,6 @@
 <report>
 <title>Normal distribution (z) test - two independent samples</title>
-<line></line>
+<br />
 <block name="sample">
 <table>
 <tr><td>Sample name:</td><td><in>name</in></td></tr>
@@ -8,18 +8,18 @@
 <tr><td>Variance =</td><td><in>var</in></td></tr>
 <tr><td>Size =</td><td><in>size</in></td></tr>
 </table>
-<line></line>
+<br />
 </block>
-<line>Combined standard error = <in>error</in></line>
-<line></line>
-<line><ci><in>pc</in>% confidence interval for difference between means = <in>from</in> to <in>to</in></ci></line>
-<line></line>
-<line>Standard normal deviate (z) = <in>z</in></line>
-<line></line>
-<line><pval>One sided <inp>p_1</inp></pval></line>
-<line><pval>Two sided <inp>p_2</inp></pval></line>
+<p>Combined standard error = <in>error</in></p>
+
+<p><ci><in>pc</in>% confidence interval for difference between means = <in>from</in> to <in>to</in></ci></p>
+
+<p>Standard normal deviate (z) = <in>z</in></p>
+
+<p><pval>One sided <inp>p_1</inp></pval><br />
+<pval>Two sided <inp>p_2</inp></pval></p>
 <block name="warn">
-<line></line>
-<line><warn>WARNING: numbers too small for this test consider using a Student t test instead</warn></line>
+
+<p><warn>WARNING: numbers too small for this test consider using a Student t test instead</warn></p>
 </block>
 </report>

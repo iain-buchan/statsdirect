@@ -1,7 +1,7 @@
 <report>
-  <block name="group"><line>Group <in>ggrp</in> mean = <inu>gmean</inu>  (n = <in>gn</in>)</line></block>
-<line>Grand mean = <inu>g_mean</inu>  (n = <in>g_n</in>)</line>
-<line></line>
+  <block name="group"><p>Group <in>ggrp</in> mean = <inu>gmean</inu>  (n = <in>gn</in>)</p></block>
+<p>Grand mean = <inu>g_mean</inu>  (n = <in>g_n</in>)</p>
+
 <table>
 <block name="subgroup"><tr><td>Group <in>sggrp</in></td><td>(subgroup <in>sgsub_grp</in>)</td><td><in>sgtitle</in> mean = <inu>sgmean</inu></td></tr></block>
 </table>

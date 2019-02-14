@@ -18,12 +18,12 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Approximate equality of variance tests and adjusted ANOVA</title>
-<line></line>
-<line>Levene's (W50) F = <inx>f</inx>  (df = <in>df1</in>, <in>df2</in>)  <pval><inp>pLevene</inp></pval></line>
-<line></line>
-<line>Bartlett's chi-square = <inx>x2</inx>  df = <in>df</in>  <pval><inp>pBartlett</inp></pval></line>
-<line></line>
-<line>Welch adjusted ANOVA F = <inx>fWelch</inx>  (df = <in>dfnWelch</in>, <inx>dfdWelch</inx>)  <pval><inp>pWelch</inp></pval></line>
+
+<p>Levene's (W50) F = <inx>f</inx>  (df = <in>df1</in>, <in>df2</in>)  <pval><inp>pLevene</inp></pval></p>
+
+<p>Bartlett's chi-square = <inx>x2</inx>  df = <in>df</in>  <pval><inp>pBartlett</inp></pval></p>
+
+<p>Welch adjusted ANOVA F = <inx>fWelch</inx>  (df = <in>dfnWelch</in>, <inx>dfdWelch</inx>)  <pval><inp>pWelch</inp></pval></p>
 </report>]]>
     </report>
 	</steps>

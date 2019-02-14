@@ -1,42 +1,42 @@
 <report>
 <title>Abridged life table</title>
-<line></line>
+<br />
 <table>
 <tr><th>Interval</th><th>Population</th><th>Deaths</th><th>Death rate</th></tr>
 <block name="inputs"><tr><td><in>int</in></td><td><inu>pop</inu></td><td><inu>dead</inu></td><td><inu>rate</inu></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Interval</th><th>Probability of dying [q<sub>x</sub>]</th><th>SE of q<sub>x</sub></th><th><ci><in>pc</in>% CI for q<sub>x</sub></ci></th></tr>
 <block name="pdying"><tr><td><in>int</in></td><td><inu>q</inu></td><td><inu>se</inu></td><td><ci><inu>lci</inu>  to  <inu>uci</inu></ci></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Interval</th><th>Living at start [l<sub>x</sub>]</th><th>Dying [d<sub>x</sub>]</th><th>Fraction of last interval of life [a<sub>x</sub>]</th></tr>
 <block name="living"><tr><td><in>int</in></td><td><in>l</in></td><td><in>d</in></td><td><inu>a</inu></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Interval</th><th>Years in interval [L<sub>x</sub>]</th><th>Years beyond start of interval [T<sub>x</sub>]</th></tr>
 <block name="years"><tr><td><in>int</in></td><td><in>L</in></td><td><in>T</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Interval</th><th>Expectation of life [e<sub>x</sub>]</th><th>SE of e<sub>x</sub></th><th><ci><in>pc</in>% CI for e<sub>x</sub></ci></th></tr>
 <block name="expectation"><tr><td><in>int</in></td><td><inu>e</inu></td><td><inu>se</inu></td><td><ci><inu>lci</inu>  to  <inu>uci</inu></ci></td></tr></block>
 </table>
 <block name="util">
-<line></line>
+<br />
 <table>
 <tr><th>Interval</th><th>Adjusted (<in>uti</in>) expectation of life [e<sub>x</sub>]</th></tr>
 <block name="adjusted"><tr><td><in>int</in></td><td><inu>eh</inu></td></tr></block>
 </table>
 </block>
-<line></line>
-<line>Median expectation of life (age at which half of original cohort survives) = <inu>med</inu></line>
-<line><ci><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <inu>med_lci</inu>  to  <inu>med_uci</inu></ci></line>
-<line></line>
-<line>Expectation of life at birth = <inu>elb</inu></line>
-<line><ci><in>pc</in>% CI by Chiang variance estimate = <inu>elb_lci</inu>  to  <inu>elb_uci</inu></ci></line>
-<line><ci><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <inu>elb_mc_lci</inu>  to  <inu>elb_mc_uci</inu></ci></line>
+
+<p>Median expectation of life (age at which half of original cohort survives) = <inu>med</inu><br />
+<ci><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <inu>med_lci</inu>  to  <inu>med_uci</inu></ci></p>
+
+<p>Expectation of life at birth = <inu>elb</inu><br />
+<ci><in>pc</in>% CI by Chiang variance estimate = <inu>elb_lci</inu>  to  <inu>elb_uci</inu></ci><br />
+<ci><in>pc</in>% CI by Monte Carlo (<in>its</in>) simulation = <inu>elb_mc_lci</inu>  to  <inu>elb_mc_uci</inu></ci></p>
 </report>

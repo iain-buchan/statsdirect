@@ -113,22 +113,22 @@
       <![CDATA[<report>
 <title>Logistic regression</title>
 <block name="warn">
-<line></line>
-<line><warn><in>warn</in></warn></line>
+
+<p><warn><in>warn</in></warn></p>
 </block>
-<line></line>
+<br />
 <table>
 <tr><td>Deviance goodness of fit chi-square =</td><td><in>dev</in></td><td>df = <in>df</in></td><td><pval><inp>p</inp></pval></td><td><warn><in>w</in></warn></td></tr>
 <tr><td>Deviance (likelihood ratio) chi-square =</td><td><in>x2</in></td><td>df = <in>df_lr</in></td><td><pval><inp>p_lr</inp></pval></td><td></td></tr>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Parameter</th><th>Odds Ratio</th><th><ci>(<in>pc</in>% Conf. Int.)</ci></th><th>Z Value</th><th><pval>P (>|Z|)</pval></th></tr>
 <block name="var"><tr><td><in>par</in></td><td><in>or</in></td><td><ci><in>ci</in></ci></td><td><in>z</in></td><td><pval><inp>p_var</inp></pval></td></tr>
 </block>
 </table>
-<line></line>
-<line><in>logit</in></line>
+
+<p><in>logit</in></p>
 </report>]]></report>
   </steps>
   <suggested-operations>

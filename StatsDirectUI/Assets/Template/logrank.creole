@@ -1,49 +1,49 @@
 <report>
 <title>Logrank and Wilcoxon tests</title>
 <block name="outer">
-<line></line>
+<br />
 <title><in>title</in><in>strata</in>:</title>
 <block name="groups">
-<line></line>
-<line><u><subtotal>For group <in>grp</in></subtotal></u></line>
-<line>Observed deaths = <in>obs</in></line>
-<line>Extent of exposure to risk of death = <inu>ext</inu></line>
-<line>Relative rate = <inu>rel</inu></line>
+
+<p><u><subtotal>For group <in>grp</in></subtotal></u><br />
+Observed deaths = <in>obs</in><br />
+Extent of exposure to risk of death = <inu>ext</inu><br />
+Relative rate = <inu>rel</inu></p>
 </block>
-<line></line>
-<line>test statistics:</line>
-<line><in>rank</in></line>
-<line></line>
-<line>variance-covariance matrix:</line>
-<block name="covar"><line><in>mat</in></line></block>
-<line></line>
-<line>Chi-square for equivalence of death rates = <inu>chi</inu>  <pval><inp>p</inp></pval></line>
-<block name="trends"><line>Chi-square for trend = <inu>trend</inu> <pval> <inp>p_trend</inp></pval></line></block>
+
+<p>test statistics:<br />
+<in>rank</in></p>
+
+<p>variance-covariance matrix:</p>
+<block name="covar"><p><in>mat</in></p></block>
+
+<p>Chi-square for equivalence of death rates = <inu>chi</inu>  <pval><inp>p</inp></pval></p>
+<block name="trends"><p>Chi-square for trend = <inu>trend</inu> <pval> <inp>p_trend</inp></pval></p></block>
 <block name="strata">
-<line></line>
-<title><in>test</in> for COMBINED STRATA</title><subtotal>:</subtotal></line>
-<line></line>
+<br />
+<title><in>test</in> for COMBINED STRATA:</title>
+
 <table>
 <tr><th>Stratum</th><th>Deaths</th><th>Extent of exposure to risk of death</th><th>Relative rate</th></tr>
 <block name="stratum"><tr><td><in>grp</in></td><td><in>res</in></td><td><inu>sum</inu></td><td><inu>tot</inu></td></tr></block>
 </table>
-<line></line>
-<line>overall chi-square = <inu>chi_strata</inu>  <pval><inp>p_strata</inp></pval></line>
-<block name="strata_trend"><line>Chi-square for trend = <inu>strata_trend</inu><pval>  <inp>p_strata_trend</inp></pval></line></block>
+
+<p>overall chi-square = <inu>chi_strata</inu>  <pval><inp>p_strata</inp></pval></p>
+<block name="strata_trend"><p>Chi-square for trend = <inu>strata_trend</inu><pval>  <inp>p_strata_trend</inp></pval></p></block>
 </block>
 <block name="hazards">
-<line></line>
-<line></line>
-<line>Hazard Ratio  <ci>(approximate <in>pc</in>% confidence interval)</ci></line>
-<block name="hazard"><line><in>vs</in> = <inu>haz</inu>  <ci>(<inu>from</inu> to <inu>to</inu>)</ci></line></block>
+<br />
+
+<p>Hazard Ratio  <ci>(approximate <in>pc</in>% confidence interval)</ci></p>
+<block name="hazard"><p><in>vs</in> = <inu>haz</inu>  <ci>(<inu>from</inu> to <inu>to</inu>)</ci></p></block>
 <block name="cml">
-<line></line>
-<line>Conditional maximum likelihood estimates:</line>
-<line>Hazard Ratio = <inu>hr</inu></line>
-<line><ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu> to <inu>ulf</inu></ci></line>
-<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
-<line><ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu> to <inu>ulm</inu></ci></line>
-<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
+
+<p>Conditional maximum likelihood estimates:<br />
+Hazard Ratio = <inu>hr</inu><br />
+<ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu> to <inu>ulf</inu></ci><br />
+<pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval><br />
+<ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu> to <inu>ulm</inu></ci><br />
+<pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></p>
 </block>
 </block>
 </block>

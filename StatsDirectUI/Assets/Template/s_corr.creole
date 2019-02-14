@@ -1,9 +1,9 @@
 <report>
 <title>Sample size for Pearson correlation</title>
-<line></line>
-<line>Alpha = <inu>alpha</inu></line>
-<line>Power = <inu>power</inu></line>
-<line>Correlation coefficient under null hypothesis = <inu>r0Fmt</inu></line>
-<line>Correlation coefficient under alternative hypothesis = <inu>r1Fmt</inu></line>
-<line>Estimated minimum sample size = <in>size</in></line>
+
+<p>Alpha = <inu>alpha</inu><br />
+Power = <inu>power</inu><br />
+Correlation coefficient under null hypothesis = <inu>r0Fmt</inu><br />
+Correlation coefficient under alternative hypothesis = <inu>r1Fmt</inu><br />
+Estimated minimum sample size = <in>size</in></p>
 </report>

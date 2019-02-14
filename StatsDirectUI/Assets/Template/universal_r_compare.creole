@@ -1,6 +1,6 @@
 <report>
 <title>Comparison of two universal agreement R statistics</title>
-<line></line>
+<br />
 <table>
 <tr><th></th><th>Group 1</th><th>Group 2</th><th>Difference</th></tr>
 <tr><td>R:</td><td><inu>r1</inu> </td><td> <inu>r2</inu></td><td><inu>dr</inu></td></tr>

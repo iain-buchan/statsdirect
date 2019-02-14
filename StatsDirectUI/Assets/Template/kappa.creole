@@ -1,41 +1,41 @@
 <report>
 <title>General agreement over all categories (2 raters)</title>
-<line></line>
-<line><u>Cohen's kappa (unweighted)</u></line>
-<line>Observed agreement = <in>po</in>%</line>
-<line>Expected agreement = <in>pe</in>%</line>
-<line>Kappa = <inu>kappa</inu> (se_0 = <inu>se</inu>, se = <inu>seci</inu>)</line>
-<line><ci><inu>pc</inu>% confidence interval = <inu>from</inu> to <inu>to</inu></ci></line>
-<line>z (for k = 0) = <in>z</in></line>
-<line><pval><inp>p</inp></pval></line>
-<line></line>
-<line><u>Cohen's kappa (weighted by <in>methodName</in>)</u></line>
-<line>ratings weighted by:</line>
+
+<p><u>Cohen's kappa (unweighted)</u><br />
+Observed agreement = <in>po</in>%<br />
+Expected agreement = <in>pe</in>%<br />
+Kappa = <inu>kappa</inu> (se_0 = <inu>se</inu>, se = <inu>seci</inu>)<br />
+<ci><inu>pc</inu>% confidence interval = <inu>from</inu> to <inu>to</inu></ci><br />
+z (for k = 0) = <in>z</in><br />
+<pval><inp>p</inp></pval></p>
+
+<p><u>Cohen's kappa (weighted by <in>methodName</in>)</u><br />
+ratings weighted by:</p>
 <table>
 <block name="weights"><tr><block name="tot"><td><in>tot</in></td></block></tr></block>
 </table>
-<line>Observed agreement = <in>pow</in>%</line>
-<line>Expected agreement = <in>pew</in>%</line>
-<line>Kappa = <inu>kappaw</inu> (se_0 = <inu>sekw</inu>, se = <inu>sekwci</inu>)</line>
-<line><ci><in>pcw</in>% confidence interval for kappa = <inu>fromw</inu> to <inu>tow</inu></ci></line>
-<line>z (for kw = 0) = <inu>zw</inu></line>
-<line><pval><inp>pw</inp></pval></line>
-<line></line>
-<line><u>Scott's pi</u></line>
-<line>Observed agreement = <in>pocopy</in>%</line>
-<line>Expected agreement = <in>spe</in>%</line>
-<line>Pi = <inu>spi</inu></line>
-<block name="deci"><line><ci><in>pc</in>% Donner-Eliasziw confidence interval = <inu>lwr</inu> to <inu>upr</inu></ci></line></block>
-<line></line>
-<line><u>Gwet's AC1</u></line>
-<line>Observed agreement = <in>gamapc</in>%</line>
-<line>Chance-independent agreement = <in>pegamapc</in>%</line>
-<line>AC1 = <inu>gama</inu> (se = <inu>segama</inu>)</line>
-<line><ci><in>pc</in>% confidence interval = <inu>gamacil</inu> to <inu>gamaciu</inu></ci></line>
-<line></line>
+<p>Observed agreement = <in>pow</in>%<br />
+Expected agreement = <in>pew</in>%<br />
+Kappa = <inu>kappaw</inu> (se_0 = <inu>sekw</inu>, se = <inu>sekwci</inu>)<br />
+<ci><in>pcw</in>% confidence interval for kappa = <inu>fromw</inu> to <inu>tow</inu></ci><br />
+z (for kw = 0) = <inu>zw</inu><br />
+<pval><inp>pw</inp></pval></p>
+
+<p><u>Scott's pi</u><br />
+Observed agreement = <in>pocopy</in>%<br />
+Expected agreement = <in>spe</in>%<br />
+Pi = <inu>spi</inu></p>
+<block name="deci"><p><ci><in>pc</in>% Donner-Eliasziw confidence interval = <inu>lwr</inu> to <inu>upr</inu></ci></p></block>
+
+<p><u>Gwet's AC1</u><br />
+Observed agreement = <in>gamapc</in>%<br />
+Chance-independent agreement = <in>pegamapc</in>%<br />
+AC1 = <inu>gama</inu> (se = <inu>segama</inu>)<br />
+<ci><in>pc</in>% confidence interval = <inu>gamacil</inu> to <inu>gamaciu</inu></ci></p>
+
 <title>Disagreement over any category and asymmetry of disagreement (2 raters)</title>
-<line></line>
-<line>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><inp>pmaxwell</inp></pval></line>
-<line></line>
-<line>Symmetry (generalised McNemar) chi-square = <inu>x2m</inu>  df = <in>dfmcnemar</in>  <pval><inp>pmcnemar</inp></pval></line>
+
+<p>Marginal homogeneity (Maxwell) chi-square = <inu>x2</inu>  df = <inu>df</inu>  <pval><inp>pmaxwell</inp></pval></p>
+
+<p>Symmetry (generalised McNemar) chi-square = <inu>x2m</inu>  df = <in>dfmcnemar</in>  <pval><inp>pmcnemar</inp></pval></p>
 </report>

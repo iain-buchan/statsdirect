@@ -1,20 +1,20 @@
 <report>
 <title>General agreement over all (<in>cats</in>) categories with <in>r</in> raters per subject</title>
-<line></line>
-<line>Cohen's kappa (Landis-Koch extension):</line>
-<line></line>
+
+<p>Cohen's kappa (Landis-Koch extension):</p>
+
 <table>
 <tr><th>Response</th><th>Kappa</th><th>se</th><th>z(for k=0)</th><th>Probability</th></tr>
 <block name="cats"><tr><td><in>resp</in></td><td><inu>k</inu></td><td><inu>se</inu></td><td><inu>z</inu></td><td><pval><inp>p</inp></pval></td></tr></block>
 </table>
-<line></line>
-<line><u>Combined (Fleiss-Nee-Landis test)</u></line>
-<line>Kappa = <inu>kc</inu></line>
-<line><in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu></line>
-<line>z (for k = 0) = <inu>zc</inu></line>
-<line><pval><inp>p</inp></pval></line>
-<line></line>
-<line><u>Universal (Berry-Mielke) R</u></line>
-<line>Weighted (linear) kappa = <inu>kw</inu></line>
-<line><pval><inp>pw</inp></pval></line>
+
+<p><u>Combined (Fleiss-Nee-Landis test)</u><br />
+Kappa = <inu>kc</inu><br />
+<in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu><br />
+z (for k = 0) = <inu>zc</inu><br />
+<pval><inp>p</inp></pval></p>
+
+<p><u>Universal (Berry-Mielke) R</u><br />
+Weighted (linear) kappa = <inu>kw</inu><br />
+<pval><inp>pw</inp></pval></p>
 </report>

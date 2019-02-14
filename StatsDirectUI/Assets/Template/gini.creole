@@ -1,24 +1,24 @@
 <report>
 <title>Gini coefficient of inequality</title>
 <block name="data">
-<line></line>
+<br />
 <subtitle>Analysis for <in>ti</in>:</subtitle>
-<line></line>
-<line>Positive non-zero observations = <in>n</in>  <warn><in>msg</in></warn></line>
-<line>Variance coefficient = <inu>cv</inu></line>
-<line></line>
-<line>Re-samples = <in>boots</in></line>
-<line>Bias = <inu>bias</inu></line>
-<line>Standard error (bootstrap) = <inu>se</inu></line>
-<line></line>
-<line>Gini coefficient = <inu>gini</inu></line>
-<line><ci>Percentile <in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci></line>
-<line><ci>BCa <in>pc</in>% CI = <inu>BCafrom</inu> to <inu>BCato</inu></ci></line>
-<line></line>
-<line>Unbiased estimator of population Gini coefficient = <inu>gini-unbiased</inu></line>
-<line><ci>Percentile <in>pc</in>% CI = <inu>from-unbiased</inu> to <inu>to-unbiased</inu></ci></line>
-<line><ci>BCa <in>pc</in>% CI = <inu>BCafrom-unbiased</inu> to <inu>BCato-unbiased</inu></ci></line>
+
+<p>Positive non-zero observations = <in>n</in>  <warn><in>msg</in></warn><br />
+Variance coefficient = <inu>cv</inu></p>
+
+<p>Re-samples = <in>boots</in><br />
+Bias = <inu>bias</inu><br />
+Standard error (bootstrap) = <inu>se</inu></p>
+
+<p>Gini coefficient = <inu>gini</inu><br />
+<ci>Percentile <in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci><br />
+<ci>BCa <in>pc</in>% CI = <inu>BCafrom</inu> to <inu>BCato</inu></ci></p>
+
+<p>Unbiased estimator of population Gini coefficient = <inu>gini-unbiased</inu><br />
+<ci>Percentile <in>pc</in>% CI = <inu>from-unbiased</inu> to <inu>to-unbiased</inu></ci><br />
+<ci>BCa <in>pc</in>% CI = <inu>BCafrom-unbiased</inu> to <inu>BCato-unbiased</inu></ci></p>
 </block>
-<line></line>
-<line><in>chart</in></line>
+
+<p><in>chart</in></p>
 </report>

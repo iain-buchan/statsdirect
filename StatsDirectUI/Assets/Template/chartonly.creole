@@ -1,4 +1,4 @@
 <report>
-<line></line>
-<line><in>chart</in></line>
+
+<p><in>chart</in></p>
 </report>

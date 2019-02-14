@@ -1,10 +1,10 @@
 <report>
 <title>Principal components (<in>type</in>)</title>
 <block name="warn">
-<line></line>
-<line><in>warn</in></line>
+
+<p><in>warn</in></p>
 </block>
-<line></line>
+<br />
 <table>
 <tr><th>Component</th><th>Eigenvalue (SVD)</th><th>Proportion</th><th>Cumulative</th></tr>
 <block name="table"><tr><td><in>comp</in></td><td><in>eigen</in></td><td><in>prop</in>%</td><td><in>cum</in>%</td></tr></block>

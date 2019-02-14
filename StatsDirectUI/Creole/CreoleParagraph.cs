@@ -1,6 +1,6 @@
 ﻿namespace StatsDirect.Creole
 {
-    public class CreoleLine<TResult> : CreoleContainer<TResult>, ICreole<TResult>
+    public class CreoleParagraph<TResult> : CreoleContainer<TResult>, ICreole<TResult>
     {
         TResult ICreole<TResult>.Accept(ICreoleVisitor<TResult> visitor)
         {

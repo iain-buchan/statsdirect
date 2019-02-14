@@ -1,32 +1,32 @@
 <report>
 <title>Crossover tests</title>
-<line></line>
+<br />
 <table>
 <tr><th></th><th>Period 1</th><th>Period 2</th><th>Difference</th></tr>
 <tr><td>Group 1</td><td><inu>grp1_p1</inu></td><td><inu>grp1_p2</inu></td><td><inu>grp1_diff</inu></td></tr>
 <tr><td>Group 2</td><td><inu>grp2_p1</inu></td><td><inu>grp2_p2</inu></td><td><inu>grp2_diff</inu></td></tr>
 </table>
-<line></line>
-<line>Test for <b>relative effectiveness</b> of drug / placebo:</line>
+
+<p>Test for <b>relative effectiveness</b> of drug / placebo:</p>
 <table>
 <tr><td>combined diff = <inu>relative_diff</inu></td><td>SE = <inu>relative_se</inu></td><td></td></tr>
 <tr><td>t = <inu>relative_t</inu></td><td>DF = <in>relative_df</in></td><td><pval><inp>relative_p</inp></pval></td></tr>
 </table>
-<line></line>
-<line>Test for <b>treatment effect</b>:</line>
+
+<p>Test for <b>treatment effect</b>:</p>
 <table>
 <tr><td>diff 1 - diff 2  = <inu>treatment_diff</inu></td><td>SE = <inu>treatment_se</inu></td><td></td></tr>
 <tr><td>effect magnitude = <inu>treatment_mag</inu></td><tdfirst><ci><inu>treatment_pc</inu>% CI = <inu>treatment_from</inu> to <inu>treatment_to</inu></ci></tdfirst><tdspan/></tr>
 <tr><td>t = <inu>treatment_t</inu></td><td>DF = <in>treatment_df</in></td><td><pval><inp>treatment_p</inp></pval></td></tr>
 </table>
-<line></line>
-<line>Test for <b>period effect</b>:</line>
+
+<p>Test for <b>period effect</b>:</p>
 <table>
 <tr><td>diff 1 + diff 2 = <inu>period_diff</inu></td><td>SE = <inu>period_se</inu></td><td></td></tr>
 <tr><td>t = <inu>period_t</inu></td><td>DF = <in>period_df</in></td><td><pval><inp>period_p</inp></pval></td></tr>
 </table>
-<line></line>
-<line>Test for <b>treatment-period interaction</b>:</line>
+
+<p>Test for <b>treatment-period interaction</b>:</p>
 <table>
 <tr><td>sum 1 - sum 2 = <in>tpi_sum</in></td><td>SE = <in>tpi_se</in></td><td></td></tr>
 <tr><td>t = <in>tpi_t</in></td><td>DF = <in>tpi_df</in></td><td><pval><inp>tpi_p</inp></pval></td></tr>

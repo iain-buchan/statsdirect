@@ -1,6 +1,6 @@
 <report>
 <title>Normal distribution (z) test - single sample</title>
-<line></line>
+<br />
 <table>
 <tr><td>Sample name:</td><td><in>name</in></td></tr>
 <tr><td>Sample mean = </td><td><in>mean</in></td></tr>
@@ -9,17 +9,17 @@
 <tr><td>Sample sd =</td><td><in>sd</in></td></tr>
 <tr><td>Population sd =</td><td><in>psd</in></td></tr>
 </table>
-<line></line>
-<line><ci><in>pc</in>% confidence interval <in>for</in> = <in>from</in> to <in>to</in></ci></line>
-<line></line>
-<line>Standard normal deviate (z) = <in>z</in></line>
-<line><pval>One sided <inp>p_1</inp></pval></line>
-<line><pval>Two sided <inp>p_2</inp></pval></line>
-<line></line>
-<line>For lognormal data:</line>
-<line><subtotal>Geometric mean = <in>gmean</in>  (<in>pc2</in>% confidence interval = <in>lrr</in> to <in>urr</in>)</subtotal></line>
+
+<p><ci><in>pc</in>% confidence interval <in>for</in> = <in>from</in> to <in>to</in></ci></p>
+
+<p>Standard normal deviate (z) = <in>z</in><br />
+<pval>One sided <inp>p_1</inp></pval><br />
+<pval>Two sided <inp>p_2</inp></pval></p>
+
+<p>For lognormal data:<br />
+<subtotal>Geometric mean = <in>gmean</in>  (<in>pc2</in>% confidence interval = <in>lrr</in> to <in>urr</in>)</subtotal></p>
 <block name="warn">
-<line></line>
-<line><warn>WARNING: numbers too small for this test, consider using a Student t test instead</warn></line>
+
+<p><warn>WARNING: numbers too small for this test, consider using a Student t test instead</warn></p>
 </block>
 </report>

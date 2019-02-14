@@ -1,20 +1,20 @@
 <report>
 <title>Kaplan-Meier survival estimates</title>
-<line></line>
+<br />
 <block name="group">
 <block name="grp">
-<line><subtotal><b><in>grp</in></b></subtotal></line>
-<line></line>
+<p><subtotal><b><in>grp</in></b></subtotal></p>
+
 </block>
 <table>
 <tr><th>Time</th><th>At risk</th><th>Dead</th><th>Censored</th><th>S</th><th>SE(S)</th><th>H</th><th>SE(H)</th></tr>
 <block name="est"><tr><td><in>time</in></td><td><in>risk</in></td><td><in>dead</in></td><td><in>cen</in></td><td><in>s</in></td><td><in>ses</in></td><td><in>h</in></td><td><in>seh</in></td></tr></block>
 </table>
-<line></line>
-<line>Median survival time = <in>med</in></line>
-<line><ci>Andersen <in>pc</in>% CI</ci> for median survival time = <ci><inu>all</inu> to <inu>aul</inu></ci></line>
-<line><ci>Brookmeyer-Crowley <in>pc</in>% CI</ci> for median survival time = <ci><inu>bll</inu> to <inu>bul</inu></ci></line>
-<line></line>
-<line>Mean survival time <ci>(<in>pc</in>% CI)</ci> <in>lim</in>= <in>mu</in>  <ci>(<inu>ll</inu> to <inu>ul</inu>)</ci></line>
+
+<p>Median survival time = <in>med</in><br />
+<ci>Andersen <in>pc</in>% CI</ci> for median survival time = <ci><inu>all</inu> to <inu>aul</inu></ci><br />
+<ci>Brookmeyer-Crowley <in>pc</in>% CI</ci> for median survival time = <ci><inu>bll</inu> to <inu>bul</inu></ci></p>
+
+<p>Mean survival time <ci>(<in>pc</in>% CI)</ci> <in>lim</in>= <in>mu</in>  <ci>(<inu>ll</inu> to <inu>ul</inu>)</ci></p>
 </block>
 </report>

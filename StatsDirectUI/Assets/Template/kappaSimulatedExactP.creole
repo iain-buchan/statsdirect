@@ -1,4 +1,4 @@
 <report>
-<line><pval>Kappa simulated exact <inp>p</inp> (<in>pc</in>% CI: <in>ll</in> to <in>ul</in>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval></line>
-<line><pval>Weighted kappa simulated exact <inp>pw</inp> (<in>pc</in>% CI: <in>llw</in> to <in>ulw</in>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval></line>
+<p><pval>Kappa simulated exact <inp>p</inp> (<in>pc</in>% CI: <in>ll</in> to <in>ul</in>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval><br />
+<pval>Weighted kappa simulated exact <inp>pw</inp> (<in>pc</in>% CI: <in>llw</in> to <in>ulw</in>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval></p>
 </report>

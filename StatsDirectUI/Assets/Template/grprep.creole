@@ -1,6 +1,6 @@
 <report>
 <title>Linearity with replicates of Y</title>
-<line></line>
+<br />
 <table>
 <tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th><th></th></tr>
 <tr><td>Due to regression</td><td><inu>reg_ssq</inu></td><td><in>reg_df</in></td><td><inu>reg_msq</inu></td><td><inu>reg_vr</inu></td><td><pval><inp>reg_p</inp></pval></td></tr>
@@ -8,7 +8,7 @@
 <tr><td>Within x residual</td><td><inu>res_ssq</inu></td><td><in>res_df</in></td><td><inu>res_msq</inu></td><td></td><td></td></tr>
 <tr><td>Total</td><td><inu>tot_ssq</inu></td><td><in>tot_df</in></td><td></td><td></td><td></td></tr>
 </table>
-<line></line>
-<line>Regression slope is <b><in>reg</in></b>significant</line>
-<line>Assumption of linearity <b><in>lin</in></b>supported</line>
+
+<p>Regression slope is <b><in>reg</in></b>significant<br />
+Assumption of linearity <b><in>lin</in></b>supported</p>
 </report>

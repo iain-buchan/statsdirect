@@ -1,18 +1,18 @@
 <report>
 <title>Nonparametric linear regression</title>
-<line></line>
-<line><in>ytitle</in> vs. <in>xtitle</in></line>
-<line>Observations per sample = <in>obs</in></line>
+
+<p><in>ytitle</in> vs. <in>xtitle</in><br />
+Observations per sample = <in>obs</in></p>
 <block name="cannotcalculate">
-<line></line>
-<line>Can not calculate regression</line>
+
+<p>Can not calculate regression</p>
 </block>
-<block name="results"><line>Median slope (<ci><in>pc</in>% CI</ci>) = <inu>mdn</inu>  (<ci><inu>from</inu> to <inu>to</inu></ci>)</line>
-<line>Y-intercept = <inu>intercept</inu></line>
+<block name="results"><p>Median slope (<ci><in>pc</in>% CI</ci>) = <inu>mdn</inu>  (<ci><inu>from</inu> to <inu>to</inu></ci>)<br />
+Y-intercept = <inu>intercept</inu></p>
 </block>
-<line></line>
-<line>Kendall's rank correlation coefficient <in>taulab</in> =  <inu>tau</inu></line>
-<line><pval>Two sided (on continuity corrected z) <inp>p_2</inp></pval>  (H<sub>1</sub>: any correlation)</line>
-<line></line>
-<line><in>chart</in></line>
+
+<p>Kendall's rank correlation coefficient <in>taulab</in> =  <inu>tau</inu><br />
+<pval>Two sided (on continuity corrected z) <inp>p_2</inp></pval>  (H<sub>1</sub>: any correlation)</p>
+
+<p><in>chart</in></p>
 </report>

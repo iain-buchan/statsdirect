@@ -1,22 +1,22 @@
 <report>
 <title>Mann-Whitney U test</title>
-<line></line>
-<line>Observations (x) in <in>sample_1</in> = <in>obs_1</in>   median = <inu>median_1</inu>   rank sum = <inu>ranksum</inu></line>
-<line>Observations (y) in <in>sample_2</in> = <in>obs_2</in>   median = <inu>median_2</inu></line>
-<line>U = <inu>u</inu>      U' = <inu>u_prime</inu></line>
-<line></line>
-<line><in>stats</in></line>
-<line><pval>Lower side <inp>p_l</inp></pval> (H<sub>1</sub>: x tends to be less than y)</line>
-<line><pval>Upper side <inp>p_u</inp></pval> (H<sub>1</sub>: x tends to be greater than y)</line>
-<line><pval>Two sided <inp>p_2</inp></pval> (H<sub>1</sub>: x tends to be distributed differently to y)</line>
-<line></line>
-<line>Theta (U'/mn) = <inu>theta</inu> <ci>(<in>pc0</in>% CI: <inu>tll</inu> to <inu>tul</inu>)</ci></line>
-<line></line>
+
+<p>Observations (x) in <in>sample_1</in> = <in>obs_1</in>   median = <inu>median_1</inu>   rank sum = <inu>ranksum</inu><br />
+Observations (y) in <in>sample_2</in> = <in>obs_2</in>   median = <inu>median_2</inu><br />
+U = <inu>u</inu>      U' = <inu>u_prime</inu></p>
+
+<p><in>stats</in><br />
+<pval>Lower side <inp>p_l</inp></pval> (H<sub>1</sub>: x tends to be less than y)<br />
+<pval>Upper side <inp>p_u</inp></pval> (H<sub>1</sub>: x tends to be greater than y)<br />
+<pval>Two sided <inp>p_2</inp></pval> (H<sub>1</sub>: x tends to be distributed differently to y)</p>
+
+<p>Theta (U'/mn) = <inu>theta</inu> <ci>(<in>pc0</in>% CI: <inu>tll</inu> to <inu>tul</inu>)</ci></p>
+
 <block name="noconf">
-<line>confidence interval not calculated if n1 or n2 </line>
+<p>confidence interval not calculated if n1 or n2 </p>
 </block>
 <block name="conf">
-<line><ci><in>pc</in>% confidence interval for difference between medians or means:</ci></line>
-<line>Median difference = <in>median</in> <ci>(CI: <in>from</in> to <in>to</in>)</ci></line>
+<p><ci><in>pc</in>% confidence interval for difference between medians or means:</ci><br />
+Median difference = <in>median</in> <ci>(CI: <in>from</in> to <in>to</in>)</ci></p>
 </block>
 </report>

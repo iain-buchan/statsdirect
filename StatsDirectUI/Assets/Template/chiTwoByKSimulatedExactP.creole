@@ -1,3 +1,3 @@
 <report>
-<line><pval>Linearity simulated exact <inp>p</inp> (<in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval></line>
+<p><pval>Linearity simulated exact <inp>p</inp> (<in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu>) on <in>k</in> Monte Carlo samples (seed: <in>seed_fmt</in>)</pval></p>
 </report>

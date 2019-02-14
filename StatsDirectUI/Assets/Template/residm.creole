@@ -1,25 +1,25 @@
 <report>
 <title>Multiple linear regression - influential data</title>
-<line></line>
+<br />
 <table>
 <tr><th>Index</th><th>Y</th><th>Fitted Y</th><th>Std. Dev. Y fit</th><th>Residual</th></tr>
 <block name="yfit"><tr><td><in>index</in></td><td><in>y</in></td><td><in>fit_y</in></td><td><in>std_err</in></td><td><in>res</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><thfirst>Index</thfirst><thspan/><thfirst>Studentized</thfirst><thspan/><thfirst>Leverage</thfirst><thspan/><th>Cook's Distance</th></tr>
 <block name="studentised"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><in>stu</in></td><td><b><in>stu*</in></b></td><td><in>hi</in></td><td><b><in>hi*</in></b></td><td><in>cook</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><thfirst>Index</thfirst><thspan/><thfirst>Jackknife</thfirst><thspan/><th>DFIT</th></tr>
 <block name="jackknife"><tr><td><in>index</in></td><td><b><in>index*</in></b></td><td><in>jack</in></td><td><warn><in>jack*</in></warn></td><td><in>dfit</in></td></tr></block>
 </table>
-<line></line>
-<line><u>Critical levels for unusual observations (marked *)</u></line>
-<line>Leverage > <in>zhi</in>  [min(3p/n,.99)]</line>
-<line>Cook's Distance > <in>zcook</in>  [f(a,p,n-p)]</line>
-<line>Studentized residual > &#xb1; <in>zstu</in>  [t(a,n-p)]</line>
-<line>Jackknife residual > &#xb1; <in>zjack</in>  [t(a,n-p-1)]</line>
-<line>DFIT > &#xb1; <in>zdfit</in>  [(2*sqr(p/n)]</line>
+
+<p><u>Critical levels for unusual observations (marked *)</u><br />
+Leverage > <in>zhi</in>  [min(3p/n,.99)]<br />
+Cook's Distance > <in>zcook</in>  [f(a,p,n-p)]<br />
+Studentized residual > &#xb1; <in>zstu</in>  [t(a,n-p)]<br />
+Jackknife residual > &#xb1; <in>zjack</in>  [t(a,n-p-1)]<br />
+DFIT > &#xb1; <in>zdfit</in>  [(2*sqr(p/n)]</p>
 </report>

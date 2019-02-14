@@ -123,9 +123,14 @@ namespace StatsDirect.Creole
             };
         }
 
-        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitLine(CreoleParser.LineContext context)
+        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitLineBreak(CreoleParser.LineBreakContext context)
         {
-            return new CreoleLine<TResult>() { Contents = context.content().Accept(this) };
+            return new CreoleLineBreak<TResult>();
+        }
+
+        ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitParagraph(CreoleParser.ParagraphContext context)
+        {
+            return new CreoleParagraph<TResult>() { Contents = context.content().Accept(this) };
         }
 
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitReport(CreoleParser.ReportContext context)

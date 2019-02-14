@@ -1,45 +1,45 @@
 <report>
 <title>Correlation meta-analysis</title>
-<line></line>
+<br />
 <table>
 <tr><th>Study</th><th>Size</th><th><in>stat</in></th><thfirst><ci>Approximate <in>pc</in>% CI</ci></thfirst><thspan/><th></th></tr>
 <block name="studies"><tr><td><in>st</in></td><td><inu>n</inu></td><td><inu>y</inu></td><td><ci><inu>from</inu></ci></td><td><ci><inu>to</inu></ci></td><td><in>lb</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><thfirst>% Weights (fixed, random, size)</thfirst><thspan/><thspan/><th></th></tr>
 <block name="studies"><tr><td><in>st</in></td><td><inu>yi</inu></td><td><inu>vi</inu></td><td><inu>wt</inu></td><td><inu>dwt</inu></td><td><inu>nwt</inu></td><td><in>lb</in></td></tr></block>
 </table>
-<line></line>
-<line><u>Hedges-Olkin fixed effects</u></line>
-<line>Pooled <in>stat_fixed</in> = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from_fixed</inu> to <inu>to_fixed</inu></ci>)</line>
-<line>Z (test correlation differs from 0) = <inu>z</inu>  <pval><inp>p_fixed</inp></pval></line>
-<line></line>
-<line><u>Non-combinability of studies</u></line>
-<line>Cochran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval></line>
-<line>Moment-based estimate of between studies variance = <inu>tausq</inu></line>
-<line>I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </line>
-<line></line>
-<line><u>Hedges-Olkin random effects</u></line>
-<line>Pooled <in>dsstat</in> = <inu>dsrr</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)</line>
-<line>Z (test correlation differs from 0) = <inu>dz</inu>  <pval><inp>dp</inp></pval></line>
-<line></line>
-<line><u>Bias indicators</u></line>
+
+<p><u>Hedges-Olkin fixed effects</u><br />
+Pooled <in>stat_fixed</in> = <inu>rmh</inu> (<ci><in>pc</in>% CI = <inu>from_fixed</inu> to <inu>to_fixed</inu></ci>)<br />
+Z (test correlation differs from 0) = <inu>z</inu>  <pval><inp>p_fixed</inp></pval></p>
+
+<p><u>Non-combinability of studies</u><br />
+Cochran Q = <inu>qc</inu>  (df = <in>df</in>)  <pval><inp>xp</inp></pval><br />
+Moment-based estimate of between studies variance = <inu>tausq</inu><br />
+I&#xb2; (inconsistency) = <in>isq</in>% (<ci><in>pc1</in>% CI = <in>llisq</in>% to <in>ulisq</in>%</ci>) </p>
+
+<p><u>Hedges-Olkin random effects</u><br />
+Pooled <in>dsstat</in> = <inu>dsrr</inu> (<ci><in>pc</in>% CI = <inu>dsll</inu> to <inu>dsul</inu></ci>)<br />
+Z (test correlation differs from 0) = <inu>dz</inu>  <pval><inp>dp</inp></pval></p>
+
+<p><u>Bias indicators</u></p>
 <block name="bias">
-<line>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval></line>
-<line>Egger: bias = <in>a</in> (<ci><in>pc</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></line>
+<p>Begg-Mazumdar: Kendall's <in>tau</in>  <pval><inp>p2</inp></pval><br />
+Egger: bias = <in>a</in> (<ci><in>pc</in>% CI = <in>cl</in> to <in>cu</in></ci>)  <pval><inp>p</inp></pval></p>
 </block>
-<line></line>
-<line><u>Schmidt-Hunter</u></line>
-<line>Weighted mean correlation (95% CI): <inu>wmr</inu> (<ci><inu>wmr_lcl</inu> to <inu>wmr_ucl</inu></ci>)</line>
-<line>Z (test correlation differs from 0) = <inu>wmr_z</inu> <pval><inp>wmr_p</inp></pval></line>
-<line></line>
-<line>Observed variance across studies: <inu>var_r</inu></line>
-<line>Variance due to sampling error: <inu>var_e</inu></line>
-<line>Variance in the population correlations: <inu>var_p</inu></line>
-<line>95% Credibility interval for weighted mean correlation: <inu>wmr_crll</inu> to <inu>wmr_crul</inu></line>
-<line></line>
-<line>Indicators of homogeneity/heterogeneity:</line>
+
+<p><u>Schmidt-Hunter</u><br />
+Weighted mean correlation (95% CI): <inu>wmr</inu> (<ci><inu>wmr_lcl</inu> to <inu>wmr_ucl</inu></ci>)<br />
+Z (test correlation differs from 0) = <inu>wmr_z</inu> <pval><inp>wmr_p</inp></pval></p>
+
+<p>Observed variance across studies: <inu>var_r</inu><br />
+Variance due to sampling error: <inu>var_e</inu><br />
+Variance in the population correlations: <inu>var_p</inu><br />
+95% Credibility interval for weighted mean correlation: <inu>wmr_crll</inu> to <inu>wmr_crul</inu></p>
+
+<p>Indicators of homogeneity/heterogeneity:</p>
 <table>
 <tr><td>1.</td><td>Residual standard deviation (should be smaller than 1/4 WMC: <inu>wmr4</inu>): <inu>sres</inu></td></tr>
 <tr><td>2.</td><td>Percent of observed variance accounted for by sampling error (should be at least 75%): <inu>percvar</inu></td></tr>

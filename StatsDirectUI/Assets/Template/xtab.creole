@@ -1,11 +1,11 @@
 <report>
 <title>Crosstabs</title>
-<line></line>
+<br />
 <table>
 <tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal></b></td></tr>
 <tr><td>Column variable (second classifier):</td><td><b><ci><in>xlab</in></ci></b></td></tr>
 </table>
-<line></line>
+<br />
 <table>
 <tr><td></td><block name="x"><td><b><ci><in>x</in></ci></b></td></block></tr>
 <block name="y"><tr><td><b><grandtotal><in>y</in></grandtotal></b></td><block name="tot"><td><inu>tot</inu></td></block></tr></block>

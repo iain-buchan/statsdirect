@@ -1,13 +1,13 @@
 <report>
 <title>General agreement over all (2) categories with <in>r</in> raters per subject</title>
-<line></line>
-<line><u>Cohen's kappa (Fleiss-Cuzick extension)</u></line>
-<line>Kappa = <inu>k</inu> (se = <inu>se</inu>)</line>
-<line><in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu></line>
-<line>z (for k = 0) = <inu>z</inu></line>
-<line><pval><inp>p</inp></pval></line>
-<line></line>
-<line><u>Universal (Berry-Mielke) R</u></line>
-<line>Weighted (linear) kappa = <inu>kw</inu></line>
-<line><pval><inp>pw</inp></pval></line>
+
+<p><u>Cohen's kappa (Fleiss-Cuzick extension)</u><br />
+Kappa = <inu>k</inu> (se = <inu>se</inu>)<br />
+<in>pc</in>% CI: <inu>ll</inu> to <inu>ul</inu><br />
+z (for k = 0) = <inu>z</inu><br />
+<pval><inp>p</inp></pval></p>
+
+<p><u>Universal (Berry-Mielke) R</u><br />
+Weighted (linear) kappa = <inu>kw</inu><br />
+<pval><inp>pw</inp></pval></p>
 </report>

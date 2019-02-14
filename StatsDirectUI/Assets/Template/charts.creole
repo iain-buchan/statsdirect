@@ -1,7 +1,7 @@
 <report>
 <block name="chart">
-<line><in>chart</in></line>
-<line></line>
-<line></line>
+<p><in>chart</in></p>
+
+<br />
 </block>
 </report>

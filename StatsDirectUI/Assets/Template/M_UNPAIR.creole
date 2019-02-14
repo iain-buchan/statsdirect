@@ -1,32 +1,32 @@
 <report>
 <title>Unpaired t test</title>
-<line></line>
-<line>Mean of <in>title_0</in> = <inu>mean_0</inu>  (n = <in>n0</in>)</line>
-<line>Mean of <in>title_1</in> = <inu>mean_1</inu>  (n = <in>n1</in>)</line>
-<line></line>
-<line><u>Assuming equal variances</u></line>
-<line>Combined standard error = <inu>error</inu></line>
-<line>df = <in>df</in></line>
-<line>t =  <inu>t</inu></line>
-<line><pval>One sided <inp>p_1</inp></pval></line>
-<line><pval>Two sided <inp>p_2</inp></pval></line>
-<line></line>
-<line><ci><in>pc</in>% confidence interval for difference between means = <inu>from</inu> to <inu>to</inu></ci></line>
-<line></line>
-<line>Power <in>pwr</in></line>
-<line></line>
-<line><u>Assuming unequal variances</u></line>
-<line>Combined standard error = <inu>error_unequal</inu></line>
-<line>df = <inu>df_unequal</inu></line>
-<line>t(d) =  <inu>t_unequal</inu></line>
-<line><pval>One sided <inp>p_1_unequal</inp></pval></line>
-<line><pval>Two sided <inp>p_2_unequal</inp></pval></line>
-<line></line>
-<line><ci><in>pc_unequal</in>% confidence interval for difference between means = <inu>from_unequal</inu> to <inu>to_unequal</inu></ci></line>
-<line></line>
-<line>Power <in>pwr_unequal</in></line>
-<line></line>
-<line><u>Comparison of variances</u></line>
-<line><in>say1</in></line>
-<line><in>say2</in></line>
+
+<p>Mean of <in>title_0</in> = <inu>mean_0</inu>  (n = <in>n0</in>)<br />
+Mean of <in>title_1</in> = <inu>mean_1</inu>  (n = <in>n1</in>)</p>
+
+<p><u>Assuming equal variances</u><br />
+Combined standard error = <inu>error</inu><br />
+df = <in>df</in><br />
+t =  <inu>t</inu><br />
+<pval>One sided <inp>p_1</inp></pval><br />
+<pval>Two sided <inp>p_2</inp></pval></p>
+
+<p><ci><in>pc</in>% confidence interval for difference between means = <inu>from</inu> to <inu>to</inu></ci></p>
+
+<p>Power <in>pwr</in></p>
+
+<p><u>Assuming unequal variances</u><br />
+Combined standard error = <inu>error_unequal</inu><br />
+df = <inu>df_unequal</inu><br />
+t(d) =  <inu>t_unequal</inu><br />
+<pval>One sided <inp>p_1_unequal</inp></pval><br />
+<pval>Two sided <inp>p_2_unequal</inp></pval></p>
+
+<p><ci><in>pc_unequal</in>% confidence interval for difference between means = <inu>from_unequal</inu> to <inu>to_unequal</inu></ci></p>
+
+<p>Power <in>pwr_unequal</in></p>
+
+<p><u>Comparison of variances</u><br />
+<in>say1</in><br />
+<in>say2</in></p>
 </report>

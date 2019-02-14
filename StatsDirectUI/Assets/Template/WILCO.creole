@@ -1,21 +1,21 @@
 <report>
 <title>Wilcoxon's signed ranks test</title>
-<line></line>
-<line><in>sample_1</in> vs. <in>sample_2</in></line>
-<line>Number of non-zero differences ranked = <in>non_0</in></line>
-<line><in>sum</in></line>
-<line></line>
-<line><in>stats</in></line>
-<line><pval>Lower side <inp>p_l</inp></pval>  (H<sub>1</sub>: differences tend to be less than zero)</line>
-<line><pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: differences tend to be greater than zero)</line>
-<line><pval>Two sided <inp>p_2</inp></pval>  (H<sub>1</sub>: differences tend not to be zero)</line>
+
+<p><in>sample_1</in> vs. <in>sample_2</in><br />
+Number of non-zero differences ranked = <in>non_0</in><br />
+<in>sum</in></p>
+
+<p><in>stats</in><br />
+<pval>Lower side <inp>p_l</inp></pval>  (H<sub>1</sub>: differences tend to be less than zero)<br />
+<pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: differences tend to be greater than zero)<br />
+<pval>Two sided <inp>p_2</inp></pval>  (H<sub>1</sub>: differences tend not to be zero)</p>
 <block name="noconf">
-<line></line>
-<line>confidence interval not calculated if n &lt; 4</line>
+
+<p>confidence interval not calculated if n &lt; 4</p>
 </block>
 <block name="conf">
-<line></line>
-<line><ci><in>pc</in></ci></line>
-<line>Median difference = <in>med_diff</in> (<ci><in>from</in> to <in>to</in></ci>)</line>
+
+<p><ci><in>pc</in></ci><br />
+Median difference = <in>med_diff</in> (<ci><in>from</in> to <in>to</in></ci>)</p>
 </block>
 </report>

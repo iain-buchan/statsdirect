@@ -1,25 +1,25 @@
 <report>
 <title>Paired t test</title>
-<line></line>
-<line>For <in>label</in>:</line>
-<line>Mean of differences = <inu>mean</inu>  (n = <in>n</in>)</line>
-<line>Standard deviation = <inu>sd</inu></line>
-<line>Standard error = <inu>sem</inu></line>
-<line></line>
-<line><ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci></line>
-<line></line>
-<line>df =  <in>df</in></line>
-<line>t = <inu>t</inu></line>
-<line></line>
-<line><pval>One sided <inp>tail_1</inp></pval></line>
-<line><pval>Two sided <inp>tail_2</inp></pval></line>
-<line></line>
-<line>Power <in>pwr</in></line>
+
+<p>For <in>label</in>:<br />
+Mean of differences = <inu>mean</inu>  (n = <in>n</in>)<br />
+Standard deviation = <inu>sd</inu><br />
+Standard error = <inu>sem</inu></p>
+
+<p><ci><in>pc</in>% CI = <inu>from</inu> to <inu>to</inu></ci></p>
+
+<p>df =  <in>df</in><br />
+t = <inu>t</inu></p>
+
+<p><pval>One sided <inp>tail_1</inp></pval><br />
+<pval>Two sided <inp>tail_2</inp></pval></p>
+
+<p>Power <in>pwr</in></p>
 <block name="twosample">
-<line></line>
-<line></line>
+<br />
+<br />
 <title>Two sample analysis of agreement</title>
-<line></line>
-<line><in>pc</in>% Limits of agreement = <inu>from2</inu> to <inu>to2</inu></line>
+
+<p><in>pc</in>% Limits of agreement = <inu>from2</inu> to <inu>to2</inu></p>
 </block>
 </report>

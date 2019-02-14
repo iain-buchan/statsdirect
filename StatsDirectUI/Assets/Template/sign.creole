@@ -1,20 +1,20 @@
 <report>
 <title>Sign test</title>
-<line></line>
-<line><b>For <in>sample</in> observations with <in>sample_1</in> on one side:</b></line>
-<line></line>
+
+<p><b>For <in>sample</in> observations with <in>sample_1</in> on one side:</b></p>
+
 <block name="exact">
-<line>Cumulative probability</line>
-<line><pval>Two sided <inp>prob_2</inp></pval></line>
-<line><pval>One sided <inp>prob_1</inp></pval></line>
+<p>Cumulative probability<br />
+<pval>Two sided <inp>prob_2</inp></pval><br />
+<pval>One sided <inp>prob_1</inp></pval></p>
 </block>
-<block name="large"><line><warn>sample is too large for an exact calculation</warn></line></block>
-<line></line>
-<line>Normal approximate z = <inu>z</inu></line>
-<line><pval>Two sided <inp>p_2</inp></pval></line>
-<line><pval>One sided <inp>p_1</inp></pval></line>
-<line></line>
-<line><b><ci>Exact (Clopper-Pearson) <in>ci</in>% confidence interval for the proportion:</ci></b></line>
+<block name="large"><p><warn>sample is too large for an exact calculation</warn></p></block>
+
+<p>Normal approximate z = <inu>z</inu><br />
+<pval>Two sided <inp>p_2</inp></pval><br />
+<pval>One sided <inp>p_1</inp></pval></p>
+
+<p><b><ci>Exact (Clopper-Pearson) <in>ci</in>% confidence interval for the proportion:</ci></b></p>
 <table>
 <tr><td><ci>Lower Limit =</ci></td><td><ci><inu>lower</inu></ci></td></tr>
 <tr><td><ci>Proportion =</ci></td><td><ci><inu>prop</inu></ci></td></tr>

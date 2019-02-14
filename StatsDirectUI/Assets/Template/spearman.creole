@@ -1,28 +1,28 @@
 <report>
 <title>Spearman's rank correlation</title>
-<line></line>
-<line><in>sample_1</in> vs. <in>sample_2</in></line>
-<line>Observations per sample = <in>obs</in></line>
-<line>Spearman's score = <inu>ix</inu></line>
-<line></line>
-<line>Spearman's rank correlation coefficient (Rho) =  <inu>rho</inu></line>
-<line></line>
-<block name="noci"><line><warn>CI not calculated when rho is 1 or -1.</warn></line></block>
-<block name="ci"><line><ci><in>pc</in>% CI for rho (Fisher's Z transformed) = <inu>from</inu> to <inu>to</inu></ci></line></block>
+
+<p><in>sample_1</in> vs. <in>sample_2</in><br />
+Observations per sample = <in>obs</in><br />
+Spearman's score = <inu>ix</inu></p>
+
+<p>Spearman's rank correlation coefficient (Rho) =  <inu>rho</inu></p>
+
+<block name="noci"><p><warn>CI not calculated when rho is 1 or -1.</warn></p></block>
+<block name="ci"><p><ci><in>pc</in>% CI for rho (Fisher's Z transformed) = <inu>from</inu> to <inu>to</inu></ci></p></block>
 <block name="lown">
-<line></line>
-<line><warn>Can not consider probability with very small samples (n &lt; 4)</warn></line></block>
+
+<p><warn>Can not consider probability with very small samples (n &lt; 4)</warn></p></block>
 <block name="results">
-<block name="nop"><line><warn>P not calculable</warn></line></block>
+<block name="nop"><p><warn>P not calculable</warn></p></block>
 <block name="results">
-<line></line>
-<line><pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: positive correlation)</line>
-<line><pval>Lower side <inp>p_l</inp></pval>  (H<sub>1</sub>: negative correlation)</line>
-<line><pval>Two sided <inp>p_2</inp></pval>  (H<sub>1</sub>: any correlation)</line>
+
+<p><pval>Upper side <inp>p_u</inp></pval>  (H<sub>1</sub>: positive correlation)<br />
+<pval>Lower side <inp>p_l</inp></pval>  (H<sub>1</sub>: negative correlation)<br />
+<pval>Two sided <inp>p_2</inp></pval>  (H<sub>1</sub>: any correlation)</p>
 </block>
 </block>
 <block name="ties">
-<line></line>
-<line><pval>Ties present: exact P not used</pval></line>
+
+<p><pval>Ties present: exact P not used</pval></p>
 </block>
 </report>

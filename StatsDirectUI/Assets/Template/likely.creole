@@ -1,6 +1,6 @@
 <report>
 <title>Likelihood ratios</title>
-<line></line>
+<br />
 <table>
 <tr><th>Result</th><th>+ Feature</th><th>- Feature</th><th>Likelihood Ratio</th><th><ci><in>pc</in>% CI (Koopman)</ci></th></tr>
 <block name="row"><tr><td><in>result</in></td><td><in>+feature</in></td><td><in>-feature</in></td><td><inu>likely</inu></td><td><ci><inu>from</inu> to <inu>to</inu></ci></td></tr></block>

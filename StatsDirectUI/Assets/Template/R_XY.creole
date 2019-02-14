@@ -1,8 +1,8 @@
 <report>
 <title>Random allocation of numbers in a series</title>
-<line></line>
-<line>Randomized with seed: <in>seed</in></line>
-<line></line>
+
+<p>Randomized with seed: <in>seed</in></p>
+
 <table>
 <block name="allocations"><tr><td><subtotal><in>index</in></subtotal></td><td><in>random</in></td></tr>
 </block>

@@ -1,21 +1,21 @@
 <report>
 <title>Generalised Cochran-Mantel-Haenszel tests</title>
-<line></line>
+<br />
 <table>
 <tr><td>Row variable (first classifier):</td><td><b><grandtotal><in>ylab</in></grandtotal></b></td></tr>
 <tr><td>Column variable (second classifier):</td><td><b><ci><in>xlab</in></ci></b></td></tr>
 <tr><td>Stratum variable (third classifier, controlling for):</td><td><b><subtotal><in>zlab</in></subtotal></b></td></tr>
 </table>
-<line></line>
-<line><in>ylab</in> scores: <in>rscore</in></line>
-<line><in>xlab</in> scores: <in>cscore</in></line>
-<line></line>
+
+<p><in>ylab</in> scores: <in>rscore</in><br />
+<in>xlab</in> scores: <in>cscore</in></p>
+
 <table>
 <tr><th>Alternative hypothesis</th><th>Statistic</th><th>DF</th><th>Probability</th></tr>
 <tr><td>Ordinal association</td><td><in>x21</in></td><td><in>df1</in></td><td><pval><inp>p1</inp></pval></td></tr>
 <tr><td>Nominal rows vs. ordinal columns association</td><td><in>x22</in></td><td><in>df2</in></td><td><pval><inp>p2</inp></pval></td></tr>
 <tr><td>Nominal association</td><td><in>x23</in></td><td><in>df3</in></td><td><pval><inp>p3</inp></pval></td></tr>
 </table>
-<line></line>
-<line>Sample size = <in>nt</in></line>
+
+<p>Sample size = <in>nt</in></p>
 </report>

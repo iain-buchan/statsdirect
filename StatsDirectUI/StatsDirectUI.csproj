@@ -313,9 +313,10 @@
     <Compile Include="Creole\CreoleBlock.cs" />
     <Compile Include="Creole\CreoleContainer.cs" />
     <Compile Include="Creole\CreoleFormatting.cs" />
+    <Compile Include="Creole\CreoleLineBreak.cs" />
     <Compile Include="Creole\CreoleParserVisitor.cs" />
     <Compile Include="Creole\CreoleInclude.cs" />
-    <Compile Include="Creole\CreoleLine.cs" />
+    <Compile Include="Creole\CreoleParagraph.cs" />
     <Compile Include="Creole\CreoleList.cs" />
     <Compile Include="Creole\CreoleReader.cs" />
     <Compile Include="Creole\CreoleParserPartial.cs" />
@@ -1278,7 +1279,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Assets\Operations\Operation.xsd" />
-    <None Include="Assets\Template\abridged.creole" />
+    <None Include="Assets\Template\abridged.creole">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Assets\Template\agree.creole">
       <SubType>Designer</SubType>
     </None>
@@ -2087,7 +2090,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
+      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

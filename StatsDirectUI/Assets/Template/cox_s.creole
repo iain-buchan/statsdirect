@@ -1,6 +1,6 @@
 <report>
 <title>Cox regression - baseline survival and hazard estimates</title>
-<line></line>
+<br />
 <table>
 <tr><th>Time</th><th>Survival probability</th><th>Cumulative hazard</th><th>Hazard ratio</th></tr>
 <block name="time"><tr><td><inu>time</inu></td><td><inu>sur</inu></td><td><inu>haz</inu></td><td><inu>hr</inu></td></tr></block>

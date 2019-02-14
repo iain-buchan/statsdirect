@@ -1,23 +1,23 @@
 <report>
 <title>Risk analysis (prospective)</title>
-<line></line>
+<br />
 <table>
 <tr><td></td><td><subtotal>Characteristic factor:</subtotal></td><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>
 <tr><td>Positive</td><td><in>a_out</in></td><td><in>b_out</in></td></tr>
 <tr><td>Negative</td><td><in>c_out</in></td><td><in>d_out</in></td></tr>
 </table>
-<line></line>
-<line>Risk ratio (relative risk in incidence study) = <inu>ratio</inu></line>
-<line><ci>Approximate (Koopman) <in>pc</in>% confidence interval = <inu>koopman_from</inu> to <inu>koopman_to</inu></ci></line>
-<line>Approximate power <in>pwr</in></line>
-<line></line>
-<line>Risk difference = <inu>dif</inu></line>
-<line><ci>Approximate (Miettinen) <in>pc</in>% confidence interval = <inu>miettinen_from</inu> to <inu>miettinen_to</inu></ci></line>
+
+<p>Risk ratio (relative risk in incidence study) = <inu>ratio</inu><br />
+<ci>Approximate (Koopman) <in>pc</in>% confidence interval = <inu>koopman_from</inu> to <inu>koopman_to</inu></ci><br />
+Approximate power <in>pwr</in></p>
+
+<p>Risk difference = <inu>dif</inu><br />
+<ci>Approximate (Miettinen) <in>pc</in>% confidence interval = <inu>miettinen_from</inu> to <inu>miettinen_to</inu></ci></p>
 <block name="exposure">
-<line></line>
-<line>Population exposure % = <inu>pe</inu></line>
-<line>Population attributable risk % = <inu>par</inu></line>
-<line><ci>Approximate (Walter) <in>pc</in>% confidence interval = <inu>walter_from</inu> to <inu>walter_to</inu></ci></line>
+
+<p>Population exposure % = <inu>pe</inu><br />
+Population attributable risk % = <inu>par</inu><br />
+<ci>Approximate (Walter) <in>pc</in>% confidence interval = <inu>walter_from</inu> to <inu>walter_to</inu></ci></p>
 </block>
 </report>

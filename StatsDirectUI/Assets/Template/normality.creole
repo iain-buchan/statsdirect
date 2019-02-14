@@ -1,29 +1,29 @@
 <report>
 <title>Normality</title>
 <block name="variable">
-<line></line>
+<br />
 <table>
 <tr><td>Sample name</td><td><in>sample</in></td></tr>
 <tr><td>Sample size</td><td><in>n</in></td></tr>
 <tr><td>Mean</td><td><in>mean</in></td></tr>
 <tr><td>Standard deviation</td><td><in>sd</in></td></tr>
 </table>
-<line></line>
+<br />
 <table>
 <tr><td>Skewness</td><td><in>skewness</in>  <pval><inp>b1_p</inp></pval></td></tr>
 <tr><td>Kurtosis</td><td><in>kurtosis</in>  <pval><inp>b2_p</inp></pval></td></tr>
 <tr><td>Royston chi-sq</td><td><in>k2</in>  <pval><inp>k2_p</inp></pval></td></tr>
 </table>
-<line></line>
+<br />
 <table>
 <tr><td>Shapiro-Wilk W</td><td><in>sw_w</in>  <in>sw_v</in>  <pval><inp>sw_p</inp></pval></td></tr>
 <tr><td>Shapiro-Francia W'</td><td><in>sf_w</in>  <in>sf_v</in>  <pval><inp>sf_p</inp></pval></td></tr>
 </table>
-<line></line>
-<line><in>result</in></line>
-<line></line>
-<line></line>
-<line><in>chart</in></line>
-<line></line>
+
+<p><in>result</in></p>
+
+
+<p><in>chart</in></p>
+
 </block>
 </report>

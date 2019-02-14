@@ -1,31 +1,31 @@
 <report>
 <title>Reference range/interval</title>
-<line></line>
+<br />
 <table>
 <tr><td>Sample name:</td><td><in>name</in></td></tr>
 <tr><td>Sample mean = </td><td><inu>mean</inu></td></tr>
 <tr><td>Sample size n =</td><td><in>size</in></td></tr>
 <tr><td>Sample sd =</td><td><inu>sd</inu></td></tr>
 </table>
-<line></line>
-<line><u>For normal data</u></line>
-<line><in>qrr</in>% reference interval = <inu>lrr</inu> to <inu>urr</inu></line>
-<line><ci><in>pc</in>% confidence interval for lower range limit = <inu>lx_l</inu> to <inu>ux_l</inu></ci></line>
-<line><ci><in>pc</in>% confidence interval for upper range limit = <inu>lx_u</inu> to <inu>ux_u</inu></ci></line>
+
+<p><u>For normal data</u><br />
+<in>qrr</in>% reference interval = <inu>lrr</inu> to <inu>urr</inu><br />
+<ci><in>pc</in>% confidence interval for lower range limit = <inu>lx_l</inu> to <inu>ux_l</inu></ci><br />
+<ci><in>pc</in>% confidence interval for upper range limit = <inu>lx_u</inu> to <inu>ux_u</inu></ci></p>
 <block name="lognormal">
-<line></line>
-<line><u>For log-normal data</u></line>
-<line><in>qrr</in>% reference interval = <inu>lrr_lognormal</inu> to <inu>urr_lognormal</inu></line>
-<line><ci><in>pc</in>% confidence interval for lower range limit = <inu>lx_l_lognormal</inu> to <inu>ux_l_lognormal</inu></ci></line>
-<line><ci><in>pc</in>% confidence interval for upper range limit = <inu>lx_u_lognormal</inu> to <inu>ux_u_lognormal</inu></ci></line>
+
+<p><u>For log-normal data</u><br />
+<in>qrr</in>% reference interval = <inu>lrr_lognormal</inu> to <inu>urr_lognormal</inu><br />
+<ci><in>pc</in>% confidence interval for lower range limit = <inu>lx_l_lognormal</inu> to <inu>ux_l_lognormal</inu></ci><br />
+<ci><in>pc</in>% confidence interval for upper range limit = <inu>lx_u_lognormal</inu> to <inu>ux_u_lognormal</inu></ci></p>
 </block>
-<line></line>
-<line><u>For any data</u></line>
-<line>Quantile <inu>qx_any</inu> = <inu>qxv_any</inu></line>
-<line><ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from_any</in> to <in>to_any</in></ci></line>
-<line>Exact confidence level = <in>co_any</in></line>
-<line></line>
-<line>Quantile <inu>qx</inu> = <inu>qxv</inu></line>
-<line><ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from</in> to <in>to</in></ci></line>
-<line>Exact confidence level = <in>co</in></line>
+
+<p><u>For any data</u><br />
+Quantile <inu>qx_any</inu> = <inu>qxv_any</inu><br />
+<ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from_any</in> to <in>to_any</in></ci><br />
+Exact confidence level = <in>co_any</in></p>
+
+<p>Quantile <inu>qx</inu> = <inu>qxv</inu><br />
+<ci>Approximate <in>pc</in>% confidence interval <in>type</in> = <in>from</in> to <in>to</in></ci><br />
+Exact confidence level = <in>co</in></p>
 </report>

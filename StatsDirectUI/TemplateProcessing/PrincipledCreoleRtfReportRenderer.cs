@@ -89,11 +89,6 @@ namespace StatsDirect.TemplateProcessing
                 return creole.Accept(this);
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleLine<string> victim)
-            {
-                return (null == victim.Contents ? string.Empty : victim.Contents.Accept(this)) + @"\par ";
-            }
-
             string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
             {
                 StringBuilder sb = new StringBuilder();
@@ -138,7 +133,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim)
             {
-                return "{" + victim.Contents.Accept(this) + "}";
+                return "{" + victim.Contents.Accept(this) + @"}\par ";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim)
@@ -196,6 +191,16 @@ namespace StatsDirect.TemplateProcessing
             {
                 return victim.Text;
             }
+
+            string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim)
+            {
+                return @"\par ";
+            }
+
+            string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim)
+            {
+                return (null == victim.Contents ? string.Empty : victim.Contents.Accept(this)) + @"\par\par ";
+            }
         }
 
         private class CellsDefinitionRenderer : ICreoleVisitor<string>
@@ -212,7 +217,8 @@ namespace StatsDirect.TemplateProcessing
             string ICreoleVisitor<string>.Visit(CreoleBlock<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleLine<string> victim) => string.Empty;
+            string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim) => string.Empty;
+            string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleSubstitution<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim) => string.Empty;

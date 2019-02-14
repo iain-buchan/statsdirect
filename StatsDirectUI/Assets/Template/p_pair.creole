@@ -1,25 +1,25 @@
 <report>
 <title>Paired proportions</title>
-<line></line>
-<line>Total = <in>n_out</in>,  both = <in>r_out</in>,  first only = <in>s_out</in>,  second only = <in>t_out</in></line>
-<line>Proportion 1 = <inu>prop_1</inu></line>
-<line>Proportion 2 = <inu>prop_2</inu></line>
-<line>Proportion difference = <inu>prop_diff</inu></line>
-<line></line>
+
+<p>Total = <in>n_out</in>,  both = <in>r_out</in>,  first only = <in>s_out</in>,  second only = <in>t_out</in><br />
+Proportion 1 = <inu>prop_1</inu><br />
+Proportion 2 = <inu>prop_2</inu><br />
+Proportion difference = <inu>prop_diff</inu></p>
+
 <block name="exact">
-<line><pval>Exact two sided <inp>cum_2</inp></pval></line>
-<line><pval>Exact one sided <inp>cum_1</inp></pval></line>
-<line></line>
-<line><pval>Exact two sided mid <inp>cum_2_mid</inp></pval></line>
-<line><pval>Exact one sided mid <inp>cum_1_mid</inp></pval></line>
+<p><pval>Exact two sided <inp>cum_2</inp></pval><br />
+<pval>Exact one sided <inp>cum_1</inp></pval></p>
+
+<p><pval>Exact two sided mid <inp>cum_2_mid</inp></pval><br />
+<pval>Exact one sided mid <inp>cum_1_mid</inp></pval></p>
 </block>
 <block name="approx">
-<line><warn>Numbers too large for exact test</warn></line>
-<line>Standard normal deviate z = <inu>z</inu></line>
-<line>Approximate two sided <in>p_2</in></line>
-<line>Approximate one sided <in>p_1</in></line>
+<p><warn>Numbers too large for exact test</warn><br />
+Standard normal deviate z = <inu>z</inu><br />
+Approximate two sided <in>p_2</in><br />
+Approximate one sided <in>p_1</in></p>
 </block>
-<line></line>
-<line><ci><in>qcl</in> <in>pc</in>% confidence interval for the proportion difference:</ci></line>
-<line><ci><inu>lower</inu> to <inu>upper</inu></ci></line>
+
+<p><ci><in>qcl</in> <in>pc</in>% confidence interval for the proportion difference:</ci><br />
+<ci><inu>lower</inu> to <inu>upper</inu></ci></p>
 </report>

@@ -1,8 +1,8 @@
 <report>
 <title>Unpaired random allocation to intervention or control group</title>
-<line></line>
-<line>Randomized with seed: <in>seed</in></line>
-<line></line>
+
+<p>Randomized with seed: <in>seed</in></p>
+
 <table>
 <block name="allocations"><tr><td><subtotal>Intervention</subtotal></td><td><subtotal><in>case</in></subtotal></td><td>Control</td><td><in>control</in></td></tr></block>
 </table>

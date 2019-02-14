@@ -1,9 +1,9 @@
 <report>
 <title>Cox regression - model analysis</title>
-<line></line>
-<line>Log likelihood with no covariates = <inu>ll0</inu></line>
-<line></line>
-<line>Log likelihood with all model covariates = <inu>ll</inu></line>
-<line></line>
-<line>Deviance (likelihood ratio) chi-square = <inu>x2</inu>   df = <in>df</in>   <pval><inp>p</inp></pval></line>
+
+<p>Log likelihood with no covariates = <inu>ll0</inu></p>
+
+<p>Log likelihood with all model covariates = <inu>ll</inu></p>
+
+<p>Deviance (likelihood ratio) chi-square = <inu>x2</inu>   df = <in>df</in>   <pval><inp>p</inp></pval></p>
 </report>

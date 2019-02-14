@@ -1,11 +1,11 @@
 <report>
 <title>Dunnett multiple comparisons with a control</title>
-<line></line>
-<line>Critical value (|d|) = <inu>d</inu></line>
-<line>Pooled standard deviation = <inu>psd</inu></line>
-<line></line>
-<line>Control  <subtotal>(n)</subtotal> = <in>control</in>  <subtotal>(<in>cn</in>)</subtotal></line>
-<line></line>
+
+<p>Critical value (|d|) = <inu>d</inu><br />
+Pooled standard deviation = <inu>psd</inu></p>
+
+<p>Control  <subtotal>(n)</subtotal> = <in>control</in>  <subtotal>(<in>cn</in>)</subtotal></p>
+
 <table>
 <tr><th>Comparison  <subtotal>(n)</subtotal></th><th>Mean difference <ci>(<in>pc</in>% CI)</ci></th><th></th></tr>
 <block name="differences"><tr><td><in>level</in>  <subtotal>(<in>cn</in>)</subtotal></td><td><inu>delta</inu><ci>(<inu>lci</inu>  to  <inu>uci</inu>)</ci></td><td><pval><inp>p</inp></pval></td></tr></block>

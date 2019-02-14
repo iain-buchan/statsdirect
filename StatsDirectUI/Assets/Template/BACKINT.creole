@@ -1,6 +1,6 @@
 <report>
-<line>For Y = <in>y</in></line>
-<line>Predicted X = <in>x</in></line>
-<line></line>
-<line></line>
+<p>For Y = <in>y</in><br />
+Predicted X = <in>x</in></p>
+
+<br />
 </report>

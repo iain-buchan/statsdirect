@@ -1,6 +1,6 @@
 <report>
 <title>Diagnostic test analysis</title>
-<line></line>
+<br />
 <table>
 <tr><td></td><thfirst>Disease / feature</thfirst><thspan/><thspan/></tr>
 <tr><th>Test:</th><td>Present</td><td>Absent</td><td>Totals</td></tr>
@@ -8,32 +8,32 @@
 <tr><td>Negative</td><td><in>cc</in></td><td><in>dd</in></td><td><subtotal><in>cd</in></subtotal></td></tr>
 <tr><td>Totals</td><td><subtotal><in>ac</in></subtotal></td><td><subtotal><in>bd</in></subtotal></td><td><grandtotal><in>tot</in></grandtotal></td></tr>
 </table>
-<line></line>
-<line><ci>Including <in>pc</in>% confidence intervals:</ci></line>
-<line></line>
-<line><b>Prevalence</b> (pre-test likelihood of disease)</line>
-<line><inu>prevalence</inu> <ci>(<inu>prevalence_from</inu> to <in>prevalence_to</in>)</ci>, <in>prevalence_pc</in>% <ci>(<in>prevalence_from_pc</in>% to <in>prevalence_to_pc</in>%)</ci></line>
-<line></line>
-<line><b>Predictive value of +ve test </b>(post-test likelihood of disease)</line>
-<line><inu>likely</inu> <ci>(<inu>likely_from</inu> to <in>likely_to</in>)</ci>, <in>likely_pc</in>% <ci>(<in>likely_from_pc</in>% to <in>likely_to_pc</in>%)</ci>,  {change = <in>likely_change</in>%}</line>
-<line></line>
-<line><b>Predictive values of -ve test</b></line>
-<line>(post-test likelihood of no disease)</line>
-<line><inu>likely_negative</inu> <ci>(<inu>likely_negative_from</inu> to <in>likely_negative_to</in>)</ci>, <in>likely_negative_pc</in>% <ci>(<in>likely_negative_from_pc</in>% to <in>likely_negative_to_pc</in>%)</ci>,  {change = <in>likely_negative_change</in>%}</line>
-<line>(post-test disease likelihood despite -ve test)</line>
-<line><inu>likely_despite</inu> <ci>(<inu>likely_despite_from</inu> to <in>likely_despite_to</in>)</ci>, <in>likely_despite_pc</in>% <ci>(<in>likely_despite_from_pc</in>% to <in>likely_despite_to_pc</in>%)</ci>, {change = <in>likely_despite_change</in>%}</line>
-<line></line>
-<line><b>Sensitivity </b>(true positive rate)</line>
-<line><inu>sensitive</inu> <ci>(<inu>sensitive_from</inu> to <in>sensitive_to</in>)</ci>, <in>sensitive_pc</in>% <ci>(<in>sensitive_from_pc</in>% to <in>sensitive_to_pc</in>%)</ci></line>
-<line></line>
-<line><b>Specificity </b>(true negative rate)</line>
-<line><inu>specific</inu> <ci>(<inu>specific_from</inu> to <in>specific_to</in>)</ci>, <in>specific_pc</in>% <ci>(<in>specific_from_pc</in>% to <in>specific_to_pc</in>%)</ci></line>
-<line></line>
-<line><b>Likelihood Ratio</b></line>
-<line>LR (positive test) = <inu>lr_pos</inu>  <ci>(<inu>lr_pos_from</inu> to <inu>lr_pos_to</inu>)</ci></line>
-<line>LR (negative test) = <inu>lr_neg</inu>  <ci>(<inu>lr_neg_from</inu> to <inu>lr_neg_to</inu>)</ci></line>
-<line></line>
-<line><b>Diagnostic Odds Ratio</b></line>
-<line><b>Observed odds ratio = <inu>odr</inu></b></line>
-<line><b>Conditional maximum likelihood estimate = <inu>cmle</inu>  <ci>(<inu>cmle_from</inu> to <inu>cmle_to</inu>)</ci></b></line>
+
+<p><ci>Including <in>pc</in>% confidence intervals:</ci></p>
+
+<p><b>Prevalence</b> (pre-test likelihood of disease)<br />
+<inu>prevalence</inu> <ci>(<inu>prevalence_from</inu> to <in>prevalence_to</in>)</ci>, <in>prevalence_pc</in>% <ci>(<in>prevalence_from_pc</in>% to <in>prevalence_to_pc</in>%)</ci></p>
+
+<p><b>Predictive value of +ve test </b>(post-test likelihood of disease)<br />
+<inu>likely</inu> <ci>(<inu>likely_from</inu> to <in>likely_to</in>)</ci>, <in>likely_pc</in>% <ci>(<in>likely_from_pc</in>% to <in>likely_to_pc</in>%)</ci>,  {change = <in>likely_change</in>%}</p>
+
+<p><b>Predictive values of -ve test</b><br />
+(post-test likelihood of no disease)<br />
+<inu>likely_negative</inu> <ci>(<inu>likely_negative_from</inu> to <in>likely_negative_to</in>)</ci>, <in>likely_negative_pc</in>% <ci>(<in>likely_negative_from_pc</in>% to <in>likely_negative_to_pc</in>%)</ci>,  {change = <in>likely_negative_change</in>%}<br />
+(post-test disease likelihood despite -ve test)<br />
+<inu>likely_despite</inu> <ci>(<inu>likely_despite_from</inu> to <in>likely_despite_to</in>)</ci>, <in>likely_despite_pc</in>% <ci>(<in>likely_despite_from_pc</in>% to <in>likely_despite_to_pc</in>%)</ci>, {change = <in>likely_despite_change</in>%}</p>
+
+<p><b>Sensitivity </b>(true positive rate)<br />
+<inu>sensitive</inu> <ci>(<inu>sensitive_from</inu> to <in>sensitive_to</in>)</ci>, <in>sensitive_pc</in>% <ci>(<in>sensitive_from_pc</in>% to <in>sensitive_to_pc</in>%)</ci></p>
+
+<p><b>Specificity </b>(true negative rate)<br />
+<inu>specific</inu> <ci>(<inu>specific_from</inu> to <in>specific_to</in>)</ci>, <in>specific_pc</in>% <ci>(<in>specific_from_pc</in>% to <in>specific_to_pc</in>%)</ci></p>
+
+<p><b>Likelihood Ratio</b><br />
+LR (positive test) = <inu>lr_pos</inu>  <ci>(<inu>lr_pos_from</inu> to <inu>lr_pos_to</inu>)</ci><br />
+LR (negative test) = <inu>lr_neg</inu>  <ci>(<inu>lr_neg_from</inu> to <inu>lr_neg_to</inu>)</ci></p>
+
+<p><b>Diagnostic Odds Ratio</b><br />
+<b>Observed odds ratio = <inu>odr</inu></b><br />
+<b>Conditional maximum likelihood estimate = <inu>cmle</inu>  <ci>(<inu>cmle_from</inu> to <inu>cmle_to</inu>)</ci></b></p>
 </report>

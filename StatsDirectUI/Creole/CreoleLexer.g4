@@ -42,6 +42,7 @@ TAG_EQUALS
 
 TAG_B          : 'b' ;
 TAG_BLOCK      : 'block' ;
+TAG_BR         : 'br' ;
 TAG_CI         : 'ci' ;
 TAG_GRANDTOTAL : 'grandtotal' ;
 TAG_I          : 'i' ;
@@ -50,8 +51,8 @@ TAG_INCLUDE    : 'include' ;
 TAG_INP        : 'inp' ;
 TAG_INU        : 'inu' ;
 TAG_INX        : 'inx' ;
-TAG_LINE       : 'line' ;
 TAG_MODEL      : 'model' ;
+TAG_P          : 'p' ;
 TAG_PRE        : 'pre' ;
 TAG_PVAL       : 'pval' ;
 TAG_REPORT     : 'report' ;

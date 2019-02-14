@@ -27,69 +27,71 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         private static string Prettify(string substitutedTemplate)
         {
-            Dictionary<string, CreoleReportSubstitute> substitutions = new Dictionary<string, CreoleReportSubstitute>
+            Dictionary<string, string> substitutions = new Dictionary<string, string>
             {
                 // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal).
-                { "<report>", new CreoleReportSubstitute("") },
-                { "</report>", new CreoleReportSubstitute("") },
-                { "<b>", new CreoleReportSubstitute(@"{\b ") },
-                { "</b>", new CreoleReportSubstitute(@"}") },
-                { "<ci>", new CreoleReportSubstitute(@"{\cf4 ") },
-                { "</ci>", new CreoleReportSubstitute(@"}") },
-                { "<grandtotal>", new CreoleReportSubstitute(@"{\cf8 ") },
-                { "</grandtotal>", new CreoleReportSubstitute(@"}") },
-                { "<i>", new CreoleReportSubstitute(@"{\i ") },
-                { "</i>", new CreoleReportSubstitute(@"}") },
-                { "<line>", new CreoleReportSubstitute(@"") },
-                { "</line>", new CreoleReportSubstitute(@"\par ") },
-                { "<model>", new CreoleReportSubstitute(@"{\cf8 ") },
-                { "</model>", new CreoleReportSubstitute(@"}") },
-                { "<pre>", new CreoleReportSubstitute(@"{\f2 ") },
-                { "</pre>", new CreoleReportSubstitute(@"}") },
-                { "<pval>", new CreoleReportSubstitute(@"{\cf5 ") },
-                { "</pval>", new CreoleReportSubstitute(@"}") },
-                { "<score>", new CreoleReportSubstitute(@"{\cf3 ") },
-                { "</score>", new CreoleReportSubstitute(@"}") },
-                { "<sub>", new CreoleReportSubstitute(@"{\sub ") },
-                { "</sub>", new CreoleReportSubstitute(@"}") },
-                { "<subtitle>", new CreoleReportSubstitute(@"{\ul ") },
-                { "</subtitle>", new CreoleReportSubstitute(@"} \par") },
-                { "<subtotal>", new CreoleReportSubstitute(@"{\cf7 ") },
-                { "</subtotal>", new CreoleReportSubstitute(@"}") },
-                { "<sup>", new CreoleReportSubstitute(@"{\sup ") },
-                { "</sup>", new CreoleReportSubstitute(@"}") },
-                { "<td>", new CreoleReportSubstitute(@"\pard\intbl ") },
-                { "</td>", new CreoleReportSubstitute(@"\cell ") },
-                { "<tdfirst>", new CreoleReportSubstitute(@"\pard\intbl!!FIRST!! ") },
-                { "</tdfirst>", new CreoleReportSubstitute(@"\cell ") },
-                { "<tdspan/>", new CreoleReportSubstitute(@"\pard\intbl!!SPAN!!\cell ") },
-                { "<th>", new CreoleReportSubstitute(@"\pard\intbl {\ul ") },
-                { "</th>", new CreoleReportSubstitute(@"}\cell ") },
-                { "<thfirst>", new CreoleReportSubstitute(@"\pard\intbl!!FIRST!! {\ul ") },
-                { "</thfirst>", new CreoleReportSubstitute(@"}\cell ") },
-                { "<thspan/>", new CreoleReportSubstitute(@"\pard\intbl!!SPAN!!\cell ") },
-                { "<table>", new CreoleReportSubstitute(@"{") },
-                { "</table>", new CreoleReportSubstitute(@"}") },
-                { "<title>", new CreoleReportSubstitute(@"{\ul\b ") },
-                { "</title>", new CreoleReportSubstitute(@"}\par ") },
-                { "<tr>", new CreoleReportSubstitute(@"\trowd\trgaph135\trleft0\trautofit1!!CELLDEFINITION!! ") },
-                { "</tr>", new CreoleReportSubstitute(@"\row " + Environment.NewLine) },
-                { "<u>", new CreoleReportSubstitute(@"{\ul ") },
-                { "</u>", new CreoleReportSubstitute(@"}") },
-                { "<warn>", new CreoleReportSubstitute(@"{\cf6 ") },
-                { "</warn>", new CreoleReportSubstitute(@"}") },
-                { "&amp;", new CreoleReportSubstitute(@"&") },
-                { "&gt;", new CreoleReportSubstitute(@">") },
-                { "&lt;", new CreoleReportSubstitute(@"<") },
-                { "&#xb1;", new CreoleReportSubstitute(@"\'b1") },
-                { "&#xb2;", new CreoleReportSubstitute(@"\'b2") },
-                { "&#xe9;", new CreoleReportSubstitute(@"\'e9") }
+                { "<report>", string.Empty },
+                { "</report>", string.Empty },
+                { "<b>", @"{\b " },
+                { "</b>", @"}" },
+                { "<br/>", @"\par " },
+                { "<br />", @"\par " },
+                { "<ci>", @"{\cf4 " },
+                { "</ci>", @"}" },
+                { "<grandtotal>", @"{\cf8 " },
+                { "</grandtotal>", @"}" },
+                { "<i>", @"{\i " },
+                { "</i>", @"}" },
+                { "<model>", @"{\cf8 " },
+                { "</model>", @"}" },
+                { "<p>", string.Empty },
+                { "</p>", @"\par\par " },
+                { "<pre>", @"{\f2 " },
+                { "</pre>", @"}" },
+                { "<pval>", @"{\cf5 " },
+                { "</pval>", @"}" },
+                { "<score>", @"{\cf3 " },
+                { "</score>", @"}" },
+                { "<sub>", @"{\sub " },
+                { "</sub>", @"}" },
+                { "<subtitle>", @"{\ul " },
+                { "</subtitle>", @"}\par\par " },
+                { "<subtotal>", @"{\cf7 " },
+                { "</subtotal>", @"}" },
+                { "<sup>", @"{\sup " },
+                { "</sup>", @"}" },
+                { "<td>", @"\pard\intbl " },
+                { "</td>", @"\cell " },
+                { "<tdfirst>", @"\pard\intbl!!FIRST!! " },
+                { "</tdfirst>", @"\cell " },
+                { "<tdspan/>", @"\pard\intbl!!SPAN!!\cell " },
+                { "<th>", @"\pard\intbl {\ul " },
+                { "</th>", @"}\cell " },
+                { "<thfirst>", @"\pard\intbl!!FIRST!! {\ul " },
+                { "</thfirst>", @"}\cell " },
+                { "<thspan/>", @"\pard\intbl!!SPAN!!\cell " },
+                { "<table>", @"{" },
+                { "</table>", @"}\par " },
+                { "<title>", @"{\ul\b " },
+                { "</title>", @"}\par\par " },
+                { "<tr>", @"\trowd\trgaph135\trleft0\trautofit1!!CELLDEFINITION!! " },
+                { "</tr>", @"\row " + Environment.NewLine },
+                { "<u>", @"{\ul " },
+                { "</u>", @"}" },
+                { "<warn>", @"{\cf6 " },
+                { "</warn>", @"}" },
+                { "&amp;", @"&" },
+                { "&gt;", @">" },
+                { "&lt;", @"<" },
+                { "&#xb1;", @"\'b1" },
+                { "&#xb2;", @"\'b2" },
+                { "&#xe9;", @"\'e9" }
             };
 
             string afterSubstitutions = substitutedTemplate.Trim();
 
-            foreach (KeyValuePair<string, CreoleReportSubstitute> pair in substitutions)
-                afterSubstitutions = afterSubstitutions.Replace(pair.Key, pair.Value.ReplacementText);
+            foreach (KeyValuePair<string, string> pair in substitutions)
+                afterSubstitutions = afterSubstitutions.Replace(pair.Key, pair.Value);
             // RTF tables need a certain amount of fixup: they need a \cellx0 for each cell in the row.
             // ASSUMPTION: An entire table row is on one line in the source and hence in the translated data.
             // ASSUMPTION: There is at lease one non-table line between tables.  This is used to detect the first row of a table in order to insert some text that is later removed when fixing up the table.
@@ -349,16 +351,6 @@ namespace StatsDirect.TemplateProcessing
 
             // If we get here, there's no nested template with the given name.
             return null;
-        }
-    }
-
-    public class CreoleReportSubstitute
-    {
-        public string ReplacementText { get; set; }
-
-        public CreoleReportSubstitute(string replacementText)
-        {
-            ReplacementText = replacementText;
         }
     }
 }

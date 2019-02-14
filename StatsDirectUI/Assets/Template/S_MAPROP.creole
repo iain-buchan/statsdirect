@@ -1,15 +1,15 @@
 <report>
 <title>Sample size for paired cohort study</title>
-<line></line>
-<line>Event rate in control group = <inu>pc</inu></line>
-<line>Event rate in experimental group = <inu>ps</inu></line>
-<line>Correlation for failure between experimental and control subjects = <inu>r</inu></line>
-<line>Alpha = <inu>alpha</inu></line>
-<line>Power = <inu>power</inu></line>
-<line></line>
-<line>Estimated minimum sample size = <in>size</in> pairs</line>
+
+<p>Event rate in control group = <inu>pc</inu><br />
+Event rate in experimental group = <inu>ps</inu><br />
+Correlation for failure between experimental and control subjects = <inu>r</inu><br />
+Alpha = <inu>alpha</inu><br />
+Power = <inu>power</inu></p>
+
+<p>Estimated minimum sample size = <in>size</in> pairs</p>
 <block name="assumptions">
-<line></line>
-<line>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</line>
+
+<p>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</p>
 </block>
 </report>

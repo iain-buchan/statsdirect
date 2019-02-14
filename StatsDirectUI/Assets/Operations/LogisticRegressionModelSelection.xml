@@ -13,10 +13,10 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Logistic regression - model selection guide</title>
-<line></line>
-<line><warn>Note: This is a guide to the amount of statistical information your variables add to the regression. It is not an automatic model selection procedure. There is no substitute for thinking about the real-world meaning of models.</warn></line>
-<line></line>
-<line><model><u>Model (~NS denotes coefficient P>0.2; ~?NS 0.05&lt;P&lt;0.2)</u></model></line>
+
+<p><warn>Note: This is a guide to the amount of statistical information your variables add to the regression. It is not an automatic model selection procedure. There is no substitute for thinking about the real-world meaning of models.</warn></p>
+
+<p><model><u>Model (~NS denotes coefficient P>0.2; ~?NS 0.05&lt;P&lt;0.2)</u></model></p>
 <table>
 <tr><th>Akaike Information</th><th>McFadden R-square</th><th>Significant coefficients</th><thfirst>LR Goodness of Fit</thfirst><thspan/><th></th></tr>
 <block name="parameters"><tr><tdfirst><model><in>model</in></model></tdfirst><tdspan/><tdspan/><tdspan/><tdspan/><tdspan/></tr>

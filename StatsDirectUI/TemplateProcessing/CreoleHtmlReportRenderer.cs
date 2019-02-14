@@ -82,11 +82,6 @@ namespace StatsDirect.TemplateProcessing
                 return creole.Accept(this);
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleLine<string> victim)
-            {
-                return (null == victim.Contents ? string.Empty : victim.Contents.Accept(this)) + @"<br />";
-            }
-
             string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
             {
                 StringBuilder sb = new StringBuilder();
@@ -182,6 +177,16 @@ namespace StatsDirect.TemplateProcessing
             string ICreoleVisitor<string>.Visit(CreoleText<string> victim)
             {
                 return victim.Text;
+            }
+
+            string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim)
+            {
+                return @"<br />";
+            }
+
+            string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim)
+            {
+                return (null == victim.Contents ? string.Empty : @"<p>" + victim.Contents.Accept(this)) + @"</p>";
             }
 
             private interface IWrapper

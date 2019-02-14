@@ -1,11 +1,11 @@
 <report>
 <title>Quantile confidence interval</title>
 <block name="variable">
-<line></line>
-<line>Variable: <in>sample</in></line>
-<line>Sample size = <in>size</in></line>
-<line>Quantile (<in>quantile_name</in>) = <inu>value</inu></line>
-<line><ci>Approximate <in>pc</in>% CI <in>type</in> = <in>from</in> to <in>to</in></ci></line>
-<line>Exact confidence level = <in>exact</in></line>
+
+<p>Variable: <in>sample</in><br />
+Sample size = <in>size</in><br />
+Quantile (<in>quantile_name</in>) = <inu>value</inu><br />
+<ci>Approximate <in>pc</in>% CI <in>type</in> = <in>from</in> to <in>to</in></ci><br />
+Exact confidence level = <in>exact</in></p>
 </block>
 </report>

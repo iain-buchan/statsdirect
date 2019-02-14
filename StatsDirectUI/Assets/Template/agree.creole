@@ -1,26 +1,26 @@
 <report>
 <title>Agreement</title>
-<line></line>
-<line>Variables: <in>tlist</in></line>
+
+<p>Variables: <in>tlist</in></p>
 <block name="all">
-<line></line>
-<line><in>pc</in>% Limits of agreement = <inu>from</inu> to <inu>to</inu></line>
+
+<p><in>pc</in>% Limits of agreement = <inu>from</inu> to <inu>to</inu></p>
 </block>
-<line></line>
-<line>Intra-class correlation coefficient (one way random effects) = <inu>icc</inu></line>
-<line></line>
-<line>Estimated within-subjects standard deviation = <inu>wssd</inu></line>
-<line></line>
-<line>For within-subjects sd vs. mean, Kendall's <in>tau</in><pval>  two sided <inp>p2</inp></pval></line>
-<line></line>
-<line>Repeatability (for alpha = <in>pc</in>) = <inu>rep</inu></line>
-<line></line>
-<line></line>
-<line><in>repeatability</in></line>
-<line></line>
-<line></line>
-<line><in>agreement</in></line>
-<line></line>
-<line></line>
-<line><in>qq</in></line>
+
+<p>Intra-class correlation coefficient (one way random effects) = <inu>icc</inu></p>
+
+<p>Estimated within-subjects standard deviation = <inu>wssd</inu></p>
+
+<p>For within-subjects sd vs. mean, Kendall's <in>tau</in><pval>  two sided <inp>p2</inp></pval></p>
+
+<p>Repeatability (for alpha = <in>pc</in>) = <inu>rep</inu></p>
+
+
+<p><in>repeatability</in></p>
+
+
+<p><in>agreement</in></p>
+
+
+<p><in>qq</in></p>
 </report>

@@ -1,25 +1,25 @@
 <report>
 <title>Cuzick's trend test</title>
-<line></line>
-<line>Groups = <in>groups</in></line>
-<line>Observations = <in>obs</in></line>
-<line>Order: <in>order</in></line>
-<line></line>
+
+<p>Groups = <in>groups</in><br />
+Observations = <in>obs</in><br />
+Order: <in>order</in></p>
+
 <table>
 <tr><td>Ez =  <inu>ez</inu></td><td>Var(z) = <inu>varz</inu></td></tr>
 <tr><td>T = <inu>t</inu></td><td>ET = <inu>et</inu></td><td>Var(T) = <inu>vart</inu></td></tr>
 <tr><td>z = <inu>z</inu></td></tr>
 </table>
-<line></line>
-<line><pval>One sided <inp>p_1</inp></pval></line>
-<line><pval>Two sided <inp>p_2</inp></pval></line>
+
+<p><pval>One sided <inp>p_1</inp></pval><br />
+<pval>Two sided <inp>p_2</inp></pval></p>
 <block name="ties">
-<line></line>
-<line>Corrected for ties:</line>
-<line>VarT = <inu>varttie</inu></line>
-<line>z   = <inu>ztie</inu></line>
-<line></line>
-<line><pval>One sided <inp>p_1tie</inp></pval></line>
-<line><pval>Two sided <inp>p_2tie</inp></pval></line>
+
+<p>Corrected for ties:<br />
+VarT = <inu>varttie</inu><br />
+z   = <inu>ztie</inu></p>
+
+<p><pval>One sided <inp>p_1tie</inp></pval><br />
+<pval>Two sided <inp>p_2tie</inp></pval></p>
 </block>
 </report>

@@ -8,32 +8,32 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Poisson regression - model analysis</title>
-<line></line>
-<line>Accuracy = <in>acc</in></line>
-<line>Log likelihood with all covariates = <in>ll</in></line>
-<line></line>
-<line>Deviance with all covariates = <in>dev</in>   df = <in>idf</in>   rank = <in>rank</in></line>
-<line>Akaike information criterion = <in>aka</in></line>
-<line>Schwartz information criterion = <in>sch</in></line>
-<line></line>
-<line>Deviance with no covariates = <in>devx</in></line>
-<line>Deviance (likelihood ratio, G&#xb2;) = <in>x2dev</in>   df = <in>x2df</in>   <pval><inp>x2p</inp></pval></line>
-<line>Pseudo (McFadden) R-square = <in>r2</in></line>
-<line>Pseudo (likelihood ratio index) R-square = <in>r2i</in></line>
-<line></line>
-<line>Pearson goodness of fit = <in>x2_pearson</in>   df = <in>idf</in>   <pval><inp>p_pearson</inp></pval></line>
-<line>Deviance goodness of fit = <in>dev</in>   df = <in>idf</in>   <pval><inp>p_dev</inp></pval></line>
-<line></line>
-<line>Over-dispersion scale parameter = <in>sp</in></line>
-<line>Scaled G&#xb2; = <in>x2dev_scaled</in>   df = <in>x2df</in>   <pval><inp>x2p_scaled</inp></pval></line>
-<line>Scaled Pearson goodness of fit = <in>x2_scaled</in>   df = <in>idf</in>   <pval><inp>p_p_scaled</inp></pval></line>
-<line>Scaled Deviance goodness of fit = <in>dev_scaled</in>   df = <in>idf</in>   <pval><inp>p_dev_scaled</inp></pval></line>
-<line></line>
+
+<p>Accuracy = <in>acc</in><br />
+Log likelihood with all covariates = <in>ll</in></p>
+
+<p>Deviance with all covariates = <in>dev</in>   df = <in>idf</in>   rank = <in>rank</in><br />
+Akaike information criterion = <in>aka</in><br />
+Schwartz information criterion = <in>sch</in></p>
+
+<p>Deviance with no covariates = <in>devx</in><br />
+Deviance (likelihood ratio, G&#xb2;) = <in>x2dev</in>   df = <in>x2df</in>   <pval><inp>x2p</inp></pval><br />
+Pseudo (McFadden) R-square = <in>r2</in><br />
+Pseudo (likelihood ratio index) R-square = <in>r2i</in></p>
+
+<p>Pearson goodness of fit = <in>x2_pearson</in>   df = <in>idf</in>   <pval><inp>p_pearson</inp></pval><br />
+Deviance goodness of fit = <in>dev</in>   df = <in>idf</in>   <pval><inp>p_dev</inp></pval></p>
+
+<p>Over-dispersion scale parameter = <in>sp</in><br />
+Scaled G&#xb2; = <in>x2dev_scaled</in>   df = <in>x2df</in>   <pval><inp>x2p_scaled</inp></pval><br />
+Scaled Pearson goodness of fit = <in>x2_scaled</in>   df = <in>idf</in>   <pval><inp>p_p_scaled</inp></pval><br />
+Scaled Deviance goodness of fit = <in>dev_scaled</in>   df = <in>idf</in>   <pval><inp>p_dev_scaled</inp></pval></p>
+
 <table>
 <tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</th></tr>
 <block name="unscaled"><tr><td><in>par</in></td><td><in>coef</in></td><td><in>err</in></td></tr></block>
 </table>
-<line></line>
+<br />
 <table>
 <tr><th>Parameter</th><th>Scaled Standard Error</th><th>Scaled Wald z</th><th></th></tr>
 <block name="scaled"><tr><td><in>par</in></td><td><in>err</in></td><td><in>z</in></td><td><pval><inp>p</inp></pval></td></tr></block>

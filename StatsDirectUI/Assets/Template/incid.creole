@@ -1,29 +1,29 @@
 <report>
 <title>Incidence rate comparison</title>
-<line></line>
+<br />
 <table>
 <tr><td></td><td><subtotal>Exposure:</subtotal></td><td></td><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Exposed</td><td>Non-exposed</td><td>Total</td></tr>
 <tr><td>Cases</td><td><in>a_out</in></td><td><in>b_out</in></td><td><in>m</in></td></tr>
 <tr><td>Person-time</td><td><in>pt1_out</in></td><td><in>pt2_out</in></td><td><in>pt</in></td></tr>
 </table>
-<line></line>
-<line>Exposed incidence rate = <inu>ir1</inu></line>
-<line>Non-exposed incidence rate = <inu>ir2</inu></line>
-<line></line>
-<line>Rate difference = <inu>ird</inu></line>
-<line><ci>approximate <in>pc</in>% confidence interval = <inu>ird_from</inu>  to  <inu>ird_to</inu></ci></line>
-<line></line>
-<line>chi-square = <inu>xmh</inu>  <pval><inp>p</inp></pval></line>
-<line></line>
-<line>Rate ratio = <in>irr</in></line>
+
+<p>Exposed incidence rate = <inu>ir1</inu><br />
+Non-exposed incidence rate = <inu>ir2</inu></p>
+
+<p>Rate difference = <inu>ird</inu><br />
+<ci>approximate <in>pc</in>% confidence interval = <inu>ird_from</inu>  to  <inu>ird_to</inu></ci></p>
+
+<p>chi-square = <inu>xmh</inu>  <pval><inp>p</inp></pval></p>
+
+<p>Rate ratio = <in>irr</in></p>
 <block name="exact">
-<line><ci>exact <in>pc</in>% confidence interval = <in>irr_from</in>  to  <in>irr_to</in> </ci></line>
-<line></line>
-<line>Conditional maximum likelihood estimate of rate ratio = <inu>eor</inu></line>
-<line><ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu>  to  <inu>ulf</inu></ci></line>
-<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
-<line><ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci></line>
-<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
+<p><ci>exact <in>pc</in>% confidence interval = <in>irr_from</in>  to  <in>irr_to</in> </ci></p>
+
+<p>Conditional maximum likelihood estimate of rate ratio = <inu>eor</inu><br />
+<ci>Exact Fisher <in>pc</in>% confidence interval = <inu>llf</inu>  to  <inu>ulf</inu></ci><br />
+<pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval><br />
+<ci>Exact mid-P <in>pc</in>% confidence interval = <inu>llm</inu>  to  <inu>ulm</inu></ci><br />
+<pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></p>
 </block>
 </report>

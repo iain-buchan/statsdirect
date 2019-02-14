@@ -21,7 +21,7 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Logistic regression - classification</title>
-<line></line>
+<br />
 <table>
 <tr><td></td><thfirst>Observed</thfirst><thspan/><thspan/></tr>
 <tr><td></td><td></td><th>Event</th><th>No Event</th><th>Total</th></tr>
@@ -29,27 +29,27 @@
 <tr><th>Classified</th><th>No Event</th><td><in>fn</in></td><td><in>tn</in></td><td><in>totnoc</in></td></tr>
 <tr><td></td><th>Total</th><td><in>tote</in></td><td><in>totnoe</in></td><td></td></tr>
 </table>
-<line></line>
-<line>cutoff = <in>co</in></line>
-<line></line>
-<line>sensitivity = <in>sens</in>%</line>
-<line>specificity = <in>spec</in>%</line>
-<line></line>
-<line>+ve predictive value = <in>+ve</in>%</line>
-<line>-ve predictive value = <in>npv</in>%</line>
-<line>predictive value despite -ve test = <in>-ve</in>%</line>
-<line></line>
-<line>correctly classified = <in>cc</in>%</line>
-<line></line>
-<line>likelihood ratio (<in>pc</in>% CI):</line>
-<line>LR (+ve) = <in>lr+</in> (<in>from+</in> to <in>to+</in>)</line>
-<line>LR (-ve) = <in>lr-</in> (<in>from-</in> to <in>to-</in>)</line>
-<line></line>
-<line> 'near' cut-off at max(sens+spec) = <in>cmax</in></line>
-<line></line>
-<line> area under ROC curve = <in>area</in></line>
-<line></line>
-<line><in>chart</in></line>
+
+<p>cutoff = <in>co</in></p>
+
+<p>sensitivity = <in>sens</in>%<br />
+specificity = <in>spec</in>%</p>
+
+<p>+ve predictive value = <in>+ve</in>%<br />
+-ve predictive value = <in>npv</in>%<br />
+predictive value despite -ve test = <in>-ve</in>%</p>
+
+<p>correctly classified = <in>cc</in>%</p>
+
+<p>likelihood ratio (<in>pc</in>% CI):<br />
+LR (+ve) = <in>lr+</in> (<in>from+</in> to <in>to+</in>)<br />
+LR (-ve) = <in>lr-</in> (<in>from-</in> to <in>to-</in>)</p>
+
+<p> 'near' cut-off at max(sens+spec) = <in>cmax</in></p>
+
+<p> area under ROC curve = <in>area</in></p>
+
+<p><in>chart</in></p>
 </report>]]>
     </report>
 	</steps>

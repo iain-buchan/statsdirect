@@ -1,14 +1,14 @@
 <report>
 <title>Odds ratio analysis</title>
-<line></line>
-<line>Odds Ratio = <in>odds</in></line>
-<line></line>
-<line>Using the Woolf (logit) approximation:</line>
-<line><ci>Approximate <in>woolf_ci</in>% confidence interval = <in>woolf_ci_1</in> to <in>woolf_ci_2</in></ci></line>
-<line></line>
-<line>Using conditional likelihood estimation:</line>
-<line><ci>Fisher exact <in>ci</in>% confidence interval = <in>llf</in> to <in>ulf</in></ci></line>
-<line><pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval></line>
-<line><ci>mid-P exact <in>ci</in>% confidence interval = <in>llm</in> to <in>ulm</in></ci></line>
-<line><pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></line>
+
+<p>Odds Ratio = <in>odds</in></p>
+
+<p>Using the Woolf (logit) approximation:<br />
+<ci>Approximate <in>woolf_ci</in>% confidence interval = <in>woolf_ci_1</in> to <in>woolf_ci_2</in></ci></p>
+
+<p>Using conditional likelihood estimation:<br />
+<ci>Fisher exact <in>ci</in>% confidence interval = <in>llf</in> to <in>ulf</in></ci><br />
+<pval>Exact Fisher one sided <inp>p1f</inp>, two sided <inp>p2f</inp></pval><br />
+<ci>mid-P exact <in>ci</in>% confidence interval = <in>llm</in> to <in>ulm</in></ci><br />
+<pval>Exact mid-P one sided <inp>p1m</inp>, two sided <inp>p2m</inp></pval></p>
 </report>

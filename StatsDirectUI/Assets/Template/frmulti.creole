@@ -1,8 +1,8 @@
 <report>
 <title>Friedman: all pairwise comparisons (Conover)</title>
-<line>Critical t (<in>df</in> df) = <inu>t</inu></line>
+<p>Critical t (<in>df</in> df) = <inu>t</inu></p>
 <block name="pair">
-<line></line>
+<br />
 <table>
 <tr><td><in>compare</in></td><td><ci><in>diff</in></ci></td></tr>
 <tr><td>(<in>val</in>)</td><td><pval><inp>p</inp></pval></td></tr>

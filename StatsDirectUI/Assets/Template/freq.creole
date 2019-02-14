@@ -1,11 +1,11 @@
 <report>
 <title>Frequencies</title>
 <block name="variable">
-<line></line>
+<br />
 <subtitle>Frequency analysis for <in>ti</in></subtitle>
-<line></line>
-<line>Total = <in>n</in></line>
-<line></line>
+
+<p>Total = <in>n</in></p>
+
 <table>
 <tr><th>Value</th><th>Frequency</th><th>Relative %</th><th>Cumulative</th><th>Cumulative Relative %</th></tr>
 <block name="bin"><tr><td><in>x</in></td><td><in>fx</in></td><td><inu>pc</inu></td><td><in>cm</in></td><td><inu>pc2</inu></td></tr></block>

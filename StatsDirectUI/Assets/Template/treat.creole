@@ -1,43 +1,43 @@
 <report>
 <title>Number needed to treat (empirical results using observed counts only)</title>
-<line></line>
-<line><ci>Estimates with <in>pc</in>% confidence intervals:</ci></line>
-<line></line>
-<line>Risk of event in controls = <in>ce</in> <ci>(<inu>ce_from</inu> to <in>ce_to</in>)</ci></line>
-<line>Risk of event in treated = <in>te</in> <ci>(<inu>te_from</inu> to <in>te_to</in>)</ci></line>
-<line>Relative risk of event = <inu>rre</inu> <ci>(<inu>rre_from</inu> to <inu>rre_to</inu>)</ci></line>
-<line></line>
-<line>Risk of no event in controls = <in>cne</in> <ci>(<inu>cne_from</inu> to <in>cne_to</in>)</ci></line>
-<line>Risk of no event in treated = <in>tne</in> <ci>(<inu>tne_from</inu> to <in>tne_to</in>)</ci></line>
-<line>Relative risk of no event = <inu>rrne</inu> <ci>(<inu>rrne_from</inu> to <inu>rrne_to</inu>)</ci></line>
-<line></line>
-<line>Odds ratio of event in treated cf. controls = <inu>oor</inu> <ci>(<inu>oor_from</inu> to <inu>oor_to</inu>)</ci></line>
-<line>Relative risk reduction (controls-treated) = <inu>rrr</inu> <ci>(<inu>rrr_from</inu> to <inu>rrr_to</inu>)</ci></line>
-<line>Risk difference (controls-treated) = <inu>rd</inu> <ci>(<inu>rd_from</inu> to <inu>rd_to</inu>)</ci></line>
-<line></line>
-<line>NNT [risk difference] = <in>treat</in> <ci>(<in>treat_from</in> to <in>treat_to</in>)</ci></line>
-<line><b>NNT [risk difference] (rounded up) = <in>treat_round</in> <ci>(<in>treat_round_from</in> to <in>treat_round_to</in>) </ci></b></line>
-<line></line>
+
+<p><ci>Estimates with <in>pc</in>% confidence intervals:</ci></p>
+
+<p>Risk of event in controls = <in>ce</in> <ci>(<inu>ce_from</inu> to <in>ce_to</in>)</ci><br />
+Risk of event in treated = <in>te</in> <ci>(<inu>te_from</inu> to <in>te_to</in>)</ci><br />
+Relative risk of event = <inu>rre</inu> <ci>(<inu>rre_from</inu> to <inu>rre_to</inu>)</ci></p>
+
+<p>Risk of no event in controls = <in>cne</in> <ci>(<inu>cne_from</inu> to <in>cne_to</in>)</ci><br />
+Risk of no event in treated = <in>tne</in> <ci>(<inu>tne_from</inu> to <in>tne_to</in>)</ci><br />
+Relative risk of no event = <inu>rrne</inu> <ci>(<inu>rrne_from</inu> to <inu>rrne_to</inu>)</ci></p>
+
+<p>Odds ratio of event in treated cf. controls = <inu>oor</inu> <ci>(<inu>oor_from</inu> to <inu>oor_to</inu>)</ci><br />
+Relative risk reduction (controls-treated) = <inu>rrr</inu> <ci>(<inu>rrr_from</inu> to <inu>rrr_to</inu>)</ci><br />
+Risk difference (controls-treated) = <inu>rd</inu> <ci>(<inu>rd_from</inu> to <inu>rd_to</inu>)</ci></p>
+
+<p>NNT [risk difference] = <in>treat</in> <ci>(<in>treat_from</in> to <in>treat_to</in>)</ci><br />
+<b>NNT [risk difference] (rounded up) = <in>treat_round</in> <ci>(<in>treat_round_from</in> to <in>treat_round_to</in>) </ci></b></p>
+
 <block name="adjusted">
-<line></line>
+<br />
 <title>Needed to treat (adjusted for baseline/expected risk)</title>
-<line></line>
-<line>Expected risk of event without treatment <in>type</in>= <in>brr</in>%</line>
-<line></line>
-<line><ci>Estimates with <in>pc</in>% confidence intervals:</ci></line>
-<line></line>
-<line>NNT [risk difference] = <in>rd_treat</in> <ci>(<in>rd_treat_from</in> to <in>rd_treat_to</in>)</ci></line>
-<line><b>NNT [risk difference] (rounded up) = <in>rd_treat_round</in> <ci>(<in>rd_treat_round_from</in> to <in>rd_treat_round_to</in>)</ci></b></line>
-<line></line>
-<line>NNT [relative risk of event] = <in>rr_treat</in> <ci>(<in>rr_treat_from</in> to <in>rr_treat_to</in>)</ci></line>
-<line><b>NNT [relative risk of event] (rounded up) = <in>rr_treat_round</in> <ci>(<in>rr_treat_round_from</in> to <in>rr_treat_round_to</in>)</ci></b></line>
-<line></line>
-<line>NNT [relative risk of no event] = <in>rrn_treat</in> <ci>(<in>rrn_treat_from</in> to <in>rrn_treat_to</in>)</ci></line>
-<line><b>NNT [relative risk of no event] (rounded up) = <in>rrn_treat_round</in> <ci>(<in>rrn_treat_round_from</in> to <in>rrn_treat_round_to</in>)</ci></b></line>
-<line></line>
-<line>NNT [odds ratio] = <in>or_treat</in> <ci>(<in>or_treat_from</in> to <in>or_treat_to</in>)</ci></line>
-<line><b>NNT [odds ratio] (rounded up) = <in>or_treat_round</in> <ci>(<in>or_treat_round_from</in> to <in>or_treat_round_to</in>)</ci></b></line>
-<line></line>
+
+<p>Expected risk of event without treatment <in>type</in>= <in>brr</in>%</p>
+
+<p><ci>Estimates with <in>pc</in>% confidence intervals:</ci></p>
+
+<p>NNT [risk difference] = <in>rd_treat</in> <ci>(<in>rd_treat_from</in> to <in>rd_treat_to</in>)</ci><br />
+<b>NNT [risk difference] (rounded up) = <in>rd_treat_round</in> <ci>(<in>rd_treat_round_from</in> to <in>rd_treat_round_to</in>)</ci></b></p>
+
+<p>NNT [relative risk of event] = <in>rr_treat</in> <ci>(<in>rr_treat_from</in> to <in>rr_treat_to</in>)</ci><br />
+<b>NNT [relative risk of event] (rounded up) = <in>rr_treat_round</in> <ci>(<in>rr_treat_round_from</in> to <in>rr_treat_round_to</in>)</ci></b></p>
+
+<p>NNT [relative risk of no event] = <in>rrn_treat</in> <ci>(<in>rrn_treat_from</in> to <in>rrn_treat_to</in>)</ci><br />
+<b>NNT [relative risk of no event] (rounded up) = <in>rrn_treat_round</in> <ci>(<in>rrn_treat_round_from</in> to <in>rrn_treat_round_to</in>)</ci></b></p>
+
+<p>NNT [odds ratio] = <in>or_treat</in> <ci>(<in>or_treat_from</in> to <in>or_treat_to</in>)</ci><br />
+<b>NNT [odds ratio] (rounded up) = <in>or_treat_round</in> <ci>(<in>or_treat_round_from</in> to <in>or_treat_round_to</in>)</ci></b></p>
+
 </block>
-<line></line>
+<br />
 </report>

@@ -1,8 +1,8 @@
 <report>
 <title>Two way randomized block analysis of variance</title>
-<line></line>
-<line>Treatments: <in>tlist</in></line>
-<line></line>
+
+<p>Treatments: <in>tlist</in></p>
+
 <table>
 <tr><th>Source of Variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
 <tr><td>Between blocks (rows)</td><td><inu>sub_sum</inu></td><td><in>sub_df</in></td><td><inu>sub_mean</inu></td></tr>
@@ -10,8 +10,8 @@
 <tr><td>Residual (error)</td><td><inu>res_sum</inu></td><td><in>res_df</in></td><td><inu>res_mean</inu></td></tr>
 <tr><td>Corrected total</td><td><inu>tot_sum</inu></td><td><in>tot_df</in></td><td></td></tr>
 </table>
-<line></line>
-<line>F (VR between blocks) = <inu>sub_vr</inu>  <pval><inp>sub_p</inp></pval></line>
-<line></line>
-<line>F (VR between treatments) = <inu>grp_vr</inu>  <pval><inp>grp_p</inp></pval></line>
+
+<p>F (VR between blocks) = <inu>sub_vr</inu>  <pval><inp>sub_p</inp></pval></p>
+
+<p>F (VR between treatments) = <inu>grp_vr</inu>  <pval><inp>grp_p</inp></pval></p>
 </report>

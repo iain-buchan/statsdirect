@@ -1,18 +1,18 @@
 <report>
 <title>Sample size for <in>tt</in> Student t test</title>
-<line></line>
-<line>Alpha = <in>alpha</in></line>
-<line>Power = <in>power</in></line>
-<line>Difference <in>mean</in> = <in>delta</in></line>
-<line>Standard deviation = <in>sd</in></line>
-<block name="controls"><line>Controls per experimental subject <in>con_per</in></line></block>
-<line></line>
-<line>Estimated minimum sample size = <in>size</in> <block name="pairs">pairs</block><block name="subjects"> experimental subjects and <in>con_tot</in> controls.</block></line>
-<line></line>
-<line>Degrees of freedom = <in>df</in></line>
+
+<p>Alpha = <in>alpha</in><br />
+Power = <in>power</in><br />
+Difference <in>mean</in> = <in>delta</in><br />
+Standard deviation = <in>sd</in></p>
+<block name="controls"><p>Controls per experimental subject <in>con_per</in></p></block>
+
+<p>Estimated minimum sample size = <in>size</in> <block name="pairs">pairs</block><block name="subjects"> experimental subjects and <in>con_tot</in> controls.</block></p>
+
+<p>Degrees of freedom = <in>df</in></p>
 <block name="assumptions">
-<line></line>
-<line>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</line>
-<line>However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</line>
+
+<p>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.<br />
+However, true power associated with <in>cases</in> cases will be no less than <in>no_less</in> and no greater than <in>no_greater</in>.</p>
 </block>
 </report>

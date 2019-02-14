@@ -8,23 +8,23 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Logistic regression - model analysis</title>
-<line></line>
-<line>Accuracy = <in>acc</in></line>
-<line>Log likelihood with all covariates = <in>ll</in></line>
-<line></line>
-<line>Deviance with all covariates = <in>dev</in>   df = <in>idf</in>   rank = <in>rank</in></line>
-<line>Akaike information criterion = <in>aka</in></line>
-<line>Schwartz information criterion = <in>sch</in></line>
-<line></line>
-<line>Deviance with no covariates = <in>devx</in></line>
-<line>Deviance (likelihood ratio) chi-square = <in>x2dev</in>   df = <in>x2df</in>   <pval><inp>x2p</inp></pval></line>
-<line>Pseudo (McFadden) R-square = <in>r2</in></line>
-<line>Pseudo (likelihood ratio index) R-square = <in>r2i</in></line>
-<line></line>
-<line>Pearson chi-square goodness of fit = <in>x2</in>   df = <in>idf</in>   <pval><inp>p</inp></pval></line>
-<line>Deviance goodness of fit = <in>dev_good</in>   df = <in>df_good</in>   <pval><inp>p_good</inp></pval></line>
-<line>Hosmer-Lemeshow test = <in>hl</in>   df = <in>df_hl</in>   <pval><inp>p_hl</inp></pval></line>
-<line></line>
+
+<p>Accuracy = <in>acc</in><br />
+Log likelihood with all covariates = <in>ll</in></p>
+
+<p>Deviance with all covariates = <in>dev</in>   df = <in>idf</in>   rank = <in>rank</in><br />
+Akaike information criterion = <in>aka</in><br />
+Schwartz information criterion = <in>sch</in></p>
+
+<p>Deviance with no covariates = <in>devx</in><br />
+Deviance (likelihood ratio) chi-square = <in>x2dev</in>   df = <in>x2df</in>   <pval><inp>x2p</inp></pval><br />
+Pseudo (McFadden) R-square = <in>r2</in><br />
+Pseudo (likelihood ratio index) R-square = <in>r2i</in></p>
+
+<p>Pearson chi-square goodness of fit = <in>x2</in>   df = <in>idf</in>   <pval><inp>p</inp></pval><br />
+Deviance goodness of fit = <in>dev_good</in>   df = <in>df_good</in>   <pval><inp>p_good</inp></pval><br />
+Hosmer-Lemeshow test = <in>hl</in>   df = <in>df_hl</in>   <pval><inp>p_hl</inp></pval></p>
+
 <table>
 <tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</th><th>Z Value</th><th><pval>P(>|Z|)</pval></th></tr>
 <block name="parameters"><tr><td><in>par</in></td><td><in>coef</in></td><td><in>err</in></td><td><in>z</in></td><td><pval><inp>p_var</inp></pval></td></tr>

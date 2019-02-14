@@ -1,20 +1,20 @@
 <report>
 <title>Probit analysis - further statistics</title>
-<line></line>
-<line>Iterations = <in>itr</in></line>
-<line></line>
-<line>Sxx = <inu>sxx</inu></line>
-<line>Sxy = <inu>sxy</inu></line>
-<line>Syy = <inu>syy</inu></line>
-<line></line>
-<line>Variance of B = <inu>var_b</inu></line>
-<line>Standard error of B <in>het</in> = <inu>seb</inu></line>
+
+<p>Iterations = <in>itr</in></p>
+
+<p>Sxx = <inu>sxx</inu><br />
+Sxy = <inu>sxy</inu><br />
+Syy = <inu>syy</inu></p>
+
+<p>Variance of B = <inu>var_b</inu><br />
+Standard error of B <in>het</in> = <inu>seb</inu></p>
 <block name="natural">
-<line></line>
-<line>Estimated natural response rate (C) = <inu>c</inu></line>
-<line>Standard error of B <in>het_c</in> = <inu>seb_c</inu></line>
+
+<p>Estimated natural response rate (C) = <inu>c</inu><br />
+Standard error of B <in>het_c</in> = <inu>seb_c</inu></p>
 </block>
-<line></line>
+<br />
 <table>
 <tr><th>Index</th><th>Subjects</th><th>Responses</th><th>Expected</th><th>Deviation</th></tr>
 <block name="obs"><tr><td><in>obs</in></td><td><inu>sub</inu></td><td><inu>res</inu></td><td><inu>exp</inu></td><td><inu>dev</inu></td></tr></block>

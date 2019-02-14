@@ -47,29 +47,29 @@
       <![CDATA[
 <report>
 <title>Chi-square test (2 by 2)</title>
-<line></line>
+<br />
 <subtitle>Observed values and totals:</subtitle>
 <table>
 <tr><td><in>tab3_a1</in></td><td><in>tab3_b1</in></td><td><subtotal><in>tab3_c1</in></subtotal></td></tr>
 <tr><td><in>tab3_a2</in></td><td><in>tab3_b2</in></td><td><subtotal><in>tab3_c2</in></subtotal></td></tr>
 <tr><td><subtotal><in>tab3_a3</in></subtotal></td><td><subtotal><in>tab3_b3</in></subtotal></td><td><grandtotal><in>tab3_c3</in></grandtotal></td></tr>
 </table>
-<line></line>
+<br />
 <subtitle>Expected values:</subtitle>
 <table>
 <tr><td><in>tab_a1</in></td><td><in>tab_b1</in></td></tr>
 <tr><td><in>tab_a2</in></td><td><in>tab_b2</in></td></tr>
 </table>
-<line></line>
-<line>Uncorrected Chi&#xb2; = <in>chi</in>  <pval><inp>chi_p</inp></pval></line>
-<line>Yates-corrected Chi&#xb2; = <in>yates_chi</in>  <pval><inp>yates_chi_p</inp></pval></line>
-<line></line>
-<line>Measures of association:</line>
-<line>Pearson's contingency = <in>pearson</in></line>
-<line>Cram&#xe9;r's <i>V</i> (signed) = <in>vs</in></line>
+
+<p>Uncorrected Chi&#xb2; = <in>chi</in>  <pval><inp>chi_p</inp></pval><br />
+Yates-corrected Chi&#xb2; = <in>yates_chi</in>  <pval><inp>yates_chi_p</inp></pval></p>
+
+<p>Measures of association:<br />
+Pearson's contingency = <in>pearson</in><br />
+Cram&#xe9;r's <i>V</i> (signed) = <in>vs</in></p>
 <block name="warn">
-<line></line>
-<line><warn><in>wrn</in> too small for chi-square, please use Fisher's exact test instead</warn></line>
+
+<p><warn><in>wrn</in> too small for chi-square, please use Fisher's exact test instead</warn></p>
 </block>
 </report>
 <block name="odds"><include src="odds.creole"/></block>

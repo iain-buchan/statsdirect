@@ -1,6 +1,6 @@
 <report>
 <title>Contingency table analysis</title>
-<line></line>
+<br />
 <table>
 <block name="rows">
 <tr><td>Observed</td><block name="obs"><td><inu>obs</inu></td></block><td><subtotal><block name="rtot"><inu>rtot</inu></block></subtotal></td><td><block name="score"><score><inu>score</inu></score></block></td></tr>
@@ -16,42 +16,42 @@
 <block name="pcgs"><tr><td>% of n</td><block name="pcg"><td><in>pcg</in></td></block><td></td><td></td></tr></block>
 <block name="scores"><tr><td></td><block name="score"><td><score><in>score</in></score></td></block><td></td><td></td></tr></block>
 </table>
-<line></line>
-<line>TOTAL number of cells = <in>tot</in></line>
+
+<p>TOTAL number of cells = <in>tot</in></p>
 <block name="warn">
-<line></line>
-<line><warn><in>warn</in></warn></line>
+
+<p><warn><in>warn</in></warn></p>
 </block>
-<line></line>
+<br />
 <subtitle>NOMINAL INDEPENDENCE</subtitle>
 <table>
 <tr><td>Chi-square = <inu>chio</inu></td><td>DF = <inu>dfo</inu></td><td><pval><inp>po</inp></pval></td></tr>
 <tr><td>G-square = <inu>g2</inu></td><td>DF = <inu>dfo</inu></td><td><pval><inp>pog2</inp></pval></td></tr>
 <tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval><inp>p2</inp></pval>  <in>lb</in></td></tr>
 </table>
-<line></line>
+<br />
 <subtitle>ANOVA</subtitle>
-<line>Chi-square for equality of mean column scores = <inu>chie</inu></line>
-<line>DF = <in>dfe</in> <pval><inp>pe</inp></pval></line>
-<line></line>
+<p>Chi-square for equality of mean column scores = <inu>chie</inu><br />
+DF = <in>dfe</in> <pval><inp>pe</inp></pval></p>
+
 <subtitle>LINEAR TREND</subtitle>
-<line>Sample correlation (r) = <inu>r</inu></line>
-<line>Chi-square for linear trend (M&#xb2;) = <inu>chit</inu></line>
-<line>DF = 1  <pval><inp>pt</inp></pval></line>
-<line></line>
+<p>Sample correlation (r) = <inu>r</inu><br />
+Chi-square for linear trend (M&#xb2;) = <inu>chit</inu><br />
+DF = 1  <pval><inp>pt</inp></pval></p>
+
 <subtitle>NOMINAL ASSOCIATION</subtitle>
-<line>Phi = <inu>phi</inu></line>
-<line>Pearson's contingency = <inu>pearson</inu></line>
-<line>Cram&#xe9;r's <i>V</i> = <inu>cramer</inu></line>
-<line></line>
+<p>Phi = <inu>phi</inu><br />
+Pearson's contingency = <inu>pearson</inu><br />
+Cram&#xe9;r's <i>V</i> = <inu>cramer</inu></p>
+
 <subtitle>ORDINAL</subtitle>
-<line>Goodman-Kruskal gamma = <inu>gamma</inu></line>
+<p>Goodman-Kruskal gamma = <inu>gamma</inu></p>
 <table>
 <tr><td>Approximate test of gamma = 0:</td><td>SE = <inu>seg</inu></td><td><pval><inp>pg</inp></pval></td><td><ci><in>pc</in>% CI = <inu>llg</inu> to <inu>ulg</inu></ci></td></tr>
 <tr><td>Approximate test of independence:</td><td>SE = <inu>segi</inu></td><td><pval><inp>pgi</inp></pval></td><td><ci><in>pc</in>% CI = <inu>llgi</inu> to <inu>ulgi</inu></ci></td></tr>
 </table>
-<line></line>
-<line>Kendall tau-b = <inu>taub</inu></line>
+
+<p>Kendall tau-b = <inu>taub</inu></p>
 <table>
 <tr><td>Approximate test of tau-b = 0:</td><td>SE = <inu>setaub</inu></td><td><pval><inp>ptaub</inp></pval></td><td><ci><in>pc</in>% CI = <inu>lltaub</inu> to <inu>ultaub</inu></ci></td></tr>
 <tr><td>Approximate test of independence:</td><td>SE = <inu>setaubi</inu></td><td><pval><inp>ptaubi</inp></pval></td><td><ci><in>pc</in>% CI = <inu>lltaubi</inu> to <inu>ultaubi</inu></ci></td></tr>

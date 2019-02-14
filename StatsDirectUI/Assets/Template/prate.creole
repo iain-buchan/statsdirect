@@ -1,9 +1,9 @@
 <report>
 <title>Poisson rate confidence interval</title>
-<line></line>
-<line>Events observed = <inu>events</inu></line>
-<line>Time spent at risk of event = <inu>time</inu></line>
-<line></line>
-<line>Poisson (e.g. incidence) rate estimate = <inu>rate</inu></line>
-<line><ci>Exact <in>pc</in>% confidence interval = <inu>from</inu>  to  <inu>to</inu> </ci></line>
+
+<p>Events observed = <inu>events</inu><br />
+Time spent at risk of event = <inu>time</inu></p>
+
+<p>Poisson (e.g. incidence) rate estimate = <inu>rate</inu><br />
+<ci>Exact <in>pc</in>% confidence interval = <inu>from</inu>  to  <inu>to</inu> </ci></p>
 </report>

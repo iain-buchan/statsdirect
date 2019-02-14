@@ -154,12 +154,12 @@ if (exists("returning.to.statsdirect")) {
   <![CDATA[
 <report>
 <title>LOESS Curve Fitting</title>
-<line></line>
-<line><in>title</in></line>
-<line>Number of Observations: <inx>observations</inx></line>
-<line>Polynomial degree: <inx>degree</inx>, Span: <inx>span</inx></line>
-<line>Equivalent Number of Parameters: <inx>parameters</inx></line>
-<line>Residual Standard Error: <inx>residualse</inx></line>
+
+<p><in>title</in><br />
+Number of Observations: <inx>observations</inx><br />
+Polynomial degree: <inx>degree</inx>, Span: <inx>span</inx><br />
+Equivalent Number of Parameters: <inx>parameters</inx><br />
+Residual Standard Error: <inx>residualse</inx></p>
 </report>
 ]]>
     </report>
@@ -169,8 +169,8 @@ if (exists("returning.to.statsdirect")) {
         <report type="application/x-statsdirect-creole">
           <![CDATA[
 <report>
-<line></line>
-<line><in>metafile1</in></line>
+
+<p><in>metafile1</in></p>
 </report>
 ]]>
         </report>
@@ -182,10 +182,10 @@ if (exists("returning.to.statsdirect")) {
         <report type="application/x-statsdirect-creole">
           <![CDATA[
 <report>
-<line></line>
+<br />
 <title>R script to reproduce this result</title>
-<line></line>
-<line><in>formattedRScript</in></line>
+
+<p><in>formattedRScript</in></p>
 </report>
 ]]>
         </report>

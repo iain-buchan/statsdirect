@@ -1,4 +1,4 @@
 <report>
-<line><in>ti</in></line>
-<line><in>gr</in></line>
+<p><in>ti</in><br />
+<in>gr</in></p>
 </report>
