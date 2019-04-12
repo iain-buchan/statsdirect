@@ -1,11 +1,11 @@
 Product: DotNetBrowser
 Version: 1.x
 Licensed to: 
-License type: Evaluation
+License type: Development
 License info: Single-user license
-Expiration date: 03-03-2019
-Generation date: 01-02-2019
+Expiration date: NEVER
+Generation date: 15-03-2019
 Platforms: win32/x64;win32/x86
-Company name: NO COMPANY
-SigB: cdojdcga1pm5e7wm147w26ok79gk5kzsnksfxldbtb9zcd76ty7fqdpop9ubu0nzpd9zowguq3b65cgq
-SigA: yw3g1w6tdj2bd6ai4zo0xo51j8a64dygb22674q75lkry8w26b113djpp7my5cdi1g9f2xfnv6fw2xhj
+Company name: statsdirect ltd
+SigB: 11najh7qtkyi8xb1hvqy3a3t98435tng9md0ir5pujz6vt1umlo9w8vth0g3i88z1p9xap6mtfn4pf6xe
+SigA: khzdrr057pumg8v4hm77l3k7v7ouapzshwsfzd44y5u0tuevj7dmvtwo9m5728u81r0szhvrijmprspp
