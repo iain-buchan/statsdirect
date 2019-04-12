@@ -7,12 +7,12 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("StatsDirect Limited")]
 [assembly: AssemblyProduct("StatsDirect")]
-[assembly: AssemblyCopyright("Copyright ©1997-2018 StatsDirect Limited")]
+[assembly: AssemblyCopyright("Copyright ©1997-2019 StatsDirect Limited")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
 
-[assembly: AssemblyVersion("3.1.21.0")]
-[assembly: AssemblyFileVersion("3.1.21.0")]
+[assembly: AssemblyVersion("3.1.23.0")]
+[assembly: AssemblyFileVersion("3.1.23.0")]
 [assembly: CLSCompliant(false)]
