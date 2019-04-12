@@ -97,22 +97,27 @@ namespace StatsDirect.TemplateProcessing
                     return string.Empty;
                 if (value is string stringValue)
                     return stringValue;
+                if (value is int intValue)
+                    return value.ToString();
                 if (value is IRenderable renderable)
                     return new HtmlRenderer(host).Render(renderable);
-                switch (victim.Format)
-                {
-                    case "pval":
-                        return host.pval((double)value);
-                    case "roundx":
-                        return host.RoundU((double)value);
-                    case "roundu":
-                        return host.RoundU((double)value);
-                    case "default":
-                        return value.ToString();
-                    default:
-                        // TODO: Warn.
-                        return value.ToString();
-                }
+                if (value is double doubleValue)
+                    switch (victim.Format)
+                    {
+                        case "pval":
+                            return host.pval(doubleValue);
+                        case "roundx":
+                            return host.RoundU(doubleValue);
+                        case "roundu":
+                            return host.RoundU(doubleValue);
+                        case "default":
+                            return doubleValue.ToString();
+                        default:
+                            // TODO: Warn.
+                            return value.ToString();
+                    }
+                // Nothing we know how to render specially, so just call ToString() on it and hope.
+                return value.ToString();
             }
 
             private object FindValue(string path)
