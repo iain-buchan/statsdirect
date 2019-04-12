@@ -1,7 +1,7 @@
 grammar StatsDirectExpression;
 
 r returns [INode node]
-	: EQ? expr { $node = $expr.node; }
+	: EQ? expr { $node = $expr.node; } EOF
 	;
 
 expr returns [INode node]
@@ -175,8 +175,13 @@ fragment Z	:	'Z'|'z';
 
 
 STRING
-    :  '"' ( ~('\\'|'"') )* '"'
+    :  '"' ( STRINGESCAPE | ~[\\"] )* '"'
     ;
+
+fragment STRINGESCAPE
+	: '\\"'
+	| '\\\\'
+	;
 
 WS:     ( ' '
         | '\t'
