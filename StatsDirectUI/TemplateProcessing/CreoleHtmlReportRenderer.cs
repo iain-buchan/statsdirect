@@ -98,7 +98,7 @@ namespace StatsDirect.TemplateProcessing
                 if (value is string stringValue)
                     return stringValue;
                 if (value is int intValue)
-                    return value.ToString();
+                    return intValue.ToString();
                 if (value is IRenderable renderable)
                     return new HtmlRenderer(host).Render(renderable);
                 if (value is double doubleValue)
