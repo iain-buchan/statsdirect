@@ -494,6 +494,7 @@ namespace StatsDirect.UI
             get
             {
                 throw new NotImplementedException();
+                // dotNetBrowserView.Browser.Sel
                 /*
                 string rtf = richEditControl1.Document.GetRtfText(richEditControl1.Document.Selection);
                 if (rtf.Contains(@"{\pict"))
