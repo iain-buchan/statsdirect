@@ -49,10 +49,10 @@ namespace StatsDirect.TemplateProcessing
                 { "pval", new RtfFormatHolder(@"\cf5") },
                 { "score", new RtfFormatHolder(@"\cf3") },
                 { "sub", new RtfFormatHolder(@"\sub") },
-                { "subtitle", new RtfFormatHolder(@"\ul", @"\par\par") },
+                { "subtitle", new RtfFormatHolder(@"\ul", @"\par") },
                 { "subtotal", new RtfFormatHolder(@"\cf7") },
                 { "sup", new RtfFormatHolder(@"\sup") },
-                { "title", new RtfFormatHolder(@"\ul\b", @"\par\par") },
+                { "title", new RtfFormatHolder(@"\ul\b", @"\par") },
                 { "u", new RtfFormatHolder(@"\ul") },
                 { "warn", new RtfFormatHolder(@"\cf6") }
             };
@@ -180,7 +180,7 @@ namespace StatsDirect.TemplateProcessing
 
             private string ToCellsDefinition(ICreole<string> contents)
             {
-                return contents.Accept(new CellsDefinitionRenderer());
+                return contents.Accept(new CellsDefinitionRenderer(substitutionStack.Peek()));
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim)
@@ -228,12 +228,19 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim)
             {
-                return (null == victim.Contents ? string.Empty : victim.Contents.Accept(this)) + @"\par\par ";
+                return (null == victim.Contents ? string.Empty : @"\par " + victim.Contents.Accept(this)) + @"\par ";
             }
         }
 
         private class CellsDefinitionRenderer : ICreoleVisitor<string>
         {
+            private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
+
+            public CellsDefinitionRenderer(ParameterBag substitutions)
+            {
+                substitutionStack.Push(substitutions);
+            }
+
             string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
             {
                 StringBuilder sb = new StringBuilder();
@@ -243,7 +250,22 @@ namespace StatsDirect.TemplateProcessing
             }
 
             string ICreoleVisitor<string>.Visit(CreoleAttribute<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleBlock<string> victim) => string.Empty;
+            string ICreoleVisitor<string>.Visit(CreoleBlock<string> victim)
+            {
+                if (null == victim.Contents)
+                    return string.Empty;
+                StringBuilder sb = new StringBuilder();
+                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && innerList.HasData)
+                {
+                    foreach (ParameterBag inner in innerList.AsParameterBagList)
+                    {
+                        substitutionStack.Push(inner);
+                        sb.Append(victim.Contents.Accept(this));
+                        substitutionStack.Pop();
+                    }
+                }
+                return sb.ToString();
+            }
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim) => string.Empty;
