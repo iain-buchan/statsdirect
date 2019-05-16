@@ -10,6 +10,7 @@ namespace StatsDirect.TemplateProcessing
     {
         const string RTF_REPORT_START = @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ";
         const string RTF_REPORT_END = @"\par }";
+        const string FirstCellOfTableMarker = "!!FIRSTCELLOFTABLE!!";
 
         public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
         {
@@ -17,30 +18,52 @@ namespace StatsDirect.TemplateProcessing
             return RTF_REPORT_START + creole.Accept(new InnerRtfReportRenderer(host, substitutions)) + RTF_REPORT_END;
         }
 
+        private class RtfFormatHolder
+        {
+            public string Prefix { get; }
+            public string Suffix { get; }
+
+            public RtfFormatHolder(string prefix)
+                : this(prefix, string.Empty)
+            {
+            }
+
+            public RtfFormatHolder(string prefix, string suffix)
+            {
+                Prefix = prefix;
+                Suffix = suffix;
+            }
+        }
+
         private class InnerRtfReportRenderer : ICreoleVisitor<string>
         {
-            private static readonly Dictionary<string, string> rtfFormatting = new Dictionary<string, string>
+            private static readonly Dictionary<string, RtfFormatHolder> rtfFormatting = new Dictionary<string, RtfFormatHolder>
             {
                 // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal).
-                { "b", @"\b" },
-                { "ci", @"\cf4" },
-                { "grandtotal", @"\cf8" },
-                { "i", @"\i" },
-                { "model", @"\cf8" },
-                { "pre", @"\f2" },
-                { "pval", @"\cf5" },
-                { "score", @"\cf3" },
-                { "sub", @"\sub" },
-                { "subtitle", @"\ul" },
-                { "subtotal", @"\cf7" },
-                { "sup", @"\sup" },
-                { "title", @"\ul\b" },
-                { "u", @"\ul" },
-                { "warn", @"\cf6" }
+                { "b", new RtfFormatHolder(@"\b") },
+                { "ci", new RtfFormatHolder(@"\cf4") },
+                { "grandtotal", new RtfFormatHolder(@"\cf8") },
+                { "i", new RtfFormatHolder(@"\i") },
+                { "model", new RtfFormatHolder(@"\cf8") },
+                { "pre", new RtfFormatHolder(@"\f2") },
+                { "pval", new RtfFormatHolder(@"\cf5") },
+                { "score", new RtfFormatHolder(@"\cf3") },
+                { "sub", new RtfFormatHolder(@"\sub") },
+                { "subtitle", new RtfFormatHolder(@"\ul", @"\par\par") },
+                { "subtotal", new RtfFormatHolder(@"\cf7") },
+                { "sup", new RtfFormatHolder(@"\sup") },
+                { "title", new RtfFormatHolder(@"\ul\b", @"\par\par") },
+                { "u", new RtfFormatHolder(@"\ul") },
+                { "warn", new RtfFormatHolder(@"\cf6") }
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
             private readonly ITemplateHost host;
+
+            /// <summary>
+            /// State so that we can inject a little extra marker at the end of the first table cell in each table - used so that the RTF insertion can format the table later.
+            /// </summary>
+            private bool isFirstCellOfTable;
 
             public InnerRtfReportRenderer(ITemplateHost host, ParameterBag substitutions)
             {
@@ -73,12 +96,17 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim)
             {
-                return "{" + ToRtfFormatting(victim.Format) + " " + victim.Contents.Accept(this) + "}";
+                return "{" + ToRtfPrefix(victim.Format) + " " + victim.Contents.Accept(this) + "}" + ToRtfSuffix(victim.Format);
             }
 
-            private string ToRtfFormatting(string format)
+            private string ToRtfPrefix(string format)
             {
-                return rtfFormatting[format];
+                return rtfFormatting[format].Prefix;
+            }
+
+            private string ToRtfSuffix(string format)
+            {
+                return rtfFormatting[format].Suffix;
             }
 
             string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim)
@@ -138,6 +166,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim)
             {
+                isFirstCellOfTable = true;
                 return "{" + victim.Contents.Accept(this) + @"}\par ";
             }
 
@@ -159,6 +188,11 @@ namespace StatsDirect.TemplateProcessing
                 StringBuilder sb = new StringBuilder();
                 sb.Append(@"\pard\intbl ");
                 sb.Append(victim.Contents.Accept(this));
+                if (isFirstCellOfTable)
+                {
+                    sb.Append(FirstCellOfTableMarker);
+                    isFirstCellOfTable = false;
+                }
                 sb.Append(@"\cell ");
                 for (int spanner = 1; spanner < victim.Colspan; spanner++)
                     sb.Append(@"\pard\intbl\cell ");
@@ -170,7 +204,13 @@ namespace StatsDirect.TemplateProcessing
                 StringBuilder sb = new StringBuilder();
                 sb.Append(@"\pard\intbl {\ul ");
                 sb.Append(victim.Contents.Accept(this));
-                sb.Append(@"}\cell ");
+                sb.Append(@"}");
+                if (isFirstCellOfTable)
+                {
+                    sb.Append(FirstCellOfTableMarker);
+                    isFirstCellOfTable = false;
+                }
+                sb.Append(@"\cell ");
                 for (int spanner = 1; spanner < victim.Colspan; spanner++)
                     sb.Append(@"\pard\intbl {\ul}\cell ");
                 return sb.ToString();
