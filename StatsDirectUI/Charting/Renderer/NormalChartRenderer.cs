@@ -174,7 +174,7 @@ namespace StatsDirect.Charting.Renderer
             EndVectorPlot();
 
             // Regression results
-            SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(x, y);
+            SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(x, y, string.Empty, string.Empty);
             context.CalculateLeastSquaresMethod();
             return new ParameterBag("context", new FilledParameter(FilledParameterDirection.Output, context));
         }

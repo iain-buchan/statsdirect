@@ -9,8 +9,8 @@ namespace StatsDirect.Builtins
     [Serializable]
     public class SimpleLinearRegressionContext
     {
-        private double[] xx;
-        private double[] yy;
+        public double[] X { get; private set; }
+        public double[] Y { get; private set; }
         private bool calculated;
 
         public double YIntercept { get; private set; }
@@ -40,16 +40,21 @@ namespace StatsDirect.Builtins
         public bool IsPerfectCorrelation { get; private set; }
         public double A { get; set; }
         public double G { get; set; }
+        public string XTitle { get; }
+        public string YTitle { get; }
 
         /// <summary>
         /// Create a context to calculate the results of a linear regression on x and y.
         /// </summary>
         /// <param name="x">0-based</param>
         /// <param name="y">0-based</param>
-        public SimpleLinearRegressionContext(double[] x, double[] y)
+        public SimpleLinearRegressionContext(double[] x, double[] y, string xTitle, string yTitle)
         {
-            xx = x;
-            yy = y;
+            X = x;
+            Y = y;
+            XTitle = xTitle;
+            YTitle = yTitle;
+            NX = X.Length;
         }
 
         /// <summary>
@@ -57,8 +62,8 @@ namespace StatsDirect.Builtins
         /// </summary>
         public void ApplyToX(Func<double, double> function)
         {
-            for (int i = 0; i < xx.Length; i++)
-                xx[i] = function.Invoke(xx[i]);
+            for (int i = 0; i < X.Length; i++)
+                X[i] = function.Invoke(X[i]);
         }
 
         /// <summary>
@@ -66,20 +71,15 @@ namespace StatsDirect.Builtins
         /// </summary>
         public void ApplyToY(Func<double, double> function)
         {
-            for (int i = 0; i < yy.Length; i++)
-                yy[i] = function.Invoke(yy[i]);
+            for (int i = 0; i < Y.Length; i++)
+                Y[i] = function.Invoke(Y[i]);
         }
 
-        /// <summary>
-        /// After this calculation, the x and y arrays will be released and the calculation will not be performed again - create a new SimpleLinearRegressionContext (they're small and cheap) if you want to calculate again.
-        /// </summary>
         public void CalculateLeastSquaresMethod()
         {
-            // If we've already calculated, we will have released our data; as the data is immutable, however, this isn't a problem as we should never recalculate.
             if (calculated)
                 return;
 
-            NX = xx.Length;
             SumX = 0.0;
             double sumy = 0.0;
             double sumxy = 0.0;
@@ -87,8 +87,8 @@ namespace StatsDirect.Builtins
             double sxs = 0.0;
             for (int n = 0; n < NX; n++)
             {
-                double x = xx[n];
-                double y = yy[n];
+                double x = X[n];
+                double y = Y[n];
                 SumX += x;
                 sxs += x * x;
                 sumy += y;
@@ -107,18 +107,24 @@ namespace StatsDirect.Builtins
             double ssres = SSY - SSREG;
             MS = ssres / (NX - 2);
             SeEst = MS > 0.0 ? Math.Sqrt(MS) : Constant.MISSING;
-
-            // We never use the data from here; release it.
             calculated = true;
-            xx = null;
-            yy = null;
+        }
+
+        /// <summary>
+        /// Release any hold on large data arrays as we may be serialised
+        /// </summary>
+        public SimpleLinearRegressionContext StripForOutput()
+        {
+            X = null;
+            Y = null;
+            return this;
         }
 
         public void CalcRcia(double regressionGamma)
         {
             // Either this will have data, or CalculateLeastSquaresMethod() will have been run and NX will have been set.
-            if (null != xx)
-                NX = xx.Length;
+            if (null != X)
+                NX = X.Length;
             DF = NX - 2;
             MathDbl.civ(DF, out double cit, regressionGamma, out double P0);
             PERT = cit;

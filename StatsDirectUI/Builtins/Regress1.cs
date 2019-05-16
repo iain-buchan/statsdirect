@@ -398,7 +398,22 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static void X_SVGO(double[,] xd, double[] yd, double[] sig, int nx, int p, double[] bd, double[,] ud, double[,] vd, double[] wd, double[] yfit, double[] er, out int ifault)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="xd"></param>
+        /// <param name="yd"></param>
+        /// <param name="sig"></param>
+        /// <param name="nx"></param>
+        /// <param name="p"></param>
+        /// <param name="bd"></param>
+        /// <param name="ud"></param>
+        /// <param name="vd"></param>
+        /// <param name="wd"></param>
+        /// <param name="yfit"></param>
+        /// <param name="er"></param>
+        /// <returns>0 on successful decomposition, non-0 if no decomposition found</returns>
+        public static int X_SVGO(double[,] xd, double[] yd, double[] sig, int nx, int p, double[] bd, double[,] ud, double[,] vd, double[] wd, double[] yfit, double[] er)
         {
             for (int i = 1; i <= nx; i++)
             {
@@ -406,7 +421,7 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= p; j++)
                     ud[i, j] = xd[i, j] * osig;
             }
-            SingularValueDecomposition(nx, p, wd, ud, vd, out ifault);
+            int ifault = SingularValueDecomposition(nx, p, wd, ud, vd);
             double wmax = wd[1];
             for (int j = 1; j <= p; j++)
                 if (wmax < wd[j])
@@ -424,6 +439,7 @@ namespace StatsDirect.Builtins
                 yfit[i] = sum;
                 er[i] = yd[i] - yfit[i];
             }
+            return ifault;
         }
 
         public static void glsqr(int ido, int intcep, int isub, int nrow, int nvar, double[,] x, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, double[] b, double[,] r, double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, double[] xmin, double[] xmax, double[] wk, ref int ifault)
@@ -1568,10 +1584,10 @@ namespace StatsDirect.Builtins
         /// <param name="w">Postcondition: w contains the n (non-negative) singular values of a (the diagonal elements of s).  they are unordered.  if an error exit is made, the singular values should be correct for indices ierr+1,ierr+2,...,n.</param>
         /// <param name="u">u contains the matrix u (orthogonal column vectors) of the decomposition if matu has been set to true otherwise u is used as a temporary array.  u may coincide with a.  if an error exit is made, the columns of u corresponding to indices of correct singular values should be correct.</param>
         /// <param name="v">v contains the matrix v (orthogonal) of the decomposition if matv has been set to true otherwise v is not referenced.  v may also coincide with a if u is not needed.  if an error exit is made, the columns of v corresponding to indices of correct singular values should be correct.</param>
-        /// <param name="ierr">set to zero for normal return, k if the k-th singular value has not been determined after 30 iterations</param>
+        /// <returns>set to zero for normal return, k if the k-th singular value has not been determined after 30 iterations</returns>
         /// <remarks>This subroutine is a translation of the algol procedure svd, num. math. 14, 403-420(1970) by golub and reinsch. handbook for auto. comp., vol ii-linear algebra, 134-151(1971).
         /// Questions and comments should be directed to burton s. garbow,  mathematics and computer science div, argonne national laboratory. this version dated august 1983.</remarks>
-        private static void SingularValueDecomposition(int m, int n, double[] w, double[,] u, double[,] v, out int ierr)
+        private static int SingularValueDecomposition(int m, int n, double[] w, double[,] u, double[,] v)
         {
             int l = 0, l1 = 0;
             double f, h, s;
@@ -1583,7 +1599,6 @@ namespace StatsDirect.Builtins
             //         a is unaltered (unless overwritten by u or v).
 
             //      calls pythag for  dsqrt(a*a + b*b) .
-            ierr = 0;
             // Householder reduction to bidiagonal form
             double g = 0.0;
             double scale = 0.0;
@@ -1805,9 +1820,8 @@ namespace StatsDirect.Builtins
                     // Shift from bottom 2 by 2 minor
                     if (its >= 30)
                     {
-                        // set error -- no convergence to a singular value after 30 iterations
-                        ierr = k;
-                        return;
+                        // Error -- no convergence to a singular value after 30 iterations
+                        return k;
                     }
                     its++;
                     x = w[l];
@@ -1875,6 +1889,7 @@ namespace StatsDirect.Builtins
                         v[j, k] = -v[j, k];
                 }
             }
+            return 0;
         }
 
         /// <summary>
