@@ -7,7 +7,8 @@ namespace StatsDirect.Charting
     public class SpreadOptions : GenericOptions
     {
 
-        public SpreadOptions(bool UseColour) : base(UseColour)
+        public SpreadOptions(bool useColour)
+            : base(useColour)
         {
 
             MarkerTypes = new List<MarkerType>();

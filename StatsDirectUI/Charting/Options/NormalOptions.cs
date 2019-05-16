@@ -21,8 +21,8 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         public bool ShouldScaleZ { get; set; }
 
-        public NormalOptions(bool UseColour)
-            : base(UseColour)
+        public NormalOptions(bool useColour)
+            : base(useColour)
         {
 
             //  A normal plot's marker is derived from the first series

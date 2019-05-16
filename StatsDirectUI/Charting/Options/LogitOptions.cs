@@ -19,8 +19,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public LogitOptions(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle, bool modelIsLog10)
-            : base(true)
+        public LogitOptions(string title, int model, double t, double sw, double s1, double a, double b, string xAxisTitle, string yAxisTitle, bool modelIsLog10, bool useColour)
+            : base(useColour)
         {
             Title = title;
             XAxisTitle = xAxisTitle;

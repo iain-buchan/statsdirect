@@ -276,7 +276,7 @@ namespace StatsDirect.Builtins
                 z[j] = vx.Data[j] * context.Slope + context.YIntercept;
                 r[j] = vy.Data[j] - z[j];
             }
-            outputParameters.AddOutput("residualsVsY", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)));
+            outputParameters.AddOutput("residualsVsY", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(z, r, "Fitted " + vy.Title, "Residuals (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
 
             for (int j = 0; j <= nx - 1; j++)
             {
@@ -284,7 +284,7 @@ namespace StatsDirect.Builtins
                 r[j] = vy.Data[j] - z[j];
                 z[j] = vx.Data[j];
             }
-            outputParameters.AddOutput("residualsVsPredictor", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, DataMinMax.XCalc_YCalc)));
+            outputParameters.AddOutput("residualsVsPredictor", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(z, r, "Predictor: " + vx.Title, "Residuals (Y - y fit)", "Residuals vs. Predictor [linear regression]", true, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
 
             ExFortran.Rank(r, z, 0, nx, 0, out double _);
             for (int j = 0; j <= nx - 1; j++)
@@ -294,7 +294,7 @@ namespace StatsDirect.Builtins
                 if (ifault != 0)
                     z[j] = Constant.MISSING;
             }
-            outputParameters.AddOutput("residualsNormalPlot", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, DataMinMax.XCalc_YCalc)));
+            outputParameters.AddOutput("residualsNormalPlot", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, z, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
             return outputParameters;
         }
 
@@ -1202,7 +1202,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
 
             context.R[0] = Constant.MISSING;
-            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
 
             for (int i = 1; i <= context.P; i++)
             {
@@ -1213,7 +1213,7 @@ namespace StatsDirect.Builtins
                     r[0] = Constant.MISSING;
                     for (int j = 1; j <= context.N; j++)
                         r[j] = context.X[j, i];
-                    chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+                    chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
                 }
             }
             r = new double[context.N + 1];
@@ -1225,7 +1225,7 @@ namespace StatsDirect.Builtins
                 if (ifault != 0)
                     r[j] = Constant.MISSING;
             }
-            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             return outputParameters;
         }
 
@@ -3376,21 +3376,21 @@ namespace StatsDirect.Builtins
             hi[0] = Constant.MISSING;
 
             //  delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  std delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  delta deviance vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  delta x2 vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  delta beta vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  delta beta std vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  delta deviance vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             //  delta x2 vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)))));
             return outputParameters;
         }
 
@@ -4201,7 +4201,7 @@ namespace StatsDirect.Builtins
             // Don't plot the zeroth element
             rx[0] = Constant.MISSING;
             ry[0] = Constant.MISSING;
-            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy0To1, new XyOptions(rx, ry, "1-specificity", "sensitivity", string.Empty, false, DataMinMax.XPreset_YPreset)));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy0To1, new XyOptions(rx, ry, "1-specificity", "sensitivity", string.Empty, false, DataMinMax.XPreset_YPreset, host.Preferences.ShouldUseColour)));
             return outputParameters;
         }
 
@@ -5317,7 +5317,7 @@ namespace StatsDirect.Builtins
 
             ParameterBag chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(yfit, r, "Fitted Y", "Abs(Deviance residual)", "Absolute Residuals vs. Fitted Y [Poisson regression]", false, DataMinMax.XCalc_YCalc)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(yfit, r, "Fitted Y", "Abs(Deviance residual)", "Absolute Residuals vs. Fitted Y [Poisson regression]", false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
             for (int i = 1; i <= P; i++)
             {
                 if (i > 1 || !Intercept)
@@ -5335,7 +5335,7 @@ namespace StatsDirect.Builtins
                     {
                         chartParameters = new ParameterBag();
                         chartList.Add(chartParameters);
-                        chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, dr, "Predictor: " + labels[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, DataMinMax.XCalc_YCalc)));
+                        chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, dr, "Predictor: " + labels[k], "Deviance residual", "Residuals vs. Predictor " + k.ToString() + " [Poisson regression]", true, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
                     }
                 }
             }
@@ -6194,7 +6194,7 @@ namespace StatsDirect.Builtins
             x[0] = Constant.MISSING;
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Logit, new LogitOptions("Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog), new DoubleSeries(x, xAxisTitle), new DoubleSeries(y, yAxisTitle)));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Logit, new LogitOptions("Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog, host.Preferences.ShouldUseColour), new DoubleSeries(x, xAxisTitle), new DoubleSeries(y, yAxisTitle)));
             return outputParameters;
         }
 

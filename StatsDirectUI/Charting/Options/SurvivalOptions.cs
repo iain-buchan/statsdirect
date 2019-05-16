@@ -23,7 +23,8 @@ namespace StatsDirect.Charting
         public bool ShowEventMarkers;
         public bool UseSeriesColourForConfidenceIntervals;
 
-        public SurvivalOptions(bool UseColour) : base(UseColour)
+        public SurvivalOptions(bool useColour)
+            : base(useColour)
         {
 
             Series = new List<SurvivalSeries>();

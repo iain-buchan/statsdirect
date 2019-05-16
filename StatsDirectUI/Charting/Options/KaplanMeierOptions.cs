@@ -21,8 +21,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public KaplanMeierOptions(int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker, double[,] x, double[,] y, KaplanMeierPlotMode plotMode, string xAxisTitle, string yAxisTitle, string title)
-            : base(true)
+        public KaplanMeierOptions(int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker, double[,] x, double[,] y, KaplanMeierPlotMode plotMode, string xAxisTitle, string yAxisTitle, string title, bool useColour)
+            : base(useColour)
         {
             this.dead = dead;
             this.groups = groups;

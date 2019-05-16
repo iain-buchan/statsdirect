@@ -27,8 +27,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public CoxSurvivalOrHazardOptions(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] arr3, ColumnData[] cdat1, bool useTic, bool useMarker)
-            : base(true)
+        public CoxSurvivalOrHazardOptions(CoxP[] z, int iobs, int istrata, CoxPlotMode plotMode, int igroups, int groupid, bool grouped, bool stratified, double[,,] arr3, ColumnData[] cdat1, bool useTic, bool useMarker, bool useColour)
+            : base(useColour)
         {
             this.z = z;
             this.iobs = iobs;

@@ -2,15 +2,14 @@ using System;
 
 namespace StatsDirect.Charting
 {
-    // TRANSMISSINGCOMMENT: Class GiniOptions
-    [ Serializable ]
-    public class GiniOptions : GenericOptions 
-    { 
-        public GiniOptions( bool useColour ) : base( useColour ) 
-        { 
-            
-        } 
-        
+    [Serializable]
+    public class GiniOptions : GenericOptions
+    {
+        public GiniOptions(bool useColour)
+            : base(useColour)
+        {
+        }
+
         public override bool UsesChartTitle => true;
 
         public override bool UsesXAxisTitle => true;
@@ -24,4 +23,4 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
     }
-} 
+}

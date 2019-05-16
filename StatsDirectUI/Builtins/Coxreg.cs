@@ -2379,13 +2379,13 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxBaselineToReport(ITemplateHost host, ParameterBag parameters)
         {
-            return RptCoxBaseline(parameters, false, string.Empty, false);
+            return RptCoxBaseline(host, parameters, false, string.Empty, false);
         }
 
 
         public static ParameterBag RptCoxBaselineToWorksheet(ITemplateHost host, ParameterBag parameters)
         {
-            return RptCoxBaseline(parameters, false, string.Empty, true);
+            return RptCoxBaseline(host, parameters, false, string.Empty, true);
         }
 
 
@@ -2399,13 +2399,13 @@ namespace StatsDirect.Builtins
                 if (selectedGroups[i])
                 {
                     string selectedGroup = subgroupsVariable.Data[i];
-                    return RptCoxBaseline(parameters, true, selectedGroup, false);
+                    return RptCoxBaseline(host, parameters, true, selectedGroup, false);
                 }
             }
             return new ParameterBag();
         }
 
-        private static ParameterBag RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
+        private static ParameterBag RptCoxBaseline(ITemplateHost host, ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
             double watch_time;
@@ -2545,7 +2545,7 @@ namespace StatsDirect.Builtins
             if (plot)
             {
                 // bypass reporting and plot if called by the plot function
-                CoxPlot(parameters, z, iobs, istrata, groupVar, outputParameters);
+                CoxPlot(host, parameters, z, iobs, istrata, groupVar, outputParameters);
             }
             else if (createGrid)
             {
@@ -2569,7 +2569,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
+        private static void CoxPlot(ITemplateHost host, ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
         {
             int igroups;
             int groupid = 0;
@@ -2646,10 +2646,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, host.Preferences.ShouldUseColour)));
             cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, host.Preferences.ShouldUseColour)));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)
@@ -2672,7 +2672,7 @@ namespace StatsDirect.Builtins
                 // Plot a metafile version
                 ParameterBag cox2Parameters = new ParameterBag();
                 chartList.Add(cox2Parameters);
-                cox2Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Cox2, new Cox2Options(gn, igroups, xp, yp, CDAT1, groupid)));
+                cox2Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Cox2, new Cox2Options(gn, igroups, xp, yp, CDAT1, groupid, host.Preferences.ShouldUseColour)));
             }
         }
 
@@ -2812,11 +2812,11 @@ namespace StatsDirect.Builtins
 
             ParameterBag chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, DataMinMax.XCalc_YCalc)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, DataMinMax.XCalc_YCalc)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
 
             // save to worksheet if requested
             if (save)

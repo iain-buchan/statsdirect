@@ -28,8 +28,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public MHOptions(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid)
-            : base(false)
+        public MHOptions(int k, double[,] o, double[] odw, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, bool[] lerr, bool[] uerr, string cap, int pbias, string qid, bool useColour)
+            : base(useColour)
         {
             this.k = k;
             this.o = o;

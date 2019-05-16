@@ -3,23 +3,23 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Charting
 {
-    // TRANSMISSINGCOMMENT: Class LadderOptions
-    [ Serializable ]
-    public class LadderOptions : GenericOptions 
-    { 
-        
-        public LadderOptions( bool useColour ) : base( useColour ) 
-        { 
-            
+    [Serializable]
+    public class LadderOptions : GenericOptions
+    {
+
+        public LadderOptions(bool useColour)
+            : base(useColour)
+        {
+
             //  A ladder plot's markers are derived from the first two series.
-            MarkerTypes = new List<MarkerType>(); 
-            MarkerType leftHandMarkerType = ChartPreferences.MarkerTypes[ 0 ].Clone(); 
-            MarkerType rightHandMarkerType = ChartPreferences.MarkerTypes[ 1 ].Clone(); 
-            leftHandMarkerType.MarkerSize = 6; 
-            rightHandMarkerType.MarkerSize = 6; 
-            MarkerTypes.Add( leftHandMarkerType ); 
-            MarkerTypes.Add( rightHandMarkerType ); 
-            
+            MarkerTypes = new List<MarkerType>();
+            MarkerType leftHandMarkerType = ChartPreferences.MarkerTypes[0].Clone();
+            MarkerType rightHandMarkerType = ChartPreferences.MarkerTypes[1].Clone();
+            leftHandMarkerType.MarkerSize = 6;
+            rightHandMarkerType.MarkerSize = 6;
+            MarkerTypes.Add(leftHandMarkerType);
+            MarkerTypes.Add(rightHandMarkerType);
+
             //  A ladder plot has a left-hand and a right-hand series, connected by a line.
             //  The line uses the left-hand marker's line type and thickness
             SeriesOptionsDescriptor leftHandOptions = new SeriesOptionsDescriptor
@@ -30,7 +30,7 @@ namespace StatsDirect.Charting
                 AllowChangeToLineColour = false,
                 MarkerIndex = 0
             };
-            SeriesOptions.Add( leftHandOptions );
+            SeriesOptions.Add(leftHandOptions);
 
             SeriesOptionsDescriptor ladderRungOptions = new SeriesOptionsDescriptor
             {
@@ -40,7 +40,7 @@ namespace StatsDirect.Charting
                 AllowChangeToMarkerType = false,
                 MarkerIndex = 0
             };
-            SeriesOptions.Add( ladderRungOptions );
+            SeriesOptions.Add(ladderRungOptions);
 
             SeriesOptionsDescriptor rightHandOptions = new SeriesOptionsDescriptor
             {
@@ -50,9 +50,9 @@ namespace StatsDirect.Charting
                 AllowChangeToLineColour = false,
                 MarkerIndex = 1
             };
-            SeriesOptions.Add( rightHandOptions ); 
-        } 
-        
+            SeriesOptions.Add(rightHandOptions);
+        }
+
         public override bool UsesAutoscale => true;
 
         public override bool UsesBoxAxes => true;
@@ -74,4 +74,4 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
     }
-} 
+}

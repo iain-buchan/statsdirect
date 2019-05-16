@@ -29,8 +29,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public BiasMAOptions(double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
-            : base(false)
+        public BiasMAOptions(double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal, bool useColour)
+            : base(useColour)
         {
             this.x = x;
             this.yy = yy;

@@ -19,8 +19,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public Cox2Options(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid)
-            : base(true)
+        public Cox2Options(int[] gn, int igroups, double[] xp, double[] yp, ColumnData[] cdat1, int groupid, bool useColour)
+            : base(useColour)
         {
             this.gn = gn;
             this.igroups = igroups;

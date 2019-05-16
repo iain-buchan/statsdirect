@@ -23,8 +23,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public CorrelationOptions(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
-            : base(false)
+        public CorrelationOptions(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference, bool useColour)
+            : base(useColour)
         {
             this.k = k;
             this.title = title;

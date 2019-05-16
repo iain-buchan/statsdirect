@@ -23,8 +23,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public XyrOptions(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, MinMax minMax)
-            : base(false)
+        public XyrOptions(double[,] x, double[,,] y, int ng, int[] gn, int[,] nr, double[] b, double[] a, string xtxt, string ytxt, string title, string[] bnam, MinMax minMax, bool useColour)
+            : base(useColour)
         {
             this.x = x;
             this.y = y;

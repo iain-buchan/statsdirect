@@ -22,8 +22,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public TiesOptions(double[] x, double[] y, int nx, double lla, double ula, double gamma, string v0Title, string v1Title, double mean)
-            : base(true)
+        public TiesOptions(double[] x, double[] y, int nx, double lla, double ula, double gamma, string v0Title, string v1Title, double mean, bool useColour)
+            : base(useColour)
         {
             this.x = x;
             this.y = y;

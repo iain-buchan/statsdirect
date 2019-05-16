@@ -5,8 +5,8 @@ namespace StatsDirect.Charting
     [Serializable]
     public class LinearizedEstimationOptions : GenericOptions
     {
-        public LinearizedEstimationOptions(string title, int model, double a, double b, string xAxisTitle, string yAxisTitle, bool shouldUseColour)
-            : base(shouldUseColour)
+        public LinearizedEstimationOptions(string title, int model, double a, double b, string xAxisTitle, string yAxisTitle, bool useColour)
+            : base(useColour)
         {
             XAxisTitle = xAxisTitle;
             YAxisTitle = yAxisTitle;

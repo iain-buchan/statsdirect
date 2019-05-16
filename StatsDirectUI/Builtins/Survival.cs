@@ -462,7 +462,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
-            IList<IRenderable> imageList = x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
+            IList<IRenderable> imageList = x_plgraph(host, h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
             foreach (IRenderable renderable in imageList)
             {
                 ParameterBag chartParameters = new ParameterBag();
@@ -472,7 +472,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
+        public static IList<IRenderable> x_plgraph(ITemplateHost host, double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
         {
             IList<IRenderable> outputImages = new List<IRenderable>();
             int gx = stime.GetUpperBound(0);
@@ -564,7 +564,7 @@ namespace StatsDirect.Builtins
                     }
                     cnx[k] = nx;
                 }
-                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title)));
+                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title, host.Preferences.ShouldUseColour)));
             }
             return outputImages;
         }

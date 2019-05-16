@@ -8,7 +8,8 @@ namespace StatsDirect.Charting
     {
         private bool showLegendIsRelevant;
 
-        public BarOptions(bool UseColour) : base(UseColour)
+        public BarOptions(bool UseColour)
+            : base(UseColour)
         {
             RotateWhenStacked = true;
         }

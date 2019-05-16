@@ -15,8 +15,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public LAbbeOptions(int k, double[,] o, double rmh)
-            : base(false)
+        public LAbbeOptions(int k, double[,] o, double rmh, bool useColour)
+            : base(useColour)
         {
             this.k = k;
             this.o = o;

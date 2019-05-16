@@ -3,9 +3,9 @@ using StatsDirect.Numerics;
 
 namespace StatsDirect.Charting
 {
-    [ Serializable ]
-    public class ControlOptions : GenericOptions 
-    { 
+    [Serializable]
+    public class ControlOptions : GenericOptions
+    {
         public bool UseMean { get; set; }
         public bool Use1SD { get; set; }
         public bool Use2SD { get; set; }
@@ -21,15 +21,16 @@ namespace StatsDirect.Charting
         public int ObservationsToUse { get; set; }
         public int RightHandDecimalPlaces { get; set; }
 
-        public ControlOptions( bool useColour ) : base( useColour ) 
-        { 
-            
-            LowerControlLimit = Constant.MISSING; 
-            LowerWarningLimit = Constant.MISSING; 
-            UpperControlLimit = Constant.MISSING; 
-            UpperWarningLimit = Constant.MISSING; 
-        } 
-        
+        public ControlOptions(bool useColour)
+            : base(useColour)
+        {
+
+            LowerControlLimit = Constant.MISSING;
+            LowerWarningLimit = Constant.MISSING;
+            UpperControlLimit = Constant.MISSING;
+            UpperWarningLimit = Constant.MISSING;
+        }
+
         public override bool ShowControlOptions => true;
 
         public override bool UsesAutoscale => true;
@@ -57,4 +58,4 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
     }
-} 
+}

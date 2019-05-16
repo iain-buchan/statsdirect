@@ -32,8 +32,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public EffectOptions(int k, double[] cn, double[] en, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
-            : base(false)
+        public EffectOptions(int k, double[] cn, double[] en, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid, bool useColour)
+            : base(useColour)
         {
             this.k = k;
             this.cn = cn;
