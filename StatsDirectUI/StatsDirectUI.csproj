@@ -305,6 +305,7 @@
     <Compile Include="Charting\ICanvasFactory.cs" />
     <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\IChartSizable.cs" />
+    <Compile Include="Creole\CreoleEntity.cs" />
     <Compile Include="Creole\CreoleAttribute.cs" />
     <Compile Include="Creole\CreoleBlock.cs" />
     <Compile Include="Creole\CreoleContainer.cs" />
