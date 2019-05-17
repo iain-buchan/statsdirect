@@ -8,6 +8,10 @@ TAG_OPEN
     : '<' -> pushMode(TAG)
     ;
 
+ENTITY_OPEN
+	: '&' -> pushMode(ENTITY)
+	;
+
 EXPR_OPEN_COMPOUND
     : '@{' -> pushMode(EXPR_COMPOUND)
     ;
@@ -17,11 +21,32 @@ EXPR_OPEN_SIMPLE
     ;
 
 TEXT
-    : ~('<'|'@')+
+    : ~('<'|'@'|'&')+
     ;
 
 //
-// tag declarations
+// Entity declarations
+//
+mode ENTITY;
+
+ENTITY_CLOSE
+	: ';' -> popMode
+	;
+
+ENTITY_HEX
+	: '#' 'x' HEXDIGIT+
+	;
+
+ENTITY_DECIMAL
+	: '#' DIGIT+
+	;
+
+ENTITY_NAMED
+	: [A-Za-z][A-Za-z0-9]*
+	;
+
+//
+// Tag declarations
 //
 mode TAG;
 

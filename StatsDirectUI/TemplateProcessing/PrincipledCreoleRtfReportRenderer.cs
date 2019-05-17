@@ -230,6 +230,11 @@ namespace StatsDirect.TemplateProcessing
             {
                 return (null == victim.Contents ? string.Empty : @"\par " + victim.Contents.Accept(this)) + @"\par ";
             }
+
+            string ICreoleVisitor<string>.Visit(CreoleEntity<string> victim)
+            {
+                return @"\'" + ((int)victim.Value).ToString("X");
+            }
         }
 
         private class CellsDefinitionRenderer : ICreoleVisitor<string>
@@ -266,6 +271,7 @@ namespace StatsDirect.TemplateProcessing
                 }
                 return sb.ToString();
             }
+            string ICreoleVisitor<string>.Visit(CreoleEntity<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim) => string.Empty;
             string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim) => string.Empty;

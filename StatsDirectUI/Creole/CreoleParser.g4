@@ -33,9 +33,10 @@ element
 	| TAG_OPEN tag=TAG_WARN TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_WARN TAG_CLOSE # formatting
     ;
 
-attributes
-	: attribute+
-	;
+// Unused in the present grammar
+//attributes
+//	: attribute+
+//	;
 
 attribute
     : name=TAG_NAME TAG_EQUALS value=ATTVALUE_VALUE
@@ -48,6 +49,7 @@ content
 inlineContent
     : chardata
 	| substitution
+	| entity
     ;
 
 substitution
@@ -60,3 +62,13 @@ chardata
     : TEXT # significantText
     | SEA_WS # significantText
     ;
+
+entity
+	: ENTITY_OPEN body=entityBody ENTITY_CLOSE
+	;
+
+entityBody
+	: ENTITY_HEX # hexEntityBody
+	| ENTITY_DECIMAL # decimalEntityBody
+	| ENTITY_NAMED # namedEntityBody
+	;

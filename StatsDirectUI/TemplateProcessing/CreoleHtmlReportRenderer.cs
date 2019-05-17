@@ -1,6 +1,7 @@
 ﻿using StatsDirect.Creole;
 using StatsDirect.Templates;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace StatsDirect.TemplateProcessing
@@ -181,6 +182,11 @@ namespace StatsDirect.TemplateProcessing
             private string MaybeAccept(ICreole<string> victimOrNull)
             {
                 return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
+            }
+
+            string ICreoleVisitor<string>.Visit(CreoleEntity<string> victim)
+            {
+                return WebUtility.HtmlEncode(string.Empty + victim.Value);
             }
 
             private interface IWrapper
