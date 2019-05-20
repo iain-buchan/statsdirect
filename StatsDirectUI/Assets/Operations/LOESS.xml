@@ -34,8 +34,7 @@
           <name>title</name>
           <prompt>Chart title</prompt>
           <must-request>true</must-request>
-          <acquire-if-true>=parameters["predictors"].AsDataFrame.Variables.Count == 1</acquire-if-true>
-          <default-value>=parameters["outcome"].AsDataFrame.Variables[0].Title + " vs. " + parameters["predictors"].AsDataFrame.Variables[0].Title</default-value>
+          <default-value>=parameters["outcome"].AsDataFrame.Variables[0].Title + " vs. " + parameters["predictors"].AsDataFrame.Variables.Select(v => v.Title).Aggregate((names, name) => names + " + " + name)</default-value>
         </string>
         <string>
           <name>ylab</name>
@@ -89,7 +88,7 @@
         </confidence-interval>
         <boolean>
           <name>saveFitsAndSe</name>
-          <prompt>Save fits and standard errors</prompt>
+          <prompt>Save fits and standard errors to worksheet</prompt>
           <must-request>true</must-request>
           <default-value>false</default-value>
         </boolean>
