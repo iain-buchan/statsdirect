@@ -9,10 +9,10 @@
           <name>data</name>
           <must-request>true</must-request>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>TwoColumns</validator>
-            <validator>NonNegative</validator>
-            <validator>PositiveRows</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>TwoColumns</name></validator>
+            <validator><name>NonNegative</name></validator>
+            <validator><name>PositiveRows</name></validator>
           </validators>
           <type>chi-2-column</type>
         </special>
@@ -62,9 +62,9 @@
     </test>
   </steps>
   <custom-validators>
-    <validator name="TwoColumns" language="CSharp">
+    <custom-validator name="TwoColumns" language="CSharp">
       return (parameters[parameter.Name].IsDataFrame &amp;&amp; parameters[parameter.Name].AsDataFrame.VariableCount == 2) ? null : "Values should be entered in both columns";
-    </validator>
+    </custom-validator>
   </custom-validators>
   <suggested-operations>
     <suggested-operation>Chi2byNLinearTrend</suggested-operation>

@@ -9,8 +9,8 @@
           <name>observations</name>
           <prompt>Select OBSERVATIONS</prompt>
           <validators>
-            <validator>Square</validator>
-            <validator>NoMissingData</validator>
+            <validator><name>Square</name></validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
@@ -21,8 +21,8 @@
           <name>column</name>
           <prompt>Select COLUMN CLASSIFIER: Factor 1</prompt>
           <validators>
-            <validator>SquareBins</validator>
-            <validator>NoMissingData</validator>
+            <validator><name>SquareBins</name></validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <same-length-as>observations</same-length-as>
@@ -34,8 +34,8 @@
           <name>row</name>
           <prompt>Select ROW CLASSIFIER: Factor 2</prompt>
           <validators>
-            <validator>SquareBins</validator>
-            <validator>NoMissingData</validator>
+            <validator><name>SquareBins</name></validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <same-length-as>observations</same-length-as>
@@ -47,8 +47,8 @@
           <name>treatment</name>
           <prompt>Select TREATMENT/LATIN/RANDOMISED CLASSIFIER: Factor 3</prompt>
           <validators>
-            <validator>SquareBins</validator>
-            <validator>NoMissingData</validator>
+            <validator><name>SquareBins</name></validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <same-length-as>observations</same-length-as>

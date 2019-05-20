@@ -9,8 +9,8 @@
           <name>data</name>
           <must-request>true</must-request>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
           <type>likelihood</type>
         </special>

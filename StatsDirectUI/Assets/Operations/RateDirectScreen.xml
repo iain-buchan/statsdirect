@@ -10,9 +10,9 @@
           <must-request>true</must-request>
           <type>person-time-size</type>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
-            <validator>PersonTimeSize</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
+            <validator><name>PersonTimeSize</name></validator>
           </validators>
         </special>
         <option>

@@ -2730,9 +2730,13 @@ namespace StatsDirect.UI
                                 if (null != outstandingParameter.Validators)
                                     foreach (Validator validator in outstandingParameter.Validators)
                                     {
-                                        validationResult = ValidationProcessor.Validate(host, validator.ValidatorName, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
-                                        if (null != validationResult)
-                                            break;
+                                        bool shouldTest = (!validator.HasTestIfTrueExpression) || (bool)processor.Evaluate(validator.TestIfTrueExpression, outputParameters);
+                                        if (shouldTest)
+                                        {
+                                            validationResult = ValidationProcessor.Validate(host, validator.ValidatorName, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
+                                            if (null != validationResult)
+                                                break;
+                                        }
                                     }
                                 if (null != validationResult)
                                     break;

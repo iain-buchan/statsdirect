@@ -7,14 +7,10 @@ namespace StatsDirect.Templates
     [XmlType(Namespace="http://www.statsdirect.com/schemas/Operation.xsd", TypeName="test")]
     public class TestStep: Step
     {
-        private readonly IList<Step> trueSteps;
-        private readonly IList<Step> falseSteps;
-        private Expression condition;
-
         public TestStep()
         {
-            trueSteps = new List<Step>();
-            falseSteps = new List<Step>();
+            TrueSteps = new List<Step>();
+            FalseSteps = new List<Step>();
         }
 
         // Remember to change Operation::StepsForXml and TestStep::FalseStepsForXml if you change this list
@@ -32,15 +28,15 @@ namespace StatsDirect.Templates
         {
             get
             {
-                Step[] stepArray = new Step[trueSteps.Count];
-                for (int i = 0; i < trueSteps.Count; i++)
-                    stepArray[i] = trueSteps[i];
+                Step[] stepArray = new Step[TrueSteps.Count];
+                for (int i = 0; i < TrueSteps.Count; i++)
+                    stepArray[i] = TrueSteps[i];
                 return stepArray;
             }
             set
             {
                 foreach (Step step in value)
-                    trueSteps.Add(step);
+                    TrueSteps.Add(step);
             }
         }
 
@@ -59,34 +55,30 @@ namespace StatsDirect.Templates
         {
             get
             {
-                Step[] stepArray = new Step[falseSteps.Count];
-                for (int i = 0; i < falseSteps.Count; i++)
-                    stepArray[i] = falseSteps[i];
+                Step[] stepArray = new Step[FalseSteps.Count];
+                for (int i = 0; i < FalseSteps.Count; i++)
+                    stepArray[i] = FalseSteps[i];
                 return stepArray;
             }
             set
             {
                 foreach (Step step in value)
-                    falseSteps.Add(step);
+                    FalseSteps.Add(step);
             }
         }
 
         [XmlElement(ElementName = "condition")]
-        public Expression Condition
-        {
-            get => condition;
-            set => condition = value;
-        }
+        public Expression Condition { get; set; }
 
         /// <summary>
         /// The steps that will be run if the condition evaluates to true.
         /// </summary>
-        public IList<Step> TrueSteps => trueSteps;
+        public IList<Step> TrueSteps { get; }
 
         /// <summary>
         /// The steps that will be run if the condition evaluates to false.
         /// </summary>
-        public IList<Step> FalseSteps => falseSteps;
+        public IList<Step> FalseSteps { get; }
 
         public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
@@ -97,12 +89,12 @@ namespace StatsDirect.Templates
         {
             get
             {
-                foreach (Step step in trueSteps)
+                foreach (Step step in TrueSteps)
                 {
                     if (step.RequiresGrid)
                         return true;
                 }
-                foreach (Step step in falseSteps)
+                foreach (Step step in FalseSteps)
                 {
                     if (step.RequiresGrid)
                         return true;
@@ -113,8 +105,8 @@ namespace StatsDirect.Templates
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            InputDuringStep trueRequirement = GetInputRequirement(trueSteps, parameters);
-            InputDuringStep falseRequirement = GetInputRequirement(falseSteps, parameters);
+            InputDuringStep trueRequirement = GetInputRequirement(TrueSteps, parameters);
+            InputDuringStep falseRequirement = GetInputRequirement(FalseSteps, parameters);
 
             // If the requirements are the same, that's the overall requirement
             if (trueRequirement == falseRequirement)
@@ -130,12 +122,12 @@ namespace StatsDirect.Templates
             if (base.IsOrContains(candidate))
                 return true;
 
-            foreach (Step s in trueSteps)
+            foreach (Step s in TrueSteps)
             {
                 if (s.IsOrContains(candidate))
                     return true;
             }
-            foreach (Step s in falseSteps)
+            foreach (Step s in FalseSteps)
             {
                 if (s.IsOrContains(candidate))
                     return true;
@@ -153,21 +145,21 @@ namespace StatsDirect.Templates
                 return HasInput.NoAndTypeNotFound;
             }
 
-            HasInput trueSide = ShouldRequestTargetAfter(stepToFind, trueSteps, stepType, found, out stepFound);
+            HasInput trueSide = ShouldRequestTargetAfter(stepToFind, TrueSteps, stepType, found, out stepFound);
             if (trueSide != HasInput.NoAndTypeNotFound)
                 return trueSide;
-            HasInput falseSide = ShouldRequestTargetAfter(stepToFind, falseSteps, stepType, found, out stepFound);
+            HasInput falseSide = ShouldRequestTargetAfter(stepToFind, FalseSteps, stepType, found, out stepFound);
             return falseSide;
         }
 
         internal override void NoteOperation(Operation operation)
         {
             base.NoteOperation(operation);
-            foreach (Step s in trueSteps)
+            foreach (Step s in TrueSteps)
             {
                 s.NoteOperation(operation);
             }
-            foreach (Step s in falseSteps)
+            foreach (Step s in FalseSteps)
             {
                 s.NoteOperation(operation);
             }

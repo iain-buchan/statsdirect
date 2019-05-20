@@ -16,7 +16,7 @@
         <max-columns>200</max-columns>
         <ask-for-group-id>true</ask-for-group-id>
         <validators>
-          <validator>NonNegative</validator>
+          <validator><name>NonNegative</name></validator>
         </validators>
         <clear-selection-first>true</clear-selection-first>
       </frame>
@@ -35,8 +35,8 @@
             <ask-for-group-id>true</ask-for-group-id>
             <same-length-as>data</same-length-as>
             <validators>
-              <validator>NonNegative</validator>
-              <validator>Integer</validator>
+              <validator><name>NonNegative</name></validator>
+              <validator><name>Integer</name></validator>
             </validators>
             <clear-selection-first>true</clear-selection-first>
           </frame>

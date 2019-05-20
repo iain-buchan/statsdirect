@@ -77,7 +77,7 @@
             <name>y</name>
             <prompt>="Select SUMMARY STATISTIC (" + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture) + ")"</prompt>
             <validators>
-              <validator>Positive</validator>
+              <validator><name>Positive</name></validator>
             </validators>
             <mode>NumericReplaceMissing</mode>
             <min-columns>1</min-columns>
@@ -134,7 +134,7 @@
                 <name>ul_y</name>
                 <prompt>="Select UPPER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture)</prompt>
                 <validators>
-                  <validator>NoMissingData</validator>
+                  <validator><name>NoMissingData</name></validator>
                 </validators>
                 <mode>NumericReplaceMissing</mode>
                 <same-length-as>y</same-length-as>

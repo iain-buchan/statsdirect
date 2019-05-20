@@ -99,6 +99,19 @@ namespace StatsDirect.UI
             CheckScript(customValidator.Language, customValidator.Script, ScriptType.Validator, null, prefix + "." + customValidator.Name);
         }
 
+        private static void CheckAllDynamicContentCompiles(Validator[] validators, string prefix)
+        {
+            if (null == validators)
+                return;
+            foreach (Validator validator in validators)
+                CheckAllDynamicContentCompiles(validator, prefix + "." + validator.ValidatorName);
+        }
+
+        private static void CheckAllDynamicContentCompiles(Validator validator, string prefix)
+        {
+            CheckAllDynamicContentCompiles(validator.TestIfTrueExpression, prefix + ".TestIfTrue");
+        }
+
         private static void CheckScript(string language, string script, ScriptType scriptType, string entryPoint, string identifier)
         {
             IScriptEngine engine = ((ITemplateHost)SdApplication.SoleInstance).GetScriptEngine(language);
@@ -120,6 +133,7 @@ namespace StatsDirect.UI
                 CheckAllDynamicContentCompiles(parameter.AcquireIfTrueExpression, ".AcquireIfTrueExpression");
                 CheckAllDynamicContentCompiles(parameter.PromptExpression, ".PromptExpression");
                 CheckAllDynamicContentCompiles(parameter.RubricExpression, ".RubricExpression");
+                CheckAllDynamicContentCompiles(parameter.Validators, ".Validators");
             }
 
             private void CheckRange(RangeParameter parameter)

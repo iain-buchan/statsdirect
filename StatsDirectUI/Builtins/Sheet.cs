@@ -1096,12 +1096,13 @@ namespace StatsDirect.Builtins
         internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
         {
             DataFrame inputFrame = parameters["data"].AsDataFrame;
-            bool isNumeric = "numeric".Equals(parameters["search-type"].AsString);
             string searchRule = parameters["search-rule"].AsString;
-            string userSearchExpression = parameters["search-expression"].AsString;
+            bool hasSearchExpression = !("blank".Equals(searchRule));
+            string userSearchExpression = hasSearchExpression ? parameters["search-expression"].AsString : string.Empty;
             string action = parameters["action"].AsString;
             string replaceExpression = parameters.ContainsKey("replace-expression") ? parameters["replace-expression"].AsString : null;
 
+            bool isNumeric = "numeric".Equals(parameters["search-type"].AsString) && hasSearchExpression;
             DataType inputType = isNumeric ? DataType.Double : DataType.String;
 
             // Use the expression parser and evaluator to make this simple
@@ -1109,6 +1110,7 @@ namespace StatsDirect.Builtins
             string searchExpression;
             switch (searchRule)
             {
+                case "blank":
                 case "equal":
                     searchExpression = "X = " + wrappedUserSearchExpression;
                     break;

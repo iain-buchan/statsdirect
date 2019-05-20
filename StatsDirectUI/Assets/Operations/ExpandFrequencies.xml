@@ -26,7 +26,7 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <validators>
-            <validator>NoMissingData</validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
         </frame>
         <frame>
@@ -39,8 +39,8 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
         </frame>
         <frame>
@@ -53,8 +53,8 @@
           <max-columns>1</max-columns>
           <same-length-as>categories</same-length-as>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
         </frame>
         <frame>
@@ -66,8 +66,8 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>ZeroToOneInclusive</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>ZeroToOneInclusive</name></validator>
           </validators>
         </frame>
         <frame>
@@ -80,8 +80,8 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
         </frame>
         <frame>
@@ -95,8 +95,8 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
         </frame>
         <frame>

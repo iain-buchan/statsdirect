@@ -9,8 +9,8 @@
           <name>times</name>
           <prompt>Select Data for Times of Observation</prompt>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>NonNegative</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
@@ -33,7 +33,7 @@
           <prompt>Select Subject/Participant Identifier</prompt>
           <mode>CategoryReplaceMissing</mode>
           <validators>
-            <validator>NoMissingData</validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
           <same-length-as>times</same-length-as>
           <min-columns>1</min-columns>

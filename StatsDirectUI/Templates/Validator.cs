@@ -9,7 +9,13 @@ namespace StatsDirect.Templates
         /// <summary>
         /// A way in which the data should be validated
         /// </summary>
-        [XmlText]
+        [XmlElement("name")]
         public string ValidatorName { get; set; }
+
+        [XmlElement("test-if-true")]
+        public Expression TestIfTrueExpression { get; set; }
+
+        [XmlIgnore]
+        public bool HasTestIfTrueExpression => null != TestIfTrueExpression;
     }
 }

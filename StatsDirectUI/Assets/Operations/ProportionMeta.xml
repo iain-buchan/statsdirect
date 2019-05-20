@@ -12,7 +12,7 @@
           <name>sn</name>
           <prompt>Select TOTAL number of subjects (n) studied</prompt>
           <validators>
-            <validator>Positive</validator>
+            <validator><name>Positive</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
@@ -23,7 +23,7 @@
           <name>sr</name>
           <prompt>Select number of subjects (r) with OUTCOME</prompt>
           <validators>
-            <validator>NonNegative</validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
           <same-length-as>sn</same-length-as>
           <mode>NumericReplaceMissing</mode>

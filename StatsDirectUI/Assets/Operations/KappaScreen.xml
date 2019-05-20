@@ -76,8 +76,8 @@
               <clear-selection-first>true</clear-selection-first>
               <can-select>false</can-select>
               <validators>
-                <validator>NoMissingData</validator>
-                <validator>NonNegative</validator>
+                <validator><name>NoMissingData</name></validator>
+                <validator><name>NonNegative</name></validator>
               </validators>
             </frame>
           </parameters>

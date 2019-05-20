@@ -13196,7 +13196,7 @@ age,16Previous,16,16Next,16NextNext,17Previous,17,17Next,17NextNext,18.5Previous
         <max-columns>1</max-columns>
         <ask-for-group-id>false</ask-for-group-id>
         <validators>
-          <validator>Positive</validator>
+          <validator><name>Positive</name></validator>
         </validators>
       </frame>
       <frame>
@@ -13209,7 +13209,7 @@ age,16Previous,16,16Next,16NextNext,17Previous,17,17Next,17NextNext,18.5Previous
         <same-length-as>data</same-length-as>
         <ask-for-group-id>false</ask-for-group-id>
         <validators>
-          <validator>NonNegative</validator>
+          <validator><name>NonNegative</name></validator>
         </validators>
       </frame>
       <frame>
@@ -13233,7 +13233,7 @@ age,16Previous,16,16Next,16NextNext,17Previous,17,17Next,17NextNext,18.5Previous
         <ask-for-group-id>false</ask-for-group-id>
         <cancel-skips-parameter>Skip this variable to assume 40 weeks (term)</cancel-skips-parameter>
         <validators>
-          <validator>Positive</validator>
+          <validator><name>Positive</name></validator>
         </validators>
       </frame>
     </parameters>

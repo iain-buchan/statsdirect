@@ -17,7 +17,7 @@
           <name>case-control</name>
           <prompt>select data for CASE {1} or CONTROL {0} INDICATOR</prompt>
           <validators>
-            <validator>Boolean</validator>
+            <validator><name>Boolean</name></validator>
           </validators>
           <same-length-as>stratum</same-length-as>
           <mode>NumericReplaceMissing</mode>

@@ -30,6 +30,7 @@
           <option value="ge">&gt;=</option>
           <option value="le">&lt;=</option>
           <option value="ne">&lt;&gt;</option>
+          <option value="blank">is blank</option>
           <option value="match">matching expression</option>
         </options>
       </option>
@@ -38,8 +39,12 @@
         <name>search-expression</name>
         <lifetime>SessionForThisOperation</lifetime>
         <must-request>true</must-request>
+        <acquire-if-true>=parameters.ContainsKey("search-rule") &amp;&amp; null != parameters["search-rule"] &amp;&amp; !("blank".Equals(parameters["search-rule"].AsString))</acquire-if-true>
         <validators>
-          <validator>Expression</validator>
+          <validator>
+            <name>Expression</name>
+            <test-if-true>=parameters.ContainsKey("search-rule") &amp;&amp; null != parameters["search-rule"] &amp;&amp; !("blank".Equals(parameters["search-rule"].AsString))</test-if-true>
+          </validator>
         </validators>
         <validation-fail-message>Please enter a valid search expression</validation-fail-message>
       </string>
@@ -76,13 +81,13 @@
         <acquire-if-true>=parameters.ContainsKey("action") &amp;&amp; null != parameters["action"] &amp;&amp; null != parameters["action"].AsString &amp;&amp; parameters["action"].AsString.StartsWith("replace")</acquire-if-true>
         <must-request>true</must-request>
         <validators>
-          <validator>Expression</validator>
+          <validator><name>Expression</name></validator>
         </validators>
         <validation-fail-message>Please enter a valid replace expression</validation-fail-message>
       </string>
     </parameters>
     <test>
-      <condition>=parameters.ContainsKey("search-type") &amp;&amp; null != parameters["search-type"] &amp;&amp; null != parameters["search-type"].AsString &amp;&amp; parameters["search-type"].AsString.StartsWith("numeric")</condition>
+      <condition>=parameters["search-type"].AsString.StartsWith("numeric") &amp;&amp; !("blank".Equals(parameters["search-rule"].AsString))</condition>
       <iftrue>
         <parameters>
           <frame>

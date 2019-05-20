@@ -36,7 +36,7 @@
           <min-columns>1</min-columns>
           <max-columns>1</max-columns>
           <validators>
-            <validator>NoMissingData</validator>
+            <validator><name>NoMissingData</name></validator>
           </validators>
         </frame>
         <frame>
@@ -49,8 +49,8 @@
           <max-columns>1</max-columns>
           <same-length-as>categories</same-length-as>
           <validators>
-            <validator>NoMissingData</validator>
-            <validator>Boolean</validator>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>Boolean</name></validator>
           </validators>
           <validation-fail-message>Response data must be 0 or 1 only, with no missing data.</validation-fail-message>
         </frame>

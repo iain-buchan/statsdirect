@@ -9,7 +9,7 @@
         <name>gid</name>
         <prompt>Select data for GROUP IDENTIFIER</prompt>
         <validators>
-          <validator>TwoBinsAndNoMissingData</validator>
+          <validator><name>TwoBinsAndNoMissingData</name></validator>
         </validators>
         <mode>CategoryReplaceMissing</mode>
         <min-columns>1</min-columns>
@@ -46,7 +46,7 @@
             <prompt>="Select data for CENSORSHIP (repeat " + parameters["repeat"].Data.ToString() + ")"</prompt>
             <must-request>true</must-request>
             <validators>
-              <validator>Boolean</validator>
+              <validator><name>Boolean</name></validator>
             </validators>
             <validation-fail-message>Censorship value must be 0 or 1 only</validation-fail-message>
             <same-length-as>gid</same-length-as>

@@ -46,7 +46,7 @@
           <prompt>Select POOLING INDICATOR [skip for none]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <validators>
-            <validator>Pooling</validator>
+            <validator><name>Pooling</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <same-length-as>odds</same-length-as>

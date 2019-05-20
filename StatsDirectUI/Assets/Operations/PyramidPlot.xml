@@ -9,7 +9,7 @@
           <name>male</name>
           <prompt>Select NUMBERS in AGE GROUPS [MALE or TOTAL]</prompt>
           <validators>
-            <validator>NonNegative</validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
           <mode>NumericReplaceMissing</mode>
           <min-columns>1</min-columns>
@@ -21,7 +21,7 @@
           <prompt>Select NUMBERS in FEMALE AGE GROUPS [skip if using total]</prompt>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <validators>
-            <validator>NonNegative</validator>
+            <validator><name>NonNegative</name></validator>
           </validators>
           <same-length>true</same-length>
           <mode>NumericReplaceMissing</mode>
