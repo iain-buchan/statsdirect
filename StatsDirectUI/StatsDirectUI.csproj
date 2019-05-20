@@ -152,15 +152,6 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DotNetBrowser, Version=1.20.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetBrowser.1.20\lib\DotNetBrowser.dll</HintPath>
-    </Reference>
-    <Reference Include="DotNetBrowser.Chromium32, Version=1.20.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetBrowser.1.20\lib\DotNetBrowser.Chromium32.dll</HintPath>
-    </Reference>
-    <Reference Include="DotNetBrowser.Chromium64, Version=1.20.0.0, Culture=neutral, PublicKeyToken=b0b5aaca9c95c84e, processorArchitecture=MSIL">
-      <HintPath>..\packages\DotNetBrowser.1.20\lib\DotNetBrowser.Chromium64.dll</HintPath>
-    </Reference>
     <Reference Include="HtmlAgilityPack, Version=1.11.4.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.11.4\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
@@ -309,7 +300,6 @@
     <Compile Include="Creole\CreoleAttribute.cs" />
     <Compile Include="Creole\CreoleBlock.cs" />
     <Compile Include="Creole\CreoleContainer.cs" />
-    <Compile Include="Creole\CreoleEntity.cs" />
     <Compile Include="Creole\CreoleFormatting.cs" />
     <Compile Include="Creole\CreoleLineBreak.cs" />
     <Compile Include="Creole\CreoleParserVisitor.cs" />
@@ -528,18 +518,6 @@
     </Compile>
     <Compile Include="UI\CustomCommands.cs" />
     <Compile Include="UI\DialogAndAction.cs" />
-    <Compile Include="UI\frmReportDNBTest.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmReportDNBTest.Designer.cs">
-      <DependentUpon>frmReportDNBTest.cs</DependentUpon>
-    </Compile>
-    <Compile Include="UI\frmReportDotNetBrowser.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmReportDotNetBrowser.designer.cs">
-      <DependentUpon>frmReportDotNetBrowser.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\HtmlRelatedClasses.cs" />
     <Compile Include="UI\IGetCells.cs" />
     <Compile Include="UI\ImmediateParameterFiller.cs" />
@@ -1035,9 +1013,6 @@
     <EmbeddedResource Include="UI\ctlUpdateRCheck.resx">
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmReportDNBTest.resx">
-      <DependentUpon>frmReportDNBTest.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInstallStatsDirect2.resx">
       <DependentUpon>frmInstallStatsDirect2.cs</DependentUpon>
     </EmbeddedResource>
@@ -1069,10 +1044,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmInstallR.resx">
       <DependentUpon>frmInstallR.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmReportDotNetBrowser.resx">
-      <DependentUpon>frmReportDotNetBrowser.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
