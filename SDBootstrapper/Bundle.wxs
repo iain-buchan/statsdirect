@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
   <Bundle
     Name="StatsDirect"
@@ -22,20 +21,8 @@
       <Payload SourceFile="greybar.png" />
     </BootstrapperApplicationRef>
     <Chain>
-      <PackageGroupRef Id="Netfx4Full"/>
       <MsiPackage Id="MsiForVersionNumber" Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" ForcePerMachine="yes" />
       <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" ForcePerMachine="yes" />
     </Chain>
   </Bundle>
-  <Fragment>
-    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4FullVersion" />
-    <util:RegistrySearch Root="HKLM" Key="SOFTWARE\Microsoft\Net Framework Setup\NDP\v4\Full" Value="Version" Variable="Netfx4x64FullVersion" Win64="yes" />
-
-    <PackageGroup Id="Netfx4Full">
-      <ExePackage Id="Netfx4Full" Cache="no" Compressed="no" PerMachine="yes" Permanent="yes" Vital="yes" SuppressSignatureVerification="no"
-          SourceFile="dotnetfx40_full_x86_x64.exe"
-          DownloadUrl="http://go.microsoft.com/fwlink/?LinkId=164193"
-          DetectCondition="Netfx4FullVersion AND (NOT VersionNT64 OR Netfx4x64FullVersion)" />
-    </PackageGroup>
-  </Fragment>
 </Wix>
