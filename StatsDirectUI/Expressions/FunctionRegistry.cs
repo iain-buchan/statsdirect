@@ -24,7 +24,7 @@ namespace StatsDirect.Expressions
             ArgumentDefinition mean = new ArgumentDefinition("mean", DataType.Double);
             ArgumentDefinition meanDef0 = new ArgumentDefinition("mean", DataType.Double, false, "0");
             ArgumentDefinition n = new ArgumentDefinition("n", DataType.Double);
-            ArgumentDefinition ncp = new ArgumentDefinition("ncp", DataType.Double);
+            ArgumentDefinition ncp = new ArgumentDefinition("Simple linear regression ncp", DataType.Double);
             ArgumentDefinition ncpDefMissing = new ArgumentDefinition("ncp", DataType.Double, false, "StatsDirect.Numerics.Constant.MISSING");
             ArgumentDefinition p = new ArgumentDefinition("p", DataType.Double);
             ArgumentDefinition q = new ArgumentDefinition("q", DataType.Double);
