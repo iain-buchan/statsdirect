@@ -96,7 +96,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim)
             {
-                return "{" + ToRtfPrefix(victim.Format) + " " + victim.Contents.Accept(this) + "}" + ToRtfSuffix(victim.Format);
+                return "{" + ToRtfPrefix(victim.Format) + " " + MaybeAccept(victim.Contents) + "}" + ToRtfSuffix(victim.Format);
             }
 
             private string ToRtfPrefix(string format)
@@ -167,27 +167,29 @@ namespace StatsDirect.TemplateProcessing
             string ICreoleVisitor<string>.Visit(CreoleTable<string> victim)
             {
                 isFirstCellOfTable = true;
-                return "{" + victim.Contents.Accept(this) + @"}\par ";
+                return "{" + MaybeAccept(victim.Contents) + @"}\par ";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim)
             {
                 return @"\trowd\trgaph135\trleft0\trautofit1"
-                    + ToCellsDefinition(victim.Contents) + " "
-                    + victim.Contents.Accept(this)
+                    + MaybeToCellsDefinition(victim.Contents) + " "
+                    + MaybeAccept(victim.Contents)
                     + @"\row ";
             }
 
-            private string ToCellsDefinition(ICreole<string> contents)
+            private string MaybeToCellsDefinition(ICreole<string> contents)
             {
-                return contents.Accept(new CellsDefinitionRenderer(substitutionStack.Peek()));
+                return null == contents
+                    ? string.Empty
+                    : contents.Accept(new CellsDefinitionRenderer(substitutionStack.Peek()));
             }
 
             string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim)
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append(@"\pard\intbl ");
-                sb.Append(victim.Contents.Accept(this));
+                sb.Append(MaybeAccept(victim.Contents));
                 if (isFirstCellOfTable)
                 {
                     sb.Append(FirstCellOfTableMarker);
@@ -203,7 +205,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 StringBuilder sb = new StringBuilder();
                 sb.Append(@"\pard\intbl {\ul ");
-                sb.Append(victim.Contents.Accept(this));
+                sb.Append(MaybeAccept(victim.Contents));
                 sb.Append(@"}");
                 if (isFirstCellOfTable)
                 {
@@ -228,12 +230,19 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim)
             {
-                return (null == victim.Contents ? string.Empty : @"\par " + victim.Contents.Accept(this)) + @"\par ";
+                return @"\par "
+                    + MaybeAccept(victim.Contents)
+                    + @"\par ";
             }
 
             string ICreoleVisitor<string>.Visit(CreoleEntity<string> victim)
             {
                 return @"\'" + ((int)victim.Value).ToString("X");
+            }
+
+            private string MaybeAccept(ICreole<string> victimOrNull)
+            {
+                return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
             }
         }
 
@@ -265,7 +274,7 @@ namespace StatsDirect.TemplateProcessing
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
                         substitutionStack.Push(inner);
-                        sb.Append(victim.Contents.Accept(this));
+                        sb.Append(MaybeAccept(victim.Contents));
                         substitutionStack.Pop();
                     }
                 }
@@ -282,6 +291,11 @@ namespace StatsDirect.TemplateProcessing
             string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim) => CellDefinition(victim.Colspan);
             string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim) => CellDefinition(victim.Colspan);
             string ICreoleVisitor<string>.Visit(CreoleText<string> victim) => string.Empty;
+
+            private string MaybeAccept(ICreole<string> victimOrNull)
+            {
+                return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
+            }
 
             private string CellDefinition(int colspan)
             {
