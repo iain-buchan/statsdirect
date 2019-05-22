@@ -31,7 +31,5 @@
     </Directory>
 
     <?include Feature.wxi ?>
-    <!-- <SetProperty Id="NgenPath" Before="LaunchConditions" Value="[%windir]\Microsoft.NET\Framework64\v4.0.30319\ngen.exe" />
-    <?include OptimiseAfterInstall.wxi ?> -->
   </Product>
 </Wix>

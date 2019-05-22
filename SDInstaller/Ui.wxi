@@ -19,16 +19,11 @@
   <WixVariable Id="WixUILicenseRtf" Value="Licence.rtf"/>
   <!-- Tell the UI what property holds the install directory -->
   <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
-  <!-- Download location for the .Net framework, plus the custom action to invoke it -->
-  <Property Id="WixShellExecTarget" Value="http://www.microsoft.com/en-us/download/details.aspx?id=17718" />
-  <CustomAction Id="LaunchFrameworkDownload" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
-  <!-- Reference the property from netfx that tells us whether framework 4.0 (full, not client) is installed or not -->
-  <PropertyRef Id="NETFRAMEWORK40FULL"/>
+  <!-- Reference the property from netfx that tells us whether framework 4.6.1 is installed or not -->
+  <PropertyRef Id="WIX_IS_NETFRAMEWORK_461_OR_LATER_INSTALLED"/>
   <!-- Custom bitmaps -->
   <WixVariable Id="WixUIBannerBmp" Value="bannrbmp-sd.bmp"/>
   <WixVariable Id="WixUIDialogBmp" Value="dlgbmp-sd.bmp"/>
-  <!-- Custom exit dialog text -->
-  <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="StatsDirect will run faster if you leave 5-10 minutes for the optimisation process to finish." />
   <UI>
     <!-- Add/Remove Programs values -->
     <Property Id='ARPCONTACT'>support@statsdirect.com</Property>
@@ -44,10 +39,12 @@
   <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico"/>
   <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
 
-  <!-- Installation conditions: At least Windows XP, no service pack required, no upper limit on OS version-->
-  <!-- Verify not an Unknown OS -->
-  <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows XP, 2003 and 2003R2, Vista, 2008 and 2008R2, 7, 2012, 8, 8.1, 2012R2 and 10.">
-    <![CDATA[Installed OR (VersionNT >= 501)]]>
+  <Condition Message="[ProductName] requires .NET Framework 4.6.1 or higher.">
+    <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_461_OR_LATER_INSTALLED]]>
+  </Condition>
+  <!-- Installation conditions: At least Windows 7, no service pack required, no upper limit on OS version-->
+  <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 7, 2012, 8, 8.1, 2012R2, 10, and 2016.">
+    <![CDATA[Installed OR (VersionNT >= 601)]]>
   </Condition>
   <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
   <Condition Message="A later version of [ProductName] is already installed. If you wish to install this version, uninstall the later version then run this installer again. Setup will now exit.">
