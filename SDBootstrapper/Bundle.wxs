@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
   <Bundle
     Name="StatsDirect"
     Version="!(bind.packageVersion.MsiForVersionNumber)"
@@ -21,6 +22,7 @@
       <Payload SourceFile="greybar.png" />
     </BootstrapperApplicationRef>
     <Chain>
+      <PackageGroupRef Id="NetFx461Web"/>
       <MsiPackage Id="MsiForVersionNumber" Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" ForcePerMachine="yes" />
       <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" ForcePerMachine="yes" />
     </Chain>
