@@ -55,7 +55,7 @@ namespace StatsDirect.TemplateProcessing
                 if (null == victim.Contents)
                     return string.Empty;
                 StringBuilder sb = new StringBuilder();
-                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && innerList.HasData)
+                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
