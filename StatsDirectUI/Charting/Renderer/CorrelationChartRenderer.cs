@@ -1,5 +1,4 @@
-﻿using Layout;
-using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -184,19 +183,17 @@ namespace StatsDirect.Charting.Renderer
                         false, false);
                     break;
                 default:
+                    if (options.cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
                     {
-                        if (options.cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
-                        {
-                            DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
-                            DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
-                        }
-                        axisScales = LayoutChartAndDrawAxes(options.cap,
-                            new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
-                            new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
-                            false, false);
-                        DataMinX = axisScales.X.MinimumScaleValue;
-                        DataMaxX = axisScales.X.MaximumScaleValue;
+                        DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
+                        DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                     }
+                    axisScales = LayoutChartAndDrawAxes(options.cap,
+                        new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+                        new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
+                        false, false);
+                    DataMinX = axisScales.X.MinimumScaleValue;
+                    DataMaxX = axisScales.X.MaximumScaleValue;
                     break;
             }
 
