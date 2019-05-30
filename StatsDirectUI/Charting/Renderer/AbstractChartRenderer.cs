@@ -494,7 +494,7 @@ namespace StatsDirect.Charting.Renderer
                 gridLinePen.DashStyle = gridLineDashStyle;
                 foreach (Tic tic in xAxisScale.Tics())
                 {
-                    double x1 = ToCanvasX(tic.Value);
+                    double x1 = ToCanvasX(tic.Value, scaleType);
                     if (drawLabels)
                     {
                         AxisDrawStringAtAngleCT(tic.Label, x1, YAxisCanvas - AxisBigTick, direction);
@@ -608,7 +608,7 @@ namespace StatsDirect.Charting.Renderer
                 gridLinePen.DashStyle = gridLineDashStyle;
                 foreach (Tic tic in yAxisScale.Tics())
                 {
-                    double y1 = ToCanvasY(tic.Value);
+                    double y1 = ToCanvasY(tic.Value, scaleType);
                     if (drawLabels)
                     {
                         AxisDrawStringAtAngleRM(tic.Label, XAxisCanvas - (AxisBigTick + axisLabelOffsetFromBigTick), y1, direction);
@@ -659,15 +659,9 @@ namespace StatsDirect.Charting.Renderer
 
             double maxLabelWidth = 0;
             if (!IsAscii)
-            {
                 foreach (Tic tic in yAxisScale.Tics())
-                {
                     if (drawLabels)
-                    {
                         maxLabelWidth = Math.Max(maxLabelWidth, AxisMeasureStringAtAngle(tic.Label, direction).Width);
-                    }
-                }
-            }
             return maxLabelWidth + AxisBigTick + axisLabelOffsetFromBigTick;
         }
 
