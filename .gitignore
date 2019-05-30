@@ -1,0 +1,9 @@
+.vs/
+*/bin/
+*/obj/
+SDInstaller/DllsFragment.wxs
+SDInstaller/OperationsFragment.wxs
+SDInstaller/TemplateFragment.wxs
+packages/*/
+
+*~
