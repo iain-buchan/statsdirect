@@ -22,6 +22,8 @@ namespace StatsDirect.Charting
                 cd.AddXSeries(xSeries);
             if (null != ySeries)
                 cd.AddYSeries(ySeries);
+            // Called from code, and there's no other path for getting hold of the scale parameters, so force that here.
+            _ = cd.ScaleParameters;
             return cd;
         }
 
