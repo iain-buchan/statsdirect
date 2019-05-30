@@ -1,9 +1,16 @@
 .vs/
 */bin/
 */obj/
-SDInstaller/DllsFragment.wxs
-SDInstaller/OperationsFragment.wxs
-SDInstaller/TemplateFragment.wxs
+SDInstaller/*Fragment.wxs
 packages/*/
+ReleaseBuild/*.msi
+ReleaseBuild/*.exe
 
+# gvim backups (Peter has a nasty habit of using gvim for bulk edits)
 *~
+
+# Don't store certs
+*.pfx
+*.pem
+*.pvk
+*.spc
