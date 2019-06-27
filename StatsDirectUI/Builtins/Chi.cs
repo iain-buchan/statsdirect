@@ -395,7 +395,7 @@ namespace StatsDirect.Builtins
             bool plotForest = parameters["plot_forest"].AsBoolean;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
-            Meta.Mantel(host, false, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
+            Meta.Mantel(host, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
             if (ierr != 0)
                 return null;
 

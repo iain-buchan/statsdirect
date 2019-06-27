@@ -5,7 +5,7 @@ namespace StatsDirect.Templates
 {
     public class BuiltinRegistry
     {
-        private readonly Dictionary<string, Builtin> builtins;
+        private readonly Dictionary<string, IBuiltin> builtins;
 
         private static BuiltinRegistry soleInstance;
 
@@ -13,19 +13,19 @@ namespace StatsDirect.Templates
 
         private BuiltinRegistry()
         {
-            builtins = new Dictionary<string,Builtin>();
+            builtins = new Dictionary<string, IBuiltin>();
         }
 
-        public Builtin Builtin(string name)
+        public IBuiltin Builtin(string name)
         {
-            if (!builtins.TryGetValue(name, out Builtin builtin))
+            if (!builtins.TryGetValue(name, out IBuiltin builtin))
                 throw new Exception("No built-in operation named '" + name + "' exists in the function registry.");
             return builtin;
         }
 
-        public void AddAll(ICollection<Builtin> candidates)
+        public void AddAll(ICollection<IBuiltin> candidates)
         {
-            foreach (Builtin candidate in candidates)
+            foreach (IBuiltin candidate in candidates)
                 builtins.Add(candidate.Name, candidate);
         }
     }

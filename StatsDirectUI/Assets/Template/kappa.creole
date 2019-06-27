@@ -6,7 +6,7 @@ Observed agreement = @po%<br />
 Expected agreement = @pe%<br />
 Kappa = @{kappa:roundu} (se_0 = @{se:roundu}, se = @{seci:roundu})<br />
 <ci>@{pc:roundu}% confidence interval = @{from:roundu} to @{to:roundu}</ci><br />
-z (for k = 0) = @z<br />
+  z (for k = 0) = @{z:roundu}<br />
 <pval>@{p:pval}</pval></p>
 
 <p><u>Cohen's kappa (weighted by @methodName)</u><br />
@@ -25,13 +25,13 @@ z (for kw = 0) = @{zw:roundu}<br />
 Observed agreement = @pocopy%<br />
 Expected agreement = @spe%<br />
 Pi = @{spi:roundu}</p>
-<block name="deci"><p><ci>@pc% Donner-Eliasziw confidence interval = @{lwr:roundu} to @{upr:roundu}</ci></p></block>
+<block name="deci"><p><ci>@{pc:roundu}% Donner-Eliasziw confidence interval = @{lwr:roundu} to @{upr:roundu}</ci></p></block>
 
 <p><u>Gwet's AC1</u><br />
 Observed agreement = @gamapc%<br />
 Chance-independent agreement = @pegamapc%<br />
 AC1 = @{gama:roundu} (se = @{segama:roundu})<br />
-<ci>@pc% confidence interval = @{gamacil:roundu} to @{gamaciu:roundu}</ci></p>
+<ci>@{pc:roundu}% confidence interval = @{gamacil:roundu} to @{gamaciu:roundu}</ci></p>
 
 <title>Disagreement over any category and asymmetry of disagreement (2 raters)</title>
 

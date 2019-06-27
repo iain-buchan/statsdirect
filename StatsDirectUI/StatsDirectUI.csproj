@@ -152,8 +152,8 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="HtmlAgilityPack, Version=1.11.4.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlAgilityPack.1.11.4\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    <Reference Include="HtmlAgilityPack, Version=1.11.1.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.11.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualBasic" />
@@ -323,6 +323,8 @@
     <Compile Include="TemplateProcessing\HtmlRenderer.cs" />
     <Compile Include="TemplateProcessing\HtmlImageRenderer.cs" />
     <Compile Include="TemplateProcessing\RtfRenderer.cs" />
+    <Compile Include="Templates\PureBuiltin.cs" />
+    <Compile Include="Templates\IBuiltin.cs" />
     <Compile Include="Templates\IRenderable.cs" />
     <Compile Include="Templates\IRenderableVisitor.cs" />
     <Compile Include="Templates\IAxisScaleVisitor.cs" />

@@ -97,7 +97,7 @@ namespace StatsDirect.Builtins
             int b = Convert.ToInt32(parameters["b"].AsDouble);
             int c = Convert.ToInt32(parameters["c"].AsDouble);
             int d = Convert.ToInt32(parameters["d"].AsDouble);
-            ParameterBag outputResult = Tables.SFisher(host, ref a, ref b, ref c, ref d, ref fault);
+            ParameterBag outputResult = Tables.SFisher(ref a, ref b, ref c, ref d, ref fault);
             if (fault != 0)
                 throw new TemplateOperationCancelledException();
             return outputResult;

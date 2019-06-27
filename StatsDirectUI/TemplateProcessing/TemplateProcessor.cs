@@ -128,11 +128,10 @@ namespace StatsDirect.TemplateProcessing
         {
             if (null == parameters)
                 throw new ArgumentOutOfRangeException(nameof(parameters), "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
-            Builtin builtin = BuiltinRegistry.SoleInstance.Builtin(step.FunctionName);
+            IBuiltin builtin = BuiltinRegistry.SoleInstance.Builtin(step.FunctionName);
             if (null == builtin)
                 throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
-            BuiltinFunction toCall = builtin.FunctionToCall;
-            ParameterBag outputResult = toCall(host, parameters);
+            ParameterBag outputResult = builtin.Invoke(host, parameters);
             // Ensure no stray progress bars stay around
             host.FinishProgress();
             return outputResult;

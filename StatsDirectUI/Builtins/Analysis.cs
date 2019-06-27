@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public static class Analysis
     {
-        public static ParameterBag RptRateDirectStd(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRateDirectStd(ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = (DoubleVariable) datFrame.Variables[0];
@@ -971,24 +971,24 @@ namespace StatsDirect.Builtins
                     throw new Exception("Unknown weight type");
             }
 
-            Tables.Kappa(host, o, w, g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror);
+            Tables.Kappa(o, w, g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror);
             if (ierror)
                 return null;
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
             outputParameters.AddOutput("pe", Formatting.XRound(pe * 100, 2));
-            outputParameters.AddOutput("kappa", host.RoundU(k));
+            outputParameters.AddOutput("kappa", k);
             outputParameters.AddInput("kDouble", k);
-            outputParameters.AddOutput("se", host.RoundU(sek));
-            outputParameters.AddOutput("seci", host.RoundU(sekci));
-            outputParameters.AddOutput("pc", host.RoundU(cco * 100));
-            outputParameters.AddOutput("from", host.RoundU(kcil));
-            outputParameters.AddOutput("to", host.RoundU(kciu));
+            outputParameters.AddOutput("se", sek);
+            outputParameters.AddOutput("seci", sekci);
+            outputParameters.AddOutput("pc", cco * 100);
+            outputParameters.AddOutput("from", kcil);
+            outputParameters.AddOutput("to", kciu);
             double z = sek != 0.0 ? k / sek : Constant.MISSING;
-            outputParameters.AddOutput("z", host.RoundU(z));
+            outputParameters.AddOutput("z", z);
             double p = z != Constant.MISSING ? 1.0 - PDF.alnorm(z) : Constant.MISSING;
-            outputParameters.AddOutput("p", host.pval(p));
+            outputParameters.AddOutput("p", p);
             switch (wtype)
             {
                 case 3:
@@ -1053,28 +1053,28 @@ namespace StatsDirect.Builtins
             Tables.Maxwell(o, g, out double x2, out double x2M, out int dfm);
             if (x2 == Constant.MISSING)
             {
-                outputParameters.AddOutput("x2", x2);
-                outputParameters.AddOutput("df", host.RoundU(x2));
-                outputParameters.AddOutput("pmaxwell", host.RoundU(x2));
+                outputParameters.AddOutput("x2", Constant.MISSING);
+                outputParameters.AddOutput("df", Constant.MISSING);
+                outputParameters.AddOutput("pmaxwell", Constant.MISSING);
             }
             else
             {
                 outputParameters.AddOutput("x2", x2);
-                outputParameters.AddOutput("df", (g - 1).ToString());
-                outputParameters.AddOutput("pmaxwell", host.pval(PDF.chivalp(x2, Convert.ToDouble(g - 1))));
+                outputParameters.AddOutput("df", g - 1.0);
+                outputParameters.AddOutput("pmaxwell", PDF.chivalp(x2, g - 1.0));
             }
             // general McNemar
             if (x2M == Constant.MISSING)
             {
-                outputParameters.AddOutput("x2m", x2M);
-                outputParameters.AddOutput("dfmcnemar", host.RoundU(x2M));
-                outputParameters.AddOutput("pmcnemar", host.RoundU(x2M));
+                outputParameters.AddOutput("x2m", Constant.MISSING);
+                outputParameters.AddOutput("dfmcnemar", Constant.MISSING);
+                outputParameters.AddOutput("pmcnemar", Constant.MISSING);
             }
             else
             {
                 outputParameters.AddOutput("x2m", x2M);
-                outputParameters.AddOutput("dfmcnemar", dfm.ToString());
-                outputParameters.AddOutput("pmcnemar", host.pval(PDF.chivalp(x2M, Convert.ToDouble(dfm))));
+                outputParameters.AddOutput("dfmcnemar", dfm);
+                outputParameters.AddOutput("pmcnemar", PDF.chivalp(x2M, dfm));
             }
 
             // Gwet's AC1
@@ -1083,7 +1083,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("segama", segama);
             outputParameters.AddOutput("gamacil", gamacil);
             outputParameters.AddOutput("gamaciu", gamaciu);
-            outputParameters.AddOutput("pegama", host.RoundU(pegama));
+            outputParameters.AddOutput("pegama", pegama);
             outputParameters.AddOutput("pegamapc", Math.Round(pegama * 100.0, 2));
 
             return outputParameters;
@@ -1564,29 +1564,20 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPropPairs(ITemplateHost host, ParameterBag parameters)
         {
-            double piu;
-            double pil;
-
             double n = parameters["n"].AsDouble;
 
             if (n <= 0)
-            {
                 throw new InvalidDataException("Total number in study must be at least 1");
-            }
             double r = parameters["r"].AsDouble;
             double s = parameters["s"].AsDouble;
             double t = parameters["t"].AsDouble;
 
             if (n < r + s + t)
-            {
                 throw new InvalidDataException("Total number in study must be at least the sum of the number responding in both categories + first category only + second category only");
-            }
 
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
-            {
                 cco = 0.95;
-            }
             double pt = (1.0 - cco) / 2.0;
 
             double cit = PDF.gauinv(cco + pt, out int ifault);
@@ -1611,13 +1602,9 @@ namespace StatsDirect.Builtins
             double nx = s + t;
             double rx = s;
             if (rx < 0 && rx >= nx)
-            {
                 return null;
-            }
             if (rx > nx / 2)
-            {
                 rx = nx - rx;
-            }
             double fl = Math.Pow(0.5, nx);
 
             List<ParameterBag> exactList = new List<ParameterBag>();
@@ -1653,9 +1640,7 @@ namespace StatsDirect.Builtins
                 p2L = 2.0 * pl;
                 p = pl;
                 if (p2L > 1.0)
-                {
                     p2L = 1.0;
-                }
                 p2 = p2L;
                 exactParameters.AddOutput("cum_2_mid", p2);
                 exactParameters.AddOutput("cum_1_mid", p);
@@ -1668,10 +1653,9 @@ namespace StatsDirect.Builtins
                 double d = Math.Abs(nx / 2 - rx) - 0.5;
                 double z;
                 if (d < 0)
-                {
                     z = 0;
-                }
-                else { z = d / Math.Sqrt(nx / 4); }
+                else
+                    z = d / Math.Sqrt(nx / 4);
                 approxParameters.AddOutput("z", z);
             }
 
@@ -1694,6 +1678,8 @@ namespace StatsDirect.Builtins
             MathDbl.Wilson(ial, ibl, icl, idl, out double cl, out double cu, cit, out bool fault);
             const string q = "Score based (Newcombe)";
             // End If
+            double piu;
+            double pil;
             if (fault == false)
             {
                 pil = cl;
@@ -1716,10 +1702,6 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPropSingle(ITemplateHost host, ParameterBag parameters)
         {
-            double p2;
-            double dp2;
-            double dp1;
-
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
             if (r > n)
@@ -1730,27 +1712,17 @@ namespace StatsDirect.Builtins
             }
 
             if (n <= 0)
-            {
                 throw new InvalidDataException();
-            }
             double qpi = parameters["qpi"].AsDouble;
             if (qpi <= 0)
-            {
                 qpi = 1.0E-28;
-            }
             if (qpi >= 1)
-            {
                 qpi = 0.9999999;
-            }
             if (r != Math.Floor(r) && n <= r)
-            {
                 return null;
-            }
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
-            {
                 cco = 0.95;
-            }
             double cit = PDF.gauinv(cco + (1 - cco) / 2, out int fault);
             double p = r / n;
             ParameterBag outputParameters = new ParameterBag();
@@ -1761,21 +1733,22 @@ namespace StatsDirect.Builtins
             // Clopper Pearson by F distribution
             outputParameters.AddOutput("ci_exact", Formatting.XRound(cco * 100, 2));
             MathDbl.binci(r, n, out double pil, out double piu, cco, out string warn);
-            outputParameters.AddOutput("lower_exact", host.RoundU(pil));
+            outputParameters.AddOutput("lower_exact", pil);
             outputParameters.AddOutput("upper_exact", host.RoundU(piu) + warn);
 
             // binomial exact P
             string aprx = "Binomial";
             double qpix = qpi == 1.0E-28 ? 0 : qpi;
             outputParameters.AddOutput("null", host.RoundU(qpix));
+            double p2;
+            double dp2;
+            double dp1;
             if (n > 1000000)
             {
                 aprx = "Normal";
                 p = 1.0 - PDF.alnorm((Math.Abs(r - n * qpi) - 0.5) / Math.Sqrt(n * qpi * (1.0 - qpi)));
                 if (p > 1.0 - p)
-                {
                     p = 1.0 - p;
-                }
                 p2 = 2.0 * p;
             }
             else
@@ -1790,9 +1763,9 @@ namespace StatsDirect.Builtins
                 p2 = Constant.MISSING;
             }
             outputParameters.AddOutput("ap_1_exact", aprx);
-            outputParameters.AddOutput("p_1_exact", host.pval(p));
+            outputParameters.AddOutput("p_1_exact", p);
             outputParameters.AddOutput("ap_2_exact", aprx);
-            outputParameters.AddOutput("p_2_exact", host.pval(p2));
+            outputParameters.AddOutput("p_2_exact", p2);
 
             // Wilson approximate mid-P
             double t1 = 2.0 * r + cit * cit;
@@ -1801,17 +1774,15 @@ namespace StatsDirect.Builtins
             pil = (t1 - t2) / t3;
             piu = (t1 + t2) / t3;
             outputParameters.AddOutput("ci_approx", Formatting.XRound(cco * 100, 2));
-            outputParameters.AddOutput("lower_approx", host.RoundU(pil));
-            outputParameters.AddOutput("upper_approx", host.RoundU(piu));
+            outputParameters.AddOutput("lower_approx", pil);
+            outputParameters.AddOutput("upper_approx", piu);
 
             // binomial mid P
             if (n > 1000000)
             {
                 p = 1.0 - PDF.alnorm((Math.Abs(r - n * qpi) - 0.5) / Math.Sqrt(n * qpi * (1.0 - qpi)));
                 if (p > 1.0 - p)
-                {
                     p = 1.0 - p;
-                }
                 p2 = 2.0 * p;
             }
             else
@@ -1826,9 +1797,9 @@ namespace StatsDirect.Builtins
                 p2 = Constant.MISSING;
             }
             outputParameters.AddOutput("ap_1_approx", aprx);
-            outputParameters.AddOutput("p_1_approx", host.pval(p));
+            outputParameters.AddOutput("p_1_approx", p);
             outputParameters.AddOutput("ap_2_approx", aprx);
-            outputParameters.AddOutput("p_2_approx", host.pval(p2));
+            outputParameters.AddOutput("p_2_approx", p2);
 
             return outputParameters;
         }
@@ -1849,9 +1820,8 @@ namespace StatsDirect.Builtins
                 n1 = rTmp;
             }
             if (n1 <= 0)
-            {
                 throw new InvalidDataException();
-            }
+
             double n2 = parameters["n2"].AsDouble;
             double r2 = parameters["r2"].AsDouble;
             if (r2 > n2)
@@ -1862,20 +1832,14 @@ namespace StatsDirect.Builtins
             }
 
             if (n2 <= 0)
-            {
                 throw new InvalidDataException();
-            }
 
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 | cco >= 1.0)
-            {
                 cco = 0.95;
-            }
             double cit = PDF.gauinv(cco + (1 - cco) / 2, out int fault);
             if (fault != 0)
-            {
                 return null;
-            }
 
             double p1 = r1 / n1;
             double p2 = r2 / n2;

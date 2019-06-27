@@ -41,10 +41,8 @@ namespace StatsDirect.Builtins
             Array.Sort(cat, lowerBound, cats, new NamevarAscending());
         }
 
-        public static ParameterBag SFisher(ITemplateHost host, ref int a, ref int b, ref int c, ref int d, ref int fault)
+        public static ParameterBag SFisher(ref int a, ref int b, ref int c, ref int d, ref int fault)
         {
-            int t;
-
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("tab_a1", a);
             outputParameters.AddOutput("tab_b1", b);
@@ -52,13 +50,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_b2", d);
             if (a > d)
             {
-                t = a;
+                int t = a;
                 a = d;
                 d = t;
             }
             if (b > c)
             {
-                t = b;
+                int t = b;
                 b = c;
                 c = t;
             }
@@ -165,16 +163,12 @@ namespace StatsDirect.Builtins
                     for (j = 1; j <= a2; j++)
                     {
                         if (h1[j] > h)
-                        {
                             break;
-                        }
                         f = f1[j];
                     }
                     double g2 = g * 2.0;
                     if (g2 > 1.0)
-                    {
                         g2 = 1.0;
-                    }
                     outputParameters.AddOutput("tail_1", "(upper tail)");
                     outputParameters.AddOutput("p_1", g);
                     outputParameters.AddOutput("p_1d", g2);
@@ -187,16 +181,12 @@ namespace StatsDirect.Builtins
                     for (j = a2; j >= 1; j--)
                     {
                         if (h1[j] > h)
-                        {
                             break;
-                        }
                         g = g1[j];
                     }
                     double f2 = 2.0 * f;
                     if (f2 > 1.0)
-                    {
                         f2 = 1.0;
-                    }
                     outputParameters.AddOutput("tail_1", "(lower tail)");
                     outputParameters.AddOutput("p_1", f);
                     outputParameters.AddOutput("p_1d", f2);
@@ -204,9 +194,7 @@ namespace StatsDirect.Builtins
                 }
                 double z = f + g;
                 if (z > 1.0)
-                {
                     z = 1.0;
-                }
                 outputParameters.AddOutput("tail_2", "(by summation)");
                 outputParameters.AddOutput("p_2", z);
                 outputParameters.AddOutput("mid_p", midP);
@@ -278,12 +266,12 @@ namespace StatsDirect.Builtins
                     maxm = qm[i];
             }
             medm = Describe.Median(qm, 0, n - 1);
-            mbar = mbar / xn;
+            mbar /= xn;
             mbarh = xn / mbarh;
             pbar = 0.0;
             for (int i = 0; i < n; i++)
                 pbar += qx[i];
-            pbar = pbar / (xn * mbar);
+            pbar /= (xn * mbar);
             double bx = 0.0;
             double wx = 0.0;
             for (int i = 0; i < n; i++)
@@ -294,8 +282,8 @@ namespace StatsDirect.Builtins
                     wx += qx[i] * (qm[i] - qx[i]) / qm[i];
                 }
             }
-            bx = bx / xn;
-            wx = wx / (xn * (mbar - 1.0));
+            bx /= xn;
+            wx /= (xn * (mbar - 1.0));
             k = (bx - wx) / (bx + (mbar - 1.0) * wx);
         }
 
@@ -439,7 +427,7 @@ namespace StatsDirect.Builtins
         /// <param name="pegama">Chance-independent agreement for Gwett's AC1</param>
         /// <param name="ierror"></param>
         /// <remarks>The double version</remarks>
-        public static void Kappa(ITemplateHost host, double[,] o, double[,] w, int g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror)
+        public static void Kappa(double[,] o, double[,] w, int g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror)
         {
             int i; int j;
 
@@ -604,7 +592,7 @@ namespace StatsDirect.Builtins
         ///  <param name="spi"></param>
         ///  <param name="ierror"></param>
         ///  <remarks>The integer version</remarks>
-        public static void Kappa(ITemplateHost host, int[,] o, double[,] w, int g, ref double k, ref double sek, ref double sekci, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double sekwci, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
+        public static void Kappa(int[,] o, double[,] w, int g, ref double k, ref double sek, ref double sekci, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double sekwci, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
         {
             // two rater kappa
             ierror = true;
@@ -623,13 +611,9 @@ namespace StatsDirect.Builtins
                 }
             }
             for (int i = 0; i <= g - 1; i++)
-            {
                 crtot[i] += pdotj[i] + pidot[i];
-            }
             if (gt <= 0.0)
-            {
                 throw new InvalidDataException();
-            }
 
             // unweighted kappa
             po = 0.0;
@@ -650,19 +634,11 @@ namespace StatsDirect.Builtins
             double sumpa = 0.0;
             double sumpb = 0.0;
             for (int i = 0; i <= g - 1; i++)
-            {
                 sumpa += o[i, i] / gt * Math.Pow(1.0 - pe - (pdotj[i] + pidot[i]) * (1.0 - po), 2.0);
-            }
             for (int i = 0; i <= g - 1; i++)
-            {
                 for (int j = 0; j <= g - 1; j++)
-                {
                     if (i != j)
-                    {
                         sumpb += o[i, j] / gt * Math.Pow(pdotj[j] + pidot[i], 2.0);
-                    }
-                }
-            }
             sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
             sekci = Math.Sqrt(sekci);
             kcil = k - cit * sekci;
@@ -695,23 +671,16 @@ namespace StatsDirect.Builtins
             }
             px = 0.0;
             for (int i = 0; i <= g - 1; i++)
-            {
                 for (int j = 0; j <= g - 1; j++)
-                {
                     px += pidot[i] * pdotj[j] * Math.Pow(w[i, j] - (wibar[i] + wjbar[j]), 2.0);
-                }
-            }
+
             //standard error for the z test
             sekw = sekw * Math.Sqrt(px - Math.Pow(pew, 2.0));
             // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
             double sumpw = 0.0;
             for (int i = 0; i <= g - 1; i++)
-            {
                 for (int j = 0; j <= g - 1; j++)
-                {
                     sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
-                }
-            }
             sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
             sekwci = Math.Sqrt(sekwci);
             kwcil = kw - cit * sekwci;
@@ -722,9 +691,7 @@ namespace StatsDirect.Builtins
             // Scott's pi
             spe = 0.0;
             for (int i = 0; i <= g - 1; i++)
-            {
                 spe += Math.Pow(crtot[i] / (gt * 2.0), 2.0);
-            }
             spi = (po - spe) / (1.0 - spe);
             ierror = false;
         }
@@ -967,7 +934,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                Kappa(host, o, w, g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror);
+                Kappa(o, w, g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror);
                 if (!ierror)
                 {
                     outputParameters.AddOutput("po", Formatting.XRound(po * 100, 2));
@@ -1575,7 +1542,7 @@ namespace StatsDirect.Builtins
                 double pew = 0;
                 double spe = 0;
                 double spi = 0;
-                Kappa(host, o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
+                Kappa(o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
                 if (!wasError)
                 {
                     if (sek != 0.0)
@@ -3256,13 +3223,11 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.Mantel(host, true, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
+            Meta.Mantel(host, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
-                {
                     throw new InvalidDataException();
-                }
                 return null;
             }
 
@@ -6948,9 +6913,7 @@ namespace StatsDirect.Builtins
             {
                 gtot += ((DoubleVariable)data.Variables[i]).Sum;
                 if (data.Variables[i].Length > maxrows)
-                {
                     maxrows = data.Variables[i].Length;
-                }
             }
             if (gtot > 64000)
             {
@@ -6959,19 +6922,13 @@ namespace StatsDirect.Builtins
             }
             int[,] xt = new int[maxrows + 1, data.VariableCount + 1];
             for (i = 0; i <= data.VariableCount - 1; i++)
-            {
                 for (j = 1; j <= maxrows; j++)
-                {
                     xt[j, i] = 0;
-                }
-            }
             for (i = 0; i <= data.VariableCount - 1; i++)
             {
                 DoubleVariable v = (DoubleVariable)data.Variables[i];
                 for (j = 1; j <= v.Length; j++)
-                {
                     xt[j, i] = Convert.ToInt32(v.Data[j - 1]);
-                }
             }
             DataFrame outputFrame = new DataFrame();
             DoubleVariable rowVariable = new DoubleVariable { Title = "Row Category" };
@@ -7004,7 +6961,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag ShtTabulate(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTabulate(ParameterBag parameters)
         {
             DataFrame rowsFrame = parameters["rows"].AsDataFrame;
             ClassifierVariable rowsVariable = (ClassifierVariable)rowsFrame.Variables[0];

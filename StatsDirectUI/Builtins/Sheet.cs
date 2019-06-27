@@ -60,7 +60,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag ShtFillSeries(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtFillSeries(ParameterBag parameters)
         {
             int rows = parameters["rows"].AsInt32;
             if (rows < 1)
@@ -92,7 +92,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtConvertUnits(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtConvertUnits(ParameterBag parameters)
         {
             string conversion = parameters["conversion"].AsString;
             string[] splitConversion = conversion.Split('|');
@@ -138,7 +138,7 @@ namespace StatsDirect.Builtins
             return minimum < 0 ? Math.Abs(minimum) : Constant.MISSING;
         }
 
-        public static ParameterBag ShtClearMissing(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtClearMissing(ParameterBag parameters)
         {
             int r;
             int ctr;
@@ -356,7 +356,7 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static ParameterBag ShtLadderPowers(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtLadderPowers(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = (DoubleVariable)data.Variables[0];
@@ -1093,7 +1093,7 @@ namespace StatsDirect.Builtins
             return lms.Value + xvarfrac * (lms.Next - lms.Value);
         }
 
-        internal static ParameterBag ShtFindAndReplaceAdvanced(ITemplateHost host, ParameterBag parameters)
+        internal static ParameterBag ShtFindAndReplaceAdvanced(ParameterBag parameters)
         {
             DataFrame inputFrame = parameters["data"].AsDataFrame;
             string searchRule = parameters["search-rule"].AsString;
@@ -1208,7 +1208,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtStandardize(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtStandardize(ParameterBag parameters)
         {
             string msd = parameters["mode"].AsString;
             int method;
@@ -1318,7 +1318,7 @@ namespace StatsDirect.Builtins
             return double.IsNaN(q) ? Constant.MISSING : q1;
         }
 
-        public static ParameterBag ShtCombine(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtCombine(ParameterBag parameters)
         {
             int totrows = 0;
             int ep;
@@ -1389,7 +1389,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtDates(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtDates(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             GenericVariable<DateTime> inputVariable = (GenericVariable<DateTime>)data.Variables[0];
@@ -1441,7 +1441,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtGroupSplit(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtGroupSplit(ParameterBag parameters)
         {
             DataFrame gidsFrame = parameters["gids"].AsDataFrame;
             ClassifierVariable gidsVariable = (ClassifierVariable)gidsFrame.Variables[0];
@@ -1494,7 +1494,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtNormal(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtNormal(ParameterBag parameters)
         {
             string lab = parameters["method"].AsString;
             int method;
@@ -1610,9 +1610,7 @@ namespace StatsDirect.Builtins
             string yt = yVariable.Title;
             double[] yy = new double[rows + 1];
             for (i = 1; i <= rows; i++)
-            {
                 yy[i] = yVariable.Data[i - 1];
-            }
             if (index != 2)
             {
                 DataFrame xFrame = parameters["x"].AsDataFrame;
@@ -1627,9 +1625,7 @@ namespace StatsDirect.Builtins
                 xt = xVariable.Title;
                 xx = new double[rows2 + 1];
                 for (i = 1; i <= rows2; i++)
-                {
                     xx[i] = xVariable.Data[i - 1];
-                }
             }
 
             if (index == 2)
@@ -1676,7 +1672,7 @@ namespace StatsDirect.Builtins
                     Debug.Assert(xx != null, "xx != null");
                     if (xx[i] != Constant.MISSING)
                     {
-                        ctr = ctr + 1;
+                        ctr++;
                         x[ctr] = xx[i];
                     }
                 }
@@ -1686,7 +1682,7 @@ namespace StatsDirect.Builtins
                 {
                     if (yy[i] != Constant.MISSING)
                     {
-                        ctr = ctr + 1;
+                        ctr++;
                         y[ctr] = yy[i];
                     }
                 }
@@ -1835,7 +1831,7 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndBeta(host, rows, cols, a, b, seed));
         }
 
-        public static ParameterBag ShtRndBinomial(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndBinomial(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
@@ -1932,7 +1928,7 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndNegBin(host, rows, cols, n, p, seed));
         }
 
-        public static ParameterBag ShtRndNormal(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndNormal(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
@@ -1942,7 +1938,7 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndNorm(rows, cols, xm, sd, seed));
         }
 
-        public static ParameterBag ShtRndPoisson(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndPoisson(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
@@ -1960,7 +1956,7 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndT(host, rows, cols, df, seed));
         }
 
-        public static ParameterBag ShtRndUniform01(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndUniform01(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
@@ -1968,7 +1964,7 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndUni(rows, cols, Constant.MISSING, Constant.MISSING, false, seed));
         }
 
-        public static ParameterBag ShtRndUniformAB(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndUniformAB(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
@@ -1996,7 +1992,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtRank(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRank(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = (DoubleVariable)data.Variables[0];
@@ -2035,7 +2031,7 @@ namespace StatsDirect.Builtins
         ///  <param name="host"></param>
         ///  <param name="parameters"></param>
         ///  <returns></returns>
-        public static ParameterBag ShtRotate(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRotate(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
@@ -2090,7 +2086,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag ShtSort(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtSort(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = (DoubleVariable)data.Variables[0];
@@ -2148,7 +2144,7 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", outputFrame);
         }
 
-        public static ParameterBag ShtSortByExpression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtSortByExpression(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             string expression = parameters["expression"].AsString;
@@ -2193,55 +2189,55 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag ShtTransformLog(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformLog(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 0);
         }
 
 
-        public static ParameterBag ShtTransformLog10(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformLog10(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 1);
         }
 
 
-        public static ParameterBag ShtTransformLogit(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformLogit(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 2);
         }
 
 
-        public static ParameterBag ShtTransformProbit(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformProbit(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 3);
         }
 
 
-        public static ParameterBag ShtTransformAngular(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformAngular(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 4);
         }
 
 
-        public static ParameterBag ShtTransformCumulate(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformCumulate(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 5);
         }
 
 
-        public static ParameterBag ShtTransformECDF(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformECDF(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 6);
         }
 
 
-        public static ParameterBag ShtTransformZsd(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformZsd(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 7);
         }
 
 
-        public static ParameterBag ShtTransformZecdf(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtTransformZecdf(ParameterBag parameters)
         {
             return ShtTransforms(parameters, 8);
         }
@@ -2596,7 +2592,7 @@ namespace StatsDirect.Builtins
             return new ParameterBag();
         }
 
-        internal static ParameterBag ShtContract(ITemplateHost host, ParameterBag parameters)
+        internal static ParameterBag ShtContract(ParameterBag parameters)
         {
             DataFrame covariatesOrNull;
             bool hasResponses;
@@ -3036,7 +3032,7 @@ namespace StatsDirect.Builtins
             public double ProportionResponding => Responders / (double)Count;
         }
 
-        internal static ParameterBag ValuesToFrequencies(ITemplateHost host, ParameterBag parameters)
+        internal static ParameterBag ValuesToFrequencies(ParameterBag parameters)
         {
             DataFrame rawValuesFrame = parameters["rawValues"].AsDataFrame;
 

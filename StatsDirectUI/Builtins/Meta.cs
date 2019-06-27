@@ -1989,7 +1989,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Mantel(host, true, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
+            Mantel(host, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -2183,7 +2183,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static void Mantel(ITemplateHost host, bool fromSheet, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, ref double cco, ref double[] odr, ref double[] odw, ref double[] dswt, ref double[] odrl, ref double[] odru, ref double[] odx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref bool[] cced, ref double tausq, out int ierr)
+        public static void Mantel(ITemplateHost host, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, ref double cco, ref double[] odr, ref double[] odw, ref double[] dswt, ref double[] odrl, ref double[] odru, ref double[] odx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref bool[] cced, ref double tausq, out int ierr)
         {
             double lori; double vrbgi;
             double weight; double n; double a; double b; double c; double d;
@@ -3899,13 +3899,9 @@ namespace StatsDirect.Builtins
 
             //  CI for H (Higgins & Thompson, 2002 Stat in Med)
             if (q > k)
-            {
                 SElnH = 0.5 * ((Math.Log(q) - Math.Log(df)) / (Math.Sqrt(2.0 * q) - Math.Sqrt(2.0 * dk - 3.0)));
-            }
             else
-            {
                 SElnH = Math.Sqrt(1.0 / (2.0 * (dk - 2.0)) * (1.0 - 1.0 / (3.0 * Math.Pow(dk - 2.0, 2.0))));
-            }
             // double LB_H_III = Math.Exp( Math.Log( Math.Sqrt( H2 ) ) - cit * SElnH ); 
             // double UB_H_III = Math.Exp( Math.Log( Math.Sqrt( H2 ) ) + cit * SElnH ); 
             // if ( LB_H_III < 1.0 )
@@ -3921,13 +3917,9 @@ namespace StatsDirect.Builtins
             double lbI2 = i22 - cit * Math.Sqrt(varI2);
             double ubI2 = i22 + cit * Math.Sqrt(varI2);
             if (lbI2 < 0.0)
-            {
                 lbI2 = 0.0;
-            }
             if (ubI2 > 1.0)
-            {
                 ubI2 = 1.0;
-            }
             ll = 100.0 * lbI2;
             ul = 100.0 * ubI2;
 
@@ -3948,16 +3940,12 @@ namespace StatsDirect.Builtins
             {
                 minLbNc = IsquareBrentRoot(0, endp, nc, df, clevelci, ref ierr);
                 if (ierr != 0)
-                {
                     minLbNc = Constant.MISSING;
-                }
             }
 
             double minUbNc = IsquareBrentRoot(0, endp, nc, df, levelci, ref ierr);
             if (ierr != 0)
-            {
                 minUbNc = Constant.MISSING;
-            }
 
             //  transform lower bound for non-centrality parameter (Q-df) in lower bound for H and I2
             if (minLbNc != Constant.MISSING)
@@ -3984,22 +3972,13 @@ namespace StatsDirect.Builtins
 
             // if all goes well - assign the Higgins non-central chi-square interval as the result
             if (lbI2H == Constant.MISSING)
-            {
                 ll = Constant.MISSING;
-            }
             else
-            {
                 ll = 100.0 * lbI2H;
-            }
             if (ubI2H == Constant.MISSING)
-            {
                 ul = Constant.MISSING;
-            }
             else
-            {
                 ul = 100.0 * ubI2H;
-            }
-
         }
 
         /// <summary>
