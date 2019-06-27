@@ -701,7 +701,7 @@ namespace StatsDirect.Numerics
             {
                 return;
             }
-            if (ia == 0 | ib == 0 | ic == 0 | id == 0)
+            if (ia == 0 || ib == 0 || ic == 0 || id == 0)
             {
                 double aa = M + N;
                 double cc;

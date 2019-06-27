@@ -19,14 +19,10 @@ namespace StatsDirect.Templates
 
         string pval_half(double p);
 
-        string zvalp1(double xz);
-        string zvalp2(double xz);
-
         bool GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled);
         bool GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled);
         double GetDouble(string prompt, string Title, double InitialValue, out bool cancelled);
         int GetInteger(string prompt, string Title, int initialValue, out bool cancelled);
-        int GetOption(string prompt, string title, List<string> options, int selectedIndex, out bool cancelled);
 
         /// <summary>
         /// Prompt the user for a string; return the user-entered string, or Nothing if the user cancels.

@@ -20,13 +20,7 @@ namespace StatsDirect.Charting
         ///  </summary>
         public bool PoolVariablesForBins { get; set; }
 
-        public BinChoiceMethod BinChoiceMethod { get; set; }
-
-        public HistogramOptions(bool useColour)
-            : base(useColour)
-        {
-            BinChoiceMethod = BinChoiceMethod.Doane;
-        }
+        public BinChoiceMethod BinChoiceMethod { get; set; } = BinChoiceMethod.Doane;
 
         /// <summary>
         /// Calculate minimum bin midpoint, midpoint interval and number of bins given the current state of the options.

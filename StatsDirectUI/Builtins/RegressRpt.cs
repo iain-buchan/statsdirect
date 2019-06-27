@@ -341,13 +341,13 @@ namespace StatsDirect.Builtins
                 }
             }
             string ylab = yrep ? "Y Replicates" : "Y";
-            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyr, new XyrOptions(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, gcd.minMax, host.Preferences.ShouldUseColour)));
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyr, new XyrOptions(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, gcd.minMax)));
 
             return outputParameters;
         }
 
 
-        public static ParameterBag RptConditionalLogisticRegression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptConditionalLogisticRegression(ParameterBag parameters)
         {
             const string capti = "Conditional logistic regression";
 
@@ -459,8 +459,7 @@ namespace StatsDirect.Builtins
                 case 2:
                 case 3:
                 case 4:
-                    host.Error("Fault in calculation.", capti);
-                    throw new TemplateOperationCancelledException();
+                    throw new TemplateOperationCancelledException("Fault in calculation.", capti);
                 case 5:
                     warn = Formatting.ERRCOLON + "Matrix singularity.";
                     if (cols > 2)

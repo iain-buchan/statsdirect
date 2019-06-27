@@ -365,11 +365,11 @@ namespace StatsDirect.Builtins
                 {
                     pvs = 1.0 - pvs;
                 }
-                P2 = Formatting.pval(pvs * 2, host.Preferences.PDecimalPlaces, host.Preferences.UseScientificNotationForSmallPValues);
+                P2 = host.pval(pvs * 2);
             }
             else
             {
-                P2 = Formatting.pval(ps * 2, host.Preferences.PDecimalPlaces, host.Preferences.UseScientificNotationForSmallPValues);
+                P2 = host.pval(ps * 2);
             }
             if (nxx < 11)
                 P2 += " (low power)";
@@ -887,10 +887,7 @@ namespace StatsDirect.Builtins
                             }
                         }
                         if (adit <= 0)
-                        {
-                            host.Error("Invalid data: a few repeat observations can be missing but not whole cells.", "Replicated Two Way ANOVA");
-                            throw new TemplateOperationCancelledException();
-                        }
+                            throw new TemplateOperationCancelledException("Invalid data: a few repeat observations can be missing but not whole cells.", "Replicated Two Way ANOVA");
                         double spare = adsum / adit;
                         for (int q = 0; q < nm; q++)
                         {
@@ -1159,10 +1156,7 @@ namespace StatsDirect.Builtins
             ExFortran.dmca(k, lam, nu, cc, out double d, out int ifault);
             double q = PDF.quantsr(cc, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
             if (q == Constant.MISSING)
-            {
-                host.Error("Fault in calculation", "Tukey Contrasts");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Fault in calculation", "Tukey Contrasts");
 
             ParameterBag outputParameters = new ParameterBag();
 
@@ -1335,7 +1329,6 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// Return a list suitable for inserting into an output ParameterBag of significant contrasts between variables.
         /// </summary>
-        /// <param name="host"> </param>
         /// <param name="contrasters">Contrasts between pairs</param>
         /// <param name="lowerBound">The lowest index in contrasters containing a valid value</param>
         /// <param name="upperBound">The highest index in contrasters containing a valid value</param>
@@ -1399,12 +1392,11 @@ namespace StatsDirect.Builtins
             }
 
             int qx = 0;
-            for (int N = 0; N <= frame.VariableCount - 1; N++)
+            for (int N = 0; N < frame.VariableCount; N++)
             {
-                if (N != 0 & tnx[N] != qx)
+                if (N != 0 && tnx[N] != qx)
                 {
-                    host.Error("All group sizes must be equal for the Newman-Keuls method.", "Newman-Keuls Contrasts");
-                    throw new TemplateOperationCancelledException();
+                    throw new TemplateOperationCancelledException("All group sizes must be equal for the Newman-Keuls method.", "Newman-Keuls Contrasts");
                 }
                 qx = tnx[N];
             }
@@ -1534,10 +1526,7 @@ namespace StatsDirect.Builtins
 
             ExFortran.dmcc(k, lam, nu, cc, out double d, out int ifault);
             if (ifault != 0)
-            {
-                host.Error("Fault in calculation", "Dunnett Contrasts");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Fault in calculation", "Dunnett Contrasts");
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("d", d);
@@ -1625,8 +1614,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    host.Error("zero length group", "Homogeneity of Variance");
-                    throw new TemplateOperationCancelledException();
+                    throw new TemplateOperationCancelledException("zero length group", "Homogeneity of Variance");
                 }
             }
 

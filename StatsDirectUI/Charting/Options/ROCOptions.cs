@@ -13,8 +13,7 @@ namespace StatsDirect.Charting
         public ComparisonValue Showopts;
         private readonly bool showLegendIsRelevant;
 
-        public ROCOptions(bool useColour, IList<ISeries> seriesToUse)
-            : base(useColour)
+        public ROCOptions(IList<ISeries> seriesToUse)
         {
 
             //  The ROC plot uses two series per ROC series.  Series 1 is the markers, series 2 is the optimum cut-off marker.

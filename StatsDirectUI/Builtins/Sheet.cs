@@ -2851,10 +2851,8 @@ namespace StatsDirect.Builtins
                     throw new Exception("Unknown mode '" + mode + "' when trying to expand data");
             }
             if (totalOutputRows > MAXROWS)
-            {
-                host.Error("The output would require " + totalOutputRows + " rows, which will not fit into the spreadsheet", "Expand");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("The output would require " + totalOutputRows + " rows, which will not fit into the spreadsheet", "Expand");
+
             bool hasLabels = null != labelsOrNull;
             int covariatesCount = covariatesOrNull?.VariableCount ?? 0;
 

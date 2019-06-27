@@ -141,10 +141,16 @@ namespace StatsDirect.TemplateProcessing
                     {
                         case "pval":
                             return host.pval(doubleValue);
-                        case "roundx":
-                            return host.RoundU(doubleValue);
+                        case "pval_half":
+                            return host.pval_half(doubleValue);
                         case "roundu":
                             return host.RoundU(doubleValue);
+                        case "roundx":
+                            return host.RoundU(doubleValue);
+                        case "zvalp1":
+                            return host.pval(zvalp1(doubleValue));
+                        case "zvalp2":
+                            return host.pval(zvalp2(doubleValue));
                         case "default":
                             return doubleValue.ToString();
                         default:
@@ -243,6 +249,22 @@ namespace StatsDirect.TemplateProcessing
             private string MaybeAccept(ICreole<string> victimOrNull)
             {
                 return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
+            }
+
+            double zvalp1(double xz)
+            {
+                double p = 1 - Numerics.PDF.alnorm(xz);
+                if (p > 1 - p)
+                    p = 1 - p;
+                return p;
+            }
+
+            double zvalp2(double xz)
+            {
+                double p = 1 - Numerics.PDF.alnorm(xz);
+                if (p > 1 - p)
+                    p = 1 - p;
+                return p * 2;
             }
         }
 

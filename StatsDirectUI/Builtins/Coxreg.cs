@@ -165,7 +165,7 @@ namespace StatsDirect.Builtins
             }
             if (!ok)
             {
-                if (host.Query("Times must be > 0: Do you want to add " + adjt.ToString() + " to all of your times?", "Cox Regression"))
+                if (host.Query($"Times must be > 0: Do you want to add {adjt} to all of your times?", "Cox Regression"))
                 {
                     for (int r = 1; r <= rows; r++)
                         x[r] = x[r] + adjt;
@@ -226,7 +226,7 @@ namespace StatsDirect.Builtins
                 predictorsFrame = parameters["predictors"].AsDataFrame;
                 // Store the predictor Data
                 double[,] xx = new double[predictorsFrame.VariableCount, rows + 1];
-                for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
+                for (c = 0; c < predictorsFrame.VariableCount; c++)
                 {
                     for (int r = 1; r <= rows; r++)
                     {
@@ -241,7 +241,7 @@ namespace StatsDirect.Builtins
                 x = transTemp5;
                 indef = new int[ncov + 1];
                 icov = ik;
-                for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
+                for (c = 0; c < predictorsFrame.VariableCount; c++)
                 {
                     indef[c + 1] = ic + c + 1;
                     for (int r = 1; r <= rows; r++)
@@ -250,7 +250,7 @@ namespace StatsDirect.Builtins
                         x[ik] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r - 1];
                     }
                 }
-                ic = ic + ncov;
+                ic += ncov;
             }
             else
             {
@@ -291,9 +291,7 @@ namespace StatsDirect.Builtins
             for (c = 0; c <= predictorsFrame.VariableCount - 1; c++)
             {
                 if (xd[c] == null)
-                {
                     xd[c] = new ColumnData();
-                }
                 xd[c].Title = predictorsFrame.Variables[c].Title;
             }
 
@@ -323,9 +321,7 @@ namespace StatsDirect.Builtins
 
             int nef = ncov;
             if (nef < 1)
-            {
                 throw new TemplateOperationCancelledException();
-            }
             int[] nvef = new int[nef + 1];
             for (int r = 1; r <= nef; r++)
                 nvef[r] = 1;
@@ -371,12 +367,11 @@ namespace StatsDirect.Builtins
             if (ifault != 0)
             {
                 if (ifault == 3)
-                    host.Error("Calculation failed to converge, try again with a lower precision or fewer predictors.", "Cox Regression");
+                    throw new TemplateOperationCancelledException("Calculation failed to converge, try again with a lower precision or fewer predictors.", "Cox Regression");
                 else if (ifault > 99)
-                    host.Error("Singularity in Hessian: try dropping predictor " + (ifault - 100).ToString() + ": " + predictorsFrame.Variables[Math.Max(ifault - 101, 0)].Title, "Cox Regression");
+                    throw new TemplateOperationCancelledException("Singularity in Hessian: try dropping predictor " + (ifault - 100).ToString() + ": " + predictorsFrame.Variables[Math.Max(ifault - 101, 0)].Title, "Cox Regression");
                 else
-                    host.Error("Error in calculation (" + ifault.ToString() + ")", "Cox Regression");
-                throw new TemplateOperationCancelledException();
+                    throw new TemplateOperationCancelledException("Error in calculation (" + ifault.ToString() + ")", "Cox Regression");
             }
             ColumnData[] CDAT1 = new ColumnData[ncoef + 1 ];
             double[, ,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
@@ -2377,19 +2372,19 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag RptCoxBaselineToReport(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxBaselineToReport(ParameterBag parameters)
         {
-            return RptCoxBaseline(host, parameters, false, string.Empty, false);
+            return RptCoxBaseline(parameters, false, string.Empty, false);
         }
 
 
-        public static ParameterBag RptCoxBaselineToWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxBaselineToWorksheet(ParameterBag parameters)
         {
-            return RptCoxBaseline(host, parameters, false, string.Empty, true);
+            return RptCoxBaseline(parameters, false, string.Empty, true);
         }
 
 
-        public static ParameterBag RptCoxHazardPlots(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxHazardPlots(ParameterBag parameters)
         {
             bool[] selectedGroups = (bool[])parameters["group"].Data;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
@@ -2399,13 +2394,13 @@ namespace StatsDirect.Builtins
                 if (selectedGroups[i])
                 {
                     string selectedGroup = subgroupsVariable.Data[i];
-                    return RptCoxBaseline(host, parameters, true, selectedGroup, false);
+                    return RptCoxBaseline(parameters, true, selectedGroup, false);
                 }
             }
             return new ParameterBag();
         }
 
-        private static ParameterBag RptCoxBaseline(ITemplateHost host, ParameterBag parameters, bool plot, string groupVar, bool createGrid)
+        private static ParameterBag RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
             double watch_time;
@@ -2545,7 +2540,7 @@ namespace StatsDirect.Builtins
             if (plot)
             {
                 // bypass reporting and plot if called by the plot function
-                CoxPlot(host, parameters, z, iobs, istrata, groupVar, outputParameters);
+                CoxPlot(parameters, z, iobs, istrata, groupVar, outputParameters);
             }
             else if (createGrid)
             {
@@ -2569,7 +2564,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void CoxPlot(ITemplateHost host, ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
+        private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
         {
             int igroups;
             int groupid = 0;
@@ -2646,10 +2641,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, host.Preferences.ShouldUseColour)));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
             cox1Parameters = new ParameterBag();
             chartList.Add(cox1Parameters);
-            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker, host.Preferences.ShouldUseColour)));
+            cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Hazard, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
 
             // do a -ln(-ln(s)) vs. ln(t) plot to check for parallel categories/proportional hazards
             if (grouped)
@@ -2672,13 +2667,12 @@ namespace StatsDirect.Builtins
                 // Plot a metafile version
                 ParameterBag cox2Parameters = new ParameterBag();
                 chartList.Add(cox2Parameters);
-                cox2Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Cox2, new Cox2Options(gn, igroups, xp, yp, CDAT1, groupid, host.Preferences.ShouldUseColour)));
+                cox2Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Cox2, new Cox2Options(gn, igroups, xp, yp, CDAT1, groupid)));
             }
         }
 
-        public static ParameterBag RptCoxResiduals(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCoxResiduals(ParameterBag parameters)
         {
-            int jcoef = 0; int i;
             int istrata = 0;
             int lastStratum = 0;
             double alpha_product = 0; double alpha_productx = 0;
@@ -2688,9 +2682,9 @@ namespace StatsDirect.Builtins
             bool save = parameters["save"].AsBoolean;
 
             int iobs = Convert.ToInt32(ARR2[0, 0]);
-            jcoef = Convert.ToInt32(ARR2[1, 0]);
+            int jcoef = Convert.ToInt32(ARR2[1, 0]);
             CoxP[] z = new CoxP[iobs + 2];
-            for (i = 1; i <= iobs; i++)
+            for (int i = 1; i <= iobs; i++)
             {
                 z[i] = new CoxP
                 {
@@ -2709,7 +2703,7 @@ namespace StatsDirect.Builtins
 
             Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
 
-            for (i = 1; i <= iobs; i++)
+            for (int i = 1; i <= iobs; i++)
             {
                 if (z[i].Stratum != lastStratum)
                 {
@@ -2723,8 +2717,7 @@ namespace StatsDirect.Builtins
                 double[] dead_theta = new double[30 + 1];
                 double dead = 0.0;
                 int iinc = 0;
-                int j;
-                for (j = i; j <= iobs; j++)
+                for (int j = i; j <= iobs; j++)
                 {
                     if (z[i].Stratum != z[j].Stratum)
                         break;
@@ -2746,12 +2739,10 @@ namespace StatsDirect.Builtins
                 }
                 // .exb must be sorted in reverse order for risk_theta to start with the correct value when d>1
                 double risk_theta = 0.0;
-                for (j = i; j <= iobs; j++)
+                for (int j = i; j <= iobs; j++)
                 {
                     if (z[i].Stratum != z[j].Stratum)
-                    {
                         break;
-                    }
                     risk_theta = risk_theta + z[j].Exb;
                 }
                 bool erra = false;
@@ -2778,7 +2769,7 @@ namespace StatsDirect.Builtins
                 alpha_productx = alpha_productx * alpha_ix;
                 if (erra == false)
                 {
-                    for (j = i; j <= i + iinc; j++)
+                    for (int j = i; j <= i + iinc; j++)
                     {
                         if (z[j] == null)
                             z[j] = new CoxP();
@@ -2793,7 +2784,7 @@ namespace StatsDirect.Builtins
             double[] xp = new double[iobs];
             double[] yp = new double[iobs];
             double[] xr = new double[iobs];
-            for (i = 1; i <= iobs; i++)
+            for (int i = 1; i <= iobs; i++)
             {
                 if (z[i].S != 0.0)
                 {
@@ -2812,11 +2803,11 @@ namespace StatsDirect.Builtins
 
             ParameterBag chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, DataMinMax.XCalc_YCalc)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, DataMinMax.XCalc_YCalc, host.Preferences.ShouldUseColour)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xr, yp, "Rank of time to event", "Deviance residual", "Deviance residuals vs. ranks of times", false, DataMinMax.XCalc_YCalc)));
 
             // save to worksheet if requested
             if (save)
@@ -2837,7 +2828,7 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(coxSnellResidualVariable);
                 resultsFrame.Variables.Add(martingaleResidualVariable);
                 resultsFrame.Variables.Add(devianceResidualVariable);
-                for (i = 1; i <= iobs; i++)
+                for (int i = 1; i <= iobs; i++)
                 {
                     leverageVariable.SetData(i - 1, ARR2[i, 2]);
                     proportionalityVariable.SetData(i - 1, ARR2[i, 5]);
@@ -2850,7 +2841,6 @@ namespace StatsDirect.Builtins
                     devianceResidualVariable.SetData(i - 1, rd);
                 }
                 outputParameters.AddOutput("results", resultsFrame);
-
             }
             return outputParameters;
         }

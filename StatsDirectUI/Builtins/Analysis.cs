@@ -178,7 +178,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptRateCompareTwo(ITemplateHost host, ParameterBag parameters)
         {
             double p2M = 0;
@@ -315,7 +314,6 @@ namespace StatsDirect.Builtins
 
             return outputParameters;
         }
-
 
         private static double PropMidPFisher2(int a, int b, int c, int d)
         {
@@ -580,7 +578,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         private static string XBenHarm(ITemplateHost host, double x, bool roundup)
         {
             return (roundup ? Formatting.RoundUp(Math.Abs(x)) : host.RoundU(Math.Abs(x))) + (x < 0 ? "_harm" : "_benefit");
@@ -588,12 +585,11 @@ namespace StatsDirect.Builtins
 
         private static void XNnSwap(ref double nnl, ref double nnu)
         {
-            double tmp;
             if (nnl < 0.0 && nnu < 0.0)
             {
                 if (nnl < nnu)
                 {
-                    tmp = nnl;
+                    double tmp = nnl;
                     nnl = nnu;
                     nnu = tmp;
                 }
@@ -602,7 +598,7 @@ namespace StatsDirect.Builtins
             {
                 if (nnl > nnu)
                 {
-                    tmp = nnl;
+                    double tmp = nnl;
                     nnl = nnu;
                     nnu = tmp;
                 }
@@ -883,8 +879,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptMiscFalseResult(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscFalseResult(ParameterBag parameters)
         {
             double pt = parameters["pt"].AsDouble;
             if (Math.Abs(pt - 0.5) >= 0.5)
@@ -910,7 +905,6 @@ namespace StatsDirect.Builtins
 
             return outputParameters;
         }
-
 
         public static ParameterBag RptKappaScreen(ITemplateHost host, ParameterBag parameters)
         {
@@ -1089,7 +1083,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptMiscLikely(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscLikely(ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = (DoubleVariable) datFrame.Variables[0];
@@ -1148,7 +1142,6 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
 
         public static ParameterBag RptMiscNumberNeededToTreat(ITemplateHost host, ParameterBag parameters)
         {
@@ -1464,8 +1457,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptMiscRelRisk(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptMiscRelRisk(ParameterBag parameters)
         {
             double pe = Constant.MISSING;
 
@@ -1562,7 +1554,7 @@ namespace StatsDirect.Builtins
             return null;
         }
 
-        public static ParameterBag RptPropPairs(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPropPairs(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
 
@@ -1699,8 +1691,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptPropSingle(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPropSingle(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
@@ -1728,18 +1719,19 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("n_out", Formatting.XRound(n, 1));
             outputParameters.AddOutput("r_out", Formatting.XRound(r, 1));
-            outputParameters.AddOutput("prop", host.RoundU(p));
+            outputParameters.AddOutput("prop", p);
 
             // Clopper Pearson by F distribution
             outputParameters.AddOutput("ci_exact", Formatting.XRound(cco * 100, 2));
             MathDbl.binci(r, n, out double pil, out double piu, cco, out string warn);
             outputParameters.AddOutput("lower_exact", pil);
-            outputParameters.AddOutput("upper_exact", host.RoundU(piu) + warn);
+            outputParameters.AddOutput("upper_exact", piu);
+            outputParameters.AddOutput("warn_exact", warn);
 
             // binomial exact P
             string aprx = "Binomial";
             double qpix = qpi == 1.0E-28 ? 0 : qpi;
-            outputParameters.AddOutput("null", host.RoundU(qpix));
+            outputParameters.AddOutput("null", qpix);
             double p2;
             double dp2;
             double dp1;
@@ -1890,8 +1882,8 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag approx2Parameters = new ParameterBag();
                 approx2List.Add(approx2Parameters);
-                approx2Parameters.AddOutput("p_2", host.zvalp2(z));
-                approx2Parameters.AddOutput("p_1", host.zvalp1(z));
+                // Duplicate - we could use the outside version, but that would leave this bag puzzlingly empty for anyone who doesn't read it along with the report and realise that it's solely there to trigger display of a section.
+                approx2Parameters.AddOutput("z", z);
             }
             return outputParameters;
         }

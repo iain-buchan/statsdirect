@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
@@ -913,10 +914,7 @@ namespace StatsDirect.Builtins
                 double pa = p10 / (p01 + p10);
                 double qa = 1.0 - pa;
                 if (pa * qa <= 0.0)
-                {
-                    host.Error("Calculation not possible, try a smaller value for correlation.", caption);
-                    return null;
-                }
+                    throw new TemplateOperationCancelledException("Calculation not possible, try a smaller value for correlation.", caption);
                 try
                 {
                     N = Math.Floor(Math.Pow(zalpha * 0.5 + zbeta * Math.Sqrt(Math.Abs(pa * qa)), 2.0) / (Math.Pow(pa - 0.5, 2.0) * (p01 + p10))) + 1.0;

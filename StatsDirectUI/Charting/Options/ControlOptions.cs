@@ -14,22 +14,12 @@ namespace StatsDirect.Charting
         public double UserSpecifiedMean { get; set; }
         public double UserSpecifiedSD { get; set; }
         public bool HasUserSpecifiedLimits { get; set; }
-        public double LowerWarningLimit { get; set; }
-        public double UpperWarningLimit { get; set; }
-        public double LowerControlLimit { get; set; }
-        public double UpperControlLimit { get; set; }
+        public double LowerWarningLimit { get; set; } = Constant.MISSING;
+        public double UpperWarningLimit { get; set; } = Constant.MISSING;
+        public double LowerControlLimit { get; set; } = Constant.MISSING;
+        public double UpperControlLimit { get; set; } = Constant.MISSING;
         public int ObservationsToUse { get; set; }
         public int RightHandDecimalPlaces { get; set; }
-
-        public ControlOptions(bool useColour)
-            : base(useColour)
-        {
-
-            LowerControlLimit = Constant.MISSING;
-            LowerWarningLimit = Constant.MISSING;
-            UpperControlLimit = Constant.MISSING;
-            UpperWarningLimit = Constant.MISSING;
-        }
 
         public override bool ShowControlOptions => true;
 

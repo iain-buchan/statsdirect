@@ -8,12 +8,6 @@ namespace StatsDirect.Charting
     {
         private bool showLegendIsRelevant;
 
-        public BarOptions(bool UseColour)
-            : base(UseColour)
-        {
-            RotateWhenStacked = true;
-        }
-
         ///  <summary>
         ///  The widest a bar may be, as a fraction of its containing space.
         ///  </summary>
@@ -27,7 +21,7 @@ namespace StatsDirect.Charting
         /// <summary>
         /// If false, stacked bar charts should be drawn per Excel.  If true, they should be drawn per StatsDirect.
         /// </summary>
-        public bool RotateWhenStacked { get; set; }
+        public bool RotateWhenStacked { get; set; } = true;
 
         ///  <summary>
         ///  If Stacked and true, bars should be drawn end-to-end scaled 0..1.  If Stacked and false, bars should be drawn end-to-end scaled to the largest bar.

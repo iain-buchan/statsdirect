@@ -248,8 +248,10 @@ namespace StatsDirect.UI
                             {
                                 dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, cv, true);
                             }
-                            catch (TemplateOperationCancelledException)
+                            catch (TemplateOperationCancelledException ex)
                             {
+                                if (ex.ShouldShowError)
+                                    SdApplication.TemplateHost.Error(ex.Message, ex.Caption);
                                 dummyFrame = null;
                             }
                             if (null != dummyFrame)

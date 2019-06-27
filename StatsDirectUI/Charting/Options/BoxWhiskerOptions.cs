@@ -27,11 +27,6 @@ namespace StatsDirect.Charting
         public string AxisFontDescriptor;
         public double Cco;
 
-        public BoxWhiskerOptions(bool useColour)
-            : base(useColour)
-        {
-        }
-
         public void SetDefaultXAxisTitle()
         {
             //  This used to try to be cleverer, but it turns out that formatting for each combination is almost essential to allow variation.

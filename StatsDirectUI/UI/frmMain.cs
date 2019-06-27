@@ -1246,7 +1246,7 @@ namespace StatsDirect.UI
 
         private bool ConvertSdwAndOpen(string sdwPath, string sd2Path)
         {
-            SdApplication.SoleInstance.StartProgress("Converting file", false);
+            SdApplication.TemplateHost.StartProgress("Converting file", false);
             string originalSdwPath = sdwPath;
             try
             {
@@ -1289,7 +1289,7 @@ namespace StatsDirect.UI
                     bool exited = p.WaitForExit(50);
                     if (exited)
                         break;
-                    if (SdApplication.SoleInstance.UpdateProgress(0))
+                    if (SdApplication.TemplateHost.UpdateProgress(0))
                     {
                         p.Kill();
                         throw new TemplateOperationCancelledException();
@@ -1315,7 +1315,7 @@ namespace StatsDirect.UI
             }
             finally
             {
-                SdApplication.SoleInstance.FinishProgress();
+                SdApplication.TemplateHost.FinishProgress();
             }
         }
 
@@ -1939,12 +1939,12 @@ namespace StatsDirect.UI
                                 else
                                 {
                                     // The CI cannot be defaulted; use our standard decision
-                                    return SdApplication.SoleInstance.CanCombine(p);
+                                    return SdApplication.TemplateHost.CanCombine(p);
                                 }
                             }
                             else
                             {
-                                return SdApplication.SoleInstance.CanCombine(p);
+                                return SdApplication.TemplateHost.CanCombine(p);
                             }
                         }
                     }
@@ -2214,7 +2214,7 @@ namespace StatsDirect.UI
                         }
                     }
 
-                    InlineParameterPreparer preparer = new InlineParameterPreparer { Context = context, Form = this, Host = host, Processor = processor };
+                    InlineParameterPreparer preparer = new InlineParameterPreparer { Context = context, Form = this, Processor = processor };
                     parameter.Accept(preparer);
                     willDisplayAtLeastOneParameter |= null == preparer.FilledParameter;
                     if (null == preparer.FilledParameter)
@@ -3726,7 +3726,7 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            string cell = SdApplication.TemplateHost.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
             workbookView.WithLock(() =>
             {
                 if (null != cell)

@@ -156,17 +156,10 @@ namespace StatsDirect.Builtins
                 {
                     if (data[Convert.ToInt32(objectId) + 1, Convert.ToInt32(raterId) + 1, Convert.ToInt32(categoryId) + 1] != Constant.MISSING)
                     {
-                        string specerr;
-                        if (hasCategories)
-                        {
-                            specerr = "Object " + objectId + ", judge " + raterId + ", category " + categoryId + " has more than one measurement assigned.";
-                        }
-                        else
-                        {
-                            specerr = "Object " + objectId + ", judge " + raterId + " has more than one measurement assigned.";
-                        }
-                        host.Error(specerr, "Universal agreement R");
-                        throw new TemplateOperationCancelledException();
+                        string specerr = hasCategories
+                            ? "Object " + objectId + ", judge " + raterId + ", category " + categoryId + " has more than one measurement assigned."
+                            : "Object " + objectId + ", judge " + raterId + " has more than one measurement assigned.";
+                        throw new TemplateOperationCancelledException(specerr, "Universal agreement R");
                     }
                     data[Convert.ToInt32(objectId) + 1, Convert.ToInt32(raterId) + 1, Convert.ToInt32(categoryId) + 1] = measurement;
                     nobs += 1;
@@ -182,9 +175,10 @@ namespace StatsDirect.Builtins
                     {
                         if (data[i, j, k] == Constant.MISSING)
                         {
-                            string specerr = hasCategories ? "A measurement must be specified for each judge, object and category." : "A measurement must be specified for each judge and object.";
-                            host.Error(specerr, "Universal agreement R");
-                            throw new TemplateOperationCancelledException();
+                            string specerr = hasCategories
+                                ? "A measurement must be specified for each judge, object and category."
+                                : "A measurement must be specified for each judge and object.";
+                            throw new TemplateOperationCancelledException(specerr, "Universal agreement R");
                         }
                     }
                 }
@@ -208,10 +202,7 @@ namespace StatsDirect.Builtins
             double gam2 = parameters["gam2_in"].AsDouble;
 
             if (r1 == Constant.MISSING || r2 == Constant.MISSING || mu1 == Constant.MISSING || mu2 == Constant.MISSING || var1 == Constant.MISSING || var2 == Constant.MISSING || gam1 == Constant.MISSING || gam2 == Constant.MISSING)
-            {
-                host.Error("Please fill in all 8 values", "Compare two R values");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Please fill in all 8 values", "Compare two R values");
 
             double dr = r1 - r2;
             double dm = mu1 - mu2;

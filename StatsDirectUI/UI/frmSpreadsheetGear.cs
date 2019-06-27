@@ -1285,7 +1285,7 @@ namespace StatsDirect.UI
 
         private void GoToCell()
         {
-            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            string cell = SdApplication.TemplateHost.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
             workbookView.WithLock(() =>
             {
                 if (null != cell)
@@ -1895,7 +1895,7 @@ namespace StatsDirect.UI
                 currentWorksheetName = workbookView.ActiveSheet.Name);
             if (null != currentWorksheetName)
             {
-                string newWorksheetName = SdApplication.SoleInstance.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
+                string newWorksheetName = SdApplication.TemplateHost.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
                 if (!string.IsNullOrWhiteSpace(newWorksheetName))
                     workbookView.WithLock(() => workbookView.ActiveSheet.Name = newWorksheetName);
             }

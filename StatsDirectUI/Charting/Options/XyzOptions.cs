@@ -17,8 +17,7 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public XyzOptions(double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, bool useColour)
-            : base(useColour)
+        public XyzOptions(double[] x, double[] y, double[] z, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY)
         {
             this.x = x;
             this.y = y;
@@ -27,6 +26,7 @@ namespace StatsDirect.Charting
             YAxisTitle = ytxt;
             Title = title;
             this.zPlot = zPlot;
+            this.minMaxY = minMaxY;
         }
     }
 }

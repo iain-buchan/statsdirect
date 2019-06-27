@@ -693,9 +693,10 @@ namespace StatsDirect.UI
             {
                 ReplayOperation();
             }
-            catch (TemplateOperationCancelledException)
+            catch (TemplateOperationCancelledException ex)
             {
-                // The operation was cancelled during replay.  Do nothing.
+                if (ex.ShouldShowError)
+                    SdApplication.TemplateHost.Error(ex.Message, ex.Caption);
             }
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)

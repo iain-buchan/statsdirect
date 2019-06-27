@@ -5,11 +5,6 @@ namespace StatsDirect.Charting
     [Serializable]
     public class EffectOptions : GenericOptions
     {
-        public EffectOptions(bool useColour)
-            : base(useColour)
-        {
-        }
-
         public int k;
         public double[] cn;
         public double[] en;
@@ -32,8 +27,7 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public EffectOptions(int k, double[] cn, double[] en, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid, bool useColour)
-            : base(useColour)
+        public EffectOptions(int k, double[] cn, double[] en, string[] title, double rmh, double ll, double ul, double cco, double[] odr, double[] odrl, double[] odru, string cap, int pbias, string qid)
         {
             this.k = k;
             this.cn = cn;
@@ -49,6 +43,6 @@ namespace StatsDirect.Charting
             this.cap = cap;
             this.pbias = pbias;
             this.qid = qid;
+        }
     }
-}
 }

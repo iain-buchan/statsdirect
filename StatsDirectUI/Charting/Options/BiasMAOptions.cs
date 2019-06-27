@@ -5,11 +5,6 @@ namespace StatsDirect.Charting
     [Serializable]
     public class BiasMAOptions : GenericOptions
     {
-        public BiasMAOptions(bool useColour)
-            : base(useColour)
-        {
-        }
-
         public double[] x;
         public double[] yy;
         public double[] yw;
@@ -29,8 +24,7 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public BiasMAOptions(double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal, bool useColour)
-            : base(useColour)
+        public BiasMAOptions(double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
         {
             this.x = x;
             this.yy = yy;

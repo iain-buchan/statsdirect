@@ -14,8 +14,7 @@ namespace StatsDirect.Charting
         public double gamma;
         public override bool ShowLegendIsRelevant => false;
 
-        public PolynomialRegressionOptions(string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int p, double gamma, string xAxisTitle, string yAxisTitle, bool shouldUseColour)
-            : base(shouldUseColour)
+        public PolynomialRegressionOptions(string title, int mode, double[,] xtxi, double[] bd, double rss, int nx, int p, double gamma, string xAxisTitle, string yAxisTitle)
         {
             Title = title;
             XAxisTitle = xAxisTitle;

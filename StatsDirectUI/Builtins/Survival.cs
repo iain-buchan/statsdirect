@@ -448,7 +448,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptKaplanMeierPlots(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKaplanMeierPlots(ParameterBag parameters)
         {
             int[] cnx = (int[])parameters["cnx"].Data;
             int[,] dead = (int[,])parameters["dead"].Data;
@@ -462,7 +462,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
-            IList<IRenderable> imageList = x_plgraph(host, h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
+            IList<IRenderable> imageList = x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
             foreach (IRenderable renderable in imageList)
             {
                 ParameterBag chartParameters = new ParameterBag();
@@ -472,7 +472,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static IList<IRenderable> x_plgraph(ITemplateHost host, double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
+        public static IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
         {
             IList<IRenderable> outputImages = new List<IRenderable>();
             int gx = stime.GetUpperBound(0);
@@ -564,7 +564,7 @@ namespace StatsDirect.Builtins
                     }
                     cnx[k] = nx;
                 }
-                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title, host.Preferences.ShouldUseColour)));
+                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title)));
             }
             return outputImages;
         }
@@ -849,10 +849,8 @@ namespace StatsDirect.Builtins
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
             if (gidVariable.GroupCount != 2)
-            {
-                host.Error("Group identifier must contain two groups and no missing data.", "Wei-Lachin");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Group identifier must contain two groups and no missing data.", "Wei-Lachin");
+
             int rows = gidVariable.Length;
             int[] g = new int[rows + 1];
             int[] n = new int[2 + 1];
@@ -897,10 +895,7 @@ namespace StatsDirect.Builtins
                         else if (Constant.MISSING == dv)
                             s[r, j] = 0;
                         else
-                        {
-                            host.Error("Censorship value must be 0 or 1 only.", "Wei-Lachin");
-                            throw new TemplateOperationCancelledException();
-                        }
+                            throw new TemplateOperationCancelledException("Censorship value must be 0 or 1 only.", "Wei-Lachin");
                     }
                 }
                 //  find missing times, censor them, and code them as minimum observed time minus one
@@ -939,8 +934,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                host.Error("Must have at least one repeat", "Wei-Lachin");
-                throw new TemplateOperationCancelledException();
+                throw new TemplateOperationCancelledException("Must have at least one repeat", "Wei-Lachin");
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -948,12 +942,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*outer", outerList);
             ParameterBag outerParameters = new ParameterBag();
             outerList.Add(outerParameters);
-            XWl(host, outerParameters, nr, rows, n, g, s, x, 1, out int ifault);
+            XWeiLachin(host, outerParameters, nr, rows, n, g, s, x, 1, out int ifault);
             if (ifault == 0)
             {
                 outerParameters = new ParameterBag();
                 outerList.Add(outerParameters);
-                XWl(host, outerParameters, nr, rows, n, g, s, x, 2, out ifault);
+                XWeiLachin(host, outerParameters, nr, rows, n, g, s, x, 2, out ifault);
             }
             if (ifault != 0)
                 host.Error("Error in calculation, report invalid", null);
@@ -961,7 +955,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void XWl(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
+        private static void XWeiLachin(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
         {
             int nn = (int)Math.Floor((double)nr * (nr + 1) / 2);
             int[,] y = new int[2 + 1, nt + 1];

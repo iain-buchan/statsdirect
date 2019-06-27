@@ -10,9 +10,9 @@ D = @{d:roundu}<br />
 
 <p>One sided test (suspecting @sample_1 shifted left of @sample_2):<br />
 D = @{d_l:roundu}<br />
-<pval>@{p_l:pval}</pval></p>
+<pval>@{p_l:pval_half}</pval></p>
 
 <p>One sided test (suspecting @sample_1 shifted right of @sample_2):<br />
 D = @{d_r:roundu}<br />
-<pval>@{p_r:pval}</pval></p>
+<pval>@{p_r:pval_half}</pval></p>
 </report>

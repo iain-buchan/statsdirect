@@ -39,7 +39,7 @@ namespace StatsDirect.UI
 
             while (true)
             {
-                string response = SdApplication.SoleInstance.GetString(prompt, "StatsDirect", (result * 100.0).ToString());
+                string response = SdApplication.TemplateHost.GetString(prompt, "StatsDirect", (result * 100.0).ToString());
                 if (string.IsNullOrEmpty(response))
                     throw new TemplateOperationCancelledException();
                 if (double.TryParse(response, out result))
@@ -79,7 +79,7 @@ namespace StatsDirect.UI
                 double? defaultValue = parameter.DefaultValue(Processor, Context);
                 if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value))
                     defaultValueString = defaultValue.Value.ToString();
-                string response = SdApplication.SoleInstance.GetString(parameter.Prompt(Processor, Context) + suffix, "StatsDirect", defaultValueString);
+                string response = SdApplication.TemplateHost.GetString(parameter.Prompt(Processor, Context) + suffix, "StatsDirect", defaultValueString);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (null != parameter.CancelSkipsParameter)
@@ -146,7 +146,7 @@ namespace StatsDirect.UI
                 if (parameter.HasDefaultValue)
                     defaultValue = parameter.DefaultValue(Processor, Context);
 
-                string response = SdApplication.SoleInstance.GetString(parameter.Prompt(Processor, Context) + suffix, "StatsDirect", defaultValue.HasValue ? defaultValue.Value.ToString() : string.Empty);
+                string response = SdApplication.TemplateHost.GetString(parameter.Prompt(Processor, Context) + suffix, "StatsDirect", defaultValue.HasValue ? defaultValue.Value.ToString() : string.Empty);
                 if (string.IsNullOrEmpty(response))
                 {
                     if (null != parameter.CancelSkipsParameter)

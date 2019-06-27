@@ -32,7 +32,6 @@ namespace StatsDirect.Builtins
                 var = sumsqdev / (nx - 1);
         }
 
-
         private static void Para(DataFrame frame, double[] mean, double[] ss, double[] var, double[] sd, double[] sem, int[] tnx)
         {
             for (int d = 0; d < frame.VariableCount; d++)
@@ -73,7 +72,6 @@ namespace StatsDirect.Builtins
                 sem[d] = sd[d] / Math.Sqrt(tnx[d]);
             }
         }
-
 
         public static ParameterBag RptVarianceRatio(ITemplateHost host, ParameterBag parameters)
         {
@@ -121,7 +119,6 @@ namespace StatsDirect.Builtins
             double cover = 0; double xq = 0;
             double o = 0;
             int j; int k = 0;
-            bool capUpper = false; bool capLower = false;
 
             double[] mean = new double[2];
             double[] ss = new double[2];
@@ -133,10 +130,8 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable variable = data.Variables[0]as DoubleVariable;
             if (variable.Data.Length < 8)
-            {
-                host.Error("Too few data for this method (minimum 8)", "Reference Range");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Too few data for this method (minimum 8)", "Reference Range");
+
             bool do_conservative = parameters["do_conservative"].AsBoolean;
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0.0 || GAMMA >= 1.0)
@@ -146,10 +141,8 @@ namespace StatsDirect.Builtins
             double qrr = parameters["reference-interval"].AsDouble;
             double qrz = Math.Abs(PDF.gauinv((1.0 - qrr) / 2.0, out int fault));
             if (fault != 0 || qrr < 0.0 || qrr > 1.0)
-            {
-                host.Error("Coverage not possible.", "Reference Range");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Coverage not possible.", "Reference Range");
+
             MathDbl.civ(0, out double z, GAMMA, out double _);
             Para(data, mean, ss, var, sd, sem, tnx);
             double xbar = mean[0];
@@ -166,7 +159,7 @@ namespace StatsDirect.Builtins
             double urr = xbar + qrz * s;
             outputParameters.AddOutput("lrr", lrr);
             outputParameters.AddOutput("urr", urr);
-            double serr = Math.Sqrt(s * s / Convert.ToDouble(N) + qrz * qrz * s * s / (2.0 * Convert.ToDouble(N)));
+            double serr = Math.Sqrt(s * s / Convert.ToDouble(N) + qrz * qrz * s * s / (2.0 * N));
             double lx = lrr - serr * z;
             double ux = lrr + serr * z;
             outputParameters.AddOutput("pc", Formatting.XRound(100.0 * GAMMA, 2));
@@ -221,7 +214,7 @@ namespace StatsDirect.Builtins
                         sumsqdev = Constant.MISSING;
                         break;
                     }
-                    sumsqdev = sumsqdev + (r[j] - xbar) * (r[j] - xbar);
+                    sumsqdev += (r[j] - xbar) * (r[j] - xbar);
                 }
                 s = sumsqdev == Constant.MISSING ? Constant.MISSING : Math.Sqrt(sumsqdev / Convert.ToDouble(N - 1));
                 lrr = xbar - qrz * s;
@@ -251,7 +244,7 @@ namespace StatsDirect.Builtins
             }
             Array.Sort(r, 1, rx);
             double qc = (1.0 - qrr) / 2.0;
-            Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out double ll, out double ul, ref cover, do_conservative, ref capUpper, ref capLower, out fault);
+            Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out double ll, out double ul, out cover, do_conservative, out bool capUpper, out bool capLower, out fault);
             outputParameters.AddOutput("qx_any", qc);
             outputParameters.AddOutput("qxv_any", xq);
             string contype = do_conservative ? "(conservative)" : "(non-conservative)";
@@ -263,7 +256,7 @@ namespace StatsDirect.Builtins
             x = capLower | capUpper ? "  (* limit capped at min/max)" : string.Empty;
             outputParameters.AddOutput("co_any", host.RoundU(cover) + "%" + x);
             qc = 1.0 - (1.0 - qrr) / 2.0;
-            Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, ref cover, do_conservative, ref capUpper, ref capLower, out fault);
+            Nonparametric.XQci(qc, rx, r, ref xq, GAMMA, out ll, out ul, out cover, do_conservative, out capUpper, out capLower, out fault);
             outputParameters.AddOutput("qx", qc);
             outputParameters.AddOutput("qxv", xq);
             x = capLower ? "* " : string.Empty;
@@ -275,7 +268,6 @@ namespace StatsDirect.Builtins
 
             return outputParameters;
         }
-
 
         private static void x_poisson(double[] x, int nobs, double percent, out double mean, out double tlower, out double tupper, ref int fault)
         {
@@ -334,8 +326,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static ParameterBag RptPoissonConfidenceInterval(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPoissonConfidenceInterval(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             double percent2 = parameters["gamma"].AsDouble * 100.0;
@@ -648,7 +639,7 @@ namespace StatsDirect.Builtins
                     variableParameters.AddOutput("result", "Error in calculation");
                 }
 
-                NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour) { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
+                NormalOptions nOptions = new NormalOptions { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
                 ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions, ChartType = ChartType.Normal };
                 cd.XSeries.Add(new DoubleSeries(data, v0.Title));
                 variableParameters.AddOutput("chart", cd);
@@ -784,7 +775,6 @@ namespace StatsDirect.Builtins
             }
 
         }
-
 
         ///  <summary> Shapiro-Francia test for normality</summary>
         ///  <param name="x">Vector of observations</param>
@@ -928,7 +918,6 @@ namespace StatsDirect.Builtins
 
         }
 
-
         ///  <summary>
         ///  Shapiro-Francia test for normality
         ///  </summary>
@@ -976,9 +965,7 @@ namespace StatsDirect.Builtins
             {
                 r[i] = PDF.gauinv((r[i] - 0.375) / (nx + 0.25), out int ifault);
                 if (ifault != 0)
-                {
                     return;
-                }
             }
 
             double h = Math.Log(nx) - 5.0;
@@ -991,11 +978,9 @@ namespace StatsDirect.Builtins
             z = (y - m) / f;
             v = (1.0 - w) / Math.Pow(l * m + 1.0, 1.0 / l);
             p = PDF.alnorm(-z);
-
         }
 
-
-        public static ParameterBag RptTUnpairedSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTUnpairedSummary(ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             int nx1 = parameters["nx1"].AsInt32;
@@ -1058,9 +1043,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("t_unequal", tstat);
             P = PDF.tvalp(Math.Abs(tstat), xdegf);
             if (P > 1.0 - P)
-            {
                 P = 1.0 - P;
-            }
             outputParameters.AddOutput("p_1_unequal", P);
             outputParameters.AddOutput("p_2_unequal", P * 2.0);
             outputParameters.AddOutput("pc_unequal", Formatting.XRound(100 * (1 - P0), 2));
@@ -1092,8 +1075,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptTSingleSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTSingleSummary(ParameterBag parameters)
         {
 
             double GAMMA = parameters["gamma"].AsDouble;
@@ -1122,9 +1104,7 @@ namespace StatsDirect.Builtins
             degf = nx - 1;
             double P = PDF.tvalp(Math.Abs(t), Convert.ToDouble(degf));
             if (P > 1.0 - P)
-            {
                 P = 1.0 - P;
-            }
             double power = Power.ptpower(1.0 - GAMMA, mu - mu0, sd, Convert.ToDouble(nx));
             outputParameters.AddOutput("df", degf);
             outputParameters.AddOutput("t", t);
@@ -1134,8 +1114,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptTUnpaired(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTUnpaired(ParameterBag parameters)
         {
             int bot; int top;
 
@@ -1231,8 +1210,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptTSingle(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTSingle(ParameterBag parameters)
         {
             double[] mean = new double[1];
             double[] ss = new double[1];
@@ -1274,8 +1252,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptTPaired(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTPaired(ParameterBag parameters)
         {
             DataFrame Data = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
@@ -1368,7 +1345,7 @@ namespace StatsDirect.Builtins
 
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Ties, new TiesOptions(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean, host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Ties, new TiesOptions(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean)));
             }
             else
             {
@@ -1377,7 +1354,5 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
     }
-
 }

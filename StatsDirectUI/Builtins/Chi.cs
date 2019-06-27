@@ -157,9 +157,7 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("p2m", host.pval(p2m));
             }
             else if (isCohort)
-            {
-                relRiskList.Add(Analysis.RptMiscRelRisk(host, parameters));
-            }
+                relRiskList.Add(Analysis.RptMiscRelRisk(parameters));
 
             List<ParameterBag> fisherList = new List<ParameterBag>();
             outputParameters.AddOutput("*fisher", fisherList);
@@ -167,13 +165,13 @@ namespace StatsDirect.Builtins
             {
                 if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
                 {
-                    fisherList.Add(Exact.RptExactFisher(host, parameters));
+                    fisherList.Add(Exact.RptExactFisher(parameters));
                 }
                 else
                 {
                     if (doFisher)
                     {
-                        fisherList.Add(Exact.RptExactFisher(host, parameters));
+                        fisherList.Add(Exact.RptExactFisher(parameters));
                     }
                 }
             }
@@ -387,10 +385,8 @@ namespace StatsDirect.Builtins
             }
 
             double cco = parameters["cco"].AsDouble;
-            if (cco <= 0.0 | cco >= 1.0)
-            {
+            if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
-            }
 
             bool plotForest = parameters["plot_forest"].AsBoolean;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
@@ -561,11 +557,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return outputParameters;
         }
@@ -620,12 +616,10 @@ namespace StatsDirect.Builtins
             DoubleVariable datV1 = (DoubleVariable)datFrame.Variables[1];
             int rows = datFrame.MaxRows;
             if (rows <= 0)
-            {
                 throw new InvalidDataException();
-            }
 
             double cco = parameters["cco"].AsDouble;
-            if (cco <= 0.0 | cco >= 1.0)
+            if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
 
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);

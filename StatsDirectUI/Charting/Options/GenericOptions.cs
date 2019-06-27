@@ -23,8 +23,7 @@ namespace StatsDirect.Charting
         public bool ShouldForceFillStyle { get; set; }
         public FillStyle ForcedFillStyle { get; set; }
 
-        protected GenericOptions(bool useColour)
-            : base(useColour)
+        protected GenericOptions()
         {
             SeriesOptions = new List<SeriesOptionsDescriptor>();
             if (UsesAxisLabelFontDescriptor)

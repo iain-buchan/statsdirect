@@ -14,54 +14,51 @@ namespace StatsDirect.Charting
         public double[] pg; // Should really be integer or bool but assigning a double variable is as efficient
         public string[] Titles { get; set; }
         public int EffectSizeAndIntervalDecimalPlaces { get; set; }
-        public bool MarkCentres { get; set; }
+        public bool MarkCentres { get; set; } = true;
 
-        public ForestOptions(bool useColour)
-            : base(useColour)
+        public ForestOptions()
         {
-            MarkCentres = true;
-
             //  A forest plot has one marker for the study and a second for the pooled effect
             MarkerTypes = new List<MarkerType>();
             MarkerType studyMarkerType = new MarkerType
-                                             {
-                                                 MarkerColor = ColorDescriptor.Gray,
-                                                 LineColor = ColorDescriptor.Black,
-                                                 IsMarkerFilled = true,
-                                                 MarkerShape = MarkerShape.Square,
-                                                 LineDashStyle = DashStyleDescriptor.Solid,
-                                                 Width = 1
-                                             };
+            {
+                MarkerColor = ColorDescriptor.Gray,
+                LineColor = ColorDescriptor.Black,
+                IsMarkerFilled = true,
+                MarkerShape = MarkerShape.Square,
+                LineDashStyle = DashStyleDescriptor.Solid,
+                Width = 1
+            };
             MarkerTypes.Add(studyMarkerType);
             MarkerType pooledMarkerType = new MarkerType
-                                              {
-                                                  MarkerColor = ColorDescriptor.Gray,
-                                                  LineColor = ColorDescriptor.Black,
-                                                  IsMarkerFilled = true,
-                                                  MarkerShape = MarkerShape.Diamond,
-                                                  LineDashStyle = DashStyleDescriptor.Solid,
-                                                  Width = 1
-                                              };
+            {
+                MarkerColor = ColorDescriptor.Gray,
+                LineColor = ColorDescriptor.Black,
+                IsMarkerFilled = true,
+                MarkerShape = MarkerShape.Diamond,
+                LineDashStyle = DashStyleDescriptor.Solid,
+                Width = 1
+            };
             MarkerTypes.Add(pooledMarkerType);
 
             SeriesOptionsDescriptor studyOptions = new SeriesOptionsDescriptor
-                                                       {
-                                                           SeriesName = "Study",
-                                                           AllowChangeToDashStyle = false,
-                                                           AllowChangeToMarkerSize = false,
-                                                           AllowChangeToLineThickness = false,
-                                                           MarkerIndex = 0
-                                                       };
+            {
+                SeriesName = "Study",
+                AllowChangeToDashStyle = false,
+                AllowChangeToMarkerSize = false,
+                AllowChangeToLineThickness = false,
+                MarkerIndex = 0
+            };
             SeriesOptions.Add(studyOptions);
 
             SeriesOptionsDescriptor pooledOptions = new SeriesOptionsDescriptor
-                                                        {
-                                                            SeriesName = "Pooled effect",
-                                                            AllowChangeToDashStyle = false,
-                                                            AllowChangeToMarkerSize = false,
-                                                            AllowChangeToLineThickness = false,
-                                                            MarkerIndex = 1
-                                                        };
+            {
+                SeriesName = "Pooled effect",
+                AllowChangeToDashStyle = false,
+                AllowChangeToMarkerSize = false,
+                AllowChangeToLineThickness = false,
+                MarkerIndex = 1
+            };
             SeriesOptions.Add(pooledOptions);
         }
 

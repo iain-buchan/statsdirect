@@ -7,10 +7,8 @@ namespace StatsDirect.Charting
     public class LadderOptions : GenericOptions
     {
 
-        public LadderOptions(bool useColour)
-            : base(useColour)
+        public LadderOptions()
         {
-
             //  A ladder plot's markers are derived from the first two series.
             MarkerTypes = new List<MarkerType>();
             MarkerType leftHandMarkerType = ChartPreferences.MarkerTypes[0].Clone();

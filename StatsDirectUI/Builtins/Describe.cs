@@ -122,20 +122,17 @@ namespace StatsDirect.Builtins
                     }
                     else if (x[i, j] < 1 || x[i, j] > groups)
                     {
-                        host.Error("invalid preference in group " + i + " at row " + j, pg);
-                        throw new TemplateOperationCancelledException();
+                        throw new TemplateOperationCancelledException("invalid preference in group " + i + " at row " + j, pg);
                     }
                 }
             }
             if (groups < preferences)
             {
-                host.Error("fewer groups than preferences", pg);
-                throw new TemplateOperationCancelledException();
+                throw new TemplateOperationCancelledException("fewer groups than preferences", pg);
             }
             if (capacity < subjects)
             {
-                host.Error("more subjects (" + subjects + ") than total capacity of groups (" + capacity + ")", pg);
-                throw new TemplateOperationCancelledException();
+                throw new TemplateOperationCancelledException("more subjects (" + subjects + ") than total capacity of groups (" + capacity + ")", pg);
             }
             bool[] done = new bool[subjects + 1]; // 1-based
             int[] allocatedGroup = new int[subjects + 1]; // 1-based
@@ -443,10 +440,7 @@ namespace StatsDirect.Builtins
                     }
 
                     if (weight < 0.0)
-                    {
-                        host.Error("Weights must not be negative", "Descriptive Statistics");
-                        throw new TemplateOperationCancelledException();
-                    }
+                        throw new TemplateOperationCancelledException("Weights must not be negative", "Descriptive Statistics");
 
                     for (int col = 0; col < cols; col++)
                     {
@@ -608,11 +602,6 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Return the median of the elements of x from ia to iz inclusive.
         ///  </summary>
-        ///  <param name="x"></param>
-        ///  <param name="ia"></param>
-        ///  <param name="iz"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
         public static double Median(double[] x, int ia, int iz)
         {
             double[] ao = new double[iz - ia + 1];
@@ -622,17 +611,13 @@ namespace StatsDirect.Builtins
                 if (x[i] != Constant.MISSING)
                 {
                     ao[reali] = x[i];
-                    reali = reali + 1;
+                    reali += 1;
                 }
             }
             //  At this point, reali counts the number of elements that have been copied to ao.
             if (reali > 1)
             {
-                // create temp variable for copying values 
-                double[] transTemp0 = new double[reali];
-                Array.Copy(ao, transTemp0, Math.Min(ao.Length, transTemp0.Length));
-                ao = transTemp0;
-                Array.Sort(ao);
+                Array.Sort(ao, 0, reali);
                 //  The -1 is because ao is 0-based
                 double imdn = 0.5 * (reali + 1) - 1;
                 if (imdn < 0)
@@ -1011,7 +996,7 @@ namespace StatsDirect.Builtins
                     cd.AddXSeries(times, null);
                     cd.AddYSeries(subjectObservations, null);
                 }
-                ScatterXYOptions options = new ScatterXYOptions(host.Preferences.ShouldUseColour, cd.XSeries, true)
+                ScatterXYOptions options = new ScatterXYOptions(cd.XSeries, true)
                 {
                     Title = group.Group.Label,
                     XAxisTitle = timesVariable.Title,
@@ -1033,7 +1018,7 @@ namespace StatsDirect.Builtins
                 ChartDefinition cd = new ChartDefinition { ChartType = ChartType.Normal };
                 cd.AddXSeries(points, "Area Under Curve");
 
-                NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour)
+                NormalOptions options = new NormalOptions
                 {
                     Title = "Normal Plot for AUC",
                     XAxisTitle = "Area Under Curve",
@@ -1052,7 +1037,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < points.Length; i++)
                     points[i] = Math.Log10(points[i]);
                 cd.AddXSeries(points, "Log Area Under Curve");
-                NormalOptions options = new NormalOptions(host.Preferences.ShouldUseColour)
+                NormalOptions options = new NormalOptions
                 {
                     Title = "Normal Plot for Log(AUC)",
                     XAxisTitle = "Log Area Under Curve",
@@ -1093,7 +1078,7 @@ namespace StatsDirect.Builtins
                 }
 
                 ChartDefinition cd = new ChartDefinition { ChartType = ChartType.ErrorBar, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
-                ErrorBarOptions options = new ErrorBarOptions(host.Preferences.ShouldUseColour)
+                ErrorBarOptions options = new ErrorBarOptions
                 {
                     Series = errorSeries,
                     Title = "Group comparison",

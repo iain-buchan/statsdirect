@@ -18,9 +18,7 @@ namespace StatsDirect.Utilities
         public const string ERRCOLON = "Error: ";
         public const string RTFCRLF = @"\par ";
 
-        private static string decimalSeparator;
-
-        public static string DecimalSeparator => decimalSeparator ?? (decimalSeparator = 5.5D.ToString(CultureInfo.CurrentCulture).Substring(1, 1));
+        public static string DecimalSeparator => CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
         public static string XRound(double amount, int places)
         {
@@ -89,9 +87,7 @@ namespace StatsDirect.Utilities
                 return ERRR;
             }
             if (Math.Abs(x) < Math.Pow(10D, -decpm) && 0 != x)
-            {
                 return x.ToString(PreferredScientificMask(decpm));
-            }
             return x.ToString("F" + decpm.ToString());
         }
 
@@ -127,7 +123,7 @@ namespace StatsDirect.Utilities
         {
             if (double.IsNaN(p) || double.IsInfinity(p) || Math.Abs(p) > 10)
                 return "P = *";
-            if (p < Math.Pow(10D, -decimalPlaces))
+            if (p < Math.Pow(10, -decimalPlaces))
             {
                 if (useScientificNotationForSmallPValues && p != 0.0)
                     return "P = " + p.ToString("E");
@@ -142,7 +138,7 @@ namespace StatsDirect.Utilities
         {
             if (Math.Abs(p) > 10)
                 return "P = err";
-            if (p < Math.Pow(10D, -decimalPlaces))
+            if (p < Math.Pow(10, -decimalPlaces))
             {
                 if (useScientificNotationForSmallPValues && p != 0.0)
                     return "P = " + p.ToString("E");

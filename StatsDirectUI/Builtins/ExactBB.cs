@@ -488,24 +488,14 @@ namespace StatsDirect.Builtins
             bool waiter = Convert.ToDouble(deg1) * Convert.ToDouble(deg2) > 300000;
 
             if (logScale)
-            {
                 for (int i = 0; i <= deg3; i++)
-                {
                     p3[i] = -Constant.MISSING;
-                }
-            }
             else
-            {
                 for (int i = 0; i <= deg3; i++)
-                {
                     p3[i] = 0.0;
-                }
-            }
 
             if (waiter)
-            {
                 host.StartProgress("Multiplying polynomials: " + job, true);
-            }
 
             if (logScale)
             {
@@ -514,13 +504,9 @@ namespace StatsDirect.Builtins
                     for (int j = 0; j <= deg2; j++)
                     {
                         if (p3[i + j] == -Constant.MISSING)
-                        {
                             p3[i + j] = p1[i] + p2[j];
-                        }
                         else
-                        {
                             p3[i + j] = SumLog(p1[i] + p2[j], p3[i + j]);
-                        }
                     }
                     if (waiter)
                     {
@@ -538,9 +524,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i <= deg1; i++)
                 {
                     for (int j = 0; j <= deg2; j++)
-                    {
                         p3[i + j] = p1[i] * p2[j] + p3[i + j];
-                    }
                     if (waiter)
                     {
                         if (host.UpdateProgress(i / (double)deg1))
@@ -553,9 +537,7 @@ namespace StatsDirect.Builtins
                 }
 
                 if (waiter)
-                {
                     host.FinishProgress();
-                }
 
                 //  Test for overflow; if so, set an appropriate error value.
                 for (int i = 0; i <= deg3; i++)
@@ -571,7 +553,6 @@ namespace StatsDirect.Builtins
             // If we get here, there were no errors
             ierr = 0;
         }
-
 
         ///  <summary>
         ///  Outputs to P the coefficients of the binomial expansion of (C0 + C1*R)^F.

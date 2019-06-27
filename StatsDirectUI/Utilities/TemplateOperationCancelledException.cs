@@ -10,5 +10,19 @@ namespace StatsDirect.Utilities
     [Serializable]
     public class TemplateOperationCancelledException: NotAnErrorException
     {
+        public TemplateOperationCancelledException()
+        {
+            // Implicitly, ShouldShowError = false.
+        }
+
+        public TemplateOperationCancelledException(string message, string caption)
+            : base(message)
+        {
+            ShouldShowError = true;
+            Caption = caption;
+        }
+
+        public string Caption { get; }
+        public bool ShouldShowError { get; }
     }
 }

@@ -26,11 +26,6 @@ namespace StatsDirect.Charting
         ///  <remarks>This used to be considerably more complex; Peter has simplified.</remarks>
         public static int SeriesNumberToMarkerNumber(int seriesNumber) => seriesNumber % 10;
 
-        protected ChartOptions(bool useColour)
-        {
-            UseColour = useColour;
-        }
-
         public virtual bool UsesAxisLineThickness => true;
         public virtual bool UsesColour => true;
         public virtual bool UsesShowLegend => true;

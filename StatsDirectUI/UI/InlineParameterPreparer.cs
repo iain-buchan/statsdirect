@@ -22,7 +22,6 @@ namespace StatsDirect.UI
     {
         public ParameterBag Context { get; set; }
         public frmMain Form { get; set; }
-        public ITemplateHost Host { get; set; }
         public ITemplateProcessor Processor { get; set; }
         public FilledParameter FilledParameter { get; private set; }
 
@@ -247,7 +246,7 @@ namespace StatsDirect.UI
                     ctl = new ctlConvertUnits();
                     break;
                 case "Distribution":
-                    ctl = new ctlPDF((DistributionOptions)fillable, Host);
+                    ctl = new ctlPDF((DistributionOptions)fillable);
                     break;
                 case "Dummy":
                     ctl = new ctlDummyOptions((DummyOptions)fillable);

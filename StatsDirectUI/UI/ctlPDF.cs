@@ -24,7 +24,6 @@ namespace StatsDirect.UI
         private readonly DistributionType selectedTest;
         private bool inverseAvailable;
         private string lastCalculationAsString;
-        private readonly ITemplateHost host;
         /// <summary>
         /// If true, the user has changed a text box but not hit Calculate or Invert, or anything else that would perform the calculation.
         /// </summary>
@@ -35,10 +34,9 @@ namespace StatsDirect.UI
         private TouchedValue priorTouchedValue = TouchedValue.NotSet;
         private TouchedValue lastTouchedValue = TouchedValue.NotSet;
 
-        public ctlPDF(DistributionOptions options, ITemplateHost host)
+        public ctlPDF(DistributionOptions options)
         {
             selectedTest = options.SelectedTest;
-            this.host = host;
             InitializeComponent();
             SetVisibility();
             txtPdf.Tag = TouchedValue.Pdf;
@@ -880,7 +878,7 @@ namespace StatsDirect.UI
 
             if (nl > 100000)
             {
-                if (host.Query("This calculation can take a long time with large numbers.\r\n\r\nDo you wish to continue?", "StatsDirect Poisson Inverse"))
+                if (SdApplication.SoleInstance.Query("This calculation can take a long time with large numbers.\r\n\r\nDo you wish to continue?", "StatsDirect Poisson Inverse"))
                     ExFortran.poissoni(idx, P, out xmid, out trm, out phi, out plo, nl, out ifault);
                 else
                     ifault = 4;

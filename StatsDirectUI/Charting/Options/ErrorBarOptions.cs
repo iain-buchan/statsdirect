@@ -6,17 +6,10 @@ namespace StatsDirect.Charting
     [Serializable]
     public class ErrorBarOptions : GenericOptions
     {
-        public bool PlotMarkers { get; set; }
+        public bool PlotMarkers { get; set; } = true;
         public bool JoinMarkersWithLines { get; set; }
         public List<MultiDoubleSeries> Series { get; set; }
-        public bool ShouldCheckForOffsets { get; set; }
-
-        public ErrorBarOptions(bool useColour)
-            : base(useColour)
-        {
-            PlotMarkers = true;
-            ShouldCheckForOffsets = true;
-        }
+        public bool ShouldCheckForOffsets { get; set; } = true;
 
         public void SetMarkers()
         {

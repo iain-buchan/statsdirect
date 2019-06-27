@@ -12,8 +12,7 @@ namespace StatsDirect.Charting
         public double ssx;
         public bool isPredictionInterval;
 
-        public LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double pert, int nx, double ms, double sumx, double ssx, bool isPredictionInterval, bool useColour)
-            : base(useColour)
+        public LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions(string title, double slope, double intercept, bool fullWidth, string xAxisTitle, string yAxisTitle, double pert, int nx, double ms, double sumx, double ssx, bool isPredictionInterval)
         {
             Title = title;
             Slope = slope;

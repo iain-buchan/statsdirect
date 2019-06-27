@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public static class Exact
     {
-        public static ParameterBag RptExactSign(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactSign(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
@@ -74,8 +74,6 @@ namespace StatsDirect.Builtins
                 x9 = d / Math.Sqrt(n / 4.0);
 
             outputParameters.AddOutput("z", x9);
-            outputParameters.AddOutput("p_2", host.zvalp2(x9));
-            outputParameters.AddOutput("p_1", host.zvalp1(x9));
 
             r = acr;
             outputParameters.AddOutput("ci", Formatting.XRound(cco * 100, 2));
@@ -84,13 +82,14 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("lower", pil);
             outputParameters.AddOutput("prop", r / n);
-            outputParameters.AddOutput("upper", host.RoundU(piu) + warn);
+            outputParameters.AddOutput("upper", piu);
+            outputParameters.AddOutput("warn", warn);
 
             return outputParameters;
         }
 
 
-        public static ParameterBag RptExactFisher(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactFisher(ParameterBag parameters)
         {
             int fault = 0;
             int a = Convert.ToInt32(parameters["a"].AsDouble);
@@ -104,7 +103,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag RptExactFisherX(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactFisherX(ParameterBag parameters)
         {
             int fault = 0;
 
@@ -325,9 +324,7 @@ namespace StatsDirect.Builtins
 
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
-            {
                 cco = 0.95;
-            }
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
@@ -372,9 +369,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_b2", Convert.ToInt64(bd));
 
             if (bb + bc <= 0.0)
-            {
                 throw new InvalidDataException();
-            }
+
             double x2 = Math.Abs(bb - bc) * Math.Abs(bb - bc) / (bb + bc);
             outputParameters.AddOutput("chi", x2);
             outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
@@ -392,9 +388,7 @@ namespace StatsDirect.Builtins
             double s = bc;
 
             if (r < s)
-            {
                 Utilities.Utilities.Swap(ref r, ref s);
-            }
             double p = (1 - gamma) / 2.0;
             double dfn = 2.0 * (s + 1.0);
             double dfd = 2.0 * r;
@@ -403,39 +397,25 @@ namespace StatsDirect.Builtins
             dfd = 2.0 * s;
             double ulf = PDF.ffromp(dfd, dfn, p);
             if (llf > 0.0)
-            {
                 ll = r / ((s + 1.0) * llf);
-            }
             else
-            {
                 ll = Constant.MISSING;
-            }
             if (s > 0.0)
-            {
                 ul = (r + 1.0) * ulf / s;
-            }
             else
-            {
                 ul = Constant.MISSING;
-            }
 
             if (bc > bb)
             {
                 if (ll != Constant.MISSING)
-                {
                     ll = 1.0 / ll;
-                }
                 if (ul != Constant.MISSING)
-                {
                     ul = 1.0 / ul;
-                }
             }
-            if (ll != Constant.MISSING & ul != Constant.MISSING)
+            if (ll != Constant.MISSING && ul != Constant.MISSING)
             {
                 if (ul < ll)
-                {
                     Utilities.Utilities.Swap(ref ll, ref ul);
-                }
             }
             outputParameters.AddOutput("pc", gamma * 100);
             string llx = ll == Constant.MISSING ? Formatting.INFRESNEG : host.RoundU(ll);
@@ -446,18 +426,14 @@ namespace StatsDirect.Builtins
             double f = r / (s + 1.0);
             p = PDF.fvalp(f, 2.0 * (s + 1.0), 2.0 * r) * 2.0;
             if (p > 1.0)
-            {
                 p = 1.0;
-            }
 
             outputParameters.AddOutput("f", f);
             outputParameters.AddOutput("tail_2", p);
             List<ParameterBag> rPrimeList = new List<ParameterBag>();
             outputParameters.AddOutput("*r_prime", rPrimeList);
             if (p < 0.05)
-            {
                 rPrimeList.Add(new ParameterBag());
-            }
 
             return outputParameters;
         }
@@ -499,7 +475,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptRatePoissonCI(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRatePoissonCI(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             double alpha = 1.0 - cco;

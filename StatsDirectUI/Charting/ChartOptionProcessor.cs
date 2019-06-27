@@ -17,57 +17,57 @@ namespace StatsDirect.Charting
             switch (step.ChartType)
             {
                 case ChartType.AgreementPair:
-                    return PreprocessAgreementOptions(host, step, parameters);
+                    return PreprocessAgreementOptions(step, parameters);
                 case ChartType.Bar:
                 case ChartType.StackedBar:
                 case ChartType.StackedBar100Percent:
-                    return PreprocessBarOptions(host, step, parameters, definition, dataName);
+                    return PreprocessBarOptions(step, parameters, definition, dataName);
                 case ChartType.BiasMA:
-                    return PreprocessBiasMAOptions(host, step, definition, dataName);
+                    return PreprocessBiasMAOptions(step, definition, dataName);
                 case ChartType.BoxWhisker:
-                    return PreprocessBoxWhiskerOptions(host, step, definition, dataName);
+                    return PreprocessBoxWhiskerOptions(step, definition, dataName);
                 case ChartType.Control:
-                    return PreprocessControlOptions(host, definition, dataName);
+                    return PreprocessControlOptions(definition, dataName);
                 case ChartType.ErrorBar:
-                    return PreprocessErrorBarOptions(host, parameters, dataName);
+                    return PreprocessErrorBarOptions(parameters, dataName);
                 case ChartType.Forest:
-                    return PreprocessForestOptions(host, parameters, definition, dataName);
+                    return PreprocessForestOptions(parameters, definition, dataName);
                 case ChartType.Gini:
-                    return PreprocessGiniOptions(host, definition, dataName);
+                    return PreprocessGiniOptions(definition, dataName);
                 case ChartType.Histogram:
-                    return PreprocessHistogramOptions(host, step, definition);
+                    return PreprocessHistogramOptions(step, definition);
                 case ChartType.Ladder:
-                    return PreprocessLadderOptions(host, definition, dataName);
+                    return PreprocessLadderOptions(definition, dataName);
                 case ChartType.LineXY:
-                    return PreprocessLineXYOptions(host, definition, dataName);
+                    return PreprocessLineXYOptions(definition, dataName);
                 case ChartType.LinearRegression:
-                    return PreprocessLinearRegressionOptions(host, step, parameters);
+                    return PreprocessLinearRegressionOptions(step, parameters);
                 case ChartType.Normal:
-                    return PreprocessNormalOptions(host, parameters, dataName);
+                    return PreprocessNormalOptions(parameters, dataName);
                 case ChartType.Pyramid:
-                    return PreprocessPyramidOptions(host, parameters, dataName);
+                    return PreprocessPyramidOptions(parameters, dataName);
                 case ChartType.ScatterXY:
-                    return PreprocessScatterXYOptions(host, step, definition, dataName);
+                    return PreprocessScatterXYOptions(step, definition, dataName);
                 case ChartType.ROC:
                     return PreprocessRocOptions(host, parameters, definition);
                 case ChartType.Spread:
-                    return PreprocessSpreadOptions(host, definition, dataName);
+                    return PreprocessSpreadOptions(definition, dataName);
                 case ChartType.Survival:
-                    return PreprocessSurvivalOptions(host, parameters, dataName);
+                    return PreprocessSurvivalOptions(parameters, dataName);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(step), step, "step.ChartType: Not all types can be plotted yet");
             }
         }
 
-        private static ChartOptions PreprocessBiasMAOptions(ITemplateHost host, ChartStep step, ChartDefinition definition, string dataName)
+        private static ChartOptions PreprocessBiasMAOptions(ChartStep step, ChartDefinition definition, string dataName)
         {
             // Nothing required
             return null;
         }
 
-        private static SurvivalOptions PreprocessSurvivalOptions(ITemplateHost host, ParameterBag parameters, string dataName)
+        private static SurvivalOptions PreprocessSurvivalOptions(ParameterBag parameters, string dataName)
         {
-            SurvivalOptions survivalOptions = new SurvivalOptions(host.Preferences.ShouldUseColour)
+            SurvivalOptions survivalOptions = new SurvivalOptions
             {
                 ShouldAutoscale =
                     !ChartPreferences.DefaultRequestScaleLimits,
@@ -145,7 +145,7 @@ namespace StatsDirect.Charting
             return survivalOptions;
         }
 
-        private static SpreadOptions PreprocessSpreadOptions(ITemplateHost host, ChartDefinition definition, string dataName)
+        private static SpreadOptions PreprocessSpreadOptions(ChartDefinition definition, string dataName)
         {
             // If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
             if (0 == definition.XSeries.Count && 0 == definition.YSeries.Count)
@@ -154,7 +154,7 @@ namespace StatsDirect.Charting
                 throw new ArgumentException("Cannot plot a spread plot with both X and Y series");
             IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
-            SpreadOptions spreadOptions = new SpreadOptions(host.Preferences.ShouldUseColour)
+            SpreadOptions spreadOptions = new SpreadOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -202,7 +202,7 @@ namespace StatsDirect.Charting
                 amn = ys.Sum / ys.Points;
             }
 
-            ROCOptions rocOptions = new ROCOptions(host.Preferences.ShouldUseColour, definition.XSeries)
+            ROCOptions rocOptions = new ROCOptions(definition.XSeries)
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -223,9 +223,9 @@ namespace StatsDirect.Charting
             return rocOptions;
         }
 
-        private static ScatterXYOptions PreprocessScatterXYOptions(ITemplateHost host, ChartStep step, ChartDefinition definition, string dataName)
+        private static ScatterXYOptions PreprocessScatterXYOptions(ChartStep step, ChartDefinition definition, string dataName)
         {
-            ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, false)
+            ScatterXYOptions sOptions = new ScatterXYOptions(definition.XSeries, false)
             {
                 IsAscii = step.IsAscii,
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
@@ -243,9 +243,9 @@ namespace StatsDirect.Charting
             return sOptions;
         }
 
-        private static PyramidOptions PreprocessPyramidOptions(ITemplateHost host, ParameterBag parameters, string dataName)
+        private static PyramidOptions PreprocessPyramidOptions(ParameterBag parameters, string dataName)
         {
-            PyramidOptions pOptions = new PyramidOptions(host.Preferences.ShouldUseColour) { ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits };
+            PyramidOptions pOptions = new PyramidOptions { ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits };
             if (parameters.ContainsKey("male"))
                 pOptions.MaleFrame = parameters["male"].AsDataFrame;
             if (parameters.ContainsKey("female"))
@@ -257,9 +257,9 @@ namespace StatsDirect.Charting
             return pOptions;
         }
 
-        private static NormalOptions PreprocessNormalOptions(ITemplateHost host, ParameterBag parameters, string dataName)
+        private static NormalOptions PreprocessNormalOptions(ParameterBag parameters, string dataName)
         {
-            NormalOptions nOptions = new NormalOptions(host.Preferences.ShouldUseColour)
+            NormalOptions nOptions = new NormalOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Method = parameters.ContainsKey("ScoreMethod")
@@ -273,9 +273,9 @@ namespace StatsDirect.Charting
             return nOptions;
         }
 
-        private static LinearRegressionOptions PreprocessLinearRegressionOptions(ITemplateHost host, ChartStep step, ParameterBag parameters)
+        private static LinearRegressionOptions PreprocessLinearRegressionOptions(ChartStep step, ParameterBag parameters)
         {
-            LinearRegressionOptions lrOptions = new LinearRegressionOptions(host.Preferences.ShouldUseColour)
+            LinearRegressionOptions lrOptions = new LinearRegressionOptions
             {
                 Slope = parameters["mdnValue"].AsDouble,
                 Intercept = parameters["interceptValue"].AsDouble,
@@ -289,9 +289,9 @@ namespace StatsDirect.Charting
             return lrOptions;
         }
 
-        private static ScatterXYOptions PreprocessLineXYOptions(ITemplateHost host, ChartDefinition definition, string dataName)
+        private static ScatterXYOptions PreprocessLineXYOptions(ChartDefinition definition, string dataName)
         {
-            ScatterXYOptions sOptions = new ScatterXYOptions(host.Preferences.ShouldUseColour, definition.XSeries, true)
+            ScatterXYOptions sOptions = new ScatterXYOptions(definition.XSeries, true)
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -308,13 +308,13 @@ namespace StatsDirect.Charting
             return sOptions;
         }
 
-        private static LadderOptions PreprocessLadderOptions(ITemplateHost host, ChartDefinition definition, string dataName)
+        private static LadderOptions PreprocessLadderOptions(ChartDefinition definition, string dataName)
         {
             // We need exactly 2 Y series
             if (2 != definition.YSeries.Count || 0 != definition.XSeries.Count)
                 throw new ArgumentException("Must have exactly two Y series for a ladder plot");
 
-            LadderOptions ladderOptions = new LadderOptions(host.Preferences.ShouldUseColour)
+            LadderOptions ladderOptions = new LadderOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -329,10 +329,10 @@ namespace StatsDirect.Charting
             return ladderOptions;
         }
 
-        private static HistogramOptions PreprocessHistogramOptions(ITemplateHost host, ChartStep step, ChartDefinition definition)
+        private static HistogramOptions PreprocessHistogramOptions(ChartStep step, ChartDefinition definition)
         {
             IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-            HistogramOptions hOptions = new HistogramOptions(host.Preferences.ShouldUseColour)
+            HistogramOptions hOptions = new HistogramOptions
             {
                 IsAscii = step.IsAscii,
                 BinChoiceMethod = step.IsAscii ? BinChoiceMethod.OldStatsDirect : BinChoiceMethod.Doane,
@@ -354,9 +354,9 @@ namespace StatsDirect.Charting
             return hOptions;
         }
 
-        private static GiniOptions PreprocessGiniOptions(ITemplateHost host, ChartDefinition definition, string dataName)
+        private static GiniOptions PreprocessGiniOptions(ChartDefinition definition, string dataName)
         {
-            GiniOptions giniOptions = new GiniOptions(host.Preferences.ShouldUseColour)
+            GiniOptions giniOptions = new GiniOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -371,9 +371,9 @@ namespace StatsDirect.Charting
             return giniOptions;
         }
 
-        private static ForestOptions PreprocessForestOptions(ITemplateHost host, ParameterBag parameters, ChartDefinition definition, string dataName)
+        private static ForestOptions PreprocessForestOptions(ParameterBag parameters, ChartDefinition definition, string dataName)
         {
-            ForestOptions fOptions = new ForestOptions(host.Preferences.ShouldUseColour)
+            ForestOptions fOptions = new ForestOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -440,7 +440,7 @@ namespace StatsDirect.Charting
             return fOptions;
         }
 
-        private static ErrorBarOptions PreprocessErrorBarOptions(ITemplateHost host, ParameterBag parameters, string dataName)
+        private static ErrorBarOptions PreprocessErrorBarOptions(ParameterBag parameters, string dataName)
         {
             if (!parameters.ContainsKey("xdat"))
                 throw new Exception("Chart expected parameter \"xdat\", which was not supplied");
@@ -483,7 +483,7 @@ namespace StatsDirect.Charting
                 allSeries.Add(new MultiDoubleSeries { Title = seriesTitle, Data = data });
             }
 
-            ErrorBarOptions errorBarOptions = new ErrorBarOptions(host.Preferences.ShouldUseColour)
+            ErrorBarOptions errorBarOptions = new ErrorBarOptions
             {
                 ShouldAutoscale =
                     !ChartPreferences.DefaultRequestScaleLimits,
@@ -506,9 +506,9 @@ namespace StatsDirect.Charting
             return errorBarOptions;
         }
 
-        private static ControlOptions PreprocessControlOptions(ITemplateHost host, ChartDefinition definition, string dataName)
+        private static ControlOptions PreprocessControlOptions(ChartDefinition definition, string dataName)
         {
-            ControlOptions controlOptions = new ControlOptions(host.Preferences.ShouldUseColour)
+            ControlOptions controlOptions = new ControlOptions
             {
                 ShouldBoxAxes = ChartPreferences.DefaultBoxAxes,
                 ShouldAutoscale =
@@ -556,9 +556,9 @@ namespace StatsDirect.Charting
             return controlOptions;
         }
 
-        private static BoxWhiskerOptions PreprocessBoxWhiskerOptions(ITemplateHost host, ChartStep step, ChartDefinition definition, string dataName)
+        private static BoxWhiskerOptions PreprocessBoxWhiskerOptions(ChartStep step, ChartDefinition definition, string dataName)
         {
-            BoxWhiskerOptions bwOptions = new BoxWhiskerOptions(host.Preferences.ShouldUseColour)
+            BoxWhiskerOptions bwOptions = new BoxWhiskerOptions
             {
                 Title = null == dataName
                             ? "Box & whisker plot"
@@ -583,9 +583,9 @@ namespace StatsDirect.Charting
             return bwOptions;
         }
 
-        private static BarOptions PreprocessBarOptions(ITemplateHost host, ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName)
+        private static BarOptions PreprocessBarOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName)
         {
-            BarOptions barOptions = new BarOptions(host.Preferences.ShouldUseColour)
+            BarOptions barOptions = new BarOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -617,9 +617,9 @@ namespace StatsDirect.Charting
             return barOptions;
         }
 
-        private static AgreementOptions PreprocessAgreementOptions(ITemplateHost host, ChartStep step, ParameterBag parameters)
+        private static AgreementOptions PreprocessAgreementOptions(ChartStep step, ParameterBag parameters)
         {
-            AgreementOptions aOptions = new AgreementOptions(host.Preferences.ShouldUseColour)
+            AgreementOptions aOptions = new AgreementOptions
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title = step.ChartTitle,

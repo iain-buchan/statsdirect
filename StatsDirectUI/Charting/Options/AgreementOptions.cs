@@ -5,11 +5,6 @@ namespace StatsDirect.Charting
     [Serializable]
     public class AgreementOptions : GenericOptions
     {
-        public AgreementOptions(bool useColour)
-            : base(useColour)
-        {
-        }
-
         public double[] av;
         public double[] mxd;
         public double lla;

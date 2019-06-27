@@ -16,11 +16,6 @@ namespace StatsDirect.Charting
         public DataFrame LabelFrame;
         public double ScaleMaximum;
 
-        public PyramidOptions(bool useColour)
-            : base(useColour)
-        {
-        }
-
         public void SetOptions()
         {
             DataFrame f = new DataFrame();

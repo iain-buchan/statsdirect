@@ -28,12 +28,6 @@ namespace StatsDirect.UI
         private string activeHelpUrl;
         private static SdApplication soleInstance;
 
-        private bool closingForUpgrade;
-
-        private readonly ICollection<WindowInformation> windows = new HashSet<WindowInformation>();
-        private WindowInformation activeWindow;
-        private WindowInformation activeGrid;
-
         // public PaneAndBoolean MostRecentlySelectedGrid { get; set; }
         public PaneAndPosition MostRecentlySelectedReport { get; set; }
 
@@ -72,6 +66,8 @@ namespace StatsDirect.UI
                 return soleInstance ?? (soleInstance = new SdApplication());
             }
         }
+
+        internal static ITemplateHost TemplateHost => SoleInstance;
 
         internal static bool HasInstance => null != soleInstance;
 
@@ -259,7 +255,7 @@ namespace StatsDirect.UI
             while (true)
             {
                 bool acceptable = true;
-                foreach (WindowInformation wi in windows)
+                foreach (WindowInformation wi in Windows)
                 {
                     if (wi.HasWindow && wi.Window is IGrid)
                     {
@@ -296,7 +292,7 @@ namespace StatsDirect.UI
             while (true)
             {
                 bool acceptable = true;
-                foreach (WindowInformation wi in windows)
+                foreach (WindowInformation wi in Windows)
                 {
                     if (!(wi.Window is IReport))
                         continue;
@@ -336,7 +332,7 @@ namespace StatsDirect.UI
             while (true)
             {
                 bool acceptable = true;
-                foreach (WindowInformation wi in windows)
+                foreach (WindowInformation wi in Windows)
                 {
                     if (wi.Window is IScriptWindow)
                     {
@@ -369,20 +365,20 @@ namespace StatsDirect.UI
 
         internal void AddWindow(WindowInformation info)
         {
-            windows.Add(info);
+            Windows.Add(info);
         }
 
         internal void RemoveWindow(WindowInformation info)
         {
-            if (windows.Contains(info))
-                windows.Remove(info);
+            if (Windows.Contains(info))
+                Windows.Remove(info);
         }
 
-        internal WindowInformation ActiveWindow => activeWindow;
+        internal WindowInformation ActiveWindow { get; private set; }
 
-        internal WindowInformation ActiveGrid => activeGrid;
+        internal WindowInformation ActiveGrid { get; private set; }
 
-        public ICollection<WindowInformation> Windows => windows;
+        public ICollection<WindowInformation> Windows { get; } = new HashSet<WindowInformation>();
 
         /// <summary>
         /// A form has found itself closing by some means and has informed us.
@@ -401,7 +397,7 @@ namespace StatsDirect.UI
                 // Break reference cycles
                 info.Window = null;
                 info.TabPage = null;
-                windows.Remove(info);
+                Windows.Remove(info);
             }
         }
 
@@ -411,11 +407,11 @@ namespace StatsDirect.UI
         /// <param name="info"></param>
         internal void NoteFormActivated(WindowInformation info)
         {
-            activeWindow = info;
+            ActiveWindow = info;
             if (null != info.Window)
             {
                 if (info.Window is IGrid)
-                    activeGrid = info;
+                    ActiveGrid = info;
                 MainWindow.EnsureTabSelected(info.TabPage);
                 MainWindow.SetMenuVisibility(info.Window is IGrid);
             }
@@ -475,7 +471,7 @@ namespace StatsDirect.UI
         internal IList<Pane> AvailableReportPanes()
         {
             IList<Pane> availableWindows = new List<Pane>();
-            foreach (WindowInformation info in windows)
+            foreach (WindowInformation info in Windows)
             {
                 if (info.Window is IReport)
                 {
@@ -520,7 +516,7 @@ namespace StatsDirect.UI
         internal IList<Pane> AvailableFramePanes()
         {
             IList<Pane> availableWindows = new List<Pane>();
-            foreach (WindowInformation info in windows)
+            foreach (WindowInformation info in Windows)
             {
                 if (info.Window is IGrid)
                 {
@@ -650,9 +646,9 @@ namespace StatsDirect.UI
             IGrid grid;
             RelativePosition writePosition = defaultPosition;
 
-            if (keepSelection && null != activeGrid)
+            if (keepSelection && null != ActiveGrid)
             {
-                grid = (IGrid)activeGrid.Window;
+                grid = (IGrid)ActiveGrid.Window;
                 // If we're writing multiple outputs that won't be written over the top of each other, each one is selected after it is written.  Therefore we can use that to ensure subsequent output is written directly after the initial output.
                 writePosition = defaultPosition != RelativePosition.ReplaceSelection ? RelativePosition.AfterSelection : defaultPosition;
             }
@@ -694,7 +690,7 @@ namespace StatsDirect.UI
                 PrepareParameter(processor, (PickFromListParameter)parameter, context);
         }
 
-        public bool CanCombine(Parameter parameter)
+        bool ITemplateHost.CanCombine(Parameter parameter)
         {
             if (parameter is Frame2DParameter)
                 return false;
@@ -799,17 +795,17 @@ namespace StatsDirect.UI
         /// Returns a display value of Amount, rounded to DisplayDecimalPlaces if sensible.
         /// </summary>
         /// <returns></returns>
-        public string RoundU(double amount)
+        string ITemplateHost.RoundU(double amount)
         {
             return Formatting.XRound(amount, Preferences.DisplayDecimalPlaces);
         }
 
-        public string pval(double p)
+        string ITemplateHost.pval(double p)
         {
             return Formatting.pval(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
         }
 
-        public string pval_half(double p)
+        string ITemplateHost.pval_half(double p)
         {
             return Formatting.pval_half(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
         }
@@ -869,17 +865,17 @@ namespace StatsDirect.UI
             return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        public bool MetaPlotCI => Preferences.MetaPlotCI;
+        bool ITemplateHost.MetaPlotCI => Preferences.MetaPlotCI;
 
-        public int MetaPlotMethod => Preferences.MetaPlotMethod;
+        int ITemplateHost.MetaPlotMethod => Preferences.MetaPlotMethod;
 
-        public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
+        bool ITemplateHost.GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
             cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
         }
 
-        public bool GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
+        bool ITemplateHost.GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
@@ -900,7 +896,7 @@ namespace StatsDirect.UI
             return host.FillAndValidateCombinedParameters(processor, context);
         }
 
-        public double GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
+        double ITemplateHost.GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
         {
             const string key = "solo";
             DoubleParameter parameter = new DoubleParameter
@@ -915,7 +911,7 @@ namespace StatsDirect.UI
             return cancelled ? 0.0 : results[key].AsDouble;
         }
 
-        public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
+        int ITemplateHost.GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string key = "solo";
             IntegerParameter parameter = new IntegerParameter
@@ -930,55 +926,37 @@ namespace StatsDirect.UI
             return cancelled ? 0 : results[key].AsInt32;
         }
 
-        public int GetOption(string prompt, string caption, List<string> options, int selectedIndex, out bool cancelled)
-        {
-            const string key = "solo";
-            OptionParameter parameter = new OptionParameter
-            {
-                Name = key,
-                PromptExpression = new Expression(prompt),
-                CancelSkipsParameter = "Skip"
-            };
-            for (int i = 0; i < options.Count; i++ )
-                parameter.Options.Add(new OptionOption { Label = options[i], Value = i.ToString() });
-            ParameterBag results = FillSingleParameter(parameter);
-            cancelled = null == results || !results.ContainsKey(key) || null == results[key];
-            return cancelled ? 0 : int.Parse(results[key].AsString);
-        }
-
-        public string GetString(string prompt, string caption, string defaultValue)
+        string ITemplateHost.GetString(string prompt, string caption, string defaultValue)
         {
             return Prompt(prompt, caption, defaultValue);
         }
 
-        public void Error(string message, string caption)
+        void ITemplateHost.Error(string message, string caption)
         {
             MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
         }
 
-        public void StartProgress(string operationDescription, bool provideProgress)
+        void ITemplateHost.StartProgress(string operationDescription, bool provideProgress)
         {
             MainWindow?.StartProgress(operationDescription, provideProgress);
         }
 
-        public bool UpdateProgress(double fractionComplete)
+        bool ITemplateHost.UpdateProgress(double fractionComplete)
         {
             return null != MainWindow && MainWindow.UpdateProgress(fractionComplete);
         }
 
-        public void FinishProgress()
+        void ITemplateHost.FinishProgress()
         {
             MainWindow?.FinishProgress();
         }
-
-        public int PDecimalPlaces => Properties.Settings.Default.PDecimalPlaces;
 
         public void NoteError(Exception ex)
         {
             MsgboxX("Error in calculation, report invalid.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", true);
         }
 
-        public void Warning(string message, string caption)
+        void ITemplateHost.Warning(string message, string caption)
         {
             MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Warning, caption, true);
         }
@@ -989,7 +967,7 @@ namespace StatsDirect.UI
             return DialogResult.OK == result;
         }
 
-        public ParameterBag Amend(IFillable fillable, ParameterBag context)
+        ParameterBag ITemplateHost.Amend(IFillable fillable, ParameterBag context)
         {
             switch (fillable.FillerToUse)
             {
@@ -1193,22 +1171,6 @@ namespace StatsDirect.UI
             }
         }
 
-        string ITemplateHost.zvalp1(double xz)
-        {
-            double P = 1 - Numerics.PDF.alnorm(xz);
-            if (P > 1 - P)
-                P = 1 - P;
-            return pval(P);
-        }
-
-        string ITemplateHost.zvalp2(double xz)
-        {
-            double P = 1 - Numerics.PDF.alnorm(xz);
-            if (P > 1 - P)
-                P = 1 - P;
-            return pval(P * 2);
-        }
-
         internal void NoteRecentFile(string path, bool openedOk)
         {
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
@@ -1349,7 +1311,7 @@ namespace StatsDirect.UI
         internal void ClearBatchMode()
         {
             // Ensure no windows might remember anything to do with batching
-            foreach (WindowInformation wi in windows)
+            foreach (WindowInformation wi in Windows)
             {
                 if (wi.HasWindow)
                     wi.Window.ClearBatchMode();
@@ -1370,7 +1332,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                closingForUpgrade = true;
+                ClosingForUpgrade = true;
                 MainWindow.Close();
             }
         }
@@ -1430,7 +1392,7 @@ namespace StatsDirect.UI
             MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
         }
 
-        public bool ClosingForUpgrade => closingForUpgrade;
+        public bool ClosingForUpgrade { get; private set; }
 
         public static bool IsRunningOnMono => Type.GetType("Mono.Runtime") != null;
 

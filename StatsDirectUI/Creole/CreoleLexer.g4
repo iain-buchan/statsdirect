@@ -235,6 +235,9 @@ fragment EXPR_COMPOUND_FORMAT_STRING
 	: 'default'
 	| 'chart'
 	| 'pval'
-	| 'roundx'
+	| 'pval_half'
 	| 'roundu'
+	| 'roundx'
+	| 'zvalp1'
+	| 'zvalp2'
 	;

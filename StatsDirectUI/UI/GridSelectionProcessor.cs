@@ -164,7 +164,7 @@ originGroup);
                     case DataAcquisitionMode2D.GroupThenBlock:
                         {
                             DataFrame2D frame = new DataFrame2D();
-                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out bool userCancelled);
+                            int groups = SdApplication.TemplateHost.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out bool userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -212,7 +212,7 @@ originGroup);
                     case DataAcquisitionMode2D.BlockThenGroup:
                         {
                             DataFrame2D frame = new DataFrame2D();
-                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out bool userCancelled);
+                            int repeats = SdApplication.TemplateHost.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out bool userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -763,7 +763,7 @@ originGroup);
 
                 if (block_maxgn > treatment_cats)
                 {
-                    SdApplication.SoleInstance.Error("Two way ANOVA requires only one observation per block - you entered " + block_maxgn / (double)treatment_cats + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
+                    SdApplication.TemplateHost.Error("Two way ANOVA requires only one observation per block - you entered " + block_maxgn / (double)treatment_cats + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
                     continue;
                 }
 

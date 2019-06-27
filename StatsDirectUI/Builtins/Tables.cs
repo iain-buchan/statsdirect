@@ -1795,15 +1795,9 @@ namespace StatsDirect.Builtins
             }
 
             if (nx < 2)
-            {
-                host.Error("Too few categories, use at least three for the chi-square goodness of fit test.", cgft);
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Too few categories, use at least three for the chi-square goodness of fit test.", cgft);
             if (nx == 2)
-            {
-                host.Error("Only two categories, use binomial methods such as the single proportion test.", cgft);
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Only two categories, use binomial methods such as the single proportion test.", cgft);
 
             double[] xn = new double[nx];
             double[] xe = new double[nx];
@@ -1823,10 +1817,7 @@ namespace StatsDirect.Builtins
             for (int n = 0; n <= nx - 1; n++)
             {
                 if (xe[n] <= 0)
-                {
-                    host.Error("Can not have expected value < = 0.", cgft);
-                    throw new TemplateOperationCancelledException();
-                }
+                    throw new TemplateOperationCancelledException("Can not have expected value < = 0.", cgft);
                 if (xe[n] < 5)
                     expectedsBelow5 += 1;
             }
@@ -2514,20 +2505,20 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false, host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, host.Preferences.ShouldUseColour)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk", host.Preferences.ShouldUseColour)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk", host.Preferences.ShouldUseColour)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
             return outputParameters;
         }
@@ -3198,9 +3189,7 @@ namespace StatsDirect.Builtins
             {
                 title[i] = zcat[i].Ti;
                 if (title[i].Length > 50)
-                {
                     title[i] = title[i].Substring(0, 50);
-                }
             }
 
             double[,] o = new double[k + 1, 4 + 1];
@@ -3389,22 +3378,22 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false, host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, host.Preferences.ShouldUseColour)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
 
             if (sk != 0)
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio", host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio", host.Preferences.ShouldUseColour)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
 
             return outputParameters;
@@ -6649,7 +6638,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         public static ParameterBag Woolf(ITemplateHost host, double[,] o, int k, bool showIntermediates, double cit, double cco, out bool ierr)
         {
             double s1X = 0; double s1 = 0; double t1 = 0; double t1X = 0; double w1 = 0; double w1X = 0; double n1 = 0; double n1X = 0;
@@ -6900,7 +6888,6 @@ namespace StatsDirect.Builtins
             return Woolf(host, o, k, showIntermediates, cit, cco, out bool _);
         }
 
-
         public static ParameterBag ShtDetabulate(ITemplateHost host, ParameterBag parameters)
         {
             int i; int j;
@@ -6915,11 +6902,9 @@ namespace StatsDirect.Builtins
                 if (data.Variables[i].Length > maxrows)
                     maxrows = data.Variables[i].Length;
             }
-            if (gtot > 64000)
-            {
-                host.Error("Number of observations exceeds row limit of worksheet.", "Detabulate");
-                return null;
-            }
+            if (gtot > 1000000)
+                throw new TemplateOperationCancelledException("Number of observations exceeds row limit of worksheet.", "Detabulate");
+
             int[,] xt = new int[maxrows + 1, data.VariableCount + 1];
             for (i = 0; i <= data.VariableCount - 1; i++)
                 for (j = 1; j <= maxrows; j++)
@@ -6941,7 +6926,7 @@ namespace StatsDirect.Builtins
             int ctr = 0;
             for (j = 1; j <= maxrows; j++)
             {
-                for (i = 0; i <= data.VariableCount - 1; i++)
+                for (i = 0; i < data.VariableCount; i++)
                 {
                     if (xt[j, i] > 0)
                     {
@@ -6976,9 +6961,7 @@ namespace StatsDirect.Builtins
                 ycat[i].X = Convert.ToDouble(i - 1);
             }
             for (int i = 1; i <= n; i++)
-            {
                 y[i] = rowsVariable.Data[i - 1];
-            }
 
             DataFrame columnsFrame = parameters["columns"].AsDataFrame;
             bool sorted = parameters["sorted"].AsBoolean;
@@ -6999,9 +6982,7 @@ namespace StatsDirect.Builtins
                     xcat[i].X = Convert.ToDouble(i - 1);
                 }
                 for (int i = 1; i <= n; i++)
-                {
                     x[i] = cv.Data[i - 1];
-                }
                 if (sorted)
                 {
                     SortName(ycats, ycat, 1);

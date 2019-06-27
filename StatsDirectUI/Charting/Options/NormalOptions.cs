@@ -21,10 +21,8 @@ namespace StatsDirect.Charting
         ///  <remarks></remarks>
         public bool ShouldScaleZ { get; set; }
 
-        public NormalOptions(bool useColour)
-            : base(useColour)
+        public NormalOptions()
         {
-
             //  A normal plot's marker is derived from the first series
             MarkerTypes = new List<MarkerType>();
             MarkerType markerType = ChartPreferences.MarkerTypes[0].Clone();

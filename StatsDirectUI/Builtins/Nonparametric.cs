@@ -153,7 +153,7 @@ namespace StatsDirect.Builtins
 
         }
 
-        public static void XQci(double qc, int rx, double[] r, ref double xq, double gamma, out double ll, out double ul, ref double cover, bool conservative, ref bool capUpper, ref bool capLower, out int fault)
+        public static void XQci(double qc, int rx, double[] r, ref double xq, double gamma, out double ll, out double ul, out double cover, bool conservative, out bool capUpper, out bool capLower, out int fault)
         {
             double llPlox; double ulPlox;
             double ulId = 0; double llId = 0;
@@ -161,26 +161,21 @@ namespace StatsDirect.Builtins
             // get 100*qc'th quantile from sorted vector r
             double iq = qc * (rx + 1);
             if (iq > rx)
-            {
                 iq = rx;
-            }
             if (iq < 0)
-            {
                 iq = 1;
-            }
             if (iq - Math.Floor(iq) == 0)
-            {
                 xq = r[Convert.ToInt32(iq)];
-            }
             if (iq - Math.Floor(iq) != 0)
-            {
                 xq = r[(int)Math.Floor(iq)] + (r[(int)Math.Floor(iq) + 1] - r[(int)Math.Floor(iq)]) * (iq - Math.Floor(iq));
-            }
             double z = Math.Abs(PDF.gauinv((1.0 - gamma) / 2.0, out fault));
             if (fault != 0)
             {
                 ll = Constant.MISSING;
                 ul = Constant.MISSING;
+                capLower = false;
+                capUpper = false;
+                cover = Constant.MISSING;
                 return;
             }
             double rxs = Convert.ToDouble(rx);
@@ -202,8 +197,8 @@ namespace StatsDirect.Builtins
                 }
                 ll = r[(int)Math.Floor(llId) + 1];
                 ul = r[(int)Math.Floor(ulId) + 1];
-                ExFortran.bino(rx, qc, Convert.ToInt32(ulId - 1.0), out double scrapTerm, out ulPlox, out double scrapPhi, out fault);
-                ExFortran.bino(rx, qc, Convert.ToInt32(llId - 1.0), out scrapTerm, out llPlox, out scrapPhi, out fault);
+                ExFortran.bino(rx, qc, Convert.ToInt32(ulId - 1.0), out double _, out ulPlox, out double _, out _);
+                ExFortran.bino(rx, qc, Convert.ToInt32(llId - 1.0), out _, out llPlox, out _, out fault);
                 cover = (ulPlox - llPlox) * 100.0;
             }
             else
@@ -212,11 +207,12 @@ namespace StatsDirect.Builtins
                 int q;
                 for (q = 0; q <= rx; q++)
                 {
-                    ExFortran.bino(rx, qc, q, out double scrapTerm, out plox[q], out double scrapPhi, out fault);
+                    ExFortran.bino(rx, qc, q, out double _, out plox[q], out double _, out fault);
                     if (fault != 0)
                     {
                         ll = Constant.MISSING;
                         ul = Constant.MISSING;
+                        cover = Constant.MISSING;
                         return;
                     }
                 }
@@ -1075,8 +1071,7 @@ namespace StatsDirect.Builtins
                 if (rx < 3)
                 {
                     host.FinishProgress();
-                    host.Error("Too few observations.  Please use three or more non-zero positive integers.", "Diversity indices"); // , App.helpfile, ACTIVE_HELP_ID)
-                    throw new TemplateOperationCancelledException();
+                    throw new TemplateOperationCancelledException("Too few observations.  Please use three or more non-zero positive integers.", "Diversity indices");
                 }
                 double simpson = 1.0 - sumnx / (sumn * (sumn - 1.0));
                 double shannon = (sumn * Math.Log(sumn) - sumnlogn) / sumn;
@@ -1948,10 +1943,7 @@ namespace StatsDirect.Builtins
             rows = ctr;
 
             if (rows <= 4)
-            {
-                host.Error("Too few observations", "Nonparametric Regression");
-                throw new TemplateOperationCancelledException();
-            }
+                throw new TemplateOperationCancelledException("Too few observations", "Nonparametric Regression");
 
             // get x and y medians in order to calculate intercepts later
             double[] axo = new double[rows + 1];
@@ -2147,8 +2139,7 @@ namespace StatsDirect.Builtins
             }
             catch (Exception)
             {
-                host.Error("Calculation Error", "Wilcoxon");
-                throw new TemplateOperationCancelledException();
+                throw new TemplateOperationCancelledException("Calculation Error", "Wilcoxon");
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -2655,7 +2646,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptSmirnov(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSmirnov(ParameterBag parameters)
         {
             int n1 = 0; int n2 = 0;
 
@@ -2700,14 +2691,12 @@ namespace StatsDirect.Builtins
             {
                 p = Constant.MISSING;
             }
-            outputParameters.AddOutput("p_l", host.pval_half(p));
+            outputParameters.AddOutput("p_l", p);
             outputParameters.AddOutput("d_r", dn);
             p = ExFortran.ksp2(n1, n2, ref dn, out ifault) / 2.0;
             if (ifault != 0)
-            {
                 p = Constant.MISSING;
-            }
-            outputParameters.AddOutput("p_r", host.pval_half(p));
+            outputParameters.AddOutput("p_r", p);
 
             return outputParameters;
         }
@@ -2741,9 +2730,8 @@ namespace StatsDirect.Builtins
                 }
                 Array.Sort(r, 1, rx);
 
-                bool capLower = false; bool capUpper = false;
-                double cover = 0; double xq = 0;
-                XQci(qc, rx, r, ref xq, gamma, out double ll, out double ul, ref cover, doConservative, ref capUpper, ref capLower, out int _);
+                double xq = 0;
+                XQci(qc, rx, r, ref xq, gamma, out double ll, out double ul, out double cover, doConservative, out bool capUpper, out bool capLower, out int _);
 
                 ParameterBag variableParameters = new ParameterBag();
                 variableParameters.AddOutput("sample", v.Title);
@@ -2752,12 +2740,12 @@ namespace StatsDirect.Builtins
                 variableParameters.AddOutput("value", xq);
                 variableParameters.AddOutput("pc", gamma * 100);
                 variableParameters.AddOutput("type", doConservative ? "(conservative)" : "(non-conservative)");
-                string x = capLower ? "* " : string.Empty;
-                variableParameters.AddOutput("from", x + host.RoundU(ll));
-                x = capUpper ? "* " : string.Empty;
-                variableParameters.AddOutput("to", x + host.RoundU(ul));
-                x = capLower || capUpper ? "  (* limit capped at min/max)" : string.Empty;
-                variableParameters.AddOutput("exact", host.RoundU(cover) + "%" + x);
+                variableParameters.AddOutput("note_from", capLower ? "* " : string.Empty);
+                variableParameters.AddOutput("from", ll);
+                variableParameters.AddOutput("note_to", capUpper ? "* " : string.Empty);
+                variableParameters.AddOutput("to", ul);
+                variableParameters.AddOutput("exact", cover);
+                variableParameters.AddOutput("note_text", capLower || capUpper ? "  (* limit capped at min/max)" : string.Empty);
                 variableList.Add(variableParameters);
             }
 
