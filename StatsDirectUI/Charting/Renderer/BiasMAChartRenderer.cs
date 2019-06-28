@@ -65,10 +65,10 @@ namespace StatsDirect.Charting.Renderer
 
 
             // get the Min and Max for the data
-            Range dataRangeX = GetMinMaxArray(xx, ScaleType.Linear);
+            Layout.Range dataRangeX = GetMinMaxArray(xx, ScaleType.Linear);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
-            Range dataRangeY = GetMinMaxArray(y, ScaleType.Linear);
+            Layout.Range dataRangeY = GetMinMaxArray(y, ScaleType.Linear);
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
 

@@ -32,7 +32,7 @@ namespace StatsDirect.Charting.Renderer
             IList<ISeries> SeriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(SeriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(SeriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -73,7 +73,7 @@ namespace StatsDirect.Charting.Renderer
             ScaleHeight(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -330,7 +330,7 @@ namespace StatsDirect.Charting.Renderer
             ScaleWidth(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -595,7 +595,7 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotBoxWhiskerAscii(IList<ISeries> seriesToUse)
         {
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 

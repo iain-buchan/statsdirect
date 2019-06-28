@@ -14,3 +14,5 @@ ReleaseBuild/*.exe
 *.pem
 *.pvk
 *.spc
+/StatsDirectUI/StatsDirectUI.csproj.user
+/Layout/Layout.csproj.user

@@ -31,12 +31,12 @@ namespace StatsDirect.Charting.Renderer
                 // Get the Min and Max for the data
                 if (minMaxY != DataMinMax.XPreset_YPreset)
                 {
-                    Range dataRangeX = GetMinMaxArray(x, Definition.ScaleParameters.X.ScaleType);
+                    Layout.Range dataRangeX = GetMinMaxArray(x, Definition.ScaleParameters.X.ScaleType);
                     DataMinX = dataRangeX.Min;
                     DataMaxX = dataRangeX.Max;
                     if (minMaxY == DataMinMax.XCalc_YCalc)
                     {
-                        Range dataRangeY = GetMinMaxArray(y, Definition.ScaleParameters.Y.ScaleType);
+                        Layout.Range dataRangeY = GetMinMaxArray(y, Definition.ScaleParameters.Y.ScaleType);
                         DataMinY = dataRangeY.Min;
                         DataMaxY = dataRangeY.Max;
                     }

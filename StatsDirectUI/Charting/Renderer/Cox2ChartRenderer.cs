@@ -36,8 +36,8 @@ namespace StatsDirect.Charting.Renderer
                 legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = mt });
             }
 
-            Range xRange = GetMinMaxArray(options.xp, Definition.ScaleParameters.X.ScaleType);
-            Range yRange = GetMinMaxArray(options.yp, Definition.ScaleParameters.Y.ScaleType);
+            Layout.Range xRange = GetMinMaxArray(options.xp, Definition.ScaleParameters.X.ScaleType);
+            Layout.Range yRange = GetMinMaxArray(options.yp, Definition.ScaleParameters.Y.ScaleType);
             DataMinX = xRange.Min;
             DataMaxX = xRange.Max;
             DataMinY = yRange.Min;

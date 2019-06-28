@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 
@@ -1391,6 +1390,8 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag ShtDates(ParameterBag parameters)
         {
+            throw new NotImplementedException("TODO: Need a replacement for DateDiff");
+            /*
             DataFrame data = parameters["data"].AsDataFrame;
             GenericVariable<DateTime> inputVariable = (GenericVariable<DateTime>)data.Variables[0];
 
@@ -1439,6 +1440,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
             return outputParameters;
+            */
         }
 
         public static ParameterBag ShtGroupSplit(ParameterBag parameters)

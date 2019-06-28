@@ -69,7 +69,7 @@ namespace StatsDirect.Charting.Renderer
             List<string> savedLines = null;
 
             //  Ensure the data is sorted
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 

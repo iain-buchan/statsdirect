@@ -56,8 +56,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            Range xRange = GetMinMaxArray(x, ScaleType.Linear);
-            Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
+            Layout.Range xRange = GetMinMaxArray(x, ScaleType.Linear);
+            Layout.Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
             return new ScaleParameters
             {
                 X = { AllowedScaleTypes = new[] { ScaleType.Linear }, ScaleType = ScaleType.Linear, Min = xRange.Min, Max = xRange.Max },

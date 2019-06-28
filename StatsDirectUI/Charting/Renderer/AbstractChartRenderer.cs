@@ -104,7 +104,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Note and return the global minimum and maximum values.
         ///  </summary>
         /// <param name="seriesToUse"></param>
-        protected static Range GetMinMaxSort(IList<ISeries> seriesToUse)
+        protected static Layout.Range GetMinMaxSort(IList<ISeries> seriesToUse)
         {
             double min = double.MaxValue;
             double max = double.MinValue;
@@ -117,7 +117,7 @@ namespace StatsDirect.Charting.Renderer
                 if (ds.Data[ds.Data.Length - 1] > max)
                     max = ds.Data[ds.Data.Length - 1];
             }
-            return new Range(min, max);
+            return new Layout.Range(min, max);
         }
 
         ///  <summary>
@@ -1674,7 +1674,7 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         /// <param name="data"></param>
         /// <param name="scaleType">The scale that will use the data.  For log scales, values of 0 or less are ignored.</param>
-        protected Range GetMinMaxArray(double[] data, ScaleType scaleType)
+        protected Layout.Range GetMinMaxArray(double[] data, ScaleType scaleType)
         {
             bool ignoreZeroOrLess = scaleType == ScaleType.LogNatural || scaleType == ScaleType.Log10;
             double min = double.MaxValue;
@@ -1689,7 +1689,7 @@ namespace StatsDirect.Charting.Renderer
                         max = data[i];
                 }
             }
-            return new Range(min, max);
+            return new Layout.Range(min, max);
         }
 
         ///  <summary>

@@ -1,1255 +1,692 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
-  <Import Project="..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.props" Condition="Exists('..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <UseWindowsForms>true</UseWindowsForms>
     <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{C73E1B83-A745-4592-92A0-40C5658D6D7C}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>StatsDirect</RootNamespace>
     <AssemblyName>StatsDirect</AssemblyName>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
     <StartupObject>StatsDirect.UI.Program</StartupObject>
     <ApplicationIcon>UI\sd3.ico</ApplicationIcon>
-    <SignAssembly>false</SignAssembly>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <IsWebBootstrapper>true</IsWebBootstrapper>
-    <PublishUrl>http://localhost/StatsDirect/</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationVersion>1.0.0.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <AssemblyTitle>StatsDirect</AssemblyTitle>
+    <Company>StatsDirect Limited</Company>
+    <Product>StatsDirect</Product>
+    <Description>StatsDirect statistical analysis workbench</Description>
+    <Copyright>Copyright ©1997-2019 StatsDirect Limited</Copyright>
+    <AssemblyVersion>3.2.7.0</AssemblyVersion>
+    <FileVersion>3.2.7.0</FileVersion>
+    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
-    <Prefer32Bit>false</Prefer32Bit>
+    <PostBuildEvent>
+      "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.comodoca.com /p ***REMOVED*** "$(TargetPath)"
+      "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.comodoca.com /td sha256 /as /p ***REMOVED*** "$(TargetPath)"
+      $(SolutionDir)Bin\sgen /n /f  /a:"$(TargetPath)"
+      "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.comodoca.com /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
+      "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.comodoca.com /td sha256 /as /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
+      xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWatchExceptions|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WATCH_EXCEPTIONS</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Antlr4.Runtime, Version=4.6.0.0, Culture=neutral, PublicKeyToken=09abb75b9ed49849, processorArchitecture=MSIL">
-      <HintPath>..\packages\Antlr4.Runtime.4.6.6\lib\net45\Antlr4.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="DevExpress.Data.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.Docs.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.Office.v19.1.Core, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.RichEdit.v19.1.Export, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.Printing.v19.1.Core, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.RichEdit.v19.1.Core, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.Sparkline.v19.1.Core, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.Utils.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.XtraBars.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.XtraEditors.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.XtraPrinting.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.Images.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="DevExpress.XtraTreeList.v19.1, Version=19.1.3.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="HtmlAgilityPack, Version=1.11.1.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlAgilityPack.1.11.5\lib\Net45\HtmlAgilityPack.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="OpenMcdf, Version=2.2.1.2, Culture=neutral, PublicKeyToken=fdbb1629d7c00800, processorArchitecture=MSIL">
-      <HintPath>..\packages\OpenMcdf.2.2.1.3\lib\net40\OpenMcdf.dll</HintPath>
-    </Reference>
-    <Reference Include="SpreadsheetGear2017.Core, Version=8.3.2.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="SpreadsheetGear2017.Drawing, Version=8.3.2.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Drawing.dll</HintPath>
-    </Reference>
-    <Reference Include="SpreadsheetGear2017.Windows.Forms, Version=8.3.2.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Windows.Forms.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.configuration" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net" />
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="DevExpress.WindowsDesktop.Win" Version="19.1.4-ctp" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Builtins\Agreement.cs" />
-    <Compile Include="Builtins\Analysis.cs" />
-    <Compile Include="Builtins\Anova.cs" />
-    <Compile Include="Builtins\Calcit.cs" />
-    <Compile Include="Builtins\CategoriseOptions.cs" />
-    <Compile Include="Builtins\ChartExplorer.cs" />
-    <Compile Include="Builtins\Chi.cs" />
-    <Compile Include="Builtins\ConvertUnitsOptions.cs" />
-    <Compile Include="Builtins\GraphicsOptions.cs" />
-    <Compile Include="Builtins\SimpleLinearRegressionContext.cs" />
-    <Compile Include="Builtins\SubjectSummary.cs" />
-    <Compile Include="Builtins\TimeSummary.cs" />
-    <Compile Include="Builtins\ToggleFiltersOptions.cs" />
-    <Compile Include="Builtins\Coxreg.cs" />
-    <Compile Include="Builtins\Describe.cs" />
-    <Compile Include="Builtins\Distribution.cs" />
-    <Compile Include="Builtins\DistributionOptions.cs" />
-    <Compile Include="Builtins\DistributionType.cs" />
-    <Compile Include="Builtins\DummyOptions.cs" />
-    <Compile Include="Builtins\Exact.cs" />
-    <Compile Include="Builtins\ExactBB.cs" />
-    <Compile Include="Builtins\ExtractionOptions.cs" />
-    <Compile Include="Builtins\Formula.cs" />
-    <Compile Include="Builtins\ImportExport.cs" />
-    <Compile Include="Builtins\Matrix.cs" />
-    <Compile Include="Builtins\Meta.cs" />
-    <Compile Include="Builtins\Nonparametric.cs" />
-    <Compile Include="Builtins\Options.cs" />
-    <Compile Include="Builtins\Parametric.cs" />
-    <Compile Include="Builtins\Power.cs" />
-    <Compile Include="Builtins\Random.cs" />
-    <Compile Include="Builtins\Rates.cs" />
-    <Compile Include="Builtins\Registry.cs" />
-    <Compile Include="Builtins\Regress.cs" />
-    <Compile Include="Builtins\Regress1.cs" />
-    <Compile Include="Builtins\RegressRpt.cs" />
-    <Compile Include="Builtins\Sheet.cs" />
-    <Compile Include="Builtins\SortInPlaceOptions.cs" />
-    <Compile Include="Builtins\SummaryStatisticsOptions.cs" />
-    <Compile Include="Builtins\Survival.cs" />
-    <Compile Include="Builtins\Tables.cs" />
-    <Compile Include="Builtins\VarianceStabilisationMethod.cs" />
-    <Compile Include="Calculator\frmStatsDirectCalculator.cs">
+    <Compile Update="Calculator\frmStatsDirectCalculator.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Calculator\frmStatsDirectCalculator.Designer.cs">
+    <Compile Update="Calculator\frmStatsDirectCalculator.Designer.cs">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </Compile>
-    <Compile Include="Charting\BrushDescriptor.cs" />
-    <Compile Include="Charting\CapStyle.cs" />
-    <Compile Include="Charting\ChartPartSizer.cs" />
-    <Compile Include="Charting\ChartPreferences.cs" />
-    <Compile Include="Charting\ColorDescriptor.cs" />
-    <Compile Include="Charting\DashStyleDescriptor.cs" />
-    <Compile Include="Charting\FontMap.cs" />
-    <Compile Include="Charting\Enums\ChartOrientation.cs" />
-    <Compile Include="Charting\Options\LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions.cs" />
-    <Compile Include="Charting\Options\LogitOptions.cs" />
-    <Compile Include="Charting\Options\LinearizedEstimationOptions.cs" />
-    <Compile Include="Charting\Options\EffectOptions.cs" />
-    <Compile Include="Charting\Options\CoxSurvivalOrHazardOptions.cs" />
-    <Compile Include="Charting\Options\KaplanMeierOptions.cs" />
-    <Compile Include="Charting\Enums\KaplanMeierPlotMode.cs" />
-    <Compile Include="Charting\Options\Cox2Options.cs" />
-    <Compile Include="Charting\Options\PolynomialRegressionOptions.cs" />
-    <Compile Include="Charting\Options\XyrOptions.cs" />
-    <Compile Include="Charting\Options\XyOptions.cs" />
-    <Compile Include="Charting\Options\XyzOptions.cs" />
-    <Compile Include="Charting\Options\LAbbeOptions.cs" />
-    <Compile Include="Charting\Options\TiesOptions.cs" />
-    <Compile Include="Charting\Options\CorrelationOptions.cs" />
-    <Compile Include="Charting\Options\MHOptions.cs" />
-    <Compile Include="Charting\Options\BiasMAOptions.cs" />
-    <Compile Include="Charting\PenDescriptor.cs" />
-    <Compile Include="Charting\PointD.cs" />
-    <Compile Include="Charting\Renderer\AbstractXYChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\AbstractXYZChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\KaplanMeierChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\Cox2ChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\AbstractLinearRegressionChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\LinearRegressionAndMaybeSeCiOrPredictionIntervalChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\LogitChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\PolynomialRegressionChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\LinearizedEstimationChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\Xy0To1ChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\XyrChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\XyChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\XyzChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\LAbbeChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\EffectChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\CoxSurvivalOrHazardChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\TiesChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\CorrelationChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\MHRDChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\MHChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\BiasMAChartRenderer.cs" />
-    <Compile Include="Charting\SizeD.cs" />
-    <Compile Include="Charting\NullCanvas.cs" />
-    <Compile Include="Charting\SvgCanvas.cs" />
-    <Compile Include="Charting\NullCanvasFactory.cs" />
-    <Compile Include="Charting\SvgCanvasFactory.cs" />
-    <Compile Include="Charting\Enums\ChartAreaShape.cs" />
-    <Compile Include="Charting\Enums\CorrelationRowType.cs" />
-    <Compile Include="Charting\Enums\CoxPlotMode.cs" />
-    <Compile Include="Charting\EmfCanvasFactory.cs" />
-    <Compile Include="Charting\FontDescriptor.cs" />
-    <Compile Include="Charting\ICanvasFactory.cs" />
-    <Compile Include="Charting\IChartOptionVisitor.cs" />
-    <Compile Include="Charting\IChartSizable.cs" />
-    <Compile Include="Creole\CreoleEntity.cs" />
-    <Compile Include="Creole\CreoleAttribute.cs" />
-    <Compile Include="Creole\CreoleBlock.cs" />
-    <Compile Include="Creole\CreoleContainer.cs" />
-    <Compile Include="Creole\CreoleFormatting.cs" />
-    <Compile Include="Creole\CreoleLineBreak.cs" />
-    <Compile Include="Creole\CreoleParserVisitor.cs" />
-    <Compile Include="Creole\CreoleInclude.cs" />
-    <Compile Include="Creole\CreoleParagraph.cs" />
-    <Compile Include="Creole\CreoleList.cs" />
-    <Compile Include="Creole\CreoleReader.cs" />
-    <Compile Include="Creole\CreoleSubstitution.cs" />
-    <Compile Include="Creole\CreoleTable.cs" />
-    <Compile Include="Creole\CreoleTableDetail.cs" />
-    <Compile Include="Creole\CreoleTableHeader.cs" />
-    <Compile Include="Creole\CreoleTableRow.cs" />
-    <Compile Include="Creole\CreoleText.cs" />
-    <Compile Include="Creole\ICreole.cs" />
-    <Compile Include="Creole\ICreoleVisitor.cs" />
-    <Compile Include="Data\GenericVariable.cs" />
-    <Compile Include="Data\BooleanVariable.cs" />
-    <Compile Include="Data\IVariableVisitor.cs" />
-    <Compile Include="TemplateProcessing\CreoleHtmlReportRenderer.cs" />
-    <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
-    <Compile Include="TemplateProcessing\HtmlRenderer.cs" />
-    <Compile Include="TemplateProcessing\HtmlImageRenderer.cs" />
-    <Compile Include="TemplateProcessing\RtfRenderer.cs" />
-    <Compile Include="Templates\PureBuiltin.cs" />
-    <Compile Include="Templates\IBuiltin.cs" />
-    <Compile Include="Templates\IRenderable.cs" />
-    <Compile Include="Templates\IRenderableVisitor.cs" />
-    <Compile Include="Templates\IAxisScaleVisitor.cs" />
-    <Compile Include="Charting\IChartSizableVisitor.cs" />
-    <Compile Include="Charting\Legend.cs" />
-    <Compile Include="Charting\Scales\DateAxisScaler.cs" />
-    <Compile Include="Charting\Margin.cs" />
-    <Compile Include="Charting\Renderer\AbstractChartRenderer.cs" />
-    <Compile Include="Charting\Options\AgreementOptions.cs" />
-    <Compile Include="Charting\Renderer\AgreementPairChartRenderer.cs" />
-    <Compile Include="Charting\AxisDefinition.cs" />
-    <Compile Include="Charting\Enums\AxisMode.cs" />
-    <Compile Include="Charting\AxisScalerFactory.cs" />
-    <Compile Include="Charting\Scales\AxisScales.cs" />
-    <Compile Include="Charting\Renderer\ControlChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\ErrorBarChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\GiniChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\HistogramChartRenderer.cs" />
-    <Compile Include="Charting\IAxisScaler.cs" />
-    <Compile Include="Charting\Scales\LinearAxisScaler.cs" />
-    <Compile Include="Charting\Scales\Log10AxisScaler.cs" />
-    <Compile Include="Charting\Scales\LogNaturalAxisScaler.cs" />
-    <Compile Include="Charting\Renderer\LinearRegressionChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\NormalChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\NotSetChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\RocChartRenderer.cs" />
-    <Compile Include="Charting\Renderer\ScatterChartRenderer.cs" />
-    <Compile Include="Templates\ReportTemplate.cs" />
-    <Compile Include="Templates\TalbotLinHanrahanAxisScale.cs" />
-    <Compile Include="Charting\Scales\TalbotLinHanrahanAxisScaler.cs" />
-    <Compile Include="Templates\ChartType.cs" />
-    <Compile Include="Templates\IAxisScale.cs" />
-    <Compile Include="Templates\ILinearAxisScale.cs" />
-    <Compile Include="Templates\CategoryAxisScale.cs" />
-    <Compile Include="Templates\DateAxisScale.cs" />
-    <Compile Include="Templates\Log2AxisScale.cs" />
-    <Compile Include="Templates\Log10AxisScale.cs" />
-    <Compile Include="Templates\LinearAxisScale.cs" />
-    <Compile Include="Charting\Scales\LinearAxisMasker.cs" />
-    <Compile Include="Charting\Renderer\BarChartRenderer.cs" />
-    <Compile Include="Charting\Options\BarOptions.cs" />
-    <Compile Include="Charting\Enums\BinChoiceMethod.cs" />
-    <Compile Include="Charting\BinsDescriptor.cs" />
-    <Compile Include="Charting\Renderer\BoxWhiskerChartRenderer.cs" />
-    <Compile Include="Charting\Options\BoxWhiskerOptions.cs" />
-    <Compile Include="Charting\ChartDefinition.cs" />
-    <Compile Include="Charting\ChartOptionProcessor.cs" />
-    <Compile Include="Charting\Options\ChartOptions.cs" />
-    <Compile Include="Charting\ChartRendererFactory.cs" />
-    <Compile Include="Charting\Enums\ComparisonValue.cs" />
-    <Compile Include="Charting\Options\ControlOptions.cs" />
-    <Compile Include="Charting\Renderer\ForestChartRenderer.cs" />
-    <Compile Include="Charting\HistogramBinChooser.cs" />
-    <Compile Include="Charting\Options\HistogramSeriesOptions.cs" />
-    <Compile Include="Charting\IChartRenderer.cs" />
-    <Compile Include="Charting\IImageRenderer.cs" />
-    <Compile Include="Charting\Renderer\LadderChartRenderer.cs" />
-    <Compile Include="Charting\MultiDoublePoint.cs" />
-    <Compile Include="Charting\MultiDoubleSeries.cs" />
-    <Compile Include="Charting\Enums\DataMinMax.cs" />
-    <Compile Include="Charting\DoubleSeries.cs" />
-    <Compile Include="Charting\EmfCanvas.cs" />
-    <Compile Include="Charting\Options\ErrorBarOptions.cs" />
-    <Compile Include="Charting\Enums\FillStyle.cs" />
-    <Compile Include="Charting\Options\ForestOptions.cs" />
-    <Compile Include="Charting\Options\GenericOptions.cs" />
-    <Compile Include="Charting\Options\GiniOptions.cs" />
-    <Compile Include="Charting\Options\HistogramOptions.cs" />
-    <Compile Include="Charting\IStatsDirectCanvas.cs" />
-    <Compile Include="Charting\Options\LadderOptions.cs" />
-    <Compile Include="Charting\Options\LinearRegressionOptions.cs" />
-    <Compile Include="Charting\Enums\MarkerShape.cs" />
-    <Compile Include="Charting\MarkerType.cs" />
-    <Compile Include="Charting\Options\NormalOptions.cs" />
-    <Compile Include="Charting\Renderer\PyramidChartRenderer.cs" />
-    <Compile Include="Charting\Options\PyramidOptions.cs" />
-    <Compile Include="Charting\ROCCutoff.cs" />
-    <Compile Include="Charting\Options\ROCOptions.cs" />
-    <Compile Include="Charting\ROCSeriesRecord.cs" />
-    <Compile Include="TemplateProcessing\RtfImageConverter.cs" />
-    <Compile Include="TemplateProcessing\RtfImageRenderer.cs" />
-    <Compile Include="Charting\Options\ScatterXYOptions.cs" />
-    <Compile Include="Charting\ISeries.cs" />
-    <Compile Include="Charting\SeriesOptionsDescriptor.cs" />
-    <Compile Include="Charting\Renderer\SpreadChartRenderer.cs" />
-    <Compile Include="Charting\Options\SpreadOptions.cs" />
-    <Compile Include="Charting\StringSeries.cs" />
-    <Compile Include="Charting\Renderer\SurvivalChartRenderer.cs" />
-    <Compile Include="Charting\Options\SurvivalOptions.cs" />
-    <Compile Include="Templates\TemplateAndParameters.cs" />
-    <Compile Include="Templates\Tic.cs" />
-    <Compile Include="Charting\Enums\Transformation.cs" />
-    <Compile Include="Configuration\SDConfiguration.cs" />
-    <Compile Include="CsvParser\Csv.g4.lexer.cs">
+    <Compile Update="CsvParser\Csv.g4.lexer.cs">
       <DependentUpon>Csv.g4</DependentUpon>
     </Compile>
-    <Compile Include="CsvParser\Csv.g4.parser.cs">
+    <Compile Update="CsvParser\Csv.g4.parser.cs">
       <DependentUpon>Csv.g4</DependentUpon>
     </Compile>
-    <Compile Include="CsvParser\CsvReader.cs" />
-    <Compile Include="Data\ClassifierVariable.cs" />
-    <Compile Include="Data\ColumnData.cs" />
-    <Compile Include="Data\VariantVariable.cs" />
-    <Compile Include="Data\DataFrame.cs" />
-    <Compile Include="Data\DataFrame2D.cs" />
-    <Compile Include="Data\DateVariable.cs" />
-    <Compile Include="Data\DoubleVariable.cs" />
-    <Compile Include="Data\Group.cs" />
-    <Compile Include="Data\IOrigin.cs" />
-    <Compile Include="Data\IRefillSource.cs" />
-    <Compile Include="Data\IStripForRedo.cs" />
-    <Compile Include="Data\StringVariable.cs" />
-    <Compile Include="Data\IVariable.cs" />
-    <Compile Include="Data\WorksheetOrigin.cs" />
-    <Compile Include="Expressions\Argument.cs" />
-    <Compile Include="Expressions\ArgumentDefinition.cs" />
-    <Compile Include="Expressions\DoubleConstantNode.cs" />
-    <Compile Include="Expressions\BooleanConstantNode.cs" />
-    <Compile Include="Expressions\Converter.cs" />
-    <Compile Include="Expressions\Arguments.cs" />
-    <Compile Include="Expressions\CSharpRenderer.cs" />
-    <Compile Include="Expressions\DataType.cs" />
-    <Compile Include="Expressions\InOutDataTypeDefinition.cs" />
-    <Compile Include="Expressions\DyadicOperatorDefinition.cs" />
-    <Compile Include="Expressions\MonadicOperatorDefinition.cs" />
-    <Compile Include="Expressions\DyadicOperatorRegistry.cs" />
-    <Compile Include="Expressions\MonadicOperatorRegistry.cs" />
-    <Compile Include="Expressions\StringNode.cs" />
-    <Compile Include="Expressions\DoubleNode.cs" />
-    <Compile Include="Expressions\DyadicNode.cs" />
-    <Compile Include="Expressions\DyadicOperator.cs" />
-    <Compile Include="Expressions\FunctionDefinition.cs" />
-    <Compile Include="Expressions\FunctionNode.cs" />
-    <Compile Include="Expressions\FunctionRegistry.cs" />
-    <Compile Include="Expressions\IExpressionVisitor.cs" />
-    <Compile Include="Expressions\INode.cs" />
-    <Compile Include="Expressions\IntegerNode.cs" />
-    <Compile Include="Expressions\MonadicNode.cs" />
-    <Compile Include="Expressions\MonadicOperator.cs" />
-    <Compile Include="Expressions\ParserConstant.cs" />
-    <Compile Include="Expressions\SDMath.cs" />
-    <Compile Include="Expressions\StatsDirectExpressionLexerPartial.cs" />
-    <Compile Include="Expressions\StatsDirectExpressionParserPartial.cs" />
-    <Compile Include="Expressions\VariableNode.cs" />
-    <Compile Include="Numerics\Utilities.cs" />
-    <Compile Include="R\FrameType.cs" />
-    <Compile Include="R\RConvert.cs" />
-    <Compile Include="R\RController.cs" />
-    <Compile Include="R\RResults.g4.lexer.cs">
+    <Compile Update="R\RResults.g4.lexer.cs">
       <DependentUpon>RResults.g4</DependentUpon>
     </Compile>
-    <Compile Include="R\RResults.g4.parser.cs">
+    <Compile Update="R\RResults.g4.parser.cs">
       <DependentUpon>RResults.g4</DependentUpon>
     </Compile>
-    <Compile Include="R\RResultsParserPartial.cs" />
-    <Compile Include="R\RVersion.cs" />
-    <Compile Include="Templates\AxisScaleParameters.cs" />
-    <Compile Include="Templates\Builtin.cs" />
-    <Compile Include="Templates\FrameData.cs" />
-    <Compile Include="Templates\GroupIdentifierMode.cs" />
-    <Compile Include="Templates\IDefaultParameter.cs" />
-    <Compile Include="Templates\IParameterVisitor.cs" />
-    <Compile Include="Templates\IStepVisitor.cs" />
-    <Compile Include="Templates\LabelDirection.cs" />
-    <Compile Include="Templates\OptionFormatType.cs" />
-    <Compile Include="Templates\OptionOption.cs" />
-    <Compile Include="Templates\OptionParameter.cs" />
-    <Compile Include="Templates\Precondition.cs" />
-    <Compile Include="Templates\ReportStep.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Templates\ScaleParameters.cs" />
-    <Compile Include="Templates\ScaleType.cs" />
-    <Compile Include="TemplateProcessing\ValidationProcessor.cs" />
-    <Compile Include="Templates\VariableFactory.cs" />
-    <Compile Include="UI\Biff5Processor.cs" />
-    <Compile Include="UI\CellArrayProcessor.cs" />
-    <Compile Include="UI\CellColumnSelection.cs" />
-    <Compile Include="UI\CellSelection.cs" />
-    <Compile Include="UI\ChartOptionsParameter.cs" />
-    <Compile Include="UI\ClipboardChecker.cs" />
-    <Compile Include="UI\ctlUpdateStatsDirectCheck.cs">
+    <Compile Update="UI\ctlUpdateStatsDirectCheck.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlUpdateStatsDirectCheck.Designer.cs">
+    <Compile Update="UI\ctlUpdateStatsDirectCheck.Designer.cs">
       <DependentUpon>ctlUpdateStatsDirectCheck.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlUpdateRCheck.cs">
+    <Compile Update="UI\ctlUpdateRCheck.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlUpdateRCheck.Designer.cs">
+    <Compile Update="UI\ctlUpdateRCheck.Designer.cs">
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\CustomCommands.cs" />
-    <Compile Include="UI\DialogAndAction.cs" />
-    <Compile Include="UI\HtmlRelatedClasses.cs" />
-    <Compile Include="UI\IGetCells.cs" />
-    <Compile Include="UI\ImmediateParameterFiller.cs" />
-    <Compile Include="UI\InlineParameterPreparer.cs" />
-    <Compile Include="UI\InlineParameterValueExtractor.cs" />
-    <Compile Include="UI\NativeMethods.cs" />
-    <Compile Include="UI\OutputType.cs" />
-    <Compile Include="UI\PaneAndPosition.cs" />
-    <Compile Include="Templates\RelativePosition.cs" />
-    <Compile Include="UI\SanityChecker.cs" />
-    <Compile Include="UI\UpdateChecker.cs" />
-    <Compile Include="UI\RUpdateChecker.cs" />
-    <Compile Include="UI\FillableParameter.cs" />
-    <Compile Include="UI\frmInstallStatsDirect2.cs">
+    <Compile Update="UI\frmInstallStatsDirect2.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmInstallStatsDirect2.Designer.cs">
+    <Compile Update="UI\frmInstallStatsDirect2.Designer.cs">
       <DependentUpon>frmInstallStatsDirect2.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmInstallR.cs">
+    <Compile Update="UI\frmInstallR.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmInstallR.Designer.cs">
+    <Compile Update="UI\frmInstallR.Designer.cs">
       <DependentUpon>frmInstallR.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\GridSelectionProcessor.cs" />
-    <Compile Include="UI\IpcSender.cs" />
-    <Compile Include="UI\IpcListener.cs" />
-    <Compile Include="Numerics\BetaRNG.cs" />
-    <Compile Include="Numerics\BinomialRNG.cs" />
-    <Compile Include="Numerics\Dunett.cs" />
-    <Compile Include="Numerics\Expnos.cs" />
-    <Compile Include="Numerics\ExponentialRNG.cs" />
-    <Compile Include="Numerics\GammaRNG.cs" />
-    <Compile Include="Numerics\MathDbl.cs" />
-    <Compile Include="Numerics\Mersenne.cs" />
-    <Compile Include="Numerics\NonParametric.cs" />
-    <Compile Include="Numerics\NormalRNG.cs" />
-    <Compile Include="Numerics\Numerics.cs" />
-    <Compile Include="Numerics\PoissonRNG.cs" />
-    <Compile Include="Numerics\Rank.cs" />
-    <Compile Include="Numerics\Summary.cs" />
-    <Compile Include="Numerics\UniformXRNG.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
+    <Compile Update="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="TemplateProcessing\CreoleRtfReportRenderer.cs" />
-    <Compile Include="TemplateProcessing\ReportRenderer.cs" />
-    <Compile Include="Templates\BooleanParameter.cs" />
-    <Compile Include="Templates\BuiltinRegistry.cs" />
-    <Compile Include="Templates\BuiltinStep.cs" />
-    <Compile Include="Templates\ChartStep.cs" />
-    <Compile Include="Templates\ConfidenceIntervalParameter.cs" />
-    <Compile Include="Templates\CustomValidator.cs" />
-    <Compile Include="Templates\DateParameter.cs" />
-    <Compile Include="Templates\Double2By2ByKParameter.cs" />
-    <Compile Include="Templates\Double2By2Parameter.cs" />
-    <Compile Include="Templates\DoubleParameter.cs" />
-    <Compile Include="Templates\EditGridParameter.cs" />
-    <Compile Include="Templates\Expression.cs" />
-    <Compile Include="Templates\FilledParameter.cs" />
-    <Compile Include="Templates\Frame2DParameter.cs" />
-    <Compile Include="Templates\FrameParameter.cs" />
-    <Compile Include="Templates\GroupedCovarianceParameter.cs" />
-    <Compile Include="Templates\HelpContext.cs" />
-    <Compile Include="Templates\HelpTip.cs" />
-    <Compile Include="Templates\IFillable.cs" />
-    <Compile Include="Templates\IMightRequireInput.cs" />
-    <Compile Include="Templates\IntegerParameter.cs" />
-    <Compile Include="Templates\InvalidDataException.cs" />
-    <Compile Include="Templates\IScriptEngine.cs" />
-    <Compile Include="Templates\ITemplateHost.cs" />
-    <Compile Include="Templates\ITemplateProcessor.cs" />
-    <Compile Include="Templates\IterationStep.cs" />
-    <Compile Include="Templates\Operation.cs" />
-    <Compile Include="Templates\OptionsParameter.cs" />
-    <Compile Include="Templates\OutputFrameStep.cs" />
-    <Compile Include="Templates\Parameter.cs" />
-    <Compile Include="Templates\ParameterBag.cs" />
-    <Compile Include="Templates\ParameterLifetime.cs" />
-    <Compile Include="Templates\ParametersStep.cs" />
-    <Compile Include="Templates\PickFromListParameter.cs" />
-    <Compile Include="Templates\PickVariablesParameter.cs" />
-    <Compile Include="Templates\RangeParameter.cs" />
-    <Compile Include="Templates\ScriptStep.cs" />
-    <Compile Include="Templates\SDPreferences.cs" />
-    <Compile Include="Templates\SpecialParameter.cs" />
-    <Compile Include="Templates\Step.cs" />
-    <Compile Include="Templates\StringParameter.cs" />
-    <Compile Include="Templates\SuggestedOperation.cs" />
-    <Compile Include="Templates\TemplateFactory.cs" />
-    <Compile Include="Templates\TestStep.cs" />
-    <Compile Include="Templates\Validator.cs" />
-    <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
-    <Compile Include="UI\CallerHandlesChangedOperationAttribute.cs" />
-    <Compile Include="UI\CancelCurrentOperationAndDoException.cs" />
-    <Compile Include="UI\CloseCurrentOperationException.cs" />
-    <Compile Include="UI\ComboFormAdapter.cs" />
-    <Compile Include="UI\Conversion.cs" />
-    <Compile Include="UI\ctlFindAndReplaceData.cs">
+    <Compile Update="UI\ctlFindAndReplaceData.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlFindAndReplaceData.Designer.cs">
+    <Compile Update="UI\ctlFindAndReplaceData.Designer.cs">
       <DependentUpon>ctlFindAndReplaceData.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlConvertUnits.cs">
+    <Compile Update="UI\ctlConvertUnits.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlConvertUnits.Designer.cs">
+    <Compile Update="UI\ctlConvertUnits.Designer.cs">
       <DependentUpon>ctlConvertUnits.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlGraphicsOptions.cs">
+    <Compile Update="UI\ctlGraphicsOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlGraphicsOptions.Designer.cs">
+    <Compile Update="UI\ctlGraphicsOptions.Designer.cs">
       <DependentUpon>ctlGraphicsOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlScores.cs">
+    <Compile Update="UI\ctlScores.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlScores.Designer.cs">
+    <Compile Update="UI\ctlScores.Designer.cs">
       <DependentUpon>ctlScores.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlExtraction.cs">
+    <Compile Update="UI\ctlExtraction.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlExtraction.Designer.cs">
+    <Compile Update="UI\ctlExtraction.Designer.cs">
       <DependentUpon>ctlExtraction.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlPDF.cs">
+    <Compile Update="UI\ctlPDF.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlPDF.Designer.cs">
+    <Compile Update="UI\ctlPDF.Designer.cs">
       <DependentUpon>ctlPDF.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\DefaultCursor.cs" />
-    <Compile Include="UI\DrawingControl.cs" />
-    <Compile Include="UI\ExcelAddInManager.cs" />
-    <Compile Include="UI\ClipboardMetafileHelper.cs" />
-    <Compile Include="UI\ctlDummyOptions.cs">
+    <Compile Update="UI\ctlDummyOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlDummyOptions.Designer.cs">
+    <Compile Update="UI\ctlDummyOptions.Designer.cs">
       <DependentUpon>ctlDummyOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmUpdateCheck.cs">
+    <Compile Update="UI\frmUpdateCheck.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmUpdateCheck.Designer.cs">
+    <Compile Update="UI\frmUpdateCheck.Designer.cs">
       <DependentUpon>frmUpdateCheck.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\MajorMinorPoint.cs" />
-    <Compile Include="UI\PortableSettingsProvider.cs" />
-    <Compile Include="UI\ComboBoxEx.cs">
+    <Compile Update="UI\ComboBoxEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\ComboBoxEx.Designer.cs">
+    <Compile Update="UI\ComboBoxEx.Designer.cs">
       <DependentUpon>ComboBoxEx.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmReportRichEditDummy.cs">
+    <Compile Update="UI\frmReportRichEditDummy.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmReportRichEditDummy.designer.cs">
+    <Compile Update="UI\frmReportRichEditDummy.designer.cs">
       <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlTextToNumbers.cs">
+    <Compile Update="UI\ctlTextToNumbers.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlTextToNumbers.Designer.cs">
+    <Compile Update="UI\ctlTextToNumbers.Designer.cs">
       <DependentUpon>ctlTextToNumbers.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlBarOptions.cs">
+    <Compile Update="UI\ctlBarOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlBarOptions.Designer.cs">
+    <Compile Update="UI\ctlBarOptions.Designer.cs">
       <DependentUpon>ctlBarOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmTextPreview.cs">
+    <Compile Update="UI\frmTextPreview.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmTextPreview.Designer.cs">
+    <Compile Update="UI\frmTextPreview.Designer.cs">
       <DependentUpon>frmTextPreview.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmErrorMessage.cs">
+    <Compile Update="UI\frmErrorMessage.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmErrorMessage.Designer.cs">
+    <Compile Update="UI\frmErrorMessage.Designer.cs">
       <DependentUpon>frmErrorMessage.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlROCCutoff.cs">
+    <Compile Update="UI\ctlROCCutoff.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlROCCutoff.Designer.cs">
+    <Compile Update="UI\ctlROCCutoff.Designer.cs">
       <DependentUpon>ctlROCCutoff.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlAxisOptions.cs">
+    <Compile Update="UI\ctlAxisOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlAxisOptions.Designer.cs">
+    <Compile Update="UI\ctlAxisOptions.Designer.cs">
       <DependentUpon>ctlAxisOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlFont.cs">
+    <Compile Update="UI\ctlFont.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlFont.Designer.cs">
+    <Compile Update="UI\ctlFont.Designer.cs">
       <DependentUpon>ctlFont.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlOneAxisOptions.cs">
+    <Compile Update="UI\ctlOneAxisOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlOneAxisOptions.Designer.cs">
+    <Compile Update="UI\ctlOneAxisOptions.Designer.cs">
       <DependentUpon>ctlOneAxisOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmImagePreview.cs">
+    <Compile Update="UI\frmImagePreview.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmImagePreview.Designer.cs">
+    <Compile Update="UI\frmImagePreview.Designer.cs">
       <DependentUpon>frmImagePreview.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmReportRichEdit.cs">
+    <Compile Update="UI\frmReportRichEdit.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmReportRichEdit.designer.cs">
+    <Compile Update="UI\frmReportRichEdit.designer.cs">
       <DependentUpon>frmReportRichEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlFillStyle.cs">
+    <Compile Update="UI\ctlFillStyle.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlFillStyle.Designer.cs">
+    <Compile Update="UI\ctlFillStyle.Designer.cs">
       <DependentUpon>ctlFillStyle.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlOneSeriesOptions.cs">
+    <Compile Update="UI\ctlOneSeriesOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlOneSeriesOptions.Designer.cs">
+    <Compile Update="UI\ctlOneSeriesOptions.Designer.cs">
       <DependentUpon>ctlOneSeriesOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlMarkerShape.cs">
+    <Compile Update="UI\ctlMarkerShape.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlMarkerShape.Designer.cs">
+    <Compile Update="UI\ctlMarkerShape.Designer.cs">
       <DependentUpon>ctlMarkerShape.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlDashStyle.cs">
+    <Compile Update="UI\ctlDashStyle.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlDashStyle.Designer.cs">
+    <Compile Update="UI\ctlDashStyle.Designer.cs">
       <DependentUpon>ctlDashStyle.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlLineThickness.cs">
+    <Compile Update="UI\ctlLineThickness.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlLineThickness.Designer.cs">
+    <Compile Update="UI\ctlLineThickness.Designer.cs">
       <DependentUpon>ctlLineThickness.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlSeriesOptions.cs">
+    <Compile Update="UI\ctlSeriesOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlSeriesOptions.Designer.cs">
+    <Compile Update="UI\ctlSeriesOptions.Designer.cs">
       <DependentUpon>ctlSeriesOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlPickAWindow.cs">
+    <Compile Update="UI\ctlPickAWindow.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlPickAWindow.Designer.cs">
+    <Compile Update="UI\ctlPickAWindow.Designer.cs">
       <DependentUpon>ctlPickAWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlChiGFOptions.cs">
+    <Compile Update="UI\ctlChiGFOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlChiGFOptions.Designer.cs">
+    <Compile Update="UI\ctlChiGFOptions.Designer.cs">
       <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlChartOptions.cs">
+    <Compile Update="UI\ctlChartOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlChartOptions.Designer.cs">
+    <Compile Update="UI\ctlChartOptions.Designer.cs">
       <DependentUpon>ctlChartOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlHistogramOptions.cs">
+    <Compile Update="UI\ctlHistogramOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlHistogramOptions.Designer.cs">
+    <Compile Update="UI\ctlHistogramOptions.Designer.cs">
       <DependentUpon>ctlHistogramOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlBoxWhiskerOptions.cs">
+    <Compile Update="UI\ctlBoxWhiskerOptions.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlBoxWhiskerOptions.Designer.cs">
+    <Compile Update="UI\ctlBoxWhiskerOptions.Designer.cs">
       <DependentUpon>ctlBoxWhiskerOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\ctlSort.cs">
+    <Compile Update="UI\ctlSort.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\ctlSort.Designer.cs">
+    <Compile Update="UI\ctlSort.Designer.cs">
       <DependentUpon>ctlSort.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmExportGraphic.cs">
+    <Compile Update="UI\frmExportGraphic.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmExportGraphic.Designer.cs">
+    <Compile Update="UI\frmExportGraphic.Designer.cs">
       <DependentUpon>frmExportGraphic.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmLicense.cs">
+    <Compile Update="UI\frmLicense.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmLicense.Designer.cs">
+    <Compile Update="UI\frmLicense.Designer.cs">
       <DependentUpon>frmLicense.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmAbout.cs">
+    <Compile Update="UI\frmAbout.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmAbout.Designer.cs">
+    <Compile Update="UI\frmAbout.Designer.cs">
       <DependentUpon>frmAbout.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmSetupTools.cs">
+    <Compile Update="UI\frmSetupTools.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmSetupTools.Designer.cs">
+    <Compile Update="UI\frmSetupTools.Designer.cs">
       <DependentUpon>frmSetupTools.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmDeleteSpecial.cs">
+    <Compile Update="UI\frmDeleteSpecial.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmDeleteSpecial.Designer.cs">
+    <Compile Update="UI\frmDeleteSpecial.Designer.cs">
       <DependentUpon>frmDeleteSpecial.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmInsertCells.cs">
+    <Compile Update="UI\frmInsertCells.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmInsertCells.Designer.cs">
+    <Compile Update="UI\frmInsertCells.Designer.cs">
       <DependentUpon>frmInsertCells.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmLoading.cs">
+    <Compile Update="UI\frmLoading.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmLoading.Designer.cs">
+    <Compile Update="UI\frmLoading.Designer.cs">
       <DependentUpon>frmLoading.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmOpening.cs">
+    <Compile Update="UI\frmOpening.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmOpening.Designer.cs">
+    <Compile Update="UI\frmOpening.Designer.cs">
       <DependentUpon>frmOpening.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmPasteSpecial.cs">
+    <Compile Update="UI\frmPasteSpecial.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmPasteSpecial.Designer.cs">
+    <Compile Update="UI\frmPasteSpecial.Designer.cs">
       <DependentUpon>frmPasteSpecial.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmCategorise.cs">
+    <Compile Update="UI\frmCategorise.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmCategorise.Designer.cs">
+    <Compile Update="UI\frmCategorise.Designer.cs">
       <DependentUpon>frmCategorise.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmInputBox.cs">
+    <Compile Update="UI\frmInputBox.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmInputBox.Designer.cs">
+    <Compile Update="UI\frmInputBox.Designer.cs">
       <DependentUpon>frmInputBox.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmScores.cs">
+    <Compile Update="UI\frmScores.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmScores.Designer.cs">
+    <Compile Update="UI\frmScores.Designer.cs">
       <DependentUpon>frmScores.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmScriptReplace.cs">
+    <Compile Update="UI\frmScriptReplace.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmScriptReplace.Designer.cs">
+    <Compile Update="UI\frmScriptReplace.Designer.cs">
       <DependentUpon>frmScriptReplace.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmScriptFind.cs">
+    <Compile Update="UI\frmScriptFind.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmScriptFind.Designer.cs">
+    <Compile Update="UI\frmScriptFind.Designer.cs">
       <DependentUpon>frmScriptFind.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmSummaryStatistics.cs">
+    <Compile Update="UI\frmSummaryStatistics.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmSummaryStatistics.Designer.cs">
+    <Compile Update="UI\frmSummaryStatistics.Designer.cs">
       <DependentUpon>frmSummaryStatistics.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\IFillParameterBag.cs" />
-    <Compile Include="UI\IFindable.cs" />
-    <Compile Include="UI\IOkable.cs" />
-    <Compile Include="UI\IScriptWindow.cs" />
-    <Compile Include="UI\frmScript.cs">
+    <Compile Update="UI\frmScript.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmScript.designer.cs">
+    <Compile Update="UI\frmScript.designer.cs">
       <DependentUpon>frmScript.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\IForm.cs" />
-    <Compile Include="UI\IGrid.cs" />
-    <Compile Include="UI\Area.cs" />
-    <Compile Include="UI\IReport.cs" />
-    <Compile Include="UI\IToolStripHost.cs" />
-    <Compile Include="UI\License.cs" />
-    <Compile Include="UI\Pane.cs" />
-    <Compile Include="PJLControls\ColourPanel.cs" />
-    <Compile Include="PJLControls\ColourPanelForm.cs">
+    <Compile Update="PJLControls\ColourPanelForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PJLControls\ColourPanelWithCapture.cs">
+    <Compile Update="PJLControls\ColourPanelWithCapture.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PJLControls\ColourPicker.cs">
+    <Compile Update="PJLControls\ColourPicker.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PJLControls\CustomColorPanel.cs">
+    <Compile Update="PJLControls\CustomColorPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PJLControls\CustomColorPicker.cs">
+    <Compile Update="PJLControls\CustomColorPicker.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PJLControls\PopupCustomColorPicker.cs">
+    <Compile Update="PJLControls\PopupCustomColorPicker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PJLControls\PopupCustomColorPicker.Designer.cs">
+    <Compile Update="PJLControls\PopupCustomColorPicker.Designer.cs">
       <DependentUpon>PopupCustomColorPicker.cs</DependentUpon>
     </Compile>
-    <Compile Include="PJLControls\Utils.cs" />
-    <Compile Include="UI\DataAcquisitionWidth.cs" />
-    <Compile Include="UI\SDGroupBox.cs">
+    <Compile Update="UI\SDGroupBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\SDListItem.cs" />
-    <Compile Include="UI\SDMenuItem.cs" />
-    <Compile Include="UI\Range.cs" />
-    <Compile Include="UI\SDApplication.cs" />
-    <Compile Include="UI\SDSpreadsheetGear.cs">
+    <Compile Update="UI\SDSpreadsheetGear.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\SelectablePictureBox.cs">
+    <Compile Update="UI\SelectablePictureBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\Settings.cs" />
-    <Compile Include="UI\StatsDirectForm.cs">
+    <Compile Update="UI\StatsDirectForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\StatsDirectToolStripRenderer.cs" />
-    <Compile Include="TemplateProcessing\ScriptEngine.cs" />
-    <Compile Include="TemplateProcessing\TemplateProcessor.cs" />
-    <Compile Include="UI\StatsDirectUpdateChecker.cs" />
-    <Compile Include="UI\SuggestionTime.cs" />
-    <Compile Include="UI\UpdateCheckerEventArgs.cs" />
-    <Compile Include="UI\VerticalLabel.cs">
+    <Compile Update="UI\VerticalLabel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI\WaitCursor.cs" />
-    <Compile Include="UI\WindowInformation.cs" />
-    <Compile Include="UI\frmSpreadsheetGear.cs">
+    <Compile Update="UI\frmSpreadsheetGear.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmSpreadsheetGear.Designer.cs">
+    <Compile Update="UI\frmSpreadsheetGear.Designer.cs">
       <DependentUpon>frmSpreadsheetGear.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmMain.cs">
+    <Compile Update="UI\frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\frmMain.Designer.cs">
+    <Compile Update="UI\frmMain.Designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\WindowsFormsExtensions.cs" />
-    <Compile Include="Utilities\CoxP.cs" />
-    <Compile Include="Utilities\DataAcquisitionMode.cs" />
-    <Compile Include="Utilities\Formatting.cs" />
-    <Compile Include="Utilities\NotAnErrorException.cs" />
-    <Compile Include="Utilities\Parsing.cs" />
-    <Compile Include="Utilities\SDRegistry.cs" />
-    <Compile Include="Utilities\TakeANumber.cs" />
-    <Compile Include="Utilities\TemplateOperationCancelledException.cs" />
-    <Compile Include="Utilities\Utilities.cs" />
-    <EmbeddedResource Include="Calculator\frmStatsDirectCalculator.resx">
+    <EmbeddedResource Update="Calculator\frmStatsDirectCalculator.resx">
       <DependentUpon>frmStatsDirectCalculator.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlUpdateStatsDirectCheck.resx">
+    <EmbeddedResource Update="UI\ctlUpdateStatsDirectCheck.resx">
       <DependentUpon>ctlUpdateStatsDirectCheck.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlUpdateRCheck.resx">
+    <EmbeddedResource Update="UI\ctlUpdateRCheck.resx">
       <DependentUpon>ctlUpdateRCheck.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmInstallStatsDirect2.resx">
+    <EmbeddedResource Update="UI\frmInstallStatsDirect2.resx">
       <DependentUpon>frmInstallStatsDirect2.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlFindAndReplaceData.resx">
+    <EmbeddedResource Update="UI\ctlFindAndReplaceData.resx">
       <DependentUpon>ctlFindAndReplaceData.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlConvertUnits.resx">
+    <EmbeddedResource Update="UI\ctlConvertUnits.resx">
       <DependentUpon>ctlConvertUnits.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlGraphicsOptions.resx">
+    <EmbeddedResource Update="UI\ctlGraphicsOptions.resx">
       <DependentUpon>ctlGraphicsOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlScores.resx">
+    <EmbeddedResource Update="UI\ctlScores.resx">
       <DependentUpon>ctlScores.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlExtraction.resx">
+    <EmbeddedResource Update="UI\ctlExtraction.resx">
       <DependentUpon>ctlExtraction.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlDummyOptions.resx">
+    <EmbeddedResource Update="UI\ctlDummyOptions.resx">
       <DependentUpon>ctlDummyOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlPDF.resx">
+    <EmbeddedResource Update="UI\ctlPDF.resx">
       <DependentUpon>ctlPDF.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmInstallR.resx">
+    <EmbeddedResource Update="UI\frmInstallR.resx">
       <DependentUpon>frmInstallR.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmReportRichEditDummy.resx">
+    <EmbeddedResource Update="UI\frmReportRichEditDummy.resx">
       <DependentUpon>frmReportRichEditDummy.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlTextToNumbers.resx">
+    <EmbeddedResource Update="UI\ctlTextToNumbers.resx">
       <DependentUpon>ctlTextToNumbers.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlBarOptions.resx">
+    <EmbeddedResource Update="UI\ctlBarOptions.resx">
       <DependentUpon>ctlBarOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmTextPreview.resx">
+    <EmbeddedResource Update="UI\frmTextPreview.resx">
       <DependentUpon>frmTextPreview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmErrorMessage.resx">
+    <EmbeddedResource Update="UI\frmErrorMessage.resx">
       <DependentUpon>frmErrorMessage.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlROCCutoff.resx">
+    <EmbeddedResource Update="UI\ctlROCCutoff.resx">
       <DependentUpon>ctlROCCutoff.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlAxisOptions.resx">
+    <EmbeddedResource Update="UI\ctlAxisOptions.resx">
       <DependentUpon>ctlAxisOptions.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlFont.resx">
+    <EmbeddedResource Update="UI\ctlFont.resx">
       <DependentUpon>ctlFont.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlOneAxisOptions.resx">
+    <EmbeddedResource Update="UI\ctlOneAxisOptions.resx">
       <DependentUpon>ctlOneAxisOptions.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmImagePreview.resx">
+    <EmbeddedResource Update="UI\frmImagePreview.resx">
       <DependentUpon>frmImagePreview.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmReportRichEdit.resx">
+    <EmbeddedResource Update="UI\frmReportRichEdit.resx">
       <DependentUpon>frmReportRichEdit.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlFillStyle.resx">
+    <EmbeddedResource Update="UI\ctlFillStyle.resx">
       <DependentUpon>ctlFillStyle.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlOneSeriesOptions.resx">
+    <EmbeddedResource Update="UI\ctlOneSeriesOptions.resx">
       <DependentUpon>ctlOneSeriesOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlMarkerShape.resx">
+    <EmbeddedResource Update="UI\ctlMarkerShape.resx">
       <DependentUpon>ctlMarkerShape.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlDashStyle.resx">
+    <EmbeddedResource Update="UI\ctlDashStyle.resx">
       <DependentUpon>ctlDashStyle.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlLineThickness.resx">
+    <EmbeddedResource Update="UI\ctlLineThickness.resx">
       <DependentUpon>ctlLineThickness.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlSeriesOptions.resx">
+    <EmbeddedResource Update="UI\ctlSeriesOptions.resx">
       <DependentUpon>ctlSeriesOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlPickAWindow.resx">
+    <EmbeddedResource Update="UI\ctlPickAWindow.resx">
       <DependentUpon>ctlPickAWindow.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlChiGFOptions.resx">
+    <EmbeddedResource Update="UI\ctlChiGFOptions.resx">
       <DependentUpon>ctlChiGFOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlChartOptions.resx">
+    <EmbeddedResource Update="UI\ctlChartOptions.resx">
       <DependentUpon>ctlChartOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlHistogramOptions.resx">
+    <EmbeddedResource Update="UI\ctlHistogramOptions.resx">
       <DependentUpon>ctlHistogramOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlBoxWhiskerOptions.resx">
+    <EmbeddedResource Update="UI\ctlBoxWhiskerOptions.resx">
       <DependentUpon>ctlBoxWhiskerOptions.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\ctlSort.resx">
+    <EmbeddedResource Update="UI\ctlSort.resx">
       <DependentUpon>ctlSort.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmExportGraphic.resx">
+    <EmbeddedResource Update="UI\frmExportGraphic.resx">
       <DependentUpon>frmExportGraphic.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmLicense.resx">
+    <EmbeddedResource Update="UI\frmLicense.resx">
       <DependentUpon>frmLicense.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmAbout.resx">
+    <EmbeddedResource Update="UI\frmAbout.resx">
       <DependentUpon>frmAbout.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmSetupTools.resx">
+    <EmbeddedResource Update="UI\frmSetupTools.resx">
       <DependentUpon>frmSetupTools.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmDeleteSpecial.resx">
+    <EmbeddedResource Update="UI\frmDeleteSpecial.resx">
       <DependentUpon>frmDeleteSpecial.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmInsertCells.resx">
+    <EmbeddedResource Update="UI\frmInsertCells.resx">
       <DependentUpon>frmInsertCells.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmLoading.resx">
+    <EmbeddedResource Update="UI\frmLoading.resx">
       <DependentUpon>frmLoading.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmOpening.resx">
+    <EmbeddedResource Update="UI\frmOpening.resx">
       <DependentUpon>frmOpening.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmPasteSpecial.resx">
+    <EmbeddedResource Update="UI\frmPasteSpecial.resx">
       <DependentUpon>frmPasteSpecial.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmCategorise.resx">
+    <EmbeddedResource Update="UI\frmCategorise.resx">
       <DependentUpon>frmCategorise.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmInputBox.resx">
+    <EmbeddedResource Update="UI\frmInputBox.resx">
       <DependentUpon>frmInputBox.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmScores.resx">
+    <EmbeddedResource Update="UI\frmScores.resx">
       <DependentUpon>frmScores.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmScriptReplace.resx">
+    <EmbeddedResource Update="UI\frmScriptReplace.resx">
       <DependentUpon>frmScriptReplace.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmScriptFind.resx">
+    <EmbeddedResource Update="UI\frmScriptFind.resx">
       <DependentUpon>frmScriptFind.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmScript.resx">
+    <EmbeddedResource Update="UI\frmScript.resx">
       <DependentUpon>frmScript.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmSpreadsheetGear.resx">
+    <EmbeddedResource Update="UI\frmSpreadsheetGear.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmSpreadsheetGear.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmMain.resx">
+    <EmbeddedResource Update="UI\frmMain.resx">
       <SubType>Designer</SubType>
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmSummaryStatistics.resx">
+    <EmbeddedResource Update="UI\frmSummaryStatistics.resx">
       <DependentUpon>frmSummaryStatistics.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\ColourPanel.resx">
+    <EmbeddedResource Update="PJLControls\ColourPanel.resx">
       <DependentUpon>ColourPanel.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\ColourPanelForm.resx">
+    <EmbeddedResource Update="PJLControls\ColourPanelForm.resx">
       <DependentUpon>ColourPanelForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\ColourPanelWithCapture.resx">
+    <EmbeddedResource Update="PJLControls\ColourPanelWithCapture.resx">
       <DependentUpon>ColourPanelWithCapture.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\ColourPicker.resx">
+    <EmbeddedResource Update="PJLControls\ColourPicker.resx">
       <DependentUpon>ColourPicker.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\CustomColorPanel.resx">
+    <EmbeddedResource Update="PJLControls\CustomColorPanel.resx">
       <DependentUpon>CustomColorPanel.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\CustomColorPicker.resx">
+    <EmbeddedResource Update="PJLControls\CustomColorPicker.resx">
       <DependentUpon>CustomColorPicker.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PJLControls\PopupCustomColorPicker.resx">
+    <EmbeddedResource Update="PJLControls\PopupCustomColorPicker.resx">
       <DependentUpon>PopupCustomColorPicker.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Properties\licenses.licx" />
-    <EmbeddedResource Include="UI\frmUpdateCheck.resx">
+    <EmbeddedResource Update="UI\frmUpdateCheck.resx">
       <DependentUpon>frmUpdateCheck.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Properties\Resources.resx">
+    <EmbeddedResource Update="UI\Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="UI\Properties\Resources.Designer.cs">
+    <Compile Update="UI\Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="App.config" />
     <None Include="Assets\Data\test.xlsx" />
     <None Include="Assets\Excel\StatsDirect3ExcelLink.xlam">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1494,14 +931,13 @@
       <Generator>MSBuild:Compile</Generator>
       <CustomToolNamespace>StatsDirect.Creole</CustomToolNamespace>
     </Antlr4>
-    <None Include="packages.config" />
     <None Include="UI\Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <None Include="Assets\STATSDIRECT.chm" />
     <None Include="Assets\Template\blank.rtf" />
-    <Compile Include="UI\Properties\Settings.Designer.cs">
+    <Compile Update="UI\Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -2018,63 +1454,61 @@
     <Content Include="UI\SD7.ICO" />
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
+    <ProjectReference Include="..\Layout\Layout.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Layout\Layout.csproj">
-      <Project>{1aa1f23b-bada-4bbd-9b09-8680188b4d4f}</Project>
-      <Name>Layout</Name>
-    </ProjectReference>
+    <PackageReference Include="Antlr4" Version="4.6.6">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Antlr4.CodeGenerator" Version="4.6.6">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.8" />
+    <PackageReference Include="OpenMcdf" Version="2.2.1.3" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Assets\UserOperations\" />
+    <Compile Remove="TextProcessing\ActiveRtfLexer.cs" />
+    <Compile Remove="TextProcessing\ActiveRtfParser.cs" />
+    <Compile Remove="UI\frmReportDNBTest.cs" />
+    <Compile Remove="UI\frmReportDNBTest.Designer.cs" />
+    <Compile Remove="UI\frmReportDotNetBrowser.cs" />
+    <Compile Remove="UI\frmReportDotNetBrowser.Designer.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CreoleLexer.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CreoleParser.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CreoleParserBaseListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CreoleParserBaseVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CreoleParserListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CreoleParserVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CsvBaseListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CsvBaseVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CsvLexer.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CsvListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CsvParser.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\CsvVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\RResultsBaseListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\RResultsBaseVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\RResultsLexer.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\RResultsListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\RResultsParser.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\RResultsVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\StatsDirectExpressionBaseListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\StatsDirectExpressionBaseVisitor.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\StatsDirectExpressionLexer.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\StatsDirectExpressionListener.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\StatsDirectExpressionParser.cs" />
+    <Compile Remove="obj\DebugWatchExceptions\StatsDirectExpressionVisitor.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
-  <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.comodoca.com /p ***REMOVED*** "$(TargetPath)"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.comodoca.com /td sha256 /as /p ***REMOVED*** "$(TargetPath)"
-$(SolutionDir)Bin\sgen /n /f  /a:"$(TargetPath)"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.comodoca.com /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.comodoca.com /td sha256 /as /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
-xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
-</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
-    </VisualStudio>
-  </ProjectExtensions>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.props'))" />
-    <Error Condition="!Exists('..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.targets'))" />
-  </Target>
-  <Import Project="..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.targets" Condition="Exists('..\packages\Antlr4.CodeGenerator.4.6.6\build\Antlr4.CodeGenerator.targets')" />
+  <ItemGroup>
+    <Reference Include="SpreadsheetGear2017.Core">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="SpreadsheetGear2017.Drawing">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="SpreadsheetGear2017.Windows.Forms">
+      <HintPath>..\..\..\..\..\..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Windows.Forms.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
