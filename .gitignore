@@ -5,6 +5,7 @@ SDInstaller/*Fragment.wxs
 packages/*/
 ReleaseBuild/*.msi
 ReleaseBuild/*.exe
+*.pubxml.user
 
 # gvim backups (Peter has a nasty habit of using gvim for bulk edits)
 *~
