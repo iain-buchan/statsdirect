@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
@@ -16,24 +17,24 @@ namespace StatsDirect.Templates
        XmlRoot(Namespace = "http://www.statsdirect.com/schemas/Operation.xsd", ElementName = "operation")]
     public class Operation : IMightRequireInput
     {
-        private readonly IList<Step> steps;
-        private readonly IList<string> prerequisiteOperationNames;
         private readonly List<SuggestedOperation> suggestedOperations;
         private readonly List<CustomValidator> customValidators;
+        private readonly List<OperationTest> tests;
         private readonly List<Precondition> preconditions;
 
         public Operation()
         {
-            steps = new List<Step>();
-            prerequisiteOperationNames = new List<string>();
+            Steps = new List<Step>();
+            PrerequisiteOperationNames = new List<string>();
             suggestedOperations = new List<SuggestedOperation>();
             customValidators = new List<CustomValidator>();
             preconditions = new List<Precondition>();
+            tests = new List<OperationTest>();
         }
 
         public void FixAfterLoading()
         {
-            foreach (Step s in steps)
+            foreach (Step s in Steps)
                 s.NoteOperation(this);
         }
 
@@ -53,22 +54,35 @@ namespace StatsDirect.Templates
         XmlArrayItem(ElementName = "validator", Type = typeof(CustomValidator))]
         public CustomValidator[] CustomValidatorsForXml
         {
-            get
-            {
-                return customValidators.ToArray();
-            }
+            get => customValidators.ToArray();
             set
             {
+                customValidators.Clear();
                 if (null != value)
-                {
                     foreach (CustomValidator cv in value)
                         customValidators.Add(cv);
-                }
             }
         }
 
         [XmlIgnore]
         public IList<CustomValidator> CustomValidators => customValidators;
+
+        [XmlArray(ElementName = "tests"),
+        XmlArrayItem(ElementName = "test", Type = typeof(OperationTest))]
+        public OperationTest[] TestsForXml
+        {
+            get => tests.ToArray();
+            set
+            {
+                tests.Clear();
+                if (null != value)
+                    foreach (OperationTest test in value)
+                        tests.Add(test);
+            }
+        }
+
+        [XmlIgnore]
+        public IList<OperationTest> Tests => tests;
 
         [XmlArray(ElementName = "preconditions"),
         XmlArrayItem(ElementName = "precondition", Type = typeof(Precondition))]
@@ -112,16 +126,14 @@ namespace StatsDirect.Templates
         [XmlElement(ElementName = "prerequisite-operation")]
         public string[] PrerequisiteOperationsForXml
         {
-            get
-            {
-                return ListToStringArray(prerequisiteOperationNames);
-            }
+            get => PrerequisiteOperationNames.ToArray();
             set
             {
+                PrerequisiteOperationNames.Clear();
                 if (null != value)
                 {
                     foreach (string name in value)
-                        prerequisiteOperationNames.Add(name);
+                        PrerequisiteOperationNames.Add(name);
                 }
             }
         }
@@ -130,7 +142,7 @@ namespace StatsDirect.Templates
         /// The operation names where at least one must be performed before this operation becomes useful.
         /// </summary>
         [XmlIgnore]
-        public IList<string> PrerequisiteOperationNames => prerequisiteOperationNames;
+        public IList<string> PrerequisiteOperationNames { get; }
 
         /// <summary>
         /// The suggested operation names that might be useful to perform after this operation.
@@ -151,32 +163,20 @@ namespace StatsDirect.Templates
         ]
         public Step[] StepsForXml
         {
-            get
-            {
-                Step[] stepArray = new Step[steps.Count];
-                for (int i = 0; i < steps.Count; i++)
-                    stepArray[i] = steps[i];
-                return stepArray;
-            }
+            get => Steps.ToArray();
             set
             {
+                Steps.Clear();
                 foreach (Step step in value)
-                    steps.Add(step);
+                    Steps.Add(step);
             }
         }
 
         /// <summary>
         /// The steps that will be executed after all the parameters have been input, in the order in which they will be executed.
         /// </summary>
-        public IList<Step> Steps => steps;
-
-        private static string[] ListToStringArray(IList<string> names)
-        {
-            string[] nameArray = new string[names.Count];
-            for (int i = 0; i < names.Count; i++)
-                nameArray[i] = names[i];
-            return nameArray;
-        }
+        [XmlIgnore]
+        public IList<Step> Steps { get; private set; }
 
         /// <summary>
         /// Returns true iff one or more of the operation's suggestions is itself.
@@ -200,7 +200,7 @@ namespace StatsDirect.Templates
         {
             get
             {
-                foreach (Step step in steps)
+                foreach (Step step in Steps)
                 {
                     if (step.RequiresGrid)
                     {
@@ -211,7 +211,7 @@ namespace StatsDirect.Templates
             }
         }
 
-        public bool HasPrerequisites => null != prerequisiteOperationNames && prerequisiteOperationNames.Count > 0;
+        public bool HasPrerequisites => null != PrerequisiteOperationNames && PrerequisiteOperationNames.Count > 0;
 
         /// <summary>
         /// Returns true if there is at least one step of the requested type and nothing between step and that typed step will ever ask for input.
@@ -222,12 +222,12 @@ namespace StatsDirect.Templates
         /// <returns></returns>
         public HasInput ShouldRequestTargetAfter(Step stepToFind, Type stepType, out Step stepFound)
         {
-            return Step.ShouldRequestTargetAfter(stepToFind, steps, stepType, false, out stepFound);
+            return Step.ShouldRequestTargetAfter(stepToFind, Steps, stepType, false, out stepFound);
         }
 
         public InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return Step.GetInputRequirement(steps, parameters);
+            return Step.GetInputRequirement(Steps, parameters);
         }
 
         public IList<SuggestedOperation> AvailableSuggestedOperations(ITemplateProcessor processor, ParameterBag parameters)

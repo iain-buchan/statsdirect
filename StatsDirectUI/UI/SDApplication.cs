@@ -672,7 +672,7 @@ namespace StatsDirect.UI
             grid.EnsureActive();
         }
 
-        private static void InitialiseFunctionRegistry()
+        public static void InitialiseFunctionRegistry()
         {
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
         }
