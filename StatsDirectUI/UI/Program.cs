@@ -30,6 +30,8 @@ namespace StatsDirect.UI
                 StartCalculator();
             else if (args.Length > 0 && "-sanity-check".Equals(args[0]))
                 SanityChecker.Check();
+            else if (args.Length > 0 && "-test-operations".Equals(args[0]))
+                OperationsTester.TestAll();
             else
                 StartStatsDirect(args);
         }
