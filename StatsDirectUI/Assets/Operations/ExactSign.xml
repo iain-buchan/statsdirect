@@ -28,4 +28,27 @@
   <suggested-operations>
     <suggested-operation>ExactSign</suggested-operation>
   </suggested-operations>
+  <tests>
+    <test reason="Check example in help text">
+      <inputs>
+        <parameter name="n">11</parameter>
+        <parameter name="r">9</parameter>
+        <parameter name="cco">0.95</parameter>
+      </inputs>
+      <outputs>
+        <output name="sample">11</output>
+        <output name="sample_1">9</output>
+        <output name="exact$1$prob_2">0.06543</output>
+        <output name="exact$1$prob_1">0.032715</output>
+        <output name="large" missing="true"></output>
+        <!-- <output name="z"></output> TODO: Find out what the value should be -->
+        <output name="ci">0.95</output>
+        <output name="lower">0.482244</output>
+        <output name="prop">0.818182</output>
+        <output name="upper">0.977169</output>
+      </outputs>
+    </test>
+    <test reason="Check reversal of n and r">
+    </test>
+  </tests>
 </operation>

@@ -204,14 +204,6 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag RptChi2ByN(ITemplateHost _, ParameterBag parameters, Chi2ByNTrend z)
         {
-            double k4 = 0;
-            double k2 = 0;
-            double k1 = 0;
-            double c = 0;
-            double t = 0;
-            double b = 0;
-            double a = 0;
-
             DataFrame datFrame = parameters["data"].AsDataFrame;
             if (datFrame.VariableCount < (z == Chi2ByNTrend.WithTrend ? 3 : 2))
                 throw new InvalidDataException("Invalid data: Please fill in the same number of rows in each column without gaps");
@@ -227,6 +219,13 @@ namespace StatsDirect.Builtins
             double[] s = new double[rows + 1];
 
             ParameterBag outputParameters = new ParameterBag();
+            double k4 = 0;
+            double k2 = 0;
+            double k1 = 0;
+            double c = 0;
+            double t = 0;
+            double b = 0;
+            double a = 0;
             for (int r = 1; r <= rows; r++)
             {
                 double a1 = datV0.Data[r - 1];
@@ -307,9 +306,7 @@ namespace StatsDirect.Builtins
                 double k8 = b / a;
                 double d = (k4 - Math.Pow(k1 + k2, 2.0) / t) / k8;
                 if (d < 0)
-                {
                     d = 0;
-                }
                 d = Math.Sqrt(d);
                 double x1 = (k1 - k2 / k8) / d;
                 x2 = x1 * x1;

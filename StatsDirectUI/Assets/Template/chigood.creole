@@ -12,10 +12,6 @@
 
 <p>Chi-square = @{chi2:roundu}  df = @df<br />
 <pval>@{p:pval}</pval></p>
-<block name="warn">
 
-<p><warn>@warn</warn></p>
-</block>
-<br />
-<br />
+<block name="warn"><p><warn>@warn</warn></p></block>
 </report>

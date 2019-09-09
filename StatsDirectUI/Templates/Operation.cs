@@ -51,7 +51,7 @@ namespace StatsDirect.Templates
         public string FriendlyName { get; set; }
 
         [XmlArray(ElementName = "custom-validators"),
-        XmlArrayItem(ElementName = "validator", Type = typeof(CustomValidator))]
+        XmlArrayItem(ElementName = "custom-validator", Type = typeof(CustomValidator))]
         public CustomValidator[] CustomValidatorsForXml
         {
             get => customValidators.ToArray();
