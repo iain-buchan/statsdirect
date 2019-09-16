@@ -14,3 +14,6 @@ ReleaseBuild/*.exe
 *.pem
 *.pvk
 *.spc
+
+# Ignore help index files that don't need to be released
+*.chw
