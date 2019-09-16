@@ -81,7 +81,7 @@ namespace StatsDirect.Builtins
             {
                 //  Work out which group number is the reference.  This is a bit ugly as the parameter is a boolean array based on what was passed in - which in this case is an alpha-sorted list of the group names.
                 string[] groupNames = ratersVariable.SortedCategoryNames;
-                bool[] standardArray = (bool[])parameters["reference"].Data;
+                bool[] standardArray = (bool[])parameters["reference"].AsObject;
                 string referenceName = null;
                 for (int finder = 0; finder <= groupNames.Length; finder++)
                 {

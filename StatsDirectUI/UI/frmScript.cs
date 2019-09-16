@@ -422,7 +422,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    rtb.AppendText(pair.Value.Data.ToString());
+                    rtb.AppendText(pair.Value.AsObject.ToString());
                 }
                 rtb.AppendText("\n");
             }

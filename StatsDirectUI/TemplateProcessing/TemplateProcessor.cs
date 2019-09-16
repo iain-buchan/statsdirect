@@ -268,7 +268,7 @@ namespace StatsDirect.TemplateProcessing
             for (int i = lower; i <= upper; i++)
             {
                 if (null != step.LoopVariableName)
-                    filledParameters[step.LoopVariableName] = new FilledParameter(FilledParameterDirection.Output, i);
+                    filledParameters[step.LoopVariableName] = FilledParameter.Output(i);
                 foreach (Step s in step.Steps)
                 {
                     // TODO: How to handle execution failures?
@@ -602,7 +602,7 @@ namespace StatsDirect.TemplateProcessing
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new ParameterBag();
-            // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(FilledParameterDirection.Input, reportId));
+            // outputParameters.Add(REPORT_ID_NAME, FilledParameter.Input(reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
                 outputParameters.AddInput(STATSDIRECT_REPORT_PANE, preferredPane);
             return outputParameters;

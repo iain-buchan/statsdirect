@@ -113,7 +113,7 @@ namespace StatsDirect.Builtins
             double residssq = 0; double t;
             double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
 
-            GroupedCovarianceData gcd = (GroupedCovarianceData)parameters["gcd"].Data;
+            GroupedCovarianceData gcd = (GroupedCovarianceData)parameters["gcd"].AsObject;
             double[] a = gcd.a;
             double[] b = gcd.b;
             string[] bnam = gcd.bnam;

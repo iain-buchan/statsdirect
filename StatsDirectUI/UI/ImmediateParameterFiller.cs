@@ -21,7 +21,7 @@ namespace StatsDirect.UI
             // Can we get away without asking?
             if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
             {
-                OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval));
+                OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Input(SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval));
                 return;
             }
 
@@ -46,7 +46,7 @@ namespace StatsDirect.UI
                 {
                     result /= 100.0;
                     if (result >= 0.0 && result <= 1.0)
-                        OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
+                        OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Input(result));
                 }
                 // else go round again
             }
@@ -92,7 +92,7 @@ namespace StatsDirect.UI
                 double result = Parsing.Cdbl_Txt(response);
                 if (result >= minimumValue && result <= maximumValue)
                 {
-                    OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
+                    OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Input(result));
                     break;
                 }
                 // else go round and prompt again
@@ -109,7 +109,7 @@ namespace StatsDirect.UI
             // If the parameter already holds static data, we don't need to request that from the user.
             if (null != parameter.Data)
             {
-                OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Output, parameter.Data.Frame));
+                OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Output(parameter.Data.Frame));
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace StatsDirect.UI
                 int result = Parsing.Cint_Txt(response);
                 if (result >= parameter.MinimumValue && result <= parameter.MaximumValue)
                 {
-                    OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, result));
+                    OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Input(result));
                     return;
                 }
                 // else go round and prompt again
@@ -201,7 +201,7 @@ namespace StatsDirect.UI
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
             Builtins.GroupedCovarianceData data = new GridSelectionProcessor(grid).FillGroupedCovarianceParameter(Processor);
             if (null != data)
-                OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, data));
+                OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Input(data));
         }
 
         public void Visit(Frame2DParameter parameter)
@@ -213,7 +213,7 @@ namespace StatsDirect.UI
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
             DataFrame2D frame = new GridSelectionProcessor(grid).FillFrameParameter2D(parameter, Processor, SdApplication.SoleInstance, Context);
-            OutputParameters = null == frame ? null : new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
+            OutputParameters = null == frame ? null : new ParameterBag(parameter.Name, FilledParameter.Input(frame));
         }
 
         public void Visit(EditGridParameter parameter)
@@ -248,7 +248,7 @@ namespace StatsDirect.UI
                 }
                 throw new TemplateOperationCancelledException();
             }
-            OutputParameters = new ParameterBag(parameter.Name, new FilledParameter(FilledParameterDirection.Input, DialogResult.Yes == result));
+            OutputParameters = new ParameterBag(parameter.Name, FilledParameter.Input(DialogResult.Yes == result));
         }
     }
 }

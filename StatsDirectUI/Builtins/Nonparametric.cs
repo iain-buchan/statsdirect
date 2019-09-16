@@ -949,7 +949,7 @@ namespace StatsDirect.Builtins
                 score[j] = j + 1;
 
             // If non-default scores exist, fill them in
-            if (parameters.ContainsKey("scores") && null != parameters["scores"].Data)
+            if (parameters.ContainsKey("scores") && null != parameters["scores"].AsObject)
             {
                 DataFrame scoreFrame = parameters["scores"].AsDataFrame;
                 DoubleVariable scoreVariable = (DoubleVariable)scoreFrame.Variables[0];
@@ -3070,10 +3070,10 @@ namespace StatsDirect.Builtins
             }
 
             //  Cache values for possible further calculation
-            outputParameters.Add("w2", new FilledParameter(FilledParameterDirection.Input, w2));
-            outputParameters.Add("N", new FilledParameter(FilledParameterDirection.Input, n));
-            outputParameters.Add("A2", new FilledParameter(FilledParameterDirection.Input, a2));
-            outputParameters.Add("B2", new FilledParameter(FilledParameterDirection.Input, b2));
+            outputParameters.AddInput("w2", w2);
+            outputParameters.AddInput("N", n);
+            outputParameters.AddInput("A2", a2);
+            outputParameters.AddInput("B2", b2);
 
             return outputParameters;
         }
@@ -3211,7 +3211,7 @@ namespace StatsDirect.Builtins
             double b2 = 0;
             if (parameters.ContainsKey("w2") && parameters.ContainsKey("N") && parameters.ContainsKey("A2") && parameters.ContainsKey("B2"))
             {
-                w2 = (double[])parameters["w2"].Data;
+                w2 = (double[])parameters["w2"].AsObject;
                 n = parameters["N"].AsInt32;
                 a2 = parameters["A2"].AsDouble;
                 b2 = parameters["B2"].AsDouble;

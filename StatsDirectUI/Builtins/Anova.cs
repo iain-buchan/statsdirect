@@ -704,7 +704,7 @@ namespace StatsDirect.Builtins
                     oneWayFrame.Variables.Add(oneWayVariable);
                 }
 
-                ParameterBag oneWayParameters = new ParameterBag {{"data", new FilledParameter(FilledParameterDirection.Input, oneWayFrame)}};
+                ParameterBag oneWayParameters = new ParameterBag {{"data", FilledParameter.Input(oneWayFrame)}};
                 ParameterBag oneWayResult = RptOneWay(host, oneWayParameters);
                 oneWayResult.AddOutput("variableName", v.Title);
                 aList.Add(oneWayResult);
@@ -752,7 +752,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag twoWayParameters = new ParameterBag {{"data", new FilledParameter(FilledParameterDirection.Input, twoWayFrame)}};
+                ParameterBag twoWayParameters = new ParameterBag {{"data", FilledParameter.Input(twoWayFrame)}};
                 ParameterBag twoWayResult = RptTwoWay(host, twoWayParameters);
                 twoWayResult.AddOutput("variableName", v.Title);
                 aList.Add(twoWayResult);
@@ -841,12 +841,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("grp_p", P);
 
             //  Add our calculated values for potential later consumption by other functions
-            outputParameters.Add("dfres", new FilledParameter(FilledParameterDirection.Input, dfres));
-            outputParameters.Add("mean", new FilledParameter(FilledParameterDirection.Input, mean));
-            outputParameters.Add("msres", new FilledParameter(FilledParameterDirection.Input, msres));
-            outputParameters.Add("ssgp", new FilledParameter(FilledParameterDirection.Input, sscol));
-            outputParameters.Add("sstot", new FilledParameter(FilledParameterDirection.Input, sstot));
-            outputParameters.Add("tnx", new FilledParameter(FilledParameterDirection.Input, tnx));
+            outputParameters.AddInput("dfres", dfres);
+            outputParameters.AddInput("mean", mean);
+            outputParameters.AddInput("msres", msres);
+            outputParameters.AddInput("ssgp", sscol);
+            outputParameters.AddInput("sstot", sstot);
+            outputParameters.AddInput("tnx", tnx);
             return outputParameters;
         }
 
@@ -968,13 +968,13 @@ namespace StatsDirect.Builtins
             }
 
             //  Add our calculated values for potential later consumption by other functions
-            outputParameters.Add("dfres", new FilledParameter(FilledParameterDirection.Input, dfres));
-            outputParameters.Add("mean", new FilledParameter(FilledParameterDirection.Input, mean));
-            outputParameters.Add("msres", new FilledParameter(FilledParameterDirection.Input, msres));
-            outputParameters.Add("ssgp", new FilledParameter(FilledParameterDirection.Input, sscol));
-            outputParameters.Add("sstot", new FilledParameter(FilledParameterDirection.Input, sstot));
-            outputParameters.Add("tnx", new FilledParameter(FilledParameterDirection.Input, tnx));
-            outputParameters.Add("data", new FilledParameter(FilledParameterDirection.Input, outputFrame));
+            outputParameters.AddInput("dfres", dfres);
+            outputParameters.AddInput("mean", mean);
+            outputParameters.AddInput("msres", msres);
+            outputParameters.AddInput("ssgp", sscol);
+            outputParameters.AddInput("sstot", sstot);
+            outputParameters.AddInput("tnx", tnx);
+            outputParameters.AddInput("data", outputFrame);
 
             return outputParameters;
         }
@@ -1069,11 +1069,11 @@ namespace StatsDirect.Builtins
             }
 
             //  Add our calculated values for potential later consumption by other functions
-            outputParameters.Add("ctr", new FilledParameter(FilledParameterDirection.Input, ctr));
-            outputParameters.Add("ngp", new FilledParameter(FilledParameterDirection.Input, ngp));
-            outputParameters.Add("gbar", new FilledParameter(FilledParameterDirection.Input, gbar));
-            outputParameters.Add("sgbar", new FilledParameter(FilledParameterDirection.Input, sgbar));
-            outputParameters.Add("gm", new FilledParameter(FilledParameterDirection.Input, gm));
+            outputParameters.AddInput("ctr", ctr);
+            outputParameters.AddInput("ngp", ngp);
+            outputParameters.AddInput("gbar", gbar);
+            outputParameters.AddInput("sgbar", sgbar);
+            outputParameters.AddInput("gm", gm);
 
             return outputParameters;
         }
@@ -1082,7 +1082,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
-            int[] variables = (int[])parameters["variables"].Data;
+            int[] variables = (int[])parameters["variables"].AsObject;
             int z_va = variables[0];
             int z_vb = variables[1];
             int comparisons = parameters["comparisons"].AsInt32;
@@ -1486,7 +1486,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
-            int[] indexvariable = (int[])parameters["indexvariable"].Data;
+            int[] indexvariable = (int[])parameters["indexvariable"].AsObject;
             int ic = indexvariable[0];
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
             int[] tnx = carrier.Tnx;
@@ -1771,9 +1771,9 @@ namespace StatsDirect.Builtins
             {
                 DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
                 int ctr = parameters["ctr"].AsInt32;
-                int[] ngp = (int[])parameters["ngp"].Data;
-                double[] gbar = (double[])parameters["gbar"].Data;
-                double[] sgbar = (double[])parameters["sgbar"].Data;
+                int[] ngp = (int[])parameters["ngp"].AsObject;
+                double[] gbar = (double[])parameters["gbar"].AsObject;
+                double[] sgbar = (double[])parameters["sgbar"].AsObject;
                 double gm = parameters["gm"].AsDouble;
 
                 ParameterBag outputParameters = new ParameterBag();
@@ -2170,9 +2170,9 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("dfres") && parameters.ContainsKey("msres") && parameters.ContainsKey("mean") && parameters.ContainsKey("tnx"))
             {
                 carrier.Dferr = parameters["dfres"].AsInt32;
-                carrier.Mean = (double[])parameters["mean"].Data;
+                carrier.Mean = (double[])parameters["mean"].AsObject;
                 carrier.Msx = parameters["msres"].AsDouble;
-                carrier.Tnx = (int[])parameters["tnx"].Data;
+                carrier.Tnx = (int[])parameters["tnx"].AsObject;
             }
             else
             {

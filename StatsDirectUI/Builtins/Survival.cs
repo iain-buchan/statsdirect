@@ -450,13 +450,13 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptKaplanMeierPlots(ParameterBag parameters)
         {
-            int[] cnx = (int[])parameters["cnx"].Data;
-            int[,] dead = (int[,])parameters["dead"].Data;
-            string[] glab = (string[])parameters["glab"].Data;
+            int[] cnx = (int[])parameters["cnx"].AsObject;
+            int[,] dead = (int[,])parameters["dead"].AsObject;
+            string[] glab = (string[])parameters["glab"].AsObject;
             int groups = parameters["ngroups"].AsInt32;
-            double[,] h = (double[,])parameters["h"].Data;
-            double[,] s = (double[,])parameters["s"].Data;
-            double[,] stime = (double[,])parameters["stime"].Data;
+            double[,] h = (double[,])parameters["h"].AsObject;
+            double[,] s = (double[,])parameters["s"].AsObject;
+            double[,] stime = (double[,])parameters["stime"].AsObject;
             bool useMarkers = parameters["use-markers"].AsBoolean;
             bool useTics = parameters["use-tics"].AsBoolean;
             ParameterBag outputParameters = new ParameterBag();

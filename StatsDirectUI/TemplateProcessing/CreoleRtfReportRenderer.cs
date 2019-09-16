@@ -259,14 +259,14 @@ namespace StatsDirect.TemplateProcessing
                         string valueU = string.Empty;
                         if (null != pair.Value && pair.Value.HasData)
                         {
-                            if (pair.Value.Data is IRenderable renderable)
+                            if (pair.Value.AsObject is IRenderable renderable)
                             {
                                 // We know we have to render to RTF, so this is legit
                                 value = new RtfRenderer(host).Render(renderable);
                             }
                             else
                             {
-                                value = pair.Value.Data.ToString();
+                                value = pair.Value.AsObject.ToString();
                                 if (pair.Value.IsDouble)
                                 {
                                     valueU = host.RoundU(pair.Value.AsDouble);

@@ -835,7 +835,7 @@ namespace StatsDirect.Builtins
                     resultsParameters.AddOutput("result", res);
                 }
                 string s = resultsList[resultsList.Count - 1]["result"].AsString;
-                resultsList[resultsList.Count - 1]["result"] = new FilledParameter(FilledParameterDirection.Output, s);
+                resultsList[resultsList.Count - 1]["result"] = FilledParameter.Output(s);
             }
             return fieldParameters;
         }
@@ -1029,7 +1029,7 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
                 outputParameters.AddOutput("aucNormalChart", cd);
-                outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
+                outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].AsObject).R);
 
             }
             {
@@ -1048,7 +1048,7 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
                 outputParameters.AddOutput("aucLogNormalChart", cd);
-                outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].Data).R);
+                outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].AsObject).R);
             }
 
             // Compare mean AUCs by group with timepoint standard errors

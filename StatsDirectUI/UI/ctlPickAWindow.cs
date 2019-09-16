@@ -149,7 +149,7 @@ namespace StatsDirect.UI
         public Control Fill(ParameterBag outputParameters, bool doValidation)
         {
             PaneAndPosition selectedPaneAndPosition = SelectedPaneAndPosition();
-            outputParameters.SetOutput(parameterName, selectedPaneAndPosition);
+            outputParameters[parameterName] = FilledParameter.Output(selectedPaneAndPosition);
             switch (outputType)
             {
                 case OutputType.Frame:

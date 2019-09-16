@@ -100,7 +100,7 @@ namespace StatsDirect.Builtins
         {
             // If there's already a cached context, assume it is from a previous operation with the same values and use it.
             if (parameters.ContainsKey("context"))
-                return (SimpleLinearRegressionContext)parameters["context"].Data;
+                return (SimpleLinearRegressionContext)parameters["context"].AsObject;
 
             // Create a new context holding these X and Y variables
             return GetSimpleLinearRegressionContextWithData(parameters);
@@ -115,7 +115,7 @@ namespace StatsDirect.Builtins
         private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag parameters)
         {
             if (parameters.ContainsKey("context"))
-                return (MultipleLinearRegressionContext)parameters["context"].Data;
+                return (MultipleLinearRegressionContext)parameters["context"].AsObject;
             throw new Exception("Expected to find a context parameter and didn't");
         }
 
@@ -982,8 +982,8 @@ namespace StatsDirect.Builtins
             string[] predictorTitles = new string[p - 2 + 1];
             for (i = 2; i <= p; i++)
                 predictorTitles[i - 2] = context.Titles[i];
-            outputParameters["predictorTitles"] = new FilledParameter(FilledParameterDirection.Input, new DataFrame(new StringVariable(predictorTitles)));
-            outputParameters["candidatePredictors"] = new FilledParameter(FilledParameterDirection.Input, x_prep_intermr(context));
+            outputParameters["predictorTitles"] = FilledParameter.Input(new DataFrame(new StringVariable(predictorTitles)));
+            outputParameters["candidatePredictors"] = FilledParameter.Input(x_prep_intermr(context));
             return outputParameters;
         }
 
@@ -1164,7 +1164,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
 
             context.R[0] = Constant.MISSING;
-            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)))));
 
             for (int i = 1; i <= context.P; i++)
             {
@@ -1175,7 +1175,7 @@ namespace StatsDirect.Builtins
                     r[0] = Constant.MISSING;
                     for (int j = 1; j <= context.N; j++)
                         r[j] = context.X[j, i];
-                    chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+                    chartList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc)))));
                 }
             }
             r = new double[context.N + 1];
@@ -1187,7 +1187,7 @@ namespace StatsDirect.Builtins
                 if (ifault != 0)
                     r[j] = Constant.MISSING;
             }
-            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
             return outputParameters;
         }
 
@@ -1521,7 +1521,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptMultipleLinearRegressionBestSubset(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
-            bool[] selectedPredictors = (bool[])parameters["selectedPredictors"].Data;
+            bool[] selectedPredictors = (bool[])parameters["selectedPredictors"].AsObject;
             bool shouldUseMaximumF = "maximumF".Equals(parameters["selector"].AsString);
             int errcode = 0;
 
@@ -2200,7 +2200,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[,] xtxi = context.H;
             double[] bd = context.B;
             double rss = context.SSY - context.SSREG;
@@ -2246,7 +2246,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionPlot(ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2288,7 +2288,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptAreaUnderCurve(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
             int nx = context.N;
             int p = context.P;
@@ -2348,7 +2348,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionConfidence(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
             int p = context.P;
             double[,] xtxi = context.H;
@@ -2395,7 +2395,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionBackInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
             int nx = context.N;
             int p = context.P;
@@ -2895,7 +2895,7 @@ namespace StatsDirect.Builtins
             context.DEVX = devx;
             context.LLX = llx;
             context.DFX = idfx;
-            outputParameters["candidatePredictors"] = new FilledParameter(FilledParameterDirection.Input, x_prep_interlr(context));
+            outputParameters["candidatePredictors"] = FilledParameter.Input(x_prep_interlr(context));
             return outputParameters;
         }
 
@@ -2934,7 +2934,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
 
             double[] t = context.T;
             double[] y = context.Y;
@@ -3245,7 +3245,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag PlotLogisticRegressionDiagnostics(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fv = context.FV;
@@ -3308,21 +3308,21 @@ namespace StatsDirect.Builtins
             hi[0] = Constant.MISSING;
 
             //  delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  std delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  delta deviance vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  delta x2 vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  delta beta vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta beta std vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta deviance vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta x2 vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameter.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             return outputParameters;
         }
 
@@ -3355,7 +3355,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             double[] se = context.Se;
             int p = context.P;
@@ -3515,7 +3515,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             double[] se = context.Se;
             int p = context.P;
@@ -3688,7 +3688,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionIrr(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             double[] se = context.Se;
             int p = context.P;
@@ -3738,7 +3738,7 @@ namespace StatsDirect.Builtins
             if (parameters["hasDichotomousCovariates"].AsBoolean)
             {
                 double[] nsel = ((DoubleVariable)parameters["dichotomousCovariates"].AsDataFrame.Variables[1]).Data;
-                bool[] cov = (bool[])parameters["cov"].Data;
+                bool[] cov = (bool[])parameters["cov"].AsObject;
                 int selectedIndex = 0;
                 for (int i = 0; i <= cov.GetUpperBound(0); i++)
                 {
@@ -3796,7 +3796,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag OpPoissonRegressionIrrMakeDichotomousCovariates(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[,] x = context.X;
             int p = context.P;
             int nx = context.N;
@@ -3843,7 +3843,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionModelSelection(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             bool mean = context.DoC;
             int n = context.N;
             string[] labels = context.Labels;
@@ -4023,7 +4023,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionClassification(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int N = context.N;
             double[] fvl = context.FV;
             double[] t = context.T;
@@ -4139,7 +4139,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionBootstrap(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] se;
             double[] b = context.B;
             double[] t = context.T;
@@ -4322,7 +4322,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionPrediction(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             int P = context.P;
             string[] labels = context.Labels;
@@ -4968,7 +4968,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;
@@ -5095,7 +5095,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag GridPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;
@@ -5225,7 +5225,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionResiduals(ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
             double[] yfit = context.FV;
             double[] dr = context.R;
@@ -6104,7 +6104,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag PlotProbit(ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double[] x = context.X1;
             double[] y = context.H1;
@@ -6128,7 +6128,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitInterpolateX(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double a = context.Arg[1];
             double b = context.Arg[2];
@@ -6169,7 +6169,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitInterpolateY(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double a = context.Arg[1];
             double b = context.Arg[2];
@@ -6201,7 +6201,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitMore(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double a = context.Arg[1];
             double b = context.Arg[2];

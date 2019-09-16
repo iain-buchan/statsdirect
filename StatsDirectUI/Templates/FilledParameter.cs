@@ -9,126 +9,99 @@ namespace StatsDirect.Templates
 {
     [XmlRoot("filled-parameter")]
     [Serializable]
-    public sealed class FilledParameter
+    public abstract class FilledParameter
     {
-        private FilledParameter()
+        public static FilledParameter Input(object data) => new FilledObjectParameter(FilledParameterDirection.Input, data);
+        public static FilledParameter Output(object data) => new FilledObjectParameter(FilledParameterDirection.Output, data);
+        public static FilledParameter Default(object data) => new FilledObjectParameter(FilledParameterDirection.Default, data);
+        public static FilledParameter Make(FilledParameterDirection direction, object data) => new FilledObjectParameter(direction, data);
+
+        protected FilledParameter()
         {
         }
 
-        public FilledParameter(FilledParameterDirection direction, object data)
+        protected FilledParameter(FilledParameterDirection direction)
         {
             Direction = direction;
-            Data = data;
         }
 
         [XmlIgnore]
-        public bool HasData => null != Data;
+        public virtual bool HasData { get; }
 
         [XmlIgnore]
         public bool IsInputParameter => FilledParameterDirection.Input == Direction;
-
-        [XmlIgnore]
-        public object Data { get; set; }
 
         [XmlElement("direction")]
         public FilledParameterDirection Direction { get; set; }
 
         [XmlIgnore]
-        public bool AsBoolean => (bool)Data;
+        public virtual bool AsBoolean { get; }
 
         [XmlIgnore]
-        public ChartOptions AsChartOptions => (ChartOptions)Data;
+        public virtual ChartOptions AsChartOptions { get; }
 
         [XmlIgnore]
-        public DataFrame AsDataFrame => (DataFrame)Data;
+        public virtual DataFrame AsDataFrame { get; }
 
         [XmlIgnore]
-        public DataFrame2D AsDataFrame2D => (DataFrame2D)Data;
+        public virtual DataFrame2D AsDataFrame2D { get; }
 
         [XmlIgnore]
-        public DateTime AsDate => (DateTime)Data;
+        public virtual DateTime AsDate { get; }
 
         [XmlIgnore]
-        public double AsDouble => (double)Data;
+        public virtual double AsDouble { get; }
 
         [XmlIgnore]
-        public int AsInt32 => (int)Data;
+        public virtual int AsInt32 { get; }
 
         [XmlIgnore]
-        public Pane AsPane => (Pane)Data;
+        public virtual object AsObject { get; }
 
         [XmlIgnore]
-        public PaneAndPosition AsPaneAndPosition => (PaneAndPosition)Data;
+        public virtual Pane AsPane { get; }
 
         [XmlIgnore]
-        public ParameterBag AsParameterBag => (ParameterBag)Data;
+        public virtual PaneAndPosition AsPaneAndPosition { get; }
 
         [XmlIgnore]
-        public IList<ParameterBag> AsParameterBagList => (IList<ParameterBag>)Data;
+        public virtual ParameterBag AsParameterBag { get; }
 
         [XmlIgnore]
-        public ScaleParameters AsScaleParameters => (ScaleParameters)Data;
+        public virtual IList<ParameterBag> AsParameterBagList { get; }
 
         [XmlIgnore]
-        public string AsString => (string)Data;
+        public virtual ScaleParameters AsScaleParameters { get; }
 
         [XmlIgnore]
-        public IList<string> AsStringList => (IList<string>)Data;
+        public virtual string AsString { get; }
 
         [XmlIgnore]
-        public bool IsBoolean => Data is bool;
+        public virtual IList<string> AsStringList { get; }
 
         [XmlIgnore]
-        public bool IsDataFrame => Data is DataFrame;
+        public virtual bool IsBoolean { get; }
 
         [XmlIgnore]
-        public bool IsDouble => Data is double;
+        public virtual bool IsDataFrame { get; }
 
         [XmlIgnore]
-        public bool IsInt32 => Data is int;
+        public virtual bool IsDouble { get; }
 
         [XmlIgnore]
-        public bool IsParameterBag => Data is ParameterBag;
+        public virtual bool IsInt32 { get; }
 
         [XmlIgnore]
-        public bool IsParameterBagList => Data is IList<ParameterBag>;
+        public virtual bool IsParameterBag { get; }
 
         [XmlIgnore]
-        public bool IsString => Data is string;
+        public virtual bool IsParameterBagList { get; }
 
-        internal FilledParameter CopyAndStripForRedo(bool shouldKeepData)
-        {
-            object copiedData;
-            if (Data is IStripForRedo)
-            {
-                copiedData = ((IStripForRedo)Data).CopyAndStripForRedo(shouldKeepData);
-                if (null == copiedData)
-                    return null;
-            }
-            else
-            {
-                copiedData = Data;
-            }
+        [XmlIgnore]
+        public virtual bool IsString { get; }
 
-            return new FilledParameter {Direction = Direction, Data = copiedData};
-        }
+        internal abstract FilledParameter CopyAndStripForRedo(bool shouldKeepData);
 
-        internal void RefillForRedo(IRefillSource refillSource)
-        {
-            if (Data is IStripForRedo)
-                ((IStripForRedo)Data).RefillForRedo(refillSource);
-        }
-
-        public override string ToString()
-        {
-            return "FP(" + Direction.ToString() + ", " + (null == Data ? "(null)" : Data.ToString()) + ")";
-        }
-    }
-
-    public enum FilledParameterDirection
-    {
-        Output = 0,
-        Input = 1,
-        Default = 2
+        internal abstract void RefillForRedo(IRefillSource refillSource);
     }
 }

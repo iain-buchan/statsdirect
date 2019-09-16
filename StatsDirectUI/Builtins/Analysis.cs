@@ -1183,8 +1183,8 @@ namespace StatsDirect.Builtins
                 tmp = xc;
                 xc = nc;
                 nc = tmp;
-                parameters["nc"] = new FilledParameter(FilledParameterDirection.Input, nc);
-                parameters["xc"] = new FilledParameter(FilledParameterDirection.Input, xc);
+                parameters["nc"] = FilledParameter.Input(nc);
+                parameters["xc"] = FilledParameter.Input(xc);
             }
             double pc = xc / nc;
             if (xt > nt)
@@ -1192,8 +1192,8 @@ namespace StatsDirect.Builtins
                 tmp = xt;
                 xt = nt;
                 nt = tmp;
-                parameters["nt"] = new FilledParameter(FilledParameterDirection.Input, nt);
-                parameters["xt"] = new FilledParameter(FilledParameterDirection.Input, xt);
+                parameters["nt"] = FilledParameter.Input(nt);
+                parameters["xt"] = FilledParameter.Input(xt);
             }
             double pt = xt / nt;
 

@@ -2293,8 +2293,8 @@ namespace StatsDirect.Builtins
             }
 
             // Obtain scores - assume _preprocess has been run.  Note that the arrays passed in are 0-based
-            double[] colScore0 = (double[])parameters["values1"].Data;
-            double[] rowScore0 = (double[])parameters["values2"].Data;
+            double[] colScore0 = (double[])parameters["values1"].AsObject;
+            double[] rowScore0 = (double[])parameters["values2"].AsObject;
             double[] colScore = new double[colScore0.Length + 1];
             Array.Copy(colScore0, 0, colScore, 1, colScore0.Length);
             double[] rowScore = new double[rowScore0.Length + 1];

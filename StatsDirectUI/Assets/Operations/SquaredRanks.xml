@@ -18,7 +18,7 @@
       </parameters>
 		<builtin function-name="rptSqRank" />
 		<test>
-			<condition>=((StatsDirect.Data.DataFrame)parameters["data"].Data).VariableCount > 2</condition>
+			<condition>=((StatsDirect.Data.DataFrame)parameters["data"].AsObject).VariableCount > 2</condition>
 			<iftrue>
         <report type="application/x-statsdirect-creole" filename="sqrank.creole" />
 			</iftrue>

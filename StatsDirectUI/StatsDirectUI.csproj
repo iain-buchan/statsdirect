@@ -325,10 +325,13 @@
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
     <Compile Include="TemplateProcessing\CreoleHtmlReportRenderer.cs" />
+    <Compile Include="TemplateProcessing\OperationTestInputsRenderer.cs" />
     <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
     <Compile Include="TemplateProcessing\HtmlRenderer.cs" />
     <Compile Include="TemplateProcessing\HtmlImageRenderer.cs" />
     <Compile Include="TemplateProcessing\RtfRenderer.cs" />
+    <Compile Include="Templates\FilledObjectParameter.cs" />
+    <Compile Include="Templates\FilledParameterDirection.cs" />
     <Compile Include="Templates\OperationTest.cs" />
     <Compile Include="Templates\OperationTestInputParameter.cs" />
     <Compile Include="Templates\OperationTestOutputParameter.cs" />
@@ -2077,7 +2080,7 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
   </PropertyGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
+      <UserProperties BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UseGlobalSettings="False" />
     </VisualStudio>
   </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

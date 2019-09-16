@@ -2386,7 +2386,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxHazardPlots(ParameterBag parameters)
         {
-            bool[] selectedGroups = (bool[])parameters["group"].Data;
+            bool[] selectedGroups = (bool[])parameters["group"].AsObject;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
             StringVariable subgroupsVariable = (StringVariable) subgroupsFrame.Variables[0];
             for (int i = 0; i <= selectedGroups.Length - 1; i++)
@@ -2405,7 +2405,7 @@ namespace StatsDirect.Builtins
             int i;
             double watch_time;
 
-            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
+            double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
 
             //  baseline S and H and S and H values at mean covariate
             int iobs = Convert.ToInt32(ARR2[0, 0]);
@@ -2570,10 +2570,10 @@ namespace StatsDirect.Builtins
             int groupid = 0;
             bool grouped; bool stratified;
 
-            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
-            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].Data;
-            ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].Data;
-            double[,] holdx = (double[,])parameters["holdx"].Data;
+            double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
+            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].AsObject;
+            ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].AsObject;
+            double[,] holdx = (double[,])parameters["holdx"].AsObject;
             bool use_tic = parameters["use-tics"].AsBoolean;
             bool use_marker = parameters["use-markers"].AsBoolean;
 
@@ -2677,7 +2677,7 @@ namespace StatsDirect.Builtins
             int lastStratum = 0;
             double alpha_product = 0; double alpha_productx = 0;
 
-            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
+            double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
 
             bool save = parameters["save"].AsBoolean;
 
@@ -2847,9 +2847,9 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxHazardRatios(ITemplateHost host, ParameterBag parameters)
         {
-            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
-            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].Data;
-            ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].Data;
+            double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
+            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].AsObject;
+            ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].AsObject;
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out double cit, GAMMA, out double _);
@@ -2884,7 +2884,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptCoxModelAnalysis(ITemplateHost host, ParameterBag parameters)
         {
-            double[,] ARR2 = (double[,])parameters["ARR2"].Data;
+            double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ll0", ARR2[3, 0]);
             outputParameters.AddOutput("ll", ARR2[2, 0]);

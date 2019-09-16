@@ -44,7 +44,7 @@ namespace StatsDirect.Templates
         {
             bool? value = DefaultValue(processor, context);
             if (value.HasValue)
-                return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Default, value.Value));
+                return new ParameterBag(Name, FilledParameter.Default(value.Value));
             return new ParameterBag();
         }
     }

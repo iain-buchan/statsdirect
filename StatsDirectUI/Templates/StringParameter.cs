@@ -38,7 +38,7 @@ namespace StatsDirect.Templates
 
         public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
         {
-            return new ParameterBag(Name, new FilledParameter(FilledParameterDirection.Default, DefaultValue(processor, context)));
+            return new ParameterBag(Name, FilledParameter.Default(DefaultValue(processor, context)));
         }
     }
 }
