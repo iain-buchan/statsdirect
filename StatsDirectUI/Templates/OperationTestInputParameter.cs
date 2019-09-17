@@ -2,7 +2,7 @@
 
 namespace StatsDirect.Templates
 {
-    public class OperationTestInputParameter
+    public class OperationTestInputParameter : IOperationTestParameter
     {
         [XmlAttribute(AttributeName ="name")]
         public string Name { get; set; }
