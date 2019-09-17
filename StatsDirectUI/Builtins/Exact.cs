@@ -487,7 +487,7 @@ namespace StatsDirect.Builtins
             if (tar <= 0.0)
             {
                 tar = 1.0;
-                parameters["tar"] = FilledParameter.Input(1.0);
+                parameters["tar"] = FilledParameterFactory.Input(1.0);
             }
 
             ParameterBag outputParameters = new ParameterBag();

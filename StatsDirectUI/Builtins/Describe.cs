@@ -835,7 +835,7 @@ namespace StatsDirect.Builtins
                     resultsParameters.AddOutput("result", res);
                 }
                 string s = resultsList[resultsList.Count - 1]["result"].AsString;
-                resultsList[resultsList.Count - 1]["result"] = FilledParameter.Output(s);
+                resultsList[resultsList.Count - 1]["result"] = FilledParameterFactory.Output(s);
             }
             return fieldParameters;
         }

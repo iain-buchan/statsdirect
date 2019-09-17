@@ -704,7 +704,7 @@ namespace StatsDirect.Builtins
                     oneWayFrame.Variables.Add(oneWayVariable);
                 }
 
-                ParameterBag oneWayParameters = new ParameterBag {{"data", FilledParameter.Input(oneWayFrame)}};
+                ParameterBag oneWayParameters = new ParameterBag {{"data", FilledParameterFactory.Input(oneWayFrame)}};
                 ParameterBag oneWayResult = RptOneWay(host, oneWayParameters);
                 oneWayResult.AddOutput("variableName", v.Title);
                 aList.Add(oneWayResult);
@@ -752,7 +752,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag twoWayParameters = new ParameterBag {{"data", FilledParameter.Input(twoWayFrame)}};
+                ParameterBag twoWayParameters = new ParameterBag {{"data", FilledParameterFactory.Input(twoWayFrame)}};
                 ParameterBag twoWayResult = RptTwoWay(host, twoWayParameters);
                 twoWayResult.AddOutput("variableName", v.Title);
                 aList.Add(twoWayResult);

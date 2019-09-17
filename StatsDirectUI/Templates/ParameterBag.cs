@@ -37,7 +37,7 @@ namespace StatsDirect.Templates
 
         public void AddOutput(string key, object value)
         {
-            filledParameters.Add(key, FilledParameter.Output(value));
+            filledParameters.Add(key, FilledParameterFactory.Output(value));
         }
 
         public void AddInput(string key, object value)
@@ -46,7 +46,7 @@ namespace StatsDirect.Templates
             if (TryGetValue(key, out FilledParameter candidate))
                 if (candidate.Direction == FilledParameterDirection.Default)
                     Remove(key);
-            filledParameters.Add(key, FilledParameter.Input(value));
+            filledParameters.Add(key, FilledParameterFactory.Input(value));
         }
 
         public bool ContainsKey(string key)
@@ -224,7 +224,7 @@ namespace StatsDirect.Templates
             [XmlIgnore]
             public FilledParameter Value
             {
-                get => FilledParameter.Make(Direction, Data);
+                get => FilledParameterFactory.Make(Direction, Data);
                 set
                 {
                     Direction = value.Direction;
