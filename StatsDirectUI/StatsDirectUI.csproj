@@ -326,6 +326,7 @@
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
     <Compile Include="TemplateProcessing\CreoleHtmlReportRenderer.cs" />
+    <Compile Include="Templates\IOperationTestParameter.cs" />
     <Compile Include="TemplateProcessing\OperationTestRenderer.cs" />
     <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
     <Compile Include="TemplateProcessing\HtmlRenderer.cs" />
