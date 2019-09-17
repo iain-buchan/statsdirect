@@ -102,12 +102,12 @@ namespace StatsDirect.Templates
         /// This must be able to deal with all subclasses of Parameter.
         /// </summary>
         /// <param name="processor"></param>
-        /// <param name="Parameter"></param>
+        /// <param name="parameter"></param>
         /// <param name="context">The already filled-in parameters - some parameters require these</param>
         /// <param name="shouldCombine">If true, the host should batch this Parameter with any others it receives until a call to FillCombinedParameters.  If false, the parameter should be filled immediately.</param>
         /// <returns>The filled-in parameters, or null if shouldCombine is true</returns>
         /// <exception cref="TemplateOperationCancelledException">if the user cancels the acquisition of the parameter</exception>
-        ParameterBag FillParameter(ITemplateProcessor processor, Parameter Parameter, ParameterBag context, bool shouldCombine);
+        ParameterBag FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine);
 
         /// <summary>
         /// Notes that this user-entered parameter will at some point be required, and prepares to produce it.

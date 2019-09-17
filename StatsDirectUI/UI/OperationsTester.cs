@@ -121,14 +121,17 @@ namespace StatsDirect.UI
             void IFilledParameterVisitor.Visit(FilledDoubleParameter victim)
             {
                 if (!double.TryParse(Output.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double expectedValue))
-                    throw new Exception($"Operation {OperationName}, output {Output.Name}: Couldn't parse {Output.Value} as a Boolean; use true, false, True, or False");
+                    throw new Exception($"Operation {OperationName}, output {Output.Name}: Couldn't parse {Output.Value} as a double");
                 if (expectedValue != victim.Data)
                     throw new Exception($"Operation {OperationName}, output {Output.Name}: Expected {Output.Value} , got {victim.Data}");
             }
 
             void IFilledParameterVisitor.Visit(FilledInt32Parameter victim)
             {
-                throw new NotImplementedException();
+                if (!int.TryParse(Output.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int expectedValue))
+                    throw new Exception($"Operation {OperationName}, output {Output.Name}: Couldn't parse {Output.Value} as an integer");
+                if (expectedValue != victim.Data)
+                    throw new Exception($"Operation {OperationName}, output {Output.Name}: Expected {Output.Value} , got {victim.Data}");
             }
 
             void IFilledParameterVisitor.Visit(FilledObjectParameter victim)

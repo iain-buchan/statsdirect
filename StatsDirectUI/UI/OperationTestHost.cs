@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using StatsDirect.Data;
+using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 
 namespace StatsDirect.UI
@@ -21,7 +22,10 @@ namespace StatsDirect.UI
 
         int ITemplateHost.MetaPlotMethod => throw new NotImplementedException();
 
-        IDictionary<string, ParameterBag> ITemplateHost.SessionParametersPerOperation => throw new NotImplementedException();
+        /// <summary>
+        /// Session values in tests are always empty; always generate a new dictionary in case anything tries to fill it.
+        /// </summary>
+        IDictionary<string, ParameterBag> ITemplateHost.SessionParametersPerOperation => new Dictionary<string, ParameterBag>();
 
         ParameterBag ITemplateHost.SessionParametersAcrossOperations => throw new NotImplementedException();
 
@@ -53,10 +57,11 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter Parameter, ParameterBag context, bool shouldCombine)
+        ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
         {
-            // Do nothing; we already have all the inputs we're going to get
-            return new ParameterBag();
+            if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter input))
+                throw new NotImplementedException($"Operation {parameter.Operation.Name} expects parameter {parameter.Name} which was not specified in the test inputs");
+            return new ParameterBag(parameter.Name, FilledParameterFactory.Input(new InputParameterFiller(input).Fill(parameter)));
         }
 
         void ITemplateHost.FinishProgress()
@@ -86,7 +91,9 @@ namespace StatsDirect.UI
 
         IScriptEngine ITemplateHost.GetScriptEngine(string language)
         {
-            throw new NotImplementedException();
+            if (ScriptEngine.CanHandle(language))
+                return new ScriptEngine();
+            return null;
         }
 
         string ITemplateHost.GetString(string prompt, string title, string initialValue)
@@ -170,7 +177,7 @@ namespace StatsDirect.UI
             }
             void IParameterVisitor.Visit(BooleanParameter parameter)
             {
-                throw new NotImplementedException();
+                parsedInput = bool.Parse(Input.Value);
             }
 
             void IParameterVisitor.Visit(ChartOptionsParameter parameter)
@@ -220,7 +227,7 @@ namespace StatsDirect.UI
 
             void IParameterVisitor.Visit(FrameParameter parameter)
             {
-                throw new NotImplementedException();
+                parsedInput = FrameData.ParseToFrame(Input.Value);
             }
 
             void IParameterVisitor.Visit(GroupedCovarianceParameter parameter)
