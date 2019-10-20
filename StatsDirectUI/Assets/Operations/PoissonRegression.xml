@@ -107,12 +107,12 @@
 <title>Poisson regression</title>
 <block name="warn">
 <p><warn>@warn</warn></p></block>
-<br />
+
 <table>
 <tr><td>Deviance goodness of fit chi-square =</td><td>@dev</td><td>df = @df_dev</td><td><pval>@{p_dev:pval}</pval> @w</td></tr>
 <tr><td>Deviance (likelihood ratio) chi-square =</td><td>@x2</td><td>df = @df_x2</td><td><pval>@{p_x2:pval}</pval></td></tr>
 </table>
-<br />
+
 <table>
 <tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@pc% CI</ci></th><th>z</th><th><pval></pval></th></tr>
 <block name="pred"><tr><td>@lab</td><td>b@idx = @res</td><td>@irr</td><td><ci>@ci</ci></td><td>@z</td><td><pval>@{p:pval}</pval></td></tr></block>

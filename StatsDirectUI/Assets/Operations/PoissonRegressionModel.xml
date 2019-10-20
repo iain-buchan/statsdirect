@@ -33,7 +33,7 @@ Scaled Deviance goodness of fit = @dev_scaled   df = @idf   <pval>@{p_dev_scaled
 <tr><th>Parameter</th><th>Coefficient</th><th>Standard Error</th></tr>
 <block name="unscaled"><tr><td>@par</td><td>@coef</td><td>@err</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Parameter</th><th>Scaled Standard Error</th><th>Scaled Wald z</th><th></th></tr>
 <block name="scaled"><tr><td>@par</td><td>@err</td><td>@z</td><td><pval>@{p:pval}</pval></td></tr></block>

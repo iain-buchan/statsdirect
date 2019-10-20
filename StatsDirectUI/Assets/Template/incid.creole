@@ -1,6 +1,5 @@
 <report>
 <title>Incidence rate comparison</title>
-<br />
 <table>
 <tr><td></td><td><subtotal>Exposure:</subtotal></td><td></td><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Exposed</td><td>Non-exposed</td><td>Total</td></tr>

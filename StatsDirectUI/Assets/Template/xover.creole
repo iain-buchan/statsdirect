@@ -1,6 +1,5 @@
 <report>
 <title>Crossover tests</title>
-<br />
 <table>
 <tr><th></th><th>Period 1</th><th>Period 2</th><th>Difference</th></tr>
 <tr><td>Group 1</td><td>@{grp1_p1:roundu}</td><td>@{grp1_p2:roundu}</td><td>@{grp1_diff:roundu}</td></tr>

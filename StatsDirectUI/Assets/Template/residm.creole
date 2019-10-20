@@ -1,16 +1,15 @@
 <report>
 <title>Multiple linear regression - influential data</title>
-<br />
 <table>
 <tr><th>Index</th><th>Y</th><th>Fitted Y</th><th>Std. Dev. Y fit</th><th>Residual</th></tr>
 <block name="yfit"><tr><td>@index</td><td>@y</td><td>@fit_y</td><td>@std_err</td><td>@res</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th colspan="2">Index</th><th colspan="2">Studentized</th><th colspan="2">Leverage</th><th>Cook's Distance</th></tr>
 <block name="studentised"><tr><td>@index</td><td><b>@index_star</b></td><td>@stu</td><td><b>@stu_star</b></td><td>@hi</td><td><b>@hi_star</b></td><td>@cook</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th colspan="2">Index</th><th colspan="2">Jackknife</th><th>DFIT</th></tr>
 <block name="jackknife"><tr><td>@index</td><td><b>@index_star</b></td><td>@jack</td><td><warn>@jack_star</warn></td><td>@dfit</td></tr></block>

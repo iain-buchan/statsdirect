@@ -1,6 +1,5 @@
 <report>
 <title>Risk analysis (prospective)</title>
-<br />
 <table>
 <tr><td></td><td><subtotal>Characteristic factor:</subtotal></td><td></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>

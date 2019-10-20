@@ -21,7 +21,6 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Logistic regression - classification</title>
-<br />
 <table>
 <tr><td></td><th colspan="3">Observed</th></tr>
 <tr><td></td><td></td><th>Event</th><th>No Event</th><th>Total</th></tr>

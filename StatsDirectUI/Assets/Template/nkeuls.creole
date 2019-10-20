@@ -1,13 +1,12 @@
 <report>
 <title>Newman-Keuls multiple comparisons</title>
-<br />
 <table>
 <tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>|L/SE(L)|</th><th></th></tr>
 <block name="differences">
 <tr><td>@cf1 vs. @cf2</td><td>@{delta:roundu}</td><td>@gps</td><td>@{t:roundu}</td><td><pval>@{p:pval}</pval></td></tr>
 </block>
 </table>
-<br />
+
 <table>
 <tr><th>Variable</th><th>Mean</th><th>Significant contrasts</th></tr>
 <block name="summary"><tr><td>@cf1</td><td>@mean</td><td>@sigs</td></tr></block>

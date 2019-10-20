@@ -1,11 +1,10 @@
 <report>
 <title>Comparison of two directly standardized rates</title>
-<br />
 <table>
 <tr><th>Stratum</th><th colspan="4">Table (a, person-time exposed, b, person-time not exposed)</th><td></td></tr>
 <block name="strata"><tr><td>@st</td><td>@a</td><td>@pt1</td><td>@b</td><td>@pt2</td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Rate ratio</th><th colspan="2"><ci>@pc% CI (@method)</ci></th><th>Weight</th><th></th></tr>
 <block name="rates"><tr><td>@st</td><td>@{rr:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@{wt:roundu}</td><td>@lb</td></tr></block>

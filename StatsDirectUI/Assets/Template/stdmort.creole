@@ -1,6 +1,5 @@
 <report>
 <title>Indirectly Standardized Rates and SMR</title>
-<br />
 <table>
 <tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</th><th></th></tr>
 <block name="groups"><tr><td>@{group:roundu}</td><td>@observed</td><td>@{expected:roundu}</td><td>@lb</td></tr></block>

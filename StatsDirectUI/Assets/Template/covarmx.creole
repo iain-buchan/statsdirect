@@ -1,6 +1,5 @@
 <report>
 <title>Multiple linear regression - variance-covariance matrix</title>
-<br />
 <table>
 <block name="covar"><tr><block name="col"><td>@x</td></block></tr></block>
 </table>

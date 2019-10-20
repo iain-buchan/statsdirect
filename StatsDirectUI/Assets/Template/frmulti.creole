@@ -2,7 +2,7 @@
 <title>Friedman: all pairwise comparisons (Conover)</title>
 <p>Critical t (@df df) = @{t:roundu}</p>
 <block name="pair">
-<br />
+
 <table>
 <tr><td>@compare</td><td><ci>@diff</ci></td></tr>
 <tr><td>(@val)</td><td><pval>@{p:pval}</pval></td></tr>

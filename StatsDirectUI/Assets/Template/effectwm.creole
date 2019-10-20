@@ -1,12 +1,11 @@
 <report>
 <title>Effect size (weighted mean difference) meta-analysis</title>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>Mean diff.</th><th colspan="2"><ci>Approximate @pc% CI</ci></th><th></th></tr>
 <block name="approximate"><tr><td>@st</td><td>@ne</td><td>@nc</td><td>@{d:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
 <block name="poolok">
-<br />
 <subtitle>Fixed effects (Mulrow-Oxman)</subtitle>
 <p>Pooled effect size wmd+ = @{dplus:roundu} (<ci>@pc% CI = @{from:roundu} to @{to:roundu}</ci>)<br />
 Z (test wmd+ differs from 0) = @{z:roundu}  <pval>@{p:pval}</pval></p>
@@ -20,8 +19,8 @@ I&#xb2; (inconsistency) = @isq% (<ci>@pc% CI = @llisq% to @ulisq%</ci>) </p>
 <p>Pooled wmd+ = @{dsrd:roundu} (<ci>@pc% CI = @{dsll:roundu} to @{dsul:roundu}</ci>)<br />
 Z (test wmd+ differs from 0) = @{dz:roundu}  <pval>@{zp:pval}</pval></p>
 </block>
+
 <block name="egger">
-<br />
 <subtitle>Bias indicators</subtitle>
 <p>Begg-Mazumdar: Kendall's @tau  <pval>@{p2:pval}</pval><br />
 Egger: bias = @a (<ci>@pc_egger% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>

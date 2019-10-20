@@ -8,7 +8,7 @@
 <tr><td>Block size:</td><td>@b_out</td></tr>
 <tr><td>Treatments:</td><td>@t_out</td></tr>
 </table>
-<br />
+
 <table>
 <tr><th>Subject</th><th>Treatment</th></tr>
 <block name="subjects"><tr><td>@id</td><td>@rx</td></tr></block>

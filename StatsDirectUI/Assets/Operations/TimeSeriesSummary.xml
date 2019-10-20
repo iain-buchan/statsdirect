@@ -111,16 +111,15 @@
 <report>
 <title>Time series summary</title>
 <block name="group">
-<br />
 <subtitle>Group: @groupName</subtitle>
-<br />
+
 <table>
 <tr><th>Time</th><th>Observations</th><th>Mean</th><th>SD</th><th>SE</th><th>Median</th><th>IQR</th></tr>
 <block name="time">
 <tr><td>@time</td><td>@observations</td><td>@{mean:roundx}</td><td>@{sd:roundx}</td><td>@{se:roundx}</td><td>@{median:roundx}</td><td>@{iqr:roundx}</td></tr>
 </block>
 </table>
-<br />
+
 <table>
 <tr><th>Subject ID</th><th>Baseline</th><th>Min. observation</th><th>Max. observation</th><th>Time to max.</th><th>Slope to max.</th><th>AUC</th></tr>
 <block name="subject">
@@ -143,7 +142,6 @@ Mean (SD) slope to maximum: @{meanSlopeToMax:roundx} (@{meanSlopeToMaxSD:roundx}
 
 <p>@{chart:chart}</p>
 </block>
-<br />
 <subtitle>AUC distribution</subtitle>
 
 <p>@{aucNormalChart:chart}<br />
@@ -151,7 +149,6 @@ R-square for AUC vs. normal scores: @{rSquareNormal:roundx}<br />
 @{aucLogNormalChart:chart}<br />
 R-square for log(AUC) vs. normal scores: @{rSquareLogNormal:roundx}</p>
 <block name="groupComparison">
-<br />
 <subtitle>Group comparison: @group1Title vs. @group2Title</subtitle>
 
 <p>t (SE): @{t:roundx} (@{se:roundx})<br />

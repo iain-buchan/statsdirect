@@ -300,9 +300,8 @@ Reference method: @xname<br />
 Sample size: @{samples:roundx}<br />
 Error ratio: @{error-ratio:roundx}</p>
 <block name="methodResults">
-<br />
 <subtitle>@title:</subtitle>
-<br />
+
 <table>
 <tr><th></th><th>Estimate</th><th>Standard Error</th><th>@{ci100:roundx}% CI</th><th>Meaning</th></tr>
 <tr><td>Slope</td><td>@{slope:roundx}</td><td>@{seslope:roundx}</td><td><ci>@{slopelci:roundx} to @{slopeuci:roundx}</ci></td><td>Proportional differences</td></tr>

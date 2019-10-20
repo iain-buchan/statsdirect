@@ -8,27 +8,26 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Poisson regression - fits and residuals</title>
-<br />
 <table>
 <tr><th>Index</th><block name="predictors"><th>@lab</th></block></tr>
 <block name="predictorValues"><tr><td>@idx</td><block name="pred"><td>@val</td></block></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Observed Events</th><th>Expected Events</th><th>Observed Incidence</th><th>Expected Incidence</th></tr>
 <block name="events"><tr><td>@idx</td><td>@obs</td><td>@fit</td><td>@iro</td><td>@ire</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Residual (score)</th><th>Freeman-Tukey Residual</th><th>Deviance Residual</th></tr>
 <block name="residuals"><tr><td>@idx</td><td>@yr</td><td>@ftr</td><td>@dev</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Pearson Chi&#xb2;</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
 <block name="pearson"><tr><td>@idx</td><td>@res</td><td>@lev</td><td>@sres</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Parameters</th><th>Covariance</th></tr>
 <block name="covar"><tr><td>@lab</td><td>@cov</td></tr></block>

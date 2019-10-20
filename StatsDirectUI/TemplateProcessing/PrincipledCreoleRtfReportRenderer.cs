@@ -2,6 +2,7 @@
 using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace StatsDirect.TemplateProcessing
@@ -14,28 +15,70 @@ namespace StatsDirect.TemplateProcessing
 
         public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
         {
-            ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
-            return RTF_REPORT_START + creole.Accept(new InnerRtfReportRenderer(host, substitutions)) + RTF_REPORT_END;
+            ICreole<IList<IStringOrDirective>> creole = CreoleReader.Parse<IList<IStringOrDirective>>(template, out string _);
+            IList<IStringOrDirective> raw = creole.Accept(new InnerRtfReportRenderer(host, substitutions));
+            return RTF_REPORT_START + Cook(raw) + RTF_REPORT_END;
+        }
+
+        private string Cook(IList<IStringOrDirective> raw)
+        {
+            // Get rid of spacing between significant markers such as paragraph/ASCII newline/paragraph.
+            raw = raw.Where(x => x.IsSignificant).ToList();
+
+            // Smash double new paragraph markers into one; render everything else into one big string and return it.
+            StringBuilder sb = new StringBuilder();
+            // BEWARE: The inside of this loop may modify the loop variable to prevent testing skipped elements.
+            for (int candidateIndex = 0; candidateIndex < raw.Count; candidateIndex++)
+            {
+                // Skip leading blank if present
+                if (candidateIndex == 0 && raw[candidateIndex].IsBlankOrWhiteSpace)
+                    continue;
+
+                if (candidateIndex == raw.Count - 1)
+                {
+                    // We're at the final element and we've not skipped it.  Emit.
+                    sb.Append(raw[candidateIndex].Rtf);
+                    continue;
+                }
+
+                // We're at an earlier-than-last element and we're not skipping it.
+                IStringOrDirective candidate = raw[candidateIndex];
+                IStringOrDirective next = raw[candidateIndex + 1];
+                IStringOrDirective maybeMerged = candidate.MaybeMergeWithNext(next);
+
+                // If the merge came back empty, this one doesn't merge.  Emit it and try the next element for merging.
+                if (null == maybeMerged)
+                {
+                    sb.Append(candidate.Rtf);
+                    continue;
+                }
+
+                // The merge came back non-empty; the returned value is used to represent both this element and the next one.  Emit it and skip the next entry.
+                // In theory, we should keep looking for further merges.  In reality, we presently (2019-10) only ever merge two adjacent newlines, so this code is sufficient.
+                sb.Append(maybeMerged.Rtf);
+                candidateIndex++;
+            }
+            return sb.ToString();
         }
 
         private class RtfFormatHolder
         {
-            public string Prefix { get; }
-            public string Suffix { get; }
+            public IList<IStringOrDirective> Prefix { get; }
+            public IList<IStringOrDirective> Suffix { get; }
 
             public RtfFormatHolder(string prefix)
-                : this(prefix, string.Empty)
+                : this(new IStringOrDirective[] { new RtfThatIsNotANewParagraph(prefix) }, Array.Empty<IStringOrDirective>())
             {
             }
 
-            public RtfFormatHolder(string prefix, string suffix)
+            public RtfFormatHolder(IList<IStringOrDirective> prefix, IList<IStringOrDirective> suffix)
             {
                 Prefix = prefix;
                 Suffix = suffix;
             }
         }
 
-        private class InnerRtfReportRenderer : ICreoleVisitor<string>
+        private class InnerRtfReportRenderer : ICreoleVisitor<IList<IStringOrDirective>>
         {
             private static readonly Dictionary<string, RtfFormatHolder> rtfFormatting = new Dictionary<string, RtfFormatHolder>
             {
@@ -49,10 +92,10 @@ namespace StatsDirect.TemplateProcessing
                 { "pval", new RtfFormatHolder(@"\cf5") },
                 { "score", new RtfFormatHolder(@"\cf3") },
                 { "sub", new RtfFormatHolder(@"\sub") },
-                { "subtitle", new RtfFormatHolder(@"\ul", @"\par") },
+                { "subtitle", new RtfFormatHolder(new IStringOrDirective[] { new NewParagraph(), new RtfThatIsNotANewParagraph(@"\ul") }, new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\par"), new NewParagraph() }) },
                 { "subtotal", new RtfFormatHolder(@"\cf7") },
                 { "sup", new RtfFormatHolder(@"\sup") },
-                { "title", new RtfFormatHolder(@"\ul\b", @"\par") },
+                { "title", new RtfFormatHolder(new IStringOrDirective[] { new NewParagraph(), new RtfThatIsNotANewParagraph(@"\ul\b") }, new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\par"), new NewParagraph() }) },
                 { "u", new RtfFormatHolder(@"\ul") },
                 { "warn", new RtfFormatHolder(@"\cf6") }
             };
@@ -71,61 +114,73 @@ namespace StatsDirect.TemplateProcessing
                 substitutionStack.Push(substitutions);
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleAttribute<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleAttribute<IList<IStringOrDirective>> victim)
             {
                 // Should never see; ignore.
-                return string.Empty;
+                return Array.Empty<IStringOrDirective>();
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleBlock<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleBlock<IList<IStringOrDirective>> victim)
             {
                 if (null == victim.Contents)
-                    return string.Empty;
-                StringBuilder sb = new StringBuilder();
+                    return Array.Empty<IStringOrDirective>();
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
                         substitutionStack.Push(inner);
-                        sb.Append(victim.Contents.Accept(this));
+                        list.AddRange(victim.Contents.Accept(this));
                         substitutionStack.Pop();
                     }
                 }
-                return sb.ToString();
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleFormatting<IList<IStringOrDirective>> victim)
             {
-                return "{" + ToRtfPrefix(victim.Format) + " " + MaybeAccept(victim.Contents) + "}" + ToRtfSuffix(victim.Format);
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                list.Add(new RtfThatIsNotANewParagraph("{"));
+                list.AddRange(ToRtfPrefix(victim.Format));
+                list.Add(new RtfThatIsNotANewParagraph(" "));
+                list.AddRange(MaybeAccept(victim.Contents));
+                list.Add(new RtfThatIsNotANewParagraph("}"));
+                list.AddRange(ToRtfSuffix(victim.Format));
+                return list;
             }
 
-            private string ToRtfPrefix(string format)
+            private IList<IStringOrDirective> ToRtfPrefix(string format)
             {
                 return rtfFormatting[format].Prefix;
             }
 
-            private string ToRtfSuffix(string format)
+            private IList<IStringOrDirective> ToRtfSuffix(string format)
             {
                 return rtfFormatting[format].Suffix;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleInclude<IList<IStringOrDirective>> victim)
             {
                 // TODO: We should perhaps cache parsed templates in case they are used many times - this is expensive on repeated calls.
                 string template = GetContent(victim.Source);
-                ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
+                ICreole<IList<IStringOrDirective>> creole = CreoleReader.Parse<IList<IStringOrDirective>>(template, out string _);
                 return creole.Accept(this);
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleList<IList<IStringOrDirective>> victim)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (ICreole<string> v in victim)
-                    sb.Append(v.Accept(this));
-                return sb.ToString();
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                foreach (ICreole<IList<IStringOrDirective>> v in victim)
+                    list.AddRange(v.Accept(this));
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleSubstitution<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleSubstitution<IList<IStringOrDirective>> victim)
+            {
+                return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(Substitute(victim)) };
+            }
+
+            private string Substitute(CreoleSubstitution<IList<IStringOrDirective>> victim)
             {
                 object value = FindValue(victim.Path);
                 if (null == value)
@@ -148,9 +203,9 @@ namespace StatsDirect.TemplateProcessing
                         case "roundx":
                             return host.RoundU(doubleValue);
                         case "zvalp1":
-                            return host.pval(zvalp1(doubleValue));
+                            return host.pval(Zvalp1(doubleValue));
                         case "zvalp2":
-                            return host.pval(zvalp2(doubleValue));
+                            return host.pval(Zvalp2(doubleValue));
                         case "default":
                             return doubleValue.ToString();
                         default:
@@ -170,88 +225,99 @@ namespace StatsDirect.TemplateProcessing
                 return null;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleTable<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTable<IList<IStringOrDirective>> victim)
             {
                 isFirstCellOfTable = true;
-                return "{" + MaybeAccept(victim.Contents) + @"}\par ";
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                list.Add(new NewParagraph());
+                list.Add(new RtfThatIsNotANewParagraph("{"));
+                list.AddRange(MaybeAccept(victim.Contents));
+                list.Add(new RtfThatIsNotANewParagraph("}"));
+                list.Add(new NewParagraph());
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableRow<IList<IStringOrDirective>> victim)
             {
-                return @"\trowd\trgaph135\trleft0\trautofit1"
-                    + MaybeToCellsDefinition(victim.Contents) + " "
-                    + MaybeAccept(victim.Contents)
-                    + @"\row ";
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                list.Add(new RtfThatIsNotANewParagraph(@"\trowd\trgaph135\trleft0\trautofit1"));
+                list.AddRange(MaybeToCellsDefinition(victim.Contents));
+                list.Add(new RtfThatIsNotANewParagraph(@" "));
+                list.AddRange(MaybeAccept(victim.Contents));
+                list.Add(new RtfThatIsNotANewParagraph(@"\row"));
+                return list;
             }
 
-            private string MaybeToCellsDefinition(ICreole<string> contents)
+            private IList<IStringOrDirective> MaybeToCellsDefinition(ICreole<IList<IStringOrDirective>> contents)
             {
                 return null == contents
-                    ? string.Empty
+                    ? Array.Empty<IStringOrDirective>()
                     : contents.Accept(new CellsDefinitionRenderer(substitutionStack.Peek()));
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableDetail<IList<IStringOrDirective>> victim)
             {
-                StringBuilder sb = new StringBuilder();
-                sb.Append(@"\pard\intbl ");
-                sb.Append(MaybeAccept(victim.Contents));
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                list.Add(new RtfThatIsNotANewParagraph(@"\pard\intbl "));
+                list.AddRange(MaybeAccept(victim.Contents));
                 if (isFirstCellOfTable)
                 {
-                    sb.Append(FirstCellOfTableMarker);
+                    list.Add(new RtfThatIsNotANewParagraph(FirstCellOfTableMarker));
                     isFirstCellOfTable = false;
                 }
-                sb.Append(@"\cell ");
+                list.Add(new RtfThatIsNotANewParagraph(@"\cell "));
                 for (int spanner = 1; spanner < victim.Colspan; spanner++)
-                    sb.Append(@"\pard\intbl\cell ");
-                return sb.ToString();
+                    list.Add(new RtfThatIsNotANewParagraph(@"\pard\intbl\cell "));
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableHeader<IList<IStringOrDirective>> victim)
             {
-                StringBuilder sb = new StringBuilder();
-                sb.Append(@"\pard\intbl {\ul ");
-                sb.Append(MaybeAccept(victim.Contents));
-                sb.Append(@"}");
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                list.Add(new RtfThatIsNotANewParagraph(@"\pard\intbl {\ul "));
+                list.AddRange(MaybeAccept(victim.Contents));
+                list.Add(new RtfThatIsNotANewParagraph(@"}"));
                 if (isFirstCellOfTable)
                 {
-                    sb.Append(FirstCellOfTableMarker);
+                    list.Add(new RtfThatIsNotANewParagraph(FirstCellOfTableMarker));
                     isFirstCellOfTable = false;
                 }
-                sb.Append(@"\cell ");
+                list.Add(new RtfThatIsNotANewParagraph(@"\cell "));
                 for (int spanner = 1; spanner < victim.Colspan; spanner++)
-                    sb.Append(@"\pard\intbl {\ul}\cell ");
-                return sb.ToString();
+                    list.Add(new RtfThatIsNotANewParagraph(@"\pard\intbl {\ul}\cell "));
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleText<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleText<IList<IStringOrDirective>> victim)
             {
-                return victim.Text;
+                return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(victim.Text) };
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleLineBreak<IList<IStringOrDirective>> victim)
             {
-                return @"\par ";
+                return new IStringOrDirective[] { new NewParagraph() };
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleParagraph<IList<IStringOrDirective>> victim)
             {
-                return @"\par "
-                    + MaybeAccept(victim.Contents)
-                    + @"\par ";
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                list.Add(new NewParagraph());
+                list.AddRange(MaybeAccept(victim.Contents));
+                list.Add(new NewParagraph());
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleEntity<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleEntity<IList<IStringOrDirective>> victim)
             {
-                return @"\'" + ((int)victim.Value).ToString("X");
+                return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\'" + ((int)victim.Value).ToString("X")) };
             }
 
-            private string MaybeAccept(ICreole<string> victimOrNull)
+            private IList<IStringOrDirective> MaybeAccept(ICreole<IList<IStringOrDirective>> victimOrNull)
             {
-                return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
+                return null == victimOrNull ? Array.Empty<IStringOrDirective>() : victimOrNull.Accept(this);
             }
 
-            double zvalp1(double xz)
+            double Zvalp1(double xz)
             {
                 double p = 1 - Numerics.PDF.alnorm(xz);
                 if (p > 1 - p)
@@ -259,7 +325,7 @@ namespace StatsDirect.TemplateProcessing
                 return p;
             }
 
-            double zvalp2(double xz)
+            double Zvalp2(double xz)
             {
                 double p = 1 - Numerics.PDF.alnorm(xz);
                 if (p > 1 - p)
@@ -268,7 +334,48 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        private class CellsDefinitionRenderer : ICreoleVisitor<string>
+        private interface IStringOrDirective
+        {
+            IStringOrDirective MaybeMergeWithNext(IStringOrDirective next);
+
+            string Rtf { get; }
+            bool IsBlankOrWhiteSpace { get; }
+            bool IsSignificant { get; }
+        }
+
+        private class NewParagraph : IStringOrDirective
+        {
+            string IStringOrDirective.Rtf => @"\par ";
+
+            bool IStringOrDirective.IsBlankOrWhiteSpace => true;
+
+            bool IStringOrDirective.IsSignificant => true;
+
+            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next)
+            {
+                return (next is NewParagraph) ? this : null;
+            }
+        }
+
+        private class RtfThatIsNotANewParagraph : IStringOrDirective
+        {
+            public string Rtf { get; private set; }
+
+            bool IStringOrDirective.IsBlankOrWhiteSpace => string.IsNullOrWhiteSpace(Rtf);
+            bool IStringOrDirective.IsSignificant => Rtf.Equals(" ") || !string.IsNullOrWhiteSpace(Rtf); // Single spaces are significant as we use them to separate formatting.
+
+            public RtfThatIsNotANewParagraph(string rtf)
+            {
+                Rtf = rtf;
+            }
+
+            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next)
+            {
+                return null;
+            }
+        }
+
+        private class CellsDefinitionRenderer : ICreoleVisitor<IList<IStringOrDirective>>
         {
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
 
@@ -277,57 +384,57 @@ namespace StatsDirect.TemplateProcessing
                 substitutionStack.Push(substitutions);
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleList<IList<IStringOrDirective>> victim)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (ICreole<string> v in victim)
-                    sb.Append(v.Accept(this));
-                return sb.ToString();
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                foreach (ICreole<IList<IStringOrDirective>> v in victim)
+                    list.AddRange(v.Accept(this));
+                return list;
             }
 
-            string ICreoleVisitor<string>.Visit(CreoleAttribute<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleBlock<string> victim)
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleAttribute<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleBlock<IList<IStringOrDirective>> victim)
             {
                 if (null == victim.Contents)
-                    return string.Empty;
-                StringBuilder sb = new StringBuilder();
+                    return Array.Empty<IStringOrDirective>();
+                List<IStringOrDirective> list = new List<IStringOrDirective>();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
                         substitutionStack.Push(inner);
-                        sb.Append(MaybeAccept(victim.Contents));
+                        list.AddRange(victim.Contents.Accept(this));
                         substitutionStack.Pop();
                     }
                 }
-                return sb.ToString();
+                return list;
             }
-            string ICreoleVisitor<string>.Visit(CreoleEntity<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleFormatting<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleInclude<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleLineBreak<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleParagraph<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleSubstitution<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTable<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTableRow<string> victim) => string.Empty;
-            string ICreoleVisitor<string>.Visit(CreoleTableDetail<string> victim) => CellDefinition(victim.Colspan);
-            string ICreoleVisitor<string>.Visit(CreoleTableHeader<string> victim) => CellDefinition(victim.Colspan);
-            string ICreoleVisitor<string>.Visit(CreoleText<string> victim) => string.Empty;
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleEntity<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleFormatting<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleInclude<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleLineBreak<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleParagraph<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleSubstitution<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTable<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableRow<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableDetail<IList<IStringOrDirective>> victim) => CellDefinition(victim.Colspan);
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableHeader<IList<IStringOrDirective>> victim) => CellDefinition(victim.Colspan);
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleText<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
 
-            private string MaybeAccept(ICreole<string> victimOrNull)
+            private IList<IStringOrDirective> MaybeAccept(ICreole<IList<IStringOrDirective>> victimOrNull)
             {
-                return null == victimOrNull ? string.Empty : victimOrNull.Accept(this);
+                return null == victimOrNull ? Array.Empty<IStringOrDirective>() : victimOrNull.Accept(this);
             }
 
-            private string CellDefinition(int colspan)
+            private IList<IStringOrDirective> CellDefinition(int colspan)
             {
                 if (colspan == 1)
-                    return @"\cellx0";
+                    return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\cellx0") };
                 StringBuilder sb = new StringBuilder();
                 sb.Append(@"\clmgf\cellx0");
                 for (int spanner = 1; spanner < colspan; spanner++)
                     sb.Append(@"\clmrg\cellx0");
-                return sb.ToString();
+                return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(sb.ToString()) };
             }
         }
     }

@@ -6,7 +6,7 @@
 <p>Pair-wise comparisons:<br />
 Critical t (@df df) = @{t:roundu}</p>
 <block name="pair">
-<br />
+
 <table>
 <tr><td>@compare</td><td>@dif</td></tr>
 <tr><td>(@val)</td><td>@{p_pair:pval}</td></tr>

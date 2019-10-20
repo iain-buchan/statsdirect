@@ -1,6 +1,5 @@
 <report>
 <title>Generalised Cochran-Mantel-Haenszel tests</title>
-<br />
 <table>
 <tr><td>Row variable (first classifier):</td><td><b><grandtotal>@ylab</grandtotal></b></td></tr>
 <tr><td>Column variable (second classifier):</td><td><b><ci>@xlab</ci></b></td></tr>

@@ -1,6 +1,5 @@
 <report>
 <title>Normal distribution (z) test - single sample</title>
-<br />
 <table>
 <tr><td>Sample name:</td><td>@name</td></tr>
 <tr><td>Sample mean = </td><td>@mean</td></tr>
