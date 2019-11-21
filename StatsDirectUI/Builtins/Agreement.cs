@@ -740,7 +740,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
             outputParameters.AddOutput("k", mpd.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());
-            host.FinishProgress();
             return outputParameters;
         }
 
@@ -1039,93 +1038,93 @@ namespace StatsDirect.Builtins
             double dx = delta * 1.000000000001;
             mp = 0;
 
-            host.StartProgress("Simulating exact P", true);
-            int ctr = 0;
-
-            mpd = ms;
-            for (iw = 1; iw <= ms; iw++)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                for (j = 2; j <= kb; j++)
+                int ctr = 0;
+
+                mpd = ms;
+                for (iw = 1; iw <= ms; iw++)
                 {
-                    for (i = 1; i <= kg; i++)
-                    {
-                        int ix = rng.NextInteger(1, kg);
-                        for (k = 1; k <= kr; k++)
-                        {
-                            double tmp = data[i, j, k];
-                            data[i, j, k] = data[ix, j, k];
-                            data[ix, j, k] = tmp;
-                        }
-                    }
-                }
-                for (i = 1; i <= kbg; i++)
-                {
-                    for (j = 1; j <= kbg; j++)
-                    {
-                        d[i, j] = 0.0;
-                    }
-                }
-                for (i = 1; i <= kg; i++)
-                {
-                    for (j = 1; j <= kb; j++)
-                    {
-                        for (k = i; k <= kg; k++)
-                        {
-                            lo = 1;
-                            if (i == k)
-                            {
-                                lo = j;
-                            }
-                            for (l = lo; l <= kb; l++)
-                            {
-                                ij = kb * (i - 1) + j;
-                                kl = kb * (k - 1) + l;
-                                d[ij, kl] = 0.0;
-                                for (m = 1; m <= kr; m++)
-                                {
-                                    d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
-                                }
-                                d[ij, kl] = Math.Pow(d[ij, kl], y);
-                                d[kl, ij] = d[ij, kl];
-                            }
-                        }
-                    }
-                }
-                double dz = 0.0;
-                for (is0 = 2; is0 <= kb; is0++)
-                {
-                    is1 = is0 - 1;
-                    for (int ir = 1; ir <= is1; ir++)
+                    for (j = 2; j <= kb; j++)
                     {
                         for (i = 1; i <= kg; i++)
                         {
-                            irr = (i - 1) * kb + ir;
-                            iss = (i - 1) * kb + is0;
-                            dz = dz + d[irr, iss];
+                            int ix = rng.NextInteger(1, kg);
+                            for (k = 1; k <= kr; k++)
+                            {
+                                double tmp = data[i, j, k];
+                                data[i, j, k] = data[ix, j, k];
+                                data[ix, j, k] = tmp;
+                            }
                         }
                     }
-                }
-                dz = dz / c0;
-                if (dz < dx)
-                {
-                    mp = mp + 1;
-                }
-
-                ctr += 1;
-                if (ctr > trigger)
-                {
-                    bool bailout = host.UpdateProgress(Convert.ToDouble(iw) / Convert.ToDouble(ms));
-                    ctr = 0;
-                    if (bailout)
+                    for (i = 1; i <= kbg; i++)
                     {
-                        mpd = iw;
-                        break;
+                        for (j = 1; j <= kbg; j++)
+                        {
+                            d[i, j] = 0.0;
+                        }
                     }
+                    for (i = 1; i <= kg; i++)
+                    {
+                        for (j = 1; j <= kb; j++)
+                        {
+                            for (k = i; k <= kg; k++)
+                            {
+                                lo = 1;
+                                if (i == k)
+                                {
+                                    lo = j;
+                                }
+                                for (l = lo; l <= kb; l++)
+                                {
+                                    ij = kb * (i - 1) + j;
+                                    kl = kb * (k - 1) + l;
+                                    d[ij, kl] = 0.0;
+                                    for (m = 1; m <= kr; m++)
+                                    {
+                                        d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
+                                    }
+                                    d[ij, kl] = Math.Pow(d[ij, kl], y);
+                                    d[kl, ij] = d[ij, kl];
+                                }
+                            }
+                        }
+                    }
+                    double dz = 0.0;
+                    for (is0 = 2; is0 <= kb; is0++)
+                    {
+                        is1 = is0 - 1;
+                        for (int ir = 1; ir <= is1; ir++)
+                        {
+                            for (i = 1; i <= kg; i++)
+                            {
+                                irr = (i - 1) * kb + ir;
+                                iss = (i - 1) * kb + is0;
+                                dz = dz + d[irr, iss];
+                            }
+                        }
+                    }
+                    dz = dz / c0;
+                    if (dz < dx)
+                    {
+                        mp = mp + 1;
+                    }
+
+                    ctr += 1;
+                    if (ctr > trigger)
+                    {
+                        bool bailout = progress.Update(Convert.ToDouble(iw) / Convert.ToDouble(ms));
+                        ctr = 0;
+                        if (bailout)
+                        {
+                            mpd = iw;
+                            break;
+                        }
+                    }
+
                 }
-
             }
-
-            host.FinishProgress();
         }
     }
 }

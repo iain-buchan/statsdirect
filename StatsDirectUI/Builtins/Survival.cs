@@ -1720,22 +1720,21 @@ namespace StatsDirect.Builtins
             double[] emdsim = new double[simits + 1 ];
             PoissonRNG rng = new PoissonRNG();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
-            host.StartProgress("Simulating...", true);
-            for (int j = 1; j <= simits; j++)
+            using (IProgressBar progress = host.StartProgress("Simulating...", true))
             {
-                if (host.UpdateProgress(j / (double)simits))
+                for (int j = 1; j <= simits; j++)
                 {
-                    host.FinishProgress();
-                    throw new TemplateOperationCancelledException();
+                    if (progress.Update(j / (double)simits))
+                        throw new TemplateOperationCancelledException();
+
+                    for (int i = 1; i <= rows; i++)
+                        dsim[i] = rng.GenPoisson(d[i]);
+                    XabLifetableBasics(rows, dsim, p, a, sl, rm, r, q, dd, yl, t, e);
+                    esim[j] = e[1];
+                    ABLifetableMedianMode(rows, dd, out emo, out emd, sl, x);
+                    emdsim[j] = emd;
                 }
-                for (int i = 1; i <= rows; i++)
-                    dsim[i] = rng.GenPoisson(d[i]);
-                XabLifetableBasics(rows, dsim, p, a, sl, rm, r, q, dd, yl, t, e);
-                esim[j] = e[1];
-                ABLifetableMedianMode(rows, dd, out emo, out emd, sl, x);
-                emdsim[j] = emd;
             }
-            host.FinishProgress();
             Array.Sort(esim, 1, simits);
             double esimll = MathDbl.QuantileFromSorted(esim, simits, 0.05);
             double esimul = MathDbl.QuantileFromSorted(esim, simits, 0.95);

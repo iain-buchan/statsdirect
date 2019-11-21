@@ -485,7 +485,7 @@ namespace StatsDirect.Builtins
         private void MultPoly(ITemplateHost host, double[] p1, double[] p2, int deg1, int deg2, double[] p3, out int deg3, out int ierr, string job)
         {
             deg3 = deg1 + deg2;
-            bool waiter = Convert.ToDouble(deg1) * Convert.ToDouble(deg2) > 300000;
+            bool couldBeSlow = Convert.ToDouble(deg1) * Convert.ToDouble(deg2) > 300000;
 
             if (logScale)
                 for (int i = 0; i <= deg3; i++)
@@ -494,58 +494,54 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i <= deg3; i++)
                     p3[i] = 0.0;
 
-            if (waiter)
-                host.StartProgress("Multiplying polynomials: " + job, true);
-
-            if (logScale)
+            using (IProgressBar progress = host.StartProgress("Multiplying polynomials: " + job, true, couldBeSlow))
             {
-                for (int i = 0; i <= deg1; i++)
+
+                if (logScale)
                 {
-                    for (int j = 0; j <= deg2; j++)
+                    for (int i = 0; i <= deg1; i++)
                     {
-                        if (p3[i + j] == -Constant.MISSING)
-                            p3[i + j] = p1[i] + p2[j];
-                        else
-                            p3[i + j] = SumLog(p1[i] + p2[j], p3[i + j]);
-                    }
-                    if (waiter)
-                    {
-                        if (host.UpdateProgress(i / (double)deg1))
+                        for (int j = 0; j <= deg2; j++)
                         {
-                            ierr = 1;
-                            host.FinishProgress();
-                            return;
+                            if (p3[i + j] == -Constant.MISSING)
+                                p3[i + j] = p1[i] + p2[j];
+                            else
+                                p3[i + j] = SumLog(p1[i] + p2[j], p3[i + j]);
+                        }
+                        if (couldBeSlow)
+                        {
+                            if (progress.Update(i / (double)deg1))
+                            {
+                                ierr = 1;
+                                return;
+                            }
                         }
                     }
                 }
-            }
-            else
-            {
-                for (int i = 0; i <= deg1; i++)
+                else
                 {
-                    for (int j = 0; j <= deg2; j++)
-                        p3[i + j] = p1[i] * p2[j] + p3[i + j];
-                    if (waiter)
+                    for (int i = 0; i <= deg1; i++)
                     {
-                        if (host.UpdateProgress(i / (double)deg1))
+                        for (int j = 0; j <= deg2; j++)
+                            p3[i + j] = p1[i] * p2[j] + p3[i + j];
+                        if (couldBeSlow)
                         {
-                            ierr = 1;
-                            host.FinishProgress();
-                            return;
+                            if (progress.Update(i / (double)deg1))
+                            {
+                                ierr = 1;
+                                return;
+                            }
                         }
                     }
-                }
 
-                if (waiter)
-                    host.FinishProgress();
-
-                //  Test for overflow; if so, set an appropriate error value.
-                for (int i = 0; i <= deg3; i++)
-                {
-                    if (double.IsInfinity(p3[i]) || double.IsNaN(p3[i]))
+                    //  Test for overflow; if so, set an appropriate error value.
+                    for (int i = 0; i <= deg3; i++)
                     {
-                        ierr = 6; //  Old VB6 code for an overflow
-                        return;
+                        if (double.IsInfinity(p3[i]) || double.IsNaN(p3[i]))
+                        {
+                            ierr = 6; //  Old VB6 code for an overflow
+                            return;
+                        }
                     }
                 }
             }

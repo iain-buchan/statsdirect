@@ -3142,17 +3142,17 @@ namespace StatsDirect.Builtins
             predictorValuesParameters.AddOutput("deltadev", null == d ? Formatting.ASTERISK : host.RoundU(d[arrayOffset]));
             predictorValuesParameters.AddOutput("deltachi", null == dc ? Formatting.ASTERISK : host.RoundU(dc[arrayOffset]));
 
-            ((DoubleVariable) outputFrame.Variables[0]).Data[outputRow] = t?[arrayOffset] ?? Constant.MISSING; // Trials
-            ((DoubleVariable) outputFrame.Variables[1]).Data[outputRow] = y?[arrayOffset] ?? Constant.MISSING; // Events
-            ((DoubleVariable) outputFrame.Variables[2]).Data[outputRow] = fit?[arrayOffset] ?? Constant.MISSING; // Event Probability
-            ((DoubleVariable) outputFrame.Variables[3]).Data[outputRow] = dr?[arrayOffset] ?? Constant.MISSING; // Deviance Residual
-            ((DoubleVariable) outputFrame.Variables[4]).Data[outputRow] = pxi?[arrayOffset] ?? Constant.MISSING; // Pearson Residual
-            ((DoubleVariable) outputFrame.Variables[5]).Data[outputRow] = hi?[arrayOffset] ?? Constant.MISSING; // Leverage
-            ((DoubleVariable) outputFrame.Variables[6]).Data[outputRow] = xis?[arrayOffset] ?? Constant.MISSING; // Std Pearson Residual
-            ((DoubleVariable) outputFrame.Variables[7]).Data[outputRow] = cbar?[arrayOffset] ?? Constant.MISSING; // Delta Beta
-            ((DoubleVariable) outputFrame.Variables[8]).Data[outputRow] = c?[arrayOffset] ?? Constant.MISSING; // Std Delta Beta
-            ((DoubleVariable) outputFrame.Variables[9]).Data[outputRow] = d?[arrayOffset] ?? Constant.MISSING; // Delta Deviance
-            ((DoubleVariable) outputFrame.Variables[10]).Data[outputRow] = dc?[arrayOffset] ?? Constant.MISSING; // Delta Chi-Square
+            ((DoubleVariable)outputFrame.Variables[0]).Data[outputRow] = t?[arrayOffset] ?? Constant.MISSING; // Trials
+            ((DoubleVariable)outputFrame.Variables[1]).Data[outputRow] = y?[arrayOffset] ?? Constant.MISSING; // Events
+            ((DoubleVariable)outputFrame.Variables[2]).Data[outputRow] = fit?[arrayOffset] ?? Constant.MISSING; // Event Probability
+            ((DoubleVariable)outputFrame.Variables[3]).Data[outputRow] = dr?[arrayOffset] ?? Constant.MISSING; // Deviance Residual
+            ((DoubleVariable)outputFrame.Variables[4]).Data[outputRow] = pxi?[arrayOffset] ?? Constant.MISSING; // Pearson Residual
+            ((DoubleVariable)outputFrame.Variables[5]).Data[outputRow] = hi?[arrayOffset] ?? Constant.MISSING; // Leverage
+            ((DoubleVariable)outputFrame.Variables[6]).Data[outputRow] = xis?[arrayOffset] ?? Constant.MISSING; // Std Pearson Residual
+            ((DoubleVariable)outputFrame.Variables[7]).Data[outputRow] = cbar?[arrayOffset] ?? Constant.MISSING; // Delta Beta
+            ((DoubleVariable)outputFrame.Variables[8]).Data[outputRow] = c?[arrayOffset] ?? Constant.MISSING; // Std Delta Beta
+            ((DoubleVariable)outputFrame.Variables[9]).Data[outputRow] = d?[arrayOffset] ?? Constant.MISSING; // Delta Deviance
+            ((DoubleVariable)outputFrame.Variables[10]).Data[outputRow] = dc?[arrayOffset] ?? Constant.MISSING; // Delta Chi-Square
 
             if (includePredictors)
             {
@@ -3879,64 +3879,68 @@ namespace StatsDirect.Builtins
             bool iweight = true;
             var dropped = string.Empty;
             var errMsg = string.Empty;
-            host.StartProgress("Checking significance with all predictors", false);
-            Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out double dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
-            LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
-            host.FinishProgress();
+            using (IProgressBar progress = host.StartProgress("Checking significance with all predictors", false))
+            {
+                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out double dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
+                LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
+            }
 
             // Now add predictors one at time: select the predictor that gives max Akaike information to the model on each addition, building up to the full model again
-            host.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true);
-            bool[] previousSelection = new bool[p + 1]; // All blank initially; no previous selections.
-            int parms = mean ? 2 : 1;
-            double estimatedRegressionsToRun = m * (m + 1) / 2.0 + m;
-            int regressionsRun = 0;
-            while (true)
+            using (IProgressBar progress = host.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true))
             {
-                selectX = new bool[p + 1];
-                Array.Copy(previousSelection, selectX, p + 1);
-                int bestPredictorIndexSoFar = 0;
-                double minAkaikeInformationSoFar = double.MaxValue;
-                bool abandon = false;
-                for (int candidate = 1; candidate <= m; candidate++)
+                bool[] previousSelection = new bool[p + 1]; // All blank initially; no previous selections.
+                int parms = mean ? 2 : 1;
+                double estimatedRegressionsToRun = m * (m + 1) / 2.0 + m;
+                int regressionsRun = 0;
+                while (true)
                 {
-                    // If we've already processed this one, don't do so again
-                    if (previousSelection[candidate])
-                        continue;
-
-                    // Check whether it's better than our best so far this run; if so, note the fact.
-                    // Lower AIC values are better - the value represents the information *lost* if this model is chosen.
-                    selectX[candidate] = true;
-                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
-                    if (host.UpdateProgress(++regressionsRun / estimatedRegressionsToRun))
+                    selectX = new bool[p + 1];
+                    Array.Copy(previousSelection, selectX, p + 1);
+                    int bestPredictorIndexSoFar = 0;
+                    double minAkaikeInformationSoFar = double.MaxValue;
+                    bool abandon = false;
+                    double dev;
+                    int fault;
+                    for (int candidate = 1; candidate <= m; candidate++)
                     {
-                        abandon = true;
+                        // If we've already processed this one, don't do so again
+                        if (previousSelection[candidate])
+                            continue;
+
+                        // Check whether it's better than our best so far this run; if so, note the fact.
+                        // Lower AIC values are better - the value represents the information *lost* if this model is chosen.
+                        selectX[candidate] = true;
+                        Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
+                        if (progress.Update(++regressionsRun / estimatedRegressionsToRun))
+                        {
+                            abandon = true;
+                            break;
+                        }
+                        double aic = dev + 2 * (1 + m);
+                        if (aic < minAkaikeInformationSoFar)
+                        {
+                            bestPredictorIndexSoFar = candidate;
+                            minAkaikeInformationSoFar = aic;
+                        }
+                        selectX[candidate] = false;
+                    }
+
+                    // Have we added all predictors (or has the user given up)?
+                    if (bestPredictorIndexSoFar <= 0 || abandon)
                         break;
-                    }
-                    double aic = dev + 2 * (1 + m);
-                    if (aic < minAkaikeInformationSoFar)
-                    {
-                        bestPredictorIndexSoFar = candidate;
-                        minAkaikeInformationSoFar = aic;
-                    }
-                    selectX[candidate] = false;
+
+                    // Re-do the regression with that predictor selected along with any others we may have from previous iterations
+                    selectX[bestPredictorIndexSoFar] = true;
+                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
+                    LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
+                    if (progress.Update(++regressionsRun / estimatedRegressionsToRun))
+                        break;
+
+                    // Go round again, remembering the predictor we've chosen this time
+                    previousSelection = selectX;
+                    parms++;
                 }
-
-                // Have we added all predictors (or has the user given up)?
-                if (bestPredictorIndexSoFar <= 0 || abandon)
-                    break;
-
-                // Re-do the regression with that predictor selected along with any others we may have from previous iterations
-                selectX[bestPredictorIndexSoFar] = true;
-                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
-                LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
-                if (host.UpdateProgress(++regressionsRun / estimatedRegressionsToRun))
-                    break;
-
-                // Go round again, remembering the predictor we've chosen this time
-                previousSelection = selectX;
-                parms++;
             }
-            host.FinishProgress();
 
             return outputParameters;
         }
@@ -4182,49 +4186,130 @@ namespace StatsDirect.Builtins
                 gtot += Convert.ToInt32(t[j]);
             }
             int boots = parameters["boots"].AsInt32;
-            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true);
-            double[,] qo = new double[p + 1, boots + 1];
-            double[] theta = new double[p + 1];
-            double[] ql = new double[p + 1];
-            double[] qu = new double[p + 1];
-            int booted = 0;
-            MersenneTwister rng = new MersenneTwister();
-            for (i = 1; i <= boots; i++)
+            using (IProgressBar progress = host.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true))
             {
-                if (host.UpdateProgress(i / (double)boots))
-                    break;
-
-                double[] rndy = new double[n + 1];
-                double[] rndt = new double[n + 1];
-                double[] rndwt = new double[n + 1];
-                for (j = 1; j <= gtot; j++)
+                double[,] qo = new double[p + 1, boots + 1];
+                double[] theta = new double[p + 1];
+                double[] ql = new double[p + 1];
+                double[] qu = new double[p + 1];
+                int booted = 0;
+                MersenneTwister rng = new MersenneTwister();
+                for (i = 1; i <= boots; i++)
                 {
-                    int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
-                    int pivot = 0;
-                    int k;
-                    for (k = 1; k <= n; k++)
+                    if (progress.Update(i / (double)boots))
+                        break;
+
+                    double[] rndy = new double[n + 1];
+                    double[] rndt = new double[n + 1];
+                    double[] rndwt = new double[n + 1];
+                    for (j = 1; j <= gtot; j++)
                     {
-                        pivot += Convert.ToInt32(t[k]);
-                        if (pick <= pivot)
+                        int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
+                        int pivot = 0;
+                        int k;
+                        for (k = 1; k <= n; k++)
                         {
-                            rndt[k]++;
-                            if (rng.NextDouble() <= Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k]))
-                                rndy[k]++;
-                            break;
+                            pivot += Convert.ToInt32(t[k]);
+                            if (pick <= pivot)
+                            {
+                                rndt[k]++;
+                                if (rng.NextDouble() <= Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k]))
+                                    rndy[k]++;
+                                break;
+                            }
+                        }
+                    }
+                    for (j = 1; j <= n; j++)
+                    {
+                        if (rndy[j] == 0.0)
+                            rndy[j] = Constant.EPSNEG;
+                        if (rndy[j] == rndt[j])
+                            rndy[j] = rndy[j] - Constant.EPSNEG;
+                        if (rndt[j] == 0.0)
+                            rndwt[j] = 0.0;
+                        else
+                            rndwt[j] = wt[j];
+                    }
+                    b = new double[p + 1];
+                    se = new double[n + 1];
+                    cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
+                    fv = new double[n + 1];
+                    dr = new double[n + 1];
+                    h = new double[n + 1];
+                    offst = new double[n + 1];
+                    bool iweight = true;
+                    dropped = string.Empty;
+                    errMsg = string.Empty;
+                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
+                    if (fault == 0)
+                    {
+                        booted++;
+                        for (j = 1; j <= p; j++)
+                        {
+                            qo[j, booted] = Formatting.SafeExp(b[j]);
+                            if (qo[j, booted] < 1000.0 * ob[j])
+                                theta[j] += qo[j, booted];
                         }
                     }
                 }
-                for (j = 1; j <= n; j++)
+
+                // In the case of the bootstrap not running to its full iterations because the user cancelled, present results as far as it's got (#669)
+                boots = i - 1;
+
+                ParameterBag outputParameters = new ParameterBag();
+
+                for (j = 1; j <= p; j++)
                 {
-                    if (rndy[j] == 0.0)
-                        rndy[j] = Constant.EPSNEG;
-                    if (rndy[j] == rndt[j])
-                        rndy[j] = rndy[j] - Constant.EPSNEG;
-                    if (rndt[j] == 0.0)
-                        rndwt[j] = 0.0;
-                    else
-                        rndwt[j] = wt[j];
+                    theta[j] = theta[j] / Convert.ToDouble(booted);
                 }
+                for (j = 1; j <= p; j++)
+                {
+                    double[] qq = new double[booted + 1];
+                    int ctr = 0;
+                    for (i = 1; i <= booted; i++)
+                    {
+                        qq[i] = qo[j, i];
+                        if (qq[i] <= ob[j])
+                        {
+                            ctr += 1;
+                        }
+                    }
+                    Array.Sort(qq, 1, booted);
+                    double z0 = ctr / (double)booted;
+                    z0 = PDF.gauinv(z0);
+                    double p1 = PDF.alnorm(2.0 * z0 - cit);
+                    double p2 = PDF.alnorm(2.0 * z0 + cit);
+                    ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p1) + 1];
+                    qu[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p2) + 1];
+                }
+                if (boots == booted)
+                    outputParameters.AddOutput("boots", booted.ToString());
+                else
+                    outputParameters.AddOutput("boots", booted.ToString() + ", warning: " + (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression");
+                outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - p0), 2));
+                if (mean)
+                    iq = 1;
+                List<ParameterBag> parametersList = new List<ParameterBag>();
+                outputParameters.AddOutput("*parameters", parametersList);
+                for (i = 1; i <= p; i++)
+                {
+                    ParameterBag parametersParameters = new ParameterBag();
+                    parametersList.Add(parametersParameters);
+                    string q = i == 1 && mean ? "Constant" : labels[i - iq];
+                    parametersParameters.AddOutput("par", q);
+                    parametersParameters.AddOutput("obs", host.RoundU(ob[i]));
+                    if (i > 1 | mean == false)
+                    {
+                        parametersParameters.AddOutput("bias", host.RoundU(theta[i] - ob[i]));
+                        parametersParameters.AddOutput("ci", host.RoundU(ql[i]) + "  to  " + host.RoundU(qu[i]));
+                    }
+                    else
+                    {
+                        parametersParameters.AddOutput("bias", string.Empty);
+                        parametersParameters.AddOutput("ci", string.Empty);
+                    }
+                }
+                //  recalculate full model
                 b = new double[p + 1];
                 se = new double[n + 1];
                 cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
@@ -4232,91 +4317,11 @@ namespace StatsDirect.Builtins
                 dr = new double[n + 1];
                 h = new double[n + 1];
                 offst = new double[n + 1];
-                bool iweight = true;
                 dropped = string.Empty;
                 errMsg = string.Empty;
-                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
-                if (fault == 0)
-                {
-                    booted++;
-                    for (j = 1; j <= p; j++)
-                    {
-                        qo[j, booted] = Formatting.SafeExp(b[j]);
-                        if (qo[j, booted] < 1000.0 * ob[j])
-                            theta[j] += qo[j, booted];
-                    }
-                }
+                Regress1.X_Logistic_Regression(mean, false, ref useWeights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int _, ref dropped, ref errMsg);
+                return outputParameters;
             }
-            host.FinishProgress();
-
-            // In the case of the bootstrap not running to its full iterations because the user cancelled, present results as far as it's got (#669)
-            boots = i - 1;
-
-            ParameterBag outputParameters = new ParameterBag();
-
-            for (j = 1; j <= p; j++)
-            {
-                theta[j] = theta[j] / Convert.ToDouble(booted);
-            }
-            for (j = 1; j <= p; j++)
-            {
-                double[] qq = new double[booted + 1];
-                int ctr = 0;
-                for (i = 1; i <= booted; i++)
-                {
-                    qq[i] = qo[j, i];
-                    if (qq[i] <= ob[j])
-                    {
-                        ctr += 1;
-                    }
-                }
-                Array.Sort(qq, 1, booted);
-                double z0 = ctr / (double)booted;
-                z0 = PDF.gauinv(z0);
-                double p1 = PDF.alnorm(2.0 * z0 - cit);
-                double p2 = PDF.alnorm(2.0 * z0 + cit);
-                ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p1) + 1];
-                qu[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p2) + 1];
-            }
-            if (boots == booted)
-                outputParameters.AddOutput("boots", booted.ToString());
-            else
-                outputParameters.AddOutput("boots", booted.ToString() + ", warning: " + (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression");
-            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - p0), 2));
-            if (mean)
-                iq = 1;
-            List<ParameterBag> parametersList = new List<ParameterBag>();
-            outputParameters.AddOutput("*parameters", parametersList);
-            for (i = 1; i <= p; i++)
-            {
-                ParameterBag parametersParameters = new ParameterBag();
-                parametersList.Add(parametersParameters);
-                string q = i == 1 && mean ? "Constant" : labels[i - iq];
-                parametersParameters.AddOutput("par", q);
-                parametersParameters.AddOutput("obs", host.RoundU(ob[i]));
-                if (i > 1 | mean == false)
-                {
-                    parametersParameters.AddOutput("bias", host.RoundU(theta[i] - ob[i]));
-                    parametersParameters.AddOutput("ci", host.RoundU(ql[i]) + "  to  " + host.RoundU(qu[i]));
-                }
-                else
-                {
-                    parametersParameters.AddOutput("bias", string.Empty);
-                    parametersParameters.AddOutput("ci", string.Empty);
-                }
-            }
-            //  recalculate full model
-            b = new double[p + 1];
-            se = new double[n + 1];
-            cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
-            fv = new double[n + 1];
-            dr = new double[n + 1];
-            h = new double[n + 1];
-            offst = new double[n + 1];
-            dropped = string.Empty;
-            errMsg = string.Empty;
-            Regress1.X_Logistic_Regression(mean, false, ref useWeights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int _, ref dropped, ref errMsg);
-            return outputParameters;
         }
 
 

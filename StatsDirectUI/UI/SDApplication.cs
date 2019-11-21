@@ -20,7 +20,7 @@ namespace StatsDirect.UI
     /// The central class for managing the state of StatsDirect.
     /// </summary>
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
-    public sealed class SdApplication : ITemplateHost, IRefillSource
+    public sealed class SdApplication : ITemplateHost, IPreferences, IRefillSource
     {
         private const int MAX_RECENT_FILES = 7;
 
@@ -417,11 +417,6 @@ namespace StatsDirect.UI
             }
         }
 
-        void ITemplateHost.ShowHelp(int helpContextId)
-        {
-            Help.ShowHelp(SoleInstance.MainWindow, HelpFilePath, HelpNavigator.TopicId, helpContextId.ToString());
-        }
-
         internal void ShowHelp(Form Parent, string Topic)
         {
             Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, Topic);
@@ -618,7 +613,7 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
-        object ITemplateHost.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
+        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
         {
             // Locate the existing report window if it still exists
             IReport report;
@@ -641,7 +636,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Append the data in the frame to a new or existing user-selected grid window.
         /// </summary>
-        void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
+        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
         {
             IGrid grid;
             RelativePosition writePosition = defaultPosition;
@@ -677,20 +672,20 @@ namespace StatsDirect.UI
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
         }
 
-        IScriptEngine ITemplateHost.GetScriptEngine(string language)
+        IScriptEngine IUserInterface.GetScriptEngine(string language)
         {
             if (ScriptEngine.CanHandle(language))
                 return new ScriptEngine();
             return null;
         }
 
-        void ITemplateHost.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
+        void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
         {
             if (parameter is PickFromListParameter)
                 PrepareParameter(processor, (PickFromListParameter)parameter, context);
         }
 
-        bool ITemplateHost.CanCombine(Parameter parameter)
+        bool IUserInterface.CanCombine(Parameter parameter)
         {
             if (parameter is Frame2DParameter)
                 return false;
@@ -714,7 +709,7 @@ namespace StatsDirect.UI
             outstandingParameters = null;
         }
 
-        ParameterBag ITemplateHost.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
+        ParameterBag IUserInterface.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
         {
             if (null == MainWindow)
                 throw new Exception("Attempt to fill combined parameters with no main window open");
@@ -723,7 +718,7 @@ namespace StatsDirect.UI
             return MainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
         }
 
-        ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
+        ParameterBag IUserInterface.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
         {
             if (shouldCombine)
             {
@@ -795,17 +790,17 @@ namespace StatsDirect.UI
         /// Returns a display value of Amount, rounded to DisplayDecimalPlaces if sensible.
         /// </summary>
         /// <returns></returns>
-        string ITemplateHost.RoundU(double amount)
+        string IPreferences.RoundU(double amount)
         {
             return Formatting.XRound(amount, Preferences.DisplayDecimalPlaces);
         }
 
-        string ITemplateHost.pval(double p)
+        string IPreferences.pval(double p)
         {
             return Formatting.pval(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
         }
 
-        string ITemplateHost.pval_half(double p)
+        string IPreferences.pval_half(double p)
         {
             return Formatting.pval_half(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
         }
@@ -865,17 +860,17 @@ namespace StatsDirect.UI
             return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        bool ITemplateHost.MetaPlotCI => Preferences.MetaPlotCI;
+        bool IPreferences.MetaPlotCI => Preferences.MetaPlotCI;
 
-        int ITemplateHost.MetaPlotMethod => Preferences.MetaPlotMethod;
+        int IPreferences.MetaPlotMethod => Preferences.MetaPlotMethod;
 
-        bool ITemplateHost.GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
+        bool IUserInterface.GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
             cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
         }
 
-        bool ITemplateHost.GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
+        bool IUserInterface.GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
@@ -896,7 +891,7 @@ namespace StatsDirect.UI
             return host.FillAndValidateCombinedParameters(processor, context);
         }
 
-        double ITemplateHost.GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
+        double IUserInterface.GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
         {
             const string key = "solo";
             DoubleParameter parameter = new DoubleParameter
@@ -911,7 +906,7 @@ namespace StatsDirect.UI
             return cancelled ? 0.0 : results[key].AsDouble;
         }
 
-        int ITemplateHost.GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
+        int IUserInterface.GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string key = "solo";
             IntegerParameter parameter = new IntegerParameter
@@ -926,27 +921,28 @@ namespace StatsDirect.UI
             return cancelled ? 0 : results[key].AsInt32;
         }
 
-        string ITemplateHost.GetString(string prompt, string caption, string defaultValue)
+        string IUserInterface.GetString(string prompt, string caption, string defaultValue)
         {
             return Prompt(prompt, caption, defaultValue);
         }
 
-        void ITemplateHost.Error(string message, string caption)
+        void IUserInterface.Error(string message, string caption)
         {
             MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
         }
 
-        void ITemplateHost.StartProgress(string operationDescription, bool provideProgress)
+        IProgressBar IUserInterface.StartProgress(string operationDescription, bool provideProgress, bool display)
         {
             MainWindow?.StartProgress(operationDescription, provideProgress);
+            return new SdProgressBarHolder(display);
         }
 
-        bool ITemplateHost.UpdateProgress(double fractionComplete)
+        private bool UpdateProgress(double fractionComplete)
         {
             return null != MainWindow && MainWindow.UpdateProgress(fractionComplete);
         }
 
-        void ITemplateHost.FinishProgress()
+        private void FinishProgress()
         {
             MainWindow?.FinishProgress();
         }
@@ -956,7 +952,7 @@ namespace StatsDirect.UI
             MsgboxX("Error in calculation, report invalid.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", true);
         }
 
-        void ITemplateHost.Warning(string message, string caption)
+        void IUserInterface.Warning(string message, string caption)
         {
             MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Warning, caption, true);
         }
@@ -967,7 +963,7 @@ namespace StatsDirect.UI
             return DialogResult.OK == result;
         }
 
-        ParameterBag ITemplateHost.Amend(IFillable fillable, ParameterBag context)
+        ParameterBag IUserInterface.Amend(IFillable fillable, ParameterBag context)
         {
             switch (fillable.FillerToUse)
             {
@@ -1414,6 +1410,48 @@ namespace StatsDirect.UI
             if (null != MainWindow)
                 if (MainWindow.InvokeRequired)
                     MainWindow.Invoke(new Action(() => OpenFile(path, false)));
+        }
+
+        private class SdProgressBarHolder : IProgressBar
+        {
+            private bool Display { get; }
+
+            public SdProgressBarHolder(bool display)
+            {
+                Display = display;
+            }
+
+            public void Finish()
+            {
+                if (Display)
+                    SoleInstance.FinishProgress();
+            }
+
+            bool IProgressBar.Update(double fractionComplete)
+            {
+                return Display ? SoleInstance.UpdateProgress(fractionComplete) : false;
+            }
+
+            #region IDisposable Support
+            private bool disposedValue = false; // To detect redundant calls
+
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!disposedValue)
+                {
+                    if (disposing)
+                        Finish();
+                    disposedValue = true;
+                }
+            }
+
+            // This code added to correctly implement the disposable pattern.
+            void IDisposable.Dispose()
+            {
+                // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+                Dispose(true);
+            }
+            #endregion
         }
     }
 }

@@ -1248,6 +1248,9 @@ namespace StatsDirect.UI
         {
             SdApplication.TemplateHost.StartProgress("Converting file", false);
             string originalSdwPath = sdwPath;
+
+            IProgressBar progress = SdApplication.TemplateHost.StartProgress("Converting", false);
+
             try
             {
                 // Name our converted file and try to create one to see if we can (and hence if we believe SD2 will be able to).
@@ -1289,7 +1292,7 @@ namespace StatsDirect.UI
                     bool exited = p.WaitForExit(50);
                     if (exited)
                         break;
-                    if (SdApplication.TemplateHost.UpdateProgress(0))
+                    if (progress.Update(0))
                     {
                         p.Kill();
                         throw new TemplateOperationCancelledException();
@@ -1315,7 +1318,7 @@ namespace StatsDirect.UI
             }
             finally
             {
-                SdApplication.TemplateHost.FinishProgress();
+                progress.Finish();
             }
         }
 
@@ -2146,6 +2149,7 @@ namespace StatsDirect.UI
             return retVal;
         }
 
+        // Idempotent
         internal void FinishProgress()
         {
             if (pnlProgress.Visible)

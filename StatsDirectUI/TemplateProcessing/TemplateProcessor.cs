@@ -140,8 +140,6 @@ namespace StatsDirect.TemplateProcessing
             if (null == builtin)
                 throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
             ParameterBag outputResult = builtin.Invoke(host, parameters);
-            // Ensure no stray progress bars stay around
-            host.FinishProgress();
             return outputResult;
         }
 

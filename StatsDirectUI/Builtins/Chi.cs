@@ -688,7 +688,6 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("p", "P = * (cancelled)");
             }
-            host.FinishProgress();
             return outputParameters;
         }
 
@@ -718,51 +717,50 @@ namespace StatsDirect.Builtins
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            host.StartProgress("Simulating exact P", true);
-
-            if (iseed != 0)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                rng.Seed(iseed);
-            }
-            else { rng.Seed(); }
+                if (iseed != 0)
+                    rng.Seed(iseed);
+                else 
+                    rng.Seed();
 
-            for (j = 1; j <= nrow; j++)
-            {
-                for (i = 1; i <= ncol; i++)
+                for (j = 1; j <= nrow; j++)
                 {
-                    nrowt[j] += x[j, i];
-                    ncolt[i] += x[j, i];
-                }
-            }
-
-            int maxtot = 5000000;
-            bool primed = false;
-
-            double[] fact = new double[ncol + 1];
-            int[] jwork = new int[ncol + 1];
-
-            const double tol = Constant.EPSILON * 100.0;
-
-            r = 0;
-            for (i = 1; i <= iter; i++)
-            {
-                if (i % bootsDivisor == 0)
-                {
-                    if (host.UpdateProgress(i / (double)iter))
+                    for (i = 1; i <= ncol; i++)
                     {
-                        ierror = -1; //  Interrupted
-                        break;
+                        nrowt[j] += x[j, i];
+                        ncolt[i] += x[j, i];
                     }
                 }
-                Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                if (ierror != 0)
-                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                double x2Rep = Chi2Trend(x, wt, nrow);
-                if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
-                    r += 1;
+
+                int maxtot = 5000000;
+                bool primed = false;
+
+                double[] fact = new double[ncol + 1];
+                int[] jwork = new int[ncol + 1];
+
+                const double tol = Constant.EPSILON * 100.0;
+
+                r = 0;
+                for (i = 1; i <= iter; i++)
+                {
+                    if (i % bootsDivisor == 0)
+                    {
+                        if (progress.Update(i / (double)iter))
+                        {
+                            ierror = -1; //  Interrupted
+                            break;
+                        }
+                    }
+                    Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                    if (ierror != 0)
+                        throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    double x2Rep = Chi2Trend(x, wt, nrow);
+                    if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
+                        r += 1;
+                }
+                actualIterations = i - 1;
             }
-            actualIterations = i - 1;
-            host.FinishProgress();
         }
 
         private static double Chi2Trend(int[,] x, double[] wt, int rows)
@@ -831,65 +829,66 @@ namespace StatsDirect.Builtins
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            host.StartProgress("Simulating exact P", true);
-
-            if (iseed != 0)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                rng.Seed(iseed);
-            }
-            else { rng.Seed(); }
 
-            for (j = 1; j <= nrow; j++)
-            {
-                for (i = 1; i <= ncol; i++)
+                if (iseed != 0)
                 {
-                    x[j, i] = Convert.ToInt32(o[j, i]);
-                    nrowt[j] += x[j, i];
-                    ncolt[i] += x[j, i];
+                    rng.Seed(iseed);
                 }
-            }
+                else { rng.Seed(); }
 
-            int maxtot = 5000000;
-            bool primed = false;
-
-            double[] fact = new double[ncol + 1];
-            int[] jwork = new int[ncol + 1];
-
-            rx2 = 0;
-            rg2 = 0;
-            rx2Eq = 0;
-            rx2Trend = 0;
-            const double tol = Constant.EPSILON * 100.0;
-            actualIterations = 0;
-
-            for (i = 1; i <= iter; i++)
-            {
-                if (i % bootsDivisor == 0)
+                for (j = 1; j <= nrow; j++)
                 {
-                    if (host.UpdateProgress(i / (double)iter))
+                    for (i = 1; i <= ncol; i++)
                     {
-                        ierror = -1; //  Interrupted
-                        break;
+                        x[j, i] = Convert.ToInt32(o[j, i]);
+                        nrowt[j] += x[j, i];
+                        ncolt[i] += x[j, i];
                     }
                 }
-                Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                if (ierror != 0)
-                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
-                if (!faultrep)
+
+                int maxtot = 5000000;
+                bool primed = false;
+
+                double[] fact = new double[ncol + 1];
+                int[] jwork = new int[ncol + 1];
+
+                rx2 = 0;
+                rg2 = 0;
+                rx2Eq = 0;
+                rx2Trend = 0;
+                const double tol = Constant.EPSILON * 100.0;
+                actualIterations = 0;
+
+                for (i = 1; i <= iter; i++)
                 {
-                    actualIterations++;
-                    if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
-                        rx2++;
-                    if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
-                        rg2++;
-                    if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
-                        rx2Eq++;
-                    if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
-                        rx2Trend++;
+                    if (i % bootsDivisor == 0)
+                    {
+                        if (progress.Update(i / (double)iter))
+                        {
+                            ierror = -1; //  Interrupted
+                            break;
+                        }
+                    }
+                    Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                    if (ierror != 0)
+                        throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
+                    if (!faultrep)
+                    {
+                        actualIterations++;
+                        if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
+                            rx2++;
+                        if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
+                            rg2++;
+                        if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
+                            rx2Eq++;
+                        if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
+                            rx2Trend++;
+                    }
                 }
             }
-            host.FinishProgress();
         }
 
         public static string MCResultString(ITemplateHost host, int ierror, int r, int its, int seed, double cco)

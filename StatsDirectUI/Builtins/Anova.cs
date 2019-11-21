@@ -264,44 +264,45 @@ namespace StatsDirect.Builtins
                 {
                     nxx = nx;
                     double gd = nxx - 1;
-                    host.StartProgress("Calculating Kendall", true);
-                    int pn;
-                    for (pn = 1; pn <= nxx - 1; pn++)
+                    using (IProgressBar progress = host.StartProgress("Calculating Kendall", true))
                     {
-                        if (host.UpdateProgress(Convert.ToDouble(pn) / gd))
-                            return;
+                        int pn;
+                        for (pn = 1; pn <= nxx - 1; pn++)
+                        {
+                            if (progress.Update(Convert.ToDouble(pn) / gd))
+                                return;
 
-                        int xtie = 0;
-                        int ytie = 0;
-                        for (int N = pn + 1; N <= nxx; N++)
-                        {
-                            if ((x[pn] > x[N] & y[pn] > y[N]) | (x[pn] < x[N] & y[pn] < y[N]))
-                                p = p + 1.0;
-                            if ((x[pn] > x[N] & y[pn] < y[N]) | (x[pn] < x[N] & y[pn] > y[N]))
-                                q = q + 1.0;
-                            if (x[pn] == x[N])
-                                xtie = xtie + 1;
-                            if (y[pn] == y[N])
-                                ytie = ytie + 1;
-                        }
-                        int cnt = xtie + 1;
-                        if (cnt > 1)
-                        {
-                            siga = siga + cnt * (cnt - 1) / 2.0;
-                            sigat1 = sigat1 + Convert.ToDouble(cnt * (cnt - 1));
-                            sigat2 = sigat2 + Convert.ToDouble(cnt * (cnt - 1) * (cnt - 2));
-                            sigat3 = sigat3 + Convert.ToDouble(cnt * (cnt - 1) * (2 * cnt + 5));
-                        }
-                        cnt = ytie + 1;
-                        if (cnt > 1)
-                        {
-                            sigb = sigb + cnt * (cnt - 1) / 2.0;
-                            sigbt1 = sigbt1 + Convert.ToDouble(cnt * (cnt - 1));
-                            sigbt2 = sigbt2 + Convert.ToDouble(cnt * (cnt - 1) * (cnt - 2));
-                            sigbt3 = sigbt3 + Convert.ToDouble(cnt * (cnt - 1) * (2 * cnt + 5));
+                            int xtie = 0;
+                            int ytie = 0;
+                            for (int N = pn + 1; N <= nxx; N++)
+                            {
+                                if ((x[pn] > x[N] & y[pn] > y[N]) | (x[pn] < x[N] & y[pn] < y[N]))
+                                    p = p + 1.0;
+                                if ((x[pn] > x[N] & y[pn] < y[N]) | (x[pn] < x[N] & y[pn] > y[N]))
+                                    q = q + 1.0;
+                                if (x[pn] == x[N])
+                                    xtie = xtie + 1;
+                                if (y[pn] == y[N])
+                                    ytie = ytie + 1;
+                            }
+                            int cnt = xtie + 1;
+                            if (cnt > 1)
+                            {
+                                siga = siga + cnt * (cnt - 1) / 2.0;
+                                sigat1 = sigat1 + Convert.ToDouble(cnt * (cnt - 1));
+                                sigat2 = sigat2 + Convert.ToDouble(cnt * (cnt - 1) * (cnt - 2));
+                                sigat3 = sigat3 + Convert.ToDouble(cnt * (cnt - 1) * (2 * cnt + 5));
+                            }
+                            cnt = ytie + 1;
+                            if (cnt > 1)
+                            {
+                                sigb = sigb + cnt * (cnt - 1) / 2.0;
+                                sigbt1 = sigbt1 + Convert.ToDouble(cnt * (cnt - 1));
+                                sigbt2 = sigbt2 + Convert.ToDouble(cnt * (cnt - 1) * (cnt - 2));
+                                sigbt3 = sigbt3 + Convert.ToDouble(cnt * (cnt - 1) * (2 * cnt + 5));
+                            }
                         }
                     }
-                    host.FinishProgress();
                     s = p - q;
                     double xn = Convert.ToDouble(nx);
                     hn = xn * (xn - 1.0) / 2.0;
@@ -374,7 +375,6 @@ namespace StatsDirect.Builtins
             if (nxx < 11)
                 P2 += " (low power)";
         }
-
 
         public static ParameterBag RptAgreement(ITemplateHost host, ParameterBag parameters)
         {

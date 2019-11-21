@@ -1482,106 +1482,106 @@ namespace StatsDirect.Builtins
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            host.StartProgress("Simulating exact P", true);
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
+            {
 
-            if (iseed != 0)
-            {
-                rng.Seed(iseed);
-            }
-            else
-            {
-                rng.Seed();
-            }
-
-            for (j = 0; j <= g - 1; j++)
-            {
-                for (i = 0; i <= g - 1; i++)
+                if (iseed != 0)
                 {
-                    nrowt[j] += o[j, i];
-                    ncolt[i] += o[j, i];
-                }
-            }
-
-            int maxtot = 5000000;
-            bool primed = false;
-
-            double[] fact = new double[g];
-            int[] jwork = new int[g];
-
-            int missingSek = 0;
-            int missingSekw = 0;
-            int r = 0;
-            int rw = 0;
-            double tol = 100.0 * Constant.EPSILON;
-            for (i = 1; i <= iter; i++)
-            {
-                if (i % bootsDivisor == 0)
-                {
-                    if (host.UpdateProgress(i / (double)iter))
-                    {
-                        ierror = -1; //  Interrupted
-                        break;
-                    }
-                }
-                Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                if (ierror != 0)
-                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                double k = 0.0;
-                double sek = 0;
-                double sekci = 0;
-                double kcil = 0;
-                double kciu = 0;
-                double kw = 0;
-                double sekw = 0;
-                double sekwci = 0;
-                double kwcil = 0;
-                double kwciu = 0;
-                double po = 0;
-                double pe = 0;
-                double pow = 0;
-                double pew = 0;
-                double spe = 0;
-                double spi = 0;
-                Kappa(o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
-                if (!wasError)
-                {
-                    if (sek != 0.0)
-                    {
-                        if (k > originalK || Math.Abs(k - originalK) < tol)
-                        {
-                            r += 1;
-                        }
-                    }
-                    else
-                    {
-                        missingSek += 1;
-                    }
-
-                    if (sekw != 0.0)
-                    {
-                        if (kw > originalKw || Math.Abs(kw - originalKw) < tol)
-                        {
-                            rw += 1;
-                        }
-                    }
-                    else
-                    {
-                        missingSekw += 1;
-                    }
+                    rng.Seed(iseed);
                 }
                 else
                 {
-                    throw new InvalidDataException();
+                    rng.Seed();
                 }
+
+                for (j = 0; j <= g - 1; j++)
+                {
+                    for (i = 0; i <= g - 1; i++)
+                    {
+                        nrowt[j] += o[j, i];
+                        ncolt[i] += o[j, i];
+                    }
+                }
+
+                int maxtot = 5000000;
+                bool primed = false;
+
+                double[] fact = new double[g];
+                int[] jwork = new int[g];
+
+                int missingSek = 0;
+                int missingSekw = 0;
+                int r = 0;
+                int rw = 0;
+                double tol = 100.0 * Constant.EPSILON;
+                for (i = 1; i <= iter; i++)
+                {
+                    if (i % bootsDivisor == 0)
+                    {
+                        if (progress.Update(i / (double)iter))
+                        {
+                            ierror = -1; //  Interrupted
+                            break;
+                        }
+                    }
+                    Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                    if (ierror != 0)
+                        throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    double k = 0.0;
+                    double sek = 0;
+                    double sekci = 0;
+                    double kcil = 0;
+                    double kciu = 0;
+                    double kw = 0;
+                    double sekw = 0;
+                    double sekwci = 0;
+                    double kwcil = 0;
+                    double kwciu = 0;
+                    double po = 0;
+                    double pe = 0;
+                    double pow = 0;
+                    double pew = 0;
+                    double spe = 0;
+                    double spi = 0;
+                    Kappa(o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
+                    if (!wasError)
+                    {
+                        if (sek != 0.0)
+                        {
+                            if (k > originalK || Math.Abs(k - originalK) < tol)
+                            {
+                                r += 1;
+                            }
+                        }
+                        else
+                        {
+                            missingSek += 1;
+                        }
+
+                        if (sekw != 0.0)
+                        {
+                            if (kw > originalKw || Math.Abs(kw - originalKw) < tol)
+                            {
+                                rw += 1;
+                            }
+                        }
+                        else
+                        {
+                            missingSekw += 1;
+                        }
+                    }
+                    else
+                    {
+                        throw new InvalidDataException();
+                    }
+                }
+
+                //  Ensure we deal with zero results by removing them from numerator (already done, they never got in there) and denominator
+                exactR = r;
+                exactIter = iter - missingSek;
+                exactRw = rw;
+                exactIterW = iter - missingSekw;
             }
-
-            //  Ensure we deal with zero results by removing them from numerator (already done, they never got in there) and denominator
-            exactR = r;
-            exactIter = iter - missingSek;
-            exactRw = rw;
-            exactIterW = iter - missingSekw;
-
-            host.FinishProgress();
         }
 
 
@@ -1712,36 +1712,37 @@ namespace StatsDirect.Builtins
                 pp[i] = Math.Round(p[i] + pp[i - 1], 12);
             }
             r = 0;
-            host.StartProgress("Simulating exact P", true);
-            MersenneTwister rng = new MersenneTwister(iseed);
-            for (int l = 1; l <= iter; l++)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                Array.Clear(x, 1, k);
-                for (int i = 1; i <= ntot; i++)
+                MersenneTwister rng = new MersenneTwister(iseed);
+                for (int l = 1; l <= iter; l++)
                 {
-                    double pr = rng.NextDouble();
-                    int j;
-                    for (j = 1; j <= k; j++)
+                    Array.Clear(x, 1, k);
+                    for (int i = 1; i <= ntot; i++)
                     {
-                        if (pr <= pp[j])
-                            break;
+                        double pr = rng.NextDouble();
+                        int j;
+                        for (j = 1; j <= k; j++)
+                        {
+                            if (pr <= pp[j])
+                                break;
+                        }
+                        if (j > k)
+                            j = k;
+                        x[j]++;
                     }
-                    if (j > k)
-                        j = k;
-                    x[j]++;
+                    if (X2Gf(x, p, k) >= x2)
+                    {
+                        r += 1;
+                    }
+                    if (progress.Update(Convert.ToDouble(l) / iter))
+                    {
+                        actualIterations = l;
+                        return;
+                    }
                 }
-                if (X2Gf(x, p, k) >= x2)
-                {
-                    r += 1;
-                }
-                if (host.UpdateProgress(Convert.ToDouble(l) / iter))
-                {
-                    actualIterations = l;
-                    return;
-                }
+                actualIterations = iter;
             }
-            actualIterations = iter;
-            host.FinishProgress();
         }
 
 

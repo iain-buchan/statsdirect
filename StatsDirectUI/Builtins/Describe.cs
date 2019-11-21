@@ -1466,36 +1466,37 @@ namespace StatsDirect.Builtins
                 resampled = new TimeSeriesSummaryStore { Group = original.Group, SortedTimes = original.SortedTimes, SortedSubjectIds = original.SortedSubjectIds };
                 resampled.NoteEndOfPass1(false);
                 double[] tValues = new double[iterations];
-                host.StartProgress("Bootstrapping " + original.Group.Label, true);
-                for (int iteration = 0; iteration < iterations; iteration++)
+                using (IProgressBar progress = host.StartProgress("Bootstrapping " + original.Group.Label, true))
                 {
-                    Shuffle(mt, original.Observations, resampled.Observations);
-                    resampled.Calculate(ci, true);
-                    double aucDifference = original.AucMean - resampled.AucMean;
-                    double t = aucDifference / resampled.Se;
-                    if (keepAucs)
+                    for (int iteration = 0; iteration < iterations; iteration++)
                     {
-                        AucMeans[iteration] = resampled.AucMean;
-                        VarAucMeans[iteration] = resampled.VarAucMean;
-                    }
-                    tValues[iteration] = t;
-                    if (iteration % 5000 == 0)
-                    {
-                        if (host.UpdateProgress(iteration / (double)iterations))
+                        Shuffle(mt, original.Observations, resampled.Observations);
+                        resampled.Calculate(ci, true);
+                        double aucDifference = original.AucMean - resampled.AucMean;
+                        double t = aucDifference / resampled.Se;
+                        if (keepAucs)
                         {
-                            // Abandon
-                            CompletedIterations = iteration;
-                            break;
+                            AucMeans[iteration] = resampled.AucMean;
+                            VarAucMeans[iteration] = resampled.VarAucMean;
+                        }
+                        tValues[iteration] = t;
+                        if (iteration % 5000 == 0)
+                        {
+                            if (progress.Update(iteration / (double)iterations))
+                            {
+                                // Abandon
+                                CompletedIterations = iteration;
+                                break;
+                            }
                         }
                     }
+                    // If we got here, we either completed fully or completedIterations will be set for the partial completion.
+                    Summary s = new Summary();
+                    double edge = (1.0 - ci) / 2.0;
+                    s.FullSummaryFromX(tValues, CompletedIterations, null, ci, edge * 100.0, (1.0 - edge) * 100.0, 1);
+                    TLcl = s.UserCentileL;
+                    TUcl = s.UserCentileU;
                 }
-                // If we got here, we either completed fully or completedIterations will be set for the partial completion.
-                Summary s = new Summary();
-                double edge = (1.0 - ci) / 2.0;
-                s.FullSummaryFromX(tValues, CompletedIterations, null, ci, edge * 100.0, (1.0 - edge) * 100.0, 1);
-                TLcl = s.UserCentileL;
-                TUcl = s.UserCentileU;
-                host.FinishProgress();
             }
 
             /// <summary>

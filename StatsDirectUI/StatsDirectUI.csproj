@@ -347,6 +347,9 @@
     <Compile Include="Templates\FilledParameters\FilledObjectParameter.cs" />
     <Compile Include="Templates\FilledParameters\FilledParameterDirection.cs" />
     <Compile Include="Templates\FilledParameters\IFilledParameterVisitor.cs" />
+    <Compile Include="Templates\IPreferences.cs" />
+    <Compile Include="Templates\IProgressBar.cs" />
+    <Compile Include="Templates\IUserInterface.cs" />
     <Compile Include="Templates\OperationTest.cs" />
     <Compile Include="Templates\OperationTestInputParameter.cs" />
     <Compile Include="Templates\OperationTestOutputParameter.cs" />
