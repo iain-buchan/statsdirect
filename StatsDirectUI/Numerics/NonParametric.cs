@@ -96,10 +96,10 @@ namespace StatsDirect.Numerics
             {
                 ranks[l1 + m + 1] = 0;
                 ranks[l2 + m + 1] = space + 1;
-                low = low + ranks[m];
-                high = high + ranks[nsum + 1 - m];
+                low += ranks[m];
+                high += ranks[nsum + 1 - m];
                 int dummy = high - low + 1;
-                space = space + dummy;
+                space += dummy;
             }
             int mwmax;
             if (change)

@@ -375,7 +375,7 @@ namespace StatsDirect.Numerics
                     fa = fw;
                     if (fw * prevfw > 0.0)
                     {
-                        fb = fb / 2.0;
+                        fb /= 2.0;
                     }
                     continue;
                 }
@@ -383,7 +383,7 @@ namespace StatsDirect.Numerics
                 fb = fw;
                 if (fw * prevfw > 0.0)
                 {
-                    fa = fa / 2.0;
+                    fa /= 2.0;
                 }
             }
             iflag = 3;
@@ -471,7 +471,7 @@ namespace StatsDirect.Numerics
             double f1 = b * da * f2;
             if (Math.Abs(delta) < emin)
             {
-                f1 = f1 + b * a * r2pi * Math.Exp(-0.5 * delta * delta);
+                f1 += b * a * r2pi * Math.Exp(-0.5 * delta * delta);
             }
             double sum = 0.0;
             double p;
@@ -491,14 +491,14 @@ namespace StatsDirect.Numerics
                         f1 = b * (da * az * f2 + f1) * fz / (fz + 1.0);
                         if (i1 <= 0)
                         {
-                            sum = sum + f2;
+                            sum += f2;
                         }
                         else
                         {
-                            sum = sum + f1;
+                            sum += f1;
                         }
                         az = 1.0 / (az * fz);
-                        fz = fz + 2.0;
+                        fz += 2.0;
                     }
                 }
                 if (i1 <= 0)
@@ -664,14 +664,14 @@ namespace StatsDirect.Numerics
             int i = 0;
             do
             {
-                i = i + 1;
+                i += 1;
                 xtermf = xtermf * x / (a + i - 1.0);
-                gamkf = gamkf - xtermf;
+                gamkf -= xtermf;
                 poikf = poikf * del / (k + i);
                 double termf = poikf * gamkf;
-                sum = sum + termf;
+                sum += termf;
                 double error = remain * gamkf;
-                remain = remain - poikf;
+                remain -= poikf;
                 if (i > k)
                 {
                     if (error <= 0.000000000001 || i > 5000)
@@ -680,11 +680,11 @@ namespace StatsDirect.Numerics
                 else
                 {
                     xtermb = xtermb * (a - i + 1.0) / x;
-                    gamkb = gamkb + xtermb;
+                    gamkb += xtermb;
                     poikb = poikb * (k - i + 1.0) / del;
                     double termb = gamkb * poikb;
-                    sum = sum + termb;
-                    remain = remain - poikb;
+                    sum += termb;
+                    remain -= poikb;
                     if (remain <= 0.000000000001 || i > 5000)
                     {
                         break;
@@ -727,12 +727,12 @@ namespace StatsDirect.Numerics
             do
             {
                 term = term * x / (a + one);
-                sum = sum + term;
+                sum += term;
                 if (term <= 0.000000000001) 
                 {
                     break;
                 }
-                one = one + 1.0;
+                one += 1.0;
             }
             while (true);
             return Math.Min(com * sum, 1.0);
@@ -811,7 +811,7 @@ namespace StatsDirect.Numerics
             {
                 do
                 {
-                    dx = dx * 0.5;
+                    dx *= 0.5;
                     xmid = bis + dx;
                     poisson(xmid, nl, out phi, out plo, out trm, out ifault);
                     double fmid = phi;
@@ -840,7 +840,7 @@ namespace StatsDirect.Numerics
             {
                 do
                 {
-                    dx = dx * 0.5;
+                    dx *= 0.5;
                     xmid = bis + dx;
                     poisson(xmid, nl, out phi, out plo, out trm, out ifault);
                     double fmid = plo;
@@ -1018,7 +1018,7 @@ namespace StatsDirect.Numerics
                 int jj = 1;
                 double p1 = -theta;
                 int icnt = (int)Math.Floor(p1 / alnsml);
-                p1 = p1 - icnt * alnsml;
+                p1 -= icnt * alnsml;
                 p1 = Math.Exp(p1);
                 //  prep backward calc
                 double x2 = k;
@@ -1028,7 +1028,7 @@ namespace StatsDirect.Numerics
                 h = PDF.alogam(h);
                 double p2 = -y2 + g - h;
                 int kcnt = (int)Math.Floor(p2 / alnsml);
-                p2 = p2 - kcnt * alnsml;
+                p2 -= kcnt * alnsml;
                 p2 = Math.Exp(p2);
                 g = 1.0;
                 h = 1.0;
@@ -1051,7 +1051,7 @@ namespace StatsDirect.Numerics
                         //  no need to scale, just store term
                         if (icnt == 0)
                         {
-                            pe = pe + p1;
+                            pe += p1;
                         }
                         if (jj != k1)
                         {
@@ -1064,11 +1064,11 @@ namespace StatsDirect.Numerics
                                 if (temp != 0.0)
                                 {
                                     p1 = temp;
-                                    icnt = icnt - 1;
+                                    icnt -= 1;
                                 }
                             }
-                            jj = jj + 1;
-                            y = y + 1.0;
+                            jj += 1;
+                            y += 1.0;
                         }
                         else
                         {
@@ -1081,7 +1081,7 @@ namespace StatsDirect.Numerics
                         //  no need to scale, just store term
                         if (kcnt == 0)
                         {
-                            pe = pe + p2;
+                            pe += p2;
                         }
                         if (jj != k1)
                         {
@@ -1094,11 +1094,11 @@ namespace StatsDirect.Numerics
                                 if (temp != 0.0)
                                 {
                                     p2 = temp;
-                                    kcnt = kcnt - 1;
+                                    kcnt -= 1;
                                 }
                             }
-                            k1 = k1 - 1;
-                            x2 = x2 - 1.0;
+                            k1 -= 1;
+                            x2 -= 1.0;
                         }
                         else
                         {
@@ -1236,7 +1236,7 @@ namespace StatsDirect.Numerics
                 {
                     x2 = x3;
                     f2 = f3;
-                    f1 = f1 * 0.5;
+                    f1 *= 0.5;
                     if (Math.Abs(f2) > Math.Abs(f1))
                     {
                         f1 = 2.0 * f1;

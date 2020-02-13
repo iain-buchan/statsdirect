@@ -433,15 +433,15 @@ namespace StatsDirect.Numerics
             for (int j = 2; j <= 152; j++)
             {
                 p = fff + q[153 - j] + ri * r[j] + rn * r[305 - j] + s[j];
-                if (p >= smexe) f = f - Math.Exp(p);
+                if (p >= smexe) f -= Math.Exp(p);
             }
             for (int j = 153; j <= 303; j++)
             {
                 p = fff + q[j - 152] + ri * r[j] + rn * r[305 - j] + s[j];
-                if (p >= smexe) f = f + Math.Exp(p);
+                if (p >= smexe) f += Math.Exp(p);
             }
             p = fff + q[152] + ri * r[304] + rn * r[1] + s[304];
-            if (p >= smexe + alogp5) f = f + 0.5 * Math.Exp(p);
+            if (p >= smexe + alogp5) f += 0.5 * Math.Exp(p);
             return -.05 * f;
         }
     }

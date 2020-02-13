@@ -301,7 +301,7 @@ namespace StatsDirect.Builtins
                     if (bin[i].Label != Formatting.MISSINGLABEL)
                     {
                         binParameters.AddOutput("pc", 100.0 * Convert.ToDouble(xn) / Convert.ToDouble(xtot));
-                        cm = cm + xn;
+                        cm += xn;
                         binParameters.AddOutput("cm", cm);
                         binParameters.AddOutput("pc2", 100.0 * Convert.ToDouble(cm) / Convert.ToDouble(xtot));
                     }

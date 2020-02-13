@@ -181,12 +181,12 @@ namespace StatsDirect.Numerics
                         if (skip == false)
                         {
                             //  Step C. creation of new poisson probabilities p[l..] and their cumulatives q =: pp[k]
-                            L = L + 1;
+                            L += 1;
                             int counter = L;
                             for (k = counter; k <= 35; k++)
                             {
                                 P = P * mu / k;
-                                Q = Q + P;
+                                Q += P;
                                 PP[k] = Q;
                                 if (u <= Q)
                                 {
@@ -261,7 +261,7 @@ namespace StatsDirect.Numerics
                     {
                         //  Case pois >= 10 uses polynomial approximation a0-a7 for accuracy when advisable
                         del = ONE_12 / fk;
-                        del = del * (1.0 - 4.8 * del * del);
+                        del *= (1.0 - 4.8 * del * del);
                         v = difmuk / fk;
                         if (Math.Abs(v) <= 0.25)
                         {
@@ -275,7 +275,7 @@ namespace StatsDirect.Numerics
                         py = Sqr2PI / Math.Sqrt(fk);
                     }
                     x = (0.5 - difmuk) / S;
-                    x = x * x;
+                    x *= x;
                     fx = -0.5 * x;
                     fy = OMEGA * (((C3 * x + C2) * x + C1) * x + C0);
                     //  Step Q. Quotient acceptance (rare case)
@@ -312,7 +312,7 @@ namespace StatsDirect.Numerics
                         {
                             //  Case pois >= 10 uses polynomial approximation a0-a7 for accuracy when advisable
                             del = ONE_12 / fk;
-                            del = del * (1.0 - 4.8 * del * del);
+                            del *= (1.0 - 4.8 * del * del);
                             v = difmuk / fk;
                             if (Math.Abs(v) <= 0.25)
                             {
@@ -326,7 +326,7 @@ namespace StatsDirect.Numerics
                             py = Sqr2PI / Math.Sqrt(fk);
                         }
                         x = (0.5 - difmuk) / S;
-                        x = x * x;
+                        x *= x;
                         fx = -0.5 * x;
                         fy = OMEGA * (((C3 * x + C2) * x + C1) * x + C0);
 

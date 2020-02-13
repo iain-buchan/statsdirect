@@ -175,14 +175,14 @@ namespace StatsDirect.Numerics
                         { 
                             for ( i=M + 1; i <= ix; i++ ) 
                             { 
-                                f = f * ( g / i - r ); 
+                                f *= ( g / i - r ); 
                             } 
                         } 
                         else if ( M != ix ) 
                         { 
                             for ( i=ix + 1; i <= M; i++ ) 
                             { 
-                                f = f / ( g / i - r ); 
+                                f /= ( g / i - r ); 
                             } 
                         } 
                         if ( v <= f )

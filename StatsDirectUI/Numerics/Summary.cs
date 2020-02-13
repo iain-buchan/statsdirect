@@ -251,9 +251,9 @@ namespace StatsDirect.Numerics
                     }
                     else
                     {
-                        m2 = m2 / nnx;
-                        m3 = m3 / nnx;
-                        m4 = m4 / nnx;
+                        m2 /= nnx;
+                        m3 /= nnx;
+                        m4 /= nnx;
                         // Numerically consistent with R but not Stata
                         Skewness = m3 * Math.Pow(m2, -1.5);
                         Kurtosis = m4 * Math.Pow(m2, -2.0);

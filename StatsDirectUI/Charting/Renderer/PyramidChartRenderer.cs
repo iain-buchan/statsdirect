@@ -32,7 +32,7 @@ namespace StatsDirect.Charting.Renderer
             else
             {
                 //  Combined male/female values - assume an even split
-                maxmale = maxmale / 2.0;
+                maxmale /= 2.0;
                 maxfemale = maxmale;
             }
 

@@ -135,7 +135,7 @@ namespace StatsDirect.Builtins
             } 
             for ( j=1; j <= jmax; j++ ) 
             { 
-                dx = dx * 0.5; 
+                dx *= 0.5; 
                 double xmid = rootfishReturn + dx; 
                 fmid = fisherss( xmid, alpha, P1, P0, N, M ); 
                 if ( fmid == Constant.MISSING ) 

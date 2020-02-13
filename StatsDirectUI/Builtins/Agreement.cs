@@ -407,13 +407,13 @@ namespace StatsDirect.Builtins
                     {
                         t1 = t1 + 4.0 * Math.Pow(sij[ir, ix], 3.0) - sij[ir, ix] * tij2[ir, ix] * 6.0 * n + uij[ir, ix] * 6.0 * n * n + tij3[ir, ix] * 2.0 * n * n + sij[ir, ix] * sij2[ir, ix] * 3.0 * n * n - vi[ir, ix] * 3.0 * n * n * n + sij3[ir, ix] * Math.Pow(n, 4.0);
                     }
-                    edel = edel + sij[ir, ix];
+                    edel += sij[ir, ix];
                     var = var + sij[ir, ix] * sij[ir, ix] - tij2[ir, ix] * n + sij2[ir, ix] * n * n;
                 }
             }
             if (n > 2)
             {
-                t1 = t1 / (n - 2);
+                t1 /= (n - 2);
             }
             double fac = n * b * (b - 1) / 2.0;
             double con = 1.0 / (fac * n);
@@ -429,11 +429,11 @@ namespace StatsDirect.Builtins
                     {
                         irr = (i - 1) * b + ir;
                         iss = (i - 1) * b + ix;
-                        delta = delta + d[irr, iss];
+                        delta += d[irr, iss];
                     }
                 }
             }
-            delta = delta / fac;
+            delta /= fac;
             double t = (delta - edel) / Math.Sqrt(var);
             p = Pgamt(t, gam);
             r = 1.0 - delta / edel;
@@ -458,7 +458,7 @@ namespace StatsDirect.Builtins
                 double r = 2.0 / Math.Abs(gam);
                 double d = r * r;
                 for (int i = 1; i <= 9; i++)
-                    d = d * (r * r + i);
+                    d *= (r * r + i);
                 double f = r * r + 10.0;
                 double u = (2.0 * f - 1.0) * Math.Log(f) / 2.0 - f + Math.Log(2.0 * pi) / 2.0 - Math.Log(d) + 1.0 / (12.0 * f) - 1.0 / (360.0 * f * f * f);
                 const double g1 = 0.045;
@@ -483,8 +483,8 @@ namespace StatsDirect.Builtins
                     y = t + 9.0;
                     for (int i = 1; i <= 99; i++)
                     {
-                        h1 = h1 + Math.Exp(a * Math.Log(r + x + g1 * (2.0 * i - 1.0)) - r * (x + g1 * (2.0 * i - 1.0)) + b);
-                        h2 = h2 + Math.Exp(a * Math.Log(r + x + g2 * i) - r * (x + g2 * i) + b);
+                        h1 += Math.Exp(a * Math.Log(r + x + g1 * (2.0 * i - 1.0)) - r * (x + g1 * (2.0 * i - 1.0)) + b);
+                        h2 += Math.Exp(a * Math.Log(r + x + g2 * i) - r * (x + g2 * i) + b);
                     }
                     h0 = Math.Exp(a * Math.Log(r + x) - r * x + b);
                     h3 = Math.Exp(a * Math.Log(r + y) - r * y + b);
@@ -499,8 +499,8 @@ namespace StatsDirect.Builtins
                 y = t;
                 for (int i = 1; i <= 99; i++)
                 {
-                    h1 = h1 + Math.Exp(a * Math.Log(r - x - g1 * (2.0 * i - 1.0)) + r * (x + g1 * (2.0 * i - 1.0)) + b);
-                    h2 = h2 + Math.Exp(a * Math.Log(r - x - g2 * i) + r * (x + g2 * i) + b);
+                    h1 += Math.Exp(a * Math.Log(r - x - g1 * (2.0 * i - 1.0)) + r * (x + g1 * (2.0 * i - 1.0)) + b);
+                    h2 += Math.Exp(a * Math.Log(r - x - g2 * i) + r * (x + g2 * i) + b);
                 }
                 h0 = Math.Exp(a * Math.Log(r - x) + r * x + b);
                 h3 = Math.Exp(a * Math.Log(r - y) + r * y + b);
@@ -579,10 +579,10 @@ namespace StatsDirect.Builtins
             double c33 = 0.0;
             for (i = 2; i <= km; i++)
             {
-                delta = delta + del[i];
-                c11 = c11 + c1[i];
-                c22 = c22 + c2[i];
-                c33 = c33 + c3[i];
+                delta += del[i];
+                c11 += c1[i];
+                c22 += c2[i];
+                c33 += c3[i];
             }
             edel = c11;
             var = c22;
@@ -695,7 +695,7 @@ namespace StatsDirect.Builtins
             if (kn > 2)
             {
                 t1 = t1 + 4.0 * Math.Pow(sij1[1, 2], 3.0) - sij1[1, 2] * tij2[1, 2] * 6.0 * kn + uij[1, 2] * 6.0 * kn * kn + tij3[1, 2] * 2.0 * kn * kn + sij1[1, 2] * sij2[1, 2] * 3.0 * kn * kn - vi[1, 2] * 3.0 * kn * kn * kn + sij3[1, 2] * Math.Pow(kn, 4.0);
-                t1 = t1 / Convert.ToDouble(kn - 2);
+                t1 /= Convert.ToDouble(kn - 2);
             }
             double c1 = 1.0 / Convert.ToDouble(kn * kn);
             double c2 = c1 * c1;
@@ -708,9 +708,9 @@ namespace StatsDirect.Builtins
             {
                 irr = (i - 1) * 2 + 1;
                 int iss = (i - 1) * 2 + 2;
-                delta = delta + d[irr, iss];
+                delta += d[irr, iss];
             }
-            delta = delta / Convert.ToDouble(kn);
+            delta /= Convert.ToDouble(kn);
 
         }
 
@@ -934,7 +934,7 @@ namespace StatsDirect.Builtins
                             w = Math.Abs(1.0 - data[i, j, k] / b2);
                             if (w < 0.00000000001)
                             {
-                                a1 = a1 + 1;
+                                a1 += 1;
                             }
                         }
                         double a4 = a2 + (a1 + 1) / 2;
@@ -946,7 +946,7 @@ namespace StatsDirect.Builtins
                                 rks[i] = a4;
                             }
                         }
-                        a2 = a2 + a1;
+                        a2 += a1;
                         a1 = 0.0;
                         b1 = b2;
                         b2 = 1.0E+30;
@@ -1029,12 +1029,12 @@ namespace StatsDirect.Builtins
                     {
                         irr = (i - 1) * kb + ir;
                         iss = (i - 1) * kb + is0;
-                        delta = delta + d[irr, iss];
+                        delta += d[irr, iss];
                     }
                 }
             }
             double c0 = bc2 * kg;
-            delta = delta / c0;
+            delta /= c0;
             double dx = delta * 1.000000000001;
             mp = 0;
 
@@ -1101,14 +1101,14 @@ namespace StatsDirect.Builtins
                             {
                                 irr = (i - 1) * kb + ir;
                                 iss = (i - 1) * kb + is0;
-                                dz = dz + d[irr, iss];
+                                dz += d[irr, iss];
                             }
                         }
                     }
-                    dz = dz / c0;
+                    dz /= c0;
                     if (dz < dx)
                     {
-                        mp = mp + 1;
+                        mp += 1;
                     }
 
                     ctr += 1;
