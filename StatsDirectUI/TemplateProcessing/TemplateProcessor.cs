@@ -73,10 +73,12 @@ namespace StatsDirect.TemplateProcessing
                 }
             }
             host.Operation = null;
+#if RENDER_TESTS
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             using (System.IO.TextWriter sw = new System.IO.StringWriter(sb))
                 new System.Xml.Serialization.XmlSerializer(typeof(OperationTest), new System.Xml.Serialization.XmlRootAttribute("test")).Serialize(sw, OperationTestRenderer.Render(filledParameters));
             Debug.Print(sb.ToString());
+#endif
             return filledParameters;
         }
 
