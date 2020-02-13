@@ -123,7 +123,7 @@ namespace StatsDirect.UI
             // #1403: Prevent looping with a selection if there was also a validation error.
             if (IsRepeatAfterValidationError)
                 grid.ClearSelection();
-            OutputParameters = new GridSelectionProcessor(grid).FillFrameParameter(parameter, Processor, SdApplication.SoleInstance, Context);
+            OutputParameters = new GridSelectionProcessor(grid).FillFrameParameter(parameter, Processor, Context);
         }
 
         public void Visit(IntegerParameter parameter)
@@ -212,7 +212,7 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
             }
             IGrid grid = (IGrid)SdApplication.SoleInstance.ActiveGrid.Window;
-            DataFrame2D frame = new GridSelectionProcessor(grid).FillFrameParameter2D(parameter, Processor, SdApplication.SoleInstance, Context);
+            DataFrame2D frame = new GridSelectionProcessor(grid).FillFrameParameter2D(parameter, Processor, Context);
             OutputParameters = null == frame ? null : new ParameterBag(parameter.Name, FilledParameterFactory.Input(frame));
         }
 

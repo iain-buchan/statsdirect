@@ -12,7 +12,7 @@ namespace StatsDirect.Builtins
 {
     public static class Chi
     {
-        public static ParameterBag RptChi2By2(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2By2(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             string studyType = parameters["study_type"].AsString;
@@ -185,24 +185,11 @@ namespace StatsDirect.Builtins
             WithTrend = 2
         }
 
-        public static ParameterBag RptChi2ByNWithoutTrend(ITemplateHost host, ParameterBag parameters)
-        {
-            return RptChi2ByN(host, parameters, Chi2ByNTrend.WithoutTrend);
-        }
+        public static ParameterBag RptChi2ByNWithoutTrend(ParameterBag parameters) => RptChi2ByN(parameters, Chi2ByNTrend.WithoutTrend);
+        public static ParameterBag RptChi2ByNLinearTrend(ParameterBag parameters) => RptChi2ByN(parameters, Chi2ByNTrend.LinearTrend);
+        public static ParameterBag RptChi2ByNWithTrend(ParameterBag parameters) => RptChi2ByN(parameters, Chi2ByNTrend.WithTrend);
 
-
-        public static ParameterBag RptChi2ByNLinearTrend(ITemplateHost host, ParameterBag parameters)
-        {
-            return RptChi2ByN(host, parameters, Chi2ByNTrend.LinearTrend);
-        }
-
-
-        public static ParameterBag RptChi2ByNWithTrend(ITemplateHost host, ParameterBag parameters)
-        {
-            return RptChi2ByN(host, parameters, Chi2ByNTrend.WithTrend);
-        }
-
-        private static ParameterBag RptChi2ByN(ITemplateHost _, ParameterBag parameters, Chi2ByNTrend z)
+        private static ParameterBag RptChi2ByN(ParameterBag parameters, Chi2ByNTrend z)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
             if (datFrame.VariableCount < (z == Chi2ByNTrend.WithTrend ? 3 : 2))
@@ -329,7 +316,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptChiMantel(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double p2M = 0;
             double p1M = 0;
@@ -563,7 +550,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptChiRbyC(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
@@ -604,7 +590,7 @@ namespace StatsDirect.Builtins
             return Tables.SChi(host, ref cco, a, rows, cols, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
         }
 
-        public static ParameterBag RptChiWoolf(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiWoolf(IPreferences host, ParameterBag parameters)
         {
             int rc;
 
@@ -628,7 +614,7 @@ namespace StatsDirect.Builtins
             int cnt = 0;
             for (rc = 1; rc <= rows; rc += 2)
             {
-                cnt = cnt + 1;
+                cnt += 1;
                 double rtd = datV0.Data[rc - 1];
                 o[cnt, 1] = rtd;
                 rtd = datV1.Data[rc - 1];
@@ -642,7 +628,7 @@ namespace StatsDirect.Builtins
             return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out bool _);
         }
 
-        public static ParameterBag RptChi2ByNWithTrendSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChi2ByNWithTrendSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
@@ -706,7 +692,7 @@ namespace StatsDirect.Builtins
         /// <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
         ///  <remarks></remarks>
-        private static void Chi2TrendResample(ITemplateHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
+        private static void Chi2TrendResample(IPreferencesAndProgressBar host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1];
             int[] nrowt = new int[nrow + 1];
@@ -817,7 +803,7 @@ namespace StatsDirect.Builtins
         ///  <param name="actualIterations">The number of Monte Carlo iterations actually performed</param>
         ///  <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
-        public static void ChiRCResample(ITemplateHost host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, double x2, out int rx2, double x2Eq, out int rx2Eq, double x2Trend, out int rx2Trend, double g2, out int rg2, out int actualIterations, int iseed, ref int ierror)
+        public static void ChiRCResample(IPreferencesAndProgressBar host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, double x2, out int rx2, double x2Eq, out int rx2Eq, double x2Trend, out int rx2Trend, double g2, out int rg2, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1];
             int[] nrowt = new int[nrow + 1];
@@ -891,7 +877,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static string MCResultString(ITemplateHost host, int ierror, int r, int its, int seed, double cco)
+        public static string MCResultString(IPreferences host, int ierror, int r, int its, int seed, double cco)
         {
             string res = string.Empty;
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )

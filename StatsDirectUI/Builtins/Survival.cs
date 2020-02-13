@@ -12,9 +12,9 @@ namespace StatsDirect.Builtins
     {
         private class Trisvar
         {
-            public double Tm;
-            public int Gp;
-            public int Cs;
+            public double Tm { get; set; }
+            public int Gp { get; set; }
+            public int Cs { get; set; }
         }
 
         private class TrisvarByTmThenGp : IComparer<Trisvar>
@@ -36,12 +36,9 @@ namespace StatsDirect.Builtins
                 //  If we get here, there are no meaningful differences
                 return 0;
             }
-            // interface methods implemented by Compare
-            int IComparer<Trisvar>.Compare(Trisvar x, Trisvar y)
-            {
-                return Compare(x, y);
-            }
 
+            // interface methods implemented by Compare
+            int IComparer<Trisvar>.Compare(Trisvar x, Trisvar y) => Compare(x, y);
         }
 
 
@@ -58,36 +55,19 @@ namespace StatsDirect.Builtins
                 //  If we get here, there are no meaningful differences
                 return 0;
             }
+
             // interface methods implemented by Compare
-            int IComparer<Trisvar>.Compare(Trisvar x, Trisvar y)
-            {
-                return Compare(x, y);
-            }
+            int IComparer<Trisvar>.Compare(Trisvar x, Trisvar y) => Compare(x, y);
 
         }
 
-
-        public static ParameterBag RptKaplan(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKaplan(IPreferences host, ParameterBag parameters)
         {
-            /*
-            int lc = 0; int nmax = 0; int j;
-            int lap;
-            string gid;
-            */
-
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0.0)
                 gamma = 0.95;
 
             double cit = PDF.gauinv(1.0 - (1.0 - gamma) / 2.0);
-
-            /*
-            double[] gpid = new double[1 + 1];
-            string[] glab = new string[1 + 1];
-            int r;
-            int c;
-            double[] g;
-            */
 
             // Store the times data
             DataFrame timesFrame = parameters["times"].AsDataFrame;
@@ -405,7 +385,7 @@ namespace StatsDirect.Builtins
                         asq += s[l, lap] * (stime[l + 1, lap] - stime[l, lap]);
                     if (!lastCen)
                         asq += stk * (tl - tk);
-                    asq = asq * asq;
+                    asq *= asq;
                     double denom = Convert.ToDouble(nat[i] * (nat[i] - dead[i, lap]));
                     if (denom != 0.0)
                         vmu += asq * Convert.ToDouble(dead[i, lap]) / denom;
@@ -619,7 +599,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         private static void ABLifetableMedianMode(int rows, double[] dd, out double emo, out double emd, double[] sl, double[] x)
         {
             // mode
@@ -646,7 +625,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         private static void ABLifetableVariance(int rows, double[] vq, double[] q, double[] d, double[] a, double[] r, double[] e, double[] sl, double[] ve, double[] vs)
         {
@@ -696,7 +674,6 @@ namespace StatsDirect.Builtins
             a[rows] = Constant.MISSING;
         }
 
-
         private static string LifetabInterval(int i, int rows, double[] x)
         {
             int j = i == 1 ? 0 : 1;
@@ -705,8 +682,7 @@ namespace StatsDirect.Builtins
             return Convert.ToInt32(x[i]).ToString() + " up";
         }
 
-
-        private static void Plest(ITemplateHost host, ParameterBag groupParameters, double[,] stime, int[] nat, int[,] dead, int[] cen, double[,] h, double[,] s, double[] vh, double[] vs, int nx, int lap)
+        private static void Plest(IPreferences host, ParameterBag groupParameters, double[,] stime, int[] nat, int[,] dead, int[] cen, double[,] h, double[,] s, double[] vh, double[] vs, int nx, int lap)
         {
             double var = 0;
 
@@ -754,7 +730,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  GIVEN A SYMMETRIC MATRIX ORDER N AS LOWER TRIANGLE in A() CALCULATES AN UPPER TRIANGLE, U( ), SUCH THAT UPRIME * U = A.
         ///  A MUST BE POSITIVE SEMI-DEFINITE.  ETA IS SET TO MULTIPLYING FACTOR DETERMINING EFFECTIVE 0 FOR PIVOT.
@@ -788,27 +763,27 @@ namespace StatsDirect.Builtins
             int ii = 0;
             for (int icol = 1; icol <= n; icol++)
             {
-                ii = ii + icol;
+                ii += icol;
                 double x = eta2 * a[ii];
                 int l = 0;
                 int kk = 0;
                 int irow;
                 for (irow = 1; irow <= icol; irow++)
                 {
-                    kk = kk + irow;
-                    k = k + 1;
+                    kk += irow;
+                    k += 1;
                     w = a[k];
                     int m = j;
                     int i;
                     for (i = 1; i <= irow; i++)
                     {
-                        l = l + 1;
+                        l += 1;
                         if (i == irow)
                         {
                             break;
                         }
-                        w = w - u[l] * u[m];
-                        m = m + 1;
+                        w -= u[l] * u[m];
+                        m += 1;
                     }
                     if (irow == icol)
                         break;
@@ -826,7 +801,7 @@ namespace StatsDirect.Builtins
                 if (Math.Abs(w) <= Math.Abs(eta * a[k]))
                 {
                     u[k] = 0;
-                    nullty = nullty + 1;
+                    nullty += 1;
                 }
                 else
                 {
@@ -839,8 +814,7 @@ namespace StatsDirect.Builtins
             ifault = 0;
         }
 
-
-        public static ParameterBag RptWeiLachin(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptWeiLachin(IPreferences host, ParameterBag parameters)
         {
             int gid2 = 0;
             int[,] s;
@@ -950,12 +924,11 @@ namespace StatsDirect.Builtins
                 XWeiLachin(host, outerParameters, nr, rows, n, g, s, x, 2, out ifault);
             }
             if (ifault != 0)
-                host.Error("Error in calculation, report invalid", null);
+                throw new Exception("Error in calculation, report invalid");
             return outputParameters;
         }
 
-
-        private static void XWeiLachin(ITemplateHost host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
+        private static void XWeiLachin(IPreferences host, ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
         {
             int nn = (int)Math.Floor((double)nr * (nr + 1) / 2);
             int[,] y = new int[2 + 1, nt + 1];
@@ -1117,16 +1090,16 @@ namespace StatsDirect.Builtins
             double sigsum = 0.0;
             for (int j = 1; j <= nr; j++)
             {
-                tsum = tsum + wlt[j];
+                tsum += wlt[j];
                 int ipoint = (int)Math.Floor((double)j * (j + 1) / 2);
-                chiomb = chiomb + wlt[j] * wlt[j] * siginv[ipoint];
-                sigsum = sigsum + sigma[ipoint];
+                chiomb += wlt[j] * wlt[j] * siginv[ipoint];
+                sigsum += sigma[ipoint];
                 int jm1 = j - 1;
                 for (int j2 = 1; j2 <= jm1; j2++)
                 {
                     ipoint = (int)Math.Floor((double)j * (j - 1) / 2) + j2;
-                    chiomb = chiomb + 2.0 * wlt[j] * wlt[j2] * siginv[ipoint];
-                    sigsum = sigsum + 2.0 * sigma[ipoint];
+                    chiomb += 2.0 * wlt[j] * wlt[j2] * siginv[ipoint];
+                    sigsum += 2.0 * sigma[ipoint];
                 }
             }
             double nrstoc = tsum / Math.Sqrt(sigsum);
@@ -1176,7 +1149,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_2", host.pval(p * 2.0));
         }
 
-
         ///  <summary>
         ///  FORMS in C( ) AS LOWER TRIANGLE, A GENERALIZED INVERSE OF THE POSITIVE SEMI-DEFINATE SYMMETRIC MATRIX A() ORDER N, STORED AS LOWER TRIANGLE.
         ///  </summary>
@@ -1220,7 +1192,7 @@ namespace StatsDirect.Builtins
                         {
                             if (k == irow)
                                 break;
-                            x = x - w[k] * c[l];
+                            x -= w[k] * c[l];
                             k--;
                             l--;
                             if (l > mdiag)
@@ -1249,7 +1221,6 @@ namespace StatsDirect.Builtins
             }
             while (irow != 0);
         }
-
 
         private static void Plsave(DataFrame resultsFrame, double[,] stime, int[] nat, int[,] dead, double[,] s, double[,] h, double[] vs, double[] vh, int nx, int lap, double gamma, int[] allcens, double[] alltime)
         {
@@ -1286,8 +1257,8 @@ namespace StatsDirect.Builtins
                 double conls;
                 if (nat[j] - dead[j, lap] > 0)
                 {
-                    sumn = sumn + Convert.ToDouble(dead[j, lap]) / (Convert.ToDouble(nat[j]) * Convert.ToDouble(nat[j] - dead[j, lap]));
-                    sumd = sumd + Math.Log(Convert.ToDouble(nat[j] - dead[j, lap]) / Convert.ToDouble(nat[j]));
+                    sumn += Convert.ToDouble(dead[j, lap]) / (Convert.ToDouble(nat[j]) * Convert.ToDouble(nat[j] - dead[j, lap]));
+                    sumd += Math.Log(Convert.ToDouble(nat[j] - dead[j, lap]) / Convert.ToDouble(nat[j]));
                     if (sumd == 0.0)
                     {
                         conus = Constant.MISSING;
@@ -1371,7 +1342,6 @@ namespace StatsDirect.Builtins
             sehuVariable.TruncateDataToLength(r);
         }
 
-
         private static void Plprep(double[,] arr2, ColumnData[] cdat1, double[,] stime, int[,] dead, int[] nat, int[] cen, int[] gnx, out int nx, int lap, out int nt, int[] allcens, double[] alltime)
         {
             nt = cdat1[0].Rows;
@@ -1395,7 +1365,7 @@ namespace StatsDirect.Builtins
                 if (q[j].Gp == lap)
                 {
                     int wdr = 0;
-                    nx = nx + 1;
+                    nx += 1;
                     stime[nx, lap] = q[j].Tm;
                     dead[nx, lap] = q[j].Cs;
                     if (dead[nx, lap] == 0)
@@ -1531,7 +1501,7 @@ namespace StatsDirect.Builtins
                         }
                         if (ok)
                         {
-                            igots = igots + 1;
+                            igots += 1;
                             // create temp variable for copying values 
                             double[] transTemp7 = new double[igots + 1];
                             Array.Copy(sid, transTemp7, Math.Min(sid.Length, transTemp7.Length));
@@ -1616,14 +1586,8 @@ namespace StatsDirect.Builtins
             ifault = false;
         }
 
-
-        public static ParameterBag RptAbridgedLifetable(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptAbridgedLifetable(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
-            double se; double lci; double uci;
-
-            double eh;
-            double emo; double emd;
-
             string uti = null;
 
             bool util;
@@ -1718,6 +1682,7 @@ namespace StatsDirect.Builtins
             double[] dsim = new double[rows + 1 ];
             double[] esim = new double[simits + 1 ];
             double[] emdsim = new double[simits + 1 ];
+            double emd;
             PoissonRNG rng = new PoissonRNG();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
             using (IProgressBar progress = host.StartProgress("Simulating...", true))
@@ -1731,7 +1696,7 @@ namespace StatsDirect.Builtins
                         dsim[i] = rng.GenPoisson(d[i]);
                     XabLifetableBasics(rows, dsim, p, a, sl, rm, r, q, dd, yl, t, e);
                     esim[j] = e[1];
-                    ABLifetableMedianMode(rows, dd, out emo, out emd, sl, x);
+                    ABLifetableMedianMode(rows, dd, out _, out emd, sl, x);
                     emdsim[j] = emd;
                 }
             }
@@ -1761,7 +1726,7 @@ namespace StatsDirect.Builtins
             }
 
             // mode e
-            ABLifetableMedianMode(rows, dd, out emo, out emd, sl, x);
+            ABLifetableMedianMode(rows, dd, out _, out emd, sl, x);
 
             // population, deaths, death rate
             ParameterBag outputParameters = new ParameterBag();
@@ -1788,7 +1753,8 @@ namespace StatsDirect.Builtins
                 pdyingList.Add(pdyingParameters);
                 pdyingParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 pdyingParameters.AddOutput("q", q[i]);
-                if (vq[i] < 0.0 | vq[i] == Constant.MISSING)
+                double se, lci, uci;
+                if (vq[i] < 0.0 || vq[i] == Constant.MISSING)
                 {
                     se = Constant.MISSING;
                     lci = Constant.MISSING;
@@ -1839,7 +1805,8 @@ namespace StatsDirect.Builtins
                 expectationList.Add(expectationParameters);
                 expectationParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 expectationParameters.AddOutput("e", e[i]);
-                if (ve[i] < 0.0 | i == rows | ve[i] == Constant.MISSING)
+                double se, lci, uci;
+                if (ve[i] < 0.0 || i == rows || ve[i] == Constant.MISSING)
                 {
                     se = Constant.MISSING;
                     lci = Constant.MISSING;
@@ -1871,6 +1838,7 @@ namespace StatsDirect.Builtins
                     ParameterBag adjustedParameters = new ParameterBag();
                     adjustedList.Add(adjustedParameters);
                     adjustedParameters.AddOutput("int", LifetabInterval(i, rows, x));
+                    double eh;
                     if (sl[i] == 0.0 || sl[i] == Constant.MISSING)
                         eh = Constant.MISSING;
                     else
@@ -1889,20 +1857,22 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("med_uci", emdsimul);
 
             outputParameters.AddOutput("elb", e[1]);
-            if (ve[1] < 0.0 || ve[1] == Constant.MISSING)
             {
-                se = Constant.MISSING;
-                lci = Constant.MISSING;
-                uci = Constant.MISSING;
+                double lci, uci;
+                if (ve[1] < 0.0 || ve[1] == Constant.MISSING)
+                {
+                    lci = Constant.MISSING;
+                    uci = Constant.MISSING;
+                }
+                else
+                {
+                    double se = Math.Sqrt(ve[1]);
+                    lci = e[1] - cit * se;
+                    uci = e[1] + cit * se;
+                }
+                outputParameters.AddOutput("elb_lci", lci);
+                outputParameters.AddOutput("elb_uci", uci);
             }
-            else
-            {
-                se = Math.Sqrt(ve[1]);
-                lci = e[1] - cit * se;
-                uci = e[1] + cit * se;
-            }
-            outputParameters.AddOutput("elb_lci", lci);
-            outputParameters.AddOutput("elb_uci", uci);
             outputParameters.AddOutput("elb_mc_lci", esimll);
             outputParameters.AddOutput("elb_mc_uci", esimul);
 
@@ -1954,7 +1924,8 @@ namespace StatsDirect.Builtins
                     intervalVariable.SetData(i - 1, xx);
                     qHatVariable.SetData(i - 1, q[i]);
                     varQVariable.SetData(i - 1, vq[i]);
-                    if (vq[i] != Constant.MISSING & vq[i] >= 0.0)
+                    double lci, uci;
+                    if (vq[i] != Constant.MISSING && vq[i] >= 0.0)
                     {
                         lci = q[i] - Math.Sqrt(vq[i]) * cit;
                         uci = q[i] + Math.Sqrt(vq[i]) * cit;
@@ -1987,14 +1958,11 @@ namespace StatsDirect.Builtins
                     uciEVariable.SetData(i - 1, uci);
                     if (util)
                     {
-                        if (sl[i] == 0.0 | sl[i] == Constant.MISSING)
-                        {
+                        double eh;
+                        if (sl[i] == 0.0 || sl[i] == Constant.MISSING)
                             eh = Constant.MISSING;
-                        }
                         else
-                        {
                             eh = u[i] * t[i] / sl[i];
-                        }
                         aEVariable.SetData(i - 1, eh);
                     }
                 }
@@ -2003,7 +1971,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptFollowUpLifetableCalculateNatst(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFollowUpLifetableCalculateNatst(ParameterBag parameters)
         {
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
@@ -2025,7 +1993,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptFollowUpLifetable(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFollowUpLifetable(IPreferences host, ParameterBag parameters)
         {
             const string nan = Formatting.ASTERISK;
             double gamma = parameters["gamma"].AsDouble;
@@ -2110,7 +2078,7 @@ namespace StatsDirect.Builtins
                 cump = p * cump;
                 if (p * en1 != 0.0)
                 {
-                    var1 = var1 + q / (en1 * p);
+                    var1 += q / (en1 * p);
                 }
                 double var = cump * cump * var1;
                 xp[j] = p;
@@ -2162,7 +2130,7 @@ namespace StatsDirect.Builtins
                 if (var > 0.0)
                 {
                     double s = Math.Sqrt(var);
-                    s = s / (-cump * Math.Log(cump));
+                    s /= (-cump * Math.Log(cump));
                     sd = host.RoundU(100.0 * s);
                     lc = host.RoundU(100.0 * Math.Pow(cump, Math.Exp(cit * s)));
                     uc = host.RoundU(100.0 * Math.Pow(cump, Math.Exp(-cit * s)));
@@ -2231,7 +2199,7 @@ namespace StatsDirect.Builtins
                 // stratum loop
                 if (strata != 0)
                 {
-                    stratum = stratum + 1;
+                    stratum += 1;
                 }
                 int[] ng = new int[groups + 1];
                 int[] dg = new int[groups + 1 ];
@@ -2241,7 +2209,7 @@ namespace StatsDirect.Builtins
                 {
                     if ((strata == 0 | arr2[3, j] == stratum) & arr2[1, j] != Constant.MISSING & arr2[2, j] != Constant.MISSING & arr2[0, j] != Constant.MISSING)
                     {
-                        ntx = ntx + 1;
+                        ntx += 1;
                         q[ntx] = new Trisvar
                                      {
                                          Tm = arr2[1, j],
@@ -2260,7 +2228,7 @@ namespace StatsDirect.Builtins
                 // logrank then Wilcoxon test loop
                 do
                 {
-                    test = test + 1;
+                    test += 1;
                     int[] drop = new int[groups + 1];
                     int[] rg = new int[groups + 1];
                     int[] dead = new int[groups + 1];
@@ -2285,7 +2253,7 @@ namespace StatsDirect.Builtins
                         double risktot = 0;
                         for (j2 = 1; j2 <= groups; j2++)
                         {
-                            risktot = risktot + rg[j2];
+                            risktot += rg[j2];
                         }
                         drop[q[j].Gp] = 1;
                         dead[q[j].Gp] = q[j].Cs;
@@ -2304,9 +2272,9 @@ namespace StatsDirect.Builtins
                                 if (q[n + 1].Cs != 0)
                                 {
                                     dead[q[n + 1].Gp] = dead[q[n + 1].Gp] + 1;
-                                    totd = totd + 1;
+                                    totd += 1;
                                 }
-                                n = n + 1;
+                                n += 1;
                             }
                             else
                             {
@@ -2375,7 +2343,7 @@ namespace StatsDirect.Builtins
                                 }
                                 else
                                 {
-                                    ne = ne + 1;
+                                    ne += 1;
                                 }
                             }
                             tbl[ne].A = Convert.ToDouble(dead[1]);
@@ -2427,7 +2395,7 @@ namespace StatsDirect.Builtins
                         x2 = 0.0;
                         for (k = 1; k <= groups - 1; k++)
                         {
-                            x2 = x2 + vtemp[k, 1] * u0[k];
+                            x2 += vtemp[k, 1] * u0[k];
                         }
                     }
                     //  trend statistic (c'U0)^2 / c'Vc
@@ -2438,9 +2406,9 @@ namespace StatsDirect.Builtins
                         x2Num = 0.0;
                         for (k = 1; k <= groups; k++)
                         {
-                            x2Num = x2Num + u0[k] * score[k];
+                            x2Num += u0[k] * score[k];
                         }
-                        x2Num = x2Num * x2Num;
+                        x2Num *= x2Num;
                         vtemp = new double[groups + 1, 1 + 1];
                         x2Den = 0.0;
                         for (j2 = 1; j2 <= groups; j2++)
@@ -2452,7 +2420,7 @@ namespace StatsDirect.Builtins
                         }
                         for (k = 1; k <= groups; k++)
                         {
-                            x2Den = x2Den + vtemp[k, 1] * score[k];
+                            x2Den += vtemp[k, 1] * score[k];
                         }
                         x2T = x2Num / x2Den;
                     }
@@ -2643,7 +2611,7 @@ namespace StatsDirect.Builtins
                                 x2 = 0.0;
                                 for (k = 1; k <= groups - 1; k++)
                                 {
-                                    x2 = x2 + vtemp[k, 1] * u0Suml[k];
+                                    x2 += vtemp[k, 1] * u0Suml[k];
                                 }
                             }
                         }
@@ -2668,7 +2636,7 @@ namespace StatsDirect.Builtins
                                 x2 = 0.0;
                                 for (k = 1; k <= groups - 1; k++)
                                 {
-                                    x2 = x2 + vtemp[k, 1] * u0Sumw[k];
+                                    x2 += vtemp[k, 1] * u0Sumw[k];
                                 }
                             }
                         }
@@ -2682,14 +2650,14 @@ namespace StatsDirect.Builtins
                             {
                                 if (test == 1)
                                 {
-                                    x2Num = x2Num + u0Suml[k] * score[k];
+                                    x2Num += u0Suml[k] * score[k];
                                 }
                                 else
                                 {
-                                    x2Num = x2Num + u0Sumw[k] * score[k];
+                                    x2Num += u0Sumw[k] * score[k];
                                 }
                             }
-                            x2Num = x2Num * x2Num;
+                            x2Num *= x2Num;
                             vtemp = new double[groups + 1, 1 + 1];
                             x2Den = 0.0;
                             for (j2 = 1; j2 <= groups; j2++)
@@ -2708,7 +2676,7 @@ namespace StatsDirect.Builtins
                             }
                             for (k = 1; k <= groups; k++)
                             {
-                                x2Den = x2Den + vtemp[k, 1] * score[k];
+                                x2Den += vtemp[k, 1] * score[k];
                             }
                             x2T = x2Num / x2Den;
                             IList<ParameterBag> strataTrendList = new List<ParameterBag>();
@@ -2757,7 +2725,7 @@ namespace StatsDirect.Builtins
                                 double rl;
                                 if (rr != Constant.MISSING & rk != 0)
                                 {
-                                    rr = rr / rk;
+                                    rr /= rk;
                                     rl = Math.Exp(Math.Log(rr) - cit * Math.Sqrt(1.0 / tesum[j] + 1.0 / tesum[k]));
                                     ru = Math.Exp(Math.Log(rr) + cit * Math.Sqrt(1.0 / tesum[j] + 1.0 / tesum[k]));
                                 }

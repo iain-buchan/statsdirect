@@ -2,9 +2,9 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-
 using System;
 using System.Collections.Generic;
+
 namespace StatsDirect.Builtins
 {
     public static class Nonparametric
@@ -13,13 +13,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Returns a list containing a single blank results dictionary.  A handy helper where a template needs to show an error message in a block, but the message has no parameters.
         ///  </summary>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        private static IList<ParameterBag> OneOutputElement()
-        {
-            return new List<ParameterBag> { new ParameterBag() };
-        }
-
+        private static IList<ParameterBag> OneOutputElement() => new List<ParameterBag> { new ParameterBag() };
 
         ///  <summary>
         ///  
@@ -40,7 +34,6 @@ namespace StatsDirect.Builtins
             XRunKwt(w1, lx, l, cols, out h, ref ha, t);
         }
 
-
         ///  <summary>
         ///  
         ///  </summary>
@@ -54,8 +47,6 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         private static void XRunKwt(double[] w1, int lx, int[] l, int cols, out double h, ref double ha, double t)
         {
-
-
             double rs = 0.0;
             for (int i = 1; i <= cols; i++)
             {
@@ -64,16 +55,12 @@ namespace StatsDirect.Builtins
                 {
                     int i1 = i - 1;
                     for (int j = 1; j <= i1; j++)
-                    {
                         l1 += l[j];
-                    }
                 }
                 int l2 = l1 + l[i] - 1;
                 double rj = 0.0;
                 for (int j = l1; j <= l2; j++)
-                {
                     rj += w1[j];
-                }
                 rj = rj * rj / Convert.ToDouble(l[i]);
                 rs += rj;
             }
@@ -85,13 +72,11 @@ namespace StatsDirect.Builtins
             {
                 double s2 = 1.0 - 12.0 * t / (xn * xn * xn - xn);
                 if (s2 <= 0.0)
-                {
                     ha = Constant.MISSING;
-                }
-                else { ha = h / s2; }
+                else
+                    ha = h / s2;
             }
         }
-
 
         ///  <summary>
         ///  
@@ -110,32 +95,24 @@ namespace StatsDirect.Builtins
 
             fault = 1;
             if (cols < 2)
-            {
                 return;
-            }
             fault = 2;
             int lsum = 0;
             for (i = 1; i <= cols; i++)
             {
                 if (l[i] <= 0)
-                {
                     return;
-                }
                 lsum += l[i];
             }
 
             fault = 3;
             if (lsum != lx)
-            {
                 return;
-            }
 
             for (i = 2; i <= lx; i++)
             {
                 if (x[i] != x[1])
-                {
                     break;
-                }
                 if (i == lx)
                 {
                     i = lx + 1;
@@ -150,7 +127,6 @@ namespace StatsDirect.Builtins
 
             ExFortran.Rank(x, w1, 1, lx, 1, out t);
             fault = 0;
-
         }
 
         public static void XQci(double qc, int rx, double[] r, ref double xq, double gamma, out double ll, out double ul, out double cover, bool conservative, out bool capUpper, out bool capLower, out int fault)
@@ -293,7 +269,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         private static void XKstwo(double[] d1, int n1, double[] d2, int n2, out double d, out double dp, out double dn)
         {
             Array.Sort(d1, 1, n1);
@@ -376,8 +351,7 @@ namespace StatsDirect.Builtins
             d = Math.Max(dp, dn);
         }
 
-
-        private static void XDokend(ITemplateHost host, ref double cit, ref int nx, ref double[] x, ref double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
+        private static void XDokend(IPreferencesAndProgressBar host, ref double cit, ref int nx, ref double[] x, ref double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
         {
             double sigbt3 = 0; double sigbt2 = 0; double sigbt1 = 0;
             int ytvn = 0; double sigat3 = 0; double sigat2 = 0; double sigat1 = 0;
@@ -799,9 +773,7 @@ namespace StatsDirect.Builtins
                 //  Find the largest value in the array (at the upper limit of one of the sorts)...
                 double bigx = x[n1 + n2];
                 if (x[n1] > bigx)
-                {
                     bigx = x[n1];
-                }
                 //  ... and set an appropriate scale so that value fits within the range of an Integer.
                 int scaler = 100000;
                 do
@@ -880,42 +852,36 @@ namespace StatsDirect.Builtins
 
         private static double XXmdn(double[] x, int nx, int n1, int n2)
         {
-            int n; int j;
+            int n;
             double[] ax;
 
             if (n2 == 1)
             {
                 ax = new double[n1 + 1 /* VB to C# conversion */ ];
-                for (j = 1; j <= n1; j++)
-                {
+                for (int j = 1; j <= n1; j++)
                     ax[j] = x[j];
-                }
                 n = n1;
             }
             else
             {
                 ax = new double[n2 + 1 /* VB to C# conversion */ ];
-                for (j = n1 + 1; j <= nx; j++)
-                {
+                for (int j = n1 + 1; j <= nx; j++)
                     ax[j - n1] = x[j];
-                }
                 n = n2;
             }
             if (n >= 2)
             {
                 Array.Sort(ax, 1, n);
                 double mdn = 0.5 * (n + 1);
-                double median;
                 if (mdn - Math.Floor(mdn) != 0)
-                    median = (ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0;
+                    return (ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0;
                 else
-                    median = ax[Convert.ToInt32(mdn)];
-                return median;
+                    return ax[Convert.ToInt32(mdn)];
             }
             return 0;
         }
 
-        public static ParameterBag RptCuzick(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCuzick(ParameterBag parameters)
         {
             double varz = 0; double ez = 0; double st = 0; int n = 0; int count = 0;
 
@@ -1020,7 +986,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptDiversity(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptDiversity(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double bias = 0; double biasx = 0;
             double thetase = 0; double thetasex = 0;
@@ -1030,10 +996,9 @@ namespace StatsDirect.Builtins
             int boots = parameters["boots"].AsInt32;
             int bootsDivisor = Math.Max(1, boots / 1000);
             if (gamma <= 0)
-            {
                 throw new TemplateOperationCancelledException();
-            }
-            MathDbl.civ(0, out double cit, gamma, out double p0);
+
+            MathDbl.civ(0, out double cit, gamma, out _);
             MersenneTwister rnd = new MersenneTwister(); //  Self-seeded
             double[] r = new double[frame.MaxRows + 1];
 
@@ -1045,7 +1010,6 @@ namespace StatsDirect.Builtins
                 DoubleVariable v = (DoubleVariable)frame.Variables[k];
                 using (IProgressBar progress = host.StartProgress("Bootstrapping diversity indices for " + v.Title, true))
                 {
-
                     int rx = 0;
                     double sumn = 0.0;
                     double sumnx = 0.0;
@@ -1136,9 +1100,8 @@ namespace StatsDirect.Builtins
                     // work out cut-offs for scaling pick points
                     cx[1] = Convert.ToInt32(r[1]);
                     for (int j = 2; j <= rx; j++)
-                    {
                         cx[j] = cx[j - 1] + Convert.ToInt32(r[j]);
-                    }
+
                     int pick;
                     for (int i = 1; i <= boots; i++)
                     {
@@ -1149,9 +1112,8 @@ namespace StatsDirect.Builtins
                         sumnlogn = 0.0;
                         sumnlognsq = 0.0;
                         for (int j = 1; j <= rx; j++)
-                        {
                             rb[j] = 0.0;
-                        }
+
                         // get N members at random
                         for (int j = 1; j <= gtot; j++)
                         {
@@ -1206,13 +1168,9 @@ namespace StatsDirect.Builtins
                         theta += simpsonb[i];
                         thetax += shannonb[i];
                         if (simpsonb[i] <= simpson)
-                        {
                             ctr += 1;
-                        }
                         if (shannonb[i] <= shannon)
-                        {
                             ctrx += 1;
-                        }
                         if (i % bootsDivisor == 0)
                         {
                             if (progress.Update(i / (double)boots))
@@ -1263,7 +1221,7 @@ namespace StatsDirect.Builtins
                         // bux = shannonb(pick)
                         // ------------------------------------------
                         // normal
-                        MathDbl.civ(boots - 1, out double citt, gamma, out p0);
+                        MathDbl.civ(boots - 1, out double citt, gamma, out _);
                         nbcl = simpson - citt * thetase;
                         nbcu = simpson + citt * thetase;
                         nbclx = shannon - citt * thetasex;
@@ -1461,13 +1419,9 @@ namespace StatsDirect.Builtins
                     varParameters.AddOutput("ti", v.Title);
                     varParameters.AddOutput("n", gtot);
                     if (rx != v.Length)
-                    {
                         varParameters.AddOutput("msg", "(note " + (v.Length - rx) + " other observations not used)");
-                    }
                     else
-                    {
                         varParameters.AddOutput("msg", string.Empty);
-                    }
                     varParameters.AddOutput("s", rx);
                     varParameters.AddOutput("stotal", stotal);
                     varParameters.AddOutput("se-largeSample", Base.SafeSqrt(stotalvar));
@@ -1638,17 +1592,12 @@ namespace StatsDirect.Builtins
         {
             const double prec = double.Epsilon * 10;
             double y = 0;
-            int i;
-            for (i = 1; i <= 100; i++)
+            for (int i = 1; i <= 100; i++)
             {
                 if (tzpre < 0)
-                {
                     y = (lp + ypre) / 2;
-                }
                 else
-                {
                     y = (ln + ypre) / 2;
-                }
                 double tz = ThetaTzfn(upper, y, z, t, m, n);
                 if (tzpre >= 0) lp = ypre;
                 if (tzpre <= 0) ln = ypre;
@@ -1734,7 +1683,7 @@ namespace StatsDirect.Builtins
             return ThetaTzmin(true, tz2, y2, lp, ln, z, t, m, n);
         }
 
-        public static ParameterBag RptSpearman(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSpearman(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
@@ -1867,7 +1816,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptNpRegression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptNpRegression(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double intercept = 0;
             double uci; double lci; double mdn = 0;
@@ -2682,7 +2631,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptQuantile(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptQuantile(ParameterBag parameters)
         {
             bool doConservative = parameters["conservative-ci"].AsBoolean;
             double gamma = parameters["gamma"].AsDouble;
@@ -2733,8 +2682,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptKendall(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKendall(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             int nxx = 0; int n;
             double ps;
@@ -2875,8 +2823,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptFriedmanSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFriedmanSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -2886,7 +2833,6 @@ namespace StatsDirect.Builtins
 
             using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-
                 PreprocessFriedman(frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall);
 
                 double a2 = 0;
@@ -2930,7 +2876,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  Randomly move values in each row of x between columns.  Values will never be moved between rows.
         ///  </summary>
@@ -2953,7 +2898,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  Randomly shuffle values between lowerBound and upperBound in x.
         ///  </summary>
@@ -2972,8 +2916,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static ParameterBag RptFriedman(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFriedman(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -3060,7 +3003,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         private static void PreprocessFriedman(DataFrame frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall)
         {
             x = new double[frame.VariableCount + 1, frame.Variables[0].Length + 1];
@@ -3095,7 +3037,6 @@ namespace StatsDirect.Builtins
             numbersAreSmall = positiveCellCount < 25;
         }
 
-
         ///  <summary>
         ///  Calculate and set w2, N, A2, B2 from the values in frame.
         ///  </summary>
@@ -3115,7 +3056,6 @@ namespace StatsDirect.Builtins
             w2 = new double[treatments + 1];
             CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
         }
-
 
         ///  <summary>
         ///  Calculate and set w2, N, A2, B2 from the values in x, N and treatments.
@@ -3181,8 +3121,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static ParameterBag RptFrMultiple(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFrMultiple(IPreferences host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double confidence = parameters["confidence"].AsDouble;
@@ -3245,8 +3184,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptKruskal(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKruskal(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -3334,8 +3272,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptKruskalSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKruskalSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -3416,8 +3353,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static ParameterBag RptKwMultiple(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKwMultiple(IPreferences host, ParameterBag parameters)
         {
             double[] ri;
             double[] x;
@@ -3601,8 +3537,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptSqRank(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSqRank(IPreferences host, ParameterBag parameters)
         {
             double ru = 0;
             double p;
@@ -3768,8 +3703,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptGini(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGini(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DataFrame weightsFrame = parameters.ContainsKey("weights") ? parameters["weights"].AsDataFrame : null;
@@ -4017,8 +3951,5 @@ namespace StatsDirect.Builtins
             }
             return outputParameters;
         }
-
     }
-
-
 }

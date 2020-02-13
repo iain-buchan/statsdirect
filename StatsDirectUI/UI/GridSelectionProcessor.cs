@@ -22,7 +22,7 @@ namespace StatsDirect.UI
             grid = g;
         }
 
-        internal ParameterBag FillFrameParameter(Parameter parameter, ITemplateProcessor processor, ITemplateHost host, ParameterBag parameters)
+        internal ParameterBag FillFrameParameter(Parameter parameter, ITemplateProcessor processor, ParameterBag parameters)
         {
             FrameParameter frameParameter = (FrameParameter)parameter;
             if (frameParameter.ShouldClearSelectionFirst)
@@ -135,7 +135,7 @@ namespace StatsDirect.UI
             }
         }
 
-        internal DataFrame2D FillFrameParameter2D(Parameter parameter, ITemplateProcessor processor, SdApplication sDApplication, ParameterBag parameters)
+        internal DataFrame2D FillFrameParameter2D(Parameter parameter, ITemplateProcessor processor, ParameterBag parameters)
         {
             Frame2DParameter frame2dParameter = (Frame2DParameter)parameter;
             if (frame2dParameter.ShouldClearSelectionFirst)
@@ -146,13 +146,13 @@ namespace StatsDirect.UI
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
                     DataFrame2D frame = Gidx3(frame2dParameter.MinimumColumns(processor, parameters),
-frame2dParameter.MaximumColumns(processor, parameters),
-0,
-frame2dParameter.SubPrompt(processor, parameters),
-frame2dParameter.DataAcquisitionMode,
-out bool userCancelled,
-out bool wasPivoted,
-originGroup);
+                        frame2dParameter.MaximumColumns(processor, parameters),
+                        0,
+                        frame2dParameter.SubPrompt(processor, parameters),
+                        frame2dParameter.DataAcquisitionMode,
+                        out bool userCancelled,
+                        out bool wasPivoted,
+                        originGroup);
                     if (userCancelled)
                         throw new TemplateOperationCancelledException();
                     if (wasPivoted)

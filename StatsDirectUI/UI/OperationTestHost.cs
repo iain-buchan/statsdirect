@@ -96,11 +96,6 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        void IUserInterface.NoteError(Exception ex)
-        {
-            throw ex;
-        }
-
         void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
         {
             throw new NotImplementedException();
@@ -139,7 +134,7 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        IProgressBar IUserInterface.StartProgress(string operationDescription, bool provideProgress, bool display)
+        IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
         {
             return new TestProgressBar();
         }

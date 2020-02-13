@@ -931,7 +931,7 @@ namespace StatsDirect.UI
             MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
         }
 
-        IProgressBar IUserInterface.StartProgress(string operationDescription, bool provideProgress, bool display)
+        IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
         {
             MainWindow?.StartProgress(operationDescription, provideProgress);
             return new SdProgressBarHolder(display);
@@ -1048,7 +1048,7 @@ namespace StatsDirect.UI
 
         public SDPreferences Preferences => preferences ?? (preferences = LoadPreferences());
 
-        public class SDPreferencesImpl : SDPreferences
+        private class SDPreferencesImpl : SDPreferences
         {
             public bool UseScientificNotationForSmallPValues
             {

@@ -116,23 +116,6 @@ namespace StatsDirect.Templates
         /// <param name="defaultPosition">A hint for the step's preferred place to put the output. TODO: This is user-interfacey; we should find a better way of communicating this.</param>
         void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition);
 
-        /// <summary>
-        /// Notes that an operation has started with the specified description that might take a while.
-        /// A host might elect to show a progress bar at this point, for example.
-        /// </summary>
-        /// <param name="operationDescription"></param>
-        /// <param name="provideProgress">true to indicate that the caller will provide meaningful progress information via fractionComplete in UpdateProgress, so a progress bar might be appropriate.
-        /// False to indicate that the caller will provide no meaningful progress, so a marquee might be appropriate.</param>
-        /// <param name="display">true (default) to display the bar, false to follow the logic but not display the bar. Occasionally useful when you want to display a bar depending on (say) the size of the calculation without requiring two code paths.</param>
-        IProgressBar StartProgress(string operationDescription, bool provideProgress, bool display = true);
-
-        /// <summary>
-        /// A non-fatal exception has occurred (generally in calculation).
-        /// The process will continue, but the user should be warned not to rely on the results of the operation.
-        /// </summary>
-        /// <param name="ex">The exception that caused the problem, in case it's of any use.</param>
-        void NoteError(Exception ex);
-
         Operation Operation
         {
             get;
