@@ -2,18 +2,21 @@ using System;
 
 namespace StatsDirect.Charting
 {
+    /// <summary>
+    /// Immutable
+    /// </summary>
     [Serializable]
     public class KaplanMeierOptions : GenericOptions
     {
-        public int[,] dead;
-        public int groups;
+        public int[,] Dead { get; }
+        public int Groups { get; }
         public int[] cnx;
-        public string[] glab;
-        public bool tic;
-        public bool marker;
-        public double[,] x;
-        public double[,] y;
-        public KaplanMeierPlotMode plotMode;
+        public string[] GroupLabels { get; }
+        public bool DrawTics { get; }
+        public bool UseMarkers { get; }
+        public double[,] X { get; }
+        public double[,] Y { get; }
+        public KaplanMeierPlotMode PlotMode { get; }
         public override bool ShowLegendIsRelevant => true;
 
         public override void Accept(IChartOptionVisitor visitor)
@@ -21,17 +24,17 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public KaplanMeierOptions(int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker, double[,] x, double[,] y, KaplanMeierPlotMode plotMode, string xAxisTitle, string yAxisTitle, string title)
+        public KaplanMeierOptions(int[,] dead, int groups, int[] cnx, string[] groupLabels, bool drawTics, bool useMarkers, double[,] x, double[,] y, KaplanMeierPlotMode plotMode, string xAxisTitle, string yAxisTitle, string title)
         {
-            this.dead = dead;
-            this.groups = groups;
+            Dead = dead;
+            Groups = groups;
             this.cnx = cnx;
-            this.glab = glab;
-            this.tic = tic;
-            this.marker = marker;
-            this.x = x;
-            this.y = y;
-            this.plotMode = plotMode;
+            GroupLabels = groupLabels;
+            DrawTics = drawTics;
+            UseMarkers = useMarkers;
+            X = x;
+            Y = y;
+            PlotMode = plotMode;
             XAxisTitle = xAxisTitle;
             YAxisTitle = yAxisTitle;
             Title = title;

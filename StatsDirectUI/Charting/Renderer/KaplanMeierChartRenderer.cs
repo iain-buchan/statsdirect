@@ -27,18 +27,18 @@ namespace StatsDirect.Charting.Renderer
 
             KaplanMeierOptions options = (KaplanMeierOptions)Definition.ChartOptions;
             Legend legend = null;
-            if (options.groups > 1)
+            if (options.Groups > 1)
             {
                 legend = new Legend { Position = LegendPosition.Left };
-                for (int k = 1; k <= options.groups; k++)
+                for (int k = 1; k <= options.Groups; k++)
                 {
                     MarkerType mt = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
-                    if (!options.marker)
+                    if (!options.UseMarkers)
                     {
                         mt.MarkerShape = MarkerShape.SurvivalTic;
                         mt.IsMarkerFilled = false;
                     }
-                    legend.LegendEntries.Add(new LegendEntry { Label = options.glab[k], MarkerType = mt });
+                    legend.LegendEntries.Add(new LegendEntry { Label = options.GroupLabels[k], MarkerType = mt });
                 }
             }
 
@@ -47,21 +47,21 @@ namespace StatsDirect.Charting.Renderer
             DataMaxY = double.MinValue;
             DataMinX = double.MaxValue;
             DataMinY = double.MaxValue;
-            for (int k = 1; k <= options.groups; k++)
+            for (int k = 1; k <= options.Groups; k++)
             {
                 for (int j = 1; j <= options.cnx[k]; j++)
                 {
-                    if (options.x[j, k] > DataMaxX)
-                        DataMaxX = options.x[j, k];
-                    if (options.x[j, k] < DataMinX)
-                        DataMinX = options.x[j, k];
-                    if (options.y[j, k] > DataMaxY)
-                        DataMaxY = options.y[j, k];
-                    if (options.y[j, k] < DataMinY)
-                        DataMinY = options.y[j, k];
+                    if (options.X[j, k] > DataMaxX)
+                        DataMaxX = options.X[j, k];
+                    if (options.X[j, k] < DataMinX)
+                        DataMinX = options.X[j, k];
+                    if (options.Y[j, k] > DataMaxY)
+                        DataMaxY = options.Y[j, k];
+                    if (options.Y[j, k] < DataMinY)
+                        DataMinY = options.Y[j, k];
                 }
             }
-            if (options.plotMode == KaplanMeierPlotMode.Survival)
+            if (options.PlotMode == KaplanMeierPlotMode.Survival)
             {
                 DataMaxY = 1;
                 DataMinY = 0;
@@ -72,11 +72,11 @@ namespace StatsDirect.Charting.Renderer
                 false, false,
                 legend);
 
-            for (int k = 1; k <= options.groups; k++)
+            for (int k = 1; k <= options.Groups; k++)
             {
                 MarkerType mt = ChartPreferences.MarkerTypes[(k - 1) % 9];
                 double x1; double y1;
-                switch (options.plotMode)
+                switch (options.PlotMode)
                 {
                     case KaplanMeierPlotMode.Survival:
                         x1 = axisScales.X.MinimumScaleValue;
@@ -89,8 +89,8 @@ namespace StatsDirect.Charting.Renderer
                     case KaplanMeierPlotMode.LogHazard:
                     case KaplanMeierPlotMode.LognormalSurvival:
                     case KaplanMeierPlotMode.HazardRate:
-                        x1 = options.x[1, k];
-                        y1 = options.y[1, k];
+                        x1 = options.X[1, k];
+                        y1 = options.Y[1, k];
                         break;
                     default:
                         throw new Exception("Unknown plot mode");
@@ -98,13 +98,13 @@ namespace StatsDirect.Charting.Renderer
 
                 for (int j = 1; j <= options.cnx[k]; j++)
                 {
-                    double x2 = options.x[j, k];
-                    double y2 = options.y[j, k];
+                    double x2 = options.X[j, k];
+                    double y2 = options.Y[j, k];
                     // Draw the markers
                     // changed to tic mark at censor points March 01
-                    if (options.dead[j, k] == 0 && options.tic)
+                    if (options.Dead[j, k] == 0 && options.DrawTics)
                         DrawLineInChartCoordinates(mt.LineColor, x2, y2, x2, y2 + FromCanvasHeight(7));
-                    if (options.dead[j, k] != 0 && options.marker)
+                    if (options.Dead[j, k] != 0 && options.UseMarkers)
                         DrawMarkerInChartCoordinates(x2, y2, 6, mt);
                     // Then the lines
                     DrawLineInChartCoordinates(mt.LineColor, x1, y1, x2, y1);
