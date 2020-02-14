@@ -6,6 +6,7 @@ packages/*/
 ReleaseBuild/*.msi
 ReleaseBuild/*.exe
 *.csproj.user
+*.bak
 
 # gvim backups (Peter has a nasty habit of using gvim for bulk edits)
 *~
