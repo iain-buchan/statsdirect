@@ -1,6 +1,5 @@
 <report>
 <title>Normal distribution (z) test - two independent samples</title>
-<br />
 <block name="sample">
 <table>
 <tr><td>Sample name:</td><td>@name</td></tr>
@@ -8,7 +7,6 @@
 <tr><td>Variance =</td><td>@var</td></tr>
 <tr><td>Size =</td><td>@size</td></tr>
 </table>
-<br />
 </block>
 <p>Combined standard error = @error</p>
 

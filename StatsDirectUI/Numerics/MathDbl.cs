@@ -71,7 +71,7 @@ namespace StatsDirect.Numerics
                 {
                     if (x[i] != Constant.MISSING & y[i] != Constant.MISSING)
                     {
-                        nx = nx + 1.0;
+                        nx += 1.0;
                         sx = x[i];
                         sy = y[i];
                         sumx += sx;
@@ -209,7 +209,7 @@ namespace StatsDirect.Numerics
                     }
                     else
                     {
-                        ph = ph / Math.Sqrt((a + b) * (c + d) * (a + c) * (b + d));
+                        ph /= Math.Sqrt((a + b) * (c + d) * (a + c) * (b + d));
                     }
                 }
                 double den = N + zsq;
@@ -461,7 +461,7 @@ namespace StatsDirect.Numerics
             ix = -5;
             do
             {
-                ix = ix + 10;
+                ix += 10;
                 ifault = 0;
                 pu = kendp(ix, nx, ref ifault);
                 if (pu < P)
@@ -472,7 +472,7 @@ namespace StatsDirect.Numerics
             while (true);
             do
             {
-                ix = ix - 1;
+                ix -= 1;
                 ifault = 0;
                 pu = kendp(ix, nx, ref ifault);
                 if (ifault == 0 & (pu > P || Math.Abs(pu - P) < 0.00000000000001))
@@ -584,8 +584,8 @@ namespace StatsDirect.Numerics
             freq[2] = 1;
             while (ic != N)
             {
-                ic = ic + 1;
-                kc = kc + ic;
+                ic += 1;
+                kc += ic;
                 int jc = (int)Math.Floor((double)(kc + 1) / 2);
                 int I1;
                 for (i = 1; i <= jc; i++)
@@ -599,20 +599,20 @@ namespace StatsDirect.Numerics
                     }
                     for (I1 = jst; I1 <= i; I1++)
                     {
-                        sum = sum + wksp[I1];
+                        sum += wksp[I1];
                     }
                     freq[i] = sum;
                 }
                 if (ic > 3)
                 {
-                    kc = kc - 1;
+                    kc -= 1;
                 }
                 int i2 = kc;
                 I1 = kc - jc;
                 for (i = 1; i <= I1; i++)
                 {
                     freq[i2] = freq[i];
-                    i2 = i2 - 1;
+                    i2 -= 1;
                 }
             }
             ic = 1;
@@ -621,16 +621,16 @@ namespace StatsDirect.Numerics
             int L = -M + 1;
             while (k > M)
             {
-                M = M + 2;
-                ic = ic + 1;
+                M += 2;
+                ic += 1;
             }
             for (i = 1; i <= L; i++)
             {
-                y = y + freq[i];
+                y += freq[i];
             }
             for (i = ic; i <= L; i++)
             {
-                x = x + freq[i];
+                x += freq[i];
             }
             kendpReturn = x / y;
             return kendpReturn;
@@ -643,7 +643,7 @@ namespace StatsDirect.Numerics
             ix = -5;
             do
             {
-                ix = ix + 10;
+                ix += 10;
                 pu = 1.0 - ExFortran.prho(nx, ix, out ifault);
                 if (pu > P)
                     break;
@@ -653,7 +653,7 @@ namespace StatsDirect.Numerics
             while (true);
             do
             {
-                ix = ix - 1;
+                ix -= 1;
                 pu = 1.0 - ExFortran.prho(nx, ix, out ifault);
                 if (ifault == 0 & (pu < P | Math.Abs(pu - P) < 0.00000000000001))
                 {
@@ -834,7 +834,7 @@ namespace StatsDirect.Numerics
                     double deriv1 = a / P1 + b / P2 - C / Q1 - D / Q2;
                     double deriv2 = -a / Math.Pow(P1, 2.0) - b / Math.Pow(P2, 2.0) - C / Math.Pow(Q1, 2.0) - D / Math.Pow(Q2, 2.0);
                     double oldps = ps;
-                    ps = ps - deriv1 / deriv2;
+                    ps -= deriv1 / deriv2;
                     if (ps <= psimin + tol10)
                     {
                         ps = 0.5 * (psimin + oldps);
@@ -945,7 +945,7 @@ namespace StatsDirect.Numerics
                         PP[1] = ps + hth;
                         PP[2] = ps - hth;
                         f = Math.Pow((th - thhat) / z, 2.0);
-                        f = f * (1.0 - 1.0 / (M + N));
+                        f *= (1.0 - 1.0 / (M + N));
                         f = PP[1] * (1 - PP[1]) / M + PP[2] * (1 - PP[2]) / N - f;
                         if (f < 0.0)
                         {
@@ -1046,12 +1046,12 @@ namespace StatsDirect.Numerics
                 double n0 = column2total;
                 if (n0 == x0)
                 {
-                    n0 = n0 + 0.5;
+                    n0 += 0.5;
                 }
                 double n1 = column1total;
                 if (n1 == x1)
                 {
-                    n1 = n1 + 0.5;
+                    n1 += 0.5;
                 }
                 if (n1 == 0.0 | n0 == 0.0)
                 {
@@ -1098,7 +1098,7 @@ namespace StatsDirect.Numerics
                         diff1 = Math.Abs(za2 - ztemp1);
                         diff2 = Math.Abs(za2 - ztemp2);
                         lr_diff(diff1, diff2, out theta1, out theta0, temptheta1, temptheta2, out z1, out z0, ztemp1, ztemp2, out zcritical);
-                        cnt = cnt + 1;
+                        cnt += 1;
                         if (cnt > 5000)
                         {
                             break;

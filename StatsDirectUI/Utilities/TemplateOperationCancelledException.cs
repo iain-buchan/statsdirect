@@ -22,6 +22,13 @@ namespace StatsDirect.Utilities
             Caption = caption;
         }
 
+        public TemplateOperationCancelledException(Exception ex)
+            : base()
+        {
+            // TODO: Do something with the exception
+            Caption = ex.Message;
+        }
+
         public string Caption { get; }
         public bool ShouldShowError { get; }
     }

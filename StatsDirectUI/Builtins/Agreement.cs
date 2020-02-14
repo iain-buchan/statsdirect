@@ -81,7 +81,7 @@ namespace StatsDirect.Builtins
             {
                 //  Work out which group number is the reference.  This is a bit ugly as the parameter is a boolean array based on what was passed in - which in this case is an alpha-sorted list of the group names.
                 string[] groupNames = ratersVariable.SortedCategoryNames;
-                bool[] standardArray = (bool[])parameters["reference"].Data;
+                bool[] standardArray = (bool[])parameters["reference"].AsObject;
                 string referenceName = null;
                 for (int finder = 0; finder <= groupNames.Length; finder++)
                 {
@@ -407,13 +407,13 @@ namespace StatsDirect.Builtins
                     {
                         t1 = t1 + 4.0 * Math.Pow(sij[ir, ix], 3.0) - sij[ir, ix] * tij2[ir, ix] * 6.0 * n + uij[ir, ix] * 6.0 * n * n + tij3[ir, ix] * 2.0 * n * n + sij[ir, ix] * sij2[ir, ix] * 3.0 * n * n - vi[ir, ix] * 3.0 * n * n * n + sij3[ir, ix] * Math.Pow(n, 4.0);
                     }
-                    edel = edel + sij[ir, ix];
+                    edel += sij[ir, ix];
                     var = var + sij[ir, ix] * sij[ir, ix] - tij2[ir, ix] * n + sij2[ir, ix] * n * n;
                 }
             }
             if (n > 2)
             {
-                t1 = t1 / (n - 2);
+                t1 /= (n - 2);
             }
             double fac = n * b * (b - 1) / 2.0;
             double con = 1.0 / (fac * n);
@@ -429,11 +429,11 @@ namespace StatsDirect.Builtins
                     {
                         irr = (i - 1) * b + ir;
                         iss = (i - 1) * b + ix;
-                        delta = delta + d[irr, iss];
+                        delta += d[irr, iss];
                     }
                 }
             }
-            delta = delta / fac;
+            delta /= fac;
             double t = (delta - edel) / Math.Sqrt(var);
             p = Pgamt(t, gam);
             r = 1.0 - delta / edel;
@@ -458,7 +458,7 @@ namespace StatsDirect.Builtins
                 double r = 2.0 / Math.Abs(gam);
                 double d = r * r;
                 for (int i = 1; i <= 9; i++)
-                    d = d * (r * r + i);
+                    d *= (r * r + i);
                 double f = r * r + 10.0;
                 double u = (2.0 * f - 1.0) * Math.Log(f) / 2.0 - f + Math.Log(2.0 * pi) / 2.0 - Math.Log(d) + 1.0 / (12.0 * f) - 1.0 / (360.0 * f * f * f);
                 const double g1 = 0.045;
@@ -483,8 +483,8 @@ namespace StatsDirect.Builtins
                     y = t + 9.0;
                     for (int i = 1; i <= 99; i++)
                     {
-                        h1 = h1 + Math.Exp(a * Math.Log(r + x + g1 * (2.0 * i - 1.0)) - r * (x + g1 * (2.0 * i - 1.0)) + b);
-                        h2 = h2 + Math.Exp(a * Math.Log(r + x + g2 * i) - r * (x + g2 * i) + b);
+                        h1 += Math.Exp(a * Math.Log(r + x + g1 * (2.0 * i - 1.0)) - r * (x + g1 * (2.0 * i - 1.0)) + b);
+                        h2 += Math.Exp(a * Math.Log(r + x + g2 * i) - r * (x + g2 * i) + b);
                     }
                     h0 = Math.Exp(a * Math.Log(r + x) - r * x + b);
                     h3 = Math.Exp(a * Math.Log(r + y) - r * y + b);
@@ -499,8 +499,8 @@ namespace StatsDirect.Builtins
                 y = t;
                 for (int i = 1; i <= 99; i++)
                 {
-                    h1 = h1 + Math.Exp(a * Math.Log(r - x - g1 * (2.0 * i - 1.0)) + r * (x + g1 * (2.0 * i - 1.0)) + b);
-                    h2 = h2 + Math.Exp(a * Math.Log(r - x - g2 * i) + r * (x + g2 * i) + b);
+                    h1 += Math.Exp(a * Math.Log(r - x - g1 * (2.0 * i - 1.0)) + r * (x + g1 * (2.0 * i - 1.0)) + b);
+                    h2 += Math.Exp(a * Math.Log(r - x - g2 * i) + r * (x + g2 * i) + b);
                 }
                 h0 = Math.Exp(a * Math.Log(r - x) + r * x + b);
                 h3 = Math.Exp(a * Math.Log(r - y) + r * y + b);
@@ -579,10 +579,10 @@ namespace StatsDirect.Builtins
             double c33 = 0.0;
             for (i = 2; i <= km; i++)
             {
-                delta = delta + del[i];
-                c11 = c11 + c1[i];
-                c22 = c22 + c2[i];
-                c33 = c33 + c3[i];
+                delta += del[i];
+                c11 += c1[i];
+                c22 += c2[i];
+                c33 += c3[i];
             }
             edel = c11;
             var = c22;
@@ -695,7 +695,7 @@ namespace StatsDirect.Builtins
             if (kn > 2)
             {
                 t1 = t1 + 4.0 * Math.Pow(sij1[1, 2], 3.0) - sij1[1, 2] * tij2[1, 2] * 6.0 * kn + uij[1, 2] * 6.0 * kn * kn + tij3[1, 2] * 2.0 * kn * kn + sij1[1, 2] * sij2[1, 2] * 3.0 * kn * kn - vi[1, 2] * 3.0 * kn * kn * kn + sij3[1, 2] * Math.Pow(kn, 4.0);
-                t1 = t1 / Convert.ToDouble(kn - 2);
+                t1 /= Convert.ToDouble(kn - 2);
             }
             double c1 = 1.0 / Convert.ToDouble(kn * kn);
             double c2 = c1 * c1;
@@ -708,9 +708,9 @@ namespace StatsDirect.Builtins
             {
                 irr = (i - 1) * 2 + 1;
                 int iss = (i - 1) * 2 + 2;
-                delta = delta + d[irr, iss];
+                delta += d[irr, iss];
             }
-            delta = delta / Convert.ToDouble(kn);
+            delta /= Convert.ToDouble(kn);
 
         }
 
@@ -740,7 +740,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
             outputParameters.AddOutput("k", mpd.ToString("N0"));
             outputParameters.AddOutput("seed_fmt", seed.ToString());
-            host.FinishProgress();
             return outputParameters;
         }
 
@@ -935,7 +934,7 @@ namespace StatsDirect.Builtins
                             w = Math.Abs(1.0 - data[i, j, k] / b2);
                             if (w < 0.00000000001)
                             {
-                                a1 = a1 + 1;
+                                a1 += 1;
                             }
                         }
                         double a4 = a2 + (a1 + 1) / 2;
@@ -947,7 +946,7 @@ namespace StatsDirect.Builtins
                                 rks[i] = a4;
                             }
                         }
-                        a2 = a2 + a1;
+                        a2 += a1;
                         a1 = 0.0;
                         b1 = b2;
                         b2 = 1.0E+30;
@@ -1030,102 +1029,102 @@ namespace StatsDirect.Builtins
                     {
                         irr = (i - 1) * kb + ir;
                         iss = (i - 1) * kb + is0;
-                        delta = delta + d[irr, iss];
+                        delta += d[irr, iss];
                     }
                 }
             }
             double c0 = bc2 * kg;
-            delta = delta / c0;
+            delta /= c0;
             double dx = delta * 1.000000000001;
             mp = 0;
 
-            host.StartProgress("Simulating exact P", true);
-            int ctr = 0;
-
-            mpd = ms;
-            for (iw = 1; iw <= ms; iw++)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                for (j = 2; j <= kb; j++)
+                int ctr = 0;
+
+                mpd = ms;
+                for (iw = 1; iw <= ms; iw++)
                 {
-                    for (i = 1; i <= kg; i++)
-                    {
-                        int ix = rng.NextInteger(1, kg);
-                        for (k = 1; k <= kr; k++)
-                        {
-                            double tmp = data[i, j, k];
-                            data[i, j, k] = data[ix, j, k];
-                            data[ix, j, k] = tmp;
-                        }
-                    }
-                }
-                for (i = 1; i <= kbg; i++)
-                {
-                    for (j = 1; j <= kbg; j++)
-                    {
-                        d[i, j] = 0.0;
-                    }
-                }
-                for (i = 1; i <= kg; i++)
-                {
-                    for (j = 1; j <= kb; j++)
-                    {
-                        for (k = i; k <= kg; k++)
-                        {
-                            lo = 1;
-                            if (i == k)
-                            {
-                                lo = j;
-                            }
-                            for (l = lo; l <= kb; l++)
-                            {
-                                ij = kb * (i - 1) + j;
-                                kl = kb * (k - 1) + l;
-                                d[ij, kl] = 0.0;
-                                for (m = 1; m <= kr; m++)
-                                {
-                                    d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
-                                }
-                                d[ij, kl] = Math.Pow(d[ij, kl], y);
-                                d[kl, ij] = d[ij, kl];
-                            }
-                        }
-                    }
-                }
-                double dz = 0.0;
-                for (is0 = 2; is0 <= kb; is0++)
-                {
-                    is1 = is0 - 1;
-                    for (int ir = 1; ir <= is1; ir++)
+                    for (j = 2; j <= kb; j++)
                     {
                         for (i = 1; i <= kg; i++)
                         {
-                            irr = (i - 1) * kb + ir;
-                            iss = (i - 1) * kb + is0;
-                            dz = dz + d[irr, iss];
+                            int ix = rng.NextInteger(1, kg);
+                            for (k = 1; k <= kr; k++)
+                            {
+                                double tmp = data[i, j, k];
+                                data[i, j, k] = data[ix, j, k];
+                                data[ix, j, k] = tmp;
+                            }
                         }
                     }
-                }
-                dz = dz / c0;
-                if (dz < dx)
-                {
-                    mp = mp + 1;
-                }
-
-                ctr += 1;
-                if (ctr > trigger)
-                {
-                    bool bailout = host.UpdateProgress(Convert.ToDouble(iw) / Convert.ToDouble(ms));
-                    ctr = 0;
-                    if (bailout)
+                    for (i = 1; i <= kbg; i++)
                     {
-                        mpd = iw;
-                        break;
+                        for (j = 1; j <= kbg; j++)
+                        {
+                            d[i, j] = 0.0;
+                        }
                     }
+                    for (i = 1; i <= kg; i++)
+                    {
+                        for (j = 1; j <= kb; j++)
+                        {
+                            for (k = i; k <= kg; k++)
+                            {
+                                lo = 1;
+                                if (i == k)
+                                {
+                                    lo = j;
+                                }
+                                for (l = lo; l <= kb; l++)
+                                {
+                                    ij = kb * (i - 1) + j;
+                                    kl = kb * (k - 1) + l;
+                                    d[ij, kl] = 0.0;
+                                    for (m = 1; m <= kr; m++)
+                                    {
+                                        d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
+                                    }
+                                    d[ij, kl] = Math.Pow(d[ij, kl], y);
+                                    d[kl, ij] = d[ij, kl];
+                                }
+                            }
+                        }
+                    }
+                    double dz = 0.0;
+                    for (is0 = 2; is0 <= kb; is0++)
+                    {
+                        is1 = is0 - 1;
+                        for (int ir = 1; ir <= is1; ir++)
+                        {
+                            for (i = 1; i <= kg; i++)
+                            {
+                                irr = (i - 1) * kb + ir;
+                                iss = (i - 1) * kb + is0;
+                                dz += d[irr, iss];
+                            }
+                        }
+                    }
+                    dz /= c0;
+                    if (dz < dx)
+                    {
+                        mp += 1;
+                    }
+
+                    ctr += 1;
+                    if (ctr > trigger)
+                    {
+                        bool bailout = progress.Update(Convert.ToDouble(iw) / Convert.ToDouble(ms));
+                        ctr = 0;
+                        if (bailout)
+                        {
+                            mpd = iw;
+                            break;
+                        }
+                    }
+
                 }
-
             }
-
-            host.FinishProgress();
         }
     }
 }

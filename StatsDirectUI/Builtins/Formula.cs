@@ -113,7 +113,7 @@ namespace StatsDirect.Builtins
                     {
                         for (i = 1; i <= t; i++)
                         {
-                            ctr = ctr + 1;
+                            ctr += 1;
                             x[ctr].Rx = i;
                         }
                     }
@@ -143,7 +143,7 @@ namespace StatsDirect.Builtins
                 bks = 0;
                 do
                 {
-                    bks = bks + 1;
+                    bks += 1;
                     // allocate at random a block size of between 'low' and 'high' times the number of treatment groups
                     if (N - ctr < maxBlockMult * t)
                     {
@@ -160,7 +160,7 @@ namespace StatsDirect.Builtins
                     {
                         for (i = 1; i <= t; i++)
                         {
-                            ctr = ctr + 1;
+                            ctr += 1;
                             x[ctr].Rx = i;
                         }
                     }
@@ -240,7 +240,7 @@ namespace StatsDirect.Builtins
             double lastDelta = 0;
             do
             {
-                ctr = ctr + 1;
+                ctr += 1;
                 double delta = P - Power.rpower(r0, r1, xp, a);
                 if (Math.Abs(delta) < acc)
                 {
@@ -253,7 +253,7 @@ namespace StatsDirect.Builtins
                 }
                 if (Math.Abs(delta) > Math.Abs(lastDelta))
                 {
-                    stp = stp / 2.0;
+                    stp /= 2.0;
                 }
                 if (delta > 0.0)
                 {
@@ -264,7 +264,7 @@ namespace StatsDirect.Builtins
                     stp = -Math.Abs(stp);
                 }
                 lastDelta = delta;
-                xp = xp + stp;
+                xp += stp;
             }
             while (true);
 
@@ -990,22 +990,22 @@ namespace StatsDirect.Builtins
                 double E1 = 0;
                 for (i = 1; i <= im; i++)
                 {
-                    E1 = E1 + Convert.ToDouble(i) * t[i] / (rm + 1.0);
+                    E1 += Convert.ToDouble(i) * t[i] / (rm + 1.0);
                 }
                 double v1 = 0.0;
                 for (i = 1; i <= im; i++)
                 {
-                    v1 = v1 + Convert.ToDouble(i) * t[i] * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow(rm + 1.0, 2.0);
+                    v1 += Convert.ToDouble(i) * t[i] * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow(rm + 1.0, 2.0);
                 }
                 double epsi = 0.0;
                 for (i = 1; i <= im; i++)
                 {
-                    epsi = epsi + Convert.ToDouble(i) * t[i] * dpsi / (Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1.0);
+                    epsi += Convert.ToDouble(i) * t[i] * dpsi / (Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1.0);
                 }
                 double vpsi = 0;
                 for (i = 1; i <= im; i++)
                 {
-                    vpsi = vpsi + Convert.ToDouble(i) * t[i] * dpsi * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow(Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1, 2.0);
+                    vpsi += Convert.ToDouble(i) * t[i] * dpsi * (rm - Convert.ToDouble(i) + 1.0) / Math.Pow(Convert.ToDouble(i) * dpsi + rm - Convert.ToDouble(i) + 1, 2.0);
                 }
                 double S1 = Math.Sqrt(v1);
                 double spsi = Math.Sqrt(vpsi);
@@ -1108,14 +1108,14 @@ namespace StatsDirect.Builtins
             if (fault == 0)
             {
                 double xza = cit;
-                P = P / 100.0;
-                xd = xd / 100.0;
+                P /= 100.0;
+                xd /= 100.0;
                 if (xd <= 0.0 | ps <= 0.0)
                 {
                     throw new InvalidDataException();
                 }
                 double sn = xza * xza * P * (1.0 - P) / (xd * xd);
-                sn = sn / (1.0 + sn / ps);
+                sn /= (1.0 + sn / ps);
 
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("estimate", ps);

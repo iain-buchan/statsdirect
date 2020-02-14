@@ -113,7 +113,7 @@ namespace StatsDirect.Builtins
             double residssq = 0; double t;
             double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
 
-            GroupedCovarianceData gcd = (GroupedCovarianceData)parameters["gcd"].Data;
+            GroupedCovarianceData gcd = (GroupedCovarianceData)parameters["gcd"].AsObject;
             double[] a = gcd.a;
             double[] b = gcd.b;
             string[] bnam = gcd.bnam;
@@ -331,7 +331,7 @@ namespace StatsDirect.Builtins
                     sepParameters.AddOutput("pc", Formatting.XRound((1 - p0) * 100, 2));
                     sepParameters.AddOutput("fromSep", t - zz);
                     sepParameters.AddOutput("toSep", t + zz);
-                    t = t / Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + 1.0 / Convert.ToDouble(nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
+                    t /= Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + 1.0 / Convert.ToDouble(nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
                     sepParameters.AddOutput("t", t);
                     sepParameters.AddOutput("df", tnx - k - 1);
                     p = PDF.tvalp(Math.Abs(t), crWithDf);
@@ -463,7 +463,7 @@ namespace StatsDirect.Builtins
                 case 5:
                     warn = Formatting.ERRCOLON + "Matrix singularity.";
                     if (cols > 2)
-                        warn = warn + " Try using fewer predictors.";
+                        warn += " Try using fewer predictors.";
                     break;
                 case 6:
                     warn = Formatting.WRNCOLON + "Regression failed to converge.  Try reducing accuracy.";
@@ -645,11 +645,11 @@ namespace StatsDirect.Builtins
                     maxobs = k + l;
 
                 nca[i] = nobs;
-                nobs = nobs + k;
+                nobs += k;
                 nct[i] = nobs;
-                nobs = nobs + l;
+                nobs += l;
             }
-            maxobs = maxobs + 1;
+            maxobs += 1;
             k = ip * nobs + maxobs * (ip + 2) * (ip + 1) / 2 + maxobs - 1;
             double[] wk = new double[k + 1 ];
 
@@ -703,7 +703,7 @@ namespace StatsDirect.Builtins
                             sum += wk[jk];
                             jk += ip;
                         }
-                        sum = sum / Convert.ToDouble(ncase);
+                        sum /= Convert.ToDouble(ncase);
                         jk = k + j;
                         for (int i = 1; i <= ncc; i++)
                         {
@@ -767,7 +767,7 @@ namespace StatsDirect.Builtins
             do
             {
 
-                iter = iter + 1;
+                iter += 1;
                 dlik = 0.0;
                 int k = 0;
                 for (int j = 1; j <= ip; j++)
@@ -775,7 +775,7 @@ namespace StatsDirect.Builtins
                     sc[j] = 0.0;
                     for (int jj = 1; jj <= j; jj++)
                     {
-                        k = k + 1;
+                        k += 1;
                         cov[k] = 0.0;
                     }
                 }
@@ -794,10 +794,10 @@ namespace StatsDirect.Builtins
                             double t = 0.0;
                             for (k = 1; k <= ip; k++)
                             {
-                                t = t + b[k] * z[k, j1];
+                                t += b[k] * z[k, j1];
                             }
                             u[j] = t;
-                            sum = sum + t;
+                            sum += t;
                         }
                         double c1 = PDF.alogam(Convert.ToDouble(n)) - PDF.alogam(Convert.ToDouble(m)) - PDF.alogam(Convert.ToDouble(n - m));
                         c1 = c1 / Convert.ToDouble(m) + sum / Convert.ToDouble(n);
@@ -826,11 +826,11 @@ namespace StatsDirect.Builtins
                             sc[k] = sc[k] - wdb[k, m + 1] / bmn;
                             for (int kk = 1; kk <= k; kk++)
                             {
-                                l = l + 1;
-                                iis = iis + 1;
+                                l += 1;
+                                iis += 1;
                                 if (iis > ir)
                                 {
-                                    ir = ir + 1;
+                                    ir += 1;
                                     iis = 1;
                                 }
                                 cov[l] = cov[l] + wd2b[l, m + 1] / bmn - wdb[ir, m + 1] * wdb[iis, m + 1] / (bmn * bmn);
@@ -927,10 +927,10 @@ namespace StatsDirect.Builtins
                     int l;
                     for (l = 1; l <= ip * (ip + 1) / 2; l++)
                     {
-                        iis = iis + 1;
+                        iis += 1;
                         if (iis > ir)
                         {
-                            ir = ir + 1;
+                            ir += 1;
                             iis = 1;
                         }
                         wd2b[l, j1] = wd2b[l, j1] + u[i] * wd2b[l, j] + z[ir, iz] * z[iis, iz] * u[i] * wb[j] + z[ir, iz] * u[i] * wdb[iis, j] + z[iis, iz] * u[i] * wdb[ir, j];
@@ -978,7 +978,7 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= n; j++)
             {
                 int jc = jj + 1;
-                jj = jj + j;
+                jj += j;
                 if (j > 1)
                 {
                     dspr(j - 1, 1.0, ap, jc, 1, ap, 1);
@@ -989,7 +989,7 @@ namespace StatsDirect.Builtins
                 for (k = 1; k <= j; k++)
                 {
                     ap[ict] = ap[ict] * ajj;
-                    ict = ict + 1;
+                    ict += 1;
                 }
             }
 
@@ -1056,7 +1056,7 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= n; j++)
             {
                 int jc = jj + 1;
-                jj = jj + j;
+                jj += j;
                 if (j > 1)
                 {
                     dtpsv(false, false, j - 1, ap, 1, ap, jc, 1, out info);
@@ -1064,7 +1064,7 @@ namespace StatsDirect.Builtins
                 double ddot = 0.0;
                 for (int i = jc; i <= jc + j - 2; i++)
                 {
-                    ddot = ddot + ap[i] * ap[i];
+                    ddot += ap[i] * ap[i];
                 }
                 double ajj = ap[jj] - ddot;
                 if (ajj <= 0.0)
@@ -1116,11 +1116,11 @@ namespace StatsDirect.Builtins
                     for (int k = kk; k <= kk + j - 1; k++)
                     {
                         ap[k] = ap[k] + x[ix] * temp;
-                        ix = ix + incx;
+                        ix += incx;
                     }
                 }
-                jx = jx + incx;
-                kk = kk + j;
+                jx += incx;
+                kk += j;
             }
 
         }
@@ -1185,12 +1185,12 @@ namespace StatsDirect.Builtins
                         ix = jx;
                         for (k = kk - 1; k >= kk - j + 1; k--)
                         {
-                            ix = ix - incx;
+                            ix -= incx;
                             x[ix] = x[ix] - temp * ap[k];
                         }
                     }
-                    jx = jx - incx;
-                    kk = kk - j;
+                    jx -= incx;
+                    kk -= j;
                 }
             }
             else
@@ -1203,16 +1203,16 @@ namespace StatsDirect.Builtins
                     ix = kx;
                     for (k = kk; k <= kk + j - 2; k++)
                     {
-                        temp = temp - ap[k] * x[ix];
-                        ix = ix + incx;
+                        temp -= ap[k] * x[ix];
+                        ix += incx;
                     }
                     if (nounit)
                     {
-                        temp = temp / ap[kk + j - 1];
+                        temp /= ap[kk + j - 1];
                     }
                     x[jx] = temp;
-                    jx = jx + incx;
-                    kk = kk + j;
+                    jx += incx;
+                    kk += j;
                 }
             }
 
@@ -1271,15 +1271,15 @@ namespace StatsDirect.Builtins
                         for (k = kk; k <= kk + j - 2; k++)
                         {
                             x[ix] = x[ix] + temp * ap[k];
-                            ix = ix + incx;
+                            ix += incx;
                         }
                         if (nounit)
                         {
                             x[jx] = x[jx] * ap[kk + j - 1];
                         }
                     }
-                    jx = jx + incx;
-                    kk = kk + j;
+                    jx += incx;
+                    kk += j;
                 }
             }
             else
@@ -1292,16 +1292,16 @@ namespace StatsDirect.Builtins
                     ix = jx;
                     if (nounit)
                     {
-                        temp = temp * ap[kk];
+                        temp *= ap[kk];
                     }
                     for (k = kk - 1; k >= kk - j + 1; k--)
                     {
-                        ix = ix - incx;
-                        temp = temp + ap[k] * x[ix];
+                        ix -= incx;
+                        temp += ap[k] * x[ix];
                     }
                     x[jx] = temp;
-                    jx = jx - incx;
-                    kk = kk - j;
+                    jx -= incx;
+                    kk -= j;
                 }
             }
 
@@ -1328,7 +1328,7 @@ namespace StatsDirect.Builtins
                 int jj = 0;
                 for (info = 1; info <= n; info++)
                 {
-                    jj = jj + info;
+                    jj += info;
                     if (ap[jj] == 0.0)
                     {
                         return;
@@ -1355,9 +1355,9 @@ namespace StatsDirect.Builtins
                 for (k = 1; k <= j - 1; k++)
                 {
                     ap[ict] = ap[ict] * ajj;
-                    ict = ict + 1;
+                    ict += 1;
                 }
-                jc = jc + j;
+                jc += j;
             }
         }
 

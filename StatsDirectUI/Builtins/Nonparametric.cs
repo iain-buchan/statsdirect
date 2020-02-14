@@ -2,9 +2,9 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-
 using System;
 using System.Collections.Generic;
+
 namespace StatsDirect.Builtins
 {
     public static class Nonparametric
@@ -13,13 +13,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Returns a list containing a single blank results dictionary.  A handy helper where a template needs to show an error message in a block, but the message has no parameters.
         ///  </summary>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        private static IList<ParameterBag> OneOutputElement()
-        {
-            return new List<ParameterBag> { new ParameterBag() };
-        }
-
+        private static IList<ParameterBag> OneOutputElement() => new List<ParameterBag> { new ParameterBag() };
 
         ///  <summary>
         ///  
@@ -40,7 +34,6 @@ namespace StatsDirect.Builtins
             XRunKwt(w1, lx, l, cols, out h, ref ha, t);
         }
 
-
         ///  <summary>
         ///  
         ///  </summary>
@@ -54,8 +47,6 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         private static void XRunKwt(double[] w1, int lx, int[] l, int cols, out double h, ref double ha, double t)
         {
-
-
             double rs = 0.0;
             for (int i = 1; i <= cols; i++)
             {
@@ -64,16 +55,12 @@ namespace StatsDirect.Builtins
                 {
                     int i1 = i - 1;
                     for (int j = 1; j <= i1; j++)
-                    {
-                        l1 = l1 + l[j];
-                    }
+                        l1 += l[j];
                 }
                 int l2 = l1 + l[i] - 1;
                 double rj = 0.0;
                 for (int j = l1; j <= l2; j++)
-                {
                     rj += w1[j];
-                }
                 rj = rj * rj / Convert.ToDouble(l[i]);
                 rs += rj;
             }
@@ -85,13 +72,11 @@ namespace StatsDirect.Builtins
             {
                 double s2 = 1.0 - 12.0 * t / (xn * xn * xn - xn);
                 if (s2 <= 0.0)
-                {
                     ha = Constant.MISSING;
-                }
-                else { ha = h / s2; }
+                else
+                    ha = h / s2;
             }
         }
-
 
         ///  <summary>
         ///  
@@ -110,32 +95,24 @@ namespace StatsDirect.Builtins
 
             fault = 1;
             if (cols < 2)
-            {
                 return;
-            }
             fault = 2;
             int lsum = 0;
             for (i = 1; i <= cols; i++)
             {
                 if (l[i] <= 0)
-                {
                     return;
-                }
                 lsum += l[i];
             }
 
             fault = 3;
             if (lsum != lx)
-            {
                 return;
-            }
 
             for (i = 2; i <= lx; i++)
             {
                 if (x[i] != x[1])
-                {
                     break;
-                }
                 if (i == lx)
                 {
                     i = lx + 1;
@@ -150,7 +127,6 @@ namespace StatsDirect.Builtins
 
             ExFortran.Rank(x, w1, 1, lx, 1, out t);
             fault = 0;
-
         }
 
         public static void XQci(double qc, int rx, double[] r, ref double xq, double gamma, out double ll, out double ul, out double cover, bool conservative, out bool capUpper, out bool capLower, out int fault)
@@ -293,7 +269,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         private static void XKstwo(double[] d1, int n1, double[] d2, int n2, out double d, out double dp, out double dn)
         {
             Array.Sort(d1, 1, n1);
@@ -317,7 +292,7 @@ namespace StatsDirect.Builtins
                     {
                         dp = dt;
                     }
-                    j1 = j1 + 1;
+                    j1 += 1;
                 }
                 else if (d1[j1] > d2[j2])
                 {
@@ -327,20 +302,20 @@ namespace StatsDirect.Builtins
                     {
                         dn = dt;
                     }
-                    j2 = j2 + 1;
+                    j2 += 1;
                 }
                 else
                 {
                     f1N = Convert.ToDouble(j1) / en1;
-                    j1 = j1 + 1;
+                    j1 += 1;
                     f2N = Convert.ToDouble(j2) / en2;
-                    j2 = j2 + 1;
+                    j2 += 1;
                     while (j1 <= n1)
                     {
                         if (d1[j1] == d1[j1 - 1])
                         {
                             f1N = Convert.ToDouble(j1) / en1;
-                            j1 = j1 + 1;
+                            j1 += 1;
                         }
                         else
                         {
@@ -352,7 +327,7 @@ namespace StatsDirect.Builtins
                         if (d2[j2] == d2[j2 - 1])
                         {
                             f2N = Convert.ToDouble(j2) / en2;
-                            j2 = j2 + 1;
+                            j2 += 1;
                         }
                         else
                         {
@@ -376,8 +351,7 @@ namespace StatsDirect.Builtins
             d = Math.Max(dp, dn);
         }
 
-
-        private static void XDokend(ITemplateHost host, ref double cit, ref int nx, ref double[] x, ref double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
+        private static void XDokend(IPreferencesAndProgressBar host, ref double cit, ref int nx, ref double[] x, ref double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
         {
             double sigbt3 = 0; double sigbt2 = 0; double sigbt1 = 0;
             int ytvn = 0; double sigat3 = 0; double sigat2 = 0; double sigat1 = 0;
@@ -403,134 +377,135 @@ namespace StatsDirect.Builtins
                 {
                     gd = nxx - 1.0;
                 }
-                host.StartProgress("Calculating Kendall", true);
-                int n;
-                int pn;
-                for (pn = 1; pn <= nxx - 1; pn++)
+                using (IProgressBar progress = host.StartProgress("Calculating Kendall", true))
                 {
-                    if (host.UpdateProgress(Convert.ToDouble(pn) / gd))
-                        throw new TemplateOperationCancelledException();
-                    int xtie = 0;
-                    int ytie = 0;
-                    for (n = pn + 1; n <= nxx; n++)
+                    int n;
+                    int pn;
+                    for (pn = 1; pn <= nxx - 1; pn++)
                     {
-                        if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
-                        {
-                            p = p + 1;
-                        }
-                        if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
-                        {
-                            q = q + 1;
-                        }
-                        if (x[pn] == x[n])
-                        {
-                            xtie = xtie + 1;
-                        }
-                        if (y[pn] == y[n])
-                        {
-                            ytie = ytie + 1;
-                        }
-                    }
-                    int count = xtie + 1;
-                    bool ok;
-                    if (count > 1)
-                    {
-                        ok = true;
-                        for (n = 1; n <= xtvn; n++)
-                        {
-                            if (x[pn] == xtv[n])
-                            {
-                                ok = false;
-                                break;
-                            }
-                        }
-                        if (ok)
-                        {
-                            xtvn = xtvn + 1;
-                            xtv[xtvn] = x[pn];
-                            siga = siga + count * (count - 1) / 2.0;
-                            sigat1 = sigat1 + Convert.ToDouble(count) * Convert.ToDouble(count - 1);
-                            sigat2 = sigat2 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2);
-                            sigat3 = sigat3 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(2 * count + 5);
-                        }
-                    }
-                    count = ytie + 1;
-                    if (count > 1)
-                    {
-                        ok = true;
-                        for (n = 1; n <= ytvn; n++)
-                        {
-                            if (y[pn] == ytv[n])
-                            {
-                                ok = false;
-                                break;
-                            }
-                        }
-                        if (ok)
-                        {
-                            ytvn = ytvn + 1;
-                            ytv[ytvn] = y[pn];
-                            sigb = sigb + Convert.ToDouble(count) * Convert.ToDouble(count - 1) / 2.0;
-                            sigbt1 = sigbt1 + Convert.ToDouble(count) * Convert.ToDouble(count - 1);
-                            sigbt2 = sigbt2 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2);
-                            sigbt3 = sigbt3 + Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(2 * count + 5);
-                        }
-                    }
-                }
-                s = p - q;
-                double xn = Convert.ToDouble(nx);
-                hn = xn * (xn - 1.0) / 2.0;
-                double tievar1 = (xn * (xn - 1.0) * (2.0 * xn + 5.0) - sigat3 - sigbt3) / 18.0;
-                double tievar2 = sigat2 * sigbt2 / (9.0 * xn * (xn - 1.0) * (xn - 2.0));
-                double tievar3 = sigat1 * sigbt1 / (2.0 * xn * (xn - 1.0));
-                double tievar = tievar1 + tievar2 + tievar3;
-                double kendvar = xn * (xn - 1.0) * (2.0 * xn + 5.0) / 18.0;
-                varf = siga != 0 | sigb != 0 ? tievar : kendvar;
-                tau = s / Math.Sqrt((hn - siga) * (hn - sigb));
-                if (cit > 0.0)
-                {
-                    // Hollander & Wolfe P383 - Samara-Randles confidence interval
-                    double dnx = Convert.ToDouble(nxx);
-                    double cbar = 2.0 * s / dnx;
-                    double cix = 0;
-                    for (pn = 1; pn <= nxx; pn++)
-                    {
-                        if (host.UpdateProgress(dnx + Convert.ToDouble(pn) / gd))
+                        if (progress.Update(Convert.ToDouble(pn) / gd))
                             throw new TemplateOperationCancelledException();
-                        for (n = 1; n <= nxx; n++)
+                        int xtie = 0;
+                        int ytie = 0;
+                        for (n = pn + 1; n <= nxx; n++)
                         {
-                            if (pn != n)
+                            if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
                             {
-                                if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
-                                {
-                                    c[pn] = c[pn] + 1;
-                                }
-                                if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
-                                {
-                                    c[pn] = c[pn] - 1;
-                                }
+                                p += 1;
+                            }
+                            if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
+                            {
+                                q += 1;
+                            }
+                            if (x[pn] == x[n])
+                            {
+                                xtie += 1;
+                            }
+                            if (y[pn] == y[n])
+                            {
+                                ytie += 1;
                             }
                         }
-                        cix = cix + (c[pn] - cbar) * (c[pn] - cbar);
+                        int count = xtie + 1;
+                        bool ok;
+                        if (count > 1)
+                        {
+                            ok = true;
+                            for (n = 1; n <= xtvn; n++)
+                            {
+                                if (x[pn] == xtv[n])
+                                {
+                                    ok = false;
+                                    break;
+                                }
+                            }
+                            if (ok)
+                            {
+                                xtvn += 1;
+                                xtv[xtvn] = x[pn];
+                                siga += count * (count - 1) / 2.0;
+                                sigat1 += Convert.ToDouble(count) * Convert.ToDouble(count - 1);
+                                sigat2 += Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2);
+                                sigat3 += Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(2 * count + 5);
+                            }
+                        }
+                        count = ytie + 1;
+                        if (count > 1)
+                        {
+                            ok = true;
+                            for (n = 1; n <= ytvn; n++)
+                            {
+                                if (y[pn] == ytv[n])
+                                {
+                                    ok = false;
+                                    break;
+                                }
+                            }
+                            if (ok)
+                            {
+                                ytvn += 1;
+                                ytv[ytvn] = y[pn];
+                                sigb += Convert.ToDouble(count) * Convert.ToDouble(count - 1) / 2.0;
+                                sigbt1 += Convert.ToDouble(count) * Convert.ToDouble(count - 1);
+                                sigbt2 += Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(count - 2);
+                                sigbt3 += Convert.ToDouble(count) * Convert.ToDouble(count - 1) * Convert.ToDouble(2 * count + 5);
+                            }
+                        }
                     }
-                    double vr = 2.0 / (dnx * (dnx - 1.0)) * (2.0 * (dnx - 2.0) / (dnx * (dnx - 1.0) * (dnx - 1.0)) * cix + 1.0 - tau * tau);
-                    ll = tau - cit * Math.Sqrt(vr);
-                    if (ll < -1.0)
+                    s = p - q;
+                    double xn = Convert.ToDouble(nx);
+                    hn = xn * (xn - 1.0) / 2.0;
+                    double tievar1 = (xn * (xn - 1.0) * (2.0 * xn + 5.0) - sigat3 - sigbt3) / 18.0;
+                    double tievar2 = sigat2 * sigbt2 / (9.0 * xn * (xn - 1.0) * (xn - 2.0));
+                    double tievar3 = sigat1 * sigbt1 / (2.0 * xn * (xn - 1.0));
+                    double tievar = tievar1 + tievar2 + tievar3;
+                    double kendvar = xn * (xn - 1.0) * (2.0 * xn + 5.0) / 18.0;
+                    varf = siga != 0 | sigb != 0 ? tievar : kendvar;
+                    tau = s / Math.Sqrt((hn - siga) * (hn - sigb));
+                    if (cit > 0.0)
                     {
-                        ll = -1.0;
+                        // Hollander & Wolfe P383 - Samara-Randles confidence interval
+                        double dnx = Convert.ToDouble(nxx);
+                        double cbar = 2.0 * s / dnx;
+                        double cix = 0;
+                        for (pn = 1; pn <= nxx; pn++)
+                        {
+                            if (progress.Update(dnx + Convert.ToDouble(pn) / gd))
+                                throw new TemplateOperationCancelledException();
+                            for (n = 1; n <= nxx; n++)
+                            {
+                                if (pn != n)
+                                {
+                                    if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
+                                    {
+                                        c[pn] = c[pn] + 1;
+                                    }
+                                    if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
+                                    {
+                                        c[pn] = c[pn] - 1;
+                                    }
+                                }
+                            }
+                            cix += (c[pn] - cbar) * (c[pn] - cbar);
+                        }
+                        double vr = 2.0 / (dnx * (dnx - 1.0)) * (2.0 * (dnx - 2.0) / (dnx * (dnx - 1.0) * (dnx - 1.0)) * cix + 1.0 - tau * tau);
+                        ll = tau - cit * Math.Sqrt(vr);
+                        if (ll < -1.0)
+                        {
+                            ll = -1.0;
+                        }
+                        ul = tau + cit * Math.Sqrt(vr);
+                        if (ul > 1.0)
+                        {
+                            ul = 1.0;
+                        }
                     }
-                    ul = tau + cit * Math.Sqrt(vr);
-                    if (ul > 1.0)
+                    else
                     {
-                        ul = 1.0;
+                        ll = Constant.MISSING;
+                        ul = Constant.MISSING;
                     }
                 }
-                else
-                {
-                    ll = Constant.MISSING;
-                    ul = Constant.MISSING;
-                }
-                host.FinishProgress();
             }
             fault = false;
         }
@@ -548,7 +523,7 @@ namespace StatsDirect.Builtins
                 double n2S = Convert.ToDouble(n2);
                 double transTemp0 = PDF.gauinv(alphat) * Math.Sqrt(n1S * n2S * (n1S + n2S) / 12.0);
                 k = Convert.ToInt32(n1S * (n1S + n2S + 1.0) / 2.0) + (int)Math.Floor(transTemp0);
-                k = k - Convert.ToInt32(n1S * ((n1S + 1.0) / 2.0));
+                k -= Convert.ToInt32(n1S * ((n1S + 1.0) / 2.0));
                 lev = alphat;
             }
             int min = n2 < n1 ? n2 : n1;
@@ -565,12 +540,12 @@ namespace StatsDirect.Builtins
             XUdist(n2, n1, ref frqncy, ref lfr, ref work, ref lwrk, out fault);
             for (q = 1; q <= lfr; q++)
             {
-                total = total + frqncy[q];
+                total += frqncy[q];
             }
             double unitd = 1.0 / total;
             for (q = 0; q <= lfr; q++)
             {
-                pcum = pcum + unitd * frqncy[q + 1];
+                pcum += unitd * frqncy[q + 1];
                 if (pcum > alphat)
                 {
                     break;
@@ -611,7 +586,7 @@ namespace StatsDirect.Builtins
                 {
                     return;
                 }
-                n1 = n1 + 1;
+                n1 += 1;
                 for (i = n1; i <= mn1; i++)
                 {
                     frqncy[i] = 0;
@@ -621,15 +596,15 @@ namespace StatsDirect.Builtins
                 for (i = 2; i <= min; i++)
                 {
                     work[i] = 0;
-                    zIn = zIn + max;
+                    zIn += max;
                     n1 = zIn + 2;
                     double l = 1 + zIn / 2;
                     int k = i;
                     int j;
                     for (j = 1; j <= (int)Math.Floor(l); j++)
                     {
-                        k = k + 1;
-                        n1 = n1 - 1;
+                        k += 1;
+                        n1 -= 1;
                         double sum = frqncy[j] + work[j];
                         frqncy[j] = sum;
                         work[k] = sum - frqncy[n1];
@@ -788,132 +763,125 @@ namespace StatsDirect.Builtins
                 midu = (int)Math.Floor((double)(limit + 1) / 2);
                 midl = midu;
             }
-            host.StartProgress("Calculating Confidence Interval", true);
-            int[] xx = new int[n1 + 1 /* VB to C# conversion */ ];
-            int[] yy = new int[n2 + 1 /* VB to C# conversion */ ];
-            Array.Sort(x, n1 + 1, n2);
-            Array.Sort(x, 1, n1);
+            using (IProgressBar progress = host.StartProgress("Calculating Confidence Interval", true))
+            {
+                int[] xx = new int[n1 + 1 /* VB to C# conversion */ ];
+                int[] yy = new int[n2 + 1 /* VB to C# conversion */ ];
+                Array.Sort(x, n1 + 1, n2);
+                Array.Sort(x, 1, n1);
 
-            //  Find the largest value in the array (at the upper limit of one of the sorts)...
-            double bigx = x[n1 + n2];
-            if (x[n1] > bigx)
-            {
-                bigx = x[n1];
-            }
-            //  ... and set an appropriate scale so that value fits within the range of an Integer.
-            int scaler = 100000;
-            do
-            {
-                if (bigx * scaler < int.MaxValue / 10.0)
-                    break;
-                scaler = Convert.ToInt32(scaler / 10);
-            }
-            while (true);
-            for (j = 1; j <= n1; j++)
-                xx[j] = Convert.ToInt32(x[j] * scaler);
-            for (j = 1; j <= n2; j++)
-                yy[j] = Convert.ToInt32(x[n1 + j] * scaler);
-            bool domed = true;
-            bool dokl = true;
-            int goal = midu + k;
-            int c = xx[1] - yy[n2] - 1;
-            int i = 0;
-            while (i < midu)
-            {
-                c = ExFortran.findnext(out occurrences, c, xx, n1, yy, n2);
-                i = i + occurrences;
-                if (host.UpdateProgress(i / (double)goal))
+                //  Find the largest value in the array (at the upper limit of one of the sorts)...
+                double bigx = x[n1 + n2];
+                if (x[n1] > bigx)
+                    bigx = x[n1];
+                //  ... and set an appropriate scale so that value fits within the range of an Integer.
+                int scaler = 100000;
+                do
                 {
-                    outputParameters.AddOutput("median", Formatting.ASTERISK);
-                    outputParameters.AddOutput("from", Formatting.ASTERISK);
-                    outputParameters.AddOutput("to", Formatting.ASTERISK);
-                    return outputParameters;
+                    if (bigx * scaler < int.MaxValue / 10.0)
+                        break;
+                    scaler = Convert.ToInt32(scaler / 10);
                 }
-                if (i >= k)
+                while (true);
+                for (j = 1; j <= n1; j++)
+                    xx[j] = Convert.ToInt32(x[j] * scaler);
+                for (j = 1; j <= n2; j++)
+                    yy[j] = Convert.ToInt32(x[n1 + j] * scaler);
+                bool domed = true;
+                bool dokl = true;
+                int goal = midu + k;
+                int c = xx[1] - yy[n2] - 1;
+                int i = 0;
+                while (i < midu)
                 {
-                    if (dokl)
+                    c = ExFortran.findnext(out occurrences, c, xx, n1, yy, n2);
+                    i += occurrences;
+                    if (progress.Update(i / (double)goal))
                     {
-                        dokl = false;
-                        kl = c / (double)scaler;
+                        outputParameters.AddOutput("median", Formatting.ASTERISK);
+                        outputParameters.AddOutput("from", Formatting.ASTERISK);
+                        outputParameters.AddOutput("to", Formatting.ASTERISK);
+                        return outputParameters;
+                    }
+                    if (i >= k)
+                    {
+                        if (dokl)
+                        {
+                            dokl = false;
+                            kl = c / (double)scaler;
+                        }
+                    }
+                    if (i >= midl)
+                    {
+                        if (domed)
+                        {
+                            domed = false;
+                            median = c / (double)scaler;
+                        }
                     }
                 }
-                if (i >= midl)
+                if (midu != midl)
+                    median = domed ? c / (double)scaler : (median + c / (double)scaler) / 2;
+                for (j = 1; j <= n1; j++)
+                    xx[j] = -xx[j];
+                for (j = 1; j <= n2; j++)
+                    yy[j] = -yy[j];
+                Array.Sort(xx, 1, n1);
+                Array.Sort(yy, 1, n2);
+                c = xx[1] - yy[n2] - 1;
+                i = 0;
+                while (i < k)
                 {
-                    if (domed)
+                    c = ExFortran.findnext(out occurrences, c, xx, n1, yy, n2);
+                    i += occurrences;
+                    if (progress.Update((midu + i) / (double)goal))
                     {
-                        domed = false;
-                        median = c / (double)scaler;
+                        outputParameters.AddOutput("median", Formatting.ASTERISK);
+                        outputParameters.AddOutput("from", Formatting.ASTERISK);
+                        outputParameters.AddOutput("to", Formatting.ASTERISK);
+                        return outputParameters;
                     }
                 }
+                double ku = -c / (double)scaler;
+                outputParameters.AddOutput("median", host.RoundU(median));
+                outputParameters.AddOutput("from", host.RoundU(kl));
+                outputParameters.AddOutput("to", host.RoundU(ku));
             }
-            if (midu != midl)
-                median = domed ? c / (double)scaler : (median + c / (double)scaler) / 2;
-            for (j = 1; j <= n1; j++)
-                xx[j] = -xx[j];
-            for (j = 1; j <= n2; j++)
-                yy[j] = -yy[j];
-            Array.Sort(xx, 1, n1);
-            Array.Sort(yy, 1, n2);
-            c = xx[1] - yy[n2] - 1;
-            i = 0;
-            while (i < k)
-            {
-                c = ExFortran.findnext(out occurrences, c, xx, n1, yy, n2);
-                i = i + occurrences;
-                if (host.UpdateProgress((midu + i) / (double)goal))
-                {
-                    outputParameters.AddOutput("median", Formatting.ASTERISK);
-                    outputParameters.AddOutput("from", Formatting.ASTERISK);
-                    outputParameters.AddOutput("to", Formatting.ASTERISK);
-                    return outputParameters;
-                }
-            }
-            double ku = -c / (double)scaler;
-            host.FinishProgress();
-            outputParameters.AddOutput("median", host.RoundU(median));
-            outputParameters.AddOutput("from", host.RoundU(kl));
-            outputParameters.AddOutput("to", host.RoundU(ku));
             return outputParameters;
         }
 
         private static double XXmdn(double[] x, int nx, int n1, int n2)
         {
-            int n; int j;
+            int n;
             double[] ax;
 
             if (n2 == 1)
             {
                 ax = new double[n1 + 1 /* VB to C# conversion */ ];
-                for (j = 1; j <= n1; j++)
-                {
+                for (int j = 1; j <= n1; j++)
                     ax[j] = x[j];
-                }
                 n = n1;
             }
             else
             {
                 ax = new double[n2 + 1 /* VB to C# conversion */ ];
-                for (j = n1 + 1; j <= nx; j++)
-                {
+                for (int j = n1 + 1; j <= nx; j++)
                     ax[j - n1] = x[j];
-                }
                 n = n2;
             }
             if (n >= 2)
             {
                 Array.Sort(ax, 1, n);
                 double mdn = 0.5 * (n + 1);
-                double median;
                 if (mdn - Math.Floor(mdn) != 0)
-                    median = (ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0;
+                    return (ax[Convert.ToInt32(mdn - 0.5)] + ax[Convert.ToInt32(mdn + 0.5)]) / 2.0;
                 else
-                    median = ax[Convert.ToInt32(mdn)];
-                return median;
+                    return ax[Convert.ToInt32(mdn)];
             }
             return 0;
         }
 
-        public static ParameterBag RptCuzick(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptCuzick(ParameterBag parameters)
         {
             double varz = 0; double ez = 0; double st = 0; int n = 0; int count = 0;
 
@@ -949,7 +917,7 @@ namespace StatsDirect.Builtins
                 score[j] = j + 1;
 
             // If non-default scores exist, fill them in
-            if (parameters.ContainsKey("scores") && null != parameters["scores"].Data)
+            if (parameters.ContainsKey("scores") && null != parameters["scores"].AsObject)
             {
                 DataFrame scoreFrame = parameters["scores"].AsDataFrame;
                 DoubleVariable scoreVariable = (DoubleVariable)scoreFrame.Variables[0];
@@ -1001,7 +969,7 @@ namespace StatsDirect.Builtins
                 ParameterBag tiesParameters = new ParameterBag();
                 IList<ParameterBag> tiesList = new List<ParameterBag> { tiesParameters };
                 outputParameters.AddOutput("*ties", tiesList);
-                vart = vart * (1.0 - tie * 12.0 / (Convert.ToDouble(n) * (Convert.ToDouble(n) * Convert.ToDouble(n) - 1.0)));
+                vart *= (1.0 - tie * 12.0 / (Convert.ToDouble(n) * (Convert.ToDouble(n) * Convert.ToDouble(n) - 1.0)));
                 stat = (st - et) / Math.Sqrt(vart);
                 tiesParameters.AddOutput("varttie", vart);
                 tiesParameters.AddOutput("ztie", stat);
@@ -1018,7 +986,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptDiversity(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptDiversity(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double bias = 0; double biasx = 0;
             double thetase = 0; double thetasex = 0;
@@ -1028,10 +996,9 @@ namespace StatsDirect.Builtins
             int boots = parameters["boots"].AsInt32;
             int bootsDivisor = Math.Max(1, boots / 1000);
             if (gamma <= 0)
-            {
                 throw new TemplateOperationCancelledException();
-            }
-            MathDbl.civ(0, out double cit, gamma, out double p0);
+
+            MathDbl.civ(0, out double cit, gamma, out _);
             MersenneTwister rnd = new MersenneTwister(); //  Self-seeded
             double[] r = new double[frame.MaxRows + 1];
 
@@ -1041,494 +1008,461 @@ namespace StatsDirect.Builtins
             for (int k = 0; k <= frame.VariableCount - 1; k++)
             {
                 DoubleVariable v = (DoubleVariable)frame.Variables[k];
-                host.StartProgress("Bootstrapping diversity indices for " + v.Title, true);
-
-                int rx = 0;
-                double sumn = 0.0;
-                double sumnx = 0.0;
-                double sumnp2 = 0.0;
-                double sumnp3 = 0.0;
-                double sumnlogn = 0.0;
-                double sumnlognsq = 0.0;
-                int singletons = 0;
-                int doubletons = 0;
-                foreach (double val in v.Data)
+                using (IProgressBar progress = host.StartProgress("Bootstrapping diversity indices for " + v.Title, true))
                 {
-                    if (val != Constant.MISSING & val > 0.0 && val == Math.Floor(val))
+                    int rx = 0;
+                    double sumn = 0.0;
+                    double sumnx = 0.0;
+                    double sumnp2 = 0.0;
+                    double sumnp3 = 0.0;
+                    double sumnlogn = 0.0;
+                    double sumnlognsq = 0.0;
+                    int singletons = 0;
+                    int doubletons = 0;
+                    foreach (double val in v.Data)
                     {
-                        rx = rx + 1;
-                        r[rx] = val;
-                        sumn = sumn + r[rx];
-                        sumnx = sumnx + r[rx] * (r[rx] - 1.0);
-                        sumnlogn = sumnlogn + r[rx] * Math.Log(r[rx]);
-                        sumnlognsq = sumnlognsq + r[rx] * Math.Pow(Math.Log(r[rx]), 2.0);
-                        if (Convert.ToInt32(r[rx]) == 1)
-                            singletons = singletons + 1;
-                        if (Convert.ToInt32(r[rx]) == 2)
-                            doubletons = doubletons + 1;
+                        if (val != Constant.MISSING & val > 0.0 && val == Math.Floor(val))
+                        {
+                            rx += 1;
+                            r[rx] = val;
+                            sumn += r[rx];
+                            sumnx += r[rx] * (r[rx] - 1.0);
+                            sumnlogn += r[rx] * Math.Log(r[rx]);
+                            sumnlognsq += r[rx] * Math.Pow(Math.Log(r[rx]), 2.0);
+                            if (Convert.ToInt32(r[rx]) == 1)
+                                singletons += 1;
+                            if (Convert.ToInt32(r[rx]) == 2)
+                                doubletons += 1;
+                        }
                     }
-                }
-                if (rx < 3)
-                {
-                    host.FinishProgress();
-                    throw new TemplateOperationCancelledException("Too few observations.  Please use three or more non-zero positive integers.", "Diversity indices");
-                }
-                double simpson = 1.0 - sumnx / (sumn * (sumn - 1.0));
-                double shannon = (sumn * Math.Log(sumn) - sumnlogn) / sumn;
-                double np;
-                for (int j = 1; j <= rx; j++)
-                {
-                    np = r[j] / sumn;
-                    sumnp2 = sumnp2 + Math.Pow(np, 2.0);
-                    sumnp3 = sumnp3 + Math.Pow(np, 3.0);
-                }
-                double simvars = (4.0 * sumn * (sumn - 1.0) * (sumn - 2.0) * sumnp3 + 2.0 * sumn * (sumn - 1.0) * sumnp2 - 2.0 * sumn * (sumn - 1.0) * (2.0 * sumn - 3.0) * Math.Pow(sumnp2, 2.0)) / Math.Pow(sumn * (sumn - 1.0), 2.0);
-                double simvar = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
-                double simcl;
-                double simcu;
-                double simse;
-                if (simvar < 0.0)
-                {
-                    simse = Constant.MISSING;
-                    simcl = Constant.MISSING;
-                    simcu = Constant.MISSING;
-                }
-                else
-                {
-                    simse = Math.Sqrt(simvar);
-                    simcl = simpson - cit * simse;
-                    simcu = simpson + cit * simse;
-                }
-                double shanvars = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0) + Convert.ToDouble(rx - 1) / (2.0 * Math.Pow(sumn, 2.0));
-                double shanvar = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
-                double shancl;
-                double shancu;
-                double shanse;
-                if (shanvar < 0.0)
-                {
-                    shanse = Constant.MISSING;
-                    shancl = Constant.MISSING;
-                    shancu = Constant.MISSING;
-                }
-                else
-                {
-                    shanse = Math.Sqrt(shanvar);
-                    shancl = shannon - cit * shanse;
-                    shancu = shannon + cit * shanse;
-                }
-                int gtot = Convert.ToInt32(sumn);
+                    if (rx < 3)
+                        throw new TemplateOperationCancelledException("Too few observations.  Please use three or more non-zero positive integers.", "Diversity indices");
 
-                double sumnm1 = sumn - 1.0;
-                double[] rb = new double[rx + 1];
-                int[] cx = new int[rx + 1];
-                double[] simpsonb = new double[boots + 1];
-                double[] shannonb = new double[boots + 1];
-                double[] simpsonbz = new double[boots + 1];
-                double[] shannonbz = new double[boots + 1];
-                // get resample boots times
-                double theta = 0.0;
-                double thetax = 0.0;
-                int ctr = 0;
-                int ctrx = 0;
-                bool ok = true;
-                bool studentfault = false;
-                // work out cut-offs for scaling pick points
-                cx[1] = Convert.ToInt32(r[1]);
-                for (int j = 2; j <= rx; j++)
-                {
-                    cx[j] = cx[j - 1] + Convert.ToInt32(r[j]);
-                }
-                int pick;
-                for (int i = 1; i <= boots; i++)
-                {
-                    sumn = 0.0;
-                    sumnx = 0.0;
-                    sumnp2 = 0.0;
-                    sumnp3 = 0.0;
-                    sumnlogn = 0.0;
-                    sumnlognsq = 0.0;
+                    double simpson = 1.0 - sumnx / (sumn * (sumn - 1.0));
+                    double shannon = (sumn * Math.Log(sumn) - sumnlogn) / sumn;
+                    double np;
                     for (int j = 1; j <= rx; j++)
                     {
-                        rb[j] = 0.0;
+                        np = r[j] / sumn;
+                        sumnp2 += Math.Pow(np, 2.0);
+                        sumnp3 += Math.Pow(np, 3.0);
                     }
-                    // get N members at random
-                    for (int j = 1; j <= gtot; j++)
+                    double simvars = (4.0 * sumn * (sumn - 1.0) * (sumn - 2.0) * sumnp3 + 2.0 * sumn * (sumn - 1.0) * sumnp2 - 2.0 * sumn * (sumn - 1.0) * (2.0 * sumn - 3.0) * Math.Pow(sumnp2, 2.0)) / Math.Pow(sumn * (sumn - 1.0), 2.0);
+                    double simvar = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
+                    double simcl;
+                    double simcu;
+                    double simse;
+                    if (simvar < 0.0)
                     {
-                        pick = Convert.ToInt32(sumnm1 * rnd.NextDouble()) + 1;
-                        for (int jj = 1; jj <= rx; jj++)
+                        simse = Constant.MISSING;
+                        simcl = Constant.MISSING;
+                        simcu = Constant.MISSING;
+                    }
+                    else
+                    {
+                        simse = Math.Sqrt(simvar);
+                        simcl = simpson - cit * simse;
+                        simcu = simpson + cit * simse;
+                    }
+                    double shanvars = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0) + Convert.ToDouble(rx - 1) / (2.0 * Math.Pow(sumn, 2.0));
+                    double shanvar = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
+                    double shancl;
+                    double shancu;
+                    double shanse;
+                    if (shanvar < 0.0)
+                    {
+                        shanse = Constant.MISSING;
+                        shancl = Constant.MISSING;
+                        shancu = Constant.MISSING;
+                    }
+                    else
+                    {
+                        shanse = Math.Sqrt(shanvar);
+                        shancl = shannon - cit * shanse;
+                        shancu = shannon + cit * shanse;
+                    }
+                    int gtot = Convert.ToInt32(sumn);
+
+                    double sumnm1 = sumn - 1.0;
+                    double[] rb = new double[rx + 1];
+                    int[] cx = new int[rx + 1];
+                    double[] simpsonb = new double[boots + 1];
+                    double[] shannonb = new double[boots + 1];
+                    double[] simpsonbz = new double[boots + 1];
+                    double[] shannonbz = new double[boots + 1];
+                    // get resample boots times
+                    double theta = 0.0;
+                    double thetax = 0.0;
+                    int ctr = 0;
+                    int ctrx = 0;
+                    bool ok = true;
+                    bool studentfault = false;
+                    // work out cut-offs for scaling pick points
+                    cx[1] = Convert.ToInt32(r[1]);
+                    for (int j = 2; j <= rx; j++)
+                        cx[j] = cx[j - 1] + Convert.ToInt32(r[j]);
+
+                    int pick;
+                    for (int i = 1; i <= boots; i++)
+                    {
+                        sumn = 0.0;
+                        sumnx = 0.0;
+                        sumnp2 = 0.0;
+                        sumnp3 = 0.0;
+                        sumnlogn = 0.0;
+                        sumnlognsq = 0.0;
+                        for (int j = 1; j <= rx; j++)
+                            rb[j] = 0.0;
+
+                        // get N members at random
+                        for (int j = 1; j <= gtot; j++)
                         {
-                            if (pick <= cx[jj])
+                            pick = Convert.ToInt32(sumnm1 * rnd.NextDouble()) + 1;
+                            for (int jj = 1; jj <= rx; jj++)
                             {
-                                rb[jj] = rb[jj] + 1;
+                                if (pick <= cx[jj])
+                                {
+                                    rb[jj] = rb[jj] + 1;
+                                    break;
+                                }
+                            }
+                        }
+                        for (int j = 1; j <= rx; j++)
+                        {
+                            if (rb[j] > 0.0)
+                            {
+                                sumn += rb[j];
+                                sumnx += rb[j] * (rb[j] - 1.0);
+                                sumnlogn += rb[j] * Math.Log(rb[j]);
+                                sumnlognsq += rb[j] * Math.Pow(Math.Log(rb[j]), 2.0);
+                            }
+                        }
+                        for (int j = 1; j <= rx; j++)
+                        {
+                            np = rb[j] / sumn;
+                            sumnp2 += Math.Pow(np, 2.0);
+                            sumnp3 += Math.Pow(np, 3.0);
+                        }
+                        simpsonb[i] = 1.0 - sumnx / (sumn * (sumn - 1.0));
+                        shannonb[i] = (sumn * Math.Log(sumn) - sumnlogn) / sumn;
+                        double xse = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
+                        if (xse > 0.0)
+                        {
+                            // simpsonbz(i) = Abs((simpsonb(i) - simpson) / Sqr(xse))
+                            simpsonbz[i] = (simpsonb[i] - simpson) / Math.Sqrt(xse);
+                        }
+                        else
+                        {
+                            studentfault = true;
+                        }
+                        xse = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
+                        if (xse > 0.0)
+                        {
+                            // shannonbz(i) = Abs((shannonb(i) - shannon) / Sqr(xse))
+                            shannonbz[i] = (shannonb[i] - shannon) / Math.Sqrt(xse);
+                        }
+                        else
+                        {
+                            studentfault = true;
+                        }
+                        theta += simpsonb[i];
+                        thetax += shannonb[i];
+                        if (simpsonb[i] <= simpson)
+                            ctr += 1;
+                        if (shannonb[i] <= shannon)
+                            ctrx += 1;
+                        if (i % bootsDivisor == 0)
+                        {
+                            if (progress.Update(i / (double)boots))
+                            {
+                                ok = false;
                                 break;
                             }
                         }
                     }
-                    for (int j = 1; j <= rx; j++)
+                    double nbcl;
+                    double nbcu;
+                    double nbclx;
+                    double nbcux;
+                    double blt;
+                    double bltx;
+                    double but;
+                    double butx;
+                    if (ok)
                     {
-                        if (rb[j] > 0.0)
+                        //  get bias and bootstrap variance
+                        theta /= Convert.ToDouble(boots);
+                        thetax /= Convert.ToDouble(boots);
+                        double thetasq = 0.0;
+                        double thetasqx = 0.0;
+                        for (int i = 1; i <= boots; i++)
                         {
-                            sumn = sumn + rb[j];
-                            sumnx = sumnx + rb[j] * (rb[j] - 1.0);
-                            sumnlogn = sumnlogn + rb[j] * Math.Log(rb[j]);
-                            sumnlognsq = sumnlognsq + rb[j] * Math.Pow(Math.Log(rb[j]), 2.0);
+                            thetasq += Math.Pow(simpsonb[i] - theta, 2.0);
+                            thetasqx += Math.Pow(shannonb[i] - thetax, 2.0);
                         }
-                    }
-                    for (int j = 1; j <= rx; j++)
-                    {
-                        np = rb[j] / sumn;
-                        sumnp2 = sumnp2 + Math.Pow(np, 2.0);
-                        sumnp3 = sumnp3 + Math.Pow(np, 3.0);
-                    }
-                    simpsonb[i] = 1.0 - sumnx / (sumn * (sumn - 1.0));
-                    shannonb[i] = (sumn * Math.Log(sumn) - sumnlogn) / sumn;
-                    double xse = (sumnp3 - Math.Pow(sumnp2, 2.0)) / (0.25 * sumn);
-                    if (xse > 0.0)
-                    {
-                        // simpsonbz(i) = Abs((simpsonb(i) - simpson) / Sqr(xse))
-                        simpsonbz[i] = (simpsonb[i] - simpson) / Math.Sqrt(xse);
-                    }
-                    else
-                    {
-                        studentfault = true;
-                    }
-                    xse = (sumnlognsq - Math.Pow(sumnlogn, 2.0) / sumn) / Math.Pow(sumn, 2.0);
-                    if (xse > 0.0)
-                    {
-                        // shannonbz(i) = Abs((shannonb(i) - shannon) / Sqr(xse))
-                        shannonbz[i] = (shannonb[i] - shannon) / Math.Sqrt(xse);
-                    }
-                    else
-                    {
-                        studentfault = true;
-                    }
-                    theta = theta + simpsonb[i];
-                    thetax = thetax + shannonb[i];
-                    if (simpsonb[i] <= simpson)
-                    {
-                        ctr = ctr + 1;
-                    }
-                    if (shannonb[i] <= shannon)
-                    {
-                        ctrx = ctrx + 1;
-                    }
-                    if (i % bootsDivisor == 0)
-                    {
-                        if (host.UpdateProgress(i / (double)boots))
+                        thetase = Math.Sqrt(1.0 / Convert.ToDouble(boots - 1) * thetasq);
+                        thetasex = Math.Sqrt(1.0 / Convert.ToDouble(boots - 1) * thetasqx);
+                        bias = simpson - theta;
+                        biasx = shannon - thetax;
+                        //  sort boostrap arrays
+                        Array.Sort(simpsonb, 1, boots);
+                        Array.Sort(shannonb, 1, boots);
+                        Array.Sort(simpsonbz, 1, boots);
+                        Array.Sort(shannonbz, 1, boots);
+                        double alpha = 1.0 - gamma;
+                        // ------------------------------------------
+                        // 'percentile
+                        // q = alpha / 2#
+                        // pick = CLng(CDbl(boots - 1) * q) + 1
+                        // bl = simpsonb(pick)
+                        // blx = shannonb(pick)
+                        // pick = CLng(CDbl(boots - 1) * (1# - q)) + 1
+                        // bu = simpsonb(pick)
+                        // bux = shannonb(pick)
+                        // ------------------------------------------
+                        // normal
+                        MathDbl.civ(boots - 1, out double citt, gamma, out _);
+                        nbcl = simpson - citt * thetase;
+                        nbcu = simpson + citt * thetase;
+                        nbclx = shannon - citt * thetasex;
+                        nbcux = shannon + citt * thetasex;
+                        // bootstrap-t
+                        double q = alpha / 2.0;
+                        pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * q) + 1;
+                        if (studentfault || simse == Constant.MISSING)
+                            but = Constant.MISSING;
+                        else
+                            but = simpson - simpsonbz[pick] * simse;
+                        if (studentfault || shanse == Constant.MISSING)
+                            butx = Constant.MISSING;
+                        else
+                            butx = shannon - shannonbz[pick] * shanse;
+                        pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - q)) + 1;
+                        if (studentfault || simse == Constant.MISSING)
+                            blt = Constant.MISSING;
+                        else
+                            blt = simpson - simpsonbz[pick] * simse;
+                        if (studentfault || shanse == Constant.MISSING)
+                            bltx = Constant.MISSING;
+                        else
+                            bltx = shannon - shannonbz[pick] * shanse;
+                        // centred
+                        double av;
+                        if (but != Constant.MISSING && blt != Constant.MISSING)
                         {
-                            ok = false;
-                            break;
+                            av = (but - blt) / 2.0;
+                            blt = simpson - av;
+                            but = simpson + av;
                         }
-                    }
-                }
-                double nbcl;
-                double nbcu;
-                double nbclx;
-                double nbcux;
-                double blt;
-                double bltx;
-                double but;
-                double butx;
-                if (ok)
-                {
-                    //  get bias and bootstrap variance
-                    theta = theta / Convert.ToDouble(boots);
-                    thetax = thetax / Convert.ToDouble(boots);
-                    double thetasq = 0.0;
-                    double thetasqx = 0.0;
-                    for (int i = 1; i <= boots; i++)
-                    {
-                        thetasq = thetasq + Math.Pow(simpsonb[i] - theta, 2.0);
-                        thetasqx = thetasqx + Math.Pow(shannonb[i] - thetax, 2.0);
-                    }
-                    thetase = Math.Sqrt(1.0 / Convert.ToDouble(boots - 1) * thetasq);
-                    thetasex = Math.Sqrt(1.0 / Convert.ToDouble(boots - 1) * thetasqx);
-                    bias = simpson - theta;
-                    biasx = shannon - thetax;
-                    //  sort boostrap arrays
-                    Array.Sort(simpsonb, 1, boots);
-                    Array.Sort(shannonb, 1, boots);
-                    Array.Sort(simpsonbz, 1, boots);
-                    Array.Sort(shannonbz, 1, boots);
-                    double alpha = 1.0 - gamma;
-                    // ------------------------------------------
-                    // 'percentile
-                    // q = alpha / 2#
-                    // pick = CLng(CDbl(boots - 1) * q) + 1
-                    // bl = simpsonb(pick)
-                    // blx = shannonb(pick)
-                    // pick = CLng(CDbl(boots - 1) * (1# - q)) + 1
-                    // bu = simpsonb(pick)
-                    // bux = shannonb(pick)
-                    // ------------------------------------------
-                    // normal
-                    MathDbl.civ(boots - 1, out double citt, gamma, out p0);
-                    nbcl = simpson - citt * thetase;
-                    nbcu = simpson + citt * thetase;
-                    nbclx = shannon - citt * thetasex;
-                    nbcux = shannon + citt * thetasex;
-                    // bootstrap-t
-                    double q = alpha / 2.0;
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * q) + 1;
-                    if (studentfault || simse == Constant.MISSING)
-                    {
-                        but = Constant.MISSING;
+                        else
+                        {
+                            blt = Constant.MISSING;
+                            but = Constant.MISSING;
+                        }
+                        if (butx != Constant.MISSING && bltx != Constant.MISSING)
+                        {
+                            av = (butx - bltx) / 2.0;
+                            bltx = shannon - av;
+                            butx = shannon + av;
+                        }
+                        else
+                        {
+                            bltx = Constant.MISSING;
+                            butx = Constant.MISSING;
+                        }
+                        // symmetrized bootstrap-t, Vives et al 2002
+                        // q = alpha / 2#
+                        // pick = CLng(CDbl(boots - 1) * q) + 1
+                        // If studentfault = True Or simse = Constant.MISSING Then
+                        //  blt = Constant.MISSING
+                        // Else
+                        //  blt = simpson - simpsonbz(pick) * simse
+                        // End If
+                        // If studentfault = True Or shanse = Constant.MISSING Then
+                        //  bltx = Constant.MISSING
+                        // Else
+                        //  bltx = shannon - shannonbz(pick) * shanse
+                        // End If
+                        // If studentfault = True Or simse = Constant.MISSING Then
+                        //  but = Constant.MISSING
+                        // Else
+                        //  but = simpson + simpsonbz(pick) * simse
+                        // End If
+                        // If studentfault = True Or shanse = Constant.MISSING Then
+                        //  butx = Constant.MISSING
+                        // Else
+                        //  butx = shannon + shannonbz(pick) * shanse
+                        // End If
+                        // --------------------------------------
+                        // 'BC
+                        // z0 = CDbl(ctr / boots)
+                        // z0 = GAUINV(z0, 0)
+                        // p1 = ALNORM(2# * z0 - cit)
+                        // p2 = ALNORM(2# * z0 + cit)
+                        // pick = CLng(CDbl(boots - 1) * p1) + 1
+                        // bcal = simpsonb(pick)
+                        // pick = CLng(CDbl(boots - 1) * p2) + 1
+                        // bcau = simpsonb(pick)
+                        // z0 = CDbl(ctrx / boots)
+                        // z0 = GAUINV(z0, 0)
+                        // p1 = ALNORM(2# * z0 - cit)
+                        // p2 = ALNORM(2# * z0 + cit)
+                        // pick = CLng(CDbl(boots - 1) * p1) + 1
+                        // bcalx = shannonb(pick)
+                        // pick = CLng(CDbl(boots - 1) * p2) + 1
+                        // bcaux = shannonb(pick)
+                        // ---------------------------------------
+                        // 'BCa
+                        // 'get influence moments - Armitage P 303
+                        // iter = 0
+                        // For i = 1 To rx
+                        //  sumn = 0#
+                        //  sumnx = 0#
+                        //  sumnlogn = 0#
+                        //  sumnlognsq = 0#
+                        //  For j = 1 To rx
+                        //   If j = i Then rm1 = r(j) - 1# Else rm1 = r(j)
+                        //   If rm1 > 0# Then
+                        //    sumn = sumn + rm1
+                        //    sumnx = sumnx + rm1 * (rm1 - 1#)
+                        //    sumnlogn = sumnlogn + rm1 * Log(rm1)
+                        //    sumnlognsq = sumnlognsq + rm1 * Log(rm1) ^ 2#
+                        //   End If
+                        //  Next
+                        //  sumsim = sumsim + (1# - sumnx / (sumn * (sumn - 1#))) * r(i)
+                        //  sumshan = sumshan + ((sumn * Log(sumn) - sumnlogn) / sumn) * r(i)
+                        // Next
+                        // simbar = sumsim / CDbl(gtot - 1)
+                        // shanbar = sumshan / CDbl(gtot - 1)
+                        // For i = 1 To rx
+                        //  sumn = 0#
+                        //  sumnx = 0#
+                        //  sumnlogn = 0#
+                        //  sumnlognsq = 0#
+                        //  For j = 1 To rx
+                        //   If j = i Then rm1 = r(j) - 1# Else rm1 = r(j)
+                        //   If rm1 > 0# Then
+                        //    sumn = sumn + rm1
+                        //    sumnx = sumnx + rm1 * (rm1 - 1#)
+                        //    sumnlogn = sumnlogn + rm1 * Log(rm1)
+                        //    sumnlognsq = sumnlognsq + rm1 * Log(rm1) ^ 2#
+                        //   End If
+                        //  Next
+                        //  sim2 = sim2 + ((1# - sumnx / (sumn * (sumn - 1#))) - simbar) ^ 2#
+                        //  sim3 = sim3 + ((1# - sumnx / (sumn * (sumn - 1#))) - simbar) ^ 3#
+                        //  shan2 = shan2 + (((sumn * Log(sumn) - sumnlogn) / sumn) - shanbar) ^ 2#
+                        //  shan3 = shan3 + (((sumn * Log(sumn) - sumnlogn) / sumn) - shanbar) ^ 3#
+                        // Next
+                        // accel = sim3 / (6# * sim2 ^ 1.5)
+                        // accelx = shan3 / (6# * shan2 ^ 1.5)
+                        // z0 = CDbl(ctr / boots)
+                        // z0 = GAUINV(z0, 0)
+                        // p1 = ALNORM(z0 + (z0 - cit) / (1# - accel * (z0 - cit)))
+                        // p2 = ALNORM(z0 + (z0 + cit) / (1# - accel * (z0 + cit)))
+                        // pick = CLng(CDbl(boots - 1) * p1) + 1
+                        // bcal = simpsonb(pick)
+                        // pick = CLng(CDbl(boots - 1) * p2) + 1
+                        // bcau = simpsonb(pick)
+                        // z0 = CDbl(ctrx / boots)
+                        // z0 = GAUINV(z0, 0)
+                        // p1 = ALNORM(z0 + (z0 - cit) / (1# - accelx * (z0 - cit)))
+                        // p2 = ALNORM(z0 + (z0 + cit) / (1# - accelx * (z0 + cit)))
+                        // pick = CLng(CDbl(boots - 1) * p1) + 1
+                        // bcalx = shannonb(pick)
+                        // pick = CLng(CDbl(boots - 1) * p2) + 1
+                        // bcaux = shannonb(pick)
                     }
                     else
                     {
-                        but = simpson - simpsonbz[pick] * simse;
-                    }
-                    if (studentfault || shanse == Constant.MISSING)
-                    {
-                        butx = Constant.MISSING;
-                    }
-                    else
-                    {
-                        butx = shannon - shannonbz[pick] * shanse;
-                    }
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * (1.0 - q)) + 1;
-                    if (studentfault || simse == Constant.MISSING)
-                    {
+                        //bl = Constant.MISSING; 
+                        //bu = Constant.MISSING; 
+                        //blx = Constant.MISSING; 
+                        //bux = Constant.MISSING; 
+                        nbcl = Constant.MISSING;
+                        nbcu = Constant.MISSING;
+                        nbclx = Constant.MISSING;
+                        nbcux = Constant.MISSING;
                         blt = Constant.MISSING;
-                    }
-                    else
-                    {
-                        blt = simpson - simpsonbz[pick] * simse;
-                    }
-                    if (studentfault || shanse == Constant.MISSING)
-                    {
-                        bltx = Constant.MISSING;
-                    }
-                    else
-                    {
-                        bltx = shannon - shannonbz[pick] * shanse;
-                    }
-                    // centred
-                    double av;
-                    if (but != Constant.MISSING && blt != Constant.MISSING)
-                    {
-                        av = (but - blt) / 2.0;
-                        blt = simpson - av;
-                        but = simpson + av;
-                    }
-                    else
-                    {
-                        blt = Constant.MISSING;
                         but = Constant.MISSING;
-                    }
-                    if (butx != Constant.MISSING && bltx != Constant.MISSING)
-                    {
-                        av = (butx - bltx) / 2.0;
-                        bltx = shannon - av;
-                        butx = shannon + av;
-                    }
-                    else
-                    {
                         bltx = Constant.MISSING;
                         butx = Constant.MISSING;
+                        //bcal = Constant.MISSING; 
+                        //bcau = Constant.MISSING; 
+                        //bcalx = Constant.MISSING; 
+                        //bcaux = Constant.MISSING; 
                     }
-                    // symmetrized bootstrap-t, Vives et al 2002
-                    // q = alpha / 2#
-                    // pick = CLng(CDbl(boots - 1) * q) + 1
-                    // If studentfault = True Or simse = Constant.MISSING Then
-                    //  blt = Constant.MISSING
-                    // Else
-                    //  blt = simpson - simpsonbz(pick) * simse
-                    // End If
-                    // If studentfault = True Or shanse = Constant.MISSING Then
-                    //  bltx = Constant.MISSING
-                    // Else
-                    //  bltx = shannon - shannonbz(pick) * shanse
-                    // End If
-                    // If studentfault = True Or simse = Constant.MISSING Then
-                    //  but = Constant.MISSING
-                    // Else
-                    //  but = simpson + simpsonbz(pick) * simse
-                    // End If
-                    // If studentfault = True Or shanse = Constant.MISSING Then
-                    //  butx = Constant.MISSING
-                    // Else
-                    //  butx = shannon + shannonbz(pick) * shanse
-                    // End If
-                    // --------------------------------------
-                    // 'BC
-                    // z0 = CDbl(ctr / boots)
-                    // z0 = GAUINV(z0, 0)
-                    // p1 = ALNORM(2# * z0 - cit)
-                    // p2 = ALNORM(2# * z0 + cit)
-                    // pick = CLng(CDbl(boots - 1) * p1) + 1
-                    // bcal = simpsonb(pick)
-                    // pick = CLng(CDbl(boots - 1) * p2) + 1
-                    // bcau = simpsonb(pick)
-                    // z0 = CDbl(ctrx / boots)
-                    // z0 = GAUINV(z0, 0)
-                    // p1 = ALNORM(2# * z0 - cit)
-                    // p2 = ALNORM(2# * z0 + cit)
-                    // pick = CLng(CDbl(boots - 1) * p1) + 1
-                    // bcalx = shannonb(pick)
-                    // pick = CLng(CDbl(boots - 1) * p2) + 1
-                    // bcaux = shannonb(pick)
-                    // ---------------------------------------
-                    // 'BCa
-                    // 'get influence moments - Armitage P 303
-                    // iter = 0
-                    // For i = 1 To rx
-                    //  sumn = 0#
-                    //  sumnx = 0#
-                    //  sumnlogn = 0#
-                    //  sumnlognsq = 0#
-                    //  For j = 1 To rx
-                    //   If j = i Then rm1 = r(j) - 1# Else rm1 = r(j)
-                    //   If rm1 > 0# Then
-                    //    sumn = sumn + rm1
-                    //    sumnx = sumnx + rm1 * (rm1 - 1#)
-                    //    sumnlogn = sumnlogn + rm1 * Log(rm1)
-                    //    sumnlognsq = sumnlognsq + rm1 * Log(rm1) ^ 2#
-                    //   End If
-                    //  Next
-                    //  sumsim = sumsim + (1# - sumnx / (sumn * (sumn - 1#))) * r(i)
-                    //  sumshan = sumshan + ((sumn * Log(sumn) - sumnlogn) / sumn) * r(i)
-                    // Next
-                    // simbar = sumsim / CDbl(gtot - 1)
-                    // shanbar = sumshan / CDbl(gtot - 1)
-                    // For i = 1 To rx
-                    //  sumn = 0#
-                    //  sumnx = 0#
-                    //  sumnlogn = 0#
-                    //  sumnlognsq = 0#
-                    //  For j = 1 To rx
-                    //   If j = i Then rm1 = r(j) - 1# Else rm1 = r(j)
-                    //   If rm1 > 0# Then
-                    //    sumn = sumn + rm1
-                    //    sumnx = sumnx + rm1 * (rm1 - 1#)
-                    //    sumnlogn = sumnlogn + rm1 * Log(rm1)
-                    //    sumnlognsq = sumnlognsq + rm1 * Log(rm1) ^ 2#
-                    //   End If
-                    //  Next
-                    //  sim2 = sim2 + ((1# - sumnx / (sumn * (sumn - 1#))) - simbar) ^ 2#
-                    //  sim3 = sim3 + ((1# - sumnx / (sumn * (sumn - 1#))) - simbar) ^ 3#
-                    //  shan2 = shan2 + (((sumn * Log(sumn) - sumnlogn) / sumn) - shanbar) ^ 2#
-                    //  shan3 = shan3 + (((sumn * Log(sumn) - sumnlogn) / sumn) - shanbar) ^ 3#
-                    // Next
-                    // accel = sim3 / (6# * sim2 ^ 1.5)
-                    // accelx = shan3 / (6# * shan2 ^ 1.5)
-                    // z0 = CDbl(ctr / boots)
-                    // z0 = GAUINV(z0, 0)
-                    // p1 = ALNORM(z0 + (z0 - cit) / (1# - accel * (z0 - cit)))
-                    // p2 = ALNORM(z0 + (z0 + cit) / (1# - accel * (z0 + cit)))
-                    // pick = CLng(CDbl(boots - 1) * p1) + 1
-                    // bcal = simpsonb(pick)
-                    // pick = CLng(CDbl(boots - 1) * p2) + 1
-                    // bcau = simpsonb(pick)
-                    // z0 = CDbl(ctrx / boots)
-                    // z0 = GAUINV(z0, 0)
-                    // p1 = ALNORM(z0 + (z0 - cit) / (1# - accelx * (z0 - cit)))
-                    // p2 = ALNORM(z0 + (z0 + cit) / (1# - accelx * (z0 + cit)))
-                    // pick = CLng(CDbl(boots - 1) * p1) + 1
-                    // bcalx = shannonb(pick)
-                    // pick = CLng(CDbl(boots - 1) * p2) + 1
-                    // bcaux = shannonb(pick)
-                }
-                else
-                {
-                    //bl = Constant.MISSING; 
-                    //bu = Constant.MISSING; 
-                    //blx = Constant.MISSING; 
-                    //bux = Constant.MISSING; 
-                    nbcl = Constant.MISSING;
-                    nbcu = Constant.MISSING;
-                    nbclx = Constant.MISSING;
-                    nbcux = Constant.MISSING;
-                    blt = Constant.MISSING;
-                    but = Constant.MISSING;
-                    bltx = Constant.MISSING;
-                    butx = Constant.MISSING;
-                    //bcal = Constant.MISSING; 
-                    //bcau = Constant.MISSING; 
-                    //bcalx = Constant.MISSING; 
-                    //bcaux = Constant.MISSING; 
-                }
-                host.FinishProgress();
 
-                // Chao 1984 extrapolation
-                if (singletons < 1)
-                {
-                    singletons = 1;
-                }
-                if (doubletons < 1)
-                {
-                    doubletons = 1;
-                }
-                double a = Convert.ToDouble(singletons);
-                double b = Convert.ToDouble(doubletons);
-                int stotal = rx + Convert.ToInt32(Math.Pow(a, 2.0) / (2.0 * b));
-                double stotalvar = b * (Math.Pow(a / b / 4.0, 4.0) + Math.Pow(a / b, 3.0) + Math.Pow(a / b / 2.0, 2.0));
-                int stotalcl;
-                int stotalcu;
-                if (stotalvar < 0.0)
-                {
-                    stotalcl = -1;
-                    stotalcu = -1;
-                }
-                else
-                {
-                    stotalcl = Convert.ToInt32(Convert.ToDouble(stotal) - cit * Math.Sqrt(stotalvar));
-                    stotalcu = Convert.ToInt32(Convert.ToDouble(stotal) + cit * Math.Sqrt(stotalvar));
-                }
+                    // Chao 1984 extrapolation
+                    if (singletons < 1)
+                        singletons = 1;
+                    if (doubletons < 1)
+                        doubletons = 1;
+                    double a = Convert.ToDouble(singletons);
+                    double b = Convert.ToDouble(doubletons);
+                    int stotal = rx + Convert.ToInt32(Math.Pow(a, 2.0) / (2.0 * b));
+                    double stotalvar = b * (Math.Pow(a / b / 4.0, 4.0) + Math.Pow(a / b, 3.0) + Math.Pow(a / b / 2.0, 2.0));
+                    int stotalcl;
+                    int stotalcu;
+                    if (stotalvar < 0.0)
+                    {
+                        stotalcl = -1;
+                        stotalcu = -1;
+                    }
+                    else
+                    {
+                        stotalcl = Convert.ToInt32(Convert.ToDouble(stotal) - cit * Math.Sqrt(stotalvar));
+                        stotalcu = Convert.ToInt32(Convert.ToDouble(stotal) + cit * Math.Sqrt(stotalvar));
+                    }
 
-                ParameterBag varParameters = new ParameterBag();
-                varList.Add(varParameters);
-                varParameters.AddOutput("ti", v.Title);
-                varParameters.AddOutput("n", gtot);
-                if (rx != v.Length)
-                {
-                    varParameters.AddOutput("msg", "(note " + (v.Length - rx) + " other observations not used)");
-                }
-                else
-                {
-                    varParameters.AddOutput("msg", string.Empty);
-                }
-                varParameters.AddOutput("s", rx);
-                varParameters.AddOutput("stotal", stotal);
-                varParameters.AddOutput("se-largeSample", Base.SafeSqrt(stotalvar));
-                varParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
-                varParameters.AddOutput("from-largeSample", stotalcl == -1 ? Formatting.ASTERISK : stotalcl.ToString());
-                varParameters.AddOutput("to-largeSample", stotalcu == -1 ? Formatting.ASTERISK : stotalcu.ToString());
+                    ParameterBag varParameters = new ParameterBag();
+                    varList.Add(varParameters);
+                    varParameters.AddOutput("ti", v.Title);
+                    varParameters.AddOutput("n", gtot);
+                    if (rx != v.Length)
+                        varParameters.AddOutput("msg", "(note " + (v.Length - rx) + " other observations not used)");
+                    else
+                        varParameters.AddOutput("msg", string.Empty);
+                    varParameters.AddOutput("s", rx);
+                    varParameters.AddOutput("stotal", stotal);
+                    varParameters.AddOutput("se-largeSample", Base.SafeSqrt(stotalvar));
+                    varParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
+                    varParameters.AddOutput("from-largeSample", stotalcl == -1 ? Formatting.ASTERISK : stotalcl.ToString());
+                    varParameters.AddOutput("to-largeSample", stotalcu == -1 ? Formatting.ASTERISK : stotalcu.ToString());
 
-                varParameters.AddOutput("simpson", simpson);
-                varParameters.AddOutput("dom", 1.0 - simpson);
-                varParameters.AddOutput("ds",
-                                        simpson != 1.0
-                                            ? host.RoundU(1.0 / (1.0 - simpson))
-                                            : host.RoundU(Constant.MISSING));
-                varParameters.AddOutput("se-simpson-largeSample", Base.SafeSqrt(simvar));
-                varParameters.AddOutput("ses-simpson", Base.SafeSqrt(simvars));
-                varParameters.AddOutput("from-simpson-largeSample", simcl);
-                varParameters.AddOutput("to-simpson-largeSample", simcu);
-                varParameters.AddOutput("boots", boots.ToString("N0"));
-                varParameters.AddOutput("bias-simpson", bias);
-                varParameters.AddOutput("se-simpson-bootstrap", thetase);
-                varParameters.AddOutput("from-simpson-bootstrap", nbcl);
-                varParameters.AddOutput("to-simpson-bootstrap", nbcu);
-                varParameters.AddOutput("from-simpson-bootstrap-t", blt);
-                varParameters.AddOutput("to-simpson-bootstrap-t", but);
+                    varParameters.AddOutput("simpson", simpson);
+                    varParameters.AddOutput("dom", 1.0 - simpson);
+                    varParameters.AddOutput("ds",
+                                            simpson != 1.0
+                                                ? host.RoundU(1.0 / (1.0 - simpson))
+                                                : host.RoundU(Constant.MISSING));
+                    varParameters.AddOutput("se-simpson-largeSample", Base.SafeSqrt(simvar));
+                    varParameters.AddOutput("ses-simpson", Base.SafeSqrt(simvars));
+                    varParameters.AddOutput("from-simpson-largeSample", simcl);
+                    varParameters.AddOutput("to-simpson-largeSample", simcu);
+                    varParameters.AddOutput("boots", boots.ToString("N0"));
+                    varParameters.AddOutput("bias-simpson", bias);
+                    varParameters.AddOutput("se-simpson-bootstrap", thetase);
+                    varParameters.AddOutput("from-simpson-bootstrap", nbcl);
+                    varParameters.AddOutput("to-simpson-bootstrap", nbcu);
+                    varParameters.AddOutput("from-simpson-bootstrap-t", blt);
+                    varParameters.AddOutput("to-simpson-bootstrap-t", but);
 
-                varParameters.AddOutput("shannon", shannon);
-                varParameters.AddOutput("se-shannon-largeSample", Base.SafeSqrt(shanvar));
-                varParameters.AddOutput("ses-shannon", Base.SafeSqrt(shanvars));
-                varParameters.AddOutput("from-shannon-largeSample", shancl);
-                varParameters.AddOutput("to-shannon-largeSample", shancu);
-                varParameters.AddOutput("bias-shannon", biasx);
-                varParameters.AddOutput("se-shannon-bootstrap", thetasex);
-                varParameters.AddOutput("from-shannon-bootstrap", nbclx);
-                varParameters.AddOutput("to-shannon-bootstrap", nbcux);
-                varParameters.AddOutput("from-shannon-bootstrap-t", bltx);
-                varParameters.AddOutput("to-shannon-bootstrap-t", butx);
+                    varParameters.AddOutput("shannon", shannon);
+                    varParameters.AddOutput("se-shannon-largeSample", Base.SafeSqrt(shanvar));
+                    varParameters.AddOutput("ses-shannon", Base.SafeSqrt(shanvars));
+                    varParameters.AddOutput("from-shannon-largeSample", shancl);
+                    varParameters.AddOutput("to-shannon-largeSample", shancu);
+                    varParameters.AddOutput("bias-shannon", biasx);
+                    varParameters.AddOutput("se-shannon-bootstrap", thetasex);
+                    varParameters.AddOutput("from-shannon-bootstrap", nbclx);
+                    varParameters.AddOutput("to-shannon-bootstrap", nbcux);
+                    varParameters.AddOutput("from-shannon-bootstrap-t", bltx);
+                    varParameters.AddOutput("to-shannon-bootstrap-t", butx);
+                }
             }
 
             return outputParameters;
         }
-
 
         public static ParameterBag RptMannWhitney(ITemplateHost host, ParameterBag parameters)
         {
@@ -1658,17 +1592,12 @@ namespace StatsDirect.Builtins
         {
             const double prec = double.Epsilon * 10;
             double y = 0;
-            int i;
-            for (i = 1; i <= 100; i++)
+            for (int i = 1; i <= 100; i++)
             {
                 if (tzpre < 0)
-                {
                     y = (lp + ypre) / 2;
-                }
                 else
-                {
                     y = (ln + ypre) / 2;
-                }
                 double tz = ThetaTzfn(upper, y, z, t, m, n);
                 if (tzpre >= 0) lp = ypre;
                 if (tzpre <= 0) ln = ypre;
@@ -1754,7 +1683,7 @@ namespace StatsDirect.Builtins
             return ThetaTzmin(true, tz2, y2, lp, ln, z, t, m, n);
         }
 
-        public static ParameterBag RptSpearman(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSpearman(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
@@ -1887,7 +1816,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptNpRegression(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptNpRegression(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double intercept = 0;
             double uci; double lci; double mdn = 0;
@@ -1926,7 +1855,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v1.Data[i - 1] != Constant.MISSING)
                     {
-                        ctr = ctr + 1;
+                        ctr += 1;
                         x[ctr] = v1.Data[i - 1];
                     }
                 }
@@ -1934,7 +1863,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v1.Data[i - 1] != Constant.MISSING & v0.Data[i - 1] != Constant.MISSING)
                     {
-                        ctr = ctr + 1;
+                        ctr += 1;
                         x[ctr] = v1.Data[i - 1];
                         y[ctr] = v0.Data[i - 1];
                     }
@@ -2473,8 +2402,8 @@ namespace StatsDirect.Builtins
             int q = 0;
             if (x <= 0.5)
             {
-                x = x - 10 * double.Epsilon;
-                for (;;)
+                x -= 10 * double.Epsilon;
+                for (; ; )
                 {
                     p += WsrEnum(q, n, ref w) * f;
                     if (p >= x)
@@ -2485,7 +2414,7 @@ namespace StatsDirect.Builtins
             else
             {
                 x = 1 - x + 10 * double.Epsilon;
-                for (;;)
+                for (; ; )
                 {
                     p += WsrEnum(q, n, ref w) * f;
                     if (p > x)
@@ -2543,106 +2472,107 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
                 return outputParameters;
             }
-            host.StartProgress("Calculating Confidence Interval", true);
-            double bigx = x[1];
-            for (int j = 1; j <= size; j++)
+            using (IProgressBar progress = host.StartProgress("Calculating Confidence Interval", true))
             {
-                if (x[j] > bigx)
-                    bigx = x[j];
-                if (y[j] > bigx)
-                    bigx = y[j];
-            }
-
-            double scaler = 100000;
-            do
-            {
-                if (bigx * scaler < Convert.ToDouble(long.MaxValue) / 10.0)
-                    break;
-                scaler = scaler / 10;
-            }
-            while (true);
-
-            long[] xx = new long[size + 1];
-            for (int j = 1; j <= size; j++)
-            {
-                xx[j] = Convert.ToInt64((x[j] - y[j]) * scaler);
-            }
-            Array.Sort(xx, 1, size);
-            int midu, midl;
-            if (limit % 2 == 0)
-            {
-                midu = Convert.ToInt32(Math.Floor((double)limit / 2) + 1);
-                midl = (int)Math.Floor((double)limit / 2);
-            }
-            else
-            {
-                midu = (int)Math.Floor((double)(limit + 1) / 2);
-                midl = midu;
-            }
-            bool domed = true;
-            bool dokl = true;
-            int goal = midu + k;
-            long c = 2 * xx[1] - 1;
-            int i = 0;
-            double median = 0;
-            double kl = 0;
-            while (i < midu)
-            {
-                c = ExFortran.pairnext(out int occurences, c, xx, size);
-                i += occurences;
-                if (host.UpdateProgress(i / (double)goal))
+                double bigx = x[1];
+                for (int j = 1; j <= size; j++)
                 {
-                    outputParameters.AddOutput("from", Formatting.ASTERISK);
-                    outputParameters.AddOutput("to", Formatting.ASTERISK);
-                    outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
-                    return outputParameters;
+                    if (x[j] > bigx)
+                        bigx = x[j];
+                    if (y[j] > bigx)
+                        bigx = y[j];
                 }
-                if (i >= k)
+
+                double scaler = 100000;
+                do
                 {
-                    if (dokl)
+                    if (bigx * scaler < Convert.ToDouble(long.MaxValue) / 10.0)
+                        break;
+                    scaler /= 10;
+                }
+                while (true);
+
+                long[] xx = new long[size + 1];
+                for (int j = 1; j <= size; j++)
+                {
+                    xx[j] = Convert.ToInt64((x[j] - y[j]) * scaler);
+                }
+                Array.Sort(xx, 1, size);
+                int midu, midl;
+                if (limit % 2 == 0)
+                {
+                    midu = Convert.ToInt32(Math.Floor((double)limit / 2) + 1);
+                    midl = (int)Math.Floor((double)limit / 2);
+                }
+                else
+                {
+                    midu = (int)Math.Floor((double)(limit + 1) / 2);
+                    midl = midu;
+                }
+                bool domed = true;
+                bool dokl = true;
+                int goal = midu + k;
+                long c = 2 * xx[1] - 1;
+                int i = 0;
+                double median = 0;
+                double kl = 0;
+                while (i < midu)
+                {
+                    c = ExFortran.pairnext(out int occurences, c, xx, size);
+                    i += occurences;
+                    if (progress.Update(i / (double)goal))
                     {
-                        dokl = false;
-                        kl = c / scaler / 2.0;
+                        outputParameters.AddOutput("from", Formatting.ASTERISK);
+                        outputParameters.AddOutput("to", Formatting.ASTERISK);
+                        outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
+                        return outputParameters;
+                    }
+                    if (i >= k)
+                    {
+                        if (dokl)
+                        {
+                            dokl = false;
+                            kl = c / scaler / 2.0;
+                        }
+                    }
+                    if (i >= midl)
+                    {
+                        if (domed)
+                        {
+                            domed = false;
+                            median = c / scaler / 2.0;
+                        }
                     }
                 }
-                if (i >= midl)
+                if (midu != midl)
                 {
                     if (domed)
-                    {
-                        domed = false;
                         median = c / scaler / 2.0;
+                    else
+                        median = (median + c / scaler / 2.0) / 2.0;
+                }
+                for (int j = 1; j <= size; j++)
+                    xx[j] = -xx[j];
+                Array.Sort(xx, 1, size);
+                c = 2 * xx[1] - 1;
+                i = 0;
+                while (i < k)
+                {
+                    c = ExFortran.pairnext(out int occurences, c, xx, size);
+                    i += occurences;
+                    if (progress.Update((midu + i) / (double)goal))
+                    {
+                        outputParameters.AddOutput("from", Formatting.ASTERISK);
+                        outputParameters.AddOutput("to", Formatting.ASTERISK);
+                        outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
+                        return outputParameters;
                     }
                 }
+                double ku = -c / scaler / 2.0;
+                outputParameters.AddOutput("from", host.RoundU(kl));
+                outputParameters.AddOutput("to", host.RoundU(ku));
+                outputParameters.AddOutput("med_diff", host.RoundU(median));
             }
-            if (midu != midl)
-            {
-                if (domed)
-                    median = c / scaler / 2.0;
-                else
-                    median = (median + c / scaler / 2.0) / 2.0;
-            }
-            for (int j = 1; j <= size; j++)
-                xx[j] = -xx[j];
-            Array.Sort(xx, 1, size);
-            c = 2 * xx[1] - 1;
-            i = 0;
-            while (i < k)
-            {
-                c = ExFortran.pairnext(out int occurences, c, xx, size);
-                i += occurences;
-                if (host.UpdateProgress((midu + i) / (double)goal))
-                {
-                    outputParameters.AddOutput("from", Formatting.ASTERISK);
-                    outputParameters.AddOutput("to", Formatting.ASTERISK);
-                    outputParameters.AddOutput("med_diff", Formatting.ASTERISK);
-                    return outputParameters;
-                }
-            }
-            double ku = -c / scaler / 2.0;
-            host.FinishProgress();
-            outputParameters.AddOutput("from", host.RoundU(kl));
-            outputParameters.AddOutput("to", host.RoundU(ku));
-            outputParameters.AddOutput("med_diff", host.RoundU(median));
             return outputParameters;
         }
 
@@ -2660,7 +2590,7 @@ namespace StatsDirect.Builtins
             {
                 if (v != Constant.MISSING)
                 {
-                    n1 = n1 + 1;
+                    n1 += 1;
                     d1[n1] = v;
                 }
             }
@@ -2668,7 +2598,7 @@ namespace StatsDirect.Builtins
             {
                 if (v != Constant.MISSING)
                 {
-                    n2 = n2 + 1;
+                    n2 += 1;
                     d2[n2] = v;
                 }
             }
@@ -2701,7 +2631,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptQuantile(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptQuantile(ParameterBag parameters)
         {
             bool doConservative = parameters["conservative-ci"].AsBoolean;
             double gamma = parameters["gamma"].AsDouble;
@@ -2752,8 +2682,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptKendall(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKendall(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             int nxx = 0; int n;
             double ps;
@@ -2775,7 +2704,7 @@ namespace StatsDirect.Builtins
             {
                 if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
                 {
-                    nx = nx + 1;
+                    nx += 1;
                     x[nx] = v0.Data[n];
                     y[nx] = v1.Data[n];
                 }
@@ -2894,8 +2823,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptFriedmanSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFriedmanSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -2903,51 +2831,50 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             int bootsDivisor = Math.Max(1, iterations / 1000);
 
-            host.StartProgress("Simulating exact P", true);
-
-            PreprocessFriedman(frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall);
-
-            double a2 = 0;
-            double b2 = 0;
-            double t1 = 0;
-            double t2 = 0;
-            double nd = 0;
-            double[] w2 = new double[treatments + 1];
-            CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
-            double actualT = allAreBinary ? t1 : t2;
-
-            int q = 0;
-            MersenneTwister rnd = new MersenneTwister(seed);
-            int iteration;
-            for (iteration = 1; iteration <= iterations; iteration++)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                if (iteration % bootsDivisor == 0)
-                {
-                    if (host.UpdateProgress(iteration / (double)iterations))
-                        break;
-                }
-                ShuffleValuesWithinRows(x, rnd, treatments, n);
+                PreprocessFriedman(frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall);
+
+                double a2 = 0;
+                double b2 = 0;
+                double t1 = 0;
+                double t2 = 0;
+                double nd = 0;
+                double[] w2 = new double[treatments + 1];
                 CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
-                double t = allAreBinary ? t1 : t2;
-                if (t >= actualT)
-                    q += 1;
+                double actualT = allAreBinary ? t1 : t2;
+
+                int q = 0;
+                MersenneTwister rnd = new MersenneTwister(seed);
+                int iteration;
+                for (iteration = 1; iteration <= iterations; iteration++)
+                {
+                    if (iteration % bootsDivisor == 0)
+                    {
+                        if (progress.Update(iteration / (double)iterations))
+                            break;
+                    }
+                    ShuffleValuesWithinRows(x, rnd, treatments, n);
+                    CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
+                    double t = allAreBinary ? t1 : t2;
+                    if (t >= actualT)
+                        q += 1;
+                }
+                int actualIterations = iteration - 1;
+
+                ParameterBag outputParameters = new ParameterBag();
+                double p = Convert.ToDouble(q) / Convert.ToDouble(actualIterations);
+                outputParameters.AddOutput("p", p);
+                //  CI
+                MathDbl.binci(Convert.ToDouble(q), Convert.ToDouble(actualIterations), out double ll, out double ul, ci, out string warn);
+                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+                outputParameters.AddOutput("ll", ll);
+                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+                outputParameters.AddOutput("k", actualIterations.ToString("N0"));
+                outputParameters.AddOutput("seed_fmt", seed);
+                return outputParameters;
             }
-            int actualIterations = iteration - 1;
-
-            ParameterBag outputParameters = new ParameterBag();
-            double p = Convert.ToDouble(q) / Convert.ToDouble(actualIterations);
-            outputParameters.AddOutput("p", p);
-            //  CI
-            MathDbl.binci(Convert.ToDouble(q), Convert.ToDouble(actualIterations), out double ll, out double ul, ci, out string warn);
-            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-            outputParameters.AddOutput("ll", ll);
-            outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-            outputParameters.AddOutput("k", actualIterations.ToString("N0"));
-            outputParameters.AddOutput("seed_fmt", seed);
-            host.FinishProgress();
-            return outputParameters;
         }
-
 
         ///  <summary>
         ///  Randomly move values in each row of x between columns.  Values will never be moved between rows.
@@ -2971,7 +2898,6 @@ namespace StatsDirect.Builtins
             }
         }
 
-
         ///  <summary>
         ///  Randomly shuffle values between lowerBound and upperBound in x.
         ///  </summary>
@@ -2990,8 +2916,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static ParameterBag RptFriedman(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFriedman(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -3070,14 +2995,13 @@ namespace StatsDirect.Builtins
             }
 
             //  Cache values for possible further calculation
-            outputParameters.Add("w2", new FilledParameter(FilledParameterDirection.Input, w2));
-            outputParameters.Add("N", new FilledParameter(FilledParameterDirection.Input, n));
-            outputParameters.Add("A2", new FilledParameter(FilledParameterDirection.Input, a2));
-            outputParameters.Add("B2", new FilledParameter(FilledParameterDirection.Input, b2));
+            outputParameters.AddInput("w2", w2);
+            outputParameters.AddInput("N", n);
+            outputParameters.AddInput("A2", a2);
+            outputParameters.AddInput("B2", b2);
 
             return outputParameters;
         }
-
 
         private static void PreprocessFriedman(DataFrame frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall)
         {
@@ -3095,7 +3019,7 @@ namespace StatsDirect.Builtins
                 }
                 if (!skip)
                 {
-                    qty = qty + 1;
+                    qty += 1;
                     for (int d = 0; d <= frame.VariableCount - 1; d++)
                     {
                         double dat = ((DoubleVariable)frame.Variables[d]).Data[j];
@@ -3112,7 +3036,6 @@ namespace StatsDirect.Builtins
             treatments = frame.VariableCount;
             numbersAreSmall = positiveCellCount < 25;
         }
-
 
         ///  <summary>
         ///  Calculate and set w2, N, A2, B2 from the values in frame.
@@ -3133,7 +3056,6 @@ namespace StatsDirect.Builtins
             w2 = new double[treatments + 1];
             CalcFriedman(x, w2, n, treatments, ref a2, ref b2, ref t1, ref t2, ref nd);
         }
-
 
         ///  <summary>
         ///  Calculate and set w2, N, A2, B2 from the values in x, N and treatments.
@@ -3191,7 +3113,7 @@ namespace StatsDirect.Builtins
 
                 nd = Convert.ToDouble(n);
                 double kd = Convert.ToDouble(treatments);
-                b2 = b2 / nd;
+                b2 /= nd;
                 //  Conover P 370
                 double c1 = nd * kd * (kd + 1.0) * (kd + 1.0) / 4.0;
                 t2 = (nd - 1.0) * (b2 - c1) / (a2 - b2);
@@ -3199,8 +3121,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        public static ParameterBag RptFrMultiple(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFrMultiple(IPreferences host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double confidence = parameters["confidence"].AsDouble;
@@ -3211,7 +3132,7 @@ namespace StatsDirect.Builtins
             double b2 = 0;
             if (parameters.ContainsKey("w2") && parameters.ContainsKey("N") && parameters.ContainsKey("A2") && parameters.ContainsKey("B2"))
             {
-                w2 = (double[])parameters["w2"].Data;
+                w2 = (double[])parameters["w2"].AsObject;
                 n = parameters["N"].AsInt32;
                 a2 = parameters["A2"].AsDouble;
                 b2 = parameters["B2"].AsDouble;
@@ -3231,7 +3152,7 @@ namespace StatsDirect.Builtins
                 p = 0.05;
             if (p > 1.0 - p)
                 p = 1.0 - p;
-            p = p / 2.0;
+            p /= 2.0;
             double tval = PDF.tfromp(p, dfq);
             double tcriq = Math.Pow(Math.Abs(2 * n * (a2 - b2) / dfq), 0.5);
             double tcrit = tcriq * tval;
@@ -3263,15 +3184,14 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptKruskal(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKruskal(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
             int prelx = 0;
             foreach (IVariable v in frame.Variables)
             {
-                prelx = prelx + v.Length;
+                prelx += v.Length;
             }
             double[] x = new double[prelx + 1];
             int[] l = new int[frame.VariableCount + 1];
@@ -3285,8 +3205,8 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING)
                     {
-                        qty = qty + 1;
-                        cnt = cnt + 1;
+                        qty += 1;
+                        cnt += 1;
                         x[qty] = val;
                     }
                 }
@@ -3304,9 +3224,9 @@ namespace StatsDirect.Builtins
             {
                 if (d > 0)
                 {
-                    tlist = tlist + ", ";
+                    tlist += ", ";
                 }
-                tlist = tlist + frame.Variables[d].Title;
+                tlist += frame.Variables[d].Title;
             }
 
             ParameterBag outputParameters = new ParameterBag();
@@ -3352,8 +3272,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptKruskalSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKruskalSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -3361,80 +3280,80 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             int bootsDivisor = Math.Max(1, iterations / 1000);
 
-            host.StartProgress("Simulating exact P", true);
-
-            int prelx = 0;
-            foreach (IVariable v in frame.Variables)
-                prelx += v.Length;
-            double[] x = new double[prelx + 1];
-            int[] l = new int[frame.VariableCount + 1];
-
-            int qty = 0;
-            for (int d = 0; d <= frame.VariableCount - 1; d++)
+            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
             {
-                int cnt = 0;
-                DoubleVariable v = (DoubleVariable)frame.Variables[d];
-                foreach (double val in v.Data)
+
+                int prelx = 0;
+                foreach (IVariable v in frame.Variables)
+                    prelx += v.Length;
+                double[] x = new double[prelx + 1];
+                int[] l = new int[frame.VariableCount + 1];
+
+                int qty = 0;
+                for (int d = 0; d <= frame.VariableCount - 1; d++)
                 {
-                    if (val != Constant.MISSING)
+                    int cnt = 0;
+                    DoubleVariable v = (DoubleVariable)frame.Variables[d];
+                    foreach (double val in v.Data)
                     {
-                        qty++;
-                        cnt++;
-                        x[qty] = val;
+                        if (val != Constant.MISSING)
+                        {
+                            qty++;
+                            cnt++;
+                            x[qty] = val;
+                        }
+                    }
+                    l[d + 1] = cnt;
+                }
+                int lx = qty;
+
+                double[] w1 = new double[lx + 1];
+                double t = 0;
+                int cols = frame.VariableCount;
+                XPreprocessKwt(x, lx, l, cols, ref t, ref w1, out int _);
+
+                //  Without ties
+                double actualha = 0; //  With ties
+                XRunKwt(w1, lx, l, cols, out double actualh, ref actualha, t);
+
+                double actual = t != 0 ? actualha : actualh;
+
+                int r = 0;
+                MersenneTwister rnd = new MersenneTwister(seed);
+                int iteration;
+                for (iteration = 1; iteration <= iterations; iteration++)
+                {
+                    if (iteration % bootsDivisor == 0)
+                    {
+                        if (progress.Update(iteration / (double)iterations))
+                            break;
+                    }
+                    ShuffleValuesWithinArray(w1, rnd, 1, lx);
+                    double ha = 0;
+                    XRunKwt(w1, lx, l, cols, out double h, ref ha, t);
+                    double thisOne = t != 0 ? ha : h;
+                    if (thisOne >= actual)
+                    {
+                        r += 1;
                     }
                 }
-                l[d + 1] = cnt;
+                int actualIterations = iteration - 1;
+
+                ParameterBag outputParameters = new ParameterBag();
+                double p = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
+                outputParameters.AddOutput("p", p);
+                //  CI
+                MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out double ll, out double ul, ci, out string warn);
+                outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+                outputParameters.AddOutput("ll", ll);
+                outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
+                outputParameters.AddOutput("k", actualIterations.ToString("N0"));
+                outputParameters.AddOutput("seed_fmt", seed);
+                return outputParameters;
             }
-            int lx = qty;
-
-            double[] w1 = new double[lx + 1];
-            double t = 0;
-            int cols = frame.VariableCount;
-            XPreprocessKwt(x, lx, l, cols, ref t, ref w1, out int _);
-
-            //  Without ties
-            double actualha = 0; //  With ties
-            XRunKwt(w1, lx, l, cols, out double actualh, ref actualha, t);
-
-            double actual = t != 0 ? actualha : actualh;
-
-            int r = 0;
-            MersenneTwister rnd = new MersenneTwister(seed);
-            int iteration;
-            for (iteration = 1; iteration <= iterations; iteration++)
-            {
-                if (iteration % bootsDivisor == 0)
-                {
-                    if (host.UpdateProgress(iteration / (double)iterations))
-                        break;
-                }
-                ShuffleValuesWithinArray(w1, rnd, 1, lx);
-                double ha = 0;
-                XRunKwt(w1, lx, l, cols, out double h, ref ha, t);
-                double thisOne = t != 0 ? ha : h;
-                if (thisOne >= actual)
-                {
-                    r += 1;
-                }
-            }
-            int actualIterations = iteration - 1;
-
-            ParameterBag outputParameters = new ParameterBag();
-            double p = Convert.ToDouble(r) / Convert.ToDouble(actualIterations);
-            outputParameters.AddOutput("p", p);
-            //  CI
-            MathDbl.binci(Convert.ToDouble(r), Convert.ToDouble(actualIterations), out double ll, out double ul, ci, out string warn);
-            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
-            outputParameters.AddOutput("ll", ll);
-            outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-            outputParameters.AddOutput("k", actualIterations.ToString("N0"));
-            outputParameters.AddOutput("seed_fmt", seed);
-            host.FinishProgress();
-            return outputParameters;
         }
 
-
-        public static ParameterBag RptKwMultiple(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptKwMultiple(IPreferences host, ParameterBag parameters)
         {
             double[] ri;
             double[] x;
@@ -3474,7 +3393,7 @@ namespace StatsDirect.Builtins
                     {
                         if (val != Constant.MISSING)
                         {
-                            ki = ki + 1;
+                            ki += 1;
                             x[ki] = val;
                         }
                     }
@@ -3484,7 +3403,7 @@ namespace StatsDirect.Builtins
                     {
                         if (val != Constant.MISSING)
                         {
-                            kj = kj + 1;
+                            kj += 1;
                             x[ki + kj] = val;
                         }
                     }
@@ -3496,11 +3415,11 @@ namespace StatsDirect.Builtins
                     double sr2 = 0.0;
                     for (int n = 1; n <= ki; n++)
                     {
-                        sr1 = sr1 + ri[n];
+                        sr1 += ri[n];
                     }
                     for (int n = ki + 1; n <= ki + kj; n++)
                     {
-                        sr2 = sr2 + ri[n];
+                        sr2 += ri[n];
                     }
                     double njj;
                     double nii;
@@ -3519,7 +3438,7 @@ namespace StatsDirect.Builtins
                     }
 
                     double v = nii * njj / 24.0;
-                    v = v * (nii + njj + 1.0 - ct / ((nii + njj) * (nii + njj - 1.0)));
+                    v *= (nii + njj + 1.0 - ct / ((nii + njj) * (nii + njj - 1.0)));
                     double wx = (wij - nii * (nii + njj + 1) / 2.0) / Math.Sqrt(v);
 
                     ParameterBag variableParameters = new ParameterBag();
@@ -3537,7 +3456,7 @@ namespace StatsDirect.Builtins
             int prelx = 0;
             foreach (IVariable varbl in frame.Variables)
             {
-                prelx = prelx + varbl.Length;
+                prelx += varbl.Length;
             }
             x = new double[prelx + 1];
             int[] l = new int[frame.VariableCount + 1];
@@ -3551,8 +3470,8 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING)
                     {
-                        qty = qty + 1;
-                        cnt = cnt + 1;
+                        qty += 1;
+                        cnt += 1;
                         x[qty] = val;
                     }
                 }
@@ -3572,7 +3491,7 @@ namespace StatsDirect.Builtins
                 p = 0.05;
             if (p > 1.0 - p)
                 p = 1.0 - p;
-            p = p / 2.0;
+            p /= 2.0;
             double df = lx - frame.VariableCount;
             double tval = PDF.tfromp(p, df);
             outputParameters.AddOutput("df", Formatting.XRound(df, 0));
@@ -3618,8 +3537,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptSqRank(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptSqRank(IPreferences host, ParameterBag parameters)
         {
             double ru = 0;
             double p;
@@ -3647,9 +3565,9 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING)
                     {
-                        cnt = cnt + 1;
-                        nx = nx + 1;
-                        sum = sum + val;
+                        cnt += 1;
+                        nx += 1;
+                        sum += val;
                     }
                 }
                 l[d] = cnt;
@@ -3666,7 +3584,7 @@ namespace StatsDirect.Builtins
                 {
                     if (val != Constant.MISSING)
                     {
-                        qty = qty + 1;
+                        qty += 1;
                         x[qty] = Math.Abs(val - mean[d]);
                     }
                 }
@@ -3685,14 +3603,14 @@ namespace StatsDirect.Builtins
                 {
                     for (n = 1; n <= l[d]; n++)
                     {
-                        cnt = cnt + 1;
+                        cnt += 1;
                         sj[d] = sj[d] + r[cnt] * r[cnt];
-                        r4 = r4 + Math.Pow(r[cnt], 4.0);
+                        r4 += Math.Pow(r[cnt], 4.0);
                     }
-                    sbar = sbar + sj[d];
-                    sj2N = sj2N + sj[d] * sj[d] / l[d];
+                    sbar += sj[d];
+                    sj2N += sj[d] * sj[d] / l[d];
                 }
-                sbar = sbar / nx;
+                sbar /= nx;
                 double d2 = 1.0 / (nx - 1) * (r4 - nx * sbar * sbar);
                 double t2 = 1.0 / d2 * (sj2N - nx * sbar * sbar);
                 double x2 = t2;
@@ -3713,7 +3631,7 @@ namespace StatsDirect.Builtins
                         p = 0.05;
                     if (p > 1 - p)
                         p = 1 - p;
-                    p = p / 2;
+                    p /= 2;
                     df = nx - frame.VariableCount;
                     double tval = PDF.tfromp(p, Convert.ToDouble(df));
                     pairwiseParameters.AddOutput("df", df);
@@ -3762,16 +3680,16 @@ namespace StatsDirect.Builtins
                 {
                     for (n = 1; n <= l[d]; n++)
                     {
-                        cnt = cnt + 1;
+                        cnt += 1;
                         sj[d] = sj[d] + r[cnt] * r[cnt];
-                        r4 = r4 + Math.Pow(r[cnt], 4.0);
+                        r4 += Math.Pow(r[cnt], 4.0);
                     }
-                    sbar = sbar + sj[d];
+                    sbar += sj[d];
                     if (d == 0)
                         ru = sj[d];
                     sj2N += sj[d] * sj[d] / l[d];
                 }
-                sbar = sbar / nx;
+                sbar /= nx;
                 int nm = l[0] * l[1];
                 double t1 = (ru - Convert.ToDouble(l[0]) * sbar) / Math.Sqrt(Convert.ToDouble(nm) / Convert.ToDouble(nx * (nx - 1)) * r4 - nm / (nx - 1.0) * sbar * sbar);
                 double z = t1;
@@ -3785,8 +3703,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
-        public static ParameterBag RptGini(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGini(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DataFrame weightsFrame = parameters.ContainsKey("weights") ? parameters["weights"].AsDataFrame : null;
@@ -3818,222 +3735,221 @@ namespace StatsDirect.Builtins
                 {
                     weightsData = ((DoubleVariable)weightsFrame.Variables[k]).Data;
                 }
-                host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
-
-                DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { v.Data, weightsData, }, 0, v.Length, 0);
-                double[] rawR = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
-                double[] w = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
-
-                // Handle the weights by replicating each value the appropriate number of times.  This pre-calculates the required array length, then copies.
-                double vtot = 0;
-                int totalWeights = 0;
-                for (int i = 0; i < rawR.Length; i++)
+                using (IProgressBar progress = host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true))
                 {
-                    vtot += rawR[i] * Math.Floor(w[i]);
-                    totalWeights += (int)Math.Floor(w[i]);
-                }
-                double[] r = new double[totalWeights + 1];
-                int nx = 0;
-                for (int i = 0; i < rawR.Length; i++)
-                    for (int repeats = 0; repeats < (int)Math.Floor(w[i]); repeats++)
-                        r[++nx] = rawR[i];
 
-                // By now, r contains the values, repeated the correct number of times.
-                int rx = r.Length - 1;
-                double vmean = vtot / rx;
-                Array.Sort(r, 1, rx);
+                    DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { v.Data, weightsData, }, 0, v.Length, 0);
+                    double[] rawR = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+                    double[] w = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
 
-                double sumx = 0;
-                double sumy = 0;
-                double sumsqdev = 0;
-                for (int j = 1; j <= rx; j++)
-                {
-                    // ascending order required
-                    sumx += r[j];
-                    sumy += (2 * j - rx - 1) * r[j];
-                    sumsqdev += (r[j] - vmean) * (r[j] - vmean);
-                }
-                double gini = sumy / (rx * sumx);
+                    // Handle the weights by replicating each value the appropriate number of times.  This pre-calculates the required array length, then copies.
+                    double vtot = 0;
+                    int totalWeights = 0;
+                    for (int i = 0; i < rawR.Length; i++)
+                    {
+                        vtot += rawR[i] * Math.Floor(w[i]);
+                        totalWeights += (int)Math.Floor(w[i]);
+                    }
+                    double[] r = new double[totalWeights + 1];
+                    int nx = 0;
+                    for (int i = 0; i < rawR.Length; i++)
+                        for (int repeats = 0; repeats < (int)Math.Floor(w[i]); repeats++)
+                            r[++nx] = rawR[i];
 
-                double drxm1 = rx - 1;
-                double cv = Math.Sqrt(sumsqdev / drxm1) / vmean;
+                    // By now, r contains the values, repeated the correct number of times.
+                    int rx = r.Length - 1;
+                    double vmean = vtot / rx;
+                    Array.Sort(r, 1, rx);
 
-                double[] rb = new double[rx + 1];
-                double[] ginib = new double[boots + 1];
-
-                // get resample boots times
-                double theta = 0.0;
-                int ctr = 0;
-                bool ok = true;
-                int pick;
-                for (int i = 1; i <= boots; i++)
-                {
+                    double sumx = 0;
+                    double sumy = 0;
+                    double sumsqdev = 0;
                     for (int j = 1; j <= rx; j++)
                     {
-                        pick = Convert.ToInt32(drxm1 * rng.NextDouble()) + 1;
-                        rb[j] = r[pick];
+                        // ascending order required
+                        sumx += r[j];
+                        sumy += (2 * j - rx - 1) * r[j];
+                        sumsqdev += (r[j] - vmean) * (r[j] - vmean);
                     }
-                    Array.Sort(rb, 1, rx);
-                    sumx = 0.0;
-                    sumy = 0.0;
-                    for (int j = 1; j <= rx; j++)
-                    { // ascending order required
+                    double gini = sumy / (rx * sumx);
 
-                        sumx += rb[j];
-                        sumy += (2 * j - rx - 1) * rb[j];
-                    }
-                    ginib[i] = sumy / (rx * sumx);
-                    theta = theta + ginib[i];
-                    if (ginib[i] <= gini)
-                        ctr++;
-                    if (i % bootsDivisor == 0)
-                    {
-                        if (host.UpdateProgress(i / (double)boots))
-                        {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-                double bl;
-                double bu;
-                double thetase;
-                double bias;
-                double bcal;
-                double bcau;
-                if (ok)
-                {
-                    // get bias and bootstrap variance
-                    theta = theta / boots;
-                    double thetasq = 0.0;
+                    double drxm1 = rx - 1;
+                    double cv = Math.Sqrt(sumsqdev / drxm1) / vmean;
+
+                    double[] rb = new double[rx + 1];
+                    double[] ginib = new double[boots + 1];
+
+                    // get resample boots times
+                    double theta = 0.0;
+                    int ctr = 0;
+                    bool ok = true;
+                    int pick;
                     for (int i = 1; i <= boots; i++)
-                        thetasq += Math.Pow(ginib[i] - theta, 2.0);
-                    thetase = Base.SafeSqrt(1.0 / (boots - 1) * thetasq);
-                    bias = gini - theta;
-                    // sort bootstraps
-                    Array.Sort(ginib, 1, boots);
-                    double q = 1.0 - gamma > gamma ? 1.0 - gamma : gamma;
-                    q = (1.0 - q) / 2.0;
-                    // percentile
-                    pick = Convert.ToInt32((boots - 1) * q) + 1;
-                    bl = ginib[pick];
-                    pick = Convert.ToInt32((boots - 1) * (1.0 - q)) + 1;
-                    bu = ginib[pick];
-                    // BC
-                    // BCa
-                    double bgini = 0.0;
-                    for (int i = 1; i <= rx; i++)
                     {
+                        for (int j = 1; j <= rx; j++)
+                        {
+                            pick = Convert.ToInt32(drxm1 * rng.NextDouble()) + 1;
+                            rb[j] = r[pick];
+                        }
+                        Array.Sort(rb, 1, rx);
                         sumx = 0.0;
                         sumy = 0.0;
                         for (int j = 1; j <= rx; j++)
+                        { // ascending order required
+
+                            sumx += rb[j];
+                            sumy += (2 * j - rx - 1) * rb[j];
+                        }
+                        ginib[i] = sumy / (rx * sumx);
+                        theta += ginib[i];
+                        if (ginib[i] <= gini)
+                            ctr++;
+                        if (i % bootsDivisor == 0)
                         {
-                            if (j != i)
+                            if (progress.Update(i / (double)boots))
                             {
-                                sumx += r[j];
-                                sumy += (2 * j - rx - 1) * r[j];
+                                ok = false;
+                                break;
                             }
                         }
-                        bgini += sumy / ((rx - 1) * sumx);
                     }
-                    bgini /= rx;
-                    double bgini2 = 0;
-                    double bgini3 = 0;
-                    for (int i = 1; i <= rx; i++)
+                    double bl;
+                    double bu;
+                    double thetase;
+                    double bias;
+                    double bcal;
+                    double bcau;
+                    if (ok)
                     {
-                        sumx = 0.0;
-                        sumy = 0.0;
-                        for (int j = 1; j <= rx; j++)
+                        // get bias and bootstrap variance
+                        theta /= boots;
+                        double thetasq = 0.0;
+                        for (int i = 1; i <= boots; i++)
+                            thetasq += Math.Pow(ginib[i] - theta, 2.0);
+                        thetase = Base.SafeSqrt(1.0 / (boots - 1) * thetasq);
+                        bias = gini - theta;
+                        // sort bootstraps
+                        Array.Sort(ginib, 1, boots);
+                        double q = 1.0 - gamma > gamma ? 1.0 - gamma : gamma;
+                        q = (1.0 - q) / 2.0;
+                        // percentile
+                        pick = Convert.ToInt32((boots - 1) * q) + 1;
+                        bl = ginib[pick];
+                        pick = Convert.ToInt32((boots - 1) * (1.0 - q)) + 1;
+                        bu = ginib[pick];
+                        // BC
+                        // BCa
+                        double bgini = 0.0;
+                        for (int i = 1; i <= rx; i++)
                         {
-                            if (j != i)
+                            sumx = 0.0;
+                            sumy = 0.0;
+                            for (int j = 1; j <= rx; j++)
                             {
-                                sumx += r[j];
-                                sumy += (2 * j - rx - 1) * r[j];
+                                if (j != i)
+                                {
+                                    sumx += r[j];
+                                    sumy += (2 * j - rx - 1) * r[j];
+                                }
                             }
+                            bgini += sumy / ((rx - 1) * sumx);
                         }
-                        bgini2 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 2.0);
-                        bgini3 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 3.0);
-                    }
-                    double accel = bgini3 / (6.0 * Math.Pow(bgini2, 1.5));
-                    double z0 = ctr / (double)boots;
-                    z0 = PDF.gauinv(z0);
-                    double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
-                    double p2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p1) + 1;
-                    bcal = ginib[pick];
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p2) + 1;
-                    bcau = ginib[pick];
-                }
-                else
-                {
-                    bl = Constant.MISSING;
-                    bu = Constant.MISSING;
-                    bcal = Constant.MISSING;
-                    bcau = Constant.MISSING;
-                    thetase = 0;
-                    bias = 0;
-                }
-                host.FinishProgress();
-
-                ParameterBag varParameters = new ParameterBag();
-                outputList.Add(varParameters);
-                varParameters.AddOutput("ti", v.Title);
-                varParameters.AddOutput("n", rx);
-                if (rawR.Length != v.Length)
-                    varParameters.AddOutput("msg", "(note " + (v.Length - rawR.Length) + " other observation(s) not used)");
-                else
-                    varParameters.AddOutput("msg", string.Empty);
-                varParameters.AddOutput("cv", cv);
-                varParameters.AddOutput("boots", boots.ToString("N0"));
-                varParameters.AddOutput("bias", bias);
-                varParameters.AddOutput("se", thetase);
-
-                varParameters.AddOutput("gini", gini);
-                varParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
-                varParameters.AddOutput("from", bl);
-                varParameters.AddOutput("to", bu);
-                varParameters.AddOutput("BCafrom", bcal);
-                varParameters.AddOutput("BCato", bcau);
-
-                double unbias = rx / (rx - 1.0);
-                varParameters.AddOutput("gini-unbiased", gini * unbias);
-                varParameters.AddOutput("from-unbiased", bl * unbias);
-                varParameters.AddOutput("to-unbiased", bu * unbias);
-                varParameters.AddOutput("BCafrom-unbiased", bcal * unbias);
-                varParameters.AddOutput("BCato-unbiased", bcau * unbias);
-
-                //  In the single-variable case, plot as well.  Only evaluate on the first time through, to prevent us removing placeholders multiple times!
-                if (k == 0)
-                {
-                    if (dataFrame.VariableCount == 1)
-                    {
-                        double[] x = new double[rx];
-                        double[] y = new double[rx];
-                        double sum = 0.0;
-                        for (int j = 1; j <= rx; j++)
+                        bgini /= rx;
+                        double bgini2 = 0;
+                        double bgini3 = 0;
+                        for (int i = 1; i <= rx; i++)
                         {
-                            sum += r[j];
-                            x[j - 1] = j / (double)rx;
+                            sumx = 0.0;
+                            sumy = 0.0;
+                            for (int j = 1; j <= rx; j++)
+                            {
+                                if (j != i)
+                                {
+                                    sumx += r[j];
+                                    sumy += (2 * j - rx - 1) * r[j];
+                                }
+                            }
+                            bgini2 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 2.0);
+                            bgini3 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 3.0);
                         }
-                        double runningTotal = 0.0;
-                        for (int j = 1; j <= rx; j++)
-                        {
-                            runningTotal += r[j] / sum;
-                            y[j - 1] = runningTotal;
-                        }
-                        outputParameters.AddOutput("X", new DataFrame(new DoubleVariable(x), dataFrame.Variables[0].Title));
-                        outputParameters.AddOutput("Y", new DataFrame(new DoubleVariable(y), dataFrame.Variables[0].Title));
+                        double accel = bgini3 / (6.0 * Math.Pow(bgini2, 1.5));
+                        double z0 = ctr / (double)boots;
+                        z0 = PDF.gauinv(z0);
+                        double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
+                        double p2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
+                        pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p1) + 1;
+                        bcal = ginib[pick];
+                        pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p2) + 1;
+                        bcau = ginib[pick];
                     }
                     else
                     {
-                        outputParameters.AddOutput("chart", null);
+                        bl = Constant.MISSING;
+                        bu = Constant.MISSING;
+                        bcal = Constant.MISSING;
+                        bcau = Constant.MISSING;
+                        thetase = 0;
+                        bias = 0;
+                    }
+
+                    ParameterBag varParameters = new ParameterBag();
+                    outputList.Add(varParameters);
+                    varParameters.AddOutput("ti", v.Title);
+                    varParameters.AddOutput("n", rx);
+                    if (rawR.Length != v.Length)
+                        varParameters.AddOutput("msg", "(note " + (v.Length - rawR.Length) + " other observation(s) not used)");
+                    else
+                        varParameters.AddOutput("msg", string.Empty);
+                    varParameters.AddOutput("cv", cv);
+                    varParameters.AddOutput("boots", boots.ToString("N0"));
+                    varParameters.AddOutput("bias", bias);
+                    varParameters.AddOutput("se", thetase);
+
+                    varParameters.AddOutput("gini", gini);
+                    varParameters.AddOutput("pc", Formatting.XRound(gamma * 100, 2));
+                    varParameters.AddOutput("from", bl);
+                    varParameters.AddOutput("to", bu);
+                    varParameters.AddOutput("BCafrom", bcal);
+                    varParameters.AddOutput("BCato", bcau);
+
+                    double unbias = rx / (rx - 1.0);
+                    varParameters.AddOutput("gini-unbiased", gini * unbias);
+                    varParameters.AddOutput("from-unbiased", bl * unbias);
+                    varParameters.AddOutput("to-unbiased", bu * unbias);
+                    varParameters.AddOutput("BCafrom-unbiased", bcal * unbias);
+                    varParameters.AddOutput("BCato-unbiased", bcau * unbias);
+
+                    //  In the single-variable case, plot as well.  Only evaluate on the first time through, to prevent us removing placeholders multiple times!
+                    if (k == 0)
+                    {
+                        if (dataFrame.VariableCount == 1)
+                        {
+                            double[] x = new double[rx];
+                            double[] y = new double[rx];
+                            double sum = 0.0;
+                            for (int j = 1; j <= rx; j++)
+                            {
+                                sum += r[j];
+                                x[j - 1] = j / (double)rx;
+                            }
+                            double runningTotal = 0.0;
+                            for (int j = 1; j <= rx; j++)
+                            {
+                                runningTotal += r[j] / sum;
+                                y[j - 1] = runningTotal;
+                            }
+                            outputParameters.AddOutput("X", new DataFrame(new DoubleVariable(x), dataFrame.Variables[0].Title));
+                            outputParameters.AddOutput("Y", new DataFrame(new DoubleVariable(y), dataFrame.Variables[0].Title));
+                        }
+                        else
+                        {
+                            outputParameters.AddOutput("chart", null);
+                        }
                     }
                 }
+
             }
             return outputParameters;
         }
-
     }
-
-
 }

@@ -1,54 +1,52 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace StatsDirect.Templates
 {
     public class OperationTest
     {
-        private readonly List<OperationTestInputParameter> inputs;
-        private readonly List<OperationTestOutputParameter> outputs;
-
         [XmlAttribute("reason")]
         public string Reason { get; set; }
 
         public OperationTest()
         {
-            inputs = new List<OperationTestInputParameter>();
-            outputs = new List<OperationTestOutputParameter>();
+            Inputs = new List<OperationTestInputParameter>();
+            Outputs = new List<OperationTestOutputParameter>();
         }
 
         [XmlArray(ElementName = "inputs"),
         XmlArrayItem(ElementName = "parameter", Type = typeof(OperationTestInputParameter))]
         public OperationTestInputParameter[] InputsForXml
         {
-            get => inputs.ToArray();
+            get => Inputs.ToArray();
             set
             {
-                inputs.Clear();
+                Inputs.Clear();
                 if (null != value)
                     foreach (OperationTestInputParameter input in value)
-                        inputs.Add(input);
+                        Inputs.Add(input);
             }
         }
 
         [XmlIgnore]
-        public IList<OperationTestInputParameter> Inputs => inputs;
+        public IList<OperationTestInputParameter> Inputs { get; set; }
 
         [XmlArray(ElementName = "outputs"),
         XmlArrayItem(ElementName = "output", Type = typeof(OperationTestOutputParameter))]
         public OperationTestOutputParameter[] OutputsForXml
         {
-            get => outputs.ToArray();
+            get => Outputs.ToArray();
             set
             {
-                outputs.Clear();
+                Outputs.Clear();
                 if (null != value)
                     foreach (OperationTestOutputParameter output in value)
-                        outputs.Add(output);
+                        Outputs.Add(output);
             }
         }
 
         [XmlIgnore]
-        public IList<OperationTestOutputParameter> Outputs => outputs;
+        public IList<OperationTestOutputParameter> Outputs { get; set; }
     }
 }

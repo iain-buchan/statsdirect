@@ -131,7 +131,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 foreach (ParameterBag candidate in substitutionStack)
                     if (candidate.TryGetValue(path, out FilledParameter value))
-                        return value.Data;
+                        return value.AsObject;
                 // If we get here, no such value exists.
                 return null;
             }

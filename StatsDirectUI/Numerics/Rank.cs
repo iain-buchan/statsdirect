@@ -97,7 +97,7 @@ namespace StatsDirect.Numerics
             occ = 1;
             while (x[xii] - c <= y[ymini] && xii != xmaxi)
             {
-                xii = xii + 1;
+                xii += 1;
             }
             if (xii == xmaxi)
             {
@@ -109,7 +109,7 @@ namespace StatsDirect.Numerics
                 {
                     if (x[xii] - y[yii] == x[xki] - y[yki])
                     {
-                        occ = occ + 1;
+                        occ += 1;
                     }
                     if (x[xki] - y[yki] > x[xii] - y[yii] && x[xii] - y[yii] != c)
                     {
@@ -149,7 +149,7 @@ namespace StatsDirect.Numerics
             const int ymaxi = 1;
             while (x[xii] - c <= -x[ymini] && xii != xmaxi)
             {
-                xii = xii + 1;
+                xii += 1;
                 yii = xii;
             }
             if (xii == xmaxi)
@@ -162,7 +162,7 @@ namespace StatsDirect.Numerics
                 {
                     if (x[xii] + x[yii] == x[xki] + x[yki])
                     {
-                        occ = occ + 1;
+                        occ += 1;
                     }
                     if (x[xki] + x[yki] > x[xii] + x[yii] && x[xii] + x[yii] != c)
                     {
@@ -172,19 +172,19 @@ namespace StatsDirect.Numerics
                     }
                     if (yii == ymaxi)
                         break;
-                    yii = yii - 1;
+                    yii -= 1;
                 }
                 if (ymini > yii)
                 {
-                    yii = yii + 1;
+                    yii += 1;
                 }
                 while (xii >= yii && ymini > yii && x[yii] == x[yii + 1])
                 {
-                    yii = yii + 1;
+                    yii += 1;
                 }
                 if (xii == xmaxi)
                     break;
-                xii = xii + 1;
+                xii += 1;
             }
             while (true);
             return x[xki] + x[yki];
@@ -332,7 +332,7 @@ namespace StatsDirect.Numerics
                 double z = d;
                 if (m != 1)
                 {
-                    z = z - 0.5 / Convert.ToDouble(n);
+                    z -= 0.5 / Convert.ToDouble(n);
                 }
                 z = Math.Max(0.0, z);
                 double tp = 2.0 * kspx(m, z);
@@ -356,7 +356,7 @@ namespace StatsDirect.Numerics
                     if (xj < sr)
                     {
                         double term = fac * Math.Exp(a * xj * xj);
-                        p = p + term;
+                        p += term;
                         double aterm = Math.Abs(term);
                         if (aterm < eps1 * p)
                         {
@@ -407,10 +407,10 @@ namespace StatsDirect.Numerics
                 for (int j = 1; j <= lim1; j++)
                 {
                     double xj = Convert.ToDouble(j);
-                    cc = cc * ((xn - xj + 1.0) / xj);
-                    v1 = v1 + vj;
-                    v2 = v2 - vj;
-                    p = p + cc * Math.Pow(v1, j - 1) * Math.Pow(v2, n - j);
+                    cc *= ((xn - xj + 1.0) / xj);
+                    v1 += vj;
+                    v2 -= vj;
+                    p += cc * Math.Pow(v1, j - 1) * Math.Pow(v2, n - j);
                 }
                 p = p * d + Math.Pow(z, n);
             }
@@ -643,7 +643,7 @@ namespace StatsDirect.Numerics
                 term = PDF.alogam(xn1) - PDF.alogam(xi + 1.0) - PDF.alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
                 if (term > sml)
                 {
-                    plo = plo + Math.Exp(term);
+                    plo += Math.Exp(term);
                 }
             }
             if (term > sml)

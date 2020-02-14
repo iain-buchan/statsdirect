@@ -293,7 +293,7 @@ namespace StatsDirect.Charting.Scales
                 znmin = znm;
                 znm = znmin * Math.Pow(10.0, maxB - i);
                 if (znm < 0.0)
-                    znm = znm - 1.0;
+                    znm -= 1.0;
                 znm = Math.Floor(znm) / Math.Pow(10.0, maxB - i);
             }
             return new LinearAxisScale(minimumDataValue, maximumDataValue, znmin, znmin + zstep * divisions, divisions);

@@ -20,7 +20,6 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Logistic regression - prediction</title>
-<br />
 <block name="predictors"><p>@x</p></block>
 
 <p>@y</p>

@@ -1637,7 +1637,7 @@ namespace StatsDirect.Builtins
                 {
                     if (yy[i] != Constant.MISSING)
                     {
-                        ctr = ctr + 1;
+                        ctr += 1;
                         x[ctr] = yy[i];
                     }
                 }
@@ -1654,7 +1654,7 @@ namespace StatsDirect.Builtins
                     Debug.Assert(xx != null, "xx != null");
                     if (xx[i] != Constant.MISSING & yy[i] != Constant.MISSING)
                     {
-                        ctr = ctr + 1;
+                        ctr += 1;
                         x[ctr] = xx[i];
                         y[ctr] = yy[i];
                     }
@@ -1783,7 +1783,7 @@ namespace StatsDirect.Builtins
                                 {
                                     if (x[i] != x[j])
                                     {
-                                        cnt = cnt + 1;
+                                        cnt += 1;
                                         if (x[i] != Constant.MISSING && y[j] != Constant.MISSING)
                                         {
                                             pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);

@@ -62,13 +62,13 @@ namespace StatsDirect.Builtins
                 if (i <= nx)
                 {
                     for (k = i; k <= nx; k++)
-                        sca = sca + Math.Abs(ad[k, i]);
+                        sca += Math.Abs(ad[k, i]);
                     if (sca != 0.0)
                     {
                         for (k = i; k <= nx; k++)
                         {
                             ad[k, i] = ad[k, i] / sca;
-                            s = s + ad[k, i] * ad[k, i];
+                            s += ad[k, i] * ad[k, i];
                         }
                         f = ad[i, i];
                         g = f >= 0.0 ? -Math.Abs(Math.Sqrt(s)) : Math.Abs(Math.Sqrt(s));
@@ -78,7 +78,7 @@ namespace StatsDirect.Builtins
                         {
                             s = 0.0;
                             for (k = i; k <= nx; k++)
-                                s = s + ad[k, i] * ad[k, j];
+                                s += ad[k, i] * ad[k, j];
                             f = s / h;
                             for (k = i; k <= nx; k++)
                                 ad[k, j] = ad[k, j] + f * ad[k, i];
@@ -94,13 +94,13 @@ namespace StatsDirect.Builtins
                 if (i <= nx & i != p)
                 {
                     for (k = l; k <= p; k++)
-                        sca = sca + Math.Abs(ad[i, k]);
+                        sca += Math.Abs(ad[i, k]);
                     if (sca != 0.0)
                     {
                         for (k = l; k <= p; k++)
                         {
                             ad[i, k] = ad[i, k] / sca;
-                            s = s + ad[i, k] * ad[i, k];
+                            s += ad[i, k] * ad[i, k];
                         }
                         f = ad[i, l];
                         g = f >= 0.0 ? -Math.Abs(Math.Sqrt(s)) : Math.Abs(Math.Sqrt(s));
@@ -112,7 +112,7 @@ namespace StatsDirect.Builtins
                         {
                             s = 0.0;
                             for (k = l; k <= p; k++)
-                                s = s + ad[j, k] * ad[i, k];
+                                s += ad[j, k] * ad[i, k];
                             for (k = l; k <= p; k++)
                                 ad[j, k] = ad[j, k] + s * rv1[k];
                         }
@@ -136,7 +136,7 @@ namespace StatsDirect.Builtins
                         {
                             s = 0.0;
                             for (k = l; k <= p; k++)
-                                s = s + ad[i, k] * vd[k, j];
+                                s += ad[i, k] * vd[k, j];
                             for (k = l; k <= p; k++)
                                 vd[k, j] = vd[k, j] + s * vd[k, i];
                         }
@@ -166,7 +166,7 @@ namespace StatsDirect.Builtins
                     {
                         s = 0.0;
                         for (k = l; k <= nx; k++)
-                            s = s + ad[k, i] * ad[k, j];
+                            s += ad[k, i] * ad[k, j];
                         f = s / ad[i, i] * g;
                         for (k = i; k <= nx; k++)
                             ad[k, j] = ad[k, j] + f * ad[k, i];
@@ -263,7 +263,7 @@ namespace StatsDirect.Builtins
                         f = x * c + g * s;
                         g = -(x * s) + g * c;
                         h = y * s;
-                        y = y * c;
+                        y *= c;
                         int jj;
                         for (jj = 1; jj <= p; jj++)
                         {
@@ -435,7 +435,7 @@ namespace StatsDirect.Builtins
             {
                 double sum = 0.0;
                 for (int j = 1; j <= p; j++)
-                    sum = sum + bd[j] * xd[i, j];
+                    sum += bd[j] * xd[i, j];
                 yfit[i] = sum;
                 er[i] = yd[i] - yfit[i];
             }
@@ -515,7 +515,7 @@ namespace StatsDirect.Builtins
                         wk[intcep + i] = x[iobs, i];
                     if (IndexNaN(nind, wk, intp1) > 0)
                     {
-                        nrmiss = nrmiss + irow;
+                        nrmiss += irow;
                     }
                     else
                     {
@@ -874,7 +874,7 @@ namespace StatsDirect.Builtins
                                     }
                                     int jdepjx = idepx;
                                     int jdepix = idepx;
-                                    scpe = scpe + wk[jdepix] * sd2 * wk[jdepjx];
+                                    scpe += wk[jdepix] * sd2 * wk[jdepjx];
                                     // jdepix = jdepix + 1; 
                                     // jdepjx = jdepjx + 1; 
                                 }
@@ -938,7 +938,7 @@ namespace StatsDirect.Builtins
                 for (int i = 1; i <= ncoef; i++)
                     b[i] = b2[i, 1];
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
-                dfe = dfe - irank;
+                dfe -= irank;
                 if (dfe <= 0.0)
                     ifault = 12;
                 for (int i = 1; i <= ncoef; i++)
@@ -1272,9 +1272,9 @@ namespace StatsDirect.Builtins
                     x = 0.0;
                     return;
                 }
-                d1 = d1 / u;
-                d2 = d2 / u;
-                x = x * u;
+                d1 /= u;
+                d2 /= u;
+                x *= u;
             }
             else
             {
@@ -1297,8 +1297,8 @@ namespace StatsDirect.Builtins
                 h21 = -1.0;
                 h22 = x / y;
                 u = 1.0 + h11 * h22;
-                d1 = d1 / u;
-                d2 = d2 / u;
+                d1 /= u;
+                d2 /= u;
                 double tmp = d2;
                 d2 = d1;
                 d1 = tmp;
@@ -1309,33 +1309,33 @@ namespace StatsDirect.Builtins
             while (d1 <= 1.0 / g2 & d1 != 0.0)
             {
                 p[1] = -1.0;
-                d1 = d1 * g2;
-                x = x / g;
-                h11 = h11 / g;
-                h12 = h12 / g;
+                d1 *= g2;
+                x /= g;
+                h11 /= g;
+                h12 /= g;
             }
             while (d1 >= g2)
             {
                 p[1] = -1.0;
-                d1 = d1 / g2;
-                x = x * g;
-                h11 = h11 * g;
-                h12 = h12 * g;
+                d1 /= g2;
+                x *= g;
+                h11 *= g;
+                h12 *= g;
             }
             //  rescale d2 in the range rg2, g2
             while (Math.Abs(d2) <= 1.0 / g2 & d2 != 0.0)
             {
                 p[1] = -1.0;
-                d2 = d2 * g2;
-                h21 = h21 / g;
-                h22 = h22 / g;
+                d2 *= g2;
+                h21 /= g;
+                h22 /= g;
             }
             while (Math.Abs(d2) >= g2)
             {
                 p[1] = -1.0;
-                d2 = d2 / g2;
-                h21 = h21 * g;
-                h22 = h22 * g;
+                d2 /= g2;
+                h21 *= g;
+                h22 *= g;
             }
             //  populate the parameter array with rescaled values
             if (p[1] == -1.0)
@@ -1449,7 +1449,7 @@ namespace StatsDirect.Builtins
             irank = 0;
             for (int i = 1; i <= n; i++)
                 if (r[i, i] != 0.0)
-                    irank = irank + 1;
+                    irank += 1;
 
             if (transposeR)
             {
@@ -1467,7 +1467,7 @@ namespace StatsDirect.Builtins
                             {
                                 double absprod = 0.0;
                                 for (int ii = 1; ii < j; ii++)
-                                    absprod = absprod + Math.Abs(r[ii, j] * b[ii]);
+                                    absprod += Math.Abs(r[ii, j] * b[ii]);
                                 double temp2 = Math.Abs(b[j]) + absprod;
                                 temp2 *= 200.0 * Constant.EPSILON;
                                 if (Math.Abs(temp1) > temp2)
@@ -1489,7 +1489,7 @@ namespace StatsDirect.Builtins
                         {
                             double xddot = 0.0;
                             for (int k = 1; k <= j - 1; k++)
-                                xddot = xddot + r[k, j] * b[k];
+                                xddot += r[k, j] * b[k];
                             b[j] = b[j] - xddot;
                             b[j] = b[j] / r[j, j];
                         }
@@ -1530,7 +1530,7 @@ namespace StatsDirect.Builtins
                             {
                                 double xddot = 0.0;
                                 for (int k = 1; k <= n - j; k++)
-                                    xddot = xddot + r[j, j + k] * b[j + k];
+                                    xddot += r[j, j + k] * b[j + k];
                                 b[j] = b[j] - xddot;
                             }
                             b[j] = b[j] / r[j, j];
@@ -1614,13 +1614,13 @@ namespace StatsDirect.Builtins
                 if (i <= m)
                 {
                     for (int k = i; k <= m; k++)
-                        scale = scale + Math.Abs(u[k, i]);
+                        scale += Math.Abs(u[k, i]);
                     if (scale != 0.0)
                     {
                         for (int k = i; k <= m; k++)
                         {
                             u[k, i] = u[k, i] / scale;
-                            s = s + Math.Pow(u[k, i], 2.0);
+                            s += Math.Pow(u[k, i], 2.0);
                         }
                         f = u[i, i];
                         g = -dsign(Math.Sqrt(s), f);
@@ -1632,7 +1632,7 @@ namespace StatsDirect.Builtins
                             {
                                 s = 0.0;
                                 for (int k = i; k <= m; k++)
-                                    s = s + u[k, i] * u[k, j];
+                                    s += u[k, i] * u[k, j];
                                 f = s / h;
                                 for (int k = i; k <= m; k++)
                                     u[k, j] = u[k, j] + f * u[k, i];
@@ -1650,14 +1650,14 @@ namespace StatsDirect.Builtins
                 {
                     for (int k = l; k <= n; k++)
                     {
-                        scale = scale + Math.Abs(u[i, k]);
+                        scale += Math.Abs(u[i, k]);
                     }
                     if (scale != 0.0)
                     {
                         for (int k = l; k <= n; k++)
                         {
                             u[i, k] = u[i, k] / scale;
-                            s = s + Math.Pow(u[i, k], 2.0);
+                            s += Math.Pow(u[i, k], 2.0);
                         }
                         f = u[i, l];
                         g = -dsign(Math.Sqrt(s), f);
@@ -1673,7 +1673,7 @@ namespace StatsDirect.Builtins
                             {
                                 s = 0.0;
                                 for (int k = l; k <= n; k++)
-                                    s = s + u[j, k] * u[i, k];
+                                    s += u[j, k] * u[i, k];
                                 for (int k = l; k <= n; k++)
                                     u[j, k] = u[j, k] + s * rv1[k];
                             }
@@ -1702,7 +1702,7 @@ namespace StatsDirect.Builtins
                         {
                             s = 0.0;
                             for (int k = l; k <= n; k++)
-                                s = s + u[i, k] * v[k, j];
+                                s += u[i, k] * v[k, j];
                             for (int k = l; k <= n; k++)
                                 v[k, j] = v[k, j] + s * v[k, i];
                         }
@@ -1738,7 +1738,7 @@ namespace StatsDirect.Builtins
                         {
                             s = 0.0;
                             for (int k = l; k <= m; k++)
-                                s = s + u[k, i] * u[k, j];
+                                s += u[k, i] * u[k, j];
                             // Double division avoids possible underflow
                             f = s / u[i, i] / g;
                             for (int k = i; k <= m; k++)
@@ -1849,7 +1849,7 @@ namespace StatsDirect.Builtins
                         f = x * c + g * s;
                         g = -x * s + g * c;
                         h = y * s;
-                        y = y * c;
+                        y *= c;
                         for (int j = 1; j <= n; j++)
                         {
                             x = v[j, i1];
@@ -1927,8 +1927,8 @@ namespace StatsDirect.Builtins
             double sum2 = 0.0;
             for (int i = 1; i <= nx; i++)
             {
-                sum1 = sum1 + erd[i] * erd[i];
-                sum2 = sum2 + er[i] * er[i];
+                sum1 += erd[i] * erd[i];
+                sum2 += er[i] * er[i];
             }
             dw = sum1 / sum2;
         }
@@ -2149,7 +2149,7 @@ namespace StatsDirect.Builtins
                 if (selectX[i])
                     count++;
             if (useIntercept)
-                count = count + 1;
+                count += 1;
             if (parameters != count)
             {
                 errLevel = 1;
@@ -2731,7 +2731,7 @@ namespace StatsDirect.Builtins
                             {
                                 if (weight[i] > 0.0)
                                 {
-                                    deviance = deviance + weight[i] * LogisticDeviance(fit[i], y[i], t[i]);
+                                    deviance += weight[i] * LogisticDeviance(fit[i], y[i], t[i]);
                                     if (t[i] < 0.0)
                                     {
                                         err_level = 2;
@@ -2746,7 +2746,7 @@ namespace StatsDirect.Builtins
                             {
                                 if (weight[i] > 0.0)
                                 {
-                                    deviance = deviance + weight[i] * PoissonDeviance(fit[i], y[i], ref t[i]);
+                                    deviance += weight[i] * PoissonDeviance(fit[i], y[i], ref t[i]);
                                     if (t[i] < 0.0)
                                     {
                                         err_level = 2;
@@ -2766,7 +2766,7 @@ namespace StatsDirect.Builtins
                         case 1:
                             for (i = 1; i <= records; i++)
                             {
-                                deviance = deviance + LogisticDeviance(fit[i], y[i], t[i]);
+                                deviance += LogisticDeviance(fit[i], y[i], t[i]);
                                 if (t[i] < 0.0)
                                 {
                                     err_level = 2;
@@ -2778,7 +2778,7 @@ namespace StatsDirect.Builtins
                         case 2:
                             for (i = 1; i <= records; i++)
                             {
-                                deviance = deviance + PoissonDeviance(fit[i], y[i], ref t[i]);
+                                deviance += PoissonDeviance(fit[i], y[i], ref t[i]);
                                 if (t[i] < 0.0)
                                 {
                                     err_level = 2;
@@ -3031,11 +3031,11 @@ namespace StatsDirect.Builtins
                     for (int i2 = 1; i2 <= m - i1 + 1; i2++)
                     {
                         double temp_2 = a[iz1, iz2];
-                        iz1 = iz1 + 1;
+                        iz1 += 1;
                         if (iz1 > m)
                         {
                             iz1 = 1;
-                            iz2 = iz2 + 1;
+                            iz2 += 1;
                         }
                         if (temp_2 != 0.0)
                         {
@@ -3052,11 +3052,11 @@ namespace StatsDirect.Builtins
                             for (int i3 = 1; i3 <= m - i1 + 1; i3++)
                             {
                                 a[i1 - 1 + i3, i1 + i2] = a[i1 - 1 + i3, i1 + i2] + a[iz1, iz2] * -zeta[i1 + i2];
-                                iz1 = iz1 + 1;
+                                iz1 += 1;
                                 if (iz1 > m)
                                 {
                                     iz1 = 1;
-                                    iz2 = iz2 + 1;
+                                    iz2 += 1;
                                 }
                             }
                         }
@@ -3087,12 +3087,12 @@ namespace StatsDirect.Builtins
                     for (int i2 = 1; i2 <= m - i1 + 1; i2++)
                     {
                         if (a[iz1, iz2] != 0.0)
-                            hold = hold + a[iz1, iz2] * b[i2 + i1 - 1];
-                        iz1 = iz1 + 1;
+                            hold += a[iz1, iz2] * b[i2 + i1 - 1];
+                        iz1 += 1;
                         if (iz1 > m)
                         {
                             iz1 = 1;
-                            iz2 = iz2 + 1;
+                            iz2 += 1;
                         }
                     }
                     if (hold != 0.0)
@@ -3101,7 +3101,7 @@ namespace StatsDirect.Builtins
                         for (int i2 = 1; i2 <= m - i1 + 1; i2++)
                         {
                             b[iz1] = b[iz1] + a[i2 + i1 - 1, i1] * -hold;
-                            iz1 = iz1 + 1;
+                            iz1 += 1;
                             if (iz1 > m)
                                 iz1 = 1;
                         }
@@ -3150,7 +3150,7 @@ namespace StatsDirect.Builtins
                     izb = iax - iax / m * m + k - 1;
                     iz2b = iax / m + 2 + k;
                     X_SVD_Rotation_Angle(ref a[iz, iz2], ref a[izb, iz2b], out super_diag[i + k], out diag[i + k]);
-                    ix = ix - m;
+                    ix -= m;
                 }
                 iax = ix;
                 izb = iax - iax / m * m + k - 1;
@@ -3284,7 +3284,7 @@ namespace StatsDirect.Builtins
                 }
                 if (i3 >= i0)
                 {
-                    i0 = i0 - 1;
+                    i0 -= 1;
                 }
                 else
                 {
@@ -3433,11 +3433,11 @@ namespace StatsDirect.Builtins
                         for (int i2 = 1; i2 <= n - i1; i2++)
                         {
                             a[ix1, ix2] = 0.0;
-                            ix1 = ix1 + 1;
+                            ix1 += 1;
                             if (ix1 > m)
                             {
                                 ix1 = 1;
-                                ix2 = ix2 + 1;
+                                ix2 += 1;
                             }
                         }
                         for (int i2 = 1; i2 <= n - i1 - 1; i2++)
@@ -3632,7 +3632,7 @@ namespace StatsDirect.Builtins
                             }
                             else
                             {
-                                sumSquares = sumSquares + Math.Pow(absxi / scale, 2.0);
+                                sumSquares += Math.Pow(absxi / scale, 2.0);
                             }
                         }
                         i1++;
@@ -3655,7 +3655,7 @@ namespace StatsDirect.Builtins
                         for (int ix = 1; ix <= n; ix++)
                         {
                             a[i1, i2] = -1.0 / alpha * a[i1, i2];
-                            i1 = i1 + 1;
+                            i1 += 1;
                             if (i1 > m)
                             {
                                 i1 = 1;
@@ -3677,7 +3677,7 @@ namespace StatsDirect.Builtins
                         for (int ix = 1; ix <= n; ix++)
                         {
                             a[i1, i2] = -1.0 / (zeta * beta) * a[i1, i2];
-                            i1 = i1 + 1;
+                            i1 += 1;
                             if (i1 > m)
                             {
                                 i1 = 1;

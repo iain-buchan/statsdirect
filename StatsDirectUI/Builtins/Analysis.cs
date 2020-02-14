@@ -66,13 +66,13 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= rows; j++)
             {
                 idxr[j] = idxy[j] / idxn[j];
-                stdr = stdr + idxr[j] * refn[j];
+                stdr += idxr[j] * refn[j];
                 poisVar += refn[j] * refn[j] * idxr[j] / idxn[j];
                 binoVar += refn[j] * refn[j] * idxr[j] * (1.0 - idxr[j]) / idxn[j];
             }
-            stdr = stdr / refntot;
-            poisVar = poisVar / (refntot * refntot);
-            binoVar = binoVar / (refntot * refntot);
+            stdr /= refntot;
+            poisVar /= (refntot * refntot);
+            binoVar /= (refntot * refntot);
 
             ParameterBag outputParameters = new ParameterBag();
             if (nunit == 1.0)
@@ -353,8 +353,8 @@ namespace StatsDirect.Builtins
                         break;
                     }
                     b0 = b0 * n1 / s1;
-                    s1 = s1 - 1.0;
-                    n1 = n1 - 1.0;
+                    s1 -= 1.0;
+                    n1 -= 1.0;
                 }
                 while (n1 > Convert.ToDouble(q));
 
@@ -379,15 +379,15 @@ namespace StatsDirect.Builtins
                 int a2;
                 do
                 {
-                    a1 = a1 + 1;
-                    q1 = q1 + 1;
+                    a1 += 1;
+                    q1 += 1;
                     h = h * p1 / a1 * r1 / q1;
-                    f = f + h;
+                    f += h;
                     a2 = a1 + 1;
                     f1[a2] = f;
                     h1[a2] = h;
-                    p1 = p1 - 1;
-                    r1 = r1 - 1;
+                    p1 -= 1;
+                    r1 -= 1;
                 }
                 while (p1 > 0);
 
@@ -398,7 +398,7 @@ namespace StatsDirect.Builtins
                 int j;
                 for (j = a2; j >= 2; j--)
                 {
-                    g = g + h1[j];
+                    g += h1[j];
                     g1[j] = g;
                 }
 
@@ -1183,8 +1183,8 @@ namespace StatsDirect.Builtins
                 tmp = xc;
                 xc = nc;
                 nc = tmp;
-                parameters["nc"] = new FilledParameter(FilledParameterDirection.Input, nc);
-                parameters["xc"] = new FilledParameter(FilledParameterDirection.Input, xc);
+                parameters["nc"] = FilledParameterFactory.Input(nc);
+                parameters["xc"] = FilledParameterFactory.Input(xc);
             }
             double pc = xc / nc;
             if (xt > nt)
@@ -1192,8 +1192,8 @@ namespace StatsDirect.Builtins
                 tmp = xt;
                 xt = nt;
                 nt = tmp;
-                parameters["nt"] = new FilledParameter(FilledParameterDirection.Input, nt);
-                parameters["xt"] = new FilledParameter(FilledParameterDirection.Input, xt);
+                parameters["nt"] = FilledParameterFactory.Input(nt);
+                parameters["xt"] = FilledParameterFactory.Input(xt);
             }
             double pt = xt / nt;
 
@@ -1316,7 +1316,7 @@ namespace StatsDirect.Builtins
                 {
                     if (brr > 1.0 & brr < 100.0)
                     {
-                        brr = brr / 100.0;
+                        brr /= 100.0;
                         brt = "(from percentage) ";
                     }
                     else
@@ -1614,7 +1614,7 @@ namespace StatsDirect.Builtins
                     for (i = 1; i <= rx; i++)
                     {
                         fl = fl * (nx - i + 1) / i;
-                        pl = pl + fl;
+                        pl += fl;
                     }
                 }
 
@@ -1628,7 +1628,7 @@ namespace StatsDirect.Builtins
                 exactParameters.AddOutput("cum_2", p2);
                 exactParameters.AddOutput("cum_1", p);
 
-                pl = pl - fl / 2.0;
+                pl -= fl / 2.0;
                 p2L = 2.0 * pl;
                 p = pl;
                 if (p2L > 1.0)

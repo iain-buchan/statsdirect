@@ -1,7 +1,6 @@
 <report>
 <title>Diversity</title>
 <block name="var">
-<br />
 <subtitle>Analysis for @ti:</subtitle>
 
 <p>Total number of counts = @n  <warn>@msg</warn><br />

@@ -1,22 +1,22 @@
 <report>
 <title>Effect size meta-analysis</title>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>J(N-2)</th><th>g</th><th colspan="2"><ci>Exact @pc% CI</ci></th><th></th></tr>
 <block name="exact"><tr><td>@st</td><td>@{gj:roundu}</td><td>@{g:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>N (exptl.)</th><th>N (ctrl.)</th><th>d</th><th colspan="2"><ci>Approximate @pc% CI</ci></th><th></th></tr>
 <block name="approximate"><tr><td>@st</td><td>@ne</td><td>@nc</td><td>@{d:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th colspan="2">% weights (fixed, random)</th><th></th></tr>
 <block name="weights"><tr><td>@st</td><td>@{howt:roundu}</td><td>@{dswt:roundu}</td><td>@lb</td></tr></block>
 </table>
+
 <block name="poolok">
-<br />
 <subtitle>Fixed effects (Hedges-Olkin)</subtitle>
 <p>Pooled effect size d+ = @{dplus:roundu} (<ci>@pc% CI = @{from:roundu} to @{to:roundu}</ci>)<br />
 Z (test d+ differs from 0) = @{z:roundu}  <pval>@{p:pval}</pval></p>
@@ -30,8 +30,8 @@ I&#xb2; (inconsistency) = @isq% (<ci>@pc1% CI = @llisq% to @ulisq%</ci>) </p>
 <p>Pooled d+ = @{dsrd:roundu} (<ci>@pc% CI = @{dsll:roundu} to @{dsul:roundu}</ci>)<br />
 Z (test d+ differs from 0) = @{dz:roundu}  <pval>@{dp:pval}</pval></p>
 </block>
+
 <block name="egger">
-<br />
 <subtitle>Bias indicators</subtitle>
 <p>Begg-Mazumdar: Kendall's @tau  <pval>@{p2:pval}</pval><br />
 Egger: bias = @a (<ci>@pc_egger% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>

@@ -22,7 +22,7 @@
       L &= "X" & j.ToString() & ": " & data.Variables(j - 1).Title & vbCrLf
   Next
   Dim outputParameters As New ParameterBag
-  outputParameters.Add("variable_list", New FilledParameter(FilledParameterDirection.Input, L))
+  outputParameters.Add("variable_list", FilledParameterFactory.Input(L))
   Return outputParameters
 ]]></script>
       <parameters>
@@ -44,7 +44,7 @@ For k as Integer = 0 To cols - 1
     qx = qx.Replace("X" & (k + 1).ToString(), data.Variables(k).Title)
 Next
 Dim outputParameters As New ParameterBag
-outputParameters.Add("default_new_column_name", New FilledParameter(FilledParameterDirection.Input, qx))
+outputParameters.Add("default_new_column_name", FilledParameterFactory.Input(qx))
 Return outputParameters
     ]]></script>
       <parameters>

@@ -1,6 +1,5 @@
 <report>
 <title>Risk analysis (retrospective)</title>
-<br />
 <table>
 <tr><th></th><td colspan="2"><subtotal>Characteristic factor:</subtotal></td></tr>
 <tr><td><subtotal>Outcome:</subtotal></td><td>Present</td><td>Absent</td></tr>

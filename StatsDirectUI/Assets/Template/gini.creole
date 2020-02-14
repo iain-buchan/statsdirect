@@ -1,7 +1,6 @@
 <report>
 <title>Gini coefficient of inequality</title>
 <block name="data">
-<br />
 <subtitle>Analysis for @ti:</subtitle>
 
 <p>Positive non-zero observations = @n  <warn>@msg</warn><br />

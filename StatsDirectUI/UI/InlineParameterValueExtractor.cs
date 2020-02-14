@@ -54,7 +54,7 @@ namespace StatsDirect.UI
                 return;
             }
             // If we get here, it's OK.
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, value);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(value);
         }
 
         public void Visit(Double2By2Parameter parameter)
@@ -109,13 +109,13 @@ namespace StatsDirect.UI
             }
 
             if (tl != Constant.MISSING)
-                OutputParameters[parm.TopLeftName] = new FilledParameter(FilledParameterDirection.Input, tl);
+                OutputParameters[parm.TopLeftName] = FilledParameterFactory.Input(tl);
             if (tr != Constant.MISSING)
-                OutputParameters[parm.TopRightName] = new FilledParameter(FilledParameterDirection.Input, tr);
+                OutputParameters[parm.TopRightName] = FilledParameterFactory.Input(tr);
             if (bl != Constant.MISSING)
-                OutputParameters[parm.BottomLeftName] = new FilledParameter(FilledParameterDirection.Input, bl);
+                OutputParameters[parm.BottomLeftName] = FilledParameterFactory.Input(bl);
             if (br != Constant.MISSING)
-                OutputParameters[parm.BottomRightName] = new FilledParameter(FilledParameterDirection.Input, br);
+                OutputParameters[parm.BottomRightName] = FilledParameterFactory.Input(br);
         }
 
         public void Visit(DoubleParameter parameter)
@@ -154,7 +154,7 @@ namespace StatsDirect.UI
                 }
             }
             // If we get here, it's OK.
-            OutputParameters[parameter.Name] = isMissing ? null : new FilledParameter(FilledParameterDirection.Input, value);
+            OutputParameters[parameter.Name] = isMissing ? null : FilledParameterFactory.Input(value);
         }
 
         public void Visit(FillableParameter parameter)
@@ -200,7 +200,7 @@ namespace StatsDirect.UI
             }
 
             // If we get here, it's valid.
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, frame);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);
         }
 
         public void Visit(IntegerParameter parameter)
@@ -236,7 +236,7 @@ namespace StatsDirect.UI
                 }
             }
             // If we get here, it's OK.
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, value);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(value);
         }
 
         public void Visit(OptionsParameter parameter)
@@ -253,7 +253,7 @@ namespace StatsDirect.UI
                 else
                 {
                     OptionsOption oo = (OptionsOption)chk.Tag;
-                    OutputParameters[oo.Name] = new FilledParameter(FilledParameterDirection.Input, chk.Checked);
+                    OutputParameters[oo.Name] = FilledParameterFactory.Input(chk.Checked);
                 }
             }
         }
@@ -268,13 +268,13 @@ namespace StatsDirect.UI
                 ComboBox cbo = (ComboBox)pickPanel.Controls[2 * v];
                 ary[v] = cbo.SelectedIndex;
             }
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, ary);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(ary);
         }
 
         public void Visit(StringParameter parameter)
         {
             TextBox txt = (TextBox)Control;
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, txt.Text);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(txt.Text);
         }
 
         public void Visit(SpecialParameter parameter)
@@ -309,7 +309,7 @@ namespace StatsDirect.UI
                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
                         frame.Variables.Add(dv);
                     }
-                    OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, frame);
+                    OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);
                 }
                 return;
             }
@@ -337,7 +337,7 @@ namespace StatsDirect.UI
                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
                         frame.Variables.Add(dv);
                     }
-                    OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, frame);
+                    OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);
                 }
                 return;
             }
@@ -364,7 +364,7 @@ namespace StatsDirect.UI
                 bool[] selected = new bool[lstPickFromList.Items.Count - offset];
                 foreach (int i in lstPickFromList.SelectedIndices)
                     selected[i - offset] = true;
-                OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, selected);
+                OutputParameters[parameter.Name] = FilledParameterFactory.Input(selected);
             }
             else
             {
@@ -374,7 +374,7 @@ namespace StatsDirect.UI
                 if (cbo.SelectedIndex >= offset)
                     selected[cbo.SelectedIndex - offset] = true;
                 if (!p.IncludeNoneEntry || cbo.SelectedIndex > 0)
-                    OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, selected);
+                    OutputParameters[parameter.Name] = FilledParameterFactory.Input(selected);
             }
         }
 
@@ -388,7 +388,7 @@ namespace StatsDirect.UI
                         ComboBoxEx cbo = (ComboBoxEx)Control;
                         ComboBoxExItem selectedItem = (ComboBoxExItem)cbo.SelectedItem;
                         OptionOption selectedOption = (OptionOption)selectedItem.Tag;
-                        OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, selectedOption.Value);
+                        OutputParameters[parameter.Name] = FilledParameterFactory.Input(selectedOption.Value);
                     }
                     break;
                 case OptionFormatType.Radio:
@@ -403,7 +403,7 @@ namespace StatsDirect.UI
                             RadioButton rad = (RadioButton)c;
                             if (rad.Checked)
                             {
-                                OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, rad.Tag);
+                                OutputParameters[parameter.Name] = FilledParameterFactory.Input(rad.Tag);
                                 atLeastOneChecked = true;
                                 break;
                             }
@@ -437,7 +437,7 @@ namespace StatsDirect.UI
             DataFrame newFrame = new DataFrame();
             foreach (IVariable v in oldFrame.Variables)
                 newFrame.Variables.Add(parameter.ValueVariable.Equals(v.Title) ? newValues : v);
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, newFrame);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(newFrame);
         }
 
         public void Visit(Double2By2ByKParameter parameter)
@@ -568,7 +568,7 @@ namespace StatsDirect.UI
             DoubleVariable var2 = new DoubleVariable(var2Data.ToArray());
             frame.Variables.Add(var1);
             frame.Variables.Add(var2);
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, frame);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);
         }
 
         public void Visit(DateParameter parameter)
@@ -593,7 +593,7 @@ namespace StatsDirect.UI
                 }
             }
             DateTime value = Parsing.Cdate_Txt(raw);
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, value);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(value);
         }
 
         public void Visit(ChartOptionsParameter parameter)
@@ -615,7 +615,7 @@ namespace StatsDirect.UI
         {
             CheckBox cb = (CheckBox)Control;
             bool value = cb.Checked;
-            OutputParameters[parameter.Name] = new FilledParameter(FilledParameterDirection.Input, value);
+            OutputParameters[parameter.Name] = FilledParameterFactory.Input(value);
         }
     }
 }

@@ -45,7 +45,7 @@ namespace StatsDirect.Charting.Renderer
                     seriesMaxY = Math.Max(seriesMaxY, so.BinsDescriptor.Counts[bindex]);
                 }
                 if (showRelativeFrequencies)
-                    seriesMaxY = seriesMaxY / points;
+                    seriesMaxY /= points;
                 if (seriesMaxY > maxY)
                     maxY = seriesMaxY;
             }
@@ -129,7 +129,7 @@ namespace StatsDirect.Charting.Renderer
                         seriesMaxY = Math.Max(seriesMaxY, descriptor.Counts[bindex]);
                     }
                     if (options.ShowRelativeFrequencies)
-                        seriesMaxY = seriesMaxY / points;
+                        seriesMaxY /= points;
                     if (seriesMaxY > DataMaxY)
                         DataMaxY = seriesMaxY;
 

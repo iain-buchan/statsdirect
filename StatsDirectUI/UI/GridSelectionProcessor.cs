@@ -22,7 +22,7 @@ namespace StatsDirect.UI
             grid = g;
         }
 
-        internal ParameterBag FillFrameParameter(Parameter parameter, ITemplateProcessor processor, ITemplateHost host, ParameterBag parameters)
+        internal ParameterBag FillFrameParameter(Parameter parameter, ITemplateProcessor processor, ParameterBag parameters)
         {
             FrameParameter frameParameter = (FrameParameter)parameter;
             if (frameParameter.ShouldClearSelectionFirst)
@@ -110,14 +110,14 @@ namespace StatsDirect.UI
                         else
                         {
                             targetFrame = new DataFrame();
-                            outputParameters.Add(frameParameter.AppendToFrame, new FilledParameter(FilledParameterDirection.Input, targetFrame));
+                            outputParameters.AddInput(frameParameter.AppendToFrame, targetFrame);
                         }
                         foreach (IVariable v in frame.Variables)
                             targetFrame.Variables.Add(v);
                         // frame.Variables.Clear(); Removed as this prevents validation - the original frame's variables have to stay intact until after the validation phase.
                         // HACK: As an unpleasant side effect, this means that *both* frames share a pointer to the variable.
                     }
-                    outputParameters.Add(parameter.Name, new FilledParameter(FilledParameterDirection.Input, frame));
+                    outputParameters.AddInput(parameter.Name, frame);
                     return outputParameters;
                 }
 
@@ -135,7 +135,7 @@ namespace StatsDirect.UI
             }
         }
 
-        internal DataFrame2D FillFrameParameter2D(Parameter parameter, ITemplateProcessor processor, SdApplication sDApplication, ParameterBag parameters)
+        internal DataFrame2D FillFrameParameter2D(Parameter parameter, ITemplateProcessor processor, ParameterBag parameters)
         {
             Frame2DParameter frame2dParameter = (Frame2DParameter)parameter;
             if (frame2dParameter.ShouldClearSelectionFirst)
@@ -146,13 +146,13 @@ namespace StatsDirect.UI
                 if (SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier)
                 {
                     DataFrame2D frame = Gidx3(frame2dParameter.MinimumColumns(processor, parameters),
-frame2dParameter.MaximumColumns(processor, parameters),
-0,
-frame2dParameter.SubPrompt(processor, parameters),
-frame2dParameter.DataAcquisitionMode,
-out bool userCancelled,
-out bool wasPivoted,
-originGroup);
+                        frame2dParameter.MaximumColumns(processor, parameters),
+                        0,
+                        frame2dParameter.SubPrompt(processor, parameters),
+                        frame2dParameter.DataAcquisitionMode,
+                        out bool userCancelled,
+                        out bool wasPivoted,
+                        originGroup);
                     if (userCancelled)
                         throw new TemplateOperationCancelledException();
                     if (wasPivoted)

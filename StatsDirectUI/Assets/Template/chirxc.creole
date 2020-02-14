@@ -1,6 +1,5 @@
 <report>
 <title>Contingency table analysis</title>
-<br />
 <table>
 <block name="rows">
 <tr><td>Observed</td><block name="obs"><td>@{obs:roundu}</td></block><td><subtotal><block name="rtot">@{rtot:roundu}</block></subtotal></td><td><block name="score"><score>@{score:roundu}</score></block></td></tr>
@@ -22,14 +21,12 @@
 
 <p><warn>@warn</warn></p>
 </block>
-<br />
 <subtitle>NOMINAL INDEPENDENCE</subtitle>
 <table>
 <tr><td>Chi-square = @{chio:roundu}</td><td>DF = @{dfo:roundu}</td><td><pval>@{po:pval}</pval></td></tr>
 <tr><td>G-square = @{g2:roundu}</td><td>DF = @{dfo:roundu}</td><td><pval>@{pog2:pval}</pval></td></tr>
 <tr><td>Fisher-Freeman-Halton exact</td><td></td><td><pval>@{p2:pval}</pval>  @lb</td></tr>
 </table>
-<br />
 <subtitle>ANOVA</subtitle>
 <p>Chi-square for equality of mean column scores = @{chie:roundu}<br />
 DF = @dfe <pval>@{pe:pval}</pval></p>

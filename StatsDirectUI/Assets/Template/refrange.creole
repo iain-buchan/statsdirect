@@ -1,6 +1,5 @@
 <report>
 <title>Reference range/interval</title>
-<br />
 <table>
 <tr><td>Sample name:</td><td>@name</td></tr>
 <tr><td>Sample mean = </td><td>@{mean:roundu}</td></tr>

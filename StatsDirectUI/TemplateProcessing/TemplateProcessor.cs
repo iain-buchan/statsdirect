@@ -7,6 +7,8 @@ using StatsDirect.UI;
 using StatsDirect.Utilities;
 using System.Globalization;
 using StatsDirect.Templates;
+using System.Diagnostics;
+using System.Linq;
 
 namespace StatsDirect.TemplateProcessing
 {
@@ -71,6 +73,12 @@ namespace StatsDirect.TemplateProcessing
                 }
             }
             host.Operation = null;
+#if RENDER_TESTS
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            using (System.IO.TextWriter sw = new System.IO.StringWriter(sb))
+                new System.Xml.Serialization.XmlSerializer(typeof(OperationTest), new System.Xml.Serialization.XmlRootAttribute("test")).Serialize(sw, OperationTestRenderer.Render(filledParameters));
+            Debug.Print(sb.ToString());
+#endif
             return filledParameters;
         }
 
@@ -134,8 +142,6 @@ namespace StatsDirect.TemplateProcessing
             if (null == builtin)
                 throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
             ParameterBag outputResult = builtin.Invoke(host, parameters);
-            // Ensure no stray progress bars stay around
-            host.FinishProgress();
             return outputResult;
         }
 
@@ -268,7 +274,7 @@ namespace StatsDirect.TemplateProcessing
             for (int i = lower; i <= upper; i++)
             {
                 if (null != step.LoopVariableName)
-                    filledParameters[step.LoopVariableName] = new FilledParameter(FilledParameterDirection.Output, i);
+                    filledParameters[step.LoopVariableName] = FilledParameterFactory.Output(i);
                 foreach (Step s in step.Steps)
                 {
                     // TODO: How to handle execution failures?
@@ -602,7 +608,7 @@ namespace StatsDirect.TemplateProcessing
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new ParameterBag();
-            // outputParameters.Add(REPORT_ID_NAME, new FilledParameter(FilledParameterDirection.Input, reportId));
+            // outputParameters.Add(REPORT_ID_NAME, FilledParameterFactory.Input(reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
                 outputParameters.AddInput(STATSDIRECT_REPORT_PANE, preferredPane);
             return outputParameters;

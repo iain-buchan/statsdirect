@@ -1,20 +1,19 @@
 <report>
 <title>Relative risk meta-analysis</title>
-<br />
 <table>
 <tr><th>Stratum</th><th colspan="4">Table (exposed +ve, control +ve, exposed -ve, control -ve)</th><th></th></tr>
 <block name="inputs">
 <tr><td>@st</td><td>@a</td><td>@b</td><td>@c</td><td>@d</td><td>@lb</td></tr>
 </block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Relative risk</th><th colspan="2"><ci>@pc% CI (@method)</ci></th><th></th></tr>
 <block name="risks">
 <tr><td>@st</td><td>@{rr:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr>
 </block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th colspan="2">% Weights (fixed, random)</th><th></th></tr>
 <block name="risks">

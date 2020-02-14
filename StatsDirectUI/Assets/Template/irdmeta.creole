@@ -1,18 +1,17 @@
 <report>
 <title>Incidence rate difference (IRD) meta-analysis</title>
-<br />
 <table>
 <tr><th>Stratum</th><th colspan="4">Table (a, person-time exposed, b, person-time not exposed)</th><th></th></tr>
 <block name="inputs">
 <tr><td>@st</td><td>@a</td><td>@{pt1:roundu}</td><td>@b</td><td>@{pt2:roundu}</td><td>@lb</td></tr>
 </block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>IRD</th><th colspan="2"><ci>@pc% CI (approximate)</ci></th><th></th></tr>
 <block name="ir"><tr><td>@st</td><td>@{ird:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th colspan="2">% Weights (fixed, random)</th><th></th></tr>
 <block name="ir"><tr><td>@st</td><td>@{yi:roundu}</td><td>@{vi:roundu}</td><td>@wt</td><td>@dwt</td><td>@lb</td></tr></block>

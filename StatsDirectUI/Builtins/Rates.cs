@@ -36,7 +36,7 @@ namespace StatsDirect.Builtins
                 if (fault != 0)
                     xu = Constant.MISSING;
                 else
-                    xu = xu / tar;
+                    xu /= tar;
             }
             else
             {
@@ -44,12 +44,12 @@ namespace StatsDirect.Builtins
                 if (fault != 0)
                     xl = Constant.MISSING;
                 else
-                    xl = xl / tar;
+                    xl /= tar;
                 xu = PDF.ppchi2(1.0 - alpha / 2.0, 2.0 * (events + 1.0), out fault) / 2.0;
                 if (fault != 0)
                     xu = Constant.MISSING;
                 else
-                    xu = xu / tar;
+                    xu /= tar;
             }
         }
 
@@ -111,9 +111,9 @@ namespace StatsDirect.Builtins
                 poisson_ci(1.0 - cco, dead, 1.0, out double xl, out double xu);
 
                 if (xl != Constant.MISSING)
-                    xl = xl / etot;
+                    xl /= etot;
                 if (xu != Constant.MISSING)
-                    xu = xu / etot;
+                    xu /= etot;
                 outputParameters.AddOutput("pc", Formatting.XRound(100 * cco, 2));
                 outputParameters.AddOutput("from", xl);
                 outputParameters.AddOutput("to", xu);
@@ -187,13 +187,13 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= rows; j++)
             {
                 idxr[j] = idxy[j] / idxn[j];
-                stdr = stdr + idxr[j] * refn[j];
-                pois_var = pois_var + refn[j] * refn[j] * idxr[j] / idxn[j];
-                bino_var = bino_var + refn[j] * refn[j] * idxr[j] * (1.0 - idxr[j]) / idxn[j];
+                stdr += idxr[j] * refn[j];
+                pois_var += refn[j] * refn[j] * idxr[j] / idxn[j];
+                bino_var += refn[j] * refn[j] * idxr[j] * (1.0 - idxr[j]) / idxn[j];
             }
-            stdr = stdr / refntot;
-            pois_var = pois_var / (refntot * refntot);
-            bino_var = bino_var / (refntot * refntot);
+            stdr /= refntot;
+            pois_var /= (refntot * refntot);
+            bino_var /= (refntot * refntot);
             if (nunit == 1.0)
                 outputParameters.AddOutput("units", "1 unit");
             else
@@ -320,11 +320,11 @@ namespace StatsDirect.Builtins
             double pt2Sum = 0.0;
             for (int i = 1; i <= k; i++)
             {
-                refsum = refsum + refIdent[i];
-                asum = asum + a[i];
-                bsum = bsum + b[i];
-                pt1Sum = pt1Sum + pt1[i];
-                pt2Sum = pt2Sum + pt2[i];
+                refsum += refIdent[i];
+                asum += a[i];
+                bsum += b[i];
+                pt1Sum += pt1[i];
+                pt2Sum += pt2[i];
             }
 
             double alpha = 1.0 - cco;
@@ -416,7 +416,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    realk = realk + 1;
+                    realk += 1;
                     double ir1 = a[i] / pt1[i];
                     double ir2 = b[i] / pt2[i];
                     if (ir2 != 0.0)
@@ -458,18 +458,18 @@ namespace StatsDirect.Builtins
                     rkw[i] = refIdent[i] / refsum;
                     double pa = a[i] / pt1[i];
                     double qa = 1.0 - pa;
-                    sre = sre + refIdent[i] * pa;
-                    vsre = vsre + rkw[i] * rkw[i] * (a[i] / (pt1[i] * pt1[i]));
-                    vsre_bino = vsre_bino + rkw[i] * rkw[i] * pa * qa / pt1[i];
+                    sre += refIdent[i] * pa;
+                    vsre += rkw[i] * rkw[i] * (a[i] / (pt1[i] * pt1[i]));
+                    vsre_bino += rkw[i] * rkw[i] * pa * qa / pt1[i];
                     double pb = b[i] / pt2[i];
                     double qb = 1.0 - pb;
-                    srne = srne + refIdent[i] * pb;
-                    vsrne = vsrne + rkw[i] * rkw[i] * (b[i] / (pt2[i] * pt2[i]));
-                    vsrne_bino = vsrne_bino + rkw[i] * rkw[i] * pb * qb / pt2[i];
+                    srne += refIdent[i] * pb;
+                    vsrne += rkw[i] * rkw[i] * (b[i] / (pt2[i] * pt2[i]));
+                    vsrne_bino += rkw[i] * rkw[i] * pb * qb / pt2[i];
                 }
             }
-            sre = sre / refsum;
-            srne = srne / refsum;
+            sre /= refsum;
+            srne /= refsum;
 
             double sreu_bino; double srel_bino; double sreu; double srel;
             if (vsre < 0.0)

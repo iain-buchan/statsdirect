@@ -19,7 +19,6 @@ DeLong standard error = @se:  <ci>@pc% CI = @ll to @ul</ci></p>
 <tr><td></td><td>c</td><td>d</td></tr>
 <tr><td></td><td>@c</td><td>@d</td></tr>
 </table>
-<br />
 
 <p><b>Predictive value of +ve test </b>(post-test likelihood of disease)<br />
 @likely <ci>(@likely_from to @likely_to)</ci>, @likely_pc% <ci>(@likely_from_pc% to @likely_to_pc%)</ci>,  {change = @likely_change%}</p>

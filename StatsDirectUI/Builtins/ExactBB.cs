@@ -37,12 +37,12 @@ namespace StatsDirect.Builtins
         /// </summary>
         public struct Rec2X2
         {
-            public double A;
-            public double M1;
-            public double N1;
-            public double N0;
-            public int Freq;
-            public bool Informative;
+            public double A { get; set; }
+            public double M1 { get; set; }
+            public double N1 { get; set; }
+            public double N0 { get; set; }
+            public int Freq { get; set; }
+            public bool Informative { get; set; }
         }
 
         private double[] polyD; // The polynomial of conditional coefficients
@@ -211,7 +211,7 @@ namespace StatsDirect.Builtins
             return brentRootReturn;
         }
 */
-        public void Exact22K(ITemplateHost host, int numTables, int dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
+        public void Exact22K(IPreferencesAndProgressBar host, int numTables, int dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
         {
             //   Stratified case-control data, matched case-control data, and
             //   stratified person-time data are all held in a record (Rec2x2). With
@@ -387,7 +387,7 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= Convert.ToInt32(Math.Min(x, y - x)); i++)
             {
                 f = f * y / Convert.ToDouble(i);
-                y = y - 1.0;
+                y -= 1.0;
             }
             return f;
         }
@@ -468,7 +468,6 @@ namespace StatsDirect.Builtins
 
         }
 
-
         ///  <summary>
         ///  This routine multiplies together two polynomials P1 and P2 to obtain the product polynomial P3.
         ///  </summary>
@@ -482,10 +481,10 @@ namespace StatsDirect.Builtins
         ///  <param name="ierr"></param>
         /// <param name="job"></param>
         /// <remarks>Reference 'Algorithms 2nd ed.', by R. Sedgewick (Addison-Wesley, 1988), p. 522.</remarks>
-        private void MultPoly(ITemplateHost host, double[] p1, double[] p2, int deg1, int deg2, double[] p3, out int deg3, out int ierr, string job)
+        private void MultPoly(IPreferencesAndProgressBar host, double[] p1, double[] p2, int deg1, int deg2, double[] p3, out int deg3, out int ierr, string job)
         {
             deg3 = deg1 + deg2;
-            bool waiter = Convert.ToDouble(deg1) * Convert.ToDouble(deg2) > 300000;
+            bool couldBeSlow = Convert.ToDouble(deg1) * Convert.ToDouble(deg2) > 300000;
 
             if (logScale)
                 for (int i = 0; i <= deg3; i++)
@@ -494,58 +493,54 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i <= deg3; i++)
                     p3[i] = 0.0;
 
-            if (waiter)
-                host.StartProgress("Multiplying polynomials: " + job, true);
-
-            if (logScale)
+            using (IProgressBar progress = host.StartProgress("Multiplying polynomials: " + job, true, couldBeSlow))
             {
-                for (int i = 0; i <= deg1; i++)
+
+                if (logScale)
                 {
-                    for (int j = 0; j <= deg2; j++)
+                    for (int i = 0; i <= deg1; i++)
                     {
-                        if (p3[i + j] == -Constant.MISSING)
-                            p3[i + j] = p1[i] + p2[j];
-                        else
-                            p3[i + j] = SumLog(p1[i] + p2[j], p3[i + j]);
-                    }
-                    if (waiter)
-                    {
-                        if (host.UpdateProgress(i / (double)deg1))
+                        for (int j = 0; j <= deg2; j++)
                         {
-                            ierr = 1;
-                            host.FinishProgress();
-                            return;
+                            if (p3[i + j] == -Constant.MISSING)
+                                p3[i + j] = p1[i] + p2[j];
+                            else
+                                p3[i + j] = SumLog(p1[i] + p2[j], p3[i + j]);
+                        }
+                        if (couldBeSlow)
+                        {
+                            if (progress.Update(i / (double)deg1))
+                            {
+                                ierr = 1;
+                                return;
+                            }
                         }
                     }
                 }
-            }
-            else
-            {
-                for (int i = 0; i <= deg1; i++)
+                else
                 {
-                    for (int j = 0; j <= deg2; j++)
-                        p3[i + j] = p1[i] * p2[j] + p3[i + j];
-                    if (waiter)
+                    for (int i = 0; i <= deg1; i++)
                     {
-                        if (host.UpdateProgress(i / (double)deg1))
+                        for (int j = 0; j <= deg2; j++)
+                            p3[i + j] = p1[i] * p2[j] + p3[i + j];
+                        if (couldBeSlow)
                         {
-                            ierr = 1;
-                            host.FinishProgress();
-                            return;
+                            if (progress.Update(i / (double)deg1))
+                            {
+                                ierr = 1;
+                                return;
+                            }
                         }
                     }
-                }
 
-                if (waiter)
-                    host.FinishProgress();
-
-                //  Test for overflow; if so, set an appropriate error value.
-                for (int i = 0; i <= deg3; i++)
-                {
-                    if (double.IsInfinity(p3[i]) || double.IsNaN(p3[i]))
+                    //  Test for overflow; if so, set an appropriate error value.
+                    for (int i = 0; i <= deg3; i++)
                     {
-                        ierr = 6; //  Old VB6 code for an overflow
-                        return;
+                        if (double.IsInfinity(p3[i]) || double.IsNaN(p3[i]))
+                        {
+                            ierr = 6; //  Old VB6 code for an overflow
+                            return;
+                        }
                     }
                 }
             }
@@ -593,7 +588,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         ///  <summary>
         ///  This routine outputs the stratum-specific polynomial of conditional
@@ -773,7 +767,7 @@ namespace StatsDirect.Builtins
         ///  <param name="tables"></param>
         ///  <param name="ierr"></param>
         ///  <remarks></remarks>
-        private void CalcPoly(ITemplateHost host, int dataType, int numTables, Rec2X2[] tables, out int ierr)
+        private void CalcPoly(IPreferencesAndProgressBar host, int dataType, int numTables, Rec2X2[] tables, out int ierr)
         {
             ierr = 0;
 
@@ -838,7 +832,6 @@ namespace StatsDirect.Builtins
                 }
             }
         }
-
 
         ///  <summary>
         ///  This routine returns the value of the polynomial c, a polynomial of
@@ -913,7 +906,7 @@ namespace StatsDirect.Builtins
                     {
                         for (i = degC - 1; i >= 0; i--)
                         {
-                            y = y + c[i];
+                            y += c[i];
                         }
                     }
                 }
@@ -991,7 +984,7 @@ namespace StatsDirect.Builtins
             // if necessary, increase X1 until F1 and F0 have different signs
             while ((f1 * f0 > 0.0) & (iter < MAX_ITER))
             {
-                iter = iter + 1;
+                iter += 1;
                 x0 = x1;
                 f0 = f1;
                 x1 = x1 * 1.5 * iter;
@@ -1053,7 +1046,7 @@ namespace StatsDirect.Builtins
             // Converge to root
             while (found == false && iter < MAX_ITER && ierr == 0)
             {
-                iter = iter + 1;
+                iter += 1;
                 double x2 = x1 - f1 * (x1 - x0) / (f1 - f0);
                 double f2 = Func(x2, out ierr);
                 if (ierr != 0)
@@ -1109,8 +1102,6 @@ namespace StatsDirect.Builtins
 
         }
 
-
-
         /// <summary>
         /// This routine returns the exact P-values as defined in 'Modern
         /// Epidemiology ' by K. J. Rothman (Little, Brown, and Co., 1986).
@@ -1162,19 +1153,19 @@ namespace StatsDirect.Builtins
             {
                 for (i = degD - 1; i >= diff; i--)
                 {
-                    upTail = upTail + polyD[i];
+                    upTail += polyD[i];
                     if (polyD[i] <= polyD[diff])
                     {
-                        upZ = upZ + polyD[i];
+                        upZ += polyD[i];
                     }
                 }
                 denom = upTail;
                 for (i = diff - 1; i >= 0; i--)
                 {
-                    denom = denom + polyD[i];
+                    denom += polyD[i];
                     if (polyD[i] <= polyD[diff])
                     {
-                        loZ = loZ + polyD[i];
+                        loZ += polyD[i];
                     }
                 }
                 if (denom == 0)
@@ -1342,7 +1333,6 @@ namespace StatsDirect.Builtins
             } // Failed convergence
         }
 
-
         private static double ZExp(double z, out int ierr)
         {
             // no need to check for z<minexp as exp in vb returns 0 and does not underflow
@@ -1355,7 +1345,7 @@ namespace StatsDirect.Builtins
             return Math.Exp(z);
         }
 
-        public static void OddsRatioCI(ITemplateHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
+        public static void OddsRatioCI(IPreferencesAndProgressBar host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
         {
             if (a == 0 && b == 0 || c == 0 && d == 0)
             {
@@ -1397,7 +1387,8 @@ namespace StatsDirect.Builtins
             lerr = llf == Constant.MISSING;
             uerr = ulf == Constant.MISSING;
         }
-        public static void OddsRatioCMLE(ITemplateHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
+        
+        public static void OddsRatioCMLE(IPreferencesAndProgressBar host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
         {
             eor = Constant.MISSING;
             llf = Constant.MISSING;

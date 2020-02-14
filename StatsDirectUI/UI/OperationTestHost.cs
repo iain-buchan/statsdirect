@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using StatsDirect.Data;
+using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    internal class OperationTestHost : ITemplateHost
+    internal class OperationTestHost : ITemplateHost, IPreferences
     {
         private Dictionary<string, OperationTestInputParameter> InputParameters { get; }
 
@@ -17,145 +18,152 @@ namespace StatsDirect.UI
                 InputParameters.Add(input.Name, input);
         }
 
-        bool ITemplateHost.MetaPlotCI => throw new NotImplementedException();
+        bool IPreferences.MetaPlotCI => throw new NotImplementedException();
 
-        int ITemplateHost.MetaPlotMethod => throw new NotImplementedException();
+        int IPreferences.MetaPlotMethod => throw new NotImplementedException();
 
-        IDictionary<string, ParameterBag> ITemplateHost.SessionParametersPerOperation => throw new NotImplementedException();
+        /// <summary>
+        /// Session values in tests are always empty; always generate a new dictionary in case anything tries to fill it.
+        /// </summary>
+        IDictionary<string, ParameterBag> IPreferences.SessionParametersPerOperation => new Dictionary<string, ParameterBag>();
 
-        ParameterBag ITemplateHost.SessionParametersAcrossOperations => throw new NotImplementedException();
+        ParameterBag IPreferences.SessionParametersAcrossOperations => throw new NotImplementedException();
 
-        SDPreferences ITemplateHost.Preferences => throw new NotImplementedException();
+        SDPreferences IPreferences.Preferences => throw new NotImplementedException();
 
-        Operation ITemplateHost.Operation { get; set; }
+        Operation IUserInterface.Operation { get; set; }
 
-        IDictionary<string, object> ITemplateHost.Session => throw new NotImplementedException();
+        IDictionary<string, object> IPreferences.Session => throw new NotImplementedException();
 
-        ParameterBag ITemplateHost.Amend(IFillable options, ParameterBag context)
+        ParameterBag IUserInterface.Amend(IFillable options, ParameterBag context)
         {
             // No amendment during tests
             return context;
         }
 
-        bool ITemplateHost.CanCombine(Parameter parameter)
+        bool IUserInterface.CanCombine(Parameter parameter)
         {
             return false; // We always force the use of single parameters to make the host's life easy
         }
 
-        void ITemplateHost.Error(string Message, string Caption)
+        void IUserInterface.Error(string Message, string Caption)
         {
             throw new NotImplementedException();
         }
 
-        ParameterBag ITemplateHost.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
+        ParameterBag IUserInterface.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
         {
             // Should never be called
             throw new NotImplementedException();
         }
 
-        ParameterBag ITemplateHost.FillParameter(ITemplateProcessor processor, Parameter Parameter, ParameterBag context, bool shouldCombine)
+        ParameterBag IUserInterface.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
         {
-            // Do nothing; we already have all the inputs we're going to get
-            return new ParameterBag();
+            if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter input))
+                throw new NotImplementedException($"Operation {parameter.Operation.Name} expects parameter {parameter.Name} which was not specified in the test inputs");
+            return new ParameterBag(parameter.Name, FilledParameterFactory.Input(new InputParameterFiller(input).Fill(parameter)));
         }
 
-        void ITemplateHost.FinishProgress()
-        {
-            // No UI during a test
-        }
-
-        bool ITemplateHost.GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled)
+        bool IUserInterface.GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled)
         {
             throw new NotImplementedException();
         }
 
-        bool ITemplateHost.GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled)
+        bool IUserInterface.GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled)
         {
             throw new NotImplementedException();
         }
 
-        double ITemplateHost.GetDouble(string prompt, string Title, double InitialValue, out bool cancelled)
+        double IUserInterface.GetDouble(string prompt, string Title, double InitialValue, out bool cancelled)
         {
             throw new NotImplementedException();
         }
 
-        int ITemplateHost.GetInteger(string prompt, string Title, int initialValue, out bool cancelled)
+        int IUserInterface.GetInteger(string prompt, string Title, int initialValue, out bool cancelled)
         {
             throw new NotImplementedException();
         }
 
-        IScriptEngine ITemplateHost.GetScriptEngine(string language)
+        IScriptEngine IUserInterface.GetScriptEngine(string language)
+        {
+            if (ScriptEngine.CanHandle(language))
+                return new ScriptEngine();
+            return null;
+        }
+
+        string IUserInterface.GetString(string prompt, string title, string initialValue)
         {
             throw new NotImplementedException();
         }
 
-        string ITemplateHost.GetString(string prompt, string title, string initialValue)
+        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
         {
             throw new NotImplementedException();
         }
 
-        void ITemplateHost.NoteError(Exception ex)
-        {
-            throw ex;
-        }
-
-        void ITemplateHost.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
-        {
-            throw new NotImplementedException();
-        }
-
-        object ITemplateHost.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
+        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
         {
             // No UI during a test
             return null;
         }
 
-        void ITemplateHost.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
+        void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
         {
             if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter input))
                 throw new NotImplementedException($"Operation {parameter.Operation.Name} expects parameter {parameter.Name} which was not specified in the test inputs");
             context.AddInput(parameter.Name, new InputParameterFiller(input).Fill(parameter));
         }
 
-        string ITemplateHost.pval(double p)
+        string IPreferences.pval(double p)
         {
             throw new NotImplementedException();
         }
 
-        string ITemplateHost.pval_half(double p)
+        string IPreferences.pval_half(double p)
         {
             throw new NotImplementedException();
         }
 
-        bool ITemplateHost.Query(string Message, string Caption)
+        bool IUserInterface.Query(string Message, string Caption)
         {
             throw new NotImplementedException();
         }
 
-        string ITemplateHost.RoundU(double amount)
+        string IPreferences.RoundU(double amount)
         {
             throw new NotImplementedException();
         }
 
-        void ITemplateHost.ShowHelp(int helpContextId)
+        IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
+        {
+            return new TestProgressBar();
+        }
+
+        void IUserInterface.Warning(string Message, string Caption)
         {
             // No UI during a test
         }
 
-        void ITemplateHost.StartProgress(string operationDescription, bool provideProgress)
+        private class TestProgressBar : IProgressBar
         {
-            // No UI during a test
-        }
+            void IProgressBar.Finish()
+            {
+                // Do nothing
+            }
 
-        bool ITemplateHost.UpdateProgress(double fractionComplete)
-        {
-            // No UI during a test
-            return true;
-        }
+            bool IProgressBar.Update(double fractionComplete)
+            {
+                // Do nothing, assume continue
+                return true;
+            }
 
-        void ITemplateHost.Warning(string Message, string Caption)
-        {
-            // No UI during a test
+            #region IDisposable Support
+            // This code added to correctly implement the disposable pattern.
+            void IDisposable.Dispose()
+            {
+                // Nothing needed
+            }
+            #endregion
         }
 
         private class InputParameterFiller : IParameterVisitor
@@ -170,7 +178,7 @@ namespace StatsDirect.UI
             }
             void IParameterVisitor.Visit(BooleanParameter parameter)
             {
-                throw new NotImplementedException();
+                parsedInput = bool.Parse(Input.Value);
             }
 
             void IParameterVisitor.Visit(ChartOptionsParameter parameter)
@@ -220,7 +228,7 @@ namespace StatsDirect.UI
 
             void IParameterVisitor.Visit(FrameParameter parameter)
             {
-                throw new NotImplementedException();
+                parsedInput = FrameData.ParseToFrame(Input.Value);
             }
 
             void IParameterVisitor.Visit(GroupedCovarianceParameter parameter)

@@ -1,6 +1,5 @@
 <report>
 <title>Chi-square test (2 by k)</title>
-<br />
 <table>
 <tr><th></th><th>Successes</th><th>Failures</th><th>Total</th><th>Per cent</th><th>Score</th></tr>
 <block name="row">

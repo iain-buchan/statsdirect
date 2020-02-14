@@ -44,7 +44,7 @@ namespace StatsDirect.Templates
             {
                 if (null == frame)
                 {
-                    frame = ParseToFrame();
+                    frame = ParseToFrame(rawData);
                     rawData = null;
                 }
                 return frame;
@@ -56,7 +56,7 @@ namespace StatsDirect.Templates
             }
         }
 
-        private DataFrame ParseToFrame()
+        public static DataFrame ParseToFrame(string rawData)
         {
             // Assumes NumericReplaceMissing.  TODO: Fix this!
             List<List<string>> strings = CsvReader.Read(new StringReader(rawData));
@@ -68,7 +68,7 @@ namespace StatsDirect.Templates
 
             // Read the header row and create variables.
             foreach (string s in strings[row])
-                outputFrame.Variables.Add(new DoubleVariable(strings.Count - 1 /* for the header row */ - row /* for leading blanks */, s));
+                outputFrame.Variables.Add(new DoubleVariable(strings.Count - 1 /* for the header row */ - row /* for leading blanks */, s.Trim()));
             int columns = outputFrame.VariableCount;
             row++;
 

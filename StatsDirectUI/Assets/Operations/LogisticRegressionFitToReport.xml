@@ -33,40 +33,40 @@
 <tr><th>Index</th><block name="predictors"><th>@lab</th></block></tr>
 <block name="predictorValues"><tr><td>@idx</td><block name="pred"><td>@val</td></block></tr>
 </block></table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Trials</th><th>Events</th><th>Event Probability</th><th>Deviance Residual</th></tr>
 <block name="predictorValues"><tr><td>@idx</td><td>@sub</td><td>@res</td><td>@fit</td><td>@dev</td></tr>
 </block></table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Pearson Residual</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
 <block name="predictorValues"><tr><td>@idx</td><td>@pres</td><td>@lev</td><td>@spres</td></tr>
 </block></table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Delta Beta</th><th>Std Delta Beta</th><th>Delta Deviance</th><th>Delta Chi-square</th></tr>
 <block name="predictorValues"><tr><td>@idx</td><td>@deltac</td><td>@deltabar</td><td>@deltadev</td><td>@deltachi</td></tr>
 </block></table>
 </block>
 <block name="individual">
-<br />
+
 <table>
 <tr><th>Index</th><th>Response</th><th>Event Probability</th><th>Deviance Residual</th></tr>
 <block name="predictorValues"><tr><td>@resnum</td><td>@resbool</td><td>@fit</td><td>@dev</td></tr>
 </block></table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Pearson Residual</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
 <block name="predictorValues"><tr><td>@resnum</td><td>@pres</td><td>@lev</td><td>@spres</td></tr>
 </block></table>
-<br />
+
 <table>
 <tr><th>Index</th><th>Delta Beta</th><th>Std Delta Beta</th><th>Delta Deviance</th><th>Delta Chi-square</th></tr>
 <block name="predictorValues"><tr><td>@resnum</td><td>@deltac</td><td>@deltabar</td><td>@deltadev</td><td>@deltachi</td></tr>
 </block></table>
 </block>
-<br />
+
 <table>
 <tr><th>Parameters</th><th>Covariance</th></tr>
 <block name="covar"><tr><td>@lab</td><td>@cov</td></tr>

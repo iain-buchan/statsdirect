@@ -1,6 +1,5 @@
 <report>
 <title>Grouped linear regression</title>
-<br />
 <table>
 <tr><th>Source of variation</th><th>SSq</th><th>DF</th><th>MSq</th><th>VR</th><th></th></tr>
 <tr><td>Common slope</td><td>@{com_ssq:roundu}</td><td>@com_df</td><td>@{com_msq:roundu}</td><td>@{com_vr:roundu}</td><td><pval>@{com_p:pval}</pval></td></tr>

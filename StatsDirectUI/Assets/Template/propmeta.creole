@@ -7,12 +7,12 @@
 <tr><th>Stratum</th><th>Responding</th><th>Total</th><th></th></tr>
 <block name="inputs"><tr><td>@st</td><td>@r</td><td>@n</td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Proportion</th><th colspan="2"><ci>@pc% CI (exact)</ci></th><th></th></tr>
 <block name="proportions"><tr><td>@st</td><td>@{p:roundu}</td><td><ci>@{from_y:roundu}</ci></td><td><ci>@{to_y:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th colspan="2">% Weights (fixed, random)</th><th></th></tr>
 <block name="proportions"><tr><td>@st</td><td>@{yi:roundu}</td><td>@{vi:roundu}</td><td>@{wt:roundu}</td><td>@{dwt:roundu}</td><td>@lb</td></tr></block>

@@ -32,15 +32,10 @@ namespace StatsDirect.Builtins
                 if (".xls".Equals(suffix) || ".xlsx".Equals(suffix))
                     throw new Exception("Please Open an excel file rather than Importing it.");
 
-                host.StartProgress("Importing data", false);
-                try
+                using (IProgressBar progress = host.StartProgress("Importing data", false))
                 {
                     ParameterBag outputParameters = FileImportAscii(openFileDialog.FileName);
                     return outputParameters;
-                }
-                finally
-                {
-                    host.FinishProgress();
                 }
             }
         }
@@ -176,27 +171,12 @@ namespace StatsDirect.Builtins
                     bool useTabDelimiter = saveFileDialog.FileName.Substring(saveFileDialog.FileName.Length - 3).ToLower(CultureInfo.InvariantCulture) == "tab";
                     using (StreamWriter sw = File.CreateText(saveFileDialog.FileName))
                     {
-                        host.StartProgress("Exporting Worksheet", true);
-
-                        //  Titles
-                        string delimiter = useTabDelimiter ? "\t" : ",";
-                        bool first = true;
-                        for (int c = 0; c < data.VariableCount; c++)
+                        using (IProgressBar progress = host.StartProgress("Exporting Worksheet", true))
                         {
-                            StringVariable v = data.Variables[c] as StringVariable;
-                            if (first)
-                                first = false;
-                            else
-                                sw.Write(delimiter);
-                            sw.Write(ToCsvCell(v.Title));
-                        }
-                        sw.WriteLine();
 
-                        //  Data
-                        int rows = data.MaxRows;
-                        for (int r = 0; r < data.MaxRows; r++)
-                        {
-                            first = true;
+                            //  Titles
+                            string delimiter = useTabDelimiter ? "\t" : ",";
+                            bool first = true;
                             for (int c = 0; c < data.VariableCount; c++)
                             {
                                 StringVariable v = data.Variables[c] as StringVariable;
@@ -204,14 +184,30 @@ namespace StatsDirect.Builtins
                                     first = false;
                                 else
                                     sw.Write(delimiter);
-                                string buf = v.Length > r ? v.Data[r] : string.Empty;
-                                sw.Write(ToCsvCell(buf));
+                                sw.Write(ToCsvCell(v.Title));
                             }
                             sw.WriteLine();
-                            if (host.UpdateProgress(r / (double)rows))
-                                break;
+
+                            //  Data
+                            int rows = data.MaxRows;
+                            for (int r = 0; r < data.MaxRows; r++)
+                            {
+                                first = true;
+                                for (int c = 0; c < data.VariableCount; c++)
+                                {
+                                    StringVariable v = data.Variables[c] as StringVariable;
+                                    if (first)
+                                        first = false;
+                                    else
+                                        sw.Write(delimiter);
+                                    string buf = v.Length > r ? v.Data[r] : string.Empty;
+                                    sw.Write(ToCsvCell(buf));
+                                }
+                                sw.WriteLine();
+                                if (progress.Update(r / (double)rows))
+                                    break;
+                            }
                         }
-                        host.FinishProgress();
                     }
                 }
             }

@@ -333,7 +333,7 @@ namespace StatsDirect.Numerics
             double val;
             if (r <= split2)
             {
-                r = r - const2;
+                r -= const2;
                 val = (((((((c7 * r + c6) * r + c5) * r + c4) * r + c3)
                          * r + c2) * r + c1) * r + c0) /
                       (((((((d7 * r + d6) * r + d5) * r + d4) * r + d3)
@@ -341,7 +341,7 @@ namespace StatsDirect.Numerics
             }
             else
             {
-                r = r - split2;
+                r -= split2;
                 val = (((((((e7 * r + e6) * r + e5) * r + e4) * r + e3)
                          * r + e2) * r + e1) * r + e0) /
                       (((((((f7 * r + f6) * r + f5) * r + f4) * r + f3)
@@ -533,10 +533,10 @@ namespace StatsDirect.Numerics
             {
                 // compute gamma(x) for -xbnd  <=  x  <=  xbnd.  reduce interval and find gamma(1+y) for 0.0  <=  y  <  1.0 first of all.
                 int n = (int)x;
-                if (x < 0.0) n = n - 1;
+                if (x < 0.0) n -= 1;
                 double xn = n;
                 y = x - xn;
-                n = n - 1;
+                n -= 1;
                 ret = 0.9375 + Base.cheby(2.0 * y - 1.0, gamcs, ngamcs);
                 if (n == 0) return ret;
                 double xi;
@@ -553,8 +553,8 @@ namespace StatsDirect.Numerics
                     xi = 0.0;
                     for (i = 1; i <= n; i++)
                     {
-                        ret = ret / (x + xi);
-                        xi = xi + 1.0;
+                        ret /= (x + xi);
+                        xi += 1.0;
                     }
                     return ret;
                 }
@@ -563,7 +563,7 @@ namespace StatsDirect.Numerics
                 for (i = 1; i <= n; i++)
                 {
                     ret = (y + xi) * ret;
-                    xi = xi + 1.0;
+                    xi += 1.0;
                 }
                 return ret;
             }
@@ -834,7 +834,7 @@ namespace StatsDirect.Numerics
                 {
                     x2 = x3;
                     f2 = f3;
-                    f1 = f1 * 0.5;
+                    f1 *= 0.5;
                     if (Math.Abs(f2) > Math.Abs(f1))
                     {
                         f1 = 2.0 * f1;
@@ -940,7 +940,7 @@ namespace StatsDirect.Numerics
             }
             else if (df == 1.0)
             {
-                p = p * pib2;
+                p *= pib2;
                 ret = Math.Cos(p) / Math.Sin(p);
             }
             else if (df < 60.0)
@@ -964,7 +964,7 @@ namespace StatsDirect.Numerics
                 else
                 {
                     y = x * x;
-                    if (df < 5.0) c = c + 0.3 * (dn - 4.5) * (x + 0.6);
+                    if (df < 5.0) c += 0.3 * (dn - 4.5) * (x + 0.6);
                     c = (((0.05 * d * x - 5.0) * x - 7.0) * x - 2.0) * x + b + c;
                     y = (((((0.4 * y + 6.3) * y + 36.0) * y + 94.5) / c - y - 3.0) / b + 1.0) * x;
                     y = a * y * y;
@@ -1030,12 +1030,12 @@ namespace StatsDirect.Numerics
                 a = p;
                 for (; ; )
                 {
-                    a = a + one;
+                    a += one;
                     c = c * x / a;
-                    ret = ret + c;
+                    ret += c;
                     if (c <= tol) break;
                 }
-                arg = arg + Math.Log(ret);
+                arg += Math.Log(ret);
                 ret = zero;
                 if (arg >= elimit) ret = Math.Exp(arg);
             }
@@ -1052,9 +1052,9 @@ namespace StatsDirect.Numerics
                 ret = pn3 / pn4;
                 for (; ; )
                 {
-                    a = a + one;
-                    b = b + two;
-                    c = c + one;
+                    a += one;
+                    b += two;
+                    c += one;
                     double an = a * c;
                     double pn5 = b * pn3 - an * pn1;
                     double pn6 = b * pn4 - an * pn2;
@@ -1070,13 +1070,13 @@ namespace StatsDirect.Numerics
                     pn4 = pn6;
                     if (Math.Abs(pn5) >= oflo)
                     {
-                        pn1 = pn1 / oflo;
-                        pn2 = pn2 / oflo;
-                        pn3 = pn3 / oflo;
-                        pn4 = pn4 / oflo;
+                        pn1 /= oflo;
+                        pn2 /= oflo;
+                        pn3 /= oflo;
+                        pn4 /= oflo;
                     }
                 }
-                arg = arg + Math.Log(ret);
+                arg += Math.Log(ret);
                 ret = one;
                 if (arg >= elimit)
                     ret = one - Math.Exp(arg);
@@ -1333,7 +1333,7 @@ namespace StatsDirect.Numerics
                     return 1.0 - x * (1.0 + Base.cheby(2.0 * x * x - 1.0, erfcs, nterf));
                 }
                 // erfc(x) = 1.0 - erf(x)  for  1.0 < Math.Abs(x) <= xmax
-                y = y * y;
+                y *= y;
                 double ret;
                 if (y <= 4.0)
                     ret = Math.Exp(-y) / Math.Abs(x) * (0.5 + Base.cheby((8.0 / y - 5.0) / 3.0, erc2cs, nterc2));
@@ -1413,7 +1413,7 @@ namespace StatsDirect.Numerics
                         p1 = 1.0 + ch * (4.67 + ch);
                         p2 = ch * (6.73 + ch * (6.66 + ch));
                         t = -0.5 + (4.67 + 2.0 * ch) / p1 - (6.73 + ch * (13.32 + 3.0 * ch)) / p2;
-                        ch = ch - (1.0 - Math.Exp(a + g + 0.5 * ch + c * aa) * p2 / p1) / t;
+                        ch -= (1.0 - Math.Exp(a + g + 0.5 * ch + c * aa) * p2 / p1) / t;
                         if (Math.Abs(q / ch - 1.0) - 0.01 <= 0.0) break;
                     }
                 }
@@ -1445,7 +1445,7 @@ namespace StatsDirect.Numerics
                 double s4 = (252.0 + a * (672.0 + 1182.0 * a) + c * (294.0 + a * (889.0 + 1740.0 * a))) / 5040.0;
                 double s5 = (84.0 + 264.0 * a + c * (175.0 + 606.0 * a)) / 2520.0;
                 double s6 = (120.0 + c * (346.0 + 127.0 * c)) / 5040.0;
-                ch = ch + t * (1.0 + 0.5 * t * s1 - b * c * (s1 - b * (s2 - b * (s3 - b * (s4 - b * (s5 - b * s6))))));
+                ch += t * (1.0 + 0.5 * t * s1 - b * c * (s1 - b * (s2 - b * (s3 - b * (s4 - b * (s5 - b * s6))))));
                 if (Math.Abs(q / ch - 1.0) <= e)
                     break;
             }
@@ -1491,7 +1491,7 @@ namespace StatsDirect.Numerics
             for (; ; )
             {
                 delta = 2.0 * delta;
-                iter = iter + 1;
+                iter += 1;
                 if (iter > 100) return double.NaN;
                 x2 = x1 + delta;
                 if (x2 < 0.0) x2 = 0.0;
@@ -1533,7 +1533,7 @@ namespace StatsDirect.Numerics
                     //                root was not trapped, use illinois
                     x2 = x3;
                     f2 = f3;
-                    f1 = f1 / 2.0;
+                    f1 /= 2.0;
                     if (Math.Abs(f2) > Math.Abs(f1))
                     {
                         //            use bisection
@@ -1571,7 +1571,7 @@ namespace StatsDirect.Numerics
             {
                 double xi = i;
                 term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if (term > sml) plo = plo + Math.Exp(term);
+                if (term > sml) plo += Math.Exp(term);
             }
             if (term > sml) term = Math.Exp(term);
             if (term < 0.0) term = 0.0;
@@ -1635,7 +1635,7 @@ namespace StatsDirect.Numerics
             {
                 xi = i;
                 term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if (term > sml) plo = plo + Math.Exp(term);
+                if (term > sml) plo += Math.Exp(term);
             }
             if (term > sml) term = Math.Exp(term);
             if (term < 0.0) term = 0.0;
@@ -1653,7 +1653,7 @@ namespace StatsDirect.Numerics
                     if (term > sml)
                     {
                         px = Math.Exp(term);
-                        if (px < z) p2 = p2 + px;
+                        if (px < z) p2 += px;
                     }
                 }
             }
@@ -1666,7 +1666,7 @@ namespace StatsDirect.Numerics
                     if (term > sml)
                     {
                         px = Math.Exp(term);
-                        if (px < z) p2 = p2 + px;
+                        if (px < z) p2 += px;
                     }
                 }
             }
@@ -1724,13 +1724,13 @@ namespace StatsDirect.Numerics
             {
                 double xi = i;
                 term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if (term > sml) plo = plo + Math.Exp(term);
+                if (term > sml) plo += Math.Exp(term);
             }
             if (term > sml) term = Math.Exp(term);
             if (term < 0.0) term = 0.0;
             double phi = 1.0 - plo + term;
             p1 = phi < plo ? phi : plo;
-            p1 = p1 - term / 2.0;
+            p1 -= term / 2.0;
             p2 = 2.0 * p1;
         }
 
@@ -1762,11 +1762,11 @@ namespace StatsDirect.Numerics
             int istep = 0;
             for (; ; )
             {
-                x2 = x2 + xnl;
+                x2 += xnl;
                 poisson(x2, nl, out phi, out plo, out trm, out ifault);
                 if (ifault != 0) break;
                 dx = idx == 2 ? Math.Abs(1.0 - phi) : Math.Abs(0.0 - plo);
-                istep = istep + 1;
+                istep += 1;
                 if (istep > imax)
                 {
                     ifault = 1;
@@ -1783,7 +1783,7 @@ namespace StatsDirect.Numerics
             {
                 for (; ; )
                 {
-                    dx = dx * 0.5;
+                    dx *= 0.5;
                     xmid = bis + dx;
                     poisson(xmid, nl, out phi, out plo, out trm, out ifault);
                     fmid = phi;
@@ -1804,14 +1804,14 @@ namespace StatsDirect.Numerics
             {
                 for (; ; )
                 {
-                    dx = dx * 0.5;
+                    dx *= 0.5;
                     xmid = bis + dx;
                     poisson(xmid, nl, out phi, out plo, out trm, out ifault);
                     fmid = plo;
                     if (ifault != 0) break;
                     if (fmid - p > 0.0) bis = xmid;
                     if ((Math.Abs(dx) <= acc) | (Math.Abs(fmid - p) == 0.0)) break;
-                    istep = istep + 1;
+                    istep += 1;
                     if (istep > imax)
                     {
                         ifault = 3;
@@ -1860,7 +1860,7 @@ namespace StatsDirect.Numerics
                 int jj = 1;
                 double p1 = -theta;
                 int icnt = (int)(p1 / alnsml);
-                p1 = p1 - icnt * alnsml;
+                p1 -= icnt * alnsml;
                 p1 = Math.Exp(p1);
                 //      prep backward calc
                 double x2 = k;
@@ -1870,7 +1870,7 @@ namespace StatsDirect.Numerics
                 h = alogam(h);
                 double p2 = -y2 + g - h;
                 int kcnt = (int)(p2 / alnsml);
-                p2 = p2 - kcnt * alnsml;
+                p2 -= kcnt * alnsml;
                 p2 = Math.Exp(p2);
                 g = 1.0;
                 h = 1.0;
@@ -1886,7 +1886,7 @@ namespace StatsDirect.Numerics
                     {
                         //        forward
                         //        no need to scale, just store term
-                        if (icnt == 0) pe = pe + p1;
+                        if (icnt == 0) pe += p1;
                         if (jj != k1)
                         {
                             //         next term (recursion)
@@ -1898,11 +1898,11 @@ namespace StatsDirect.Numerics
                                 if (temp != 0.0)
                                 {
                                     p1 = temp;
-                                    icnt = icnt - 1;
+                                    icnt -= 1;
                                 }
                             }
-                            jj = jj + 1;
-                            y = y + 1.0;
+                            jj += 1;
+                            y += 1.0;
                         }
                         else
                         {
@@ -1913,7 +1913,7 @@ namespace StatsDirect.Numerics
                     {
                         //        backward
                         //        no need to scale, just store term
-                        if (kcnt == 0) pe = pe + p2;
+                        if (kcnt == 0) pe += p2;
                         if (jj != k1)
                         {
                             //         next term (recursion)
@@ -1925,11 +1925,11 @@ namespace StatsDirect.Numerics
                                 if (temp != 0.0)
                                 {
                                     p2 = temp;
-                                    kcnt = kcnt - 1;
+                                    kcnt -= 1;
                                 }
                             }
-                            k1 = k1 - 1;
-                            x2 = x2 - 1.0;
+                            k1 -= 1;
+                            x2 -= 1.0;
                         }
                         else
                         {
@@ -2364,15 +2364,15 @@ namespace StatsDirect.Numerics
             for (j = 2; j <= 152; j++)
             {
                 p = fff + q[153 - j] + ri * r[j] + rn * r[305 - j] + s[j];
-                if (p >= smexe) f = f - Math.Exp(p);
+                if (p >= smexe) f -= Math.Exp(p);
             }
             for (j = 153; j <= 303; j++)
             {
                 p = fff + q[j - 152] + ri * r[j] + rn * r[305 - j] + s[j];
-                if (p >= smexe) f = f + Math.Exp(p);
+                if (p >= smexe) f += Math.Exp(p);
             }
             p = fff + q[152] + ri * r[304] + rn * r[1] + s[304];
-            if (p >= smexe + alogp5) f = f + 0.5 * Math.Exp(p);
+            if (p >= smexe + alogp5) f += 0.5 * Math.Exp(p);
             return -.05 * f;
         }
 
@@ -2625,7 +2625,7 @@ namespace StatsDirect.Numerics
                 ulen = ulen4;
             }
 
-            f2lf = f2lf + Math.Log(ulen);
+            f2lf += Math.Log(ulen);
 
             // integrate over each subinterval                                     
             for (int i = 1; i <= 50; i++)
@@ -2681,7 +2681,7 @@ namespace StatsDirect.Numerics
                     break;
                 }
                 // end of interval i                                                   
-                retval = retval + otsum;
+                retval += otsum;
             }
             if (retval > eps)
                 ir[2] = 1;
@@ -2831,14 +2831,14 @@ namespace StatsDirect.Numerics
                     if (rinsum >= Math.Exp(eps1 / cc1))
                     {
                         rinsum = aleg[j] * Math.Exp(-(0.5 * qexpo)) * Math.Pow(rinsum, cc1);
-                        elsum = elsum + rinsum;
+                        elsum += rinsum;
                     }
                     // end legendre quadrature
                 }
                 elsum = 2.0 * b * cc * sq2pii * elsum;
-                einsum = einsum + elsum;
+                einsum += elsum;
                 blb = bub;
-                bub = bub + binc;
+                bub += binc;
                 // end integration of second term
             }
 
@@ -2894,7 +2894,7 @@ namespace StatsDirect.Numerics
             double yi = Math.Sqrt(Math.Log(1.0 / (ps * ps)));
             double t = yi + ((((yi * p4 + p3) * yi + p2) * yi + p1) * yi + p0) / ((((yi * q4 + q3) * yi + q2) * yi + q1) * yi + q0);
             if (v < vmax)
-                t = t + (t * t * t + t) / v / 4.0;
+                t += (t * t * t + t) / v / 4.0;
             double q = c1 - c2 * t;
             if (v < vmax)
                 q = q - c3 / v + c4 * t / v;

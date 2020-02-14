@@ -29,7 +29,7 @@ namespace StatsDirect.UI
         {
             if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
             {
-                FilledParameter = new FilledParameter(FilledParameterDirection.Input, SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
+                FilledParameter = FilledParameterFactory.Input(SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
                 return;
             }
 
@@ -1261,7 +1261,7 @@ namespace StatsDirect.UI
             if (null == ctl)
             {
                 // Do nothing - there are no options to fill
-                FilledParameter = new FilledParameter(FilledParameterDirection.Input, parameter.ChartDefinition);
+                FilledParameter = FilledParameterFactory.Input(parameter.ChartDefinition);
                 return;
             }
             // At this point, ctl is always assigned.

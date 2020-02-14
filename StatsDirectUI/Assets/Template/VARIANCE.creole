@@ -1,6 +1,5 @@
 <report>
 <title>Variance ratio/F test</title>
-<br />
 <table>
 <tr><th>Variable Name</th><th>DF (n-1)</th><th>Variance</th></tr>
 <tr><td>@title_0</td><td>@df_0</td><td>@var_0</td></tr>

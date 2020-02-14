@@ -1,6 +1,5 @@
 <report>
 <title>Kaplan-Meier survival estimates</title>
-<br />
 <block name="group">
 <block name="grp">
 <p><subtotal><b>@grp</b></subtotal></p>

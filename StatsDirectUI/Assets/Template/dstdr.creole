@@ -7,7 +7,7 @@
 <tr><th>Index events</th><th>Index PT</th><th>Index rate</th><th>Reference size</th><th>Weight</th></tr>
 <block name="inputs"><tr><td>@{idxy:roundu}</td><td>@{idxn:roundu}</td><td>@{idxr:roundu}</td><td>@{refn:roundu}</td><td>@{refw:roundu}</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Index rate</th><th><ci>Exact @pc% confidence interval</ci></th><th></th></tr>
 <block name="cis"><tr><td>@{idxr:roundu}</td><td><ci>@{from:roundu}  to  @{to:roundu}</ci></td><td>@label</td></tr></block>

@@ -1,6 +1,5 @@
 <report>
 <title>Analysis of variance from regression</title>
-<br />
 <table>
 <tr><th>Source of variation</th><th>Sum Squares</th><th>DF</th><th>Mean Square</th></tr>
 <tr><td>Regression</td><td>@reg_sum</td><td>@reg_df</td><td>@reg_mean</td></tr>

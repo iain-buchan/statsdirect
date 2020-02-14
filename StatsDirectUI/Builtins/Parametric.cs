@@ -703,9 +703,9 @@ namespace StatsDirect.Builtins
             for (i = lowerBound; i < n + lowerBound; i++)
             {
                 double s = x[i] - mean;
-                m2 = m2 + Math.Pow(s, 2.0);
-                m3 = m3 + Math.Pow(s, 3.0);
-                m4 = m4 + Math.Pow(s, 4.0);
+                m2 += Math.Pow(s, 2.0);
+                m3 += Math.Pow(s, 3.0);
+                m4 += Math.Pow(s, 4.0);
                 if (m4 > 1.0E+300)
                     return;
             }
@@ -713,9 +713,9 @@ namespace StatsDirect.Builtins
             sd = Math.Sqrt(var);
             if (var == 0.0)
                 return;
-            m2 = m2 / nx;
-            m3 = m3 / nx;
-            m4 = m4 / nx;
+            m2 /= nx;
+            m3 /= nx;
+            m4 /= nx;
             skewness = m3 * Math.Pow(m2, -1.5);
             kurtosis = m4 * Math.Pow(m2, -2.0);
             if (n < 8)
@@ -829,14 +829,14 @@ namespace StatsDirect.Builtins
                 double mean = 0.0;
                 for (i = 1; i <= k; i++)
                     mean += r[i];
-                mean = mean / nx;
+                mean /= nx;
                 double m1 = 0.0;
                 double m2 = 0.0;
                 // bool toobig = false; 
                 for (i = 1; i <= k; i++)
                 {
                     double sx = r[i] - mean;
-                    m2 = m2 + Math.Pow(sx, 2.0);
+                    m2 += Math.Pow(sx, 2.0);
                     if (m2 > 1.0E+300)
                         return;
                 }
@@ -1337,7 +1337,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v0.Data[j] != Constant.MISSING & v1.Data[j] != Constant.MISSING)
                     {
-                        nx = nx + 1;
+                        nx += 1;
                         y[nx] = v0.Data[j] - v1.Data[j];
                         x[nx] = (v0.Data[j] + v1.Data[j]) / 2;
                     }

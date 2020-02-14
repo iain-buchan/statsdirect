@@ -163,8 +163,8 @@ namespace StatsDirect.Builtins
                     break;
                 }
                 b0 = b0 * n1 / s1;
-                s1 = s1 - 1.0;
-                n1 = n1 - 1.0;
+                s1 -= 1.0;
+                n1 -= 1.0;
             }
             while (n1 > Convert.ToDouble(q));
 
@@ -240,7 +240,7 @@ namespace StatsDirect.Builtins
                 g = 0.0;
                 for (int j = a2; j >= 2; j--)
                 {
-                    g = g + h1[j];
+                    g += h1[j];
                     g1[j] = g;
                 }
                 // int Start = 1; 
@@ -487,7 +487,7 @@ namespace StatsDirect.Builtins
             if (tar <= 0.0)
             {
                 tar = 1.0;
-                parameters["tar"] = new FilledParameter(FilledParameterDirection.Input, 1.0);
+                parameters["tar"] = FilledParameterFactory.Input(1.0);
             }
 
             ParameterBag outputParameters = new ParameterBag();

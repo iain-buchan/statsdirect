@@ -48,7 +48,7 @@ namespace StatsDirect.Charting.Renderer
                     maxGn = gn[i];
                 if (options.odr[i] != Constant.MISSING)
                 {
-                    kok = kok + 1;
+                    kok += 1;
                     if (options.odr[i] > ormax)
                         ormax = options.odr[i];
                     if (options.odr[i] < ormin)

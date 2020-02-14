@@ -96,59 +96,59 @@
     <Reference Include="Antlr4.Runtime, Version=4.6.0.0, Culture=neutral, PublicKeyToken=09abb75b9ed49849, processorArchitecture=MSIL">
       <HintPath>..\packages\Antlr4.Runtime.4.6.6\lib\net45\Antlr4.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Data.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Data.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Docs.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Docs.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Office.v19.1.Core, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Office.v19.2.Core, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.RichEdit.v19.1.Export, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.RichEdit.v19.2.Export, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Printing.v19.1.Core, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Printing.v19.2.Core, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.RichEdit.v19.1.Core, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.RichEdit.v19.2.Core, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Sparkline.v19.1.Core, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Sparkline.v19.2.Core, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Utils.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Utils.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraBars.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraBars.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraEditors.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraEditors.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraPrinting.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraPrinting.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.Images.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.Images.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraRichEdit.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
-    <Reference Include="DevExpress.XtraTreeList.v19.1, Version=19.1.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+    <Reference Include="DevExpress.XtraTreeList.v19.2, Version=19.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>True</Private>
     </Reference>
@@ -321,14 +321,37 @@
     <Compile Include="Creole\CreoleText.cs" />
     <Compile Include="Creole\ICreole.cs" />
     <Compile Include="Creole\ICreoleVisitor.cs" />
+    <Compile Include="CsvParser\CsvRenderer.cs" />
     <Compile Include="Data\GenericVariable.cs" />
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
     <Compile Include="TemplateProcessing\CreoleHtmlReportRenderer.cs" />
+    <Compile Include="Templates\IOperationTestParameter.cs" />
+    <Compile Include="TemplateProcessing\OperationTestRenderer.cs" />
     <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
     <Compile Include="TemplateProcessing\HtmlRenderer.cs" />
     <Compile Include="TemplateProcessing\HtmlImageRenderer.cs" />
     <Compile Include="TemplateProcessing\RtfRenderer.cs" />
+    <Compile Include="Templates\FilledParameters\FilledInt32Parameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledPaneAndPositionParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledPaneParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledChartDefinitionParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledStringListParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledParameterBagListParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledParameterBagParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledDataFrameParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledBooleanParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledParameterFactory.cs" />
+    <Compile Include="Templates\FilledParameters\FilledStringParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledDoubleParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledObjectParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledParameterDirection.cs" />
+    <Compile Include="Templates\FilledParameters\IFilledParameterVisitor.cs" />
+    <Compile Include="Templates\IPreferences.cs" />
+    <Compile Include="Templates\IProgressBar.cs" />
+    <Compile Include="Templates\IPreferencesAndProgressBar.cs" />
+    <Compile Include="Templates\IProgressBarHost.cs" />
+    <Compile Include="Templates\IUserInterface.cs" />
     <Compile Include="Templates\OperationTest.cs" />
     <Compile Include="Templates\OperationTestInputParameter.cs" />
     <Compile Include="Templates\OperationTestOutputParameter.cs" />
@@ -336,7 +359,7 @@
     <Compile Include="Templates\IBuiltin.cs" />
     <Compile Include="Templates\IRenderable.cs" />
     <Compile Include="Templates\IRenderableVisitor.cs" />
-    <Compile Include="Templates\IAxisScaleVisitor.cs" />
+    <Compile Include="Templates\Charting\IAxisScaleVisitor.cs" />
     <Compile Include="Charting\IChartSizableVisitor.cs" />
     <Compile Include="Charting\Legend.cs" />
     <Compile Include="Charting\Scales\DateAxisScaler.cs" />
@@ -362,16 +385,16 @@
     <Compile Include="Charting\Renderer\RocChartRenderer.cs" />
     <Compile Include="Charting\Renderer\ScatterChartRenderer.cs" />
     <Compile Include="Templates\ReportTemplate.cs" />
-    <Compile Include="Templates\TalbotLinHanrahanAxisScale.cs" />
+    <Compile Include="Templates\Charting\TalbotLinHanrahanAxisScale.cs" />
     <Compile Include="Charting\Scales\TalbotLinHanrahanAxisScaler.cs" />
-    <Compile Include="Templates\ChartType.cs" />
-    <Compile Include="Templates\IAxisScale.cs" />
-    <Compile Include="Templates\ILinearAxisScale.cs" />
-    <Compile Include="Templates\CategoryAxisScale.cs" />
-    <Compile Include="Templates\DateAxisScale.cs" />
-    <Compile Include="Templates\Log2AxisScale.cs" />
-    <Compile Include="Templates\Log10AxisScale.cs" />
-    <Compile Include="Templates\LinearAxisScale.cs" />
+    <Compile Include="Templates\Charting\ChartType.cs" />
+    <Compile Include="Templates\Charting\IAxisScale.cs" />
+    <Compile Include="Templates\Charting\ILinearAxisScale.cs" />
+    <Compile Include="Templates\Charting\CategoryAxisScale.cs" />
+    <Compile Include="Templates\Charting\DateAxisScale.cs" />
+    <Compile Include="Templates\Charting\Log2AxisScale.cs" />
+    <Compile Include="Templates\Charting\Log10AxisScale.cs" />
+    <Compile Include="Templates\Charting\LinearAxisScale.cs" />
     <Compile Include="Charting\Scales\LinearAxisMasker.cs" />
     <Compile Include="Charting\Renderer\BarChartRenderer.cs" />
     <Compile Include="Charting\Options\BarOptions.cs" />
@@ -424,7 +447,7 @@
     <Compile Include="Charting\Renderer\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\Options\SurvivalOptions.cs" />
     <Compile Include="Templates\TemplateAndParameters.cs" />
-    <Compile Include="Templates\Tic.cs" />
+    <Compile Include="Templates\Charting\Tic.cs" />
     <Compile Include="Charting\Enums\Transformation.cs" />
     <Compile Include="Configuration\SDConfiguration.cs" />
     <Compile Include="CsvParser\Csv.g4.lexer.cs">
@@ -490,23 +513,23 @@
     </Compile>
     <Compile Include="R\RResultsParserPartial.cs" />
     <Compile Include="R\RVersion.cs" />
-    <Compile Include="Templates\AxisScaleParameters.cs" />
+    <Compile Include="Templates\Parameters\AxisScaleParameters.cs" />
     <Compile Include="Templates\Builtin.cs" />
     <Compile Include="Templates\FrameData.cs" />
     <Compile Include="Templates\GroupIdentifierMode.cs" />
-    <Compile Include="Templates\IDefaultParameter.cs" />
-    <Compile Include="Templates\IParameterVisitor.cs" />
-    <Compile Include="Templates\IStepVisitor.cs" />
-    <Compile Include="Templates\LabelDirection.cs" />
-    <Compile Include="Templates\OptionFormatType.cs" />
-    <Compile Include="Templates\OptionOption.cs" />
-    <Compile Include="Templates\OptionParameter.cs" />
+    <Compile Include="Templates\Parameters\IDefaultParameter.cs" />
+    <Compile Include="Templates\Parameters\IParameterVisitor.cs" />
+    <Compile Include="Templates\Steps\IStepVisitor.cs" />
+    <Compile Include="Templates\Charting\LabelDirection.cs" />
+    <Compile Include="Templates\Charting\OptionFormatType.cs" />
+    <Compile Include="Templates\Charting\OptionOption.cs" />
+    <Compile Include="Templates\Parameters\OptionParameter.cs" />
     <Compile Include="Templates\Precondition.cs" />
-    <Compile Include="Templates\ReportStep.cs">
+    <Compile Include="Templates\Steps\ReportStep.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Templates\ScaleParameters.cs" />
-    <Compile Include="Templates\ScaleType.cs" />
+    <Compile Include="Templates\Charting\ScaleParameters.cs" />
+    <Compile Include="Templates\Charting\ScaleType.cs" />
     <Compile Include="TemplateProcessing\ValidationProcessor.cs" />
     <Compile Include="Templates\VariableFactory.cs" />
     <Compile Include="UI\Biff5Processor.cs" />
@@ -581,50 +604,50 @@
     </Compile>
     <Compile Include="TemplateProcessing\CreoleRtfReportRenderer.cs" />
     <Compile Include="TemplateProcessing\ReportRenderer.cs" />
-    <Compile Include="Templates\BooleanParameter.cs" />
+    <Compile Include="Templates\Parameters\BooleanParameter.cs" />
     <Compile Include="Templates\BuiltinRegistry.cs" />
-    <Compile Include="Templates\BuiltinStep.cs" />
-    <Compile Include="Templates\ChartStep.cs" />
-    <Compile Include="Templates\ConfidenceIntervalParameter.cs" />
+    <Compile Include="Templates\Steps\BuiltinStep.cs" />
+    <Compile Include="Templates\Steps\ChartStep.cs" />
+    <Compile Include="Templates\Parameters\ConfidenceIntervalParameter.cs" />
     <Compile Include="Templates\CustomValidator.cs" />
-    <Compile Include="Templates\DateParameter.cs" />
-    <Compile Include="Templates\Double2By2ByKParameter.cs" />
-    <Compile Include="Templates\Double2By2Parameter.cs" />
-    <Compile Include="Templates\DoubleParameter.cs" />
-    <Compile Include="Templates\EditGridParameter.cs" />
+    <Compile Include="Templates\Parameters\DateParameter.cs" />
+    <Compile Include="Templates\Parameters\Double2By2ByKParameter.cs" />
+    <Compile Include="Templates\Parameters\Double2By2Parameter.cs" />
+    <Compile Include="Templates\Parameters\DoubleParameter.cs" />
+    <Compile Include="Templates\Parameters\EditGridParameter.cs" />
     <Compile Include="Templates\Expression.cs" />
-    <Compile Include="Templates\FilledParameter.cs" />
-    <Compile Include="Templates\Frame2DParameter.cs" />
-    <Compile Include="Templates\FrameParameter.cs" />
-    <Compile Include="Templates\GroupedCovarianceParameter.cs" />
+    <Compile Include="Templates\FilledParameters\FilledParameter.cs" />
+    <Compile Include="Templates\Parameters\Frame2DParameter.cs" />
+    <Compile Include="Templates\Parameters\FrameParameter.cs" />
+    <Compile Include="Templates\Parameters\GroupedCovarianceParameter.cs" />
     <Compile Include="Templates\HelpContext.cs" />
     <Compile Include="Templates\HelpTip.cs" />
     <Compile Include="Templates\IFillable.cs" />
     <Compile Include="Templates\IMightRequireInput.cs" />
-    <Compile Include="Templates\IntegerParameter.cs" />
+    <Compile Include="Templates\Parameters\IntegerParameter.cs" />
     <Compile Include="Templates\InvalidDataException.cs" />
     <Compile Include="Templates\IScriptEngine.cs" />
     <Compile Include="Templates\ITemplateHost.cs" />
     <Compile Include="Templates\ITemplateProcessor.cs" />
-    <Compile Include="Templates\IterationStep.cs" />
+    <Compile Include="Templates\Steps\IterationStep.cs" />
     <Compile Include="Templates\Operation.cs" />
-    <Compile Include="Templates\OptionsParameter.cs" />
-    <Compile Include="Templates\OutputFrameStep.cs" />
+    <Compile Include="Templates\Parameters\OptionsParameter.cs" />
+    <Compile Include="Templates\Steps\OutputFrameStep.cs" />
     <Compile Include="Templates\Parameter.cs" />
     <Compile Include="Templates\ParameterBag.cs" />
     <Compile Include="Templates\ParameterLifetime.cs" />
-    <Compile Include="Templates\ParametersStep.cs" />
-    <Compile Include="Templates\PickFromListParameter.cs" />
-    <Compile Include="Templates\PickVariablesParameter.cs" />
-    <Compile Include="Templates\RangeParameter.cs" />
-    <Compile Include="Templates\ScriptStep.cs" />
+    <Compile Include="Templates\Steps\ParametersStep.cs" />
+    <Compile Include="Templates\Parameters\PickFromListParameter.cs" />
+    <Compile Include="Templates\Parameters\PickVariablesParameter.cs" />
+    <Compile Include="Templates\Parameters\RangeParameter.cs" />
+    <Compile Include="Templates\Steps\ScriptStep.cs" />
     <Compile Include="Templates\SDPreferences.cs" />
-    <Compile Include="Templates\SpecialParameter.cs" />
+    <Compile Include="Templates\Parameters\SpecialParameter.cs" />
     <Compile Include="Templates\Step.cs" />
-    <Compile Include="Templates\StringParameter.cs" />
+    <Compile Include="Templates\Parameters\StringParameter.cs" />
     <Compile Include="Templates\SuggestedOperation.cs" />
     <Compile Include="Templates\TemplateFactory.cs" />
-    <Compile Include="Templates\TestStep.cs" />
+    <Compile Include="Templates\Steps\TestStep.cs" />
     <Compile Include="Templates\Validator.cs" />
     <Compile Include="TextProcessing\ActiveRtfParserPartial.cs" />
     <Compile Include="UI\CallerHandlesChangedOperationAttribute.cs" />
@@ -2075,11 +2098,6 @@ xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties BuildVersion_UseGlobalSettings="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_UpdateFileVersion="False" BuildVersion_ConfigurationName="ReleaseWithSigning" BuildVersion_BuildVersioningStyle="None.None.Increment.DeltaBaseDate" />
-    </VisualStudio>
-  </ProjectExtensions>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>

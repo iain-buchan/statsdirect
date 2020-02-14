@@ -100,7 +100,7 @@ namespace StatsDirect.Builtins
         {
             // If there's already a cached context, assume it is from a previous operation with the same values and use it.
             if (parameters.ContainsKey("context"))
-                return (SimpleLinearRegressionContext)parameters["context"].Data;
+                return (SimpleLinearRegressionContext)parameters["context"].AsObject;
 
             // Create a new context holding these X and Y variables
             return GetSimpleLinearRegressionContextWithData(parameters);
@@ -115,7 +115,7 @@ namespace StatsDirect.Builtins
         private static MultipleLinearRegressionContext GetMultipleLinearRegressionContext(ParameterBag parameters)
         {
             if (parameters.ContainsKey("context"))
-                return (MultipleLinearRegressionContext)parameters["context"].Data;
+                return (MultipleLinearRegressionContext)parameters["context"].AsObject;
             throw new Exception("Expected to find a context parameter and didn't");
         }
 
@@ -982,8 +982,8 @@ namespace StatsDirect.Builtins
             string[] predictorTitles = new string[p - 2 + 1];
             for (i = 2; i <= p; i++)
                 predictorTitles[i - 2] = context.Titles[i];
-            outputParameters["predictorTitles"] = new FilledParameter(FilledParameterDirection.Input, new DataFrame(new StringVariable(predictorTitles)));
-            outputParameters["candidatePredictors"] = new FilledParameter(FilledParameterDirection.Input, x_prep_intermr(context));
+            outputParameters["predictorTitles"] = FilledParameterFactory.Input(new DataFrame(new StringVariable(predictorTitles)));
+            outputParameters["candidatePredictors"] = FilledParameterFactory.Input(x_prep_intermr(context));
             return outputParameters;
         }
 
@@ -1164,7 +1164,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
 
             context.R[0] = Constant.MISSING;
-            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)))));
 
             for (int i = 1; i <= context.P; i++)
             {
@@ -1175,7 +1175,7 @@ namespace StatsDirect.Builtins
                     r[0] = Constant.MISSING;
                     for (int j = 1; j <= context.N; j++)
                         r[j] = context.X[j, i];
-                    chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+                    chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc)))));
                 }
             }
             r = new double[context.N + 1];
@@ -1187,7 +1187,7 @@ namespace StatsDirect.Builtins
                 if (ifault != 0)
                     r[j] = Constant.MISSING;
             }
-            chartList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
             return outputParameters;
         }
 
@@ -1521,7 +1521,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptMultipleLinearRegressionBestSubset(ITemplateHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
-            bool[] selectedPredictors = (bool[])parameters["selectedPredictors"].Data;
+            bool[] selectedPredictors = (bool[])parameters["selectedPredictors"].AsObject;
             bool shouldUseMaximumF = "maximumF".Equals(parameters["selector"].AsString);
             int errcode = 0;
 
@@ -2200,7 +2200,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[,] xtxi = context.H;
             double[] bd = context.B;
             double rss = context.SSY - context.SSREG;
@@ -2246,7 +2246,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionPlot(ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2288,7 +2288,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptAreaUnderCurve(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
             int nx = context.N;
             int p = context.P;
@@ -2348,7 +2348,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionConfidence(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
             int p = context.P;
             double[,] xtxi = context.H;
@@ -2395,7 +2395,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPolynomialRegressionBackInterpolation(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
             int nx = context.N;
             int p = context.P;
@@ -2895,7 +2895,7 @@ namespace StatsDirect.Builtins
             context.DEVX = devx;
             context.LLX = llx;
             context.DFX = idfx;
-            outputParameters["candidatePredictors"] = new FilledParameter(FilledParameterDirection.Input, x_prep_interlr(context));
+            outputParameters["candidatePredictors"] = FilledParameterFactory.Input(x_prep_interlr(context));
             return outputParameters;
         }
 
@@ -2934,7 +2934,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
 
             double[] t = context.T;
             double[] y = context.Y;
@@ -3142,17 +3142,17 @@ namespace StatsDirect.Builtins
             predictorValuesParameters.AddOutput("deltadev", null == d ? Formatting.ASTERISK : host.RoundU(d[arrayOffset]));
             predictorValuesParameters.AddOutput("deltachi", null == dc ? Formatting.ASTERISK : host.RoundU(dc[arrayOffset]));
 
-            ((DoubleVariable) outputFrame.Variables[0]).Data[outputRow] = t?[arrayOffset] ?? Constant.MISSING; // Trials
-            ((DoubleVariable) outputFrame.Variables[1]).Data[outputRow] = y?[arrayOffset] ?? Constant.MISSING; // Events
-            ((DoubleVariable) outputFrame.Variables[2]).Data[outputRow] = fit?[arrayOffset] ?? Constant.MISSING; // Event Probability
-            ((DoubleVariable) outputFrame.Variables[3]).Data[outputRow] = dr?[arrayOffset] ?? Constant.MISSING; // Deviance Residual
-            ((DoubleVariable) outputFrame.Variables[4]).Data[outputRow] = pxi?[arrayOffset] ?? Constant.MISSING; // Pearson Residual
-            ((DoubleVariable) outputFrame.Variables[5]).Data[outputRow] = hi?[arrayOffset] ?? Constant.MISSING; // Leverage
-            ((DoubleVariable) outputFrame.Variables[6]).Data[outputRow] = xis?[arrayOffset] ?? Constant.MISSING; // Std Pearson Residual
-            ((DoubleVariable) outputFrame.Variables[7]).Data[outputRow] = cbar?[arrayOffset] ?? Constant.MISSING; // Delta Beta
-            ((DoubleVariable) outputFrame.Variables[8]).Data[outputRow] = c?[arrayOffset] ?? Constant.MISSING; // Std Delta Beta
-            ((DoubleVariable) outputFrame.Variables[9]).Data[outputRow] = d?[arrayOffset] ?? Constant.MISSING; // Delta Deviance
-            ((DoubleVariable) outputFrame.Variables[10]).Data[outputRow] = dc?[arrayOffset] ?? Constant.MISSING; // Delta Chi-Square
+            ((DoubleVariable)outputFrame.Variables[0]).Data[outputRow] = t?[arrayOffset] ?? Constant.MISSING; // Trials
+            ((DoubleVariable)outputFrame.Variables[1]).Data[outputRow] = y?[arrayOffset] ?? Constant.MISSING; // Events
+            ((DoubleVariable)outputFrame.Variables[2]).Data[outputRow] = fit?[arrayOffset] ?? Constant.MISSING; // Event Probability
+            ((DoubleVariable)outputFrame.Variables[3]).Data[outputRow] = dr?[arrayOffset] ?? Constant.MISSING; // Deviance Residual
+            ((DoubleVariable)outputFrame.Variables[4]).Data[outputRow] = pxi?[arrayOffset] ?? Constant.MISSING; // Pearson Residual
+            ((DoubleVariable)outputFrame.Variables[5]).Data[outputRow] = hi?[arrayOffset] ?? Constant.MISSING; // Leverage
+            ((DoubleVariable)outputFrame.Variables[6]).Data[outputRow] = xis?[arrayOffset] ?? Constant.MISSING; // Std Pearson Residual
+            ((DoubleVariable)outputFrame.Variables[7]).Data[outputRow] = cbar?[arrayOffset] ?? Constant.MISSING; // Delta Beta
+            ((DoubleVariable)outputFrame.Variables[8]).Data[outputRow] = c?[arrayOffset] ?? Constant.MISSING; // Std Delta Beta
+            ((DoubleVariable)outputFrame.Variables[9]).Data[outputRow] = d?[arrayOffset] ?? Constant.MISSING; // Delta Deviance
+            ((DoubleVariable)outputFrame.Variables[10]).Data[outputRow] = dc?[arrayOffset] ?? Constant.MISSING; // Delta Chi-Square
 
             if (includePredictors)
             {
@@ -3245,7 +3245,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag PlotLogisticRegressionDiagnostics(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fv = context.FV;
@@ -3308,21 +3308,21 @@ namespace StatsDirect.Builtins
             hi[0] = Constant.MISSING;
 
             //  delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  std delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  delta deviance vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  delta x2 vs. proportion
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
             //  delta beta vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta beta std vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta deviance vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta x2 vs. hi
-            chartsList.Add(new ParameterBag("chart", new FilledParameter(FilledParameterDirection.Output, ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             return outputParameters;
         }
 
@@ -3355,7 +3355,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             double[] se = context.Se;
             int p = context.P;
@@ -3515,7 +3515,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionModel(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             double[] se = context.Se;
             int p = context.P;
@@ -3688,7 +3688,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionIrr(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             double[] se = context.Se;
             int p = context.P;
@@ -3738,7 +3738,7 @@ namespace StatsDirect.Builtins
             if (parameters["hasDichotomousCovariates"].AsBoolean)
             {
                 double[] nsel = ((DoubleVariable)parameters["dichotomousCovariates"].AsDataFrame.Variables[1]).Data;
-                bool[] cov = (bool[])parameters["cov"].Data;
+                bool[] cov = (bool[])parameters["cov"].AsObject;
                 int selectedIndex = 0;
                 for (int i = 0; i <= cov.GetUpperBound(0); i++)
                 {
@@ -3796,7 +3796,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag OpPoissonRegressionIrrMakeDichotomousCovariates(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[,] x = context.X;
             int p = context.P;
             int nx = context.N;
@@ -3843,7 +3843,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionModelSelection(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             bool mean = context.DoC;
             int n = context.N;
             string[] labels = context.Labels;
@@ -3879,64 +3879,68 @@ namespace StatsDirect.Builtins
             bool iweight = true;
             var dropped = string.Empty;
             var errMsg = string.Empty;
-            host.StartProgress("Checking significance with all predictors", false);
-            Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out double dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
-            LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
-            host.FinishProgress();
+            using (IProgressBar progress = host.StartProgress("Checking significance with all predictors", false))
+            {
+                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out double dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
+                LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
+            }
 
             // Now add predictors one at time: select the predictor that gives max Akaike information to the model on each addition, building up to the full model again
-            host.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true);
-            bool[] previousSelection = new bool[p + 1]; // All blank initially; no previous selections.
-            int parms = mean ? 2 : 1;
-            double estimatedRegressionsToRun = m * (m + 1) / 2.0 + m;
-            int regressionsRun = 0;
-            while (true)
+            using (IProgressBar progress = host.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true))
             {
-                selectX = new bool[p + 1];
-                Array.Copy(previousSelection, selectX, p + 1);
-                int bestPredictorIndexSoFar = 0;
-                double minAkaikeInformationSoFar = double.MaxValue;
-                bool abandon = false;
-                for (int candidate = 1; candidate <= m; candidate++)
+                bool[] previousSelection = new bool[p + 1]; // All blank initially; no previous selections.
+                int parms = mean ? 2 : 1;
+                double estimatedRegressionsToRun = m * (m + 1) / 2.0 + m;
+                int regressionsRun = 0;
+                while (true)
                 {
-                    // If we've already processed this one, don't do so again
-                    if (previousSelection[candidate])
-                        continue;
-
-                    // Check whether it's better than our best so far this run; if so, note the fact.
-                    // Lower AIC values are better - the value represents the information *lost* if this model is chosen.
-                    selectX[candidate] = true;
-                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
-                    if (host.UpdateProgress(++regressionsRun / estimatedRegressionsToRun))
+                    selectX = new bool[p + 1];
+                    Array.Copy(previousSelection, selectX, p + 1);
+                    int bestPredictorIndexSoFar = 0;
+                    double minAkaikeInformationSoFar = double.MaxValue;
+                    bool abandon = false;
+                    double dev;
+                    int fault;
+                    for (int candidate = 1; candidate <= m; candidate++)
                     {
-                        abandon = true;
+                        // If we've already processed this one, don't do so again
+                        if (previousSelection[candidate])
+                            continue;
+
+                        // Check whether it's better than our best so far this run; if so, note the fact.
+                        // Lower AIC values are better - the value represents the information *lost* if this model is chosen.
+                        selectX[candidate] = true;
+                        Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
+                        if (progress.Update(++regressionsRun / estimatedRegressionsToRun))
+                        {
+                            abandon = true;
+                            break;
+                        }
+                        double aic = dev + 2 * (1 + m);
+                        if (aic < minAkaikeInformationSoFar)
+                        {
+                            bestPredictorIndexSoFar = candidate;
+                            minAkaikeInformationSoFar = aic;
+                        }
+                        selectX[candidate] = false;
+                    }
+
+                    // Have we added all predictors (or has the user given up)?
+                    if (bestPredictorIndexSoFar <= 0 || abandon)
                         break;
-                    }
-                    double aic = dev + 2 * (1 + m);
-                    if (aic < minAkaikeInformationSoFar)
-                    {
-                        bestPredictorIndexSoFar = candidate;
-                        minAkaikeInformationSoFar = aic;
-                    }
-                    selectX[candidate] = false;
+
+                    // Re-do the regression with that predictor selected along with any others we may have from previous iterations
+                    selectX[bestPredictorIndexSoFar] = true;
+                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
+                    LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
+                    if (progress.Update(++regressionsRun / estimatedRegressionsToRun))
+                        break;
+
+                    // Go round again, remembering the predictor we've chosen this time
+                    previousSelection = selectX;
+                    parms++;
                 }
-
-                // Have we added all predictors (or has the user given up)?
-                if (bestPredictorIndexSoFar <= 0 || abandon)
-                    break;
-
-                // Re-do the regression with that predictor selected along with any others we may have from previous iterations
-                selectX[bestPredictorIndexSoFar] = true;
-                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
-                LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
-                if (host.UpdateProgress(++regressionsRun / estimatedRegressionsToRun))
-                    break;
-
-                // Go round again, remembering the predictor we've chosen this time
-                previousSelection = selectX;
-                parms++;
             }
-            host.FinishProgress();
 
             return outputParameters;
         }
@@ -4023,7 +4027,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionClassification(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int N = context.N;
             double[] fvl = context.FV;
             double[] t = context.T;
@@ -4139,7 +4143,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogisticRegressionBootstrap(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] se;
             double[] b = context.B;
             double[] t = context.T;
@@ -4182,49 +4186,130 @@ namespace StatsDirect.Builtins
                 gtot += Convert.ToInt32(t[j]);
             }
             int boots = parameters["boots"].AsInt32;
-            host.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true);
-            double[,] qo = new double[p + 1, boots + 1];
-            double[] theta = new double[p + 1];
-            double[] ql = new double[p + 1];
-            double[] qu = new double[p + 1];
-            int booted = 0;
-            MersenneTwister rng = new MersenneTwister();
-            for (i = 1; i <= boots; i++)
+            using (IProgressBar progress = host.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true))
             {
-                if (host.UpdateProgress(i / (double)boots))
-                    break;
-
-                double[] rndy = new double[n + 1];
-                double[] rndt = new double[n + 1];
-                double[] rndwt = new double[n + 1];
-                for (j = 1; j <= gtot; j++)
+                double[,] qo = new double[p + 1, boots + 1];
+                double[] theta = new double[p + 1];
+                double[] ql = new double[p + 1];
+                double[] qu = new double[p + 1];
+                int booted = 0;
+                MersenneTwister rng = new MersenneTwister();
+                for (i = 1; i <= boots; i++)
                 {
-                    int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
-                    int pivot = 0;
-                    int k;
-                    for (k = 1; k <= n; k++)
+                    if (progress.Update(i / (double)boots))
+                        break;
+
+                    double[] rndy = new double[n + 1];
+                    double[] rndt = new double[n + 1];
+                    double[] rndwt = new double[n + 1];
+                    for (j = 1; j <= gtot; j++)
                     {
-                        pivot += Convert.ToInt32(t[k]);
-                        if (pick <= pivot)
+                        int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
+                        int pivot = 0;
+                        int k;
+                        for (k = 1; k <= n; k++)
                         {
-                            rndt[k]++;
-                            if (rng.NextDouble() <= Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k]))
-                                rndy[k]++;
-                            break;
+                            pivot += Convert.ToInt32(t[k]);
+                            if (pick <= pivot)
+                            {
+                                rndt[k]++;
+                                if (rng.NextDouble() <= Convert.ToInt64(y[k]) / (double)Convert.ToInt64(t[k]))
+                                    rndy[k]++;
+                                break;
+                            }
+                        }
+                    }
+                    for (j = 1; j <= n; j++)
+                    {
+                        if (rndy[j] == 0.0)
+                            rndy[j] = Constant.EPSNEG;
+                        if (rndy[j] == rndt[j])
+                            rndy[j] = rndy[j] - Constant.EPSNEG;
+                        if (rndt[j] == 0.0)
+                            rndwt[j] = 0.0;
+                        else
+                            rndwt[j] = wt[j];
+                    }
+                    b = new double[p + 1];
+                    se = new double[n + 1];
+                    cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
+                    fv = new double[n + 1];
+                    dr = new double[n + 1];
+                    h = new double[n + 1];
+                    offst = new double[n + 1];
+                    bool iweight = true;
+                    dropped = string.Empty;
+                    errMsg = string.Empty;
+                    Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
+                    if (fault == 0)
+                    {
+                        booted++;
+                        for (j = 1; j <= p; j++)
+                        {
+                            qo[j, booted] = Formatting.SafeExp(b[j]);
+                            if (qo[j, booted] < 1000.0 * ob[j])
+                                theta[j] += qo[j, booted];
                         }
                     }
                 }
-                for (j = 1; j <= n; j++)
+
+                // In the case of the bootstrap not running to its full iterations because the user cancelled, present results as far as it's got (#669)
+                boots = i - 1;
+
+                ParameterBag outputParameters = new ParameterBag();
+
+                for (j = 1; j <= p; j++)
                 {
-                    if (rndy[j] == 0.0)
-                        rndy[j] = Constant.EPSNEG;
-                    if (rndy[j] == rndt[j])
-                        rndy[j] = rndy[j] - Constant.EPSNEG;
-                    if (rndt[j] == 0.0)
-                        rndwt[j] = 0.0;
-                    else
-                        rndwt[j] = wt[j];
+                    theta[j] = theta[j] / Convert.ToDouble(booted);
                 }
+                for (j = 1; j <= p; j++)
+                {
+                    double[] qq = new double[booted + 1];
+                    int ctr = 0;
+                    for (i = 1; i <= booted; i++)
+                    {
+                        qq[i] = qo[j, i];
+                        if (qq[i] <= ob[j])
+                        {
+                            ctr += 1;
+                        }
+                    }
+                    Array.Sort(qq, 1, booted);
+                    double z0 = ctr / (double)booted;
+                    z0 = PDF.gauinv(z0);
+                    double p1 = PDF.alnorm(2.0 * z0 - cit);
+                    double p2 = PDF.alnorm(2.0 * z0 + cit);
+                    ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p1) + 1];
+                    qu[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p2) + 1];
+                }
+                if (boots == booted)
+                    outputParameters.AddOutput("boots", booted.ToString());
+                else
+                    outputParameters.AddOutput("boots", booted.ToString() + ", warning: " + (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression");
+                outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - p0), 2));
+                if (mean)
+                    iq = 1;
+                List<ParameterBag> parametersList = new List<ParameterBag>();
+                outputParameters.AddOutput("*parameters", parametersList);
+                for (i = 1; i <= p; i++)
+                {
+                    ParameterBag parametersParameters = new ParameterBag();
+                    parametersList.Add(parametersParameters);
+                    string q = i == 1 && mean ? "Constant" : labels[i - iq];
+                    parametersParameters.AddOutput("par", q);
+                    parametersParameters.AddOutput("obs", host.RoundU(ob[i]));
+                    if (i > 1 | mean == false)
+                    {
+                        parametersParameters.AddOutput("bias", host.RoundU(theta[i] - ob[i]));
+                        parametersParameters.AddOutput("ci", host.RoundU(ql[i]) + "  to  " + host.RoundU(qu[i]));
+                    }
+                    else
+                    {
+                        parametersParameters.AddOutput("bias", string.Empty);
+                        parametersParameters.AddOutput("ci", string.Empty);
+                    }
+                }
+                //  recalculate full model
                 b = new double[p + 1];
                 se = new double[n + 1];
                 cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
@@ -4232,97 +4317,17 @@ namespace StatsDirect.Builtins
                 dr = new double[n + 1];
                 h = new double[n + 1];
                 offst = new double[n + 1];
-                bool iweight = true;
                 dropped = string.Empty;
                 errMsg = string.Empty;
-                Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, predictors, isx, p, rndy, rndt, rndwt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
-                if (fault == 0)
-                {
-                    booted++;
-                    for (j = 1; j <= p; j++)
-                    {
-                        qo[j, booted] = Formatting.SafeExp(b[j]);
-                        if (qo[j, booted] < 1000.0 * ob[j])
-                            theta[j] += qo[j, booted];
-                    }
-                }
+                Regress1.X_Logistic_Regression(mean, false, ref useWeights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int _, ref dropped, ref errMsg);
+                return outputParameters;
             }
-            host.FinishProgress();
-
-            // In the case of the bootstrap not running to its full iterations because the user cancelled, present results as far as it's got (#669)
-            boots = i - 1;
-
-            ParameterBag outputParameters = new ParameterBag();
-
-            for (j = 1; j <= p; j++)
-            {
-                theta[j] = theta[j] / Convert.ToDouble(booted);
-            }
-            for (j = 1; j <= p; j++)
-            {
-                double[] qq = new double[booted + 1];
-                int ctr = 0;
-                for (i = 1; i <= booted; i++)
-                {
-                    qq[i] = qo[j, i];
-                    if (qq[i] <= ob[j])
-                    {
-                        ctr += 1;
-                    }
-                }
-                Array.Sort(qq, 1, booted);
-                double z0 = ctr / (double)booted;
-                z0 = PDF.gauinv(z0);
-                double p1 = PDF.alnorm(2.0 * z0 - cit);
-                double p2 = PDF.alnorm(2.0 * z0 + cit);
-                ql[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p1) + 1];
-                qu[j] = qq[Convert.ToInt32(Convert.ToDouble(booted - 1) * p2) + 1];
-            }
-            if (boots == booted)
-                outputParameters.AddOutput("boots", booted.ToString());
-            else
-                outputParameters.AddOutput("boots", booted.ToString() + ", warning: " + (boots - booted).ToString() + " re-samples were dropped because they caused error in the regression");
-            outputParameters.AddOutput("pc", Formatting.XRound(100 * (1.0 - p0), 2));
-            if (mean)
-                iq = 1;
-            List<ParameterBag> parametersList = new List<ParameterBag>();
-            outputParameters.AddOutput("*parameters", parametersList);
-            for (i = 1; i <= p; i++)
-            {
-                ParameterBag parametersParameters = new ParameterBag();
-                parametersList.Add(parametersParameters);
-                string q = i == 1 && mean ? "Constant" : labels[i - iq];
-                parametersParameters.AddOutput("par", q);
-                parametersParameters.AddOutput("obs", host.RoundU(ob[i]));
-                if (i > 1 | mean == false)
-                {
-                    parametersParameters.AddOutput("bias", host.RoundU(theta[i] - ob[i]));
-                    parametersParameters.AddOutput("ci", host.RoundU(ql[i]) + "  to  " + host.RoundU(qu[i]));
-                }
-                else
-                {
-                    parametersParameters.AddOutput("bias", string.Empty);
-                    parametersParameters.AddOutput("ci", string.Empty);
-                }
-            }
-            //  recalculate full model
-            b = new double[p + 1];
-            se = new double[n + 1];
-            cov = new double[(int)Math.Floor((double)p * (p + 1) / 2) + 1];
-            fv = new double[n + 1];
-            dr = new double[n + 1];
-            h = new double[n + 1];
-            offst = new double[n + 1];
-            dropped = string.Empty;
-            errMsg = string.Empty;
-            Regress1.X_Logistic_Regression(mean, false, ref useWeights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int _, ref dropped, ref errMsg);
-            return outputParameters;
         }
 
 
         public static ParameterBag RptLogisticRegressionPrediction(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
             int P = context.P;
             string[] labels = context.Labels;
@@ -4968,7 +4973,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;
@@ -5095,7 +5100,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag GridPoissonRegressionFit(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
             double[] y = context.Y;
             double[] fvl = context.FV;
@@ -5225,7 +5230,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptPoissonRegressionResiduals(ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
             double[] yfit = context.FV;
             double[] dr = context.R;
@@ -6104,7 +6109,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag PlotProbit(ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double[] x = context.X1;
             double[] y = context.H1;
@@ -6128,7 +6133,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitInterpolateX(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double a = context.Arg[1];
             double b = context.Arg[2];
@@ -6169,7 +6174,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitInterpolateY(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double a = context.Arg[1];
             double b = context.Arg[2];
@@ -6201,7 +6206,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptProbitMore(ITemplateHost host, ParameterBag parameters)
         {
-            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].Data;
+            MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
             double a = context.Arg[1];
             double b = context.Arg[2];

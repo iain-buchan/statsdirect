@@ -83,8 +83,7 @@ namespace StatsDirect.TemplateProcessing
             }
             sb.AppendLine(code);
             string modifiedCode = sb.ToString();
-            host.StartProgress("Running R script", false);
-            try
+            using (IProgressBar progress = host.StartProgress("Running R script", false))
             {
                 Process p = RController.RunScriptAndQuit(host, modifiedCode, out string codeForEmit);
                 while (true)
@@ -92,7 +91,7 @@ namespace StatsDirect.TemplateProcessing
                     bool exited = p.WaitForExit(50);
                     if (exited)
                         break;
-                    if (host.UpdateProgress(0))
+                    if (progress.Update(0))
                     {
                         p.Kill();
                         throw new TemplateOperationCancelledException();
@@ -107,10 +106,6 @@ namespace StatsDirect.TemplateProcessing
                     pb.AddOutput("formattedRScript", codeForEmit);
                     return pb;
                 }
-            }
-            finally
-            {
-                host.FinishProgress();
             }
         }
 

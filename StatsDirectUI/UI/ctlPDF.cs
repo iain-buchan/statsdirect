@@ -250,7 +250,7 @@ namespace StatsDirect.UI
                     Pval15Into(txt2p, p, AllowsZeroP(selectedTest));
                     if (selectedTest != DistributionType.Poisson)
                     {
-                        p = p / 2.0;
+                        p /= 2.0;
                         if (p > 1.0 - p)
                             p = 1.0 - p;
                         Pval15Into(txtLp, 1.0 - p, AllowsZeroP(selectedTest));

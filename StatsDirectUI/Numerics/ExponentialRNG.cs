@@ -74,15 +74,15 @@ namespace StatsDirect.Numerics
             double u = RNG.NextDoubleX(); 
             do 
             { 
-                u = u + u; 
+                u += u; 
                 if ( u >= 1.0 )
                 { 
                     break; 
                 } 
-                a = a + Q0; 
+                a += Q0; 
             } 
             while ( true ); 
-            u = u - 1.0; 
+            u -= 1.0; 
             if ( u <= Q0 ) 
             { 
                 genExpReturn = a + u; 
@@ -98,7 +98,7 @@ namespace StatsDirect.Numerics
                 { 
                     umin = ustar; 
                 } 
-                i = i + 1; 
+                i += 1; 
             } 
             while ( u > Q[ i ] ); 
             genExpReturn = a + umin * Q0; 

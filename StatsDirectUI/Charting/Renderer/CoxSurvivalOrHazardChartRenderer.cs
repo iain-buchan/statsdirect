@@ -150,7 +150,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 if (i > 1 && (options.grouped ? options.z[i].Id != options.z[i - 1].Id : options.z[i].Stratum != options.z[i - 1].Stratum))
                 {
-                    igp = igp + 1;
+                    igp += 1;
                     ix1 = ix0;
                     iy1 = iy0;
                     mt = ChartPreferences.MarkerTypes[igp % 9];

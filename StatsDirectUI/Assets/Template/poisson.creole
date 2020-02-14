@@ -1,6 +1,5 @@
 <report>
 <title>Poisson confidence interval</title>
-<br />
 <block name="sample">
 <table>
 <tr><td>Sample name:</td><td>@ti    <warn>@warn</warn></td></tr>

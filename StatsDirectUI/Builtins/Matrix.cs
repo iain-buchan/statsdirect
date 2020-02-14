@@ -44,7 +44,7 @@ namespace StatsDirect.Builtins
             { 
                 if ( indkey[ i ] < 1 | nrx > 0 & indkey[ i ] > nrx )
                 { 
-                    k1 = k1 + 1; 
+                    k1 += 1; 
                 } 
             } 
             if ( k1 > 0 ) 
@@ -66,16 +66,16 @@ namespace StatsDirect.Builtins
             for ( i=1; i <= lir; i++ ) 
             { 
                 iperm[ ix ] = 1 + ib; 
-                ix = ix + 1; 
-                ib = ib + 1; 
+                ix += 1; 
+                ib += 1; 
             } 
             ix = 1; 
             ib = 0; 
             for ( i=1; i <= ljr; i++ ) 
             { 
                 iwk[ ix ] = 1 + ib; 
-                ix = ix + 1; 
-                ib = ib + 1; 
+                ix += 1; 
+                ib += 1; 
             } 
             for ( i=1; i <= nkey; i++ ) 
             { 
@@ -89,8 +89,8 @@ namespace StatsDirect.Builtins
                 int itemp = iwk[ ibeg ]; 
                 iwk[ ibeg ] = iwk[ iend ]; 
                 iwk[ iend ] = itemp; 
-                ibeg = ibeg + 1; 
-                iend = iend - 1; 
+                ibeg += 1; 
+                iend -= 1; 
             } 
             for ( i=1; i <= nkey; i++ )
             {
@@ -106,16 +106,16 @@ namespace StatsDirect.Builtins
             for ( i=1; i <= ljr; i++ ) 
             { 
                 wk[ iy ] = iwk[ ix ]; 
-                ix = ix + 1; 
-                iy = iy + 1; 
+                ix += 1; 
+                iy += 1; 
             } 
             ix = 1; 
             ib = 0; 
             for ( i=1; i <= ljr; i++ ) 
             { 
                 iwk[ ix ] = 1 + ib; 
-                ix = ix + 1; 
-                ib = ib + 1; 
+                ix += 1; 
+                ib += 1; 
             } 
             dqsortperm( ref ljr, ref wk, ref wk, ref iwk ); 
             pmurc( nrx, ncx, x, iwk, 1, x, wk, ref ifault ); 
@@ -131,8 +131,8 @@ namespace StatsDirect.Builtins
                         if ( iperm[ i ] < 0 ) 
                         { 
                             iperm[ i ] = -iperm[ i ]; 
-                            icnt = icnt + 1; 
-                            i = i + 1; 
+                            icnt += 1; 
+                            i += 1; 
                         } 
                         else 
                         { 
@@ -146,8 +146,8 @@ namespace StatsDirect.Builtins
                     { 
                         if ( iperm[ i ] > 0 ) 
                         { 
-                            icnt = icnt + 1; 
-                            i = i + 1; 
+                            icnt += 1; 
+                            i += 1; 
                         } 
                         else 
                         { 
@@ -155,7 +155,7 @@ namespace StatsDirect.Builtins
                         } 
                     } 
                 } 
-                lind = lind + 1; 
+                lind += 1; 
                 ni[ lind ] = icnt; 
             } 
             ngroup = lind; 
@@ -164,16 +164,16 @@ namespace StatsDirect.Builtins
             for ( i=1; i <= lir; i++ ) 
             { 
                 wk[ iy ] = iperm[ ix ]; 
-                ix = ix + 1; 
-                iy = iy + 1; 
+                ix += 1; 
+                iy += 1; 
             } 
             ix = 1; 
             ib = 0; 
             for ( i=1; i <= lir; i++ ) 
             { 
                 iperm[ ix ] = 1 + ib; 
-                ix = ix + 1; 
-                ib = ib + 1; 
+                ix += 1; 
+                ib += 1; 
             } 
             dqsortperm( ref lir, ref wk, ref wk, ref iperm ); 
             pmurc( nrx, ncx, x, iperm, 2, x, wk, ref ifault ); 
@@ -182,16 +182,16 @@ namespace StatsDirect.Builtins
             for ( i=1; i <= lir; i++ ) 
             { 
                 wk[ iy ] = iperm[ ix ]; 
-                ix = ix + 1; 
-                iy = iy + 1; 
+                ix += 1; 
+                iy += 1; 
             } 
             ix = 1; 
             ib = 0; 
             for ( i=1; i <= lir; i++ ) 
             { 
                 iperm[ ix ] = 1 + ib; 
-                ix = ix + 1; 
-                ib = ib + 1; 
+                ix += 1; 
+                ib += 1; 
             } 
             dqsortperm( ref lir, ref wk, ref wk, ref iperm ); 
         } 
@@ -231,11 +231,11 @@ namespace StatsDirect.Builtins
             const double dr = 0.21875; 
             if ( r <= r1 ) 
             { 
-                r = r + ur; 
+                r += ur; 
             } 
             else 
             { 
-                r = r - dr; 
+                r -= dr; 
             } 
             do 
             {
@@ -246,7 +246,7 @@ namespace StatsDirect.Builtins
                 int kompar;
                 if ( i == j ) 
                 { 
-                    m = m - 1; 
+                    m -= 1; 
                     if ( m == 0 ) 
                     { 
                         if ( ncx >= 2 ) 
@@ -285,8 +285,8 @@ namespace StatsDirect.Builtins
                     for ( ii=1; ii <= nr1; ii++ ) 
                     { 
                         WK[ iiw ] = x[ iix + ( ij - 1 ) * nrx ]; 
-                        iiw = iiw + 1; 
-                        iix = iix + 1; 
+                        iiw += 1; 
+                        iix += 1; 
                     } 
                     it = iperm[ ij ];
                     mxsrt3(kr, x, irowx + (i - 1) * nrx - 1, WK, irowx - 1, out kompar); 
@@ -316,8 +316,8 @@ namespace StatsDirect.Builtins
                         { 
                             x[ iix + ( j - 1 ) * nrx ] = WK[ iiw ]; 
                             WK[ iiw ] = x[ iix + ( ij - 1 ) * nrx ]; 
-                            iiw = iiw + 1; 
-                            iix = iix + 1; 
+                            iiw += 1; 
+                            iix += 1; 
                         } 
                         iperm[ ij ] = iperm[ j ]; 
                         iperm[ j ] = it; 
@@ -340,7 +340,7 @@ namespace StatsDirect.Builtins
                     { 
                         do 
                         { 
-                            l = l - 1;
+                            l -= 1;
                             mxsrt3(kr, x, irowx + (l - 1) * nrx - 1, WK, irowx - 1, out kompar); 
                             if ( kompar != 1 )
                             { 
@@ -350,7 +350,7 @@ namespace StatsDirect.Builtins
                         while ( true ); 
                         do 
                         { 
-                            k = k + 1;
+                            k += 1;
                             mxsrt3(kr, x, irowx + (k - 1) * nrx - 1, WK, irowx - 1, out kompar); 
                             if ( kompar != -1 )
                             { 
@@ -382,24 +382,24 @@ namespace StatsDirect.Builtins
                         istk[ m + ix2 ] = k; 
                         istk[ m + ix1 ] = j; 
                         j = l; 
-                        m = m + 1; 
+                        m += 1; 
                     } 
                     else 
                     { 
                         istk[ m + ix2 ] = i; 
                         istk[ m + ix1 ] = l; 
                         i = k; 
-                        m = m + 1; 
+                        m += 1; 
                     } 
                 } 
                 if ( j - i < 11 ) 
                 { 
                     if ( i != jcolx ) 
                     { 
-                        i = i - 1; 
+                        i -= 1; 
                         do 
                         { 
-                            i = i + 1; 
+                            i += 1; 
                             if ( i == j )
                             { 
                                 break; 
@@ -420,7 +420,7 @@ namespace StatsDirect.Builtins
                                         x[ ii + k * nrx ] = x[ ii + ( k - 1 ) * nrx ]; 
                                     } 
                                     iperm[ k + 1 ] = iperm[ k ]; 
-                                    k = k - 1; 
+                                    k -= 1; 
                                     mxsrt3( kr, WK, irowx - 1, x, irowx + ( k - 1 ) * nrx - 1, out kompar ); 
                                     if ( kompar != -1 )
                                     { 
@@ -442,11 +442,11 @@ namespace StatsDirect.Builtins
                 { 
                     if ( r <= r1 ) 
                     { 
-                        r = r + ur; 
+                        r += ur; 
                     } 
                     else 
                     { 
-                        r = r - dr; 
+                        r -= dr; 
                     } 
                 } 
             } 
@@ -473,8 +473,8 @@ namespace StatsDirect.Builtins
             { 
                 if ( sx[ ix1 + ix ] == sy[ ix2 + iy ] ) 
                 { 
-                    ix = ix + 1; 
-                    iy = iy + 1; 
+                    ix += 1; 
+                    iy += 1; 
                 } 
                 else 
                 { 
@@ -644,11 +644,11 @@ namespace StatsDirect.Builtins
             double r = 0.375; 
             if ( r <= 0.5898437 ) 
             { 
-                r = r + 0.0390625; 
+                r += 0.0390625; 
             } 
             else 
             { 
-                r = r - 0.21875; 
+                r -= 0.21875; 
             } 
             do 
             {
@@ -686,7 +686,7 @@ namespace StatsDirect.Builtins
                         //         find element smaller than ic in the second half
                         do 
                         { 
-                            l = l - 1; 
+                            l -= 1; 
                             if ( iy[ l ] <= ic )
                             { 
                                 break; 
@@ -696,7 +696,7 @@ namespace StatsDirect.Builtins
                         //         find element larger than ic in the first half
                         do 
                         { 
-                            k = k + 1; 
+                            k += 1; 
                             if ( iy[ k ] >= ic )
                             { 
                                 break; 
@@ -722,20 +722,20 @@ namespace StatsDirect.Builtins
                         il[ m ] = i; 
                         iu[ m ] = l; 
                         i = k; 
-                        m = m + 1; 
+                        m += 1; 
                     } 
                     else 
                     { 
                         il[ m ] = k; 
                         iu[ m ] = j; 
                         j = l; 
-                        m = m + 1; 
+                        m += 1; 
                     } 
                     //        start over in another part of the array
                 } 
                 else 
                 { 
-                    m = m - 1; 
+                    m -= 1; 
                     if ( m == 0 )
                     { 
                         return; 
@@ -747,18 +747,18 @@ namespace StatsDirect.Builtins
                 { 
                     if ( r <= 0.5898437 ) 
                     { 
-                        r = r + 0.0390625; 
+                        r += 0.0390625; 
                     } 
                     else 
                     { 
-                        r = r - 0.21875; 
+                        r -= 0.21875; 
                     } 
                     if ( i != 1 ) 
                     { 
-                        i = i - 1; 
+                        i -= 1; 
                         do 
                         { 
-                            i = i + 1; 
+                            i += 1; 
                             if ( i == j )
                             { 
                                 break; 
@@ -770,7 +770,7 @@ namespace StatsDirect.Builtins
                                 do 
                                 { 
                                     iy[ k + 1 ] = iy[ k ]; 
-                                    k = k - 1; 
+                                    k -= 1; 
                                     if ( ic >= iy[ k ] )
                                     { 
                                         break; 
@@ -819,11 +819,11 @@ namespace StatsDirect.Builtins
             double r = 0.375; 
             if ( r <= 0.5898437 ) 
             { 
-                r = r + 0.0390625; 
+                r += 0.0390625; 
             } 
             else 
             { 
-                r = r - 0.21875; 
+                r -= 0.21875; 
             } 
             do 
             {
@@ -872,7 +872,7 @@ namespace StatsDirect.Builtins
                         //         find element smaller than cp in the second half
                         do 
                         { 
-                            l = l - 1; 
+                            l -= 1; 
                             if ( y[ l ] <= cp )
                             { 
                                 break; 
@@ -882,7 +882,7 @@ namespace StatsDirect.Builtins
                         //         find element larger than cp in the first half
                         do 
                         { 
-                            k = k + 1; 
+                            k += 1; 
                             if ( y[ k ] >= cp )
                             { 
                                 break; 
@@ -911,20 +911,20 @@ namespace StatsDirect.Builtins
                         il[ m ] = i; 
                         iu[ m ] = l; 
                         i = k; 
-                        m = m + 1; 
+                        m += 1; 
                     } 
                     else 
                     { 
                         il[ m ] = k; 
                         iu[ m ] = j; 
                         j = l; 
-                        m = m + 1; 
+                        m += 1; 
                     } 
                     //        start over in another part of the array
                 } 
                 else 
                 { 
-                    m = m - 1; 
+                    m -= 1; 
                     if ( m == 0 ) 
                     {
                         int ik;
@@ -945,18 +945,18 @@ namespace StatsDirect.Builtins
                 { 
                     if ( r <= 0.5898437 ) 
                     { 
-                        r = r + 0.0390625; 
+                        r += 0.0390625; 
                     } 
                     else 
                     { 
-                        r = r - 0.21875; 
+                        r -= 0.21875; 
                     } 
                     if ( i != 1 ) 
                     { 
-                        i = i - 1; 
+                        i -= 1; 
                         do 
                         { 
-                            i = i + 1; 
+                            i += 1; 
                             if ( i == j )
                             { 
                                 break; 
@@ -970,7 +970,7 @@ namespace StatsDirect.Builtins
                                 { 
                                     y[ k + 1 ] = y[ k ]; 
                                     ipmu[ k + 1 ] = ipmu[ k ]; 
-                                    k = k - 1; 
+                                    k -= 1; 
                                     if ( cp >= y[ k ] )
                                     { 
                                         break; 
@@ -1029,14 +1029,14 @@ namespace StatsDirect.Builtins
                     double vvdot = 0.0; 
                     for (int ii=1; ii <= k - 1; ii++ ) 
                     { 
-                        vvdot = vvdot + r[ ii + ldr * ( k - 1 ) ] * r[ ii + ldr * ( j - 1 ) ]; 
+                        vvdot += r[ ii + ldr * ( k - 1 ) ] * r[ ii + ldr * ( j - 1 ) ]; 
                     } 
                     double t = r[ k + ldr * ( j - 1 ) ] - vvdot; 
                     if ( r[ k + ldr * ( k - 1 ) ] != 0.0 ) 
                     { 
-                        t = t / r[ k + ldr * ( k - 1 ) ]; 
+                        t /= r[ k + ldr * ( k - 1 ) ]; 
                         r[ k + ldr * ( j - 1 ) ] = t; 
-                        s = s + t * t; 
+                        s += t * t; 
                     } 
                     else 
                     { 
@@ -1120,7 +1120,7 @@ namespace StatsDirect.Builtins
                         } 
                         else 
                         { 
-                            ssq = ssq + Math.Pow( absxi / scale, 2.0 ); 
+                            ssq += Math.Pow( absxi / scale, 2.0 ); 
                         }
                     }
                 } 
@@ -1174,7 +1174,7 @@ namespace StatsDirect.Builtins
             { 
                 if ( r[ i + ldr * ( i - 1 ) ] != 0.0 )
                 { 
-                    irank = irank + 1; 
+                    irank += 1; 
                 } 
             } 
             for ( int j=1; j <= n; j++ ) 
@@ -1189,7 +1189,7 @@ namespace StatsDirect.Builtins
                     double dd = 0.0; 
                     for ( int i=1; i <= j - 1; i++ ) 
                     { 
-                        dd = dd + x[ i ] * r[ i + ldr * ( j - 1 ) ]; 
+                        dd += x[ i ] * r[ i + ldr * ( j - 1 ) ]; 
                     } 
                     double temp1 = x[ j ] - dd; 
                     if ( r[ j + ldr * ( j - 1 ) ] == 0.0 ) 
@@ -1197,7 +1197,7 @@ namespace StatsDirect.Builtins
                         double ap = 0.0; 
                         for ( int i=1; i <= j - 1; i++ ) 
                         { 
-                            ap = ap + Math.Abs( x[ i ] ) * Math.Abs( r[ i + ldr * ( j - 1 ) ] ); 
+                            ap += Math.Abs( x[ i ] ) * Math.Abs( r[ i + ldr * ( j - 1 ) ] ); 
                         } 
                         double temp2 = Math.Abs( x[ j ] + ap ); 
                         temp2 = temp2 * 200.0 * Constant.EPSILON; 
@@ -1224,13 +1224,13 @@ namespace StatsDirect.Builtins
                     int iiy = 1 + ldr * ( i - 1 ); 
                     for ( int ii=1; ii <= i - 1; ii++ ) 
                     { 
-                        dd = dd + r[ iiy ] * x[ iix ]; 
-                        iiy = iiy + 1; 
-                        iix = iix + 1; 
+                        dd += r[ iiy ] * x[ iix ]; 
+                        iiy += 1; 
+                        iix += 1; 
                     } 
                     x[ ix ] = x[ ix ] - dd; 
                     x[ ix ] = x[ ix ] / r[ i + ldr * ( i - 1 ) ]; 
-                    ix = ix + 1; 
+                    ix += 1; 
                 }
             }
         } 

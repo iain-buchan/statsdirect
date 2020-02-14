@@ -38,14 +38,16 @@
       <outputs>
         <output name="sample">11</output>
         <output name="sample_1">9</output>
-        <output name="exact$1$prob_2">0.06543</output>
-        <output name="exact$1$prob_1">0.032715</output>
+        <output name="*exact$1$prob_2">0.0654296875</output>
+        <output name="*exact$1$prob_1">0.03271484375</output>
+        <output name="z">1.8090680674665818</output>
+        <output name="ci">95</output>
+        <output name="lower">0.48224414763982704</output>
+        <output name="prop">0.81818181818181823</output>
+        <output name="upper">0.97716880170004039</output>
+        <output name="warn" />
         <output name="large" missing="true"></output>
         <!-- <output name="z"></output> TODO: Find out what the value should be -->
-        <output name="ci">0.95</output>
-        <output name="lower">0.482244</output>
-        <output name="prop">0.818182</output>
-        <output name="upper">0.977169</output>
       </outputs>
     </test>
     <test reason="Check reversal of n and r">

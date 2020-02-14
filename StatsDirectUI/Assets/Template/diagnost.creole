@@ -1,6 +1,5 @@
 <report>
 <title>Diagnostic test analysis</title>
-<br />
 <table>
 <tr><td></td><th colspan="3">Disease / feature</th></tr>
 <tr><th>Test:</th><td>Present</td><td>Absent</td><td>Totals</td></tr>

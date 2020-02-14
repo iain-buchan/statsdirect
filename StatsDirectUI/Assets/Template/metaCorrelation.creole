@@ -1,11 +1,10 @@
 <report>
 <title>Correlation meta-analysis</title>
-<br />
 <table>
 <tr><th>Study</th><th>Size</th><th>@stat</th><th colspan="2"><ci>Approximate @pc% CI</ci></th><th></th></tr>
 <block name="studies"><tr><td>@st</td><td>@{n:roundu}</td><td>@{y:roundu}</td><td><ci>@{from:roundu}</ci></td><td><ci>@{to:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
-<br />
+
 <table>
 <tr><th>Stratum</th><th>Standardized effect</th><th>Variance</th><th colspan="3">% Weights (fixed, random, size)</th><th></th></tr>
 <block name="studies"><tr><td>@st</td><td>@{yi:roundu}</td><td>@{vi:roundu}</td><td>@{wt:roundu}</td><td>@{dwt:roundu}</td><td>@{nwt:roundu}</td><td>@lb</td></tr></block>

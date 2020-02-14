@@ -1,7 +1,6 @@
 <report>
 <title>Frequencies</title>
 <block name="variable">
-<br />
 <subtitle>Frequency analysis for @ti</subtitle>
 
 <p>Total = @n</p>

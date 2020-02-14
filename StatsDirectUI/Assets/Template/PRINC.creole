@@ -4,7 +4,7 @@
 
 <p>@warn</p>
 </block>
-<br />
+
 <table>
 <tr><th>Component</th><th>Eigenvalue (SVD)</th><th>Proportion</th><th>Cumulative</th></tr>
 <block name="table"><tr><td>@comp</td><td>@eigen</td><td>@prop%</td><td>@cum%</td></tr></block>
