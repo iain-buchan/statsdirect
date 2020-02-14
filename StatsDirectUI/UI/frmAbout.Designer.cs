@@ -68,7 +68,7 @@
             this.lblCopyright.Name = "lblCopyright";
             this.lblCopyright.Size = new System.Drawing.Size(285, 13);
             this.lblCopyright.TabIndex = 1;
-            this.lblCopyright.Text = "Copyright ©1990-2019 StatsDirect Ltd.  All rights reserved.";
+            this.lblCopyright.Text = "Copyright ©1990-2020 StatsDirect Ltd.  All rights reserved.";
             // 
             // cmdOK
             // 
