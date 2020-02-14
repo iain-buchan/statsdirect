@@ -464,6 +464,7 @@ namespace StatsDirect.Builtins
                 // Reallocate x and y each time; appears less efficient, but we need to keep copies of the values as the charts are rendered quite a while after this is called.
                 double[,] x = new double[gx + 1, groups + 1];
                 double[,] y = new double[gx + 1, groups + 1];
+                int[] outCnx = new int[cnx.Length];
                 switch (plotMode)
                 {
                     case KaplanMeierPlotMode.Survival:
@@ -516,7 +517,7 @@ namespace StatsDirect.Builtins
                                 }
                                 break;
                             case KaplanMeierPlotMode.LogHazard:
-                                if (h[j, k] != Constant.MISSING && stime[j, k] > 0 & h[j, k] > 0)
+                                if (h[j, k] != Constant.MISSING && stime[j, k] > 0 && h[j, k] > 0)
                                 {
                                     nx++;
                                     x[nx, k] = Math.Log(stime[j, k]);
@@ -542,9 +543,9 @@ namespace StatsDirect.Builtins
                                 break;
                         }
                     }
-                    cnx[k] = nx;
+                    outCnx[k] = nx;
                 }
-                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, cnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title)));
+                outputImages.Add(ChartRendererFactory.PrepForLater(ChartType.KaplanMeier, new KaplanMeierOptions(dead, groups, outCnx, glab, tic, marker, x, y, plotMode, xAxisTitle, yAxisTitle, title)));
             }
             return outputImages;
         }
