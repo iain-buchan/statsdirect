@@ -46,9 +46,14 @@ namespace StatsDirect.Charting
             }
         }
 
-        public void DrawString(string s, FontDescriptor font, BrushDescriptor brush, double x, double y, StringFormat txtFormat)
+        public void DrawString(string s, FontDescriptor font, BrushDescriptor b, double x, double y, StringFormat txtFormat)
         {
-            metafileGraphics.DrawString(s, FontCache.Font(font), GetBrush(brush), Convert.ToSingle(x), Convert.ToSingle(Height - y), txtFormat);
+            if (null != b)
+            {
+                Brush brush = GetBrush(b);
+                if (null != brush)
+                    metafileGraphics.DrawString(s, FontCache.Font(font), brush, Convert.ToSingle(x), Convert.ToSingle(Height - y), txtFormat);
+            }
         }
 
         ///  <summary>
@@ -65,7 +70,7 @@ namespace StatsDirect.Charting
         ///  <param name="direction"></param>
         ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
-        public void DrawStringAtAngle(string s, FontDescriptor font, BrushDescriptor brush, double x, double y, StringFormat txtFormat, LabelDirection direction)
+        public void DrawStringAtAngle(string s, FontDescriptor font, BrushDescriptor b, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
             //  Work out how to fiddle the text alignment
             if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
@@ -100,13 +105,20 @@ namespace StatsDirect.Charting
                     txtFormat.Alignment = StringAlignment.Far;
                 }
             }
-            float angle = DirectionToAngle(direction);
-            metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(Height - y));
-            metafileGraphics.RotateTransform(angle);
-            metafileGraphics.DrawString(s, FontCache.Font(font), GetBrush(brush), 0, 0, txtFormat);
-            // Undo the transform
-            metafileGraphics.RotateTransform(0f - angle);
-            metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(Height - y));
+            if (null != b)
+            {
+                Brush brush = GetBrush(b);
+                if (null != brush)
+                {
+                    float angle = DirectionToAngle(direction);
+                    metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(Height - y));
+                    metafileGraphics.RotateTransform(angle);
+                    metafileGraphics.DrawString(s, FontCache.Font(font), brush, 0, 0, txtFormat);
+                    // Undo the transform
+                    metafileGraphics.RotateTransform(0f - angle);
+                    metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(Height - y));
+                }
+            }
         }
 
         public SizeD MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction)
@@ -275,7 +287,7 @@ namespace StatsDirect.Charting
                             new PointF(Convert.ToSingle(x + size), Convert.ToSingle(Height - (y - size)))
                         };
                         if (isFilled)
-                            metafileGraphics.FillPolygon(GetBrush(b), points);
+                            metafileGraphics.FillPolygon(GetBrush(b), points); // Guaranteed not to be called with a null brush
                         else
                             metafileGraphics.DrawPolygon(GetPen(p), points);
                     }
@@ -320,7 +332,12 @@ namespace StatsDirect.Charting
 
         private void FillEllipse(BrushDescriptor b, double x, double y, double w, double h)
         {
-            metafileGraphics.FillEllipse(GetBrush(b), Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(Height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
+            if (null != b)
+            {
+                Brush brush = GetBrush(b);
+                if (null != brush)
+                    metafileGraphics.FillEllipse(brush, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(Height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
+            }
         }
 
         private void DrawEllipse(PenDescriptor p, double x, double y, double w, double h)
@@ -337,7 +354,11 @@ namespace StatsDirect.Charting
         public void DrawRectangle(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h)
         {
             if (null != b)
-                metafileGraphics.FillRectangle(GetBrush(b), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            {
+                Brush brush = GetBrush(b);
+                if (null != brush)
+                    metafileGraphics.FillRectangle(brush, Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            }
             if (null != p)
                 metafileGraphics.DrawRectangle(GetPen(p), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
