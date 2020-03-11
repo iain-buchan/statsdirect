@@ -19,7 +19,7 @@ namespace StatsDirect.Templates
 
         public override bool HasData => true;
 
-        public ParameterBag Data { get; set; }
+        public ParameterBag Data { get; }
 
         public override ParameterBag AsParameterBag => Data;
 
