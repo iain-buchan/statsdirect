@@ -1,3 +1,4 @@
+using StatsDirect.UI;
 using System;
 using System.Collections.Generic;
 
@@ -11,7 +12,7 @@ namespace StatsDirect.Charting
         public string YAxisTitle { get; set; }
         public float AxisLineThickness { get; set; }
         public bool ShowLegend { get; set; }
-        public bool UseColour { get; set; }
+        public bool UseColour { get; set; } = SdApplication.SoleInstance.Preferences.ShouldUseColour;
         ///  <summary>
         ///  Marker details.
         ///  </summary>

@@ -7,6 +7,7 @@ using Layout;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
+using StatsDirect.UI;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -104,7 +105,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Note and return the global minimum and maximum values.
         ///  </summary>
         /// <param name="seriesToUse"></param>
-        protected static Range GetMinMaxSort(IList<ISeries> seriesToUse)
+        protected static Layout.Range GetMinMaxSort(IList<ISeries> seriesToUse)
         {
             double min = double.MaxValue;
             double max = double.MinValue;
@@ -117,7 +118,7 @@ namespace StatsDirect.Charting.Renderer
                 if (ds.Data[ds.Data.Length - 1] > max)
                     max = ds.Data[ds.Data.Length - 1];
             }
-            return new Range(min, max);
+            return new Layout.Range(min, max);
         }
 
         ///  <summary>
@@ -490,8 +491,10 @@ namespace StatsDirect.Charting.Renderer
                     hasGridLines = Definition.ScaleParameters.X.HasGridLines;
                     gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
                 }
-                PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1);
-                gridLinePen.DashStyle = gridLineDashStyle;
+                PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
+                {
+                    DashStyle = gridLineDashStyle
+                };
                 foreach (Tic tic in xAxisScale.Tics())
                 {
                     double x1 = ToCanvasX(tic.Value, scaleType);
@@ -604,8 +607,10 @@ namespace StatsDirect.Charting.Renderer
 
             if (!IsAscii)
             {
-                PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1);
-                gridLinePen.DashStyle = gridLineDashStyle;
+                PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
+                {
+                    DashStyle = gridLineDashStyle
+                };
                 foreach (Tic tic in yAxisScale.Tics())
                 {
                     double y1 = ToCanvasY(tic.Value, scaleType);
@@ -690,9 +695,11 @@ namespace StatsDirect.Charting.Renderer
                         hasGridLines = Definition.ScaleParameters.Y.HasGridLines;
                         gridLineDashStyle = Definition.ScaleParameters.Y.GridLineDashStyle;
                     }
-                    PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1);
-                        gridLinePen.DashStyle = gridLineDashStyle;
-                        double count = labels.Count;
+                    PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
+                    {
+                        DashStyle = gridLineDashStyle
+                    };
+                    double count = labels.Count;
                         for (int y = 0; y < labels.Count; y++)
                         {
                             double yctr = YAxisCanvas + YExtCanvas - (y + 0.5) / count * YExtCanvas;
@@ -760,9 +767,11 @@ namespace StatsDirect.Charting.Renderer
                         hasGridLines = Definition.ScaleParameters.X.HasGridLines;
                         gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
                     }
-                    PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1);
-                        gridLinePen.DashStyle = gridLineDashStyle;
-                        double count = labels.Count;
+                    PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
+                    {
+                        DashStyle = gridLineDashStyle
+                    };
+                    double count = labels.Count;
                         for (int x = 0; x < labels.Count; x++)
                         {
                             double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
@@ -1289,7 +1298,7 @@ namespace StatsDirect.Charting.Renderer
         {
             get
             {
-                bool useColour = !ChartPreferences.DefaultAllBlack;
+                bool useColour = SdApplication.SoleInstance.Preferences.ShouldUseColour;
                 if (HasChartOptions)
                     useColour = Definition.ChartOptions.UseColour;
                 return useColour;
@@ -1674,7 +1683,7 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         /// <param name="data"></param>
         /// <param name="scaleType">The scale that will use the data.  For log scales, values of 0 or less are ignored.</param>
-        protected Range GetMinMaxArray(double[] data, ScaleType scaleType)
+        protected Layout.Range GetMinMaxArray(double[] data, ScaleType scaleType)
         {
             bool ignoreZeroOrLess = scaleType == ScaleType.LogNatural || scaleType == ScaleType.Log10;
             double min = double.MaxValue;
@@ -1689,7 +1698,7 @@ namespace StatsDirect.Charting.Renderer
                         max = data[i];
                 }
             }
-            return new Range(min, max);
+            return new Layout.Range(min, max);
         }
 
         ///  <summary>

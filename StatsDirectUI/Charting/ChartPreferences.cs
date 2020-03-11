@@ -40,17 +40,6 @@ namespace StatsDirect.Charting
             set => defaultBoxAxes = value;
         }
 
-        public static bool DefaultAllBlack
-        {
-            get
-            {
-                if (!AreSharedValuesInitialised)
-                    InitSharedValues();
-                return defaultAllBlack;
-            }
-            set => defaultAllBlack = value;
-        }
-
         public static FontDescriptor DefaultAxisLabelFont
         {
             get
