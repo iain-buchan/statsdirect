@@ -8,7 +8,7 @@ using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class MHChartRenderer : AbstractChartRenderer, IChartRenderer
+    class MHChartRenderer : AbstractForestishChartRenderer, IChartRenderer
     {
         public MHChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -43,7 +43,7 @@ namespace StatsDirect.Charting.Renderer
             double orumax = double.NegativeInfinity;
             double orlmin = double.PositiveInfinity;
             double maxGw = double.NegativeInfinity;
-            double absmin = double.PositiveInfinity;
+            double absMin = double.PositiveInfinity;
             for (int i = 1; i <= options.k; i++)
             {
                 if (odw[i] != Constant.MISSING)
@@ -52,7 +52,7 @@ namespace StatsDirect.Charting.Renderer
                         maxGw = odw[i];
                     gw[i] = odw[i];
                 }
-                if (odr[i] != Constant.MISSING && include_table(options.o, i) && !double.IsInfinity(odr[i]))
+                if (odr[i] != Constant.MISSING && IncludeTable(options, i) && !double.IsInfinity(odr[i]))
                 {
                     if (odr[i] > ormax)
                         ormax = odr[i];
@@ -67,12 +67,12 @@ namespace StatsDirect.Charting.Renderer
                         if (odrl[i] < orlmin && odrl[i] > 0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
                             orlmin = odrl[i];
                     }
-                    if (Math.Abs(odr[i]) < absmin && odr[i] != 0.0)
-                        absmin = Math.Abs(odr[i]);
-                    if (Math.Abs(odrl[i]) < absmin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
-                        absmin = Math.Abs(odrl[i]);
-                    if (Math.Abs(odru[i]) < absmin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
-                        absmin = Math.Abs(odru[i]);
+                    if (Math.Abs(odr[i]) < absMin && odr[i] != 0.0)
+                        absMin = Math.Abs(odr[i]);
+                    if (Math.Abs(odrl[i]) < absMin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING && !double.IsInfinity(odrl[i]))
+                        absMin = Math.Abs(odrl[i]);
+                    if (Math.Abs(odru[i]) < absMin && odru[i] != 0.0 && odru[i] != Constant.MISSING && !double.IsInfinity(odru[i]))
+                        absMin = Math.Abs(odru[i]);
                 }
             }
 
@@ -101,7 +101,7 @@ namespace StatsDirect.Charting.Renderer
                     w = LegendWidthInCanvasCoordinates(options.title[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - AxisBigTick;
-                    w = LegendWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")");
+                    w = LegendWidthInCanvasCoordinates(RangeLabel(odr[i], odrl[i], odru[i], absMin));
                     if (w > rgap)
                         rgap = w;
                 }
@@ -114,141 +114,70 @@ namespace StatsDirect.Charting.Renderer
             DivY = options.k + options.pbias;
             OffY = YAxisCanvas;
 
-            MarkerType studyMarkerType = new MarkerType
-            {
-                MarkerColor = ColorDescriptor.Gray,
-                LineColor = ColorDescriptor.Black,
-                IsMarkerFilled = true,
-                MarkerShape = MarkerShape.Square,
-                LineDashStyle = DashStyleDescriptor.Solid,
-                Width = 1
-            };
-            MarkerType pooledMarkerType = new MarkerType
-            {
-                MarkerColor = ColorDescriptor.Gray,
-                LineColor = ColorDescriptor.Black,
-                IsMarkerFilled = true,
-                MarkerShape = MarkerShape.Diamond,
-                LineDashStyle = DashStyleDescriptor.Solid,
-                Width = 1
-            };
-
             PenDescriptor ciPen = GetLinePen(studyMarkerType, true);
             PenDescriptor dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
-            PenDescriptor pooledCiPen = GetLinePen(pooledMarkerType, true);
-            PenDescriptor pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);
             int r = 0;
-            double txh = LabelHeightInCanvasCoordinates(options.title[1]);
-            double realamin = axisScales.X.MinimumScaleValue;
-            double realamax = axisScales.X.MaximumScaleValue;
             double yc = 0;
             for (int i = options.k; i >= 1; i--)
             {
                 r++;
-                double yctr = (r + options.pbias - 0.5) / DivY * YExtCanvas;
-                double ytop = (r + options.pbias) / DivY * YExtCanvas;
-                double y2 = (ytop - yctr) / 1.5;
-                double y3 = (ytop - yctr) / 4;
-                yc = OffY + yctr;
-                double yt = OffY + yctr + y2;
-                double yb = OffY + yctr - y2;
-                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]) && include_table(options.o, i))
+                yc = (r + options.pbias - 0.5);
+                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]) && IncludeTable(options.o, i))
                 {
-                    double xm;
-                    if (odr[i] <= 0 || odr[i] < realamin)
-                        xm = XAxisCanvas;
-                    else
-                        xm = ToCanvasX(odr[i]);
-                    double xl;
-                    if (odrl[i] <= 0 || odrl[i] < realamin || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
-                        xl = XAxisCanvas;
-                    else
-                        xl = ToCanvasX(odrl[i]);
-                    double xr;
-                    if (double.IsInfinity(odru[i]) || odru[i] == Constant.MISSING || double.IsInfinity(odru[i]))
-                        xr = ToCanvasX(realamax);
-                    else
-                        xr = odru[i] <= 0 ? OffX : ToCanvasX(odru[i]);
+                    double xm = odr[i] <= 0 || odr[i] < axisScales.X.MinimumScaleValue
+                        ? axisScales.X.MinimumScaleValue
+                        : odr[i];
+                    double xl = odrl[i] <= 0 || odrl[i] < axisScales.X.MinimumScaleValue || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i])
+                        ? axisScales.X.MinimumScaleValue
+                        : odrl[i];
+                    double xr = double.IsInfinity(odru[i]) || odru[i] == Constant.MISSING || double.IsInfinity(odru[i])
+                        ? axisScales.X.MaximumScaleValue
+                        : odru[i] <= axisScales.X.MinimumScaleValue
+                            ? axisScales.X.MinimumScaleValue
+                            : odru[i];
 
                     // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                     // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                    double blobSize = (5 + Math.Abs(yt - yb) * Math.Sqrt(gw[i] / maxGw)) * 0.7;
-                    DrawMarkerInCanvasCoordinates(xm, yc, blobSize / 2, studyMarkerType);
+                    double blobSize = (5 + ToCanvasHeight(featureHeight * Math.Sqrt(gw[i] / maxGw))) * 0.7;
+                    DrawMarkerInChartCoordinates(xm, yc, blobSize / 2, studyMarkerType);
 
                     // CI line
-                    DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
+                    DrawLineInChartCoordinates(ciPen, xl, yc, xr, yc);
+
                     // Arrow ends if not plottable
                     if (odrl[i] <= 0 || options.lerr[i] || odrl[i] < orlmin || odrl[i] == Constant.MISSING || double.IsInfinity(odrl[i]))
                     {
-                        DrawLineInCanvasCoordinates(ciPen, xl + y3, yc + y3, xl, yc);
-                        DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + y3, yc - y3);
+                        DrawLineInCanvasCoordinates(ciPen, ToCanvasX(xl) + ToCanvasHeight(arrowWidth), ToCanvasY(yc) + ToCanvasHeight(arrowWidth), ToCanvasX(xl), ToCanvasY(yc));
+                        DrawLineInCanvasCoordinates(ciPen, ToCanvasX(xl), ToCanvasY(yc), ToCanvasX(xl) + ToCanvasHeight(arrowWidth), ToCanvasY(yc) - ToCanvasHeight(arrowWidth));
                     }
                     if (options.uerr[i] || double.IsInfinity(odru[i]) || odru[i] == Constant.MISSING)
                     {
-                        DrawLineInCanvasCoordinates(ciPen, xr - y3, yc + y3, xr, yc);
-                        DrawLineInCanvasCoordinates(ciPen, xr, yc, xr - y3, yc - y3);
+                        DrawLineInCanvasCoordinates(ciPen, ToCanvasX(xr) - ToCanvasHeight(arrowWidth), ToCanvasY(yc) + ToCanvasHeight(arrowWidth), ToCanvasX(xr), ToCanvasY(yc));
+                        DrawLineInCanvasCoordinates(ciPen, ToCanvasX(xr), ToCanvasY(yc), ToCanvasX(xr) - ToCanvasHeight(arrowWidth), ToCanvasY(yc) - ToCanvasHeight(arrowWidth));
                     }
                     // Centre mark.  Draw this last so that it appears in front of the line.  Always black.
-                    DrawMarkerInCanvasCoordinates(xm, yc, 2, MarkerShape.Circle, true, dotPen);
+                    DrawMarkerInChartCoordinates(xm, yc, 2, MarkerShape.Circle, true, dotPen);
 
-                    DrawStringLabel(options.title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
-                    DrawStringLabel(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
+                    DrawStringLabel(options.title[i], XAxisCanvas - 15, ToCanvasY(yc), StringAlignment.Far, StringAlignment.Center);
+                    DrawRangeLabelInChartCoordinates(odr[i], odrl[i], odru[i], absMin, yc);
                 }
                 else
                 {
-                    DrawStringLabel(options.title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
-                    DrawStringLabel("* (excluded)", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
+                    DrawStringLabel(options.title[i], XAxisCanvas - 15, ToCanvasY(yc), StringAlignment.Far, StringAlignment.Center);
+                    DrawStringLabel("* (excluded)", XAxisCanvas + XExtCanvas + 10, ToCanvasY(yc), StringAlignment.Near, StringAlignment.Center);
                 }
             }
 
-            // zero effect marker
-            switch (Definition.ScaleParameters.X.ScaleType)
-            {
-                case ScaleType.Linear:
-                    if (axisScales.X.MinimumScaleValue <= 0 && axisScales.X.MaximumScaleValue >= 0)
-                        DrawLineInChartCoordinates(GrBlack, 0, axisScales.Y.MinimumScaleValue, 0, axisScales.Y.MaximumScaleValue);
-                    break;
-                case ScaleType.Log10:
-                case ScaleType.LogNatural:
-                    if (axisScales.X.MinimumScaleValue <= 1 && axisScales.X.MaximumScaleValue >= 1)
-                        DrawLineInChartCoordinates(GrBlack, 1, axisScales.Y.MinimumScaleValue, 1, axisScales.Y.MaximumScaleValue);
-                    break;
-            }
+            PlotNoEffectMarker(axisScales);
 
             if (options.pbias == 1)
-            {
-                // pooled marker
-                double saveYc = yc;
-                double yctr = 0.5 / DivY * YExtCanvas;
-                double ytop = 1 / DivY * YExtCanvas;
-                double y2 = (ytop - yctr) / 1.5;
-                yc = OffY + yctr;
-                double yt = OffY + yctr + y2;
-                // yb = offy + yctr - Y2; 
-                DrawMarkerInCanvasCoordinates(ToCanvasX(options.rmh), yc, y2, pooledMarkerType);
-                DrawLineInCanvasCoordinates(pooledCiPen, ToCanvasX(options.ul), yc, ToCanvasX(options.ll), yc);
-                // pooled effect marker
-                DrawLineInCanvasCoordinates(pooledEffectPen, ToCanvasX(options.rmh), saveYc, ToCanvasX(options.rmh), yt);
-                // pool label
-                DrawStringLabel(ComboTi(options.cap), XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
-                DrawStringLabel(Formatting.RoundMeta(options.rmh, absmin) + " (" + Formatting.RoundMeta(options.ll, absmin) + ", " + Formatting.RoundMeta(options.ul, absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
-                // xaxis label
-            }
+                PlotPooledMarker(options.rmh, options.ll, options.ul, absMin, yc, options.cap);
 
             EndVectorPlot();
             return new ParameterBag();
         }
 
-        ///  <summary>
-        ///  Copied from meta due to mutual dependency issues
-        ///  </summary>
-        ///  <param name="o"></param>
-        ///  <param name="i"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        private static bool include_table(double[,] o, int i)
-        {
-            return !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
-        }
+        protected override bool IncludeTable(MHOptions options, int i) => IncludeTable(options.o, i);
+        private static bool IncludeTable(double[,] o, int i) => !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
     }
 }

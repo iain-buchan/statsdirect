@@ -17,13 +17,6 @@ namespace StatsDirect.Charting.Renderer
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             ForestOptions fOptions = (ForestOptions)Definition.ChartOptions;
-            /*
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis }, 0, fOptions.k, 0);
-            double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
-            double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
-            double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
-            int k = odr.Length;
-            */
             double[] odr = fOptions.OddsRatios;
             double[] odrl = fOptions.OddsRatioLcis;
             double[] odru = fOptions.OddsRatioUcis;
@@ -85,7 +78,7 @@ namespace StatsDirect.Charting.Renderer
 
             return new ScaleParameters
             {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear, /* ScaleType.LogNatural, */ ScaleType.Log10 }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
+                X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10 }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
                 Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
             };
         }
@@ -101,16 +94,6 @@ namespace StatsDirect.Charting.Renderer
             MarkerType studyMarkerType = fOptions.MarkerTypes[0];
             MarkerType pooledMarkerType = fOptions.MarkerTypes[1];
 
-            /*
-            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { fOptions.OddsRatios, fOptions.OddsRatioLcis, fOptions.OddsRatioUcis, fOptions.gn, fOptions.pg }, 0, fOptions.k, 0);
-            double[] odr = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
-            double[] odrl = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
-            double[] odru = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[2];
-            double[] gn = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[3];
-            double[] pg = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[4];
-            int k = odr.Length;
-            string[] title = Numerics.Utilities.CopyValidRows(fOptions.Titles, copiesRemovingMissingRows.ValidRowsInOriginal, 0, fOptions.k, 0, k);
-            */
             double[] odr = fOptions.OddsRatios;
             double[] odrl = fOptions.OddsRatioLcis;
             double[] odru = fOptions.OddsRatioUcis;

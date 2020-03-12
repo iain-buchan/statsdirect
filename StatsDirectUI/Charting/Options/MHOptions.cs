@@ -5,22 +5,23 @@ namespace StatsDirect.Charting
     [Serializable]
     public class MHOptions : GenericOptions
     {
-        public int k;
-        public double[,] o;
-        public double[] odw;
-        public string[] title;
-        public double rmh;
-        public double ll;
-        public double ul;
-        public double cco;
-        public double[] odr;
-        public double[] odrl;
-        public double[] odru;
-        public bool[] lerr;
-        public bool[] uerr;
-        public string cap;
-        public int pbias;
-        public string qid;
+        public int k { get; }
+        public double[,] o { get; }
+        public double[] odw { get; }
+        public string[] title { get; }
+        public double rmh { get; }
+        public double ll { get; }
+        public double ul { get; }
+        public double cco { get; }
+        public double[] odr { get; }
+        public double[] odrl { get; }
+        public double[] odru { get; }
+        public bool[] lerr { get; }
+        public bool[] uerr { get; }
+        public string cap { get; }
+        public int pbias { get; }
+        public string qid { get; }
+
         public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
