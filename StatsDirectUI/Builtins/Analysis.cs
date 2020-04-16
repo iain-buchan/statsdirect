@@ -5,6 +5,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
@@ -261,7 +262,7 @@ namespace StatsDirect.Builtins
                 tabl[1].N0 = pt2;
                 tabl[1].Informative = a * pt1 != 0 || b * pt2 != 0;
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, 1, 3, tabl, gamma, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
+                new ExactBB().Exact22K(host, 1, Exact22KDataType.Type3, tabl, gamma, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
                 if (ierr != 0)
                     host.Error(Formatting.ERRCOLON + "Error in calculation", "StatsDirect");
             }

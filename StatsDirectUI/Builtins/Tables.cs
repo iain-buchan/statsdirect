@@ -6,6 +6,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
@@ -2348,10 +2349,9 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag TabRelativeRisk(IPreferencesAndProgressBar host, double cco, int zcats, double[,,] zt, Namevar[] zcat)
         {
-            double dsul = 0; double dsll = 0;
-            double dsx2 = 0; double dsrr = 0; double qc = 0; double sk = 0; double x2Rmh = 0; double ul = 0; double ll = 0; double rmh = 0; double cit;
-            double tausq = 0;
-            int i;
+            const int lowerBound = 1;
+
+            double cit;
             if (cco > 0)
             {
                 double p = (1.0 - cco) / 2.0;
@@ -2364,29 +2364,18 @@ namespace StatsDirect.Builtins
             }
 
             int k = zcats;
-            string[] title = new string[k + 1];
-            for (i = 1; i <= k; i++)
+            string[] title = new string[k + lowerBound];
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 title[i] = zcat[i].Ti;
                 if (title[i].Length > 50)
-                {
                     title[i] = title[i].Substring(0, 50);
-                }
             }
 
             double[,] o = new double[k + 1, 4 + 1];
-            double[] rkr = new double[k + 1];
-            double[] rkw = new double[k + 1];
-            double[] dsw = new double[k + 1];
-            double[] rkrl = new double[k + 1];
-            double[] rkru = new double[k + 1];
-            double[] rkx = new double[k + 1];
-            bool[] lerr = new bool[k + 1];
-            bool[] uerr = new bool[k + 1];
-            bool[] cced = new bool[k + 1];
-            double[] axll = new double[k + 1];
-            double[] axul = new double[k + 1];
-            for (i = 1; i <= k; i++)
+            double[] axll = new double[k + lowerBound];
+            double[] axul = new double[k + lowerBound];
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 o[i, 4] = zt[1, 1, i];
                 o[i, 3] = zt[1, 2, i];
@@ -2394,7 +2383,7 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.RelativeRiskMA(host, k, out int realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out int ierr);
+            Meta.RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException();
 
@@ -2402,7 +2391,7 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
@@ -2417,7 +2406,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Koopman" : "approximate");
             List<ParameterBag> risksList = new List<ParameterBag>();
             outputParameters.AddOutput("*risks", risksList);
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 ParameterBag risksParameters = new ParameterBag();
                 risksList.Add(risksParameters);
@@ -2487,11 +2476,11 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
             return outputParameters;
         }
@@ -3098,42 +3087,24 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag TabMh(IPreferencesAndProgressBar host, double cco, int zcats, double[,,] zt, Namevar[] zcat)
         {
-            double tausq = 0;
-            double bd = 0; double qc = 0; double cit;
-            int i;
+            const int lowerBound = 1;
 
-            if (cco > 0)
-            {
-                double p = (1.0 - cco) / 2.0;
-                cit = PDF.gauinv(1.0 - p);
-            }
-            else
-            {
+            if (cco <= 0)
                 cco = 0.95;
-                cit = PDF.gauinv(0.975);
-            }
+            double cit = PDF.gauinv(1.0 - ((1.0 - cco) / 2.0));
             int k = zcats;
-            string[] title = new string[k + 1];
-            for (i = 1; i <= k; i++)
+            string[] title = new string[k + lowerBound];
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 title[i] = zcat[i].Ti;
                 if (title[i].Length > 50)
                     title[i] = title[i].Substring(0, 50);
             }
 
-            double[,] o = new double[k + 1, 4 + 1];
-            double[] odr = new double[k + 1];
-            double[] odrl = new double[k + 1];
-            double[] odru = new double[k + 1];
-            double[] odw = new double[k + 1];
-            double[] dswt = new double[k + 1];
-            double[] odx = new double[k + 1];
-            bool[] lerr = new bool[k + 1];
-            bool[] uerr = new bool[k + 1];
-            bool[] cced = new bool[k + 1];
-            double[] axll = new double[k + 1];
-            double[] axul = new double[k + 1];
-            for (i = 1; i <= k; i++)
+            double[,] o = new double[k + lowerBound, 4 + 1];
+            double[] axll = new double[k + lowerBound];
+            double[] axul = new double[k + lowerBound];
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 o[i, 4] = zt[1, 1, i];
                 o[i, 3] = zt[1, 2, i];
@@ -3141,7 +3112,7 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.Mantel(host, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
+            Meta.Mantel(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -3150,8 +3121,8 @@ namespace StatsDirect.Builtins
             }
 
             // Try exact Mantel
-            ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1];
-            for (i = 1; i <= k; i++)
+            Rec2X2[] tbl = new Rec2X2[k + 1];
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 tbl[i].Freq = 1;
                 tbl[i].A = o[i, 1];
@@ -3161,7 +3132,7 @@ namespace StatsDirect.Builtins
                 tbl[i].Informative = o[i, 1] * o[i, 4] != 0.0 || o[i, 2] * o[i, 3] != 0.0;
             }
             bool useLogScale = false;
-            new ExactBB().Exact22K(host, k, 1, tbl, cco, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out ierr);
+            new ExactBB().Exact22K(host, k, Exact22KDataType.Type1, tbl, cco, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out ierr);
             if (ierr != 0)
             {
                 eor = Constant.MISSING;
@@ -3178,7 +3149,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
@@ -3194,7 +3165,7 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> orList = new List<ParameterBag>();
             outputParameters.AddOutput("*or", orList);
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 ParameterBag orParameters = new ParameterBag();
                 orList.Add(orParameters);
@@ -3208,9 +3179,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("dwt", Formatting.XRound(100 * dswt[i] / Formatting.dsum(dswt, 1), 2));
                 string tmp = Meta.GetMetaLabel(host, o, i, true, cced, title);
                 if (host.Preferences.DelayContinuityCorrection)
-                {
                     tmp = tmp.Replace("[CC", "[late CC");
-                }
                 orParameters.AddOutput("lb", tmp);
 
                 //orParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i,  true, cced, title));
@@ -3318,11 +3287,11 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
 
             return outputParameters;

@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
@@ -52,12 +53,10 @@ namespace StatsDirect.Builtins
             double[] odw = new double[k + 1];
             double[] odz = new double[k + 1];
             double[] odx = new double[k + 1];
-            bool[] lerr = new bool[k + 1];
-            bool[] uerr = new bool[k + 1];
-            bool[] cced = new bool[k + 1];
+            bool[] allFalse = new bool[k + 1];
+            bool[] included = new bool[k + 1];
             for (int i = 1; i <= k; i++)
             {
-                cced[i] = false;
                 o[i, 1] = Math.Abs(sr[i]);
                 o[i, 3] = Math.Abs(sn[i] - sr[i]);
                 if (sr[i] < 0 || sn[i] < 0 || sn[i] < sr[i])
@@ -66,6 +65,7 @@ namespace StatsDirect.Builtins
                 o[i, 4] = Math.Abs(xn[i] - xr[i]);
                 if (xr[i] < 0 || xn[i] < 0 || xn[i] < xr[i])
                     throw new InvalidDataException();
+                included[i] = IncludeTable(o, i);
             }
 
             // see Fleiss paper
@@ -152,7 +152,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("b", o[i, 2]);
                 inputsParameters.AddOutput("c", o[i, 3]);
                 inputsParameters.AddOutput("d", o[i, 4]);
-                inputsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, cced, title));
+                inputsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
             }
 
             outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
@@ -171,7 +171,7 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("lci", odrl[i]);
                 oddsParameters.AddOutput("uci", odru[i]);
                 oddsParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
-                oddsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, cced, title));
+                oddsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
             }
 
             IList<ParameterBag> zList = new List<ParameterBag>();
@@ -194,7 +194,7 @@ namespace StatsDirect.Builtins
                 {
                     zParameters.AddOutput("p", Formatting.ASTERISK);
                 }
-                zParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, cced, title));
+                zParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
             }
 
             outputParameters.AddOutput("por", por);
@@ -245,7 +245,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, por, porl, poru, cco, odr, odrl, odru, lerr, uerr, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, por, porl, poru, cco, odr, odrl, odru, allFalse, allFalse, included, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */)));
 
             if (k > 2)
             {
@@ -609,17 +609,19 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
 
             return outputParameters;
         }
 
         public static ParameterBag RptRelativeRiskMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
+            const int lowerBound = 1;
+
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
                 cco = 0.95;
@@ -646,18 +648,9 @@ namespace StatsDirect.Builtins
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 1; /* 1-based */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
 
-            double[,] o = new double[k + 1, 4 + 1];
-            double[] rkr = new double[k + 1];
-            double[] rkw = new double[k + 1];
-            double[] dsw = new double[k + 1];
-            double[] rkrl = new double[k + 1];
-            double[] rkru = new double[k + 1];
-            double[] rkx = new double[k + 1];
-            bool[] lerr = new bool[k + 1];
-            bool[] uerr = new bool[k + 1];
-            bool[] cced = new bool[k + 1];
-            double[] axll = new double[k + 1];
-            double[] axul = new double[k + 1];
+            double[,] o = new double[k + lowerBound, 4 + 1];
+            double[] axll = new double[k + lowerBound];
+            double[] axul = new double[k + lowerBound];
             for (int i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -671,10 +664,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
             }
 
-            double dsrr = 0; double dsx2 = 0; double dsul = 0; double dsll = 0;
-            double qc = 0; double sk = 0; double x2Rmh = 0; double ul = 0; double ll = 0; double rmh = 0;
-            double tausq = 0;
-            RelativeRiskMA(host, k, out int realk, o, ref rmh, ref ll, ref ul, ref x2Rmh, ref sk, ref cit, ref cco, ref rkr, ref rkw, ref dsw, ref rkrl, ref rkru, ref rkx, ref lerr, ref uerr, ref qc, ref dsrr, ref dsx2, ref dsll, ref dsul, ref tausq, ref cced, out int ierr);
+            RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException("relriskma() returned an error");
 
@@ -771,11 +761,11 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
             return outputParameters;
         }
@@ -1372,7 +1362,7 @@ namespace StatsDirect.Builtins
             while (true);
         }
 
-        public static void RelativeRiskMA(IPreferences host, int k, out int realk, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, ref double[] rkr, ref double[] rkw, ref double[] dsw, ref double[] rkrl, ref double[] rkru, ref double[] rkx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double dsrr, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, ref bool[] cced, out int ierr)
+        public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
         {
             ierr = -1;
             double siga = 0.0;
@@ -1382,7 +1372,18 @@ namespace StatsDirect.Builtins
             double svd3 = 0.0;
             realk = 0;
 
-            for (int i = 1; i <= k; i++)
+            rkr = new double[k + lowerBound];
+            rkw = new double[k + lowerBound];
+            dsw = new double[k + lowerBound];
+            rkrl = new double[k + lowerBound];
+            rkru = new double[k + lowerBound];
+            rkx = new double[k + lowerBound];
+            lerr = new bool[k + lowerBound];
+            uerr = new bool[k + lowerBound];
+            cced = new bool[k + lowerBound];
+            included = new bool[k + lowerBound];
+
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 double a = o[i, 1];
                 double b = o[i, 2];
@@ -1393,7 +1394,8 @@ namespace StatsDirect.Builtins
                 if (n <= 0)
                     throw new InvalidDataException();
 
-                if (IncludeTable(o, i))
+                included[i] = IncludeTable(o, i);
+                if (included[i])
                 {
                     realk++;
 
@@ -1460,7 +1462,7 @@ namespace StatsDirect.Builtins
             qc = 0.0;
             sumwt = 0.0;
             double sumsqwt = 0.0;
-            for (int i = 1; i <= k; i++)
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 if (IncludeTable(o, i))
                 {
@@ -1469,9 +1471,8 @@ namespace StatsDirect.Builtins
                     double c = o[i, 3];
                     double d = o[i, 4];
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    {
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                    }
+
                     double n = a + b + c + d;
                     // Weight = b * ( a + C ) / N; - unused
                     // using weight as 1/variance
@@ -1496,7 +1497,7 @@ namespace StatsDirect.Builtins
             double wlrr = 0.0;
             sumwt = 0.0;
             // sumsqwt = 0.0; 
-            for (int i = 1; i <= k; i++)
+            for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 if (IncludeTable(o, i))
                 {
@@ -1530,21 +1531,16 @@ namespace StatsDirect.Builtins
 
         private static void Riskdifma(IPreferences host, int k, double[,] o, ref double rmh, ref double ll, ref double ul, ref double x2Rmh, ref double sk, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, ref double qc, ref double dsrd, ref double dsx2, ref double dsll, ref double dsul, ref double tausq, bool[] cced, out int ierr)
         {
-            double wt;
-            double rkrs;
-            double a; double b; double c; double d; double vark;
-            int i;
-
             ierr = -1;
             double sumlk = 0.0;
             double mhn = 0.0;
             double mhd = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
-                a = o[i, 1];
-                b = o[i, 2];
-                c = o[i, 3];
-                d = o[i, 4];
+                double a = o[i, 1];
+                double b = o[i, 2];
+                double c = o[i, 3];
+                double d = o[i, 4];
                 double n = a + b + c + d;
                 rkx[i] = n;
                 // rd and ci for stratum
@@ -1594,7 +1590,7 @@ namespace StatsDirect.Builtins
                 // rkw(i) = 1# / vark
                 if (!host.Preferences.MetaExact)
                 {
-                    vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
+                    double vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
                     double se = Math.Sqrt(vark);
                     rkrl[i] = rkr[i] - cit * se;
                     rkru[i] = rkr[i] + cit * se;
@@ -1613,18 +1609,18 @@ namespace StatsDirect.Builtins
             qc = 0.0;
             double sumwt = 0.0;
             double sumsqwt = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
-                a = o[i, 1];
-                b = o[i, 2];
-                c = o[i, 3];
-                d = o[i, 4];
+                double a = o[i, 1];
+                double b = o[i, 2];
+                double c = o[i, 3];
+                double d = o[i, 4];
                 // nmn = ( a + C ) * ( b + D ) / N; 
-                rkrs = a / (a + c) - b / (b + d);
+                double rkrs = a / (a + c) - b / (b + d);
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                     ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
-                wt = 1.0 / vark;
+                double vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
+                double wt = 1.0 / vark;
                 qc += wt * Math.Pow(rkrs - rmh, 2.0);
                 sumwt += wt;
                 sumsqwt += wt * wt;
@@ -1645,18 +1641,18 @@ namespace StatsDirect.Builtins
             double wrd = 0.0;
             sumwt = 0.0;
             // sumsqwt = 0.0; 
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
-                a = o[i, 1];
-                b = o[i, 2];
-                c = o[i, 3];
-                d = o[i, 4];
+                double a = o[i, 1];
+                double b = o[i, 2];
+                double c = o[i, 3];
+                double d = o[i, 4];
                 // nmn = ( ( a + C ) * ( b + D ) ) / N; 
-                rkrs = a / (a + c) - b / (b + d);
+                double rkrs = a / (a + c) - b / (b + d);
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                     ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                vark = a * c / Math.Pow(a + c, 3) + b * d / Math.Pow(b + d, 3);
-                wt = 1.0 / vark;
+                double vark = a * c / Math.Pow(a + c, 3) + b * d / Math.Pow(b + d, 3);
+                double wt = 1.0 / vark;
                 double weight = 1.0 / (tausq + 1.0 / wt);
                 dsw[i] = weight;
                 wrd += rkrs * weight;
@@ -1711,6 +1707,7 @@ namespace StatsDirect.Builtins
             double[] rkru = new double[k + 1];
             bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
+            bool[] included = new bool[k + 1];
             double zrmh; double ul; double ll; double rmh;
             double dz; double dsird = 0; double dsirr = 0; double qc;
             double dsul; double dsll; double tausq;
@@ -1740,7 +1737,7 @@ namespace StatsDirect.Builtins
                         tbl[i].Informative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
                     }
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -1874,7 +1871,8 @@ namespace StatsDirect.Builtins
                 o[i, 2] = pt2[i];
                 o[i, 3] = pt1[i];
                 o[i, 4] = pt2[i];
-                if (pt2[i] == Constant.MISSING | pt1[i] == Constant.MISSING)
+                included[i] = IncludeTable(o, i);
+                if (pt2[i] == Constant.MISSING || pt1[i] == Constant.MISSING)
                     ptt[i] = Constant.MISSING;
                 else
                     ptt[i] = pt1[i] + pt2[i];
@@ -1895,11 +1893,11 @@ namespace StatsDirect.Builtins
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(k, o, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference")));
             }
             else
             {
@@ -1912,19 +1910,19 @@ namespace StatsDirect.Builtins
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio")));
             }
             return outputParameters;
         }
         public static ParameterBag RptMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double p2M = 0; double p1M = 0;
-            double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0; double tausq = 0;
-            double bd = 0; double qc = 0;
+            double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0;
+
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
                 cco = 0.95;
@@ -1952,15 +1950,6 @@ namespace StatsDirect.Builtins
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k);
 
             double[,] o = new double[k + 1, 4 + 1];
-            double[] odr = new double[k + 1];
-            double[] odrl = new double[k + 1];
-            double[] odru = new double[k + 1];
-            double[] odw = new double[k + 1];
-            double[] dswt = new double[k + 1];
-            double[] odx = new double[k + 1];
-            bool[] lerr = new bool[k + 1];
-            bool[] uerr = new bool[k + 1];
-            bool[] cced = new bool[k + 1];
             double[] axll = new double[k + 1];
             double[] axul = new double[k + 1];
             for (int i = 1; i <= k; i++)
@@ -1975,7 +1964,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Mantel(host, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
+            Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -1997,7 +1986,7 @@ namespace StatsDirect.Builtins
                     tbl[i].Informative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
                 }
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                new ExactBB().Exact22K(host, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             }
             else
             {
@@ -2160,21 +2149,27 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return outputParameters;
         }
 
-        public static void Mantel(IPreferencesAndProgressBar host, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, ref double cco, ref double[] odr, ref double[] odw, ref double[] dswt, ref double[] odrl, ref double[] odru, ref double[] odx, ref bool[] lerr, ref bool[] uerr, ref double qc, ref double bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref bool[] cced, ref double tausq, out int ierr)
+        public static void Mantel(IPreferencesAndProgressBar host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr)
         {
-            double lori; double vrbgi;
-            double weight; double n; double a; double b; double c; double d;
-            double pp; double qq; double ss; double rr;
-            int i;
+            odr = new double[k + lowerBound];
+            odrl = new double[k + lowerBound];
+            odru = new double[k + lowerBound];
+            odw = new double[k + lowerBound];
+            dswt = new double[k + lowerBound];
+            odx = new double[k + lowerBound];
+            lerr = new bool[k + lowerBound];
+            uerr = new bool[k + lowerBound];
+            cced = new bool[k + lowerBound];
+            included = new bool[k + lowerBound];
 
             ierr = -1;
             double eai = 0.0;
@@ -2189,17 +2184,17 @@ namespace StatsDirect.Builtins
             realk = 0;
 
             bool rkok = false;
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < k + lowerBound; i++)
                 if (o[i, 1] * o[i, 4] != 0.0)
                     rkok = true;
 
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < k + lowerBound; i++)
             {
-                a = o[i, 1];
-                b = o[i, 2];
-                c = o[i, 3];
-                d = o[i, 4];
-                n = a + b + c + d;
+                double a = o[i, 1];
+                double b = o[i, 2];
+                double c = o[i, 3];
+                double d = o[i, 4];
+                double n = a + b + c + d;
                 odx[i] = n;
                 if (n <= 0)
                     throw new InvalidDataException();
@@ -2208,10 +2203,11 @@ namespace StatsDirect.Builtins
                     rkok = false;
 
                 // MH across strata
-                if (IncludeTable(o, i))
+                included[i] = IncludeTable(o, i);
+                if (included[i])
                 {
                     // only do cc at this stage if absolutely necessary (all a or all d cells zero)
-                    if (rkok == false)
+                    if (!rkok)
                     {
                         if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         {
@@ -2227,22 +2223,22 @@ namespace StatsDirect.Builtins
                     realk += 1;
                     eai = eai + a - (a + c) * (a + b) / n;
                     vari += (a + c) * (b + d) * (a + b) * (c + d) / (Math.Pow(n, 2.0) * (n - 1.0));
-                    rr = a * d / n;
-                    ss = b * c / n;
-                    pp = (a + d) / n;
-                    qq = (b + c) / n;
+                    double rr = a * d / n;
+                    double ss = b * c / n;
+                    double pp = (a + d) / n;
+                    double qq = (b + c) / n;
                     w = w + (qq + 1.0 / n) * rr + (pp + 1.0 / n) * ss;
                     rk += rr;
                     sk += ss;
                     svd1 += pp * rr;
                     svd2 += (qq * rr + pp * ss);
                     svd3 += qq * ss;
-                    weight = b * c / n;
+                    double weight = b * c / n;
                     odw[i] = weight;
                     sumwt += weight;
                 }
 
-                if (IncludeTable(o, i) == false)
+                if (!included[i])
                 {
                     odr[i] = 0;
                     odrl[i] = 0;
@@ -2311,18 +2307,18 @@ namespace StatsDirect.Builtins
             double wlor = 0.0;
             sumwt = 0.0;
             double sumsqwt = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < k + lowerBound; i++)
             {
-                a = o[i, 1];
-                b = o[i, 2];
-                c = o[i, 3];
-                d = o[i, 4];
+                double a = o[i, 1];
+                double b = o[i, 2];
+                double c = o[i, 3];
+                double d = o[i, 4];
                 // Breslow-Day - must do it before continuity correction -->
                 double n1 = a + b;
                 double n0 = c + d;
                 double m1 = a + c;
                 double m2 = b + d;
-                if (n1 != 0 & n0 != 0 & m1 != 0 & m2 != 0)
+                if (n1 != 0 && n0 != 0 && m1 != 0 && m2 != 0)
                 {
                     // quadratic coefficients ax² + bx + c = 0
                     double qda = 1.0 - rmh;
@@ -2334,21 +2330,21 @@ namespace StatsDirect.Builtins
                     bd += (a - ea) * (a - ea) / varea;
                 }
                 // <--
-                if (IncludeTable(o, i))
+                if (included[i])
                 {
                     if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                    n = a + b + c + d;
-                    rr = a * d / n;
-                    ss = b * c / n;
-                    pp = (a + d) / n;
-                    qq = (b + c) / n;
+                    double n = a + b + c + d;
+                    double rr = a * d / n;
+                    double ss = b * c / n;
+                    double pp = (a + d) / n;
+                    double qq = (b + c) / n;
                     svd1 = pp * rr;
                     svd2 = qq * rr + pp * ss;
                     svd3 = qq * ss;
-                    vrbgi = svd1 / 2.0 / rr / rr + svd2 / 2.0 / rr / ss + svd3 / 2.0 / ss / ss;
-                    weight = 1.0 / vrbgi;
-                    lori = Math.Log(a * d / (b * c));
+                    double vrbgi = svd1 / 2.0 / rr / rr + svd2 / 2.0 / rr / ss + svd3 / 2.0 / ss / ss;
+                    double weight = 1.0 / vrbgi;
+                    double lori = Math.Log(a * d / (b * c));
                     qc += weight * Math.Pow(lori - Math.Log(rmh), 2.0);
                     wlor += lori * weight;
                     sumwt += weight;
@@ -2359,33 +2355,33 @@ namespace StatsDirect.Builtins
             if (sumwt * sumwt - sumsqwt == 0.0)
                 tausq = 0.0;
             else
-                tausq = (qc - Convert.ToDouble(realk - 1)) * sumwt / (sumwt * sumwt - sumsqwt);
+                tausq = (qc - (realk - 1)) * sumwt / (sumwt * sumwt - sumsqwt);
             if (tausq < 0.0)
                 tausq = 0.0;
             wlor = 0.0;
             sumwt = 0.0;
-            for (i = 1; i <= k; i++)
+            for (int i = lowerBound; i < k + lowerBound; i++)
             {
-                a = o[i, 1];
-                b = o[i, 2];
-                c = o[i, 3];
-                d = o[i, 4];
-                if (IncludeTable(o, i))
+                double a = o[i, 1];
+                double b = o[i, 2];
+                double c = o[i, 3];
+                double d = o[i, 4];
+                if (included[i])
                 {
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                    n = a + b + c + d;
-                    rr = a * d / n;
-                    ss = b * c / n;
-                    pp = (a + d) / n;
-                    qq = (b + c) / n;
+                    double n = a + b + c + d;
+                    double rr = a * d / n;
+                    double ss = b * c / n;
+                    double pp = (a + d) / n;
+                    double qq = (b + c) / n;
                     svd1 = pp * rr;
                     svd2 = qq * rr + pp * ss;
                     svd3 = qq * ss;
-                    vrbgi = svd1 / 2.0 / rr / rr + svd2 / 2.0 / rr / ss + svd3 / 2.0 / ss / ss;
-                    weight = 1.0 / (tausq + vrbgi);
+                    double vrbgi = svd1 / 2.0 / rr / rr + svd2 / 2.0 / rr / ss + svd3 / 2.0 / ss / ss;
+                    double weight = 1.0 / (tausq + vrbgi);
                     dswt[i] = weight;
-                    lori = Math.Log(a * d / (b * c));
+                    double lori = Math.Log(a * d / (b * c));
                     wlor += lori * weight;
                     sumwt += weight;
                 }
@@ -2531,17 +2527,11 @@ namespace StatsDirect.Builtins
 
             // DerSimonian-Laird random effects
             if (sumwt - sumsqwt / sumwt == 0.0)
-            {
                 tausq = 0.0;
-            }
             else
-            {
                 tausq = (qc - (realk - 1.0)) / (sumwt - sumsqwt / sumwt);
-            }
             if (tausq < 0.0)
-            {
                 tausq = 0.0;
-            }
             double wrd = 0.0;
             sumwt = 0.0;
             // sumsqwt = 0.0; - unused
@@ -2779,7 +2769,7 @@ namespace StatsDirect.Builtins
 
             string[] title = MakeTitles(parameters, "studies", "study {0}", rawRows, out bool hasUserSuppliedLabels);
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
-            title[k + 1] = Charting.Renderer.AbstractChartRenderer.ComboTi(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3033,7 +3023,7 @@ namespace StatsDirect.Builtins
                 for (i = 1; i <= k; i++)
                     title[i] = "study " + i;
             }
-            title[k + 1] = Charting.Renderer.AbstractChartRenderer.ComboTi(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
             // Pool
             double sumwt = 0.0;
@@ -3434,7 +3424,7 @@ namespace StatsDirect.Builtins
 
             int k = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0].Length - 2; /* 1-based, 1 extra for pooling */
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, k, 1);
-            title[k + 1] = Charting.Renderer.AbstractChartRenderer.ComboTi(string.Empty);
+            title[k + 1] = Charting.Renderer.AbstractForestishChartRenderer.ComboTi(string.Empty);
 
             bool allRZero = true;
             bool allREqualN = true;

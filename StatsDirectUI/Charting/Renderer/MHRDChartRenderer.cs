@@ -1,11 +1,8 @@
-﻿using Layout;
-using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
-using System.Drawing;
-using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -33,11 +30,6 @@ namespace StatsDirect.Charting.Renderer
             MHOptions options = (MHOptions)Definition.ChartOptions;
             ScaleHeight(options.k);
 
-            double[] odw = options.odw;
-            double[] odr = options.odr;
-            double[] odrl = options.odrl;
-            double[] odru = options.odru;
-
             double[] gw = new double[options.k + 1];
             double orMax = double.NegativeInfinity;
             double orMin = double.PositiveInfinity;
@@ -45,35 +37,35 @@ namespace StatsDirect.Charting.Renderer
             double orlMin = double.PositiveInfinity;
             double maxGw = double.NegativeInfinity;
             double absMin = double.PositiveInfinity;
-            for (int i = 1; i <= options.k; i++)
+            for (int i = options.LowerBound; i < options.LowerBound + options.k; i++)
             {
-                if (odw[i] != Constant.MISSING)
+                if (options.GroupSizes[i] != Constant.MISSING)
                 {
-                    if (odw[i] > maxGw)
-                        maxGw = odw[i];
-                    gw[i] = odw[i];
+                    if (options.GroupSizes[i] > maxGw)
+                        maxGw = options.GroupSizes[i];
+                    gw[i] = options.GroupSizes[i];
                 }
-                if (odr[i] != Constant.MISSING)
+                if (options.OddsRatios[i] != Constant.MISSING)
                 {
-                    if (odr[i] > orMax)
-                        orMax = odr[i];
-                    if (odr[i] < orMin)
-                        orMin = odr[i];
-                    if (odrl[i] < orlMin && odrl[i] != Constant.MISSING)
-                        orlMin = odrl[i];
-                    if (odru[i] > oruMax && odru[i] != Constant.MISSING)
-                        oruMax = odru[i];
-                    if (Math.Abs(odr[i]) < absMin && odr[i] != 0.0)
-                        absMin = Math.Abs(odr[i]);
-                    if (Math.Abs(odrl[i]) < absMin && odrl[i] != 0.0 && odrl[i] != Constant.MISSING)
-                        absMin = Math.Abs(odrl[i]);
-                    if (Math.Abs(odru[i]) < absMin && odru[i] != 0.0 && odru[i] != Constant.MISSING)
-                        absMin = Math.Abs(odru[i]);
+                    if (options.OddsRatios[i] > orMax)
+                        orMax = options.OddsRatios[i];
+                    if (options.OddsRatios[i] < orMin)
+                        orMin = options.OddsRatios[i];
+                    if (options.OddsRatioLcis[i] < orlMin && options.OddsRatioLcis[i] != Constant.MISSING)
+                        orlMin = options.OddsRatioLcis[i];
+                    if (options.OddsRatioUcis[i] > oruMax && options.OddsRatioUcis[i] != Constant.MISSING)
+                        oruMax = options.OddsRatioUcis[i];
+                    if (Math.Abs(options.OddsRatios[i]) < absMin && options.OddsRatios[i] != 0.0)
+                        absMin = Math.Abs(options.OddsRatios[i]);
+                    if (Math.Abs(options.OddsRatioLcis[i]) < absMin && options.OddsRatioLcis[i] != 0.0 && options.OddsRatioLcis[i] != Constant.MISSING)
+                        absMin = Math.Abs(options.OddsRatioLcis[i]);
+                    if (Math.Abs(options.OddsRatioUcis[i]) < absMin && options.OddsRatioUcis[i] != 0.0 && options.OddsRatioUcis[i] != Constant.MISSING)
+                        absMin = Math.Abs(options.OddsRatioUcis[i]);
                 }
             }
 
-            DataMaxX = new[] { orMax, options.rmh, options.ul, oruMax }.MaxIgnoringMissingAndInfinities();
-            DataMinX = new[] { orMin, options.rmh, options.ll, orlMin }.MinIgnoringMissingAndInfinities();
+            DataMaxX = MaxIgnoringMissingAndInfinities(orMax, options.rmh, options.ul, oruMax);
+            DataMinX = MinIgnoringMissingAndInfinities(orMin, options.rmh, options.ll, orlMin);
 
             StartVectorPlot();
 
@@ -87,14 +79,14 @@ namespace StatsDirect.Charting.Renderer
             double w = LegendWidthInCanvasCoordinates(ComboTi(options.cap)) + 30;
             if (w > xtra + XAxisCanvas)
                 xtra = w - XAxisCanvas - AxisBigTick;
-            for (int i = 1; i <= options.k; i++)
+            for (int i = options.LowerBound; i < options.LowerBound + options.k; i++)
             {
-                if (odr[i] != Constant.MISSING && !double.IsInfinity(odr[i]))
+                if (options.OddsRatios[i] != Constant.MISSING && !double.IsInfinity(options.OddsRatios[i]))
                 {
-                    w = LegendWidthInCanvasCoordinates(options.title[i]) + 30;
+                    w = LegendWidthInCanvasCoordinates(options.Titles[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - AxisBigTick;
-                    w = LegendWidthInCanvasCoordinates(RangeLabel(odr[i], odrl[i], odru[i], absMin));
+                    w = LegendWidthInCanvasCoordinates(RangeLabel(options.OddsRatios[i], options.OddsRatioLcis[i], options.OddsRatioUcis[i], absMin));
                     if (w > rgap)
                         rgap = w;
                 }
@@ -107,56 +99,31 @@ namespace StatsDirect.Charting.Renderer
             DivY = options.k + options.pbias;
             OffY = YAxisCanvas;
 
-            PenDescriptor ciPen = GetLinePen(studyMarkerType, true);
-            PenDescriptor dotPen = GetMarkerPen(ChartPreferences.MarkerTypes[10]);
             int r = 0;
             double yc = 0;
-            double txh = LabelHeightInCanvasCoordinates(options.title[1]);
-            double rowHeight = YExtCanvas / DivY;
-            double featureHeight = rowHeight * 2 / 3;
-            double arrowWidth = rowHeight / 8;
-            for (int i = options.k; i >= 1; i--)
+            for (int i = options.LowerBound + options.k - 1; i >= options.LowerBound; i--)
             {
                 r++;
-                double yctr = (r + options.pbias - 0.5) / DivY * YExtCanvas;
-                yc = OffY + yctr;
-                if (odr[i] != Constant.MISSING)
+                yc = r + options.pbias - 0.5;
+                if (options.OddsRatios[i] != Constant.MISSING)
                 {
-                    double xl = odrl[i] == Constant.MISSING ? XAxisCanvas : ToCanvasX(odrl[i]);
-                    double xr;
-                    if (odru[i] == double.PositiveInfinity || odru[i] == Constant.MISSING)
-                        xr = XAxisCanvas + XExtCanvas;
-                    else
-                        xr = ToCanvasX(odru[i]);
-                    // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
-                    // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance
-                    double blobSize = (5 + featureHeight * Math.Sqrt(gw[i] / maxGw)) * 0.7;
-                    DrawMarkerInCanvasCoordinates(ToCanvasX(odr[i]), yc, blobSize / 2, studyMarkerType);
+                    double xm = options.OddsRatios[i] < axisScales.X.MinimumScaleValue
+                        ? axisScales.X.MinimumScaleValue
+                        : options.OddsRatios[i];
+                    double xl = options.OddsRatioLcis[i] < axisScales.X.MinimumScaleValue || options.OddsRatioLcis[i] == Constant.MISSING || double.IsInfinity(options.OddsRatioLcis[i])
+                        ? axisScales.X.MinimumScaleValue
+                        : options.OddsRatioLcis[i];
+                    double xr = options.OddsRatioUcis[i] == Constant.MISSING || double.IsInfinity(options.OddsRatioUcis[i])
+                        ? axisScales.X.MaximumScaleValue
+                        : options.OddsRatioUcis[i] <= axisScales.X.MinimumScaleValue
+                            ? axisScales.X.MinimumScaleValue
+                            : options.OddsRatioUcis[i];
 
-                    // CI line
-                    DrawLineInCanvasCoordinates(ciPen, xl, yc, xr, yc);
-
-                    // Arrow ends if not plottable
-                    if (options.lerr[i])
-                    {
-                        DrawLineInCanvasCoordinates(ciPen, xl + arrowWidth, yc + arrowWidth, xl, yc);
-                        DrawLineInCanvasCoordinates(ciPen, xl, yc, xl + arrowWidth, yc - arrowWidth);
-                    }
-                    if (options.uerr[i])
-                    {
-                        DrawLineInCanvasCoordinates(ciPen, xr - arrowWidth, yc + arrowWidth, xr, yc);
-                        DrawLineInCanvasCoordinates(ciPen, xr, yc, xr - arrowWidth, yc - arrowWidth);
-                    }
-                    // Centre mark.  Draw this last so that it appears in front of the line.  Always black.
-                    DrawMarkerInCanvasCoordinates(ToCanvasX(odr[i]), yc, 2, MarkerShape.Circle, true, dotPen);
-
-                    DrawStringLabel(options.title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
-                    DrawStringLabel(Formatting.RoundMeta(odr[i], absMin) + " (" + Formatting.RoundMeta(odrl[i], absMin) + ", " + Formatting.RoundMeta(odru[i], absMin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
+                    DrawRowInChartCoordinates(options.Titles[i], options.OddsRatios[i], options.OddsRatioLcis[i], options.OddsRatioUcis[i], gw[i] / maxGw, absMin, yc, xm, xl, xr, options.lerr[i], options.uerr[i], options.MarkCentres);
                 }
                 else
                 {
-                    DrawStringLabel(options.title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
-                    DrawStringLabel("* (excluded)", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
+                    DrawExcludedInChartCoordinates(options.Titles[i], yc);
                 }
             }
 
@@ -168,6 +135,5 @@ namespace StatsDirect.Charting.Renderer
             EndVectorPlot();
             return new ParameterBag();
         }
-        protected override bool IncludeTable(MHOptions options, int i) => true;
     }
 }

@@ -1575,16 +1575,6 @@ namespace StatsDirect.Charting.Renderer
             return useIfAvailable;
         }
 
-        public static string ComboTi(string cap)
-        {
-            string x = "combined";
-            if (cap.Contains("fixed effects"))
-                x += " [fixed]";
-            else if (cap.Contains("random effects"))
-                x += " [random]";
-            return x;
-        }
-
 #if WARN_OBSOLETES
         [Obsolete("Ideally subclasses would never need to use canvas co-ordinates")]
 #endif

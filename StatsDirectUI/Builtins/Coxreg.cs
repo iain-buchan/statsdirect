@@ -363,7 +363,7 @@ namespace StatsDirect.Builtins
             double[,] cov = new double[ldcoef + 1, ldcoef + 1];
             double[] GR = new double[ldcoef + 1 ];
             double[] xmean = new double[ldcoef + 1];
-            coxreg(ref nobs, ref nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
+            coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             if (ifault != 0)
             {
                 if (ifault == 3)
@@ -422,7 +422,7 @@ namespace StatsDirect.Builtins
             cov = new double[ldcoef + 1, ldcoef + 1];
             GR = new double[ldcoef + 1 ];
             xmean = new double[ldcoef + 1 ];
-            coxreg(ref nobs, ref nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
+            coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             ARR2[3, 0] = algl;
 
             List<string> subgroups = new List<string>();
@@ -494,29 +494,22 @@ namespace StatsDirect.Builtins
         ///  <remarks></remarks>
         private static void genregs(int nCol, double[] x, int ix1, int nef, int[] nvef, int[] indef, int idummy, ref int nreg, double[] reg, ref int nrmiss, ref int ifault)
         {
-            int i;
             int lindef = 0;
 
-            for (i = 1; i <= nef; i++)
+            for (int i = 1; i <= nef; i++)
             {
                 if (nvef[i] <= 0)
-                {
                     ifault = 2;
-                }
                 else
-                {
                     lindef += nvef[i];
-                }
             }
             if (ifault != 0)
                 return;
-            for (i = 1; i <= lindef; i++)
+            for (int i = 1; i <= lindef; i++)
                 if (indef[i] <= 0 || indef[i] > nCol)
                     ifault = 3;
             if (ifault != 0)
-            {
                 return;
-            }
             nrmiss = 0;
             if (idummy < 0)
             {
@@ -529,23 +522,18 @@ namespace StatsDirect.Builtins
             int indefx = 0;
             int misef = 0;
             int misval = 0;
-            for (i = 1; i <= nef; i++)
+            for (int i = 1; i <= nef; i++)
             {
                 double xprod = 1.0;
                 int nlast = 0;
-                int L;
-                for (L = nvef[i]; L >= 1; L--)
+                for (int L = nvef[i]; L >= 1; L--)
                 {
                     int lndef = indef[indefx + L];
                     double xvar = x[ix1 - 1 + (lndef - 1) + 1];
                     if (xvar == Constant.MISSING)
-                    {
                         misef = 1;
-                    }
                     if (misef == 0)
-                    {
                         xprod *= xvar;
-                    }
                 }
                 int kpos = nreg;
                 nreg += 1;
@@ -576,7 +564,7 @@ namespace StatsDirect.Builtins
             nrmiss += misval;
         }
 
-        private static void coxreg(ref int nRow, ref int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
+        private static void coxreg(int nRow, int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
         {
             int i;
             double[] obz = new double[1 + 1];
@@ -620,31 +608,25 @@ namespace StatsDirect.Builtins
             else
             {
                 if (ldcov < ncoef)
-                {
                     ifault = 11;
-                }
                 if (ldcoef < ncoef)
-                {
                     ifault = 12;
-                }
             }
             if (ifault != 0)
-            {
                 return;
-            }
             double[] OBS = new double[2 * (ncoef + 1) + 1];
             double[] smg = new double[2 * ncoef + 1];
             double[] smh = new double[2 * Math.Max(ncoef * ncoef, 2) + 1];
             int[] iptr = new int[nRow + ncoef + 1];
             int[] idt = new int[nRow + 1];
             int[] iwk = new int[3 * Math.Max(nRow, nCol) + 1 ];
-            coxest(nRow, nCol, ref x, ref ldx, ref irt, ref IFRQ, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref iwk, ref ifault);
+            coxest(nRow, nCol, ref x, ldx, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref iwk, ref ifault);
         }
 
         /// <summary>
         /// ESTIMATES FOR PARAMETERS IN PROPORTIONAL HAZARDS MODEL
         /// </summary>
-        private static void coxest(int nRow, int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
+        private static void coxest(int nRow, int nCol, ref double[] x, int ldx, int irt, int IFRQ, int ifix, int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
         smg, ref double[] smh, ref int[] iptr, ref int[] idt, ref int[] iwk, ref int ifault)
         {
             int nidt = 0; int ik;
@@ -866,7 +848,7 @@ namespace StatsDirect.Builtins
                 for (ik = 1; ik <= ncoef; ik++)
                     coef[ik, 1] = 0.0;
             }
-            coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
+            coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, istrat, maxit, eps, ratio, nef, nvef, indef, itie, ref ncoef, coef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
             if (ifault != 0)
                 return;
 
@@ -874,7 +856,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[] smg, ref double[]
+        private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int istrat, int maxit, double eps, double ratio, int nef, int[] nvef, int[] indef, int itie, ref /* yes, really */ int ncoef, double[,] coef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[] smg, ref double[]
          smh, ref int[] iptr, ref int[] idt, ref int ifault)
         {
             int icncd; int icnn;
@@ -1152,7 +1134,7 @@ namespace StatsDirect.Builtins
                 }
                 irank = 0;
                 imiss = 0;
-                Regress1.glsqr1(1, 0, 0, 0, indy, x, 1, -ncoef, indef, indep, indef, 0, 0, ref coef1, ref cov, ref smg, ref irank, ref smu, ref smd[1], ref imiss, ref smh, ref smhmax, ref OBS, ref ifault);
+                Regress1.glsqr1(1, 0, 0, 0, indy, x, 1, -ncoef, indef, indep, indef, 0, 0, coef1, cov, smg, ref irank, ref smu, ref smd[1], ref imiss, smh, smhmax, OBS, ref ifault);
                 for (int i = 0; i <= ncoef; i++)
                 {
                     smh[i + ncoef] = smhmax[i];
@@ -1182,36 +1164,26 @@ namespace StatsDirect.Builtins
                             ymean = 0.0;
                             xx = 0.0;
                             for (j = 1; j <= ncoef; j++)
-                            {
                                 caze[j, 1] = 0.0;
-                            }
                             for (j = i; j <= nobs; j++)
                             {
                                 kk = iptr[j];
                                 if (igrp[kk] >= 0)
                                 {
                                     if (igrp[kk] != igr)
-                                    {
                                         break;
-                                    }
                                     genregs(nCol, x, 1 + (kk - 1) * nCol, nef, nvef, indef, 2, ref ncoef, OBS, ref imiss, ref ifault);
                                     zdot = 0.0;
                                     for (iq = 1; iq <= ncoef; iq++)
-                                    {
                                         zdot += OBS[iq] * coef[iq, 1];
-                                    }
                                     ymean += zdot;
                                     for (iq = 1; iq <= ncoef; iq++)
-                                    {
                                         caze[iq, 1] = caze[iq, 1] + OBS[iq] * 1.0;
-                                    }
                                     xx += 1.0;
                                 }
                             }
                             if (xx > 0.0)
-                            {
                                 xx = 1.0 / xx;
-                            }
                             ymean *= xx;
                         }
                         genregs(nCol, x, 1 + (k - 1) * nCol, nef, nvef, indef, 2, ref ncoef, OBS, ref imiss, ref ifault);
@@ -1233,7 +1205,7 @@ namespace StatsDirect.Builtins
                             smhmax[ii] = smh[ii + ncoef];
                             coef1[ii] = coef[ii, 1];
                         }
-                        Regress1.glsqr1(2, 0, 0, 1, indy, OBS, 1, -ncoef, indef, indep, indef, 0, 0, ref coef1, ref cov, ref smg, ref irank, ref smu, ref smd[1], ref imiss, ref smh, ref smhmax, ref OBS, ref ifault);
+                        Regress1.glsqr1(2, 0, 0, 1, indy, OBS, 1, -ncoef, indef, indep, indef, 0, 0, coef1, cov, smg, ref irank, ref smu, ref smd[1], ref imiss, smh, smhmax, OBS, ref ifault);
                         for (ii = 0; ii <= ncoef; ii++)
                         {
                             smh[ii + ncoef] = smhmax[ii];
@@ -1277,7 +1249,7 @@ namespace StatsDirect.Builtins
                         smhmax[ii] = smh[ii + ncoef];
                         coef1[ii] = coef[ii, 1];
                     }
-                    Regress1.glsqr1(3, 0, 0, 0, indy, OBS, 1, -ncoef, indef, indep, indef, 0, 0, ref coef1, ref cov, ref smg, ref irank, ref smu, ref smd[1], ref imiss, ref smh, ref smhmax, ref OBS, ref ifault);
+                    Regress1.glsqr1(3, 0, 0, 0, indy, OBS, 1, -ncoef, indef, indep, indef, 0, 0, coef1, cov, smg, ref irank, ref smu, ref smd[1], ref imiss, smh, smhmax, OBS, ref ifault);
                     for (ii = 0; ii <= ncoef; ii++)
                     {
                         smh[ii + ncoef] = smhmax[ii];

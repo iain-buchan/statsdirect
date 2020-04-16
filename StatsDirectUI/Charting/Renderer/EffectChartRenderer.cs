@@ -1,5 +1,4 @@
-﻿using Layout;
-using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -43,20 +42,20 @@ namespace StatsDirect.Charting.Renderer
             double maxGn = double.NegativeInfinity;
             for (int i = 1; i <= options.k; i++)
             {
-                gn[i] = options.cn[i] + options.en[i];
+                gn[i] = options.ControlGroupSizes[i] + options.ExperimentGroupSizes[i];
                 if (gn[i] > maxGn)
                     maxGn = gn[i];
-                if (options.odr[i] != Constant.MISSING)
+                if (options.OddsRatios[i] != Constant.MISSING)
                 {
                     kok += 1;
-                    if (options.odr[i] > ormax)
-                        ormax = options.odr[i];
-                    if (options.odr[i] < ormin)
-                        ormin = options.odr[i];
-                    if (options.odrl[i] < orlmin)
-                        orlmin = options.odrl[i];
-                    if (options.odru[i] > orumax)
-                        orumax = options.odru[i];
+                    if (options.OddsRatios[i] > ormax)
+                        ormax = options.OddsRatios[i];
+                    if (options.OddsRatios[i] < ormin)
+                        ormin = options.OddsRatios[i];
+                    if (options.OddsRatioLcis[i] < orlmin)
+                        orlmin = options.OddsRatioLcis[i];
+                    if (options.OddsRatioUcis[i] > orumax)
+                        orumax = options.OddsRatioUcis[i];
                 }
             }
 
@@ -82,9 +81,9 @@ namespace StatsDirect.Charting.Renderer
             double xtra = 0;
             for (int i = 1; i <= options.k; i++)
             {
-                if (options.odr[i] != Constant.MISSING)
+                if (options.OddsRatios[i] != Constant.MISSING)
                 {
-                    double w = LabelWidthInCanvasCoordinates(options.title[i]) + 30;
+                    double w = LabelWidthInCanvasCoordinates(options.Titles[i]) + 30;
                     if (w > xtra + XAxisCanvas)
                         xtra = w - XAxisCanvas - 5;
                 }
@@ -98,20 +97,20 @@ namespace StatsDirect.Charting.Renderer
             OffY = YAxisCanvas;
 
             PenDescriptor linePen = GetLinePen(ChartPreferences.MarkerTypes[10], true);
-            double txh = LabelHeightInCanvasCoordinates(options.title[1]);
+            double txh = LabelHeightInCanvasCoordinates(options.Titles[1]);
             int r = 0;
             double yc = 0;
             double yt = 0;
             for (int i = options.k; i >= 1; i--)
             {
-                if (options.odr[i] != Constant.MISSING)
+                if (options.OddsRatios[i] != Constant.MISSING)
                 {
                     r++;
                     double yctr = (r + options.pbias - 0.5) / DivY * YExtCanvas;
                     double ytop = (r + options.pbias) / DivY * YExtCanvas;
-                    double xm = ToCanvasX(options.odr[i]);
-                    double xl = ToCanvasX(options.odrl[i]);
-                    double xr = ToCanvasX(options.odru[i]);
+                    double xm = ToCanvasX(options.OddsRatios[i]);
+                    double xl = ToCanvasX(options.OddsRatioLcis[i]);
+                    double xr = ToCanvasX(options.OddsRatioUcis[i]);
                     double y2 = (ytop - yctr) / 1.5;
                     yc = OffY + yctr;
                     yt = OffY + yctr + y2;
@@ -120,7 +119,7 @@ namespace StatsDirect.Charting.Renderer
                     DrawLineInCanvasCoordinates(linePen, xl, yc, xr, yc);
                     // Weight blob
                     DrawSquareInCanvasCoordinates(linePen, xm, yc, (5 + Math.Abs(yt - yb) * (gn[i] / maxGn)) * 0.7, true);
-                    DrawStringLabel(options.title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
+                    DrawStringLabel(options.Titles[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                 }
             }
 

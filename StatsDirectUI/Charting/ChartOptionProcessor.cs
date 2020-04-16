@@ -23,7 +23,7 @@ namespace StatsDirect.Charting
                 case ChartType.StackedBar100Percent:
                     return PreprocessBarOptions(step, parameters, definition, dataName);
                 case ChartType.BiasMA:
-                    return PreprocessBiasMAOptions(step, definition, dataName);
+                    return PreprocessBiasMAOptions();
                 case ChartType.BoxWhisker:
                     return PreprocessBoxWhiskerOptions(step, definition, dataName);
                 case ChartType.Control:
@@ -31,7 +31,7 @@ namespace StatsDirect.Charting
                 case ChartType.ErrorBar:
                     return PreprocessErrorBarOptions(parameters, dataName);
                 case ChartType.Forest:
-                    return PreprocessForestOptions(parameters, definition, dataName);
+                    return PreprocessForestOptions(parameters, dataName);
                 case ChartType.Gini:
                     return PreprocessGiniOptions(definition, dataName);
                 case ChartType.Histogram:
@@ -59,7 +59,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private static ChartOptions PreprocessBiasMAOptions(ChartStep step, ChartDefinition definition, string dataName)
+        private static ChartOptions PreprocessBiasMAOptions()
         {
             // Nothing required
             return null;
@@ -78,19 +78,19 @@ namespace StatsDirect.Charting
             };
 
             if (!parameters.ContainsKey("group-count"))
-                throw new Exception("Chart expected parameter \"group-count\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"group-count\", which was not supplied");
             int groupCount = parameters["group-count"].AsInt32;
 
             if (!parameters.ContainsKey("xdat"))
-                throw new Exception("Chart expected parameter \"xdat\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"xdat\", which was not supplied");
             DataFrame xdatFrame = parameters["xdat"].AsDataFrame;
 
             if (!parameters.ContainsKey("cdat"))
-                throw new Exception("Chart expected parameter \"cdat\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"cdat\", which was not supplied");
             DataFrame cdatFrame = parameters["cdat"].AsDataFrame;
 
             if (!parameters.ContainsKey("ydat"))
-                throw new Exception("Chart expected parameter \"ydat\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"ydat\", which was not supplied");
             DataFrame ydatFrame = parameters["ydat"].AsDataFrame;
 
             DataFrame ydatlFrame = null;
@@ -171,11 +171,11 @@ namespace StatsDirect.Charting
         private static ROCOptions PreprocessRocOptions(ITemplateHost host, ParameterBag parameters, ChartDefinition definition)
         {
             if (!parameters.ContainsKey("series-count"))
-                throw new Exception("Chart expected parameter \"series-count\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"series-count\", which was not supplied");
             int seriesCount = parameters["series-count"].AsInt32;
             // Series: First present...
             if (!parameters.ContainsKey("P"))
-                throw new Exception("Chart expected parameter \"P\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"P\", which was not supplied");
             DataFrame frame = parameters["P"].AsDataFrame;
             for (int v = 0; v < frame.VariableCount; v++)
             {
@@ -184,7 +184,7 @@ namespace StatsDirect.Charting
             }
             // ... then absent
             if (!parameters.ContainsKey("A"))
-                throw new Exception("Chart expected parameter \"A\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"A\", which was not supplied");
             frame = parameters["A"].AsDataFrame;
             for (int v = 0; v < frame.VariableCount; v++)
             {
@@ -371,10 +371,11 @@ namespace StatsDirect.Charting
             return giniOptions;
         }
 
-        private static ForestOptions PreprocessForestOptions(ParameterBag parameters, ChartDefinition definition, string dataName)
+        private static ForestOptions PreprocessForestOptions(ParameterBag parameters, string dataName)
         {
             ForestOptions fOptions = new ForestOptions
             {
+                cco = 0.95,
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
                     null == dataName
@@ -387,14 +388,14 @@ namespace StatsDirect.Charting
             };
             if (parameters.ContainsKey("gn") && null != parameters["gn"])
             {
-                fOptions.gn = ((DoubleVariable)parameters["gn"].AsDataFrame.Variables[0]).Data;
+                fOptions.GroupSizes = ((DoubleVariable)parameters["gn"].AsDataFrame.Variables[0]).Data;
             }
             else
             {
                 double[] gn = new double[fOptions.k];
                 for (int i = 0; i < fOptions.k; i++)
                     gn[i] = 10;
-                fOptions.gn = gn;
+                fOptions.GroupSizes = gn;
             }
             if (parameters.ContainsKey("pg") && null != parameters["pg"])
                 fOptions.pg = ((DoubleVariable)parameters["pg"].AsDataFrame.Variables[0]).Data;
@@ -425,10 +426,10 @@ namespace StatsDirect.Charting
             int decpm = 2;
             try
             {
-                if (absmin < Math.Pow(10D, -decpm) && absmin != 0D)
+                if (absmin < Math.Pow(10, -decpm) && absmin != 0D)
                 {
                     decpm = 3;
-                    if (absmin < Math.Pow(10D, -decpm) && absmin != 0D)
+                    if (absmin < Math.Pow(10, -decpm) && absmin != 0D)
                         decpm = 4;
                 }
             }
@@ -443,13 +444,13 @@ namespace StatsDirect.Charting
         private static ErrorBarOptions PreprocessErrorBarOptions(ParameterBag parameters, string dataName)
         {
             if (!parameters.ContainsKey("xdat"))
-                throw new Exception("Chart expected parameter \"xdat\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"xdat\", which was not supplied");
             if (!parameters.ContainsKey("ydat"))
-                throw new Exception("Chart expected parameter \"ydat\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"ydat\", which was not supplied");
             if (!parameters.ContainsKey("ydatl"))
-                throw new Exception("Chart expected parameter \"ydatl\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"ydatl\", which was not supplied");
             if (!parameters.ContainsKey("ydatu"))
-                throw new Exception("Chart expected parameter \"ydatu\", which was not supplied");
+                throw new ArgumentException("Chart expected parameter \"ydatu\", which was not supplied");
 
             DataFrame xdatFrame = parameters["xdat"].AsDataFrame;
             DataFrame ydatFrame = parameters["ydat"].AsDataFrame;

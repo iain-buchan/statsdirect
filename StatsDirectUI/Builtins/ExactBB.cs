@@ -211,7 +211,17 @@ namespace StatsDirect.Builtins
             return brentRootReturn;
         }
 */
-        public void Exact22K(IPreferencesAndProgressBar host, int numTables, int dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
+
+        public enum Exact22KDataType
+        {
+            NotSet = 0,
+            Type1,
+            Type2,
+            Type3,
+            Type4
+        }
+
+        public void Exact22K(IPreferencesAndProgressBar host, int numTables, Exact22KDataType dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
         {
             //   Stratified case-control data, matched case-control data, and
             //   stratified person-time data are all held in a record (Rec2x2). With
@@ -409,13 +419,13 @@ namespace StatsDirect.Builtins
         ///         2 = no informative strata,
         ///         3 = matched table a > 1.
         ///</param>
-        private void CheckData(int dataType, int numTables, Rec2X2[] tables, out int ierr)
+        private void CheckData(Exact22KDataType dataType, int numTables, Rec2X2[] tables, out int ierr)
         {
             int i;
 
             ierr = 0;
 
-            if (dataType == 2)
+            if (dataType == Exact22KDataType.Type2)
             {
                 for (i = 1; i <= numTables; i++)
                 {
@@ -438,7 +448,7 @@ namespace StatsDirect.Builtins
                 if (transTemp2.Informative)
                 {
                     sumA = Convert.ToInt32(transTemp2.A) * transTemp2.Freq + sumA;
-                    if (dataType == 3)
+                    if (dataType == Exact22KDataType.Type3)
                     {
                         // Person-time data
                         minSumA = 0;
@@ -767,7 +777,7 @@ namespace StatsDirect.Builtins
         ///  <param name="tables"></param>
         ///  <param name="ierr"></param>
         ///  <remarks></remarks>
-        private void CalcPoly(IPreferencesAndProgressBar host, int dataType, int numTables, Rec2X2[] tables, out int ierr)
+        private void CalcPoly(IPreferencesAndProgressBar host, Exact22KDataType dataType, int numTables, Rec2X2[] tables, out int ierr)
         {
             ierr = 0;
 
@@ -779,14 +789,14 @@ namespace StatsDirect.Builtins
 
             switch (dataType)
             {
-                case 1:
-                case 4:
+                case Exact22KDataType.Type1:
+                case Exact22KDataType.Type4:
                     PolyStratCc(ref tables[1], polyD, out degD, out ierr); // Stratified case-control/survival
                     break;
-                case 2:
+                case Exact22KDataType.Type2:
                     PolyMatchCc(ref tables[1], polyD, out degD, ref ierr); // Matched case-control
                     break;
-                case 3:
+                case Exact22KDataType.Type3:
                     PolyStratPt1(tables[1], polyD, out degD, ref ierr); // Stratified person-time
                     break;
             }
@@ -806,14 +816,14 @@ namespace StatsDirect.Builtins
                     Array.Copy(polyD, poly1, polyD.Length);
                     switch (dataType)
                     {
-                        case 1:
-                        case 4:
+                        case Exact22KDataType.Type1:
+                        case Exact22KDataType.Type4:
                             PolyStratCc(ref tables[i], poly2, out deg2, out ierr); // Stratified case-control
                             break;
-                        case 2:
+                        case Exact22KDataType.Type2:
                             PolyMatchCc(ref tables[i], poly2, out deg2, ref ierr); // Matched case-control }
                             break;
-                        case 3:
+                        case Exact22KDataType.Type3:
                             PolyStratPt1(tables[i], poly2, out deg2, ref ierr); // Stratified person-time }
                             break;
                         default:
@@ -1365,7 +1375,7 @@ namespace StatsDirect.Builtins
                     tabl[1].N0 = b + d;
                     tabl[1].Informative = a * d != 0 || b * c != 0;
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out double _, out double _, out double _, out double _, out double _, out double _, ref useLogScale, out int _);
+                    new ExactBB().Exact22K(host, 1, Exact22KDataType.Type1, tabl, cco, out eor, out ulf, out llf, out double _, out double _, out double _, out double _, out double _, out double _, ref useLogScale, out int _);
                 }
                 else
                 {
@@ -1418,7 +1428,7 @@ namespace StatsDirect.Builtins
                     tabl[1].N0 = b + d;
                     tabl[1].Informative = a * d != 0 || b * c != 0;
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, 1, 1, tabl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1f, out p2f, out p1m, out p2m, ref useLogScale, out ierr);
+                    new ExactBB().Exact22K(host, 1, Exact22KDataType.Type1, tabl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1f, out p2f, out p1m, out p2m, ref useLogScale, out ierr);
                 }
                 if ((a == 0) | (d == 0))
                 {

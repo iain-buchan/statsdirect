@@ -5,6 +5,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
@@ -2429,7 +2430,7 @@ namespace StatsDirect.Builtins
                     {
                         // exact test
                         bool useLogScale = false;
-                        new ExactBB().Exact22K(host, ne, 4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
+                        new ExactBB().Exact22K(host, ne, Exact22KDataType.Type4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
                         if (ierr != 0)
                         {
                             hr = Constant.MISSING;

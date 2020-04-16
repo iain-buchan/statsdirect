@@ -7,6 +7,7 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
@@ -327,11 +328,6 @@ namespace StatsDirect.Builtins
             double llf = 0;
             double ulf = 0;
             double eor = 0;
-            double bd = 0;
-            double qc = 0;
-            double tausq = 0;
-            int r;
-            int i;
             DataFrame datFrame = parameters["data"].AsDataFrame;
             DoubleVariable datV0 = (DoubleVariable)datFrame.Variables[0];
             DoubleVariable datV1 = (DoubleVariable)datFrame.Variables[1];
@@ -342,19 +338,10 @@ namespace StatsDirect.Builtins
 
             int k = rows / 2;
             double[,] o = new double[k + 1, 4 + 1];
-            double[] odr = new double[k + 1];
-            double[] odw = new double[k + 1];
-            double[] dswt = new double[k + 1];
-            double[] odrl = new double[k + 1];
-            double[] odru = new double[k + 1];
-            double[] odx = new double[k + 1];
-            bool[] lerr = new bool[k + 1];
-            bool[] uerr = new bool[k + 1];
             string[] title = new string[k + 1];
-            bool[] cced = new bool[k + 1];
             double[] axll = new double[k + 1];
             double[] axul = new double[k + 1];
-            for (r = 1; r <= rows; r += 2)
+            for (int r = 1; r <= rows; r += 2)
             {
                 int strat = 1 + r / 2;
                 title[strat] = "stratum " + strat.ToString();
@@ -375,7 +362,7 @@ namespace StatsDirect.Builtins
             bool plotForest = parameters["plot_forest"].AsBoolean;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
-            Meta.Mantel(host, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, ref cco, ref odr, ref odw, ref dswt, ref odrl, ref odru, ref odx, ref lerr, ref uerr, ref qc, ref bd, out double dsor, out double dsx2, out double dsll, out double dsul, ref cced, ref tausq, out int ierr);
+            Meta.Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
             if (ierr != 0)
                 return null;
 
@@ -384,7 +371,7 @@ namespace StatsDirect.Builtins
             if (tryExact)
             {
                 ExactBB.Rec2X2[] tbl = new ExactBB.Rec2X2[k + 1];
-                for (i = 1; i <= k; i++)
+                for (int i = 1; i <= k; i++)
                 {
                     tbl[i].Freq = 1;
                     tbl[i].A = o[i, 1];
@@ -394,7 +381,7 @@ namespace StatsDirect.Builtins
                     tbl[i].Informative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
                 }
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, k, 1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                new ExactBB().Exact22K(host, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             }
             else
             {
@@ -416,7 +403,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 ParameterBag inputsParameters = new ParameterBag();
                 inputsList.Add(inputsParameters);
@@ -431,7 +418,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
             List<ParameterBag> orList = new List<ParameterBag>();
             outputParameters.AddOutput("*or", orList);
-            for (i = 1; i <= k; i++)
+            for (int i = 1; i <= k; i++)
             {
                 ParameterBag orParameters = new ParameterBag();
                 orList.Add(orParameters);
@@ -541,11 +528,11 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(k, o, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return outputParameters;
         }

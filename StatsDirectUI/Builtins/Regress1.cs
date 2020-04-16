@@ -695,7 +695,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static void glsqr1(int ido, int intcep, int isub, int nrow, int nvar, double[] x, int ldx, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, ref double[] b, ref double[,] r, ref double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, ref double[] xmin, ref double[] xmax, ref double[] wk, ref int ifault)
+        public static void glsqr1(int ido, int intcep, int isub, int nrow, int nvar, double[] x, int ldx, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, double[] b, double[,] r, double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, double[] xmin, double[] xmax, double[] wk, ref int ifault)
         {
             double[] sparam = new double[5 + 1];
 
@@ -1023,7 +1023,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static void CheckObs1(int ido, double[] x, int ldx, int iobs, int irow, int ifrq, int iwt, double xmiss, ref int nmiss, ref double frq, ref double wt, out int igo, ref int ifault)
+        private static void CheckObs1(int ido, double[] x, int ldx, int iobs, int irow, int ifrq, int iwt, double xmiss, ref /* Yes, really */ int nmiss, ref /* yes, really */ double frq, ref double wt, out int igo, ref int ifault)
         {
             igo = 0;
             if (ifrq > 0)
