@@ -23,21 +23,9 @@ namespace StatsDirect.Expressions
             DataType leftType = Left.DataType(passedVariableTypes);
             DataType rightType = Right.DataType(passedVariableTypes);
             foreach (InOutDataTypeDefinition candidate in definition.InOutDataTypeDefinitions)
-                if (CanBePromotedFromTo(leftType, candidate.InputTypes[0]) && CanBePromotedFromTo(rightType, candidate.InputTypes[1]))
+                if (TypePromoter.CanBePromotedFromTo(leftType, candidate.InputTypes[0]) && TypePromoter.CanBePromotedFromTo(rightType, candidate.InputTypes[1]))
                     return candidate;
             throw new Exception("Type mismatch: " + Operator.ToString() + " doesn't expect parameters of type " + leftType.ToString() + " and " + rightType.ToString());
-        }
-
-        private static bool CanBePromotedFromTo(DataType from, DataType to)
-        {
-            // Common case: Identical
-            if (from == to)
-                return true;
-            // Integers can be promoted to doubles
-            if (from == Expressions.DataType.Integer && to == Expressions.DataType.Double)
-                return true;
-            // Everything else is incompatible.  In particular, we don't automatically promote to string, as otherwise we get dangerous things like boolean + double returning a string.
-            return false;
         }
 
         public DataType DataType(DataType[] passedVariableTypes)

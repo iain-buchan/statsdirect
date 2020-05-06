@@ -12,7 +12,7 @@ namespace StatsDirect.Expressions
             DataType inputType = Node.DataType(passedVariableTypes);
             MonadicOperatorDefinition definition = MonadicOperatorRegistry.SoleInstance.DefinitionFor(Operator);
             foreach (InOutDataTypeDefinition candidate in definition.InOutDataTypeDefinitions)
-                if (candidate.InputTypes[0] == inputType)
+                if (TypePromoter.CanBePromotedFromTo(inputType, candidate.InputTypes[0]))
                     return candidate.ReturnType;
             // If we get here, our input type is illegal
             throw new Exception("Type mismatch: " + Operator.ToString() + " doesn't expect a parameter of type " + inputType.ToString());
