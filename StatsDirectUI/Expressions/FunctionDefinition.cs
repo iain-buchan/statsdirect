@@ -16,10 +16,9 @@ namespace StatsDirect.Expressions
             ClrName = clrName;
             DataType = dataType;
 
-            if (null == argumentDefinitions)
-                ArgumentDefinitions = new List<ArgumentDefinition>();
-            else
-                ArgumentDefinitions = new List<ArgumentDefinition>(argumentDefinitions);
+            ArgumentDefinitions = null == argumentDefinitions
+                ? new List<ArgumentDefinition>()
+                : new List<ArgumentDefinition>(argumentDefinitions);
         }
 
         public override string ToString()
