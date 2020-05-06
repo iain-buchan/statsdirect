@@ -16,10 +16,10 @@ namespace StatsDirect.Expressions
             // A few useful parameters that can be re-used
             definitions = new Dictionary<MonadicOperator, MonadicOperatorDefinition>();
             AddAll(new[]
-                       {
-                           new MonadicOperatorDefinition(MonadicOperator.Factorial, "SDMath.Factorial", new[] { new InOutDataTypeDefinition(DataType.Double, new[] { DataType.Double }) }),
-                           new MonadicOperatorDefinition(MonadicOperator.Not, "!", new[] { new InOutDataTypeDefinition(DataType.Boolean, new[] { DataType.Boolean }) }),
-                       });
+            {
+                new MonadicOperatorDefinition(MonadicOperator.Factorial, "SDMath.Factorial", new[] { new InOutDataTypeDefinition(DataType.Double, new[] { DataType.Double }) }),
+                new MonadicOperatorDefinition(MonadicOperator.Not, "!", new[] { new InOutDataTypeDefinition(DataType.Boolean, new[] { DataType.Boolean }) }),
+            });
 
         }
 
