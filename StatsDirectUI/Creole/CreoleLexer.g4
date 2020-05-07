@@ -8,7 +8,7 @@ ENTITY_OPEN        : '&'  -> pushMode(ENTITY) ;
 EXPR_OPEN_COMPOUND : '@{' -> pushMode(EXPR_COMPOUND) ;
 EXPR_OPEN_SIMPLE   : '@'  -> pushMode(EXPR_SIMPLE) ;
 
-SEA_WS             :  (' '|'\t'|'\r'? '\n')+ ;
+SEA_WS             : (LineWhitespace* NewLine LineWhitespace*)+ -> skip;
 TEXT               : ~('<'|'@'|'&')+ ;
 
 //
@@ -62,7 +62,7 @@ TAG_WARN       : 'warn' ;
 TAG_NAME       : (Letter | Digit | '-' | '_' | '.' | MidDot | CombiningDiacriticalMark | Tie)+ ;
 
 // Inside a tag, whitespace is ignored.
-TAG_WHITESPACE : (' '|'\t'|'\r'|'\n')+ -> channel(2) ;
+TAG_WHITESPACE : (' '|'\t'|'\r'|'\n')+ -> skip ;
 
 //
 // attribute values
@@ -93,6 +93,18 @@ Expr_VariableName      : Letter (Letter | Digit | '-' | '_' | MidDot | Combining
 //
 // Non-application specific below here.
 //
+
+fragment
+LineWhitespace
+    : ' '
+    | '\t'
+    ;
+
+// Works with Mac, Unix, and Windows line endings.
+fragment
+NewLine
+    : ('\r'|'\n')+
+    ;
 
 fragment
 Letter
