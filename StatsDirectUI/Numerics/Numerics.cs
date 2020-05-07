@@ -3,21 +3,52 @@ namespace StatsDirect.Numerics
     using System;
     public static class Constant
     {
-        public const double DBL_MIN = 2.2250738585072014E-308; //smallest positive magnitude [SPREAL]
-        public const double DBL_LRS = 2.22044604925031308085E-016; //largest relative spacing [EPSILON]
-        public const double DBL_SRS = 1.11022302462515654042E-016; //smallest relative spacing [EPSNEG]
-        public const double MAXEXP = 709.78271289338399672; //log(DBL_MAX)
+        /// <summary>
+        /// smallest positive magnitude [SPREAL]
+        /// </summary>
+        public const double DBL_MIN = 2.2250738585072014E-308;
+        /// <summary>
+        /// largest relative spacing [EPSILON]
+        /// </summary>
+        public const double DBL_LRS = 2.22044604925031308085E-016;
+        /// <summary>
+        /// smallest relative spacing [EPSNEG]
+        /// </summary>
+        public const double DBL_SRS = 1.11022302462515654042E-016;
+        /// <summary>
+        /// log(DBL_MAX)
+        /// </summary>
+        public const double MAXEXP = 709.78271289338399672;
 
         public const double PI = 3.1415926535897932384626433832795028841971693993751d;
         public const double SQRTPI = 1.7724538509055160272981674833411451827975494561224d;
-        public const double SQ2PIL = 0.918938533204672741780329736405617639861397473637;  //log(sqrt(pi*2))
-        public const double SQPI2L = 0.225791352644727432363097614947441071785897339277;  //log(sqrt(pi/2))
+        /// <summary>
+        /// log(sqrt(pi*2))
+        /// </summary>
+        public const double SQ2PIL = 0.918938533204672741780329736405617639861397473637;
+        /// <summary>
+        /// log(sqrt(pi/2))
+        /// </summary>
+        public const double SQPI2L = 0.225791352644727432363097614947441071785897339277;
 
-        public const double MISSING = double.MinValue; //missing data value, was 1E+300 in SD2
+        /// <summary>
+        /// missing data value
+        /// </summary>
+        /// <remarks>was 1E+300 in SD2</remarks>
+        public const double MISSING = double.MinValue;
 
-        public const double EPSNEG = DBL_SRS; //largest relative spacing of doubles = B**(-MACHEP)
-        public const double SPREAL = DBL_MIN; //smallest positive double = B**(EMIN-1)
-        public const double EPSILON = DBL_LRS; //smallest relative spacing of doubles = B**(-D)
+        /// <summary>
+        /// largest relative spacing of doubles = B**(-MACHEP)
+        /// </summary>
+        public const double EPSNEG = DBL_SRS;
+        /// <summary>
+        /// smallest positive double = B**(EMIN-1)
+        /// </summary>
+        public const double SPREAL = DBL_MIN;
+        /// <summary>
+        /// smallest relative spacing of doubles = B**(-D)
+        /// </summary>
+        public const double EPSILON = DBL_LRS;
     }
 
     /// <summary>
@@ -36,42 +67,23 @@ namespace StatsDirect.Numerics
         /// <summary>
         /// Sign transfer b to a (FORTRAN compatability).
         /// </summary>
-        public static double dsign(double a, double b)
-        {
-            if (b < 0.0)
-                return -Math.Abs(a);
-            return Math.Abs(a);
-        }
+        public static double dsign(double a, double b) => b < 0.0 ? -Math.Abs(a) : Math.Abs(a);
 
         /// <summary>
         /// Integer rounding function (FORTRAN compatability)
         /// </summary>
-        public static double dnint(double a)
-        {
-            if (a > 0.0)
-                return (int)(a + 0.5);
-            return (int)(a - 0.5);
-        }
+        public static double dnint(double a) => a > 0.0 ? (int)(a + 0.5) : (int)(a - 0.5);
 
         /// <summary>
-        /// safe Exponent.
+        /// Safe Exponent
         /// </summary>
-        public static double SafeExp(double x)
-        {
-            if (Math.Log(x) > Constant.MAXEXP)
-                return double.MaxValue;
-            return Math.Exp(x);
-        }
+        /// <returns>double.MaxValue if this would overflow, otherwise Math.Exp(x)</returns>
+        public static double SafeExp(double x) => Math.Log(x) > Constant.MAXEXP ? double.MaxValue : Math.Exp(x);
 
         /// <summary>
         /// Safe square root (was Safe_Sqr in SD2).
         /// </summary>
-        public static double SafeSqrt(double x)
-        {
-            if (x > 0.0)
-                return Math.Sqrt(x);
-            return Constant.MISSING;
-        }
+        public static double SafeSqrt(double x) => x > 0.0 ? Math.Sqrt(x) : Constant.MISSING;
 
         /// <summary>
         /// Number of terms for 64 bit orthogonal series; error within eta.
@@ -225,7 +237,6 @@ namespace StatsDirect.Numerics
             y -= (1.0 + y) * (log1p(y) - x);
             return y;
         }
-
     } //end of Base class
 
     /// <summary>
@@ -240,10 +251,7 @@ namespace StatsDirect.Numerics
         /// Wichura MJ. Algorithm AS 241: The Percentage Points of the Normal Distribution.
         /// Applied Statistics 1988, 37, 477-484.
         /// </remarks>
-        public static double gauinv(double p)
-        {
-            return gauinv(p, out int _);
-        }
+        public static double gauinv(double p) => gauinv(p, out int _);
 
         /// <summary>
         /// normal deviate Z for a given lower tail area of P; Z is accurate to about 1 part in 10**16.
@@ -347,7 +355,8 @@ namespace StatsDirect.Numerics
                       (((((((f7 * r + f6) * r + f5) * r + f4) * r + f3)
                          * r + f2) * r + f1) * r + one);
             }
-            if (q < zero) val = -val;
+            if (q < zero)
+                val = -val;
             return val;
         }
 
@@ -355,46 +364,30 @@ namespace StatsDirect.Numerics
         /// log of the absolute value of the gamma function
         /// </summary>
         /// <remarks>
-        /// december 2003 iain buchan C# translation and adaptation
-        /// august 1980 edition. w. fullerton, c3, los alamos scientific lab.
+        /// December 2003 Iain Buchan C# translation and adaptation
+        /// August 1980 edition. W. Fullerton, c3, Los Alamos scientific lab.
         /// </remarks>
         public static double alogam(double x)
         {
-            //xmax=0.0;
-            //dxrel=0.0;
-            double ret = double.NaN;
-            double xmax = double.MaxValue / Math.Log(double.MaxValue);
-            //dxrel = Math.Sqrt(Defs.DBL_LRS)
-            double y = Math.Abs(x);
-            if (y <= 10.0)
+            double xMax = double.MaxValue / Math.Log(double.MaxValue);
+            double absX = Math.Abs(x);
+            if (absX <= 10.0)
             {
                 double dabsgx = Math.Abs(dgamma(x));
-                ret = Math.Log(dabsgx);
+                return Math.Log(dabsgx);
             }
-            else if (y > xmax)
-            {
-                //      overflow
-            }
-            else if (x > 0.0)
-            {
-                ret = Constant.SQ2PIL + (x - 0.5) * Math.Log(x) - x + d9lgmc(y);
-            }
-            else
-            {
-                double sinpiy = Math.Abs(Math.Sin(Constant.PI * y));
-                if (sinpiy == 0.0)
-                {
-                    //        -ve argument
-                }
-                else
-                {
-                    ret = Constant.SQPI2L + (x - 0.5) * Math.Log(y) - x - Math.Log(sinpiy) - d9lgmc(y);
-                    //        if (Math.Abs((x-dint(x-0.5))*alogam/x) < dxrel) then
-                    //        low precision
-                    //     end if
-                }
-            }
-            return ret;
+            if (absX > xMax)
+                return double.NaN; // Overflow
+            if (x > 0.0)
+                return Constant.SQ2PIL + (x - 0.5) * Math.Log(x) - x + d9lgmc(absX);
+
+            double sinPiAbsX = Math.Abs(Math.Sin(Constant.PI * absX));
+            if (sinPiAbsX == 0.0)
+                return double.NaN; // -ve argument
+
+            // if (Math.Abs((x-dint(x-0.5))*alogam/x) < dxrel)
+            //     low precision
+            return Constant.SQPI2L + (x - 0.5) * Math.Log(absX) - x - Math.Log(sinPiAbsX) - d9lgmc(absX);
         }
 
         /// <summary>
@@ -407,56 +400,51 @@ namespace StatsDirect.Numerics
         /// </remarks>
         private static double d9lgmc(double x)
         {
+            if (x < 10.0)
+                return double.NaN; // x must be > 10
+
             // series for algm on the interval  0. to  1.00000e-02
             //                      with weighted error   1.28e-31
             //                           log weighted error  30.89
             //                 significant figures required  29.81
             //                      decimal places required  31.48
             //
-            double[] algmcs = {
-								  +0.166638948045186324720572965082e+0,
-								  -0.1384948176067563840732986059135e-4,
-								  +0.9810825646924729426157171547487e-8,
-								  -0.1809129475572494194263306266719e-10,
-								  +0.6221098041892605227126015543416e-13,
-								  -0.3399615005417721944303330599666e-15,
-								  +0.2683181998482698748957538846666e-17,
-								  -0.2868042435334643284144622399999e-19,
-								  +0.3962837061046434803679306666666e-21,
-								  -0.6831888753985766870111999999999e-23,
-								  +0.1429227355942498147573333333333e-24,
-								  -0.3547598158101070547199999999999e-26,
-								  +0.1025680058010470912000000000000e-27,
-								  -0.3401102254316748799999999999999e-29,
-								  +0.1276642195630062933333333333333e-30};
+            double[] algmcs =
+            {
+				+0.166638948045186324720572965082e+0,
+				-0.1384948176067563840732986059135e-4,
+				+0.9810825646924729426157171547487e-8,
+				-0.1809129475572494194263306266719e-10,
+				+0.6221098041892605227126015543416e-13,
+				-0.3399615005417721944303330599666e-15,
+				+0.2683181998482698748957538846666e-17,
+				-0.2868042435334643284144622399999e-19,
+				+0.3962837061046434803679306666666e-21,
+				-0.6831888753985766870111999999999e-23,
+				+0.1429227355942498147573333333333e-24,
+				-0.3547598158101070547199999999999e-26,
+				+0.1025680058010470912000000000000e-27,
+				-0.3401102254316748799999999999999e-29,
+				+0.1276642195630062933333333333333e-30
+            };
+
             // IEEE 64-bit Chebyshev orthogonal series = 5
             // for other systems call nalgm=Base.chebyinit(algmcs,15,Defs.DBL_SRS)
             const int nalgm = 5;
             double
                 xbig = 1.0 / Math.Sqrt(Constant.DBL_SRS),
                 xmax = Math.Exp(Math.Min(Math.Log(double.MaxValue / 12.0), -Math.Log(12.0 * Constant.DBL_SRS)));
-            double ret = double.NaN;
-            if (x < 10.0)
-            {
-                //     x must be > 10
-            }
-            else if (x < xmax)
+
+            if (x < xmax)
             {
                 if (x >= xbig)
-                {
-                    ret = 1.0 / (12.0 * x);
-                }
+                    return 1.0 / (12.0 * x);
                 else
-                {
-                    ret = Base.cheby(2.0 * Math.Pow(10.0 / x, 2.0) - 1.0, algmcs, nalgm) / x;
-                }
+                    return Base.cheby(2.0 * Math.Pow(10.0 / x, 2.0) - 1.0, algmcs, nalgm) / x;
             }
-            else
-            {
-                //  underflow
-                ret = 0.0;
-            }
-            return ret;
+
+            //  underflow
+            return 0.0;
         }
 
         ///<summary>

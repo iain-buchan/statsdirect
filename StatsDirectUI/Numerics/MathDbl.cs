@@ -852,20 +852,20 @@ namespace StatsDirect.Numerics
             }
         }
 
-        public static void pone(double P0, double dpsi, double r, out double dp1, out int imposs)
+        public static void pone(double p0, double dpsi, double r, out double dp1, out bool imposs)
         {
-            double Q0 = 1.0 - P0;
-            double temp1 = 2 * Math.Pow(dpsi, 2.0) * Math.Pow(P0, 2.0) + 2.0 * dpsi * P0 * Q0 + Math.Pow(dpsi - 1.0, 2.0) * P0 * Q0 * Math.Pow(r, 2.0);
-            double temp2 = (dpsi - 1.0) * P0 * Q0 * r * Math.Sqrt(Math.Pow(r, 2.0) * Math.Pow(dpsi - 1.0, 2.0) + 4.0 * dpsi);
-            double temp3 = 2.0 * (Math.Pow(dpsi * P0 + Q0, 2.0) + Math.Pow(r, 2.0) * Math.Pow(dpsi - 1.0, 2.0) * P0 * Q0);
+            double Q0 = 1.0 - p0;
+            double temp1 = 2 * Math.Pow(dpsi, 2.0) * Math.Pow(p0, 2.0) + 2.0 * dpsi * p0 * Q0 + Math.Pow(dpsi - 1.0, 2.0) * p0 * Q0 * Math.Pow(r, 2.0);
+            double temp2 = (dpsi - 1.0) * p0 * Q0 * r * Math.Sqrt(Math.Pow(r, 2.0) * Math.Pow(dpsi - 1.0, 2.0) + 4.0 * dpsi);
+            double temp3 = 2.0 * (Math.Pow(dpsi * p0 + Q0, 2.0) + Math.Pow(r, 2.0) * Math.Pow(dpsi - 1.0, 2.0) * p0 * Q0);
             dp1 = (temp1 - temp2) / temp3;
             double Q1 = 1.0 - dp1;
-            Q0 = 1.0 - P0;
-            double temp4 = r * Math.Sqrt(dp1 * P0 * Q0 * Q1);
+            Q0 = 1.0 - p0;
+            double temp4 = r * Math.Sqrt(dp1 * p0 * Q0 * Q1);
             double p00 = Q1 * Q0 + temp4;
-            double p11 = dp1 * P0 + temp4;
+            double p11 = dp1 * p0 + temp4;
             double p10 = dp1 * Q0 - temp4;
-            double p01 = P0 * Q1 - temp4;
+            double p01 = p0 * Q1 - temp4;
             double min = p00;
             double max = p00;
             if (p11 > max)
@@ -882,10 +882,7 @@ namespace StatsDirect.Numerics
                 min = p01;
             double pl = min;
             double pu = max;
-            if (pl < 0.0 || pu > 1.0)
-                imposs = 1;
-            else
-                imposs = 0;
+            imposs = (pl < 0.0 || pu > 1.0);
         }
 
         public static void uppci(int ia, int im, int ib, int z_in, out double xl, out double xu, double z, double Conf)

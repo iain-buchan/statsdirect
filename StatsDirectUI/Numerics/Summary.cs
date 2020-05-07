@@ -35,7 +35,6 @@ namespace StatsDirect.Numerics
 
         public string UserCentileLCaption { get; set; }
         public string UserCentileUCaption { get; set; }
-        public string CLCaption { get; set; }
         public string Title { get; set; }
 
         public int CentileType;
@@ -151,7 +150,6 @@ namespace StatsDirect.Numerics
             if (P > 1.0 - P)
                 P = 1.0 - P;
             double cit = PDF.tfromp(P, ValidData - 1);
-            CLCaption = " " + Formatting.XRound(userCL * 100, 1) + "% CL";
 
             if (ValidData > 1)
             {
