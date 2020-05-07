@@ -39,6 +39,12 @@ namespace StatsDirect.Templates
         {
             filledParameters.Add(key, FilledParameterFactory.Output(value));
         }
+        public void AddOutput(IDictionary<string, object> outputs)
+        {
+            foreach (KeyValuePair<string, object> pair in outputs)
+                filledParameters.Add(pair.Key, FilledParameterFactory.Output(pair.Value));
+        }
+
 
         public void AddInput(string key, object value)
         {
