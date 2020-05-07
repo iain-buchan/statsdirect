@@ -89,7 +89,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptPreferences(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptPreferences(ParameterBag parameters)
         {
             const string pg = "Preference Groups";
 
@@ -239,7 +239,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptFrequency(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptFrequency(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             for (int v = 0; v <= data.VariableCount - 1; v++)
@@ -317,7 +317,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag QuickSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag QuickSummary(IUserInterface host, ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
@@ -356,14 +356,14 @@ namespace StatsDirect.Builtins
             return new ParameterBag();
         }
 
-        public static ParameterBag RptUnivariateSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUnivariateSummary(ParameterBag parameters)
         {
-            return RptDescriptive(host, parameters, false);
+            return RptDescriptive(parameters, false);
         }
 
-        public static ParameterBag RptWeightedUnivariateSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptWeightedUnivariateSummary(ParameterBag parameters)
         {
-            return RptDescriptive(host, parameters, true);
+            return RptDescriptive(parameters, true);
         }
 
         private enum SummaryType
@@ -392,31 +392,28 @@ namespace StatsDirect.Builtins
             Udc2 = 21
         }
 
-        private static ParameterBag RptDescriptive(ITemplateHost host, ParameterBag parameters, bool isWeighted)
+        private static ParameterBag RptDescriptive(ParameterBag parameters, bool isWeighted)
         {
-            int maxrows; int cols;
             double nsumwt = 0;
             string wti = null;
             ColumnData[] cdx;
             double[,] x; double[,] w = null;
 
             // get data
+            DataFrame data = parameters["data"].AsDataFrame;
             if (isWeighted)
             {
                 nsumwt = Constant.MISSING;
                 // store the data
-                DataFrame data = parameters["data"].AsDataFrame;
-                maxrows = data.MaxRows;
-                cols = data.VariableCount;
-                x = new double[cols, maxrows + 1];
-                cdx = new ColumnData[cols];
-                for (int i = 0; i < cols; i++)
+                x = new double[data.VariableCount, data.MaxRows + 1];
+                cdx = new ColumnData[data.VariableCount];
+                for (int i = 0; i < data.VariableCount; i++)
                 {
                     DoubleVariable vi = (DoubleVariable)data.Variables[i];
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
                 }
 
-                w = new double[cols, maxrows + 1];
+                w = new double[data.VariableCount, data.MaxRows + 1];
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
                 DoubleVariable weightsVariable = (DoubleVariable)weightsFrame.Variables[0];
                 wti = weightsVariable.Title;
@@ -424,13 +421,13 @@ namespace StatsDirect.Builtins
                 // Load the data, skipping rows where weights are 0 or missing
                 int targetRow = 1;
                 int removed = 0;
-                for (int row = 0; row < maxrows; row++)
+                for (int row = 0; row < data.MaxRows; row++)
                 {
                     double weight = weightsVariable.Data[row];
                     if (weight == Constant.MISSING || weight == 0)
                     {
                         // Remove the row from any variables that are at least this long
-                        for (int col = 0; col < cols; col++)
+                        for (int col = 0; col < data.VariableCount; col++)
                         {
                             if (row < cdx[col].Rows + removed)
                                 cdx[col].Rows--;
@@ -442,7 +439,7 @@ namespace StatsDirect.Builtins
                     if (weight < 0.0)
                         throw new TemplateOperationCancelledException("Weights must not be negative", "Descriptive Statistics");
 
-                    for (int col = 0; col < cols; col++)
+                    for (int col = 0; col < data.VariableCount; col++)
                     {
                         w[col, targetRow] = weight;
                         DoubleVariable vi = (DoubleVariable)data.Variables[col];
@@ -453,19 +450,14 @@ namespace StatsDirect.Builtins
                     }
                     targetRow++;
                 }
-                // Account for missing or zero weights
-                maxrows = targetRow - 1;
             }
             else
             {
                 //  Index = 1: Univariate summary
                 // store the data
-                DataFrame data = parameters["data"].AsDataFrame;
-                maxrows = data.MaxRows;
-                cols = data.VariableCount;
-                x = new double[cols, maxrows + 1];
-                cdx = new ColumnData[cols];
-                for (int i = 0; i < cols; i++)
+                x = new double[data.VariableCount, data.MaxRows + 1];
+                cdx = new ColumnData[data.VariableCount];
+                for (int i = 0; i < data.VariableCount; i++)
                 {
                     DoubleVariable vi = (DoubleVariable)data.Variables[i];
                     cdx[i] = new ColumnData { Title = vi.Title, Rows = vi.Length };
@@ -514,8 +506,8 @@ namespace StatsDirect.Builtins
             bool shouldSave = !parameters.ContainsKey("output-to-frame") || parameters["output-to-frame"].AsBoolean;
 
             // get a result object for each column of data
-            Summary[] sx = new Summary[cols];
-            for (int i = 0; i < cols; i++)
+            Summary[] sx = new Summary[data.VariableCount];
+            for (int i = 0; i < data.VariableCount; i++)
             {
                 sx[i] = new Summary();
                 if (isWeighted)
@@ -529,13 +521,13 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             List<ParameterBag> titlesList = new List<ParameterBag>();
             outputParameters.AddOutput("*titles", titlesList);
-            for (int i = 0; i < cols; i++)
+            for (int i = 0; i < data.VariableCount; i++)
             { // Title
 
                 ParameterBag titlesParameters = new ParameterBag();
                 titlesList.Add(titlesParameters);
                 string val = sx[i].Title;
-                if ((i + 1) % 3 == 0 && cols > 3)
+                if ((i + 1) % 3 == 0 && data.VariableCount > 3)
                     val += Formatting.RTFCRLF;
                 titlesParameters.AddOutput("title", val);
             }
@@ -544,7 +536,7 @@ namespace StatsDirect.Builtins
             foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
             {
                 if (shouldOutput[s])
-                    fieldsList.Add(FillField(host, s, sx, cols, shouldOutput[s], titles[(int)s], isWeighted));
+                    fieldsList.Add(FillField(s, sx, data.VariableCount, shouldOutput[s], titles[(int)s], isWeighted));
             }
 
             // Fill the worksheet if required
@@ -583,14 +575,14 @@ namespace StatsDirect.Builtins
                     {
                         // If the worksheet is loaded then fill it
                         StringVariable totalsVariable = new StringVariable { Title = "Title" };
-                        totalsVariable.EnsureLength(cols);
-                        for (int i = 0; i < cols; i++)
+                        totalsVariable.EnsureLength(data.VariableCount);
+                        for (int i = 0; i < data.VariableCount; i++)
                             totalsVariable.SetData(i, sx[i].Title);
                         outputFrame.Variables.Add(totalsVariable);
                         foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                         {
                             if (shouldOutput[s])
-                                outputFrame.Variables.Add(FillCell(s, sx, cols, titles));
+                                outputFrame.Variables.Add(FillCell(s, sx, data.VariableCount, titles));
                         }
                     }
                 }
@@ -737,7 +729,7 @@ namespace StatsDirect.Builtins
             return v;
         }
 
-        private static ParameterBag FillField(ITemplateHost host, SummaryType opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool isWeighted)
+        private static ParameterBag FillField(SummaryType opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool isWeighted)
         {
             ParameterBag fieldParameters = new ParameterBag();
             List<ParameterBag> resultsList = new List<ParameterBag>();
@@ -760,74 +752,74 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag resultsParameters = new ParameterBag();
                     resultsList.Add(resultsParameters);
-                    string res;
+                    object res;
                     switch (opt)
                     {
                         case SummaryType.ValidData:
-                            res = sx[i].ValidData.ToString();
+                            res = sx[i].ValidData;
                             break;
                         case SummaryType.MissingData:
-                            res = sx[i].MissingData.ToString();
+                            res = sx[i].MissingData;
                             break;
                         case SummaryType.Sum:
-                            res = host.RoundU(isWeighted ? sx[i].SumOfWeights : sx[i].Sum);
+                            res = isWeighted ? sx[i].SumOfWeights : sx[i].Sum;
                             break;
                         case SummaryType.Mean:
-                            res = host.RoundU(sx[i].Mean);
+                            res = sx[i].Mean;
                             break;
                         case SummaryType.Variance:
-                            res = host.RoundU(sx[i].Variance);
+                            res = sx[i].Variance;
                             break;
                         case SummaryType.Sd:
-                            res = host.RoundU(sx[i].SD);
+                            res = sx[i].SD;
                             break;
                         case SummaryType.VarianceCoefficient:
-                            res = host.RoundU(sx[i].VarianceCoefficient);
+                            res = sx[i].VarianceCoefficient;
                             break;
                         case SummaryType.Sem:
-                            res = host.RoundU(sx[i].SEM);
+                            res = sx[i].SEM;
                             break;
                         case SummaryType.MeanUcl:
-                            res = host.RoundU(sx[i].MeanUCL);
+                            res = sx[i].MeanUCL;
                             break;
                         case SummaryType.MeanLcl:
-                            res = host.RoundU(sx[i].MeanLCL);
+                            res = sx[i].MeanLCL;
                             break;
                         case SummaryType.GeometricMean:
-                            res = host.RoundU(sx[i].GeometricMean);
+                            res = sx[i].GeometricMean;
                             break;
                         case SummaryType.Skewness:
-                            res = host.RoundU(sx[i].Skewness);
+                            res = sx[i].Skewness;
                             break;
                         case SummaryType.Kurtosis:
-                            res = host.RoundU(sx[i].Kurtosis);
+                            res = sx[i].Kurtosis;
                             break;
                         case SummaryType.Maximum:
-                            res = host.RoundU(sx[i].Maximum);
+                            res = sx[i].Maximum;
                             break;
                         case SummaryType.UpperQuartile:
-                            res = host.RoundU(sx[i].UpperQuartile);
+                            res = sx[i].UpperQuartile;
                             break;
                         case SummaryType.Median:
-                            res = host.RoundU(sx[i].Median);
+                            res = sx[i].Median;
                             break;
                         case SummaryType.LowerQuartile:
-                            res = host.RoundU(sx[i].LowerQuartile);
+                            res = sx[i].LowerQuartile;
                             break;
                         case SummaryType.InterquartileRange:
-                            res = host.RoundU(sx[i].InterquartileRange);
+                            res = sx[i].InterquartileRange;
                             break;
                         case SummaryType.Minimum:
-                            res = host.RoundU(sx[i].Minimum);
+                            res = sx[i].Minimum;
                             break;
                         case SummaryType.Range:
-                            res = host.RoundU(sx[i].Range);
+                            res = sx[i].Range;
                             break;
                         case SummaryType.Udc1:
-                            res = host.RoundU(sx[i].UserCentileU);
+                            res = sx[i].UserCentileU;
                             break;
                         case SummaryType.Udc2:
-                            res = host.RoundU(sx[i].UserCentileL);
+                            res = sx[i].UserCentileL;
                             break;
                         default:
                             throw new ArgumentException("Unknown opt", nameof(opt));
@@ -840,7 +832,7 @@ namespace StatsDirect.Builtins
             return fieldParameters;
         }
 
-        public static ParameterBag RptTimeSeriesSummary(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptTimeSeriesSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             // Extract our variables from the input
             DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0] as DoubleVariable;
@@ -1454,7 +1446,7 @@ namespace StatsDirect.Builtins
                 this.original = original;
             }
 
-            public void Bootstrap(ITemplateHost host, int iterations, MersenneTwister mt, double ci, bool keepAucs)
+            public void Bootstrap(IProgressBarHost host, int iterations, MersenneTwister mt, double ci, bool keepAucs)
             {
                 if (keepAucs)
                 {

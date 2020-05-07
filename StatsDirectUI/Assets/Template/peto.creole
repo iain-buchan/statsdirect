@@ -7,7 +7,7 @@
 </table>
 
 <table>
-<tr><th>Stratum</th><th>O-E</th><th>Odds ratio</th><th colspan="2"><ci>@pc% CI</ci></th><th></th></tr>
+<tr><th>Stratum</th><th>O-E</th><th>Odds ratio</th><th colspan="2"><ci>@{pc:round2}% CI</ci></th><th></th></tr>
 <block name="odds"><tr><td>@st</td><td>@{oe:roundu}</td><td>@{or:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
 
@@ -21,19 +21,19 @@
 <block name="z"><tr><td>@st</td><td>@{v:roundu}</td><td>@{z:roundu}</td><td><pval>@{p:pval}</pval></td><td>@lb</td></tr></block>
 </table>
 
-<p>Pooled odds ratio = @{por:roundu} (<ci>@pc% CI = @{from:roundu} to @{to:roundu}</ci>)<br />
+<p>Pooled odds ratio = @{por:roundu} (<ci>@{pc:round2}% CI = @{from:roundu} to @{to:roundu}</ci>)<br />
 Z (test of odds ratio differs from 1) = @{z:roundu}  <pval>@{p_z:pval}</pval></p>
 
 <p><u>Non-combinability of studies</u><br />
 Cochran Q = @{qc:roundu}  (df = @df)  <pval>@{xp:pval}</pval><br />
-I<sub>2</sub> (inconsistency) = @isq% (<ci>@pc1% CI = @llisq% to @ulisq%</ci>) </p>
+I<sub>2</sub> (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1}% to @{ulisq:round1}%</ci>) </p>
 
 <p><u>Bias indicators</u></p>
 <block name="egger">
-<p>Begg-Mazumdar: Kendall's @tau  <pval>@{p2:pval}</pval><br />
-Egger: bias = @a (<ci>@pc_egger% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>
+<p>Begg-Mazumdar: Kendall's @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}</pval><br />
+Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 <block name="harbord">
-<p>Harbord-Egger: bias = @a (<ci>@pc_harbord% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>
+<p>Harbord-Egger: bias = @{a:roundu} (<ci>@{pc_harbord:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 </report>

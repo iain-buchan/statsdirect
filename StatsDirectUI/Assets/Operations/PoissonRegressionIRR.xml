@@ -25,8 +25,8 @@
 
 <p>Inference population: @pop</p>
 <table>
-<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@pc% CI</ci></th></tr>
-<block name="par"><tr><td>@par</td><td>@est</td><td>@irr</td><td><ci>@ci</ci></td></tr></block>
+<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@{pc:round2}% CI</ci></th></tr>
+<block name="par"><tr><td>@par</td><td>@{est:roundu}</td><td>@{irr:roundu}</td><td><ci>@{lci:roundu}  to  @{uci:roundu}</ci></td></tr></block>
 </table>
 </block>
 </report>]]>

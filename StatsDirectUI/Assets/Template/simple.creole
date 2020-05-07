@@ -1,16 +1,16 @@
 <report>
 <title>Simple linear regression</title>
 
-<p><b>Equation: </b>@eq_y @eq_x</p>
+<p><b>Equation: </b>@ytitle = @{slope:roundu} @xtitle @lnk @{abs_yintercept:roundu}</p>
 
 <block name="se">
 <p>Standard Error of slope = @{slope_err:roundu}<br />
-<ci>@se_pc% CI for population value of slope = @{se_from:roundu} to @{se_to:roundu}</ci></p>
+<ci>@{se_pc:round2}% CI for population value of slope = @{se_from:roundu} to @{se_to:roundu}</ci></p>
 
 <p>Correlation coefficient (r) = @{se_r:roundu} (r<sub>2</sub> = @{se_r2:roundu})</p>
 
 <block name="ci">
-<p><ci>@ci_pc% CI for r (Fisher's z transformed) = @{ci_from:roundu} to @{ci_to:roundu}</ci></p>
+<p><ci>@{ci_pc:round1}% CI for r (Fisher's z transformed) = @{ci_from:roundu} to @{ci_to:roundu}</ci></p>
 
 <p>t with @df DF = @{tdf:roundu}<br />
 <pval>Two sided @{p:pval}</pval><br />

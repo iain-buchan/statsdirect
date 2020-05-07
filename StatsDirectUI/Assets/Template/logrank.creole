@@ -11,11 +11,13 @@ Extent of exposure to risk of death = @{ext:roundu}<br />
 Relative rate = @{rel:roundu}</p>
 </block>
 
-<p>test statistics:<br />
-@rank</p>
+<p>test statistics:</p>
+<table><tr><block name="rank"><td>@{cell:roundu}</td></block></tr></table>
 
 <p>variance-covariance matrix:</p>
-<block name="covar"><p>@mat</p></block>
+<table>
+<block name="covar"><tr><block name="mat"><td>@{cell:roundu}</td></block></tr></block>
+</table>
 
 <p>Chi-square for equivalence of death rates = @{chi:roundu}  <pval>@{p:pval}</pval></p>
 <block name="trends"><p>Chi-square for trend = @{trend:roundu} <pval> @{p_trend:pval}</pval></p></block>
@@ -34,15 +36,15 @@ Relative rate = @{rel:roundu}</p>
 <block name="hazards">
 <br />
 
-<p>Hazard Ratio  <ci>(approximate @pc% confidence interval)</ci></p>
+<p>Hazard Ratio  <ci>(approximate @{pc:round2}% confidence interval)</ci></p>
 <block name="hazard"><p>@vs = @{haz:roundu}  <ci>(@{from:roundu} to @{to:roundu})</ci></p></block>
 <block name="cml">
 
 <p>Conditional maximum likelihood estimates:<br />
 Hazard Ratio = @{hr:roundu}<br />
-<ci>Exact Fisher @pc% confidence interval = @{llf:roundu} to @{ulf:roundu}</ci><br />
+<ci>Exact Fisher @{pc:round2}% confidence interval = @{llf:roundu} to @{ulf:roundu}</ci><br />
 <pval>Exact Fisher one sided @{p1f:pval}, two sided @{p2f:pval}</pval><br />
-<ci>Exact mid-P @pc% confidence interval = @{llm:roundu} to @{ulm:roundu}</ci><br />
+<ci>Exact mid-P @{pc:round2}% confidence interval = @{llm:roundu} to @{ulm:roundu}</ci><br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 </block>
 </block>

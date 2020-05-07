@@ -53,7 +53,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptRateSmr(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRateSmr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 || cco < 0.0)
@@ -106,7 +106,7 @@ namespace StatsDirect.Builtins
             if (fault == 0)
             {
                 outputParameters.AddOutput("ratio", dead / etot);
-                outputParameters.AddOutput("smr", Formatting.XRound(Convert.ToInt32(dead / etot * 100), 0));
+                outputParameters.AddOutput("smr", dead / etot * 100);
 
                 poisson_ci(1.0 - cco, dead, 1.0, out double xl, out double xu);
 
@@ -114,10 +114,10 @@ namespace StatsDirect.Builtins
                     xl /= etot;
                 if (xu != Constant.MISSING)
                     xu /= etot;
-                outputParameters.AddOutput("pc", Formatting.XRound(100 * cco, 2));
+                outputParameters.AddOutput("pc", 100 * cco);
                 outputParameters.AddOutput("from", xl);
                 outputParameters.AddOutput("to", xu);
-                outputParameters.AddOutput("from100", Formatting.XRound(Convert.ToInt32(100 * xl), 0));
+                outputParameters.AddOutput("from100", Convert.ToInt32(100 * xl));
                 outputParameters.AddOutput("to100", Convert.ToInt32(100 * xu));
 
                 ExFortran.poisson(etot, Convert.ToInt32(dead), out double phi, out double plo, out double _, out fault);
@@ -132,7 +132,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag rptRateDirect(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptRateDirect(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 || cco < 0.0)
@@ -212,7 +212,7 @@ namespace StatsDirect.Builtins
             }
             double xu; double xl;
             // CIs for the single Poisson parameter (stratum specific rate)
-            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
+            outputParameters.AddOutput("pc", cco * 100.0);
             List<ParameterBag> cisList = new List<ParameterBag>();
             outputParameters.AddOutput("*cis", cisList);
             for (int j = 1; j <= rows; j++)
@@ -267,7 +267,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptStdrr(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptStdrr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0)
@@ -566,7 +566,7 @@ namespace StatsDirect.Builtins
                 strataParameters.AddOutput("pt2", pt2[i]);
                 strataParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
             }
-            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
+            outputParameters.AddOutput("pc", cco * 100.0);
             string meth = model == 1 ? "exact Poisson" : "Koopman";
             outputParameters.AddOutput("method", meth);
             List<ParameterBag> ratesList = new List<ParameterBag>();
@@ -591,11 +591,13 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("cre", cre * nunit);
             outputParameters.AddOutput("cre_from", crel * nunit);
-            outputParameters.AddOutput("cre_to", host.RoundU(creu * nunit) + warn1);
+            outputParameters.AddOutput("cre_to", creu * nunit);
+            outputParameters.AddOutput("cre_warn", warn1);
 
             outputParameters.AddOutput("crne", crne * nunit);
             outputParameters.AddOutput("crne_from", crnel * nunit);
-            outputParameters.AddOutput("crne_to", host.RoundU(crneu * nunit) + warn2);
+            outputParameters.AddOutput("crne_to", crneu * nunit);
+            outputParameters.AddOutput("crne_warn", warn2);
 
             outputParameters.AddOutput("sre", sre * nunit);
             if (model == 1)

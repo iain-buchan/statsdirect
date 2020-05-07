@@ -1,15 +1,13 @@
 <report>
 <title>Multiple linear regression</title>
-<block name="warn">
+  
+<block name="warn"><p>WARNING: @warn</p><br /></block>
 
-<p>WARNING: @warn</p>
-</block>
-<br />
 <block name="row">
 <table>
-<block name="col"><tr><td>@label</td><td>b@b = @val_b</td><td>@rp</td><td>t = @t</td><td><pval>@{p:pval}</pval></td></tr></block>
+<block name="col"><tr><td>@label</td><td>b@b = @{val_b:roundu}</td><block name="r"><td>r = @{rp:roundu}</td></block><td>t = @{t:roundu}</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 
-<p>@y = <block name="z">@z</block></p>
+<p>@y = <block name="z" separator=" ">@extraSign@{z:roundu}@title</block></p>
 </block>
 </report>

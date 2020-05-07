@@ -1,6 +1,8 @@
 ﻿using StatsDirect.Creole;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Text;
 
@@ -8,7 +10,7 @@ namespace StatsDirect.TemplateProcessing
 {
     public class CreoleHtmlReportRenderer : ReportRenderer
     {
-        public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
+        public override string Render(IPreferences host, string template, ParameterBag substitutions)
         {
             ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
             return creole.Accept(new InnerHtmlReportRenderer(host, substitutions));
@@ -36,15 +38,21 @@ namespace StatsDirect.TemplateProcessing
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
-            private readonly ITemplateHost host;
+            private readonly IPreferences host;
 
-            public InnerHtmlReportRenderer(ITemplateHost host, ParameterBag substitutions)
+            public InnerHtmlReportRenderer(IPreferences host, ParameterBag substitutions)
             {
                 this.host = host;
                 substitutionStack.Push(substitutions);
             }
 
             string ICreoleVisitor<string>.Visit(CreoleAttribute<string> victim)
+            {
+                // Should never see; ignore.
+                return string.Empty;
+            }
+
+            string ICreoleVisitor<string>.Visit(CreoleAttributes<string> victim)
             {
                 // Should never see; ignore.
                 return string.Empty;
@@ -57,8 +65,13 @@ namespace StatsDirect.TemplateProcessing
                 StringBuilder sb = new StringBuilder();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
+                    bool first = true;
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
+                        if (first)
+                            first = false;
+                        else
+                            sb.Append(victim.Separator);
                         substitutionStack.Push(inner);
                         sb.Append(victim.Contents.Accept(this));
                         substitutionStack.Pop();
@@ -99,7 +112,7 @@ namespace StatsDirect.TemplateProcessing
                 if (value is string stringValue)
                     return stringValue;
                 if (value is int intValue)
-                    return intValue.ToString();
+                    return intValue.ToString(CultureInfo.CurrentUICulture);
                 if (value is IRenderable renderable)
                     return new HtmlRenderer(host).Render(renderable);
                 if (value is double doubleValue)
@@ -113,6 +126,14 @@ namespace StatsDirect.TemplateProcessing
                             return host.RoundU(doubleValue);
                         case "roundx":
                             return host.RoundU(doubleValue);
+                        case "round0":
+                            return Formatting.XRound(doubleValue, 0);
+                        case "round1":
+                            return Formatting.XRound(doubleValue, 1);
+                        case "round2":
+                            return Formatting.XRound(doubleValue, 2);
+                        case "round3":
+                            return Formatting.XRound(doubleValue, 3);
                         case "zvalp1":
                             return host.pval(zvalp1(doubleValue));
                         case "zvalp2":

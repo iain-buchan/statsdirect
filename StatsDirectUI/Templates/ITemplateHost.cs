@@ -3,7 +3,7 @@
     /// <summary>
     /// An application capable of hosting the template language.
     /// </summary>
-    public interface ITemplateHost: IPreferencesAndProgressBar, IUserInterface
+    public interface ITemplateHost: IPreferencesAndProgressBar, IScriptEngineHost, IUserInterface, ISession
     {
     }
 }

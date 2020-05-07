@@ -1,6 +1,4 @@
 <report>
-<p>For Y = @y<br />
-Predicted X = @x</p>
-
-<br />
+<p>For Y = @{y:roundu}<br />
+Predicted X = @{x:roundu}</p>
 </report>

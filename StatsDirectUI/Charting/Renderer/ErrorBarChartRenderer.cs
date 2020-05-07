@@ -62,7 +62,7 @@ namespace StatsDirect.Charting.Renderer
         /// Series setup: Y[0] = centre value, Y[1] = lower error bar value, Y[2] = upper error bar value.
         /// </summary>
         /// <returns></returns>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

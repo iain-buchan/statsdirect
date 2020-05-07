@@ -10,23 +10,27 @@
 <p><u>Repeat time @time</u></p>
 <table>
 <tr><td>observed failures by group =</td><td>@fail_1 and @fail_2</td></tr>
-<tr><td>Wei-Lachin t =</td><td>@t</td></tr>
-<tr><td>Wei-Lachin variance =</td><td>@var</td></tr>
-<tr><td>chi-square =</td><td>@chi</td><td><pval>@{p:pval}</pval></td></tr>
+<tr><td>Wei-Lachin t =</td><td>@{t:roundu}</td></tr>
+<tr><td>Wei-Lachin variance =</td><td>@{var:roundu}</td></tr>
+<tr><td>chi-square =</td><td>@{chi:roundu}</td><td><pval>@{p:pval}</pval></td></tr>
 </table>
 </block>
 <br />
 <title>@title_multi</title>
 
 <p><u>Covariance matrix</u>:</p>
-<block name="covar"><p>@mat</p></block>
+<table>
+<block name="covar"><tr><block name="mat"><td>@{cell:roundu}</td></block></tr></block>
+</table>
 
 <p><u>Inverse of covariance matrix</u>:</p>
-<block name="inv_covar"><p>@mat</p></block>
+<table>
+<block name="inv_covar"><tr><block name="mat"><td>@{cell:roundu}</td></block></tr></block>
+</table>
 
 <p>repeat times = @rep<br />
-chi-square omnibus statistic = @stat  <pval>@{p_omnibus:pval}</pval></p>
+chi-square omnibus statistic = @{stat:roundu}  <pval>@{p_omnibus:pval}</pval></p>
 
-<p>stochastic ordering z = @z  <pval>one sided @{p_1:pval},  two sided @{p_2:pval}</pval></p>
+<p>stochastic ordering z = @{z:roundu}  <pval>one sided @{p_1:pval},  two sided @{p_2:pval}</pval></p>
 </block>
 </report>

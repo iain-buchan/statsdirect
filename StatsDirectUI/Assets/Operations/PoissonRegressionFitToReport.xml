@@ -15,22 +15,22 @@
 
 <table>
 <tr><th>Index</th><th>Observed Events</th><th>Expected Events</th><th>Observed Incidence</th><th>Expected Incidence</th></tr>
-<block name="events"><tr><td>@idx</td><td>@obs</td><td>@fit</td><td>@iro</td><td>@ire</td></tr></block>
+<block name="events"><tr><td>@idx</td><td>@{obs:roundu}</td><td>@{fit:roundu}</td><td>@{iro:roundu}</td><td>@{ire:roundu}</td></tr></block>
 </table>
 
 <table>
 <tr><th>Index</th><th>Residual (score)</th><th>Freeman-Tukey Residual</th><th>Deviance Residual</th></tr>
-<block name="residuals"><tr><td>@idx</td><td>@yr</td><td>@ftr</td><td>@dev</td></tr></block>
+<block name="residuals"><tr><td>@idx</td><td>@{yr:roundu}</td><td>@{ftr:roundu}</td><td>@{dev:roundu}</td></tr></block>
 </table>
 
 <table>
 <tr><th>Index</th><th>Pearson Chi&#xb2;</th><th>Leverage</th><th>Std Pearson Residual</th></tr>
-<block name="pearson"><tr><td>@idx</td><td>@res</td><td>@lev</td><td>@sres</td></tr></block>
+<block name="pearson"><tr><td>@idx</td><td>@{res:roundu}</td><td>@{lev:roundu}</td><td>@{sres}</td></tr></block>
 </table>
 
 <table>
 <tr><th>Parameters</th><th>Covariance</th></tr>
-<block name="covar"><tr><td>@lab</td><td>@cov</td></tr></block>
+<block name="covar"><tr><td>@labi vs. @labj</td><td>@{cov:roundu}</td></tr></block>
 </table>
 </report>]]>
     </report>

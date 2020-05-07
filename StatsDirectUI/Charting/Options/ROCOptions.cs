@@ -10,8 +10,9 @@ namespace StatsDirect.Charting
         public bool ShowOptimumCutOff;
         public double GAMMA;
         public double Weight;
-        public ComparisonValue Showopts;
+        public Comparison Comparison;
         private readonly bool showLegendIsRelevant;
+        public IList<ROCSeriesRecord> SeriesRecordCache { get; set; } = new List<ROCSeriesRecord>();
 
         public ROCOptions(IList<ISeries> seriesToUse)
         {

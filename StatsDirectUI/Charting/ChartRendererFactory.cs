@@ -27,7 +27,7 @@ namespace StatsDirect.Charting
             return cd;
         }
 
-        internal static ParameterBag PlotForResultsOnly(ITemplateHost host, ChartDefinition definition)
+        internal static ParameterBag PlotForResultsOnly(IPreferences host, ChartDefinition definition)
         {
             using (IChartRenderer ch = ChartRendererFor(definition, NULL_FACTORY))
                 return ch.Plot(host, true);

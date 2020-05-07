@@ -90,15 +90,11 @@ namespace StatsDirect.Templates
             get
             {
                 foreach (Step step in TrueSteps)
-                {
                     if (step.RequiresGrid)
                         return true;
-                }
                 foreach (Step step in FalseSteps)
-                {
                     if (step.RequiresGrid)
                         return true;
-                }
                 return false;
             }
         }
@@ -112,9 +108,8 @@ namespace StatsDirect.Templates
             if (trueRequirement == falseRequirement)
                 return trueRequirement;
 
-            // Otherwise, they're different.  In all such cases, it's a resounding maybe!
-            // (Yes/sometimes, yes/no, sometimes/no and the reverses of these)
-            return InputDuringStep.Sometimes;
+            // Otherwise, they're different.  In all such cases, it's a resounding maybe - which means we have to assume yes.
+            return InputDuringStep.SometimesOrAlways;
         }
 
         public override bool IsOrContains(Step candidate)
@@ -123,15 +118,11 @@ namespace StatsDirect.Templates
                 return true;
 
             foreach (Step s in TrueSteps)
-            {
                 if (s.IsOrContains(candidate))
                     return true;
-            }
             foreach (Step s in FalseSteps)
-            {
                 if (s.IsOrContains(candidate))
                     return true;
-            }
             return false;
         }
 

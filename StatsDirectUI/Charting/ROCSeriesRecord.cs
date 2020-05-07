@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+
 namespace StatsDirect.Charting
 {
     ///  <summary>
@@ -20,60 +23,15 @@ namespace StatsDirect.Charting
         public double sens;
         public double spec;
         public double auc;
-        public ComparisonValue comp;
+        public double weight;
+        public Comparison comparison;
+        public Func<double, double, bool> comparisonFunction;
 
         public void ReCut()
         {
-            a = 0;
-            b = 0;
-            c = 0;
-            d = 0;
-            for (int j = 0; j < pdata.Length; j++)
-            {
-                switch (comp)
-                {
-                    case ComparisonValue.LT:
-                        if (pdata[j] < cutoff)
-                            a += 1;
-                        break;
-                    case ComparisonValue.LE:
-                        if (pdata[j] <= cutoff)
-                            a += 1;
-                        break;
-                    case ComparisonValue.GT:
-                        if (pdata[j] > cutoff)
-                            a += 1;
-                        break;
-                    default:
-                        if (pdata[j] >= cutoff)
-                            a += 1;
-                        break;
-                }
-            }
+            a = pdata.Count(value => comparisonFunction(value, cutoff));
             c = pdata.Length - a;
-            for (int j = 0; j < adata.Length; j++)
-            {
-                switch (comp)
-                {
-                    case ComparisonValue.LT:
-                        if (adata[j] < cutoff)
-                            b += 1;
-                        break;
-                    case ComparisonValue.LE:
-                        if (adata[j] <= cutoff)
-                            b += 1;
-                        break;
-                    case ComparisonValue.GT:
-                        if (adata[j] > cutoff)
-                            b += 1;
-                        break;
-                    default:
-                        if (adata[j] >= cutoff)
-                            b += 1;
-                        break;
-                }
-
-            }
+            b = adata.Count(value => comparisonFunction(value, cutoff));
             d = adata.Length - b;
             sens = a / (double)(a + c);
             spec = d / (double)(b + d);
@@ -104,7 +62,9 @@ namespace StatsDirect.Charting
                 spec = spec,
                 sens = sens,
                 auc = auc,
-                comp = comp
+                comparison = comparison,
+                comparisonFunction = comparisonFunction,
+                weight = weight
             };
         }
     }

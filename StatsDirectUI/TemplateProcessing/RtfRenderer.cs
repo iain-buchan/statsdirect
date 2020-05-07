@@ -10,10 +10,10 @@ namespace StatsDirect.TemplateProcessing
     /// </summary>
     class RtfRenderer : IRenderableVisitor
     {
-        private ITemplateHost Host { get; }
+        private IPreferences Host { get; }
         private StringBuilder builder;
 
-        public RtfRenderer(ITemplateHost host)
+        public RtfRenderer(IPreferences host)
         {
             Host = host;
         }

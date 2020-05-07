@@ -7,7 +7,7 @@ Observations per sample = @obs</p>
 
 <p>Can not calculate regression</p>
 </block>
-<block name="results"><p>Median slope (<ci>@pc% CI</ci>) = @{mdn:roundu}  (<ci>@{from:roundu} to @{to:roundu}</ci>)<br />
+<block name="results"><p>Median slope (<ci>@{pc:round2}% CI</ci>) = @{mdn:roundu}  (<ci>@{from:roundu} to @{to:roundu}</ci>)<br />
 Y-intercept = @{intercept:roundu}</p>
 </block>
 

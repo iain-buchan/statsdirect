@@ -2737,7 +2737,7 @@ namespace StatsDirect.UI
                                         bool shouldTest = (!validator.HasTestIfTrueExpression) || (bool)processor.Evaluate(validator.TestIfTrueExpression, outputParameters);
                                         if (shouldTest)
                                         {
-                                            validationResult = ValidationProcessor.Validate(host, validator.ValidatorName, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
+                                            validationResult = SdApplication.SoleInstance.Validate(validator, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
                                             if (null != validationResult)
                                                 break;
                                         }
@@ -3730,7 +3730,7 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            string cell = SdApplication.TemplateHost.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
             workbookView.WithLock(() =>
             {
                 if (null != cell)

@@ -6,7 +6,7 @@
 </table>
 
 <table>
-<tr><th>Interval</th><th>Probability of dying [q<sub>x</sub>]</th><th>SE of q<sub>x</sub></th><th><ci>@pc% CI for q<sub>x</sub></ci></th></tr>
+<tr><th>Interval</th><th>Probability of dying [q<sub>x</sub>]</th><th>SE of q<sub>x</sub></th><th><ci>@{pc:round2}% CI for q<sub>x</sub></ci></th></tr>
 <block name="pdying"><tr><td>@int</td><td>@{q:roundu}</td><td>@{se:roundu}</td><td><ci>@{lci:roundu}  to  @{uci:roundu}</ci></td></tr></block>
 </table>
 
@@ -21,7 +21,8 @@
 </table>
 
 <table>
-<tr><th>Interval</th><th>Expectation of life [e<sub>x</sub>]</th><th>SE of e<sub>x</sub></th><th><ci>@pc% CI for e<sub>x</sub></ci></th></tr>
+<tr><th>Interval</th><th>Expectation of life [e<sub>x</sub>]</th><th>SE of e<sub>x</sub></th><th><ci>
+  @{pc:round2}% CI for e<sub>x</sub></ci></th></tr>
 <block name="expectation"><tr><td>@int</td><td>@{e:roundu}</td><td>@{se:roundu}</td><td><ci>@{lci:roundu}  to  @{uci:roundu}</ci></td></tr></block>
 </table>
 <block name="util">
@@ -33,9 +34,9 @@
 </block>
 
 <p>Median expectation of life (age at which half of original cohort survives) = @{med:roundu}<br />
-<ci>@pc% CI by Monte Carlo (@its) simulation = @{med_lci:roundu}  to  @{med_uci:roundu}</ci></p>
+<ci>@{pc:round2}% CI by Monte Carlo (@its) simulation = @{med_lci:roundu}  to  @{med_uci:roundu}</ci></p>
 
 <p>Expectation of life at birth = @{elb:roundu}<br />
-<ci>@pc% CI by Chiang variance estimate = @{elb_lci:roundu}  to  @{elb_uci:roundu}</ci><br />
-<ci>@pc% CI by Monte Carlo (@its) simulation = @{elb_mc_lci:roundu}  to  @{elb_mc_uci:roundu}</ci></p>
+<ci>@{pc:round2}% CI by Chiang variance estimate = @{elb_lci:roundu}  to  @{elb_uci:roundu}</ci><br />
+<ci>@{pc:round2}% CI by Monte Carlo (@its) simulation = @{elb_mc_lci:roundu}  to  @{elb_mc_uci:roundu}</ci></p>
 </report>

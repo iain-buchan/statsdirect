@@ -31,8 +31,6 @@ namespace StatsDirect.UI
         /// <returns>A Control to select for user correction if there was an input error, null otherwise.</returns>
         private Control Extract(bool count, ParameterBag outputParameters)
         {
-            ITemplateHost host = SdApplication.SoleInstance;
-
             int cols = options.IdentifiersFrame.VariableCount;
             string dtitle = options.Title;
 
@@ -51,7 +49,7 @@ namespace StatsDirect.UI
             }
             if (!ok || "X1=".Equals(expression))
             {
-                host.Error("Invalid expression, you must enter an expression such as X1>0 or X1=1 etc.", "Extract variable");
+                SdApplication.SoleInstance.Error("Invalid expression, you must enter an expression such as X1>0 or X1=1 etc.", "Extract variable");
                 return txtExpression;
             }
 

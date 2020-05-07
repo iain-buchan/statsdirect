@@ -164,7 +164,7 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode2D.GroupThenBlock:
                         {
                             DataFrame2D frame = new DataFrame2D();
-                            int groups = SdApplication.TemplateHost.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out bool userCancelled);
+                            int groups = SdApplication.SoleInstance.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out bool userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -212,7 +212,7 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode2D.BlockThenGroup:
                         {
                             DataFrame2D frame = new DataFrame2D();
-                            int repeats = SdApplication.TemplateHost.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out bool userCancelled);
+                            int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out bool userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
                                 // Cancelling the number of groups probably implies that the user wants to select by group
@@ -399,8 +399,7 @@ namespace StatsDirect.UI
                     if (xlab.Length > 70)
                         xlab = xlab.Substring(0, 70);
 
-                    ITemplateHost host = SdApplication.SoleInstance;
-                    bool yrep = host.GetBoolean("Use Y replicates", "Grouped linear covariance", false, out cancelled);
+                    bool yrep = SdApplication.SoleInstance.GetBoolean("Use Y replicates", "Grouped linear covariance", false, out cancelled);
                     if (cancelled)
                         break;
                     double[] b = new double[k + 1];
@@ -481,7 +480,7 @@ namespace StatsDirect.UI
                     }
 
                     ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
-                    ParameterBag filledCi = host.FillParameter(new TemplateProcessor(host), ciParam, new ParameterBag(), false);
+                    ParameterBag filledCi = SdApplication.TemplateHost.FillParameter(new TemplateProcessor(SdApplication.TemplateHost), ciParam, new ParameterBag(), false);
 
                     // If we get here, the operation acquired all its parameters successfully
                     GroupedCovarianceData gcd = new GroupedCovarianceData
@@ -763,7 +762,7 @@ namespace StatsDirect.UI
 
                 if (block_maxgn > treatment_cats)
                 {
-                    SdApplication.TemplateHost.Error("Two way ANOVA requires only one observation per block - you entered " + block_maxgn / (double)treatment_cats + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
+                    SdApplication.SoleInstance.Error("Two way ANOVA requires only one observation per block - you entered " + block_maxgn / (double)treatment_cats + ".\r\n\r\nPlease use a repeated/replicate measures method or a regression model instead.", msg_ti);
                     continue;
                 }
 

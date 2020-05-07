@@ -1,73 +1,37 @@
 lexer grammar CreoleLexer;
 
-SEA_WS
-    :  (' '|'\t'|'\r'? '\n')+
-    ;
+//
+// Start in content mode - grab almost anything until we get something that drops us into another mode.
+//
+TAG_OPEN           : '<'  -> pushMode(TAG) ;
+ENTITY_OPEN        : '&'  -> pushMode(ENTITY) ;
+EXPR_OPEN_COMPOUND : '@{' -> pushMode(EXPR_COMPOUND) ;
+EXPR_OPEN_SIMPLE   : '@'  -> pushMode(EXPR_SIMPLE) ;
 
-TAG_OPEN
-    : '<' -> pushMode(TAG)
-    ;
-
-ENTITY_OPEN
-	: '&' -> pushMode(ENTITY)
-	;
-
-EXPR_OPEN_COMPOUND
-    : '@{' -> pushMode(EXPR_COMPOUND)
-    ;
-
-EXPR_OPEN_SIMPLE
-    : '@' -> pushMode(EXPR_SIMPLE)
-    ;
-
-TEXT
-    : ~('<'|'@'|'&')+
-    ;
+SEA_WS             :  (' '|'\t'|'\r'? '\n')+ ;
+TEXT               : ~('<'|'@'|'&')+ ;
 
 //
 // Entity declarations
 //
 mode ENTITY;
 
-ENTITY_CLOSE
-	: ';' -> popMode
-	;
+ENTITY_CLOSE    : ';' -> popMode ;
 
-ENTITY_HEX
-	: '#' 'x' HEXDIGIT+
-	;
-
-ENTITY_DECIMAL
-	: '#' DIGIT+
-	;
-
-ENTITY_NAMED
-	: [A-Za-z][A-Za-z0-9]*
-	;
+ENTITY_HEX      : '#x' HexDigit+ ;
+ENTITY_DECIMAL  : '#' Digit+ ;
+ENTITY_NAMED    : Letter (Letter|Digit)* ;
 
 //
 // Tag declarations
 //
 mode TAG;
 
-TAG_CLOSE
-    : '>' -> popMode
-    ;
-
-TAG_SLASH_CLOSE
-    : '/>' -> popMode
-    ;
-
-TAG_SLASH
-    : '/'
-    ;
-
-//
-// lexing mode for attribute values
-//
-TAG_EQUALS
-    : '=' -> pushMode(ATTVALUE)
-    ;
+// Closers and mode changes
+TAG_CLOSE      : '>' -> popMode ;
+TAG_SLASH_CLOSE: '/>' -> popMode ;
+TAG_EQUALS     : '=' -> pushMode(ATTVALUE) ;
+TAG_SLASH      : '/' ;
 
 TAG_B          : 'b' ;
 TAG_BLOCK      : 'block' ;
@@ -94,45 +58,11 @@ TAG_TR         : 'tr' ;
 TAG_U          : 'u' ;
 TAG_WARN       : 'warn' ;
 
-TAG_NAME
-    : TAG_NameStartChar TAG_NameChar*
-    ;
+// A useful catch-all to grab other tag names.  This will then fail at the parser.
+TAG_NAME       : (Letter | Digit | '-' | '_' | '.' | MidDot | CombiningDiacriticalMark | Tie)+ ;
 
-TAG_WHITESPACE
-    : [ \t\r\n] -> skip
-    ;
-
-fragment
-HEXDIGIT
-    : [a-fA-F0-9]
-    ;
-
-fragment
-DIGIT
-    : [0-9]
-    ;
-
-fragment
-TAG_NameChar
-    : TAG_NameStartChar
-    | '-'
-    | '_'
-    | '.'
-    | DIGIT
-    | '\u00B7'
-    | '\u0300'..'\u036F'
-    | '\u203F'..'\u2040'
-    ;
-
-fragment
-TAG_NameStartChar
-    : [:a-zA-Z]
-    | '\u2070'..'\u218F'
-    | '\u2C00'..'\u2FEF'
-    | '\u3001'..'\uD7FF'
-    | '\uF900'..'\uFDCF'
-    | '\uFDF0'..'\uFFFD'
-    ;
+// Inside a tag, whitespace is ignored.
+TAG_WHITESPACE : (' '|'\t'|'\r'|'\n')+ -> channel(2) ;
 
 //
 // attribute values
@@ -140,76 +70,34 @@ TAG_NameStartChar
 mode ATTVALUE;
 
 // an attribute value may have spaces between the '=' and the value
-ATTVALUE_VALUE
-    : [ ]* ATTRIBUTE -> popMode
-    ;
+ATTVALUE_VALUE  : ' '* ATTRIBUTE -> popMode ;
+ATTRIBUTE       : '"' ~('<'|'"')* '"' | '\'' ~[<']* '\'' ;
 
-ATTRIBUTE
-    : DOUBLE_QUOTE_STRING
-    | SINGLE_QUOTE_STRING
-    | ATTCHARS
-    | HEXCHARS
-    | DECCHARS
-    ;
-
-fragment ATTCHAR
-    : '-'
-    | '_'
-    | '.'
-    | '/'
-    | '+'
-    | ','
-    | '?'
-    | '='
-    | ':'
-    | ';'
-    | '#'
-    | [0-9a-zA-Z]
-    ;
-
-fragment ATTCHARS
-    : ATTCHAR+ ' '?
-    ;
-
-fragment HEXCHARS
-    : '#' [0-9a-fA-F]+
-    ;
-
-fragment DECCHARS
-    : [0-9]+ '%'?
-    ;
-
-fragment DOUBLE_QUOTE_STRING
-    : '"' ~[<"]* '"'
-    ;
-fragment SINGLE_QUOTE_STRING
-    : '\'' ~[<']* '\''
-	;
-
+//
+// Simple expressions - just grab the expression variable and go!
+//
 mode EXPR_SIMPLE;
 
-EXPR_SIMPLE_VARIABLE
-    : EXPR_VariableStartChar EXPR_VariableChar* -> popMode
-    ;
+EXPR_SIMPLE_VARIABLE : Expr_VariableName -> popMode ;
 
-EXPR_SIMPLE_WHITESPACE
-    : [ \t\r\n] -> skip
-    ;
+mode EXPR_COMPOUND;
 
-fragment
-EXPR_VariableChar
-    : EXPR_VariableStartChar
-    | '-'
-    | '_'
-    | DIGIT
-    | '\u00B7'
-    | '\u0300'..'\u036F'
-    | '\u203F'..'\u2040'
-    ;
+EXPR_CLOSE_COMPOUND    : '}' -> popMode ;
+
+EXPR_COMPOUND_FORMAT   : ':' ('default' | 'chart' | 'pval' | 'pval_half' | 'roundu' | 'roundx' | 'round0' | 'round1' | 'round2' | 'round3' | 'zvalp1' | 'zvalp2') ;
+EXPR_COMPOUND_VARIABLE : Expr_VariableName ;
 
 fragment
-EXPR_VariableStartChar
-    : [a-zA-Z]
+Expr_VariableName      : Letter (Letter | Digit | '-' | '_' | MidDot | CombiningDiacriticalMark | Tie)* ;
+
+//
+// Non-application specific below here.
+//
+
+fragment
+Letter
+    : 'a'..'z'
+    | 'A'..'Z'
     | '\u2070'..'\u218F'
     | '\u2C00'..'\u2FEF'
     | '\u3001'..'\uD7FF'
@@ -217,27 +105,29 @@ EXPR_VariableStartChar
     | '\uFDF0'..'\uFFFD'
     ;
 
-mode EXPR_COMPOUND;
-
-EXPR_COMPOUND_FORMAT
-	: ':' EXPR_COMPOUND_FORMAT_STRING
-	;
-
-EXPR_CLOSE_COMPOUND
-	: '}' -> popMode
-	;
-
-EXPR_COMPOUND_VARIABLE
-    : EXPR_VariableStartChar EXPR_VariableChar*
+fragment
+HexDigit
+    : 'a'..'f'
+    | 'A'..'F'
+    | Digit
     ;
 
-fragment EXPR_COMPOUND_FORMAT_STRING
-	: 'default'
-	| 'chart'
-	| 'pval'
-	| 'pval_half'
-	| 'roundu'
-	| 'roundx'
-	| 'zvalp1'
-	| 'zvalp2'
-	;
+fragment
+Digit
+    : '0'..'9'
+    ;
+
+fragment
+MidDot
+    : '\u00B7'
+    ;
+
+fragment
+CombiningDiacriticalMark
+    : '\u0300'..'\u036F'
+    ;
+
+fragment
+Tie
+    : '\u203F'..'\u2040'
+    ;

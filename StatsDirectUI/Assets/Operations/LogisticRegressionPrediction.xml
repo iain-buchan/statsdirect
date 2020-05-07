@@ -20,11 +20,11 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Logistic regression - prediction</title>
-<block name="predictors"><p>@x</p></block>
+<block name="predictors"><p>@xtitle = @{x:roundu}</p></block>
 
-<p>@y</p>
+<p>Response proportion = @{y:roundu}@msg</p>
 
-<p><ci>@pc% Confidence interval = @from to @to</ci></p>
+<p><ci>@{pc:round2}% Confidence interval = @{from:roundu} to @{to:roundu}</ci></p>
 </report>]]>
     </report>
   </steps>

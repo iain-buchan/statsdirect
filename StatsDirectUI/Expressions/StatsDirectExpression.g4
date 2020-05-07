@@ -5,17 +5,17 @@ r returns [INode node]
 	;
 
 expr returns [INode node]
-	: lhs=expr op=OR rhs=andexpr { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.Or, Right = $rhs.node }; }
+	: lhs=expr op=(OR | DOUBLEBAR) rhs=andexpr { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.Or, Right = $rhs.node }; }
 	| andexpr { $node = $andexpr.node; }
 	;
 
 andexpr returns [INode node]
-	: lhs=andexpr op=AND rhs=notexpr { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.And, Right = $rhs.node }; }
+	: lhs=andexpr op=(AND | DOUBLEAMPERSAND) rhs=notexpr { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.And, Right = $rhs.node }; }
 	| notexpr { $node = $notexpr.node; }
 	;
 
 notexpr returns [INode node]
-	: NOT rhs=relexpr { $node = new MonadicNode { Operator = MonadicOperator.Not, Node = $rhs.node }; }
+	: (NOT | EXCLAIM) rhs=notexpr { $node = new MonadicNode { Operator = MonadicOperator.Not, Node = $rhs.node }; }
 	| relexpr { $node = $relexpr.node; }
 	;
 
@@ -102,6 +102,7 @@ mulop returns [DyadicOperator operator]
 explicitParameterName
 	: IDENTIFIER
 	;
+
 // Anything below here is lexical analysis
 
 INTEGER :	DIGITSANDTHOUSANDS
@@ -117,25 +118,26 @@ FLOAT
 AND	:	A N D;
 EE	:	E E;
 EQ	:	'=';
-FALSE: F A L S E;
-GE	:	('=' '>') | ('>' '=');
-GETS: ':' '=';
+FALSE:	F A L S E;
+GE	:	'=>' | '>=';
+GETS:	':=';
 GT	:	'>';
-LE	:	('<' '=') | ('=' '<');
+LE	:	'<=' | '=<';
 LT	:	'<';
-MOD	: M O D;
-NE	:	('<' '>') | ('>' '<');
+MOD	:	M O D;
+NE	:	'<>' | '><';
 NOT	:	N O T;
 OR	:	O R;
 PI	:	P I;
-TRUE: T R U E;
+TRUE:	T R U E;
 
-IDENTIFIER: ('A'..'Z'|'a'..'z')('A'..'Z'|'a'..'z'|'0'..'9'|'.'|'!')*
-	;
+IDENTIFIER: FirstOfIdentifier (MiddleOfIdentifier* LastOfIdentifier)? ;
 
 BACKSLASH	: '\\';
 CARET		: '^';
 COMMA		: ',';
+DOUBLEAMPERSAND: '&&';
+DOUBLEBAR	: '||';
 EXCLAIM		: '!';
 LPAREN		: '(';
 MINUS		: '-';
@@ -144,6 +146,10 @@ RPAREN		: ')';
 SLASH		: '/';
 STARSTAR	: '*' '*';
 STAR		: '*';
+
+fragment FirstOfIdentifier : 'A'..'Z'|'a'..'z';
+fragment MiddleOfIdentifier: 'A'..'Z'|'a'..'z'|'0'..'9'|'.'|'!';
+fragment LastOfIdentifier:   'A'..'Z'|'a'..'z'|'0'..'9'|;
 
 fragment A	:	'A'|'a';
 fragment B	:	'B'|'b';

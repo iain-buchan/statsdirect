@@ -4,16 +4,17 @@
 <p>Variables: @tlist</p>
 <block name="all">
 
-<p>@pc% Limits of agreement = @{from:roundu} to @{to:roundu}</p>
+<p>@{pc:round2}% Limits of agreement = @{from:roundu} to @{to:roundu}</p>
 </block>
 
 <p>Intra-class correlation coefficient (one way random effects) = @{icc:roundu}</p>
 
 <p>Estimated within-subjects standard deviation = @{wssd:roundu}</p>
 
-<p>For within-subjects sd vs. mean, Kendall's @tau<pval>  two sided @{p2:pval}</pval></p>
+<p>
+  For within-subjects sd vs. mean, Kendall's tau @{tau_b_addendum}= @{tau:roundu}  <pval>two sided @{p2:pval}@{low_power_warn}</pval></p>
 
-<p>Repeatability (for alpha = @pc) = @{rep:roundu}</p>
+<p>Repeatability (for alpha = @{pc:round2}) = @{rep:roundu}</p>
 
 
 <p>@repeatability</p>

@@ -205,13 +205,14 @@ namespace StatsDirect.Charting
             ROCOptions rocOptions = new ROCOptions(definition.XSeries)
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName ? "ROC plot" : "ROC plot from " + dataName,
+                Title = null == dataName
+                    ? "ROC plot"
+                    : "ROC plot from " + dataName,
                 ShowCutOffCalculator = true,
                 ShowOptimumCutOff = true,
                 Weight = 1.0,
                 GAMMA = host.Preferences.DefaultConfidenceInterval,
-                Showopts = pmn > amn ? ComparisonValue.GE : ComparisonValue.LE
+                Comparison = pmn > amn ? Comparison.GreaterEqual : Comparison.LessEqual
             };
 
             if (parameters.ContainsKey("GAMMA"))

@@ -7,6 +7,6 @@
 <tr><td>Mean =</td><td>@{mean:roundu}</td></tr>
 </table>
 <p><ci>Approximate two sided @pc2% CI =  @{lower2:roundu}  to  @{upper2:roundu}</ci><br />
-<ci>Approximate one sided @pc1% CI =  @{lower1:roundu}  to  @{upper1:roundu}</ci>  </p>
+<ci>Approximate one sided @{pc1:round1}% CI =  @{lower1:roundu}  to  @{upper1:roundu}</ci>  </p>
 </block>
 </report>

@@ -36,7 +36,7 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

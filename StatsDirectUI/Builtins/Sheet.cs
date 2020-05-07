@@ -237,7 +237,7 @@ namespace StatsDirect.Builtins
                 // If there is a user number and x is that user number, it's missing.
                 return userNumber != Constant.MISSING && x == userNumber;
             }
-            if (value == null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper(CultureInfo.InvariantCulture)) || Formatting.FULLSTOP.Equals(value) || value.Trim().Length == 0)
+            if (value == null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper(CultureInfo.InvariantCulture)) || ".".Equals(value) || value.Trim().Length == 0)
                 return true;
 
             return !string.IsNullOrEmpty(userText) && userText.Equals(value);
@@ -1577,17 +1577,17 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtPairDifferences(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtPairDifferences(IPreferences host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 1);
         }
 
-        public static ParameterBag ShtPairMeans(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtPairMeans(IPreferences host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 2);
         }
 
-        public static ParameterBag ShtPairSlopes(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtPairSlopes(IPreferences host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 3);
         }
@@ -1595,11 +1595,9 @@ namespace StatsDirect.Builtins
         ///  <param name="parameters"></param>
         /// <param name="index">1 = differences, 2 = means, 3 = slopes</param>
         /// <param name="host"></param>
-        private static ParameterBag ShtPair(ITemplateHost host, ParameterBag parameters, int index)
+        private static ParameterBag ShtPair(IPreferences host, ParameterBag parameters, int index)
         {
-            int i;
             int ctr; int rows2 = 0; int limit = 0;
-            int j;
             string qx = null; string xt = null;
             double[] xx = null; double[] x; double[] y = null;
             double mdn = 0;
@@ -1609,7 +1607,7 @@ namespace StatsDirect.Builtins
             int rows = yVariable.Length;
             string yt = yVariable.Title;
             double[] yy = new double[rows + 1];
-            for (i = 1; i <= rows; i++)
+            for (int i = 1; i <= rows; i++)
                 yy[i] = yVariable.Data[i - 1];
             if (index != 2)
             {
@@ -1619,12 +1617,11 @@ namespace StatsDirect.Builtins
                 if (rows2 != rows & index == 3)
                 {
                     //  Should never happen due to the data acquisition, but just in case...
-                    host.Error(Formatting.ERRCOLON + "unequal number of observations in X and Y.", "Pairwise");
-                    return null;
+                    throw new TemplateOperationCancelledException("Unequal number of observations in X and Y.", "Pairwise");
                 }
                 xt = xVariable.Title;
                 xx = new double[rows2 + 1];
-                for (i = 1; i <= rows2; i++)
+                for (int i = 1; i <= rows2; i++)
                     xx[i] = xVariable.Data[i - 1];
             }
 
@@ -1633,7 +1630,7 @@ namespace StatsDirect.Builtins
                 // means
                 x = new double[rows + 1];
                 ctr = 0;
-                for (i = 1; i <= rows; i++)
+                for (int i = 1; i <= rows; i++)
                 {
                     if (yy[i] != Constant.MISSING)
                     {
@@ -1649,7 +1646,7 @@ namespace StatsDirect.Builtins
                 x = new double[rows + 1];
                 y = new double[rows + 1];
                 ctr = 0;
-                for (i = 1; i <= rows; i++)
+                for (int i = 1; i <= rows; i++)
                 {
                     Debug.Assert(xx != null, "xx != null");
                     if (xx[i] != Constant.MISSING & yy[i] != Constant.MISSING)
@@ -1667,7 +1664,7 @@ namespace StatsDirect.Builtins
                 x = new double[rows + 1];
                 y = new double[rows2 + 1];
                 ctr = 0;
-                for (i = 1; i <= rows2; i++)
+                for (int i = 1; i <= rows2; i++)
                 {
                     Debug.Assert(xx != null, "xx != null");
                     if (xx[i] != Constant.MISSING)
@@ -1678,7 +1675,7 @@ namespace StatsDirect.Builtins
                 }
                 rows2 = ctr;
                 ctr = 0;
-                for (i = 1; i <= rows; i++)
+                for (int i = 1; i <= rows; i++)
                 {
                     if (yy[i] != Constant.MISSING)
                     {
@@ -1707,11 +1704,8 @@ namespace StatsDirect.Builtins
             }
 
             if (limit > host.Preferences.MaxRows)
-            {
-                host.Error(Formatting.ERRCOLON + "too many data.", "Pairwise");
-                return null;
-            }
-            // t = InputFrm("New column name", qx, "Pairwise")
+                throw new TemplateOperationCancelledException("Too many data.", "Pairwise");
+
             string t = qx;
 
             DataFrame outputFrame = new DataFrame();
@@ -1721,9 +1715,9 @@ namespace StatsDirect.Builtins
             switch (index)
             {
                 case 1:
-                    for (i = 1; i <= rows; i++)
+                    for (int i = 1; i <= rows; i++)
                     {
-                        for (j = 1; j <= rows2; j++)
+                        for (int j = 1; j <= rows2; j++)
                         {
                             Debug.Assert(y != null, "y != null");
                             if (x[i] == Constant.MISSING || y[j] == Constant.MISSING)
@@ -1735,9 +1729,9 @@ namespace StatsDirect.Builtins
                     }
                     break;
                 case 2:
-                    for (i = 1; i <= rows; i++)
+                    for (int i = 1; i <= rows; i++)
                     {
-                        for (j = i; j <= rows; j++)
+                        for (int j = i; j <= rows; j++)
                         {
                             if (x[i] == Constant.MISSING)
                                 outputVariable.SetData(cnt, Constant.MISSING);
@@ -1749,9 +1743,9 @@ namespace StatsDirect.Builtins
                     break;
                 case 3:
                     Debug.Assert(y != null, "y != null");
-                    for (i = 1; i <= rows - 1; i++)
+                    for (int i = 1; i < rows; i++)
                     {
-                        for (j = i + 1; j <= rows; j++)
+                        for (int j = i + 1; j <= rows; j++)
                         {
                             if (x[i] != x[j])
                             {
@@ -1767,27 +1761,23 @@ namespace StatsDirect.Builtins
                     {
                         double gamma = parameters["gamma"].AsDouble;
                         double p = (1.0 - gamma) / 2.0;
-                        if (p < 0 | p > 1)
-                        {
+                        if (p < 0 || p > 1)
                             p = 0.025;
-                        }
                         int nx = rows;
                         MathDbl.taufromp(p, out double _, out int ix, ref nx, out int fault);
                         double[] pws = new double[cnt + 1];
                         if (fault == 0)
                         {
                             cnt = 0;
-                            for (i = 1; i <= rows - 1; i++)
+                            for (int i = 1; i < rows; i++)
                             {
-                                for (j = i + 1; j <= rows; j++)
+                                for (int j = i + 1; j <= rows; j++)
                                 {
                                     if (x[i] != x[j])
                                     {
                                         cnt += 1;
                                         if (x[i] != Constant.MISSING && y[j] != Constant.MISSING)
-                                        {
                                             pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
-                                        }
                                     }
                                 }
                             }
@@ -1810,7 +1800,7 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            host.Error("TODO: Error description", "Pairwise");
+                            throw new TemplateOperationCancelledException("TODO: Error description", "Pairwise");
                         }
                     }
                     break;
@@ -1821,14 +1811,14 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag ShtRndBeta(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndBeta(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndBeta(host, rows, cols, a, b, seed));
+            return WrapFrame("output", Random.RndBeta(rows, cols, a, b, seed));
         }
 
         public static ParameterBag ShtRndBinomial(ParameterBag parameters)
@@ -1841,91 +1831,91 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndBino(rows, cols, nn, p, seed));
         }
 
-        public static ParameterBag ShtRndCauchy(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndCauchy(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double l = parameters["l"].AsDouble;
             double s = parameters["s"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndCauchy(host, rows, cols, l, s, seed));
+            return WrapFrame("output", Random.RndCauchy(rows, cols, l, s, seed));
         }
 
-        public static ParameterBag ShtRndChiSquare(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndChiSquare(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double df = parameters["df"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndChi(host, rows, cols, df, seed));
+            return WrapFrame("output", Random.RndChi(rows, cols, df, seed));
         }
 
-        public static ParameterBag ShtRndExponential(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndExponential(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double xm = parameters["xm"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndExpo(host, rows, cols, xm, seed));
+            return WrapFrame("output", Random.RndExpo(rows, cols, xm, seed));
         }
 
-        public static ParameterBag ShtRndF(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndF(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double dfn = parameters["dfn"].AsDouble;
             double dfd = parameters["dfd"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndF(host, rows, cols, dfn, dfd, seed));
+            return WrapFrame("output", Random.RndF(rows, cols, dfn, dfd, seed));
         }
 
-        public static ParameterBag ShtRndGamma(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndGamma(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndGamma(host, rows, cols, a, b, seed));
+            return WrapFrame("output", Random.RndGamma(rows, cols, a, b, seed));
         }
 
-        public static ParameterBag ShtRndGeometric(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndGeometric(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double p = parameters["p"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndGeom(host, rows, cols, p, seed));
+            return WrapFrame("output", Random.RndGeom(rows, cols, p, seed));
         }
 
-        public static ParameterBag ShtRndLogit(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndLogit(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double mu = parameters["mu"].AsDouble;
             double sigma = parameters["sigma"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndLogit(host, rows, cols, mu, sigma, seed));
+            return WrapFrame("output", Random.RndLogit(rows, cols, mu, sigma, seed));
         }
 
-        public static ParameterBag ShtRndLogNormal(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndLogNormal(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double xm = parameters["xm"].AsDouble;
             double sd = parameters["sd"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndLogNorm(host, rows, cols, xm, sd, seed));
+            return WrapFrame("output", Random.RndLogNorm(rows, cols, xm, sd, seed));
         }
 
-        public static ParameterBag ShtRndNegativeBinomial(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndNegativeBinomial(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double n = parameters["n"].AsDouble;
             double p = parameters["p"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndNegBin(host, rows, cols, n, p, seed));
+            return WrapFrame("output", Random.RndNegBin(rows, cols, n, p, seed));
         }
 
         public static ParameterBag ShtRndNormal(ParameterBag parameters)
@@ -1947,13 +1937,13 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndPoisson(rows, cols, xm, seed));
         }
 
-        public static ParameterBag ShtRndT(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndT(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double df = parameters["df"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndT(host, rows, cols, df, seed));
+            return WrapFrame("output", Random.RndT(rows, cols, df, seed));
         }
 
         public static ParameterBag ShtRndUniform01(ParameterBag parameters)
@@ -1975,14 +1965,14 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", Random.RndUni(rows, cols, a, b, isCount, seed));
         }
 
-        public static ParameterBag ShtRndWeibull(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag ShtRndWeibull(ParameterBag parameters)
         {
             int cols = parameters["cols"].AsInt32;
             int rows = parameters["rows"].AsInt32;
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            return WrapFrame("output", Random.RndWeibull(host, rows, cols, a, b, seed));
+            return WrapFrame("output", Random.RndWeibull(rows, cols, a, b, seed));
         }
 
         private static ParameterBag WrapFrame(string name, DataFrame frame)
@@ -2772,7 +2762,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        internal static ParameterBag ShtExpand(ITemplateHost host, ParameterBag parameters)
+        internal static ParameterBag ShtExpand(ParameterBag parameters)
         {
             int MAXROWS = 1000000; // Maximum number of output rows we're willing to tolerate.  TODO: Should really acquire this from the host.
             string mode = parameters["mode"].AsString;
@@ -2993,7 +2983,7 @@ namespace StatsDirect.Builtins
             for (int i = 0; i < differenceArray.Length; i++)
             {
                 int differenceValue = differenceArray[i];
-                IntAndSomething<T> probe = new IntAndSomething<T>(differenceValue, i < testArray.Length ? testArray[i] : default(T));
+                IntAndSomething<T> probe = new IntAndSomething<T>(differenceValue, i < testArray.Length ? testArray[i] : default);
                 // Holds the value we'll use
                 if (differenceMapper.TryGetValue(probe, out int target))
                 {

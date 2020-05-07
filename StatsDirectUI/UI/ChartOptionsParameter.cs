@@ -19,7 +19,7 @@ namespace StatsDirect.UI
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
         {
-            return InputDuringStep.Always;
+            return InputDuringStep.SometimesOrAlways;
         }
 
         public override void Accept(IParameterVisitor visitor)

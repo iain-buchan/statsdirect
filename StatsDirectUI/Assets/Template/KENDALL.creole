@@ -10,7 +10,7 @@ Kendall's score = @s   (standard error = @{ses:roundu})<br />
 Gamma = @{gam:roundu}</p>
 
 <p>Kendall's @tb  = @{tau:roundu}<br />
-<ci>Approximate @pc% CI = @{ll:roundu} to @{ul:roundu}</ci></p>
+<ci>Approximate @{pc:round2}% CI = @{ll:roundu} to @{ul:roundu}</ci></p>
 
 <p><u>Approximate tests@adj</u></p>
 <block name="smallsample">

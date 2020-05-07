@@ -190,7 +190,7 @@ namespace StatsDirect.UI
 
         private void SetDataRangeLabel()
         {
-            lblDataRange.Text = $"Data range: {SdApplication.TemplateHost.RoundU(MinimumDataValue)} to {SdApplication.TemplateHost.RoundU(MaximumDataValue)}";
+            lblDataRange.Text = $"Data range: {SdApplication.SoleInstance.RoundU(MinimumDataValue)} to {SdApplication.SoleInstance.RoundU(MaximumDataValue)}";
         }
 
         private void SetCandidateScaleValues()

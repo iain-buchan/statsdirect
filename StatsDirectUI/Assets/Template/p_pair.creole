@@ -1,7 +1,7 @@
 <report>
 <title>Paired proportions</title>
 
-<p>Total = @n_out,  both = @r_out,  first only = @s_out,  second only = @t_out<br />
+<p>Total = @{n:round2},  both = @{r:round2},  first only = @{s:round2},  second only = @{t:round2}<br />
 Proportion 1 = @{prop_1:roundu}<br />
 Proportion 2 = @{prop_2:roundu}<br />
 Proportion difference = @{prop_diff:roundu}</p>
@@ -20,6 +20,6 @@ Approximate two sided @p_2<br />
 Approximate one sided @p_1</p>
 </block>
 
-<p><ci>@qcl @pc% confidence interval for the proportion difference:</ci><br />
+<p><ci>@qcl @{pc:round2}% confidence interval for the proportion difference:</ci><br />
 <ci>@{lower:roundu} to @{upper:roundu}</ci></p>
 </report>

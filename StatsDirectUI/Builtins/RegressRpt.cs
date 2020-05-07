@@ -42,7 +42,7 @@ namespace StatsDirect.Builtins
 
     public static class RegressRpt
     {
-        public static ParameterBag RptGroupedLinearity(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGroupedLinearity(ParameterBag parameters)
         {
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
             int nx = predictorFrame.Variables[0].Length;
@@ -54,11 +54,11 @@ namespace StatsDirect.Builtins
             double tntot = 0;
             for (int j = 0; j < nx; j++)
             {
-                DoubleVariable v = (DoubleVariable) outcomesFrame.Variables[j];
+                DoubleVariable v = (DoubleVariable)outcomesFrame.Variables[j];
                 double[] data = v.Data;
                 double ysum = 0;
                 double ysum2 = 0;
-                for (int j2 = 0; j2 <= v.Length - 1; j2++)
+                for (int j2 = 0; j2 < v.Length; j2++)
                 {
                     ysum += data[j2];
                     ysum2 += data[j2] * data[j2];
@@ -66,7 +66,7 @@ namespace StatsDirect.Builtins
                 totssy += ysum2;
                 totny += v.Length;
                 totsy += ysum;
-                tntot += ysum * ysum / Convert.ToDouble(v.Length);
+                tntot += ysum * ysum / v.Length;
                 sx += v.Length * x[j];
                 ssx += v.Length * x[j] * x[j];
                 sxy += x[j] * ysum;
@@ -86,12 +86,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("reg_msq", regssq);
             outputParameters.AddOutput("reg_vr", vr);
             outputParameters.AddOutput("reg_p", P);
-            vr = devssq / Convert.ToDouble(nx - 2) / (rsdssq / (totny - nx));
+            vr = devssq / (nx - 2) / (rsdssq / (totny - nx));
             P = PDF.fvalp(vr, nx - 2, totny - nx);
             string Q = P <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("dev_ssq", devssq);
             outputParameters.AddOutput("dev_df", nx - 2);
-            outputParameters.AddOutput("dev_msq", devssq / Convert.ToDouble(nx - 2));
+            outputParameters.AddOutput("dev_msq", devssq / (nx - 2));
             outputParameters.AddOutput("dev_vr", vr);
             outputParameters.AddOutput("dev_p", P);
             outputParameters.AddOutput("res_ssq", rsdssq);
@@ -103,7 +103,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lin", Q);
             return outputParameters;
         }
-
 
         public static ParameterBag RptGroupedCovariance(ITemplateHost host, ParameterBag parameters)
         {
@@ -208,7 +207,7 @@ namespace StatsDirect.Builtins
             string q2 = p > 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("bet_ssq", btwnssq);
             outputParameters.AddOutput("bet_df", k - 1);
-            outputParameters.AddOutput("bet_msq", btwnssq / Convert.ToDouble(k - 1));
+            outputParameters.AddOutput("bet_msq", btwnssq / (k - 1));
             outputParameters.AddOutput("bet_vr", vr);
             outputParameters.AddOutput("bet_p", p);
             outputParameters.AddOutput("res_ssq", residssq);
@@ -234,7 +233,7 @@ namespace StatsDirect.Builtins
                     slopeParameters.AddOutput("res2", b[j]);
                     double dif = Math.Abs(b[g] - b[j]);
                     t = Math.Sqrt(residmsq * (rssx[g] + rssx[j])) * cit;
-                    slopeParameters.AddOutput("pc", Formatting.XRound((1 - p0) * 100, 2));
+                    slopeParameters.AddOutput("pc", (1 - p0) * 100);
                     slopeParameters.AddOutput("dif", dif);
                     slopeParameters.AddOutput("from", dif - t);
                     slopeParameters.AddOutput("to", dif + t);
@@ -242,9 +241,7 @@ namespace StatsDirect.Builtins
                     slopeParameters.AddOutput("t", t);
                     p = PDF.tvalp(Math.Abs(t), grandn - 2 * k);
                     if (p > 1.0 - p)
-                    {
                         p = 1.0 - p;
-                    }
                     slopeParameters.AddOutput("p", p * 2.0);
                 }
             }
@@ -275,11 +272,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("uc_tot_df", tnx - 1);
             // Corrected
             double crWithDf = tnx - k - 1;
-            vr = cssb / Convert.ToDouble(k - 1) / (cssw / crWithDf);
+            vr = cssb / (k - 1) / (cssw / crWithDf);
             p = PDF.fvalp(vr, k - 1, crWithDf);
             outputParameters.AddOutput("cr_bet_ssq", cssb);
             outputParameters.AddOutput("cr_bet_df", k - 1);
-            outputParameters.AddOutput("cr_bet_msq", cssb / Convert.ToDouble(k - 1));
+            outputParameters.AddOutput("cr_bet_msq", cssb / (k - 1));
             outputParameters.AddOutput("cr_bet_vr", vr);
             outputParameters.AddOutput("cr_with_ssq", cssw);
             outputParameters.AddOutput("cr_with_df", crWithDf);
@@ -297,7 +294,7 @@ namespace StatsDirect.Builtins
                 ParameterBag cmyParameters = new ParameterBag();
                 cmyList.Add(cmyParameters);
                 double cmy = ymean[g] + bs * (mx0 - xmean[g]);
-                double secmy = Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + (mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw));
+                double secmy = Math.Sqrt(cssw / crWithDf * (1.0 / nxi[g] + (mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw));
                 cmyParameters.AddOutput("y", cmy);
                 cmyParameters.AddOutput("res", secmy);
             }
@@ -305,11 +302,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("slope", bs);
             cit = PDF.tfromp(p0 / 2, crWithDf);
             if (q2.Length == 0)
-            { // Lines not parallel
-
-                IList<ParameterBag> notParallelList = new List<ParameterBag>();
-                notParallelList.Add(new ParameterBag());
-                outputParameters.AddOutput("*notParallel", notParallelList);
+            {
+                // Lines not parallel
+                outputParameters.AddOutput("*notParallel", new List<ParameterBag> { new ParameterBag() });
             }
             else
             {
@@ -317,7 +312,7 @@ namespace StatsDirect.Builtins
             }
             IList<ParameterBag> sepList = new List<ParameterBag>();
             outputParameters.AddOutput("*sep", sepList);
-            for (int g = 1; g <= k - 1; g++)
+            for (int g = 1; g < k; g++)
             {
                 for (int j = g + 1; j <= k; j++)
                 {
@@ -327,11 +322,11 @@ namespace StatsDirect.Builtins
                     sepParameters.AddOutput("lab1", bnam[g]);
                     sepParameters.AddOutput("lab2", bnam[j]);
                     sepParameters.AddOutput("sep", t);
-                    double zz = cit * Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + 1.0 / Convert.ToDouble(nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
-                    sepParameters.AddOutput("pc", Formatting.XRound((1 - p0) * 100, 2));
+                    double zz = cit * Math.Sqrt(cssw / crWithDf * (1.0 / nxi[g] + 1.0 / nxi[j] + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
+                    sepParameters.AddOutput("pc", (1 - p0) * 100);
                     sepParameters.AddOutput("fromSep", t - zz);
                     sepParameters.AddOutput("toSep", t + zz);
-                    t /= Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + 1.0 / Convert.ToDouble(nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
+                    t /= Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + (1.0 / nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
                     sepParameters.AddOutput("t", t);
                     sepParameters.AddOutput("df", tnx - k - 1);
                     p = PDF.tvalp(Math.Abs(t), crWithDf);
@@ -346,7 +341,6 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-
         public static ParameterBag RptConditionalLogisticRegression(ParameterBag parameters)
         {
             const string capti = "Conditional logistic regression";
@@ -356,7 +350,6 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             MathDbl.civ(0, out double cit, GAMMA, out double _);
 
-            // bool OK = false; 
             DataFrame stratumFrame = parameters["stratum"].AsDataFrame;
             ClassifierVariable stratumVariable = (ClassifierVariable) stratumFrame.Variables[0];
             int rows = stratumVariable.Length;
@@ -365,16 +358,9 @@ namespace StatsDirect.Builtins
             int strata = stratumVariable.GroupCount;
             string[] stratlab = new string[strata + 1];
             for (int i = 1; i <= rows; i++)
-            {
-                if (stratumVariable.Data[i - 1] == Constant.MISSING)
-                {
-                    isi[i] = 0;
-                }
-                else
-                {
-                    isi[i] = Convert.ToInt32(stratumVariable.Data[i - 1]) + 1; //  Groups are numbered 0 to n-1 in SD3, were 1 to n in SD2. The +1 causes the array offsets to line up.
-                }
-            }
+                isi[i] = stratumVariable.Data[i - 1] == Constant.MISSING
+                    ? 0
+                    : Convert.ToInt32(stratumVariable.Data[i - 1]) + 1; //  Groups are numbered 0 to n-1 in SD3, were 1 to n in SD2. The +1 causes the array offsets to line up.
             for (int i = 1; i <= strata; i++)
                 stratlab[i] = stratumVariable.Groups[i - 1].Label;
 
@@ -400,22 +386,18 @@ namespace StatsDirect.Builtins
                 cd[c] = new ColumnData { Title = v.Title };
 
                 for (int r = 1; r <= rows; r++)
-                {
                     x[c, r] = v.Data[r - 1];
-                }
             }
             // check predictors for categorical data not yet dummied
             // transpose x into z
             double[,] z = new double[rows + 1, cols + 1];
-            for (int C = 1; C <= cols; C++)
+            for (int c = 1; c <= cols; c++)
             {
                 for (int r = 1; r <= rows; r++)
                 {
-                    z[r, C] = x[C, r];
-                    if (z[r, C] == Constant.MISSING)
-                    {
+                    z[r, c] = x[c, r];
+                    if (z[r, c] == Constant.MISSING)
                         isi[r] = 0;
-                    }
                 }
             }
 
@@ -430,9 +412,7 @@ namespace StatsDirect.Builtins
             bool show_counts = parameters["show-counts"].AsBoolean;
             double tol = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
             if (tol > 0.001)
-            {
                 tol = 0.001;
-            }
 
             const int maxit = 15;
 
@@ -496,7 +476,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("dv", dev);
             outputParameters.AddOutput("warn", warn);
             outputParameters.AddOutput("x2", lrx2);
-            outputParameters.AddOutput("p_dev", PDF.chivalp(lrx2, Convert.ToDouble(cols)));
+            outputParameters.AddOutput("p_dev", PDF.chivalp(lrx2, cols));
             outputParameters.AddOutput("r2", lrx2 / devx);
 
             IList<ParameterBag> estList = new List<ParameterBag>();
@@ -518,18 +498,16 @@ namespace StatsDirect.Builtins
                 else
                 {
                     zz = -b[i] / se[i];
-                    double P = 1.0 - PDF.alnorm(zz);
-                    if (P > 1.0 - P)
-                    {
-                        P = 1.0 - P;
-                    }
-                    P = 2.0 * P;
+                    double p = 1.0 - PDF.alnorm(zz);
+                    if (p > 1.0 - p)
+                        p = 1.0 - p;
+                    p = 2.0 * p;
                     estParameters.AddOutput("z", zz);
-                    estParameters.AddOutput("p", P);
+                    estParameters.AddOutput("p", p);
                 }
             }
 
-            outputParameters.AddOutput("pc", Formatting.XRound(GAMMA * 100, 2));
+            outputParameters.AddOutput("pc", GAMMA * 100);
             IList<ParameterBag> orList = new List<ParameterBag>();
             outputParameters.AddOutput("*or", orList);
             for (int i = 1; i <= cols; i++)
@@ -541,17 +519,12 @@ namespace StatsDirect.Builtins
                 double lci = Formatting.SafeExp(-b[i] - se[i] * cit);
                 double uci = Formatting.SafeExp(-b[i] + se[i] * cit);
                 if (lci > uci)
-                {
-                    double temp = lci;
-                    lci = uci;
-                    uci = temp;
-                }
+                    Utilities.Utilities.Swap(ref lci, ref uci);
                 orParameters.AddOutput("from", lci);
                 orParameters.AddOutput("to", uci);
             }
             return outputParameters;
         }
-
 
         ///  <summary>
         ///  conditional logistic - from as 196
@@ -722,11 +695,11 @@ namespace StatsDirect.Builtins
 
             for (int i = ns; i >= 2; i--)
             {
-                nct[i] = nct[i] - nca[i];
-                nca[i] = nca[i] - nct[i - 1];
+                nct[i] -= nca[i];
+                nca[i] -= nct[i - 1];
             }
 
-            nct[1] = nct[1] - nca[1];
+            nct[1] -= nca[1];
 
             double[,] wz = new double[ip + 1, nobs + 1];
             for (j = 1; j <= nobs; j++)
@@ -740,18 +713,15 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= ip; i++)
             {
                 k += i;
-                if (cov[k] > 0.0)
-                    se[i] = Math.Sqrt(cov[k]);
-                else
-                    se[i] = 0.0;
+                se[i] = cov[k] > 0.0
+                    ? Math.Sqrt(cov[k])
+                    : 0.0;
             }
         }
 
         private static void clmain2(int nobs, int maxobs, int ns, double[,] z, int[] nca, int[] nct, int ip, out double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault)
         {
-
             //      based on applied statistics algorithm as 196 (logcch)
-
             //      dimension b(ip), cov(ip*(ip+1)/2), sc(ip), u(*), wb(*), wd2b(ip*(ip+1)/2,*), wdb(ip,*), z(ldz,*), nca(ns), nct(ns)
 
             int info;
@@ -854,14 +824,10 @@ namespace StatsDirect.Builtins
                 if (maxit > 0)
                 {
                     for (int i = 1; i <= ip; i++)
-                    {
                         wdb[i, 1] = sc[i];
-                    }
                     dpptrs(ip, cov, wdb, out info);
                     for (int i = 1; i <= ip; i++)
-                    {
                         b[i] = b[i] + wdb[i, 1];
-                    }
                 }
 
                 if (iter != 1)
@@ -900,9 +866,7 @@ namespace StatsDirect.Builtins
 
         private static void Howard2(int m, int n, double[] u, double[,] z, int idz, int ip, double[] wb, double[,] wdb, double[,] wd2b)
         {
-
             //      from as 196
-
             //       dimension u(n), wb(n+1), wd2b(ip*(ip+1)/2,n+1),wdb(ip,n+1), z(ldz,*)
 
             for (int j = 1; j <= m + 1; j++)
@@ -936,9 +900,7 @@ namespace StatsDirect.Builtins
                         wd2b[l, j1] = wd2b[l, j1] + u[i] * wd2b[l, j] + z[ir, iz] * z[iis, iz] * u[i] * wb[j] + z[ir, iz] * u[i] * wdb[iis, j] + z[iis, iz] * u[i] * wdb[ir, j];
                     }
                     for (l = 1; l <= ip; l++)
-                    {
                         wdb[l, j1] = wdb[l, j1] + u[i] * wdb[l, j] + z[l, iz] * u[i] * wb[j];
-                    }
                     wb[j1] = wb[j1] + u[i] * wb[j];
                 }
             }
@@ -957,32 +919,24 @@ namespace StatsDirect.Builtins
         {
             info = 0;
             if (n < 0)
-            {
                 info = -2;
-            }
             if (info != 0)
             {
                 info = -info;
                 return;
             }
             if (n == 0)
-            {
                 return;
-            }
             dtptri(false, n, ap, out info);
             if (info > 0)
-            {
                 return;
-            }
             int jj = 0;
             for (int j = 1; j <= n; j++)
             {
                 int jc = jj + 1;
                 jj += j;
                 if (j > 1)
-                {
                     dspr(j - 1, 1.0, ap, jc, 1, ap, 1);
-                }
                 double ajj = ap[jj];
                 int ict = jc;
                 int k;
@@ -992,7 +946,6 @@ namespace StatsDirect.Builtins
                     ict += 1;
                 }
             }
-
         }
 
         /// <summary>
@@ -1006,31 +959,23 @@ namespace StatsDirect.Builtins
 
             info = 0;
             if (n < 0)
-            {
                 info = -2;
-            }
             if (info != 0)
             {
                 info = -info;
                 return;
             }
             if (n == 0)
-            {
                 return;
-            }
 
             for (int i = 1; i <= n; i++)
-            {
                 tb[i] = b[i, 1];
-            }
 
             dtpsv(false, false, n, ap, 1, tb, 1, 1, out info);
             dtpsv(true, false, n, ap, 1, tb, 1, 1, out info);
 
             for (int i = 1; i <= n; i++)
-            {
                 b[i, 1] = tb[i];
-            }
         }
 
         /// <summary>
@@ -1040,32 +985,24 @@ namespace StatsDirect.Builtins
         {
             info = 0;
             if (n < 0)
-            {
                 info = -2;
-            }
             if (info != 0)
             {
                 info = -info;
                 return;
             }
             if (n == 0)
-            {
                 return;
-            }
             int jj = 0;
             for (int j = 1; j <= n; j++)
             {
                 int jc = jj + 1;
                 jj += j;
                 if (j > 1)
-                {
                     dtpsv(false, false, j - 1, ap, 1, ap, jc, 1, out info);
-                }
                 double ddot = 0.0;
                 for (int i = jc; i <= jc + j - 2; i++)
-                {
                     ddot += ap[i] * ap[i];
-                }
                 double ajj = ap[jj] - ddot;
                 if (ajj <= 0.0)
                 {
@@ -1089,21 +1026,13 @@ namespace StatsDirect.Builtins
         {
             int info = 0;
             if (n < 0)
-            {
                 info = 2;
-            }
             else if (incx == 0)
-            {
                 info = 5;
-            }
             if (info != 0)
-            {
                 return;
-            }
-            if (n == 0 | alpha == 0.0)
-            {
+            if (n == 0 || alpha == 0.0)
                 return;
-            }
             int kx = incx <= 0 ? idx - (n - 1) * incx : idx;
             int kk = idap;
             int jx = kx;
@@ -1122,7 +1051,6 @@ namespace StatsDirect.Builtins
                 jx += incx;
                 kk += j;
             }
-
         }
 
         /// <summary>
@@ -1138,52 +1066,30 @@ namespace StatsDirect.Builtins
         /// </summary>
         private static void dtpsv(bool ntrans, bool udiag, int n, double[] ap, int idap, double[] x, int idx, int incx, out int info)
         {
-            int ix, k, j, kx, kk, jx;
-            double temp;
-
             info = 0;
             if (n < 0)
-            {
                 info = 4;
-            }
             else if (incx == 0)
-            {
                 info = 7;
-            }
             if (info != 0)
-            {
                 return;
-            }
             if (n == 0)
-            {
                 return;
-            }
 
-            bool nounit = udiag == false;
-
-            if (incx <= 0)
-            {
-                kx = idx - (n - 1) * incx;
-            }
-            else
-            {
-                kx = idx;
-            }
+            int kx = incx <= 0 ? idx - (n - 1) * incx : idx;
             if (ntrans)
             {
-                kk = idap + n * (n + 1) / 2 - 1;
-                jx = kx + (n - 1) * incx;
-                for (j = n; j >= 1; j--)
+                int kk = idap + n * (n + 1) / 2 - 1;
+                int jx = kx + (n - 1) * incx;
+                for (int j = n; j >= 1; j--)
                 {
                     if (x[jx] != 0.0)
                     {
-                        if (nounit)
-                        {
+                        if (!udiag)
                             x[jx] = x[jx] / ap[kk];
-                        }
-                        temp = x[jx];
-                        ix = jx;
-                        for (k = kk - 1; k >= kk - j + 1; k--)
+                        double temp = x[jx];
+                        int ix = jx;
+                        for (int k = kk - 1; k >= kk - j + 1; k--)
                         {
                             ix -= incx;
                             x[ix] = x[ix] - temp * ap[k];
@@ -1195,21 +1101,19 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                kk = 1;
-                jx = kx;
-                for (j = 1; j <= n; j++)
+                int kk = 1;
+                int jx = kx;
+                for (int j = 1; j <= n; j++)
                 {
-                    temp = x[jx];
-                    ix = kx;
-                    for (k = kk; k <= kk + j - 2; k++)
+                    double temp = x[jx];
+                    int ix = kx;
+                    for (int k = kk; k <= kk + j - 2; k++)
                     {
                         temp -= ap[k] * x[ix];
                         ix += incx;
                     }
-                    if (nounit)
-                    {
+                    if (!udiag)
                         temp /= ap[kk + j - 1];
-                    }
                     x[jx] = temp;
                     jx += incx;
                     kk += j;
@@ -1228,55 +1132,34 @@ namespace StatsDirect.Builtins
         /// </summary>
         private static void dtpmv(bool ntrans, bool udiag, int n, double[] ap, int idap, double[] x, int idx, int incx, out int info)
         {
-            int ix, jx, j, kx, kk, k;
-            double temp;
-
             info = 0;
             if (n < 0)
-            {
                 info = 4;
-            }
             else if (incx == 0)
-            {
                 info = 7;
-            }
             if (info != 0)
-            {
                 return;
-            }
             if (n == 0)
-            {
                 return;
-            }
-            bool nounit = udiag == false;
-            if (incx <= 0)
-            {
-                kx = idx - (n - 1) * incx;
-            }
-            else
-            {
-                kx = idx;
-            }
+            int kx = incx <= 0 ? idx - (n - 1) * incx : idx;
 
             if (ntrans)
             {
-                kk = idap;
-                jx = kx;
-                for (j = 1; j <= n; j++)
+                int kk = idap;
+                int jx = kx;
+                for (int j = 1; j <= n; j++)
                 {
                     if (x[jx] != 0.0)
                     {
-                        temp = x[jx];
-                        ix = kx;
-                        for (k = kk; k <= kk + j - 2; k++)
+                        double temp = x[jx];
+                        int ix = kx;
+                        for (int k = kk; k <= kk + j - 2; k++)
                         {
                             x[ix] = x[ix] + temp * ap[k];
                             ix += incx;
                         }
-                        if (nounit)
-                        {
+                        if (!udiag)
                             x[jx] = x[jx] * ap[kk + j - 1];
-                        }
                     }
                     jx += incx;
                     kk += j;
@@ -1284,17 +1167,15 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                kk = idap + n * (n + 1) / 2 - 1;
-                jx = kx + (n - 1) * incx;
-                for (j = n; j >= 1; j--)
+                int kk = idap + n * (n + 1) / 2 - 1;
+                int jx = kx + (n - 1) * incx;
+                for (int j = n; j >= 1; j--)
                 {
-                    temp = x[jx];
-                    ix = jx;
-                    if (nounit)
-                    {
+                    double temp = x[jx];
+                    int ix = jx;
+                    if (!udiag)
                         temp *= ap[kk];
-                    }
-                    for (k = kk - 1; k >= kk - j + 1; k--)
+                    for (int k = kk - 1; k >= kk - j + 1; k--)
                     {
                         ix -= incx;
                         temp += ap[k] * x[ix];
@@ -1304,7 +1185,6 @@ namespace StatsDirect.Builtins
                     kk -= j;
                 }
             }
-
         }
 
         /// <summary>
@@ -1313,26 +1193,21 @@ namespace StatsDirect.Builtins
         private static void dtptri(bool udiag, int n, double[] ap, out int info)
         {
             info = 0;
-            bool nounit = udiag == false;
             if (n < 0)
-            {
                 info = -3;
-            }
             if (info != 0)
             {
                 info = -info;
                 return;
             }
-            if (nounit)
+            if (!udiag)
             {
                 int jj = 0;
                 for (info = 1; info <= n; info++)
                 {
                     jj += info;
                     if (ap[jj] == 0.0)
-                    {
                         return;
-                    }
                 }
                 info = 0;
             }
@@ -1340,7 +1215,7 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= n; j++)
             {
                 double ajj;
-                if (nounit)
+                if (!udiag)
                 {
                     ap[jc + j - 1] = 1.0 / ap[jc + j - 1];
                     ajj = -ap[jc + j - 1];
@@ -1360,6 +1235,5 @@ namespace StatsDirect.Builtins
                 jc += j;
             }
         }
-
     }
 }

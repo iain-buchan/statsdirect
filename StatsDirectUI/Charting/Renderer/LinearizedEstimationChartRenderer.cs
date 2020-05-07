@@ -22,7 +22,7 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
         {
             const int MARKER_SIZE = 6;
 

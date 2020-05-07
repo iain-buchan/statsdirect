@@ -3,7 +3,7 @@ using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
+using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -37,7 +37,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a ROC chart.
         ///  </summary>
         /// <param name="host"></param>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences host, bool isForReturnedParametersOnly)
         {
             ROCOptions rOptions = (ROCOptions)Definition.ChartOptions;
             double gamma = rOptions.GAMMA;
@@ -47,26 +47,7 @@ namespace StatsDirect.Charting.Renderer
 
             //  Assume data passed as series - X is positive, Y is negative.
 
-            ROCSeriesRecord[] seriesData = new ROCSeriesRecord[Definition.XSeries.Count];
-            for (int c = 0; c < Definition.XSeries.Count; c++)
-            {
-                seriesData[c] = new ROCSeriesRecord();
-                DoubleSeries xs = (DoubleSeries)Definition.XSeries[c];
-                DoubleSeries ys = (DoubleSeries)Definition.YSeries[c];
-                seriesData[c].pdata = xs.Data;
-                seriesData[c].adata = ys.Data;
-                seriesData[c].pmn = xs.Sum / Convert.ToDouble(xs.Points);
-                seriesData[c].amn = ys.Sum / Convert.ToDouble(ys.Points);
-                seriesData[c].min = Math.Min(xs.Min, ys.Min);
-                seriesData[c].max = Math.Max(xs.Max, ys.Max);
-                // get a sorted list of all data in order to calculate cut points
-                seriesData[c].tdata = new double[xs.Points + ys.Points];
-                for (int r = 0; r < xs.Points; r++)
-                    seriesData[c].tdata[r] = xs.Data[r];
-                for (int r = 0; r < ys.Points; r++)
-                    seriesData[c].tdata[xs.Points + r] = ys.Data[r];
-                Array.Sort(seriesData[c].tdata);
-            }
+            IList<ROCSeriesRecord> seriesRecords = rOptions.SeriesRecordCache;
 
             AssignMarkersToSeries(rOptions);
             Legend legend = new Legend();
@@ -95,91 +76,40 @@ namespace StatsDirect.Charting.Renderer
             OffX = XAxisCanvas;
             OffY = YAxisCanvas;
 
-            bool hideopt = !rOptions.ShowOptimumCutOff;
-            ComparisonValue showopt = rOptions.Showopts;
             ParameterBag results = new ParameterBag();
             IList<ParameterBag> allResults = new List<ParameterBag>();
             results.AddOutput("*datasets", allResults);
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
             {
-                ROCSeriesRecord thisData = seriesData[cs];
+                ROCSeriesRecord seriesRecord = seriesRecords[cs];
                 DoubleSeries xs = (DoubleSeries)Definition.XSeries[cs];
                 DoubleSeries ys = (DoubleSeries)Definition.YSeries[cs];
-                double weight = rOptions.Weight;
-                if (weight <= 0)
-                    weight = 1.0;
-
-                int a;
-                int b;
-                int c;
-                int d;
-                double cutoff;
-                double sens;
-                if (!hideopt)
-                {
-                    // work out cutoff for max(weight*sens+spec)
-                    double maxss = 0.0;
-                    for (int r = 0; r < thisData.tdata.Length; r++)
-                    {
-                        cutoff = thisData.tdata[r];
-                        a = CountValues(showopt, thisData.pdata, cutoff);
-                        c = thisData.pdata.Length - a;
-                        b = CountValues(showopt, thisData.adata, cutoff);
-                        d = thisData.adata.Length - b;
-                        sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
-                        double spec = Convert.ToDouble(d) / Convert.ToDouble(b + d);
-                        if (weight * sens + spec > maxss)
-                        {
-                            maxss = weight * sens + spec;
-                            thisData.cutoff = cutoff;
-                            thisData.a = a;
-                            thisData.b = b;
-                            thisData.c = c;
-                            thisData.d = d;
-                            thisData.sens = sens;
-                            thisData.spec = spec;
-                        }
-                    }
-
-                    // Cutoff calculator
-                    thisData.comp = showopt;
-                    if (rOptions.ShowCutOffCalculator)
-                    {
-                        string q = "ROC plot for " + rOptions.SeriesTitles[cs];
-                        thisData = ShowCutoff(host, thisData, weight, q);
-                    }
-                    seriesData[cs] = thisData;
-                }
 
                 // make first mark
-                cutoff = thisData.cutoff;
-                a = 0;
-                for (int r = 0; r < thisData.pdata.Length; r++)
-                    a += CountValues(showopt, thisData.pdata, cutoff);
-                c = thisData.pdata.Length - a;
-                b = 0;
-                for (int r = 0; r < thisData.adata.Length; r++)
-                    b += CountValues(showopt, thisData.adata, cutoff);
-                d = thisData.adata.Length - b;
-                sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
-                double mspec = 1.0 - Convert.ToDouble(d) / Convert.ToDouble(b + d);
+                double cutoff = seriesRecord.cutoff;
+                int a = seriesRecord.pdata.Count(value => seriesRecord.comparisonFunction(value, cutoff));
+                int c = seriesRecord.pdata.Length - a;
+                int b = seriesRecord.adata.Count(value => seriesRecord.comparisonFunction(value, cutoff));
+                int d = seriesRecord.adata.Length - b;
+                double sens = a / (double)(a + c);
+                double mspec = 1.0 - d / (double)(b + d);
                 double x1 = OffX + mspec * XExtCanvas;
                 double y1 = OffY + sens * YExtCanvas;
 
-                int stps = thisData.tdata.Length;
+                int stps = seriesRecord.tdata.Length;
                 double[] rx = new double[stps];
                 double[] ry = new double[stps];
 
                 for (int r = 0; r < stps; r++)
                 {
-                    cutoff = thisData.tdata[r];
-                    a = CountValuesSingleSided(showopt, thisData.pdata, cutoff);
-                    c = thisData.pdata.Length - a;
-                    b = CountValuesSingleSided(showopt, thisData.adata, cutoff);
-                    d = thisData.adata.Length - b;
-                    sens = Convert.ToDouble(a) / Convert.ToDouble(a + c);
+                    cutoff = seriesRecord.tdata[r];
+                    a = CountValuesSingleSided(seriesRecord.comparison, seriesRecord.pdata, cutoff);
+                    c = seriesRecord.pdata.Length - a;
+                    b = CountValuesSingleSided(seriesRecord.comparison, seriesRecord.adata, cutoff);
+                    d = seriesRecord.adata.Length - b;
+                    sens = a / (double)(a + c);
                     ry[r] = sens;
-                    mspec = 1.0 - Convert.ToDouble(d) / Convert.ToDouble(b + d);
+                    mspec = 1.0 - d / (double)(b + d);
                     rx[r] = mspec;
                 }
 
@@ -206,28 +136,28 @@ namespace StatsDirect.Charting.Renderer
                 }
 
                 // Mark cutoff point.  This is reversed if the chart requires reversal.
-                double x = 1.0 - thisData.spec;
-                double y = thisData.sens;
-                if (showopt == ComparisonValue.LT || showopt == ComparisonValue.LE)
+                double x = 1.0 - seriesRecord.spec;
+                double y = seriesRecord.sens;
+                if (seriesRecord.comparison == Comparison.LessThan || seriesRecord.comparison == Comparison.LessEqual)
                 {
                     x = 1.0 - x;
                     y = 1.0 - y;
                 }
                 DrawMarkerInChartCoordinates(x, y, rOptions.MarkerTypes[Definition.XSeries.Count + cs].MarkerSize, rOptions.MarkerTypes[Definition.XSeries.Count + cs]);
 
-                thisData.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
+                seriesRecord.auc = MathDbl.trapezoid_xy_roc(rx, ry, 0, stps);
 
-                if (!hideopt)
+                if (rOptions.ShowOptimumCutOff)
                 {
                     ParameterBag thisResults = new ParameterBag();
                     allResults.Add(thisResults);
                     // Wilcoxon estimate for AUC
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
                     //  Note that mwx and mwr are 1-based
-                    double[] mwx = new double[thisData.pdata.Length + thisData.adata.Length + 1];
-                    Array.Copy(thisData.pdata, 0, mwx, 1, thisData.pdata.Length);
-                    Array.Copy(thisData.adata, 0, mwx, 1 + thisData.pdata.Length, thisData.adata.Length);
-                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, thisData.pdata.Length, thisData.adata.Length, out double[] _, out double u, out double _, out double _, out double _, out bool fault);
+                    double[] mwx = new double[seriesRecord.pdata.Length + seriesRecord.adata.Length + 1];
+                    Array.Copy(seriesRecord.pdata, 0, mwx, 1, seriesRecord.pdata.Length);
+                    Array.Copy(seriesRecord.adata, 0, mwx, 1 + seriesRecord.pdata.Length, seriesRecord.adata.Length);
+                    NonParametric.MannWhitneyUTest(mwx, mwx.Length - 1, seriesRecord.pdata.Length, seriesRecord.adata.Length, out double[] _, out double u, out double _, out double _, out double _, out bool fault);
                     double theta;
                     double ll;
                     double ul;
@@ -242,11 +172,11 @@ namespace StatsDirect.Charting.Renderer
                     {
                         // if (thisData.pdata.Length * thisData.adata.Length - u > u)
                         //     u = thisData.pdata.Length * thisData.adata.Length - u;
-                        theta = u / (thisData.pdata.Length * thisData.adata.Length);
+                        theta = u / (seriesRecord.pdata.Length * seriesRecord.adata.Length);
                         // Q1 = theta / (2# - theta)
                         // Q2 = (2# * (theta ^ 2#)) / (1# + theta)
                         // sew = Sqr((theta * (1# - theta) + CDbl(rowsp(cs) - 1) * (Q1 - theta ^ 2#) + CDbl(rowsa(cs) - 1) * (Q2 - theta# ^ 2#)) / CDbl(rowsp(cs) * rowsa(cs)))
-                        sew = DeLongSE(thisData.pdata, thisData.adata, theta);
+                        sew = DeLongSE(seriesRecord.pdata, seriesRecord.adata, theta);
                         if (sew == Constant.MISSING)
                         {
                             ll = Constant.MISSING;
@@ -260,45 +190,47 @@ namespace StatsDirect.Charting.Renderer
                     }
                     // end of Wilcoxon estimate
                     thisResults.AddOutput("ti", rOptions.SeriesTitles[cs]);
-                    thisResults.AddOutput("auc", host.RoundU(thisData.auc));
-                    thisResults.AddOutput("theta", host.RoundU(theta));
-                    thisResults.AddOutput("se", host.RoundU(sew));
-                    thisResults.AddOutput("pc", Formatting.XRound(100.0 * (1.0 - p0), 2));
+                    thisResults.AddOutput("auc", seriesRecord.auc);
+                    thisResults.AddOutput("theta", theta);
+                    thisResults.AddOutput("se", sew);
+                    thisResults.AddOutput("pc", 100.0 * (1.0 - p0));
                     if (ll < 0.0)
                         ll = 0.0;
-                    thisResults.AddOutput("ll", host.RoundU(ll));
+                    thisResults.AddOutput("ll", ll);
                     if (ul > 1.0)
                         ul = 1.0;
-                    thisResults.AddOutput("ul", host.RoundU(ul));
-                    thisResults.AddOutput("cut", host.RoundU(thisData.cutoff));
-                    thisResults.AddOutput("a", thisData.a.ToString(CultureInfo.InvariantCulture));
-                    thisResults.AddOutput("b", thisData.b.ToString(CultureInfo.InvariantCulture));
-                    thisResults.AddOutput("c", thisData.c.ToString(CultureInfo.InvariantCulture));
-                    thisResults.AddOutput("d", thisData.d.ToString(CultureInfo.InvariantCulture));
+                    thisResults.AddOutput("ul", ul);
+                    thisResults.AddOutput("cut", seriesRecord.cutoff);
+                    thisResults.AddOutput("a", seriesRecord.a);
+                    thisResults.AddOutput("b", seriesRecord.b);
+                    thisResults.AddOutput("c", seriesRecord.c);
+                    thisResults.AddOutput("d", seriesRecord.d);
                     // sensitivity CI
-                    MathDbl.binci(Convert.ToDouble(thisData.a), Convert.ToDouble(thisData.a + thisData.c), out ll, out ul, gamma, out string warn);
-                    thisResults.AddOutput("senspc", Formatting.XRound(100.0 * (1.0 - p0), 2));
-                    thisResults.AddOutput("sens", host.RoundU(thisData.sens));
-                    thisResults.AddOutput("sensll", host.RoundU(ll));
-                    thisResults.AddOutput("sensul", host.RoundU(ul) + warn);
+                    MathDbl.binci(seriesRecord.a, seriesRecord.a + seriesRecord.c, out ll, out ul, gamma, out string warn);
+                    thisResults.AddOutput("senspc", 100.0 * (1.0 - p0));
+                    thisResults.AddOutput("sens", seriesRecord.sens);
+                    thisResults.AddOutput("sensll", ll);
+                    thisResults.AddOutput("sensul", ul);
+                    thisResults.AddOutput("senswarn", warn);
                     // specificity CI
-                    MathDbl.binci(Convert.ToDouble(thisData.d), Convert.ToDouble(thisData.d + thisData.b), out ll, out ul, gamma, out warn);
-                    thisResults.AddOutput("specpc", Formatting.XRound(100.0 * (1.0 - p0), 2));
-                    thisResults.AddOutput("spec", host.RoundU(thisData.spec));
-                    thisResults.AddOutput("specll", host.RoundU(ll));
-                    thisResults.AddOutput("specul", host.RoundU(ul) + warn);
+                    MathDbl.binci(seriesRecord.d, seriesRecord.d + seriesRecord.b, out ll, out ul, gamma, out warn);
+                    thisResults.AddOutput("specpc", 100.0 * (1.0 - p0));
+                    thisResults.AddOutput("spec", seriesRecord.spec);
+                    thisResults.AddOutput("specll", ll);
+                    thisResults.AddOutput("specul", ul);
+                    thisResults.AddOutput("specwarn", warn);
 
                     //  BEWARE from this point on: a, b, c, d are integer, but divisions need to deal with floating-point.
                     // prevalence
-                    double n = thisData.a + thisData.b + thisData.c + thisData.d;
-                    double prevel = Convert.ToDouble(thisData.a + thisData.c) / n;
+                    double n = seriesRecord.a + seriesRecord.b + seriesRecord.c + seriesRecord.d;
+                    double prevel = (seriesRecord.a + seriesRecord.c) / n;
 
                     // ppv
                     double ptld;
                     double temp1; double temp2;
-                    if (thisData.a + thisData.b > 0)
+                    if (seriesRecord.a + seriesRecord.b > 0)
                     {
-                        ptld = thisData.a / Convert.ToDouble(thisData.a + thisData.b);
+                        ptld = seriesRecord.a / Convert.ToDouble(seriesRecord.a + seriesRecord.b);
                         temp1 = ptld * 100.0;
                         temp2 = Convert.ToInt64(ptld * 100.0) - Convert.ToInt64(prevel * 100.0);
                     }
@@ -308,35 +240,26 @@ namespace StatsDirect.Charting.Renderer
                         temp1 = Constant.MISSING;
                         temp2 = Constant.MISSING;
                     }
-                    thisResults.AddOutput("likely", host.RoundU(ptld));
+                    thisResults.AddOutput("likely", ptld);
                     // Clopper-Pearson CI
-                    MathDbl.binci(thisData.a, thisData.a + thisData.b, out double pil, out double piu, gamma, out warn);
-                    thisResults.AddOutput("likely_from", host.RoundU(pil));
-                    thisResults.AddOutput("likely_to", host.RoundU(piu) + warn);
+                    MathDbl.binci(seriesRecord.a, seriesRecord.a + seriesRecord.b, out double pil, out double piu, gamma, out warn);
+                    thisResults.AddOutput("likely_from", pil);
+                    thisResults.AddOutput("likely_to", piu);
+                    thisResults.AddOutput("likely_warn", warn);
                     // as percentage
-                    thisResults.AddOutput("likely_pc", Formatting.XRound(temp1, 2));
-                    if (pil != Constant.MISSING)
-                    {
-                        pil = 100.0 * pil;
-                    }
-                    else { pil = Constant.MISSING; }
-                    thisResults.AddOutput("likely_from_pc", Formatting.XRound(pil, 2));
-                    if (piu != Constant.MISSING)
-                    {
-                        piu = 100.0 * piu;
-                    }
-                    else { piu = Constant.MISSING; }
-                    thisResults.AddOutput("likely_to_pc", Formatting.XRound(piu, 2));
+                    thisResults.AddOutput("likely_pc", temp1);
+                    thisResults.AddOutput("likely_from_pc", pil != Constant.MISSING ? 100.0 * pil : Constant.MISSING);
+                    thisResults.AddOutput("likely_to_pc", piu != Constant.MISSING ? 100.0 * piu : Constant.MISSING);
                     // change
-                    thisResults.AddOutput("likely_change", Formatting.XRound(temp2, 2));
+                    thisResults.AddOutput("likely_change", temp2);
 
                     // npv
                     double ptlng;
-                    if (thisData.d + thisData.c > 0)
+                    if (seriesRecord.d + seriesRecord.c > 0)
                     {
-                        ptlng = thisData.d / Convert.ToDouble(thisData.d + thisData.c);
+                        ptlng = seriesRecord.d / (double)(seriesRecord.d + seriesRecord.c);
                         temp1 = ptlng * 100.0;
-                        temp2 = Convert.ToInt32(ptlng * 100.0) - Convert.ToInt32(Convert.ToDouble(thisData.b + thisData.d) / n * 100.0);
+                        temp2 = Convert.ToInt32(ptlng * 100.0) - Convert.ToInt32((seriesRecord.b + seriesRecord.d) / n * 100.0);
                     }
                     else
                     {
@@ -344,33 +267,24 @@ namespace StatsDirect.Charting.Renderer
                         temp1 = Constant.MISSING;
                         temp2 = Constant.MISSING;
                     }
-                    thisResults.AddOutput("likely_negative", host.RoundU(ptlng));
+                    thisResults.AddOutput("likely_negative", ptlng);
                     // Clopper-Pearson CI
-                    MathDbl.binci(thisData.d, thisData.d + thisData.c, out pil, out piu, gamma, out warn);
-                    thisResults.AddOutput("likely_negative_from", host.RoundU(pil));
-                    thisResults.AddOutput("likely_negative_to", host.RoundU(piu) + warn);
+                    MathDbl.binci(seriesRecord.d, seriesRecord.d + seriesRecord.c, out pil, out piu, gamma, out warn);
+                    thisResults.AddOutput("likely_negative_from", pil);
+                    thisResults.AddOutput("likely_negative_to", piu);
+                    thisResults.AddOutput("likely_negative_warn", warn);
                     // as percentage
-                    thisResults.AddOutput("likely_negative_pc", Formatting.XRound(temp1, 2));
-                    if (pil != Constant.MISSING)
-                    {
-                        pil = 100.0 * pil;
-                    }
-                    else { pil = Constant.MISSING; }
-                    thisResults.AddOutput("likely_negative_from_pc", Formatting.XRound(pil, 2));
-                    if (piu != Constant.MISSING)
-                    {
-                        piu = 100.0 * piu;
-                    }
-                    else { piu = Constant.MISSING; }
-                    thisResults.AddOutput("likely_negative_to_pc", Formatting.XRound(piu, 2));
+                    thisResults.AddOutput("likely_negative_pc", temp1);
+                    thisResults.AddOutput("likely_negative_from_pc", pil != Constant.MISSING ? 100.0 * pil : Constant.MISSING);
+                    thisResults.AddOutput("likely_negative_to_pc", piu != Constant.MISSING ? 100.0 * piu : Constant.MISSING);
                     // change
-                    thisResults.AddOutput("likely_negative_change", Formatting.XRound(temp2, 2));
+                    thisResults.AddOutput("likely_negative_change", temp2);
 
                     // p[dx] despite -ve test
                     double ptlnd;
-                    if (thisData.d + thisData.c > 0)
+                    if (seriesRecord.d + seriesRecord.c > 0)
                     {
-                        ptlnd = 1.0 - thisData.d / Convert.ToDouble(thisData.d + thisData.c);
+                        ptlnd = 1.0 - seriesRecord.d / (double)(seriesRecord.d + seriesRecord.c);
                         temp1 = ptlnd * 100.0;
                         temp2 = Convert.ToInt32(ptlnd * 100.0) - Convert.ToInt32(prevel * 100.0);
                     }
@@ -380,27 +294,24 @@ namespace StatsDirect.Charting.Renderer
                         temp1 = Constant.MISSING;
                         temp2 = Constant.MISSING;
                     }
-                    thisResults.AddOutput("likely_despite", host.RoundU(ptlnd));
+                    thisResults.AddOutput("likely_despite", ptlnd);
                     // Clopper-Pearson CI
-                    MathDbl.binci(thisData.d, thisData.d + thisData.c, out pil, out piu, gamma, out warn);
-                    thisResults.AddOutput("likely_despite_from", host.RoundU(Math.Min(1.0 - pil, 1.0 - piu)));
-                    thisResults.AddOutput("likely_despite_to", host.RoundU(Math.Max(1.0 - pil, 1.0 - piu)) + warn);
+                    MathDbl.binci(seriesRecord.d, seriesRecord.d + seriesRecord.c, out pil, out piu, gamma, out warn);
+                    thisResults.AddOutput("likely_despite_from", Math.Min(1.0 - pil, 1.0 - piu));
+                    thisResults.AddOutput("likely_despite_to", Math.Max(1.0 - pil, 1.0 - piu));
+                    thisResults.AddOutput("likely_despite_warn", warn);
                     // as percentage
-                    thisResults.AddOutput("likely_despite_pc", Formatting.XRound(temp1, 2));
-                    if (pil != Constant.MISSING)
-                    {
-                        pil = 100.0 * (1.0 - pil);
-                    }
-                    else { pil = Constant.MISSING; }
-                    if (piu != Constant.MISSING)
-                    {
-                        piu = 100.0 * (1.0 - piu);
-                    }
-                    else { piu = Constant.MISSING; }
-                    thisResults.AddOutput("likely_despite_from_pc", Formatting.XRound(Math.Min(pil, piu), 2));
-                    thisResults.AddOutput("likely_despite_to_pc", Formatting.XRound(Math.Max(pil, piu), 2));
+                    thisResults.AddOutput("likely_despite_pc", temp1);
+                    pil = pil != Constant.MISSING
+                        ? 100.0 * (1.0 - pil)
+                        : Constant.MISSING;
+                    piu = piu != Constant.MISSING
+                        ? 100.0 * (1.0 - piu)
+                        : Constant.MISSING;
+                    thisResults.AddOutput("likely_despite_from_pc", Math.Min(pil, piu));
+                    thisResults.AddOutput("likely_despite_to_pc", Math.Max(pil, piu));
                     // change
-                    thisResults.AddOutput("likely_despite_change", Formatting.XRound(temp2, 2));
+                    thisResults.AddOutput("likely_despite_change", temp2);
                 }
             }
             DrawLegend(legend);
@@ -408,43 +319,130 @@ namespace StatsDirect.Charting.Renderer
             return results;
         }
 
-        private static int CountValues(ComparisonValue showopt, double[] data, double cutoff)
+        private static IList<ROCSeriesRecord> MakeAndMaybeAmendSeriesRecords(ITemplateHost host, ChartDefinition definition)
         {
-            int a = 0;
-            for (int j = 0; j < data.Length; j++)
+            ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
+            double gamma = rOptions.GAMMA;
+            if (gamma <= 0)
+                return null;
+
+            //  Assume data passed as series - X is positive, Y is negative.
+
+            IList<ROCSeriesRecord> seriesRecords = MakeSeriesRecords(definition);
+
+            if (rOptions.ShowOptimumCutOff)
             {
-                switch (showopt)
+                for (int cs = 0; cs < seriesRecords.Count; cs++)
                 {
-                    case ComparisonValue.LT:
-                        if (data[j] < cutoff)
-                            a++;
-                        break;
-                    case ComparisonValue.LE:
-                        if (data[j] <= cutoff)
-                            a++;
-                        break;
-                    case ComparisonValue.GT:
-                        if (data[j] > cutoff)
-                            a++;
-                        break;
-                    default:
-                        if (data[j] >= cutoff)
-                            a++;
-                        break;
+                    ROCSeriesRecord seriesRecord = seriesRecords[cs];
+                    if (rOptions.ShowCutOffCalculator)
+                    {
+                        string title = "ROC plot for " + rOptions.SeriesTitles[cs];
+                        seriesRecord = ShowCutoff(host, seriesRecord, title);
+                    }
+                    seriesRecords[cs] = seriesRecord;
                 }
             }
-            return a;
+            return seriesRecords;
         }
 
-        private static int CountValuesSingleSided(ComparisonValue showopt, double[] data, double cutoff)
+        private static IList<ROCSeriesRecord> MakeSeriesRecords(ChartDefinition definition)
+        {
+            ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
+            double gamma = rOptions.GAMMA;
+            if (gamma <= 0)
+                return null;
+
+            //  Assume data passed as series - X is positive, Y is negative.
+
+            Func<double, double, bool> comparisonFunction = ToComparisonFunction(rOptions.Comparison);
+            ROCSeriesRecord[] seriesRecords = new ROCSeriesRecord[definition.XSeries.Count];
+            for (int c = 0; c < definition.XSeries.Count; c++)
+            {
+                DoubleSeries xs = (DoubleSeries)definition.XSeries[c];
+                DoubleSeries ys = (DoubleSeries)definition.YSeries[c];
+                double[] tdata = new double[xs.Points + ys.Points];
+                Array.Copy(xs.Data, tdata, xs.Points);
+                Array.Copy(ys.Data, 0, tdata, xs.Points, ys.Points);
+                Array.Sort(tdata);
+                seriesRecords[c] = new ROCSeriesRecord()
+                {
+                    comparison = rOptions.Comparison,
+                    comparisonFunction = comparisonFunction,
+                    pdata = xs.Data,
+                    adata = ys.Data,
+                    pmn = xs.Sum / xs.Points,
+                    amn = ys.Sum / ys.Points,
+                    min = Math.Min(xs.Min, ys.Min),
+                    max = Math.Max(xs.Max, ys.Max),
+                    // get a sorted list of all data in order to calculate cut points
+                    tdata = tdata
+                };
+            }
+
+            for (int cs = 0; cs < definition.XSeries.Count; cs++)
+            {
+                ROCSeriesRecord seriesRecord = seriesRecords[cs];
+                double weight = rOptions.Weight;
+                if (weight <= 0)
+                    weight = 1.0;
+                seriesRecord.weight = weight;
+
+                if (rOptions.ShowOptimumCutOff)
+                {
+                    // work out cutoff for max(weight*sens+spec)
+                    double maxss = 0.0;
+                    for (int r = 0; r < seriesRecord.tdata.Length; r++)
+                    {
+                        double cutoff = seriesRecord.tdata[r];
+                        int a = seriesRecord.pdata.Count(value => comparisonFunction(value, cutoff));
+                        int c = seriesRecord.pdata.Length - a;
+                        int b = seriesRecord.adata.Count(value => comparisonFunction(value, cutoff));
+                        int d = seriesRecord.adata.Length - b;
+                        double sens = a / (double)(a + c);
+                        double spec = d / (double)(b + d);
+                        if (weight * sens + spec > maxss)
+                        {
+                            maxss = weight * sens + spec;
+                            seriesRecord.cutoff = cutoff;
+                            seriesRecord.a = a;
+                            seriesRecord.b = b;
+                            seriesRecord.c = c;
+                            seriesRecord.d = d;
+                            seriesRecord.sens = sens;
+                            seriesRecord.spec = spec;
+                        }
+                    }
+                }
+            }
+            return seriesRecords;
+        }
+
+        private static Func<double, double, bool> ToComparisonFunction(Comparison comparisonValue)
+        {
+            // TODO: Is there a way of using Double's native operator< etc. to prevent the intermediate functions?
+            switch (comparisonValue)
+            {
+                case Comparison.LessThan:
+                    return (value, threshold) => value < threshold;
+                case Comparison.LessEqual:
+                    return (value, threshold) => value <= threshold;
+                case Comparison.GreaterThan:
+                    return (value, threshold) => value > threshold;
+                default:
+                    return (value, threshold) => value >= threshold;
+            }
+        }
+
+        private static int CountValuesSingleSided(Comparison showopt, double[] data, double cutoff)
         {
             int a = 0;
             for (int j = 0; j < data.Length; j++)
             {
                 switch (showopt)
                 {
-                    case ComparisonValue.LT:
-                    case ComparisonValue.GT:
+                    case Comparison.LessThan:
+                    case Comparison.GreaterThan:
                         if (data[j] > cutoff)
                             a++;
                         break;
@@ -496,13 +494,13 @@ namespace StatsDirect.Charting.Renderer
         ///  Cause the host to amend the thisData record in-place with any revisions to the cutoff data.
         ///  </summary>
         ///  <param name="host"></param>
-        ///  <param name="thisData"></param>
+        ///  <param name="seriesRecord"></param>
         ///  <param name="weight"></param>
-        ///  <param name="ti"></param>
+        ///  <param name="title"></param>
         ///  <remarks></remarks>
-        private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord thisData, double weight, string ti)
+        private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord seriesRecord, string title)
         {
-            ROCCutoff payload = new ROCCutoff { SeriesRecord = thisData, Weight = weight, Title = ti };
+            ROCCutoff payload = new ROCCutoff { SeriesRecord = seriesRecord, Title = title };
             host.Amend(payload, null);
             return payload.SeriesRecord;
         }

@@ -10,7 +10,7 @@ namespace StatsDirect.TemplateProcessing
     {
         public static ICanvasFactory CANVAS_FACTORY = new EmfCanvasFactory();
 
-        public static ParameterBag PlotAndReturnRtf(ITemplateHost host, ChartDefinition cd, out string rtf)
+        public static ParameterBag PlotAndReturnRtf(IPreferences host, ChartDefinition cd, out string rtf)
         {
             using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY))
             {

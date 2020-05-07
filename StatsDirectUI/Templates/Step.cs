@@ -14,13 +14,9 @@ namespace StatsDirect.Templates
         /// </summary>
         Never,
         /// <summary>
-        /// This action may or may not require input
-        /// </summary>
-        Sometimes,
-        /// <summary>
         /// This action will always require input
         /// </summary>
-        Always
+        SometimesOrAlways
     }
 
     /// <summary>
@@ -91,26 +87,21 @@ namespace StatsDirect.Templates
 
         internal static InputDuringStep GetInputRequirement(IList<Step> steps, ParameterBag parameters)
         {
-            bool atLeastOneSometimes = false;
-
             foreach (Step step in steps)
             {
                 switch (step.RequiresInputGiven(parameters))
                 {
-                    case InputDuringStep.Always:
-                        // If any step always requires input, so does the overall set of steps
-                        return InputDuringStep.Always;
-                    case InputDuringStep.Sometimes:
-                        atLeastOneSometimes = true;
-                        break;
-                    case InputDuringStep.Never:
+                    case InputDuringStep.SometimesOrAlways:
+                        // If any step requires input, so does the overall set of steps
+                        return InputDuringStep.SometimesOrAlways;
+                    default:
                         // Do nothing
                         break;
                 }
             }
 
-            // If we get here, there are no steps that always require input.
-            return atLeastOneSometimes ? InputDuringStep.Sometimes : InputDuringStep.Never;
+            // If we get here, there are no steps that require input.
+            return InputDuringStep.Never;
         }
 
         /// <summary>

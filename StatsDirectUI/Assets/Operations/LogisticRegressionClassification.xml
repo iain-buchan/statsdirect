@@ -29,24 +29,24 @@
 <tr><td></td><th>Total</th><td>@tote</td><td>@totnoe</td><td></td></tr>
 </table>
 
-<p>cutoff = @co</p>
+<p>cutoff = @{co:round2}</p>
 
-<p>sensitivity = @sens%<br />
-specificity = @spec%</p>
+<p>sensitivity = @{sens:round2}%<br />
+specificity = @{spec:round2}%</p>
 
-<p>+ve predictive value = @+ve%<br />
--ve predictive value = @npv%<br />
-predictive value despite -ve test = @-ve%</p>
+<p>+ve predictive value = @{positive:round2}%<br />
+-ve predictive value = @{npv:round2}%<br />
+predictive value despite -ve test = @{negative:round2}%</p>
 
-<p>correctly classified = @cc%</p>
+<p>correctly classified = @{cc:round2}%</p>
 
-<p>likelihood ratio (@pc% CI):<br />
-LR (+ve) = @lr+ (@from+ to @to+)<br />
-LR (-ve) = @lr- (@from- to @to-)</p>
+<p>likelihood ratio (@{pc:round2}% CI):<br />
+LR (+ve) = @{lr_positive:roundu} (@{from_positive:roundu} to @{to_positive:roundu})<br />
+LR (-ve) = @{lr_negative:roundu} (@{from_negative:roundu} to @{to_negative:roundu})</p>
 
-<p> 'near' cut-off at max(sens+spec) = @cmax</p>
+<p> 'near' cut-off at max(sens+spec) = @{cmax:round3}</p>
 
-<p> area under ROC curve = @area</p>
+<p> area under ROC curve = @{area:roundu}</p>
 
 <p>@{chart:chart}</p>
 </report>]]>

@@ -143,6 +143,7 @@ namespace StatsDirect.UI
             this.chkScatterXYPlotMarkers = new System.Windows.Forms.CheckBox();
             this.chkScatterXYPlotLines = new System.Windows.Forms.CheckBox();
             this.chkShouldCheckForOffsets = new System.Windows.Forms.CheckBox();
+            this.cmdRocEditCutoffs = new System.Windows.Forms.Button();
             this.tlpDisplay.SuspendLayout();
             this.pnlLegendFont.SuspendLayout();
             this.pnlSeriesLabelFont.SuspendLayout();
@@ -203,7 +204,7 @@ namespace StatsDirect.UI
             this.tlpDisplay.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpDisplay.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpDisplay.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpDisplay.Size = new System.Drawing.Size(206, 429);
+            this.tlpDisplay.Size = new System.Drawing.Size(206, 431);
             this.tlpDisplay.TabIndex = 1;
             // 
             // pnlLegendFont
@@ -259,7 +260,7 @@ namespace StatsDirect.UI
             this.pnlSeriesOptions.Location = new System.Drawing.Point(0, 153);
             this.pnlSeriesOptions.Margin = new System.Windows.Forms.Padding(0);
             this.pnlSeriesOptions.Name = "pnlSeriesOptions";
-            this.pnlSeriesOptions.Size = new System.Drawing.Size(203, 276);
+            this.pnlSeriesOptions.Size = new System.Drawing.Size(203, 278);
             this.pnlSeriesOptions.TabIndex = 11;
             // 
             // seriesOptions
@@ -275,7 +276,7 @@ namespace StatsDirect.UI
             this.seriesOptions.SeriesOptionsDescriptors = null;
             this.seriesOptions.ShouldForceFillStyle = false;
             this.seriesOptions.ShouldForceIsFilled = false;
-            this.seriesOptions.Size = new System.Drawing.Size(203, 276);
+            this.seriesOptions.Size = new System.Drawing.Size(203, 278);
             this.seriesOptions.TabIndex = 0;
             // 
             // pnlColour
@@ -831,7 +832,7 @@ namespace StatsDirect.UI
             this.tlpOuter.Name = "tlpOuter";
             this.tlpOuter.RowCount = 1;
             this.tlpOuter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tlpOuter.Size = new System.Drawing.Size(859, 1561);
+            this.tlpOuter.Size = new System.Drawing.Size(859, 1585);
             this.tlpOuter.TabIndex = 1;
             // 
             // tlpFunction
@@ -870,7 +871,7 @@ namespace StatsDirect.UI
             this.tlpFunction.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpFunction.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpFunction.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpFunction.Size = new System.Drawing.Size(248, 655);
+            this.tlpFunction.Size = new System.Drawing.Size(248, 620);
             this.tlpFunction.TabIndex = 0;
             // 
             // ctlAxisOptions
@@ -883,7 +884,7 @@ namespace StatsDirect.UI
             this.ctlAxisOptions.Name = "ctlAxisOptions";
             this.ctlAxisOptions.ShowX = true;
             this.ctlAxisOptions.ShowY = true;
-            this.ctlAxisOptions.Size = new System.Drawing.Size(240, 276);
+            this.ctlAxisOptions.Size = new System.Drawing.Size(240, 241);
             this.ctlAxisOptions.TabIndex = 7;
             // 
             // tlpCustom
@@ -920,7 +921,8 @@ namespace StatsDirect.UI
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tlpCustom.Size = new System.Drawing.Size(405, 1561);
+            this.tlpCustom.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tlpCustom.Size = new System.Drawing.Size(405, 1585);
             this.tlpCustom.TabIndex = 2;
             // 
             // pnlPreview
@@ -928,7 +930,7 @@ namespace StatsDirect.UI
             this.pnlPreview.AutoSize = true;
             this.pnlPreview.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.pnlPreview.Controls.Add(this.cmdPreview);
-            this.pnlPreview.Location = new System.Drawing.Point(0, 1531);
+            this.pnlPreview.Location = new System.Drawing.Point(0, 1555);
             this.pnlPreview.Margin = new System.Windows.Forms.Padding(0);
             this.pnlPreview.Name = "pnlPreview";
             this.pnlPreview.Size = new System.Drawing.Size(82, 30);
@@ -1280,6 +1282,7 @@ namespace StatsDirect.UI
             // 
             // grpRocOptions
             // 
+            this.grpRocOptions.Controls.Add(this.cmdRocEditCutoffs);
             this.grpRocOptions.Controls.Add(this.cboRocWeight);
             this.grpRocOptions.Controls.Add(this.lblRocSensSpec);
             this.grpRocOptions.Controls.Add(this.lblRocPercent);
@@ -1518,7 +1521,7 @@ namespace StatsDirect.UI
             this.ctlHistogramOptions1.Location = new System.Drawing.Point(4, 1132);
             this.ctlHistogramOptions1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ctlHistogramOptions1.Name = "ctlHistogramOptions1";
-            this.ctlHistogramOptions1.Size = new System.Drawing.Size(322, 394);
+            this.ctlHistogramOptions1.Size = new System.Drawing.Size(322, 418);
             this.ctlHistogramOptions1.TabIndex = 23;
             this.ctlHistogramOptions1.ScaleChanged += new System.EventHandler(this.ctlHistogramOptions1_ScaleChanged);
             // 
@@ -1574,6 +1577,15 @@ namespace StatsDirect.UI
             this.chkShouldCheckForOffsets.UseVisualStyleBackColor = true;
             this.chkShouldCheckForOffsets.Visible = false;
             // 
+            // cmdRocEditCutoffs
+            // 
+            this.cmdRocEditCutoffs.Location = new System.Drawing.Point(164, 67);
+            this.cmdRocEditCutoffs.Name = "cmdRocEditCutoffs";
+            this.cmdRocEditCutoffs.Size = new System.Drawing.Size(91, 23);
+            this.cmdRocEditCutoffs.TabIndex = 11;
+            this.cmdRocEditCutoffs.Text = "Edit cut-offs...";
+            this.cmdRocEditCutoffs.UseVisualStyleBackColor = true;
+            // 
             // ctlChartOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1584,7 +1596,7 @@ namespace StatsDirect.UI
             this.Margin = new System.Windows.Forms.Padding(0);
             this.MinimumSize = new System.Drawing.Size(405, 40);
             this.Name = "ctlChartOptions";
-            this.Size = new System.Drawing.Size(859, 1561);
+            this.Size = new System.Drawing.Size(859, 1585);
             this.tlpDisplay.ResumeLayout(false);
             this.tlpDisplay.PerformLayout();
             this.pnlLegendFont.ResumeLayout(false);
@@ -1772,7 +1784,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.CheckBox chkScatterXYPlotLines;
         private System.Windows.Forms.CheckBox chkForestMarkCentres;
         private System.Windows.Forms.CheckBox chkShouldCheckForOffsets;
-
-
+        private System.Windows.Forms.Button cmdRocEditCutoffs;
     }
 }

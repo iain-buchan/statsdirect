@@ -34,22 +34,13 @@ namespace StatsDirect.Templates
         [XmlAttribute(AttributeName="default-placement")]
         public RelativePosition DefaultPlacement { get; set; }
 
-        public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
-        {
-            return processor.ExecuteInternal(this, parameters, isRedo);
-        }
+        public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo) => processor.ExecuteInternal(this, parameters, isRedo);
 
         /// <summary>
         /// Requires input if the output location has not been selected.
         /// </summary>
-        public override InputDuringStep RequiresInputGiven(ParameterBag parameters)
-        {
-            return InputDuringStep.Sometimes;
-        }
+        public override InputDuringStep RequiresInputGiven(ParameterBag parameters) => InputDuringStep.SometimesOrAlways;
 
-        public override void Accept(IStepVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IStepVisitor visitor) => visitor.Visit(this);
     }
 }

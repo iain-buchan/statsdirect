@@ -116,11 +116,11 @@
           </parameters>
       </iffalse>
     </test>
-      <parameters>
-        <confidence-interval>
-          <name>cco</name>
-        </confidence-interval>
-      </parameters>
+    <parameters>
+      <confidence-interval>
+        <name>cco</name>
+      </confidence-interval>
+    </parameters>
     <builtin function-name="rptCrosstabsPreprocess" />
     <test>
       <condition>=parameters["strat"].AsBoolean</condition>

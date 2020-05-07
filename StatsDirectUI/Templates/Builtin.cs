@@ -2,27 +2,18 @@
 {
     public class Builtin : IBuiltin
     {
-        readonly string name;
         private readonly BuiltinFunction func;
-        private readonly InputDuringStep requiresInput;
 
-        public Builtin(string name, BuiltinFunction func, InputDuringStep requiresInput = InputDuringStep.Never)
+        public Builtin(string name, BuiltinFunction func)
         {
-            this.name = name;
+            Name = name;
             this.func = func;
-            this.requiresInput = requiresInput;
         }
 
-        ParameterBag IBuiltin.Invoke(ITemplateHost host, ParameterBag parameters)
-        {
-            return func(host, parameters);
-        }
+        ParameterBag IBuiltin.Invoke(ITemplateHost host, ParameterBag parameters) => func(host, parameters);
 
-        InputDuringStep IMightRequireInput.RequiresInputGiven(ParameterBag parameters)
-        {
-            return requiresInput;
-        }
+        InputDuringStep IMightRequireInput.RequiresInputGiven(ParameterBag parameters) => InputDuringStep.SometimesOrAlways;
 
-        string IBuiltin.Name => name;
+        public string Name { get; }
     }
 }

@@ -29,7 +29,6 @@
         <string>
           <name>expression</name>
           <prompt language="VB">=parameters("variable_list").AsString &amp; "Enter an expression using X1 etc."</prompt>
-          <default-value>=host.Session.ContainsKey("LastFunction") ? host.Session["LastFunction"] : "X1"</default-value>
         </string>
       </parameters>
     <script language="VB">
@@ -59,7 +58,6 @@ Return outputParameters
         Dim data As DataFrame = parameters("data").AsDataFrame
         Dim cols as Integer = data.VariableCount
         Dim Q as String = parameters("expression").AsString
-        host.Session("LastFunction") = Q
         Dim rows as Integer = data.MaxRows
         Dim t as String = parameters("new_column_name").AsString
 

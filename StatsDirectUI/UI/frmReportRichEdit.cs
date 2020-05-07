@@ -696,7 +696,7 @@ namespace StatsDirect.UI
             catch (TemplateOperationCancelledException ex)
             {
                 if (ex.ShouldShowError)
-                    SdApplication.TemplateHost.Error(ex.Message, ex.Caption);
+                    SdApplication.SoleInstance.Error(ex.Message, ex.Caption);
             }
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)

@@ -18,7 +18,7 @@ Pseudo (McFadden) R-square = @{r2:roundu}</p>
 </table>
 
 <table>
-<tr><th>Label</th><th>Odds ratio</th><th><ci>@pc% confidence interval</ci></th></tr>
+<tr><th>Label</th><th>Odds ratio</th><th><ci>@{pc:round2}% confidence interval</ci></th></tr>
 <block name="or"><tr><td>@lab</td><td>@{or:roundu}</td><td><ci>@{from:roundu}  to  @{to:roundu}</ci></td></tr></block>
 </table>
 </report>

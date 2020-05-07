@@ -14,7 +14,7 @@ Difference between slopes is <b>@diff</b>significant</p>
 <p><i><b>Slope comparisons:</b></i></p>
 <block name="slope">
 <p><i>slope</i> @lab1 vs.<i> slope</i> @lab2 = @{res1:roundu} <i>vs.</i> @{res2:roundu}<br />
-Difference<ci> (@pc% CI) = </ci>@{dif:roundu}  <ci>(@{from:roundu} to @{to:roundu})</ci><br />
+Difference<ci> (@{pc:round2}% CI) = </ci>@{dif:roundu}  <ci>(@{from:roundu} to @{to:roundu})</ci><br />
 t = @{t:roundu} <pval>@{p:pval}</pval></p>
 </block>
 
@@ -49,7 +49,7 @@ t = @{t:roundu} <pval>@{p:pval}</pval></p>
 </block>
 <block name="sep">
 <p><i>line</i> @lab1 vs.<i> line</i> @lab2 vertical separation = @{sep:roundu}<br />
-<ci>@pc% CI = @{fromSep:roundu} to @{toSep:roundu}</ci></p>
+<ci>@{pc:round2}% CI = @{fromSep:roundu} to @{toSep:roundu}</ci></p>
 <table>
 <tr><td>t = @{t:roundu}</td><td>(@{df:roundu} df)</td><td><pval>@{pSep:pval}</pval></td></tr>
 </table>

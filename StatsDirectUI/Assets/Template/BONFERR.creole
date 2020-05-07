@@ -6,7 +6,7 @@ Variable B: @var_b<br />
 Mean A - Mean B = @{a-b:roundu}<br />
 Estimated std. error = @{std_err:roundu}<br />
 Number of groups = @groups<br />
-@pc% confidence interval = @{from:roundu} to @{to:roundu}</p>
+@{pc:round2}% confidence interval = @{from:roundu} to @{to:roundu}</p>
 
 <p>t = @{t:roundu}<br />
 df = @df<br />

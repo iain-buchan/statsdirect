@@ -16,14 +16,14 @@ Approximate power @pwr</p>
 </block>
 <p>Conditional maximum likelihood estimates:<br />
 Conditional estimate of odds ratio = @{eor:roundu}<br />
-<ci>Exact Fisher @pc% confidence interval = @{llf:roundu}  to  @{ulf:roundu}</ci><br />
+<ci>Exact Fisher @{pc:round2}% confidence interval = @{llf:roundu}  to  @{ulf:roundu}</ci><br />
 <pval>Exact Fisher one sided @{p1f:pval}, two sided @{p2f:pval}</pval><br />
-<ci>Exact mid-P @pc% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
+<ci>Exact mid-P @{pc:round2}% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 
 <block name="risk">
 <p>Population exposure % = @{pe:roundu}<br />
 Population attributable risk % = @{par:roundu}<br />
-<ci>Approximate @pc% confidence interval = @{from:roundu}  to  @{to:roundu}</ci></p>
+<ci>Approximate @{pc:round2}% confidence interval = @{from:roundu}  to  @{to:roundu}</ci></p>
 </block>
 </report>

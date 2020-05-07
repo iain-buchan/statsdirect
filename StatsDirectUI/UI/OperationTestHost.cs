@@ -7,7 +7,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    internal class OperationTestHost : ITemplateHost, IPreferences
+    internal class OperationTestHost : ITemplateHost
     {
         private Dictionary<string, OperationTestInputParameter> InputParameters { get; }
 
@@ -18,22 +18,16 @@ namespace StatsDirect.UI
                 InputParameters.Add(input.Name, input);
         }
 
-        bool IPreferences.MetaPlotCI => throw new NotImplementedException();
-
-        int IPreferences.MetaPlotMethod => throw new NotImplementedException();
-
         /// <summary>
         /// Session values in tests are always empty; always generate a new dictionary in case anything tries to fill it.
         /// </summary>
-        IDictionary<string, ParameterBag> IPreferences.SessionParametersPerOperation => new Dictionary<string, ParameterBag>();
+        IDictionary<string, ParameterBag> ISession.SessionParametersPerOperation => new Dictionary<string, ParameterBag>();
 
-        ParameterBag IPreferences.SessionParametersAcrossOperations => throw new NotImplementedException();
+        ParameterBag ISession.SessionParametersAcrossOperations => throw new NotImplementedException();
 
         SDPreferences IPreferences.Preferences => throw new NotImplementedException();
 
         Operation IUserInterface.Operation { get; set; }
-
-        IDictionary<string, object> IPreferences.Session => throw new NotImplementedException();
 
         ParameterBag IUserInterface.Amend(IFillable options, ParameterBag context)
         {
@@ -69,31 +63,16 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        bool IUserInterface.GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled)
-        {
-            throw new NotImplementedException();
-        }
-
         double IUserInterface.GetDouble(string prompt, string Title, double InitialValue, out bool cancelled)
         {
             throw new NotImplementedException();
         }
 
-        int IUserInterface.GetInteger(string prompt, string Title, int initialValue, out bool cancelled)
-        {
-            throw new NotImplementedException();
-        }
-
-        IScriptEngine IUserInterface.GetScriptEngine(string language)
+        IScriptEngine IScriptEngineHost.GetScriptEngine(string language)
         {
             if (ScriptEngine.CanHandle(language))
                 return new ScriptEngine();
             return null;
-        }
-
-        string IUserInterface.GetString(string prompt, string title, string initialValue)
-        {
-            throw new NotImplementedException();
         }
 
         void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
@@ -114,22 +93,17 @@ namespace StatsDirect.UI
             context.AddInput(parameter.Name, new InputParameterFiller(input).Fill(parameter));
         }
 
-        string IPreferences.pval(double p)
+        string IFormatting.pval(double p)
         {
             throw new NotImplementedException();
         }
 
-        string IPreferences.pval_half(double p)
+        string IFormatting.pval_half(double p)
         {
             throw new NotImplementedException();
         }
 
-        bool IUserInterface.Query(string Message, string Caption)
-        {
-            throw new NotImplementedException();
-        }
-
-        string IPreferences.RoundU(double amount)
+        string IFormatting.RoundU(double amount)
         {
             throw new NotImplementedException();
         }

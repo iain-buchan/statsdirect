@@ -20,7 +20,7 @@ namespace StatsDirect.UI
     /// The central class for managing the state of StatsDirect.
     /// </summary>
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
-    public sealed class SdApplication : ITemplateHost, IPreferences, IRefillSource
+    public sealed class SdApplication : ITemplateHost, IRefillSource
     {
         private const int MAX_RECENT_FILES = 7;
 
@@ -34,11 +34,6 @@ namespace StatsDirect.UI
         private SDPreferences preferences;
 
         private List<Parameter> outstandingParameters;
-
-        /// <summary>
-        /// Holder for variables that should be preserved during a run of this host, but not between runs.
-        /// </summary>
-        private Dictionary<string, object> session;
 
         private Dictionary<string, ParameterBag> sessionParametersPerOperation;
 
@@ -479,10 +474,7 @@ namespace StatsDirect.UI
             return availableWindows;
         }
 
-        internal void DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag parameterBag)
-        {
-            MainWindow.DoOperationOnceOrUntilCancelled(operation, parameterBag);
-        }
+        internal void DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag parameterBag) => MainWindow.DoOperationOnceOrUntilCancelled(operation, parameterBag);
 
         internal IList<PaneAndPosition> AvailableReportPanesAndPositions()
         {
@@ -672,7 +664,7 @@ namespace StatsDirect.UI
             BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
         }
 
-        IScriptEngine IUserInterface.GetScriptEngine(string language)
+        IScriptEngine IScriptEngineHost.GetScriptEngine(string language)
         {
             if (ScriptEngine.CanHandle(language))
                 return new ScriptEngine();
@@ -745,7 +737,7 @@ namespace StatsDirect.UI
                 {
                     foreach (Validator validator in parameter.Validators)
                     {
-                        validationResult = ValidationProcessor.Validate(this, validator.ValidatorName, parameter, filler.OutputParameters, parameter.ValidationFailMessage);
+                        validationResult = Validate(validator, parameter, filler.OutputParameters, parameter.ValidationFailMessage);
                         if (null != validationResult)
                             break;
                     }
@@ -755,6 +747,36 @@ namespace StatsDirect.UI
 
                 MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 lastHadValidationError = true;
+            }
+        }
+
+        public string Validate(Validator validator, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
+        {
+            ValidationResult validationResult = ValidationProcessor.Validate(this, validator.ValidatorName, parameter, filledParameters, failedValidationMessage);
+            switch (validationResult.Validity)
+            {
+                case Validity.Valid:
+                    return null;
+                case Validity.Invalid:
+                    return validationResult.FailedValidationMessage;
+                case Validity.NeedMoreInformation:
+                    bool result = GetBoolean(validationResult.PromptForMoreInformation, validationResult.TitleForMoreInformation, false, validationResult.HelpContextId, out bool wasCancelled);
+                    if (wasCancelled)
+                        throw new TemplateOperationCancelledException();
+                    ValidationAction validationAction = result ? validationResult.ActionOnMoreInformationYes : validationResult.ActionOnMoreInformationNo;
+                    switch (validationAction)
+                    {
+                        case ValidationAction.CancelOperation:
+                            throw new TemplateOperationCancelledException();
+                        case ValidationAction.RequestAgain:
+                            return validationResult.FailedValidationMessage;
+                        case ValidationAction.UseAsIs:
+                            return null;
+                        default:
+                            throw new Exception("Unknown validation action requested");
+                    }
+                default:
+                    throw new Exception("Unknown validity");
             }
         }
 
@@ -790,20 +812,11 @@ namespace StatsDirect.UI
         /// Returns a display value of Amount, rounded to DisplayDecimalPlaces if sensible.
         /// </summary>
         /// <returns></returns>
-        string IPreferences.RoundU(double amount)
-        {
-            return Formatting.XRound(amount, Preferences.DisplayDecimalPlaces);
-        }
+        public string RoundU(double amount) => Formatting.XRound(amount, Preferences.DisplayDecimalPlaces);
 
-        string IPreferences.pval(double p)
-        {
-            return Formatting.pval(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
-        }
+        string IFormatting.pval(double p) => Formatting.pval(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
 
-        string IPreferences.pval_half(double p)
-        {
-            return Formatting.pval_half(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
-        }
+        string IFormatting.pval_half(double p) => Formatting.pval_half(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
 
         /// <summary>
         /// An expected error has occurred.  Tell the user in a suitable manner.
@@ -837,10 +850,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private bool ModalDialogShowing()
-        {
-            return null != MainWindow && ModalDialogShowing(MainWindow);
-        }
+        private bool ModalDialogShowing() => null != MainWindow && ModalDialogShowing(MainWindow);
 
         private static bool ModalDialogShowing(Form f)
         {
@@ -860,17 +870,13 @@ namespace StatsDirect.UI
             return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
-        bool IPreferences.MetaPlotCI => Preferences.MetaPlotCI;
-
-        int IPreferences.MetaPlotMethod => Preferences.MetaPlotMethod;
-
-        bool IUserInterface.GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
+        public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
             cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
         }
 
-        bool IUserInterface.GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
+        bool GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
@@ -906,7 +912,7 @@ namespace StatsDirect.UI
             return cancelled ? 0.0 : results[key].AsDouble;
         }
 
-        int IUserInterface.GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
+        public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string key = "solo";
             IntegerParameter parameter = new IntegerParameter
@@ -921,15 +927,9 @@ namespace StatsDirect.UI
             return cancelled ? 0 : results[key].AsInt32;
         }
 
-        string IUserInterface.GetString(string prompt, string caption, string defaultValue)
-        {
-            return Prompt(prompt, caption, defaultValue);
-        }
+        public string GetString(string prompt, string caption, string defaultValue) => Prompt(prompt, caption, defaultValue);
 
-        void IUserInterface.Error(string message, string caption)
-        {
-            MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
-        }
+        public void Error(string message, string caption) => MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
 
         IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
         {
@@ -937,20 +937,9 @@ namespace StatsDirect.UI
             return new SdProgressBarHolder(display);
         }
 
-        private bool UpdateProgress(double fractionComplete)
-        {
-            return null != MainWindow && MainWindow.UpdateProgress(fractionComplete);
-        }
+        private bool UpdateProgress(double fractionComplete) => null != MainWindow && MainWindow.UpdateProgress(fractionComplete);
 
-        private void FinishProgress()
-        {
-            MainWindow?.FinishProgress();
-        }
-
-        public void NoteError(Exception ex)
-        {
-            MsgboxX("Error in calculation, report invalid.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", true);
-        }
+        private void FinishProgress() => MainWindow?.FinishProgress();
 
         void IUserInterface.Warning(string message, string caption)
         {
@@ -1296,11 +1285,9 @@ namespace StatsDirect.UI
             }
         }
 
-        public IDictionary<string, ParameterBag> SessionParametersPerOperation => sessionParametersPerOperation ?? (sessionParametersPerOperation = new Dictionary<string, ParameterBag>());
+        IDictionary<string, ParameterBag> ISession.SessionParametersPerOperation => sessionParametersPerOperation ?? (sessionParametersPerOperation = new Dictionary<string, ParameterBag>());
 
-        public ParameterBag SessionParametersAcrossOperations => sessionParametersAcrossOperations ?? (sessionParametersAcrossOperations = new ParameterBag());
-
-        public IDictionary<string, object> Session => session ?? (session = new Dictionary<string, object>());
+        ParameterBag ISession.SessionParametersAcrossOperations => sessionParametersAcrossOperations ?? (sessionParametersAcrossOperations = new ParameterBag());
 
         public string TemplateFileForNewReports => Path.Combine(SDConfiguration.TemplatePath, "blank.rtf");
 

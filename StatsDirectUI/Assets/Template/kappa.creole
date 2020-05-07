@@ -2,8 +2,8 @@
 <title>General agreement over all categories (2 raters)</title>
 
 <p><u>Cohen's kappa (unweighted)</u><br />
-Observed agreement = @po%<br />
-Expected agreement = @pe%<br />
+Observed agreement = @{po:round2}%<br />
+Expected agreement = @{pe:round2}%<br />
 Kappa = @{kappa:roundu} (se_0 = @{se:roundu}, se = @{seci:roundu})<br />
 <ci>@{pc:roundu}% confidence interval = @{from:roundu} to @{to:roundu}</ci><br />
   z (for k = 0) = @{z:roundu}<br />
@@ -14,22 +14,22 @@ ratings weighted by:</p>
 <table>
 <block name="weights"><tr><block name="tot"><td>@tot</td></block></tr></block>
 </table>
-<p>Observed agreement = @pow%<br />
-Expected agreement = @pew%<br />
+<p>Observed agreement = @{pow:round2}%<br />
+Expected agreement = @{pew:round2}%<br />
 Kappa = @{kappaw:roundu} (se_0 = @{sekw:roundu}, se = @{sekwci:roundu})<br />
-<ci>@pcw% confidence interval for kappa = @{fromw:roundu} to @{tow:roundu}</ci><br />
+<ci>@{pcw:round1}% confidence interval for kappa = @{fromw:roundu} to @{tow:roundu}</ci><br />
 z (for kw = 0) = @{zw:roundu}<br />
 <pval>@{pw:pval}</pval></p>
 
 <p><u>Scott's pi</u><br />
-Observed agreement = @pocopy%<br />
-Expected agreement = @spe%<br />
+Observed agreement = @{po:round2}%<br />
+Expected agreement = @{spe:round2}%<br />
 Pi = @{spi:roundu}</p>
 <block name="deci"><p><ci>@{pc:roundu}% Donner-Eliasziw confidence interval = @{lwr:roundu} to @{upr:roundu}</ci></p></block>
 
 <p><u>Gwet's AC1</u><br />
-Observed agreement = @gamapc%<br />
-Chance-independent agreement = @pegamapc%<br />
+Observed agreement = @{gamapc:round2}%<br />
+Chance-independent agreement = @{pegamapc:round2}%<br />
 AC1 = @{gama:roundu} (se = @{segama:roundu})<br />
 <ci>@{pc:roundu}% confidence interval = @{gamacil:roundu} to @{gamaciu:roundu}</ci></p>
 

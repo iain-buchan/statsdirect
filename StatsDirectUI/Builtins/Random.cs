@@ -1,6 +1,5 @@
 using StatsDirect.Data;
 using StatsDirect.Numerics;
-using StatsDirect.Templates;
 using StatsDirect.Utilities;
 
 using System;
@@ -73,16 +72,13 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndExpo(ITemplateHost host, int rows, int cols, double m, int seed)
+        public static DataFrame RndExpo(int rows, int cols, double m, int seed)
         {
             ExponentialRNG rng = new ExponentialRNG();
 
             const string mx = "Exponential deviates";
             if (m <= 0.0 || rows <= 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             rng.Seed(seed);
             string ti = $"Exponential (seed {seed}, rate = {m})";
@@ -97,14 +93,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndF(ITemplateHost host, int rows, int cols, double dfn, double dfd, int seed)
+        public static DataFrame RndF(int rows, int cols, double dfn, double dfd, int seed)
         {
             const string mx = "F deviates";
             if (dfn <= 0.0 || dfd <= 0.0 || rows <= 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             GammaRNG rng = new GammaRNG();
             rng.Seed(seed);
@@ -120,14 +113,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndGeom(ITemplateHost host, int rows, int cols, double a, int seed)
+        public static DataFrame RndGeom(int rows, int cols, double a, int seed)
         {
             const string mx = "Geometric deviates";
             if (rows <= 0 || a <= 0.0 || a > 1.0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             PoissonRNG rng = new PoissonRNG();
             rng.Seed(seed);
@@ -143,14 +133,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndNegBin(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        public static DataFrame RndNegBin(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "Negative binomial deviates";
             if (rows <= 0 || b <= 0.0 || b > 1.0 || a <= 0.0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             PoissonRNG rng = new PoissonRNG();
             rng.Seed(seed);
@@ -166,14 +153,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndBeta(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        public static DataFrame RndBeta(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "beta deviates";
             if (rows <= 0 || b <= 0.0 || a <= 0.0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             BetaRNG rng = new BetaRNG();
             rng.Seed(seed);
@@ -189,14 +173,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndCauchy(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        public static DataFrame RndCauchy(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "Cauchy deviates";
             if (rows <= 0 || b < 0.0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             UniformXRNG rng = new UniformXRNG();
             rng.Seed(seed);
@@ -212,14 +193,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndWeibull(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        public static DataFrame RndWeibull(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "Weibull deviates";
             if (rows <= 0 || a <= 0.0 || b <= 0.0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             UniformXRNG rng = new UniformXRNG();
             rng.Seed(seed);
@@ -235,14 +213,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndLogit(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        public static DataFrame RndLogit(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "Logistic deviates";
             if (rows <= 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             UniformXRNG rng = new UniformXRNG();
             rng.Seed(seed);
@@ -258,14 +233,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndT(ITemplateHost host, int rows, int cols, double df, int seed)
+        public static DataFrame RndT(int rows, int cols, double df, int seed)
         {
             const string mx = "Student t deviates";
             if (df <= 0.0 || rows <= 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             GammaRNG rng = new GammaRNG();
             rng.Seed(seed);
@@ -281,14 +253,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndChi(ITemplateHost host, int rows, int cols, double df, int seed)
+        public static DataFrame RndChi(int rows, int cols, double df, int seed)
         {
             const string mx = "Chi-square deviates";
             if (df <= 0.0 || rows <= 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             GammaRNG rng = new GammaRNG();
             rng.Seed(seed);
@@ -302,24 +271,18 @@ namespace StatsDirect.Builtins
                 {
                     double e = rng.GenChiSq(df);
                     if (e == Constant.MISSING)
-                    {
-                        host.Error(BADPARA, mx);
-                        return null;
-                    }
+                        throw new TemplateOperationCancelledException(BADPARA, mx);
                     v.Data[n] = e;
                 }
             }
             return outputFrame;
         }
 
-        public static DataFrame RndGamma(ITemplateHost host, int rows, int cols, double a, double b, int seed)
+        public static DataFrame RndGamma(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "Gamma deviates";
             if (a <= 0.0 || rows <= 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             GammaRNG rng = new GammaRNG();
             rng.Seed(seed);
@@ -335,14 +298,11 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static DataFrame RndLogNorm(ITemplateHost host, int rows, int cols, double xm, double sd, int seed)
+        public static DataFrame RndLogNorm(int rows, int cols, double xm, double sd, int seed)
         {
             const string mx = "Lognormal deviates";
             if (sd < 0)
-            {
-                host.Error(BADPARA, mx);
-                return null;
-            }
+                throw new TemplateOperationCancelledException(BADPARA, mx);
 
             NormalRNG rng = new NormalRNG();
             rng.Seed(seed);

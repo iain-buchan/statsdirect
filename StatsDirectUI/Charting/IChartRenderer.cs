@@ -5,7 +5,7 @@ namespace StatsDirect.Charting
 {
     public interface IChartRenderer : IDisposable
     {
-        ParameterBag Plot(ITemplateHost host, bool isForReturnedParametersOnly);
+        ParameterBag Plot(IPreferences host, bool isForReturnedParametersOnly);
         /// <summary>
         /// Intended to obtain a completed canvas for read only.
         /// </summary>

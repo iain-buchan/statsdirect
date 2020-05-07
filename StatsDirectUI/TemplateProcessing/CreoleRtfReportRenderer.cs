@@ -11,7 +11,7 @@ namespace StatsDirect.TemplateProcessing
         const string RTF_REPORT_START = @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ";
         const string RTF_REPORT_END = @"\par }";
 
-        public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
+        public override string Render(IPreferences host, string template, ParameterBag substitutions)
         {
             // Before doing anything else, replace any {...} in the creole with \{...\}.  Do it now because we're about to put a whole load of {...} into the substituted RTF and won't be able to tell the difference later.
             string protectedTemplate = template.Replace(@"{", @"\{").Replace(@"}", @"\}");
@@ -58,7 +58,7 @@ namespace StatsDirect.TemplateProcessing
                 { "</subtitle>", @"}\par\par " },
                 { "<subtotal>", @"{\cf7 " },
                 { "</subtotal>", @"}" },
-                { "<sup>", @"{\sup " },
+                { "<sup>", @"{\super " },
                 { "</sup>", @"}" },
                 { "<td>", @"\pard\intbl " },
                 { "</td>", @"\cell " },
@@ -228,7 +228,7 @@ namespace StatsDirect.TemplateProcessing
         /// <summary>
         /// Recursively fill in any values in this block, examining the template for nested blocks.
         /// </summary>
-        private string SubstituteInternal(ITemplateHost host, string template, ParameterBag substitutions)
+        private string SubstituteInternal(IPreferences host, string template, ParameterBag substitutions)
         {
             if (null != substitutions)
             {
@@ -278,6 +278,9 @@ namespace StatsDirect.TemplateProcessing
                         }
                         template = template.Replace("@" + pair.Key + "", value);
                         template = template.Replace("@{" + pair.Key + ":roundx}", valueU);
+                        template = template.Replace("@{" + pair.Key + ":round0}", valueU);
+                        template = template.Replace("@{" + pair.Key + ":round1}", valueU);
+                        template = template.Replace("@{" + pair.Key + ":round2}", valueU);
                         template = template.Replace("@{" + pair.Key + ":roundu}", valueU);
                         template = template.Replace("@{" + pair.Key + ":pval}", valueP);
                     }
@@ -297,7 +300,7 @@ namespace StatsDirect.TemplateProcessing
         /// Recursively fill in a template.  We've found a nested template; clone it as many times as we have values, and fill it in.
         /// If there are no values, remove the template entirely.
         /// </summary>
-        private string SubstituteInternal(ITemplateHost host, string template, IEnumerable<ParameterBag> substitutions)
+        private string SubstituteInternal(IPreferences host, string template, IEnumerable<ParameterBag> substitutions)
         {
             // If the template still has a /bs templatename/.../bf/ pair, strip them.
             if (template.StartsWith("<block"))

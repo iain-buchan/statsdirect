@@ -80,7 +80,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a bar, stacked bar or 100% stacked bar chart.
         ///  </summary>
         ///  <remarks></remarks>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

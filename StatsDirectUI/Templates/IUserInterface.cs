@@ -10,16 +10,7 @@ namespace StatsDirect.Templates
     public interface IUserInterface
     {
         bool GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled);
-        bool GetBoolean(string prompt, string Title, bool InitialValue, int HelpIndex, out bool cancelled);
         double GetDouble(string prompt, string Title, double InitialValue, out bool cancelled);
-        int GetInteger(string prompt, string Title, int initialValue, out bool cancelled);
-
-        /// <summary>
-        /// Prompt the user for a string; return the user-entered string, or Nothing if the user cancels.
-        /// </summary>
-        /// <returns>The user-entered string, or Nothing if the user cancels</returns>
-        /// <remarks></remarks>
-        string GetString(string prompt, string title, string initialValue);
 
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
@@ -40,32 +31,18 @@ namespace StatsDirect.Templates
         ParameterBag Amend(IFillable options, ParameterBag context);
 
         /// <summary>
-        /// Return a clean, initialised instance of a script engine capable of running code in the specified language.
-        /// </summary>
-        /// <returns></returns>
-        IScriptEngine GetScriptEngine(string language);
-
-        /// <summary>
         /// Show/log an error to the user.
         /// </summary>
-        /// <param name="Message"></param>
-        /// <param name="Caption"></param>
-        void Error(string Message, string Caption);
+        /// <param name="message"></param>
+        /// <param name="caption"></param>
+        void Error(string message, string caption);
 
         /// <summary>
         /// Show/log a warning to the user.
         /// </summary>
-        /// <param name="Message"></param>
-        /// <param name="Caption"></param>
-        void Warning(string Message, string Caption);
-
-        /// <summary>
-        /// Ask the user an OK/Cancel question.
-        /// </summary>
-        /// <param name="Message"></param>
-        /// <param name="Caption"></param>
-        /// <returns>true if the user selected OK, false if the user selected Cancel</returns>
-        bool Query(string Message, string Caption);
+        /// <param name="message"></param>
+        /// <param name="caption"></param>
+        void Warning(string message, string caption);
 
         /// <summary>
         /// Returns true if the host is willing to combine this parameter with any previous parameters requested with FillParameter and shouldCombine=true; false if not.
@@ -116,10 +93,6 @@ namespace StatsDirect.Templates
         /// <param name="defaultPosition">A hint for the step's preferred place to put the output. TODO: This is user-interfacey; we should find a better way of communicating this.</param>
         void OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition);
 
-        Operation Operation
-        {
-            get;
-            set;
-        }
+        Operation Operation { get; set; }
     }
 }

@@ -5,5 +5,5 @@
 Time spent at risk of event = @{time:roundu}</p>
 
 <p>Poisson (e.g. incidence) rate estimate = @{rate:roundu}<br />
-<ci>Exact @pc% confidence interval = @{from:roundu}  to  @{to:roundu} </ci></p>
+<ci>Exact @{pc:round2}% confidence interval = @{from:roundu}  to  @{to:roundu} </ci></p>
 </report>

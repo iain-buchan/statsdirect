@@ -7,7 +7,7 @@ Population mean = @{pop_mean:roundu}<br />
 Sample size n = @size<br />
 Sample sd = @{sd:roundu}</p>
 
-<p><ci>@pc% confidence interval @for = @{from:roundu} to @{to:roundu}</ci></p>
+<p><ci>@{pc:round2}% confidence interval @for = @{from:roundu} to @{to:roundu}</ci></p>
 
 <p>df = @df<br />
 t  = @{t:roundu}</p>

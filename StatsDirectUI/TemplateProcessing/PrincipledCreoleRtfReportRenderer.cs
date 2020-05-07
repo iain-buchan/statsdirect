@@ -1,7 +1,9 @@
 ﻿using StatsDirect.Creole;
 using StatsDirect.Templates;
+using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -13,7 +15,7 @@ namespace StatsDirect.TemplateProcessing
         const string RTF_REPORT_END = @"\par }";
         const string FirstCellOfTableMarker = "!!FIRSTCELLOFTABLE!!";
 
-        public override string Render(ITemplateHost host, string template, ParameterBag substitutions)
+        public override string Render(IPreferences host, string template, ParameterBag substitutions)
         {
             ICreole<IList<IStringOrDirective>> creole = CreoleReader.Parse<IList<IStringOrDirective>>(template, out string _);
             IList<IStringOrDirective> raw = creole.Accept(new InnerRtfReportRenderer(host, substitutions));
@@ -22,9 +24,6 @@ namespace StatsDirect.TemplateProcessing
 
         private string Cook(IList<IStringOrDirective> raw)
         {
-            // Get rid of spacing between significant markers such as paragraph/ASCII newline/paragraph.
-            raw = raw.Where(x => x.IsSignificant).ToList();
-
             // Smash double new paragraph markers into one; render everything else into one big string and return it.
             StringBuilder sb = new StringBuilder();
             // BEWARE: The inside of this loop may modify the loop variable to prevent testing skipped elements.
@@ -94,27 +93,33 @@ namespace StatsDirect.TemplateProcessing
                 { "sub", new RtfFormatHolder(@"\sub") },
                 { "subtitle", new RtfFormatHolder(new IStringOrDirective[] { new NewParagraph(), new RtfThatIsNotANewParagraph(@"\ul") }, new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\par"), new NewParagraph() }) },
                 { "subtotal", new RtfFormatHolder(@"\cf7") },
-                { "sup", new RtfFormatHolder(@"\sup") },
+                { "sup", new RtfFormatHolder(@"\super") },
                 { "title", new RtfFormatHolder(new IStringOrDirective[] { new NewParagraph(), new RtfThatIsNotANewParagraph(@"\ul\b") }, new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\par"), new NewParagraph() }) },
                 { "u", new RtfFormatHolder(@"\ul") },
                 { "warn", new RtfFormatHolder(@"\cf6") }
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
-            private readonly ITemplateHost host;
+            private readonly IPreferences host;
 
             /// <summary>
             /// State so that we can inject a little extra marker at the end of the first table cell in each table - used so that the RTF insertion can format the table later.
             /// </summary>
             private bool isFirstCellOfTable;
 
-            public InnerRtfReportRenderer(ITemplateHost host, ParameterBag substitutions)
+            public InnerRtfReportRenderer(IPreferences host, ParameterBag substitutions)
             {
                 this.host = host;
                 substitutionStack.Push(substitutions);
             }
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleAttribute<IList<IStringOrDirective>> victim)
+            {
+                // Should never see; ignore.
+                return Array.Empty<IStringOrDirective>();
+            }
+
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleAttributes<IList<IStringOrDirective>> victim)
             {
                 // Should never see; ignore.
                 return Array.Empty<IStringOrDirective>();
@@ -127,8 +132,13 @@ namespace StatsDirect.TemplateProcessing
                 List<IStringOrDirective> list = new List<IStringOrDirective>();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
+                    bool first = true;
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
+                        if (first)
+                            first = false;
+                        else
+                            list.Add(new RtfThatIsNotANewParagraph(victim.Separator ));
                         substitutionStack.Push(inner);
                         list.AddRange(victim.Contents.Accept(this));
                         substitutionStack.Pop();
@@ -149,15 +159,9 @@ namespace StatsDirect.TemplateProcessing
                 return list;
             }
 
-            private IList<IStringOrDirective> ToRtfPrefix(string format)
-            {
-                return rtfFormatting[format].Prefix;
-            }
+            private IList<IStringOrDirective> ToRtfPrefix(string format) => rtfFormatting[format].Prefix;
 
-            private IList<IStringOrDirective> ToRtfSuffix(string format)
-            {
-                return rtfFormatting[format].Suffix;
-            }
+            private IList<IStringOrDirective> ToRtfSuffix(string format) => rtfFormatting[format].Suffix;
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleInclude<IList<IStringOrDirective>> victim)
             {
@@ -188,7 +192,7 @@ namespace StatsDirect.TemplateProcessing
                 if (value is string stringValue)
                     return stringValue;
                 if (value is int intValue)
-                    return intValue.ToString();
+                    return intValue.ToString(CultureInfo.CurrentUICulture);
                 if (value is IRenderable renderable)
                     return new RtfRenderer(host).Render(renderable);
                 if (value is double doubleValue)
@@ -202,6 +206,14 @@ namespace StatsDirect.TemplateProcessing
                             return host.RoundU(doubleValue);
                         case "roundx":
                             return host.RoundU(doubleValue);
+                        case "round0":
+                            return Formatting.XRound(doubleValue, 0);
+                        case "round1":
+                            return Formatting.XRound(doubleValue, 1);
+                        case "round2":
+                            return Formatting.XRound(doubleValue, 2);
+                        case "round3":
+                            return Formatting.XRound(doubleValue, 3);
                         case "zvalp1":
                             return host.pval(Zvalp1(doubleValue));
                         case "zvalp2":
@@ -288,15 +300,9 @@ namespace StatsDirect.TemplateProcessing
                 return list;
             }
 
-            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleText<IList<IStringOrDirective>> victim)
-            {
-                return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(victim.Text) };
-            }
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleText<IList<IStringOrDirective>> victim) => new IStringOrDirective[] { new RtfThatIsNotANewParagraph(victim.Text) };
 
-            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleLineBreak<IList<IStringOrDirective>> victim)
-            {
-                return new IStringOrDirective[] { new NewParagraph() };
-            }
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleLineBreak<IList<IStringOrDirective>> victim) => new IStringOrDirective[] { new NewParagraph() };
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleParagraph<IList<IStringOrDirective>> victim)
             {
@@ -312,12 +318,9 @@ namespace StatsDirect.TemplateProcessing
                 return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\'" + ((int)victim.Value).ToString("X")) };
             }
 
-            private IList<IStringOrDirective> MaybeAccept(ICreole<IList<IStringOrDirective>> victimOrNull)
-            {
-                return null == victimOrNull ? Array.Empty<IStringOrDirective>() : victimOrNull.Accept(this);
-            }
+            private IList<IStringOrDirective> MaybeAccept(ICreole<IList<IStringOrDirective>> victimOrNull) => null == victimOrNull ? Array.Empty<IStringOrDirective>() : victimOrNull.Accept(this);
 
-            double Zvalp1(double xz)
+            private double Zvalp1(double xz)
             {
                 double p = 1 - Numerics.PDF.alnorm(xz);
                 if (p > 1 - p)
@@ -325,13 +328,7 @@ namespace StatsDirect.TemplateProcessing
                 return p;
             }
 
-            double Zvalp2(double xz)
-            {
-                double p = 1 - Numerics.PDF.alnorm(xz);
-                if (p > 1 - p)
-                    p = 1 - p;
-                return p * 2;
-            }
+            private double Zvalp2(double xz) => Zvalp1(xz) * 2;
         }
 
         private interface IStringOrDirective
@@ -340,7 +337,6 @@ namespace StatsDirect.TemplateProcessing
 
             string Rtf { get; }
             bool IsBlankOrWhiteSpace { get; }
-            bool IsSignificant { get; }
         }
 
         private class NewParagraph : IStringOrDirective
@@ -349,12 +345,7 @@ namespace StatsDirect.TemplateProcessing
 
             bool IStringOrDirective.IsBlankOrWhiteSpace => true;
 
-            bool IStringOrDirective.IsSignificant => true;
-
-            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next)
-            {
-                return (next is NewParagraph) ? this : null;
-            }
+            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next) => (next is NewParagraph) ? this : null;
         }
 
         private class RtfThatIsNotANewParagraph : IStringOrDirective
@@ -362,17 +353,15 @@ namespace StatsDirect.TemplateProcessing
             public string Rtf { get; private set; }
 
             bool IStringOrDirective.IsBlankOrWhiteSpace => string.IsNullOrWhiteSpace(Rtf);
-            bool IStringOrDirective.IsSignificant => Rtf.Equals(" ") || !string.IsNullOrWhiteSpace(Rtf); // Single spaces are significant as we use them to separate formatting.
 
             public RtfThatIsNotANewParagraph(string rtf)
             {
                 Rtf = rtf;
             }
 
-            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next)
-            {
-                return null;
-            }
+            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next) => null;
+
+            public override string ToString() => Rtf;
         }
 
         private class CellsDefinitionRenderer : ICreoleVisitor<IList<IStringOrDirective>>
@@ -393,6 +382,7 @@ namespace StatsDirect.TemplateProcessing
             }
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleAttribute<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
+            IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleAttributes<IList<IStringOrDirective>> victim) => Array.Empty<IStringOrDirective>();
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleBlock<IList<IStringOrDirective>> victim)
             {
                 if (null == victim.Contents)
@@ -400,8 +390,13 @@ namespace StatsDirect.TemplateProcessing
                 List<IStringOrDirective> list = new List<IStringOrDirective>();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
+                    bool first = true;
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
                     {
+                        if (first)
+                            first = false;
+                        else
+                            list.Add(new RtfThatIsNotANewParagraph(victim.Separator));
                         substitutionStack.Push(inner);
                         list.AddRange(victim.Contents.Accept(this));
                         substitutionStack.Pop();

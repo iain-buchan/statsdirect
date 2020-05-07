@@ -2,7 +2,7 @@
 <p>With raw variables:</p>
 
 <table>
-<tr><td>Scale reliability alpha =</td><td>@{raw_t:roundu}  <ci>(@pc% lower confidence limit = @{raw_cl:roundu})</ci><u></u></td></tr>
+<tr><td>Scale reliability alpha =</td><td>@{raw_t:roundu}  <ci>(@{pc:round2}% lower confidence limit = @{raw_cl:roundu})</ci><u></u></td></tr>
 </table>
 
 <table>
@@ -13,7 +13,7 @@
 <p>With standardized variables:</p>
 
 <table>
-<tr><td>Scale reliability alpha =</td><td>@{standard_t:roundu} <ci>(@pc% lower confidence limit = @{standard_cl:roundu})</ci><u></u></td></tr>
+<tr><td>Scale reliability alpha =</td><td>@{standard_t:roundu} <ci>(@{pc:round2}% lower confidence limit = @{standard_cl:roundu})</ci><u></u></td></tr>
 </table>
 
 <table>

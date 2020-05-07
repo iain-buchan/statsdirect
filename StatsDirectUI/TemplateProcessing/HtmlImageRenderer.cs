@@ -3,15 +3,14 @@ using System.IO;
 using System.Text;
 using StatsDirect.Charting;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 
 namespace StatsDirect.TemplateProcessing
 {
     public static class HtmlImageRenderer
     {
-        public static ICanvasFactory CANVAS_FACTORY = new SvgCanvasFactory();
+        private static readonly ICanvasFactory CANVAS_FACTORY = new SvgCanvasFactory();
 
-        public static ParameterBag PlotAndReturnHtml(ITemplateHost host, ChartDefinition cd, out string html)
+        public static ParameterBag PlotAndReturnHtml(IPreferences host, ChartDefinition cd, out string html)
         {
             using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY))
             {

@@ -9,16 +9,15 @@ namespace StatsDirect.Utilities
     public static class Formatting
     {
         public const string ERRR = "error";
-        public const string FULLSTOP = ".";
-        public const string INFRES = "infinity";
-        public const string INFRESNEG = "-infinity";
+        private const string INFRES = "infinity";
+        private const string INFRESNEG = "-infinity";
         public const string MISSINGLABEL = "* (missing)";
         public const string ASTERISK = "*";
         public const string WRNCOLON = "Warning: ";
         public const string ERRCOLON = "Error: ";
         public const string RTFCRLF = @"\par ";
 
-        public static string DecimalSeparator => CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        private static string DecimalSeparator => CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
         public static string XRound(double amount, int places)
         {
@@ -91,7 +90,7 @@ namespace StatsDirect.Utilities
             return x.ToString("F" + decpm.ToString());
         }
 
-        public static string PreferredScientificMask(int decpm)
+        private static string PreferredScientificMask(int decpm)
         {
             int extraSigDigits = Math.Max(0, decpm - 2);
             return "0.0" + new string('#', extraSigDigits) + "E0";
@@ -129,7 +128,7 @@ namespace StatsDirect.Utilities
                     return "P = " + p.ToString("E");
                 return "P < 0" + DecimalSeparator + new string('0', decimalPlaces - 1) + "1";
             }
-            if (p > 1D - Math.Pow(10D, -decimalPlaces))
+            if (p > 1.0 - Math.Pow(10.0, -decimalPlaces))
                 return "P > 0" + DecimalSeparator + new string('9', decimalPlaces);
             return p.ToString("P = 0." + new string('#', decimalPlaces));
         }
@@ -228,10 +227,7 @@ namespace StatsDirect.Utilities
                 : ((int)x + 1).ToString();
         }
 
-        public static string pr15(double q)
-        {
-            return q.ToString(q < Constant.EPSNEG ? "#.##########E+000" : "0.000000000000000");
-        }
+        public static string pr15(double q) => q.ToString(q < Constant.EPSNEG ? "#.##########E+000" : "0.000000000000000");
 
         /// <summary>
         /// Try to return a relatively short path.

@@ -9,18 +9,15 @@ namespace StatsDirect.UI
         private double add;
         private double lastcut;
         private readonly Charting.ROCSeriesRecord originalRecord;
-        private Charting.ROCSeriesRecord currentRecord;
-        private readonly double weight;
         private readonly string titleSuffix;
 
-        public Charting.ROCSeriesRecord CurrentRecord => currentRecord;
+        public Charting.ROCSeriesRecord CurrentRecord { get; private set; }
 
-        public ctlROCCutoff(Charting.ROCSeriesRecord seriesRecord, double weight, string titleSuffix)
+        public ctlROCCutoff(Charting.ROCSeriesRecord seriesRecord, string titleSuffix)
         {
             InitializeComponent();
             originalRecord = seriesRecord;
-            currentRecord = seriesRecord.Clone();
-            this.weight = weight;
+            CurrentRecord = seriesRecord.Clone();
             this.titleSuffix = titleSuffix;
             inc = seriesRecord.cutoff / 300.0;
         }
@@ -31,13 +28,13 @@ namespace StatsDirect.UI
             txtB.Text = record.b.ToString();
             txtC.Text = record.c.ToString();
             txtD.Text = record.d.ToString();
-            txtSensitivity.Text = SdApplication.TemplateHost.RoundU(record.sens);
-            txtSpecificity.Text = SdApplication.TemplateHost.RoundU(record.spec);
-            txtCutoff.Text = SdApplication.TemplateHost.RoundU(record.cutoff);
+            txtSensitivity.Text = SdApplication.SoleInstance.RoundU(record.sens);
+            txtSpecificity.Text = SdApplication.SoleInstance.RoundU(record.spec);
+            txtCutoff.Text = SdApplication.SoleInstance.RoundU(record.cutoff);
             double ppv = record.a / ((double)record.a + record.b);
             double npv = record.d / ((double)record.d + record.c);
-            txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : SdApplication.TemplateHost.RoundU(ppv);
-            txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : SdApplication.TemplateHost.RoundU(npv);
+            txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : SdApplication.SoleInstance.RoundU(ppv);
+            txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : SdApplication.SoleInstance.RoundU(npv);
             lastcut = record.cutoff;
         }
 
@@ -54,8 +51,8 @@ namespace StatsDirect.UI
 
         private void ReCutAndDisplay()
         {
-            currentRecord.ReCut();
-            PopulateFormFromData(currentRecord);
+            CurrentRecord.ReCut();
+            PopulateFormFromData(CurrentRecord);
         }
 
         private void btnUp_MouseDown(object sender, MouseEventArgs e)
@@ -80,16 +77,16 @@ namespace StatsDirect.UI
 
         private void cmdReset_Click(object sender, EventArgs e)
         {
-            currentRecord = originalRecord.Clone();
-            PopulateFormFromData(currentRecord);
+            CurrentRecord = originalRecord.Clone();
+            PopulateFormFromData(CurrentRecord);
         }
 
         private void txtCutoff_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (13 == e.KeyChar)
             {
-                currentRecord.cutoff = Utilities.Parsing.Cdbl_Txt(txtCutoff.Text);
-                if (currentRecord.cutoff != lastcut)
+                CurrentRecord.cutoff = Utilities.Parsing.Cdbl_Txt(txtCutoff.Text);
+                if (CurrentRecord.cutoff != lastcut)
                 {
                     ReCutAndDisplay(); // Sets LASTCUT, so we don't need to
                 }
@@ -151,8 +148,8 @@ namespace StatsDirect.UI
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            currentRecord.cutoff += add;
-            if (currentRecord.cutoff != lastcut)
+            CurrentRecord.cutoff += add;
+            if (CurrentRecord.cutoff != lastcut)
             {
                 ReCutAndDisplay(); // Sets LASTCUT, so we don't have to
             }
@@ -161,25 +158,25 @@ namespace StatsDirect.UI
         private void ctlROCCutoff_Load(object sender, EventArgs e)
         {
             Text += titleSuffix;
-            lblOptimum.Text = "For optimum, sensitivity:specificity weighting = " + weight.ToString() + ":1";
+            lblOptimum.Text = "For optimum, sensitivity:specificity weighting = " + originalRecord.weight.ToString() + ":1";
             string Q = string.Empty;
-            switch (originalRecord.comp)
+            switch (originalRecord.comparison)
             {
-                case Charting.ComparisonValue.GE:
+                case Charting.Comparison.GreaterEqual:
                     Q = ">=";
                     break;
-                case Charting.ComparisonValue.GT:
+                case Charting.Comparison.GreaterThan:
                     Q = ">";
                     break;
-                case Charting.ComparisonValue.LE:
+                case Charting.Comparison.LessEqual:
                     Q = "<=";
                     break;
-                case Charting.ComparisonValue.LT:
+                case Charting.Comparison.LessThan:
                     Q = "<";
                     break;
             }
             lblCutoff.Text += " " + Q;
-            PopulateFormFromData(currentRecord);
+            PopulateFormFromData(CurrentRecord);
         }
 
         public void OkClicked()

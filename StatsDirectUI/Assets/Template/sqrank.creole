@@ -8,8 +8,8 @@ Critical t (@df df) = @{t:roundu}</p>
 <block name="pair">
 
 <table>
-<tr><td>@compare</td><td>@dif</td></tr>
-<tr><td>(@val)</td><td>@{p_pair:pval}</td></tr>
+<tr><td>@t1 and @t2</td><td>@dif</td></tr>
+<tr><td>(@{stata:roundu}, @{statb:roundu})</td><td>@{p_pair:pval}</td></tr>
 </table>
 </block>
 </block>

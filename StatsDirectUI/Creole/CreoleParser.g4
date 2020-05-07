@@ -3,12 +3,12 @@ parser grammar CreoleParser;
 options { tokenVocab=CreoleLexer; }
 
 document
-    : SEA_WS* (element SEA_WS*)+ EOF
+    : SEA_WS? (element SEA_WS?)+ EOF
     ;
 
 element
 	: TAG_OPEN tag=TAG_B TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_B TAG_CLOSE # formatting
-	| TAG_OPEN TAG_BLOCK name=attribute TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_BLOCK TAG_CLOSE # block
+	| TAG_OPEN TAG_BLOCK attributes TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_BLOCK TAG_CLOSE # block
     | TAG_OPEN TAG_BR TAG_SLASH_CLOSE # lineBreak
 	| TAG_OPEN tag=TAG_CI TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_CI TAG_CLOSE # formatting
 	| TAG_OPEN tag=TAG_GRANDTOTAL TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_GRANDTOTAL TAG_CLOSE # formatting
@@ -33,10 +33,9 @@ element
 	| TAG_OPEN tag=TAG_WARN TAG_CLOSE content TAG_OPEN TAG_SLASH TAG_WARN TAG_CLOSE # formatting
     ;
 
-// Unused in the present grammar
-//attributes
-//	: attribute+
-//	;
+attributes
+	: attribute+
+	;
 
 attribute
     : name=TAG_NAME TAG_EQUALS value=ATTVALUE_VALUE

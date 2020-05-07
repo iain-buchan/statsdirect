@@ -2,15 +2,15 @@
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
-using StatsDirect.Utilities;
 using System;
+using System.Collections.Generic;
 
 namespace StatsDirect.TemplateProcessing
 {
     static class ValidationProcessor
     {
         /// <returns>A string containing at least one validation error, or null if there are no validation errors detected.</returns>
-        public static string Validate(ITemplateHost host, string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
+        public static ValidationResult Validate(ITemplateHost host, string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
         {
             // Does the operation define a custom validator with that name?  If so, use it.
             if (null != parameter.Operation.CustomValidators)
@@ -23,16 +23,16 @@ namespace StatsDirect.TemplateProcessing
                         IScriptEngine scriptEngine = host.GetScriptEngine(language);
                         object result = scriptEngine.Run(language, candidate.Script, ScriptType.Validator, host, filledParameters, parameter, null);
                         if (null == result)
-                            return null;
-                        return result.ToString();
+                            return ValidationResult.Valid;
+                        return ValidationResult.Invalid(result.ToString());
                     }
                 }
             }
 
-            return ValidateGeneric(host, validatorName, parameter, filledParameters, failedValidationMessage);
+            return ValidateGeneric(validatorName, parameter, filledParameters, failedValidationMessage);
         }
 
-        private static string ValidateGeneric(ITemplateHost host, string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
+        private static ValidationResult ValidateGeneric(string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
         {
             // If we're allowing blank parameters, accept a blank.
             if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
@@ -61,7 +61,7 @@ namespace StatsDirect.TemplateProcessing
                 case "Boolean":
                     return ValidateBoolean(failedValidationMessage, p.AsDataFrame);
                 case "CheckForNonDummiedCategories":
-                    return CheckForNonDummiedCategories(host, p.AsDataFrame);
+                    return CheckForNonDummiedCategories(p.AsDataFrame);
                 case "Expression":
                     return ValidateExpression(failedValidationMessage, p.AsString);
                 case "Integer":
@@ -95,7 +95,7 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        private static string ValidatePersonTimeSize(DataFrame dataFrame)
+        private static ValidationResult ValidatePersonTimeSize(DataFrame dataFrame)
         {
             // Assumes no missing data, no data < 0
             DoubleVariable datV0 = (DoubleVariable)dataFrame.Variables[0];
@@ -111,80 +111,80 @@ namespace StatsDirect.TemplateProcessing
                 double rf = datV2.Data[j];
                 refntot += rf;
                 if (xn <= 0)
-                    return "Person-time must be greater than zero";
+                    return ValidationResult.Invalid("Person-time must be greater than zero");
                 if (xy > xn)
-                    return "Number of events must be greater then person-time, do not scale person-time";
+                    return ValidationResult.Invalid("Number of events must be greater then person-time, do not scale person-time");
             }
 
             if (refntot <= 0.0)
-                return "Total reference group size must be greater than zero";
-            return null;
+                return ValidationResult.Invalid("Total reference group size must be greater than zero");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateNoMissingData(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateNoMissingData(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure there's no missing data in any of the numeric variables in the frame
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (value == Constant.MISSING)
-                            return failedValidationMessage ?? "Data with missing values cannot be used here";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Data with missing values cannot be used here");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateExpression(string failedValidationMessage, string expression)
+        private static ValidationResult ValidateExpression(string failedValidationMessage, string expression)
         {
             if (!Calcit.IsValid(expression))
-                return failedValidationMessage ?? "Please enter a valid expression";
-            return null;
+                return ValidationResult.Invalid(failedValidationMessage ?? "Please enter a valid expression");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateTwoBins(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateTwoBins(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure there are exactly two bins in the classifier variable
             if (((ClassifierVariable)dataFrame.Variables[0]).GroupCount != 2)
-                return failedValidationMessage ?? "Group identifier must contain two groups and no missing data";
-            return null;
+                return ValidationResult.Invalid(failedValidationMessage ?? "Group identifier must contain two groups and no missing data");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateZeroToOneInclusive(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateZeroToOneInclusive(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are in the range [0, 1]
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (value < 0 || value > 1)
-                            return failedValidationMessage ?? "Data must lie between 0 and 1 inclusive";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Data must lie between 0 and 1 inclusive");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateZeroToOneExclusive(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateZeroToOneExclusive(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are in the range (0, 1)
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (value <= 0 || value >= 1)
-                            return failedValidationMessage ?? "Data must lie between 0 and 1";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Data must lie between 0 and 1");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateNonNegative(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateNonNegative(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are >= 0
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (value < 0)
-                            return failedValidationMessage ?? "Data must be positive or zero numbers";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Data must be positive or zero numbers");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidatePositiveRowsExceptLastColumn(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidatePositiveRowsExceptLastColumn(string failedValidationMessage, DataFrame dataFrame)
         {
             foreach (IVariable variable in dataFrame.Variables)
                 if (!(variable is DoubleVariable))
-                    return "Data must be numeric";
+                    return ValidationResult.Invalid("Data must be numeric");
 
             // Ensure the sum of all values across a row except the last column is > 0
             for (int row = 0; row < dataFrame.MinRows; row++)
@@ -198,16 +198,16 @@ namespace StatsDirect.TemplateProcessing
                         sum += x;
                 }
                 if (sum <= 0)
-                    return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
+                    return ValidationResult.Invalid(failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation");
             }
-            return null;
+            return ValidationResult.Valid;
         }
 
-        private static string ValidatePositiveRows(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidatePositiveRows(string failedValidationMessage, DataFrame dataFrame)
         {
             foreach (IVariable variable in dataFrame.Variables)
                 if (!(variable is DoubleVariable))
-                    return "Data must be numeric";
+                    return ValidationResult.Invalid("Data must be numeric");
 
             // Ensure the sum of all values across a row is > 0
             for (int row = 0; row < dataFrame.MinRows; row++)
@@ -220,126 +220,146 @@ namespace StatsDirect.TemplateProcessing
                         sum += x;
                 }
                 if (sum <= 0)
-                    return failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation";
+                    return ValidationResult.Invalid(failedValidationMessage ?? "Invalid data: row " + (row + 1).ToString() + " total is not greater than zero, which it must be for this calculation");
             }
-            return null;
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateInteger(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateInteger(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are integers
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (value != Math.Floor(value))
-                            return failedValidationMessage ?? "Data must be integer numbers";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Data must be integer numbers");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidatePositive(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidatePositive(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are > 0
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (value <= 0)
-                            return failedValidationMessage ?? "Data must be positive non-zero numbers";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Data must be positive non-zero numbers");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateBoolean(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateBoolean(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are in {0, 1}
             foreach (IVariable variable in dataFrame.Variables)
                 if (variable is DoubleVariable doubleVariable)
                     foreach (double value in doubleVariable.Data)
                         if (0.0 != value && 1.0 != value)
-                            return failedValidationMessage ?? "Case-control indicator must be 1 for case or 0 for control only";
-            return null;
+                            return ValidationResult.Invalid(failedValidationMessage ?? "Case-control indicator must be 1 for case or 0 for control only");
+            return ValidationResult.Valid;
         }
 
-        private static string CheckForNonDummiedCategories(ITemplateHost host, DataFrame dataFrame)
+        private static ValidationResult CheckForNonDummiedCategories(DataFrame dataFrame)
         {
             // Ensure the number of bins, if >2, is at least 12 (or they're all distinct)
             foreach (DoubleVariable v in dataFrame.Variables)
             {
                 double[] data = v.Data;
-                bool skip = false;
+                bool allInteger = true;
                 // skip if all not integers
                 foreach (double t in data)
                 {
                     if (t != Math.Floor(t))
                     {
-                        skip = true;
+                        allInteger = false;
                         break;
                     }
                 }
-                if (!skip)
-                {
-                    // get number of categories if all integers
-                    int ng = 1;
-                    int[] g = new int[data.Length];
-                    foreach (double t in data)
+                if (!allInteger)
+                    continue;
+
+                // All integers. How many categories have we got?  If it's 12 or more, we're OK.  If there's only one duplicate, we're also OK.
+                int upperLimitForCategories = Math.Min(data.Length - 1, 11);
+                HashSet<double> distinctValues = new HashSet<double>();
+                foreach (double value in data)
+                    if (value != Constant.MISSING)
                     {
-                        if (t != Constant.MISSING)
-                        {
-                            g[0] = (int)t;
+                        distinctValues.Add(value);
+                        // Break out early if we already know we won't consider it categorical.
+                        if (distinctValues.Count > upperLimitForCategories)
                             break;
-                        }
                     }
-                    for (int j = 1; j < data.Length; j++)
+                if (distinctValues.Count > 2 && distinctValues.Count <= upperLimitForCategories)
+                    return new ValidationResult()
                     {
-                        bool newa = true;
-                        for (int i = 0; i < ng; i++)
-                        {
-                            if (data[j] == g[i] || data[j] == Constant.MISSING)
-                            {
-                                newa = false;
-                                break;
-                            }
-                        }
-                        if (newa)
-                            g[ng++] = (int)data[j];
-                    }
-                    if (ng > 2 && ng < Math.Min(data.Length - 2, 12))
-                    {
-                        bool sortOutData = host.GetBoolean("The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?", "Regression Predictor Scan", false, 140766, out bool wasCancelled);
-                        if (wasCancelled || sortOutData)
-                            throw new TemplateOperationCancelledException();
-                    }
-                }
+                        Validity = Validity.NeedMoreInformation,
+                        HelpContextId = 140766,
+                        TitleForMoreInformation = "Regression Predictor Scan",
+                        PromptForMoreInformation = "The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?",
+                        ActionOnMoreInformationYes = ValidationAction.CancelOperation,
+                        ActionOnMoreInformationNo = ValidationAction.UseAsIs
+                    };
             }
             // If we get here, we're fine
-            return null;
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateSquareBins(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateSquareBins(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure the number of bins is the square root of the number of values
             DoubleVariable variable = (DoubleVariable)dataFrame.Variables[0];
             ClassifierVariable cv = TemplateProcessor.gidx_bins(variable);
             if (Math.Sqrt(variable.Length) != cv.GroupCount)
-                return failedValidationMessage ?? "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes";
-            return null;
+                return ValidationResult.Invalid(failedValidationMessage ?? "There should be " + Math.Sqrt(variable.Length).ToString("N0") + " classes");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidateSquare(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidateSquare(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure the number of values is a square number
             DoubleVariable variable = (DoubleVariable)dataFrame.Variables[0];
             if (Math.Sqrt(variable.Length) != Math.Floor(Math.Sqrt(variable.Length)))
-                return failedValidationMessage ?? "Number of observations can not be arranged as a square (i.e. integer square root)";
-            return null;
+                return ValidationResult.Invalid(failedValidationMessage ?? "Number of observations can not be arranged as a square (i.e. integer square root)");
+            return ValidationResult.Valid;
         }
 
-        private static string ValidatePooling(string failedValidationMessage, DataFrame dataFrame)
+        private static ValidationResult ValidatePooling(string failedValidationMessage, DataFrame dataFrame)
         {
             // Ensure all values are in {-1, 0, 1}
             DoubleVariable variable = (DoubleVariable)dataFrame.Variables[0];
             foreach (double value in variable.Data)
                 if (0 != value && -1 != value && 1 != value)
-                    return failedValidationMessage ?? "Pooling indicator must be 0 (not pooled), 1 (subgroup) or -1 (pooled) only";
-            return null;
+                    return ValidationResult.Invalid(failedValidationMessage ?? "Pooling indicator must be 0 (not pooled), 1 (subgroup) or -1 (pooled) only");
+            return ValidationResult.Valid;
         }
+    }
+
+    public enum Validity
+    {
+        None = 0,
+        Valid = 1,
+        Invalid = 2,
+        NeedMoreInformation = 3
+    }
+
+    public enum ValidationAction
+    {
+        None = 0,
+        CancelOperation = 1,
+        UseAsIs = 2,
+        RequestAgain = 3
+    }
+
+    public class ValidationResult
+    {
+        public Validity Validity { get; set; }
+        public string FailedValidationMessage { get; set; }
+        public string PromptForMoreInformation { get; set; }
+        public string TitleForMoreInformation { get; set; }
+        public int HelpContextId { get; set; }
+        public ValidationAction ActionOnMoreInformationYes { get; set; }
+        public ValidationAction ActionOnMoreInformationNo { get; set; }
+
+        public static ValidationResult Valid { get; } = new ValidationResult() { Validity = Validity.Valid };
+        public static ValidationResult Invalid(string failedValidationMessage) => new ValidationResult() { Validity = Validity.Invalid, FailedValidationMessage = failedValidationMessage };
     }
 }

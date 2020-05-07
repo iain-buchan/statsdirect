@@ -8,15 +8,15 @@
 </table>
 
 <p>Risk ratio (relative risk in incidence study) = @{ratio:roundu}<br />
-<ci>Approximate (Koopman) @pc% confidence interval = @{koopman_from:roundu} to @{koopman_to:roundu}</ci><br />
+<ci>Approximate (Koopman) @{pc:round2}% confidence interval = @{koopman_from:roundu} to @{koopman_to:roundu}</ci><br />
 Approximate power @pwr</p>
 
 <p>Risk difference = @{dif:roundu}<br />
-<ci>Approximate (Miettinen) @pc% confidence interval = @{miettinen_from:roundu} to @{miettinen_to:roundu}</ci></p>
+<ci>Approximate (Miettinen) @{pc:round2}% confidence interval = @{miettinen_from:roundu} to @{miettinen_to:roundu}</ci></p>
 <block name="exposure">
 
 <p>Population exposure % = @{pe:roundu}<br />
 Population attributable risk % = @{par:roundu}<br />
-<ci>Approximate (Walter) @pc% confidence interval = @{walter_from:roundu} to @{walter_to:roundu}</ci></p>
+<ci>Approximate (Walter) @{pc:round2}% confidence interval = @{walter_from:roundu} to @{walter_to:roundu}</ci></p>
 </block>
 </report>

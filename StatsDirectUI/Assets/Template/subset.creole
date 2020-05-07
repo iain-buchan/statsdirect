@@ -4,7 +4,7 @@
 <p>Selected variables:</p>
 <block name="selected"><p>@label</p></block>
 
-<p>F = @f<br />
-R&#xb2; = @r2<br />
-Mallows' Cp = @cp</p>
+<p>F = @{f:roundu}<br />
+R&#xb2; = @{r2:roundu}<br />
+Mallows' Cp = @{cp:roundu}</p>
 </report>

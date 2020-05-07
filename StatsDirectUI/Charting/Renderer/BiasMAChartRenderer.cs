@@ -22,7 +22,7 @@ namespace StatsDirect.Charting.Renderer
             };
         }
 
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences host, bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -33,7 +33,7 @@ namespace StatsDirect.Charting.Renderer
             double cit = options.cit;
             double cco = options.cco;
             double[] x = options.x;
-            Get_ma_ordinate(host, out double[] y, options.yy, options.yw, options.cl, options.cu, ref cco, rows, out string title, out string ytxt, options.XAxisTitle, out int plotMethod, options.xform, out bool reverse, ref useCi);
+            GetMAOrdinate(host, out double[] y, options.yy, options.yw, options.cl, options.cu, ref cco, rows, out string title, out string ytxt, options.XAxisTitle, out int plotMethod, options.xform, out bool reverse, ref useCi);
 
             double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;
@@ -86,7 +86,7 @@ namespace StatsDirect.Charting.Renderer
                     pool = options.rmh;
                     break;
                 default:
-                    throw new Exception("Unexpected transform: only Log, None, Z known");
+                    throw new ArgumentException("Unexpected transform: only Log, None, Z known");
             }
 
             ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).QAxis(DataMinY, 0, DataMaxY, true, false);
@@ -97,7 +97,7 @@ namespace StatsDirect.Charting.Renderer
             double mini = Math.Min(axisScale.Interval, DataMinY);
             if (useCi)
             {
-                double se = ma_plot_se(plotMethod == 2 ? ymn : ymx, mini, plotMethod);
+                double se = MAPlotStandardError(plotMethod == 2 ? ymn : ymx, mini, plotMethod);
                 if (DataMaxX < pool + se * cit)
                     DataMaxX = pool + se * cit;
                 if (DataMinX > pool - se * cit)
@@ -144,13 +144,13 @@ namespace StatsDirect.Charting.Renderer
                 if (plotMethod == 2)
                 {
                     double ynow = axisScales.Y.MaximumScaleValue;
-                    double xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
+                    double xnow = pool + MAPlotStandardError(ynow, mini, plotMethod) * cit;
                     double y1 = ynow;
                     double x1 = xnow;
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow -= yinc;
-                        xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
+                        xnow = pool + MAPlotStandardError(ynow, mini, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
                             MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
@@ -159,13 +159,13 @@ namespace StatsDirect.Charting.Renderer
                         }
                     }
                     ynow = axisScales.Y.MaximumScaleValue;
-                    xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
+                    xnow = pool - MAPlotStandardError(ynow, mini, plotMethod) * cit;
                     y1 = ynow;
                     x1 = xnow;
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow -= yinc;
-                        xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
+                        xnow = pool - MAPlotStandardError(ynow, mini, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
                             MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
@@ -183,7 +183,7 @@ namespace StatsDirect.Charting.Renderer
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow += yinc;
-                        xnow = pool + ma_plot_se(ynow, mini, plotMethod) * cit;
+                        xnow = pool + MAPlotStandardError(ynow, mini, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
                             MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
@@ -198,7 +198,7 @@ namespace StatsDirect.Charting.Renderer
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow += yinc;
-                        xnow = pool - ma_plot_se(ynow, mini, plotMethod) * cit;
+                        xnow = pool - MAPlotStandardError(ynow, mini, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
                             MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
@@ -215,7 +215,7 @@ namespace StatsDirect.Charting.Renderer
             return new ParameterBag();
         }
 
-        private static void Get_ma_ordinate(ITemplateHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
+        private static void GetMAOrdinate(IPreferences host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
         {
             y = new double[rows + 1];
             y[0] = Constant.MISSING;
@@ -236,13 +236,13 @@ namespace StatsDirect.Charting.Renderer
             }
 
             bool usept = xtxt.Contains("Incidence");
-            useCi = host.MetaPlotCI;
+            useCi = host.Preferences.MetaPlotCI;
 
             if (cco <= 0.0)
                 cco = 0.95;
             double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
 
-            plotMethod = host.MetaPlotMethod;
+            plotMethod = host.Preferences.MetaPlotMethod;
 
             switch (plotMethod)
             {
@@ -293,7 +293,7 @@ namespace StatsDirect.Charting.Renderer
                                     y[r] = Constant.MISSING;
                                 else
                                     y[r] = (Math.Log(cu[r]) - Math.Log(cl[r])) / 2.0 / cit;
-                                if (y[r] != 0.0 & y[r] != Constant.MISSING)
+                                if (y[r] != 0.0 && y[r] != Constant.MISSING)
                                     y[r] = 1.0 / y[r];
                                 else
                                     y[r] = Constant.MISSING;
@@ -302,11 +302,11 @@ namespace StatsDirect.Charting.Renderer
                         case Transformation.Z:
                             for (int r = 1; r <= rows; r++)
                             {
-                                if (cu[r] == Constant.MISSING | cl[r] == Constant.MISSING)
+                                if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING)
                                     y[r] = Constant.MISSING;
                                 else
                                     y[r] = (MathDbl.rtoz(cu[r]) - MathDbl.rtoz(cl[r])) / 2.0 / cit;
-                                if (y[r] != 0.0 & y[r] != Constant.MISSING)
+                                if (y[r] != 0.0 && y[r] != Constant.MISSING)
                                     y[r] = 1.0 / y[r];
                                 else
                                     y[r] = Constant.MISSING;
@@ -315,11 +315,11 @@ namespace StatsDirect.Charting.Renderer
                         case Transformation.None:
                             for (int r = 1; r <= rows; r++)
                             {
-                                if (cu[r] == Constant.MISSING | cl[r] == Constant.MISSING)
+                                if (cu[r] == Constant.MISSING || cl[r] == Constant.MISSING)
                                     y[r] = Constant.MISSING;
                                 else
                                     y[r] = (cu[r] - cl[r]) / 2.0 / cit;
-                                if (y[r] != 0.0 & y[r] != Constant.MISSING)
+                                if (y[r] != 0.0 && y[r] != Constant.MISSING)
                                     y[r] = 1.0 / y[r];
                                 else
                                     y[r] = Constant.MISSING;
@@ -350,7 +350,7 @@ namespace StatsDirect.Charting.Renderer
                     ytx = "1/Log(sample size)";
                     for (int r = 1; r <= rows; r++)
                     {
-                        if (yy[r] <= 0.0 | yy[r] == 1.0)
+                        if (yy[r] <= 0.0 || yy[r] == 1.0)
                             y[r] = Constant.MISSING;
                         else
                             y[r] = 1.0 / Math.Log10(yy[r]);
@@ -387,7 +387,7 @@ namespace StatsDirect.Charting.Renderer
             title = "Bias assessment plot";
         }
 
-        private static double ma_plot_se(double y, double z, int plotMethod)
+        private static double MAPlotStandardError(double y, double z, int plotMethod)
         {
             switch (plotMethod)
             {

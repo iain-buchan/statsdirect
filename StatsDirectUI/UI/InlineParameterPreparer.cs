@@ -264,7 +264,7 @@ namespace StatsDirect.UI
                 case "ROCCutoff":
                     {
                         ROCCutoff rc = (ROCCutoff)fillable;
-                        ctl = new ctlROCCutoff(rc.SeriesRecord, rc.Weight, rc.Title);
+                        ctl = new ctlROCCutoff(rc.SeriesRecord, rc.Title);
                         break;
                     }
                 case "SortInPlace":

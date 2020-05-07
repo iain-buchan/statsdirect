@@ -11,10 +11,10 @@
 
 <table>
 <tr><th>Alternative hypothesis</th><th>Statistic</th><th>DF</th><th>Probability</th></tr>
-<tr><td>Ordinal association</td><td>@x21</td><td>@df1</td><td><pval>@{p1:pval}</pval></td></tr>
-<tr><td>Nominal rows vs. ordinal columns association</td><td>@x22</td><td>@df2</td><td><pval>@{p2:pval}</pval></td></tr>
-<tr><td>Nominal association</td><td>@x23</td><td>@df3</td><td><pval>@{p3:pval}</pval></td></tr>
+<tr><td>Ordinal association</td><td>@{x21:roundu}</td><td>@{df1:round0}</td><td><pval>@{p1:pval}</pval></td></tr>
+<tr><td>Nominal rows vs. ordinal columns association</td><td>@{x22:roundu}</td><td>@{df2:round0}</td><td><pval>@{p2:pval}</pval></td></tr>
+<tr><td>Nominal association</td><td>@{x23:roundu}</td><td>@{df3:round0}</td><td><pval>@{p3:pval}</pval></td></tr>
 </table>
 
-<p>Sample size = @nt</p>
+<p>Sample size = @{nt:round0}</p>
 </report>

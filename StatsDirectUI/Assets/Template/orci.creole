@@ -11,9 +11,9 @@
 
 <p>Conditional maximum likelihood estimate of odds ratio = @{eor:roundu}</p>
 
-<p><ci>Exact Fisher @pc% confidence interval = @{llf:roundu}  to  @{ulf:roundu}</ci><br />
+<p><ci>Exact Fisher @{pc:round2}% confidence interval = @{llf:roundu}  to  @{ulf:roundu}</ci><br />
 <pval>Exact Fisher one sided @{p1f:pval}, two sided @{p2f:pval}</pval></p>
 
-<p><ci>Exact mid-P @pc% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
+<p><ci>Exact mid-P @{pc:round2}% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 </report>

@@ -39,13 +39,13 @@
 <p>Total = @n,  response = @r<br />
 Proportion = @{prop:roundu}</p>
 
-<p><ci>Exact (Clopper-Pearson) @ci_exact% confidence interval = @{lower_exact:roundu} to @{upper_exact:roundu}@{warn_exact}</ci></p>
+<p><ci>Exact (Clopper-Pearson) @{ci_exact:round2}% confidence interval = @{lower_exact:roundu} to @{upper_exact:roundu}@{warn_exact}</ci></p>
 
 <p>Using null hypothesis that the population proportion equals @{null:roundu}<br />
 <pval>@{ap_1_exact:pval} one sided @{p_1_exact:pval}</pval><br />
 <pval>@{ap_2_exact:pval} two sided @{p_2_exact:pval}</pval></p>
 
-<p>Approximate (Wilson) @ci_approx% mid-P confidence interval = @{lower_approx:roundu} to @{upper_approx:roundu}</p>
+<p>Approximate (Wilson) @{ci_approx:round2}% mid-P confidence interval = @{lower_approx:roundu} to @{upper_approx:roundu}</p>
 
 <p><pval>@{ap_1_approx:pval} one sided mid-@{p_1_approx:pval}</pval><br />
 <pval>@{ap_2_approx:pval} two sided mid-@{p_2_approx:pval}</pval></p>

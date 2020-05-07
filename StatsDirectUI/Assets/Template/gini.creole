@@ -11,12 +11,12 @@ Bias = @{bias:roundu}<br />
 Standard error (bootstrap) = @{se:roundu}</p>
 
 <p>Gini coefficient = @{gini:roundu}<br />
-<ci>Percentile @pc% CI = @{from:roundu} to @{to:roundu}</ci><br />
-<ci>BCa @pc% CI = @{BCafrom:roundu} to @{BCato:roundu}</ci></p>
+<ci>Percentile @{pc:round2}% CI = @{from:roundu} to @{to:roundu}</ci><br />
+<ci>BCa @{pc:round2}% CI = @{BCafrom:roundu} to @{BCato:roundu}</ci></p>
 
 <p>Unbiased estimator of population Gini coefficient = @{gini-unbiased:roundu}<br />
-<ci>Percentile @pc% CI = @{from-unbiased:roundu} to @{to-unbiased:roundu}</ci><br />
-<ci>BCa @pc% CI = @{BCafrom-unbiased:roundu} to @{BCato-unbiased:roundu}</ci></p>
+<ci>Percentile @{pc:round2}% CI = @{from-unbiased:roundu} to @{to-unbiased:roundu}</ci><br />
+<ci>BCa @{pc:round2}% CI = @{BCafrom-unbiased:roundu} to @{BCato-unbiased:roundu}</ci></p>
 </block>
 
 <p>@{chart:chart}</p>

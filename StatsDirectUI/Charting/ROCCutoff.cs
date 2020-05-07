@@ -4,9 +4,8 @@ namespace StatsDirect.Charting
 {
     public class ROCCutoff : IFillable
     {
-        public ROCSeriesRecord SeriesRecord;
-        public double Weight;
-        public string Title;
+        public ROCSeriesRecord SeriesRecord { get; set; }
+        public string Title { get; set; }
 
         public string FillerToUse => "ROCCutoff";
     }

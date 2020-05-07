@@ -3,6 +3,7 @@
     public interface ICreoleVisitor<TResult>
     {
         TResult Visit(CreoleAttribute<TResult> victim);
+        TResult Visit(CreoleAttributes<TResult> victim);
         TResult Visit(CreoleBlock<TResult> victim);
         TResult Visit(CreoleEntity<TResult> victim);
         TResult Visit(CreoleFormatting<TResult> victim);

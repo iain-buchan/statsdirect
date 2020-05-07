@@ -10,13 +10,13 @@ U = @{u:roundu}      U' = @{u_prime:roundu}</p>
 <pval>Upper side @{p_u:pval}</pval> (H<sub>1</sub>: x tends to be greater than y)<br />
 <pval>Two sided @{p_2:pval}</pval> (H<sub>1</sub>: x tends to be distributed differently to y)</p>
 
-<p>Theta (U'/mn) = @{theta:roundu} <ci>(@pc0% CI: @{tll:roundu} to @{tul:roundu})</ci></p>
+<p>Theta (U'/mn) = @{theta:roundu} <ci>(@{pc0:round1}% CI: @{tll:roundu} to @{tul:roundu})</ci></p>
 
 <block name="noconf">
 <p>confidence interval not calculated if n1 or n2 </p>
 </block>
 <block name="conf">
-<p><ci>@pc% confidence interval for difference between medians or means:</ci><br />
-Median difference = @median <ci>(CI: @from to @to)</ci></p>
+<p><ci>@{pc:round2}% confidence interval for difference between medians or means:</ci><br />
+Median difference = @{median:roundu} <ci>(CI: @{from:roundu} to @{to:roundu})</ci></p>
 </block>
 </report>

@@ -1,7 +1,7 @@
 <report>
 <title>Number needed to treat (empirical results using observed counts only)</title>
 
-<p><ci>Estimates with @pc% confidence intervals:</ci></p>
+<p><ci>Estimates with @{pc:round2}% confidence intervals:</ci></p>
 
 <p>Risk of event in controls = @ce <ci>(@{ce_from:roundu} to @ce_to)</ci><br />
 Risk of event in treated = @te <ci>(@{te_from:roundu} to @te_to)</ci><br />
@@ -22,9 +22,9 @@ Risk difference (controls-treated) = @{rd:roundu} <ci>(@{rd_from:roundu} to @{rd
 <br />
 <title>Needed to treat (adjusted for baseline/expected risk)</title>
 
-<p>Expected risk of event without treatment @type= @brr%</p>
+<p>Expected risk of event without treatment @type= @{brr:round2}%</p>
 
-<p><ci>Estimates with @pc% confidence intervals:</ci></p>
+<p><ci>Estimates with @{pc:round2}% confidence intervals:</ci></p>
 
 <p>NNT [risk difference] = @rd_treat <ci>(@rd_treat_from to @rd_treat_to)</ci><br />
 <b>NNT [risk difference] (rounded up) = @rd_treat_round <ci>(@rd_treat_round_from to @rd_treat_round_to)</ci></b></p>

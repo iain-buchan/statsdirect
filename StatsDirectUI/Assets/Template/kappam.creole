@@ -10,7 +10,7 @@
 
 <p><u>Combined (Fleiss-Nee-Landis test)</u><br />
 Kappa = @{kc:roundu}<br />
-@pc% CI: @{ll:roundu} to @{ul:roundu}<br />
+@{pc:round2}% CI: @{ll:roundu} to @{ul:roundu}<br />
 z (for k = 0) = @{zc:roundu}<br />
 <pval>@{p:pval}</pval></p>
 

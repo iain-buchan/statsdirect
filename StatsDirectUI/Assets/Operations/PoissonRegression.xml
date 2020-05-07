@@ -105,17 +105,16 @@
     <report type="application/x-statsdirect-creole">
       <![CDATA[<report>
 <title>Poisson regression</title>
-<block name="warn">
-<p><warn>@warn</warn></p></block>
+<block name="warn"><p><warn>@warn</warn></p></block>
 
 <table>
-<tr><td>Deviance goodness of fit chi-square =</td><td>@dev</td><td>df = @df_dev</td><td><pval>@{p_dev:pval}</pval> @w</td></tr>
-<tr><td>Deviance (likelihood ratio) chi-square =</td><td>@x2</td><td>df = @df_x2</td><td><pval>@{p_x2:pval}</pval></td></tr>
+<tr><td>Deviance goodness of fit chi-square =</td><td>@{dev:roundu}</td><td>df = @df_dev</td><td><pval>@{p_dev:pval}</pval> @w</td></tr>
+<tr><td>Deviance (likelihood ratio) chi-square =</td><td>@{x2:roundu}</td><td>df = @df_x2</td><td><pval>@{p_x2:pval}</pval></td></tr>
 </table>
 
 <table>
-<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@pc% CI</ci></th><th>z</th><th><pval></pval></th></tr>
-<block name="pred"><tr><td>@lab</td><td>b@idx = @res</td><td>@irr</td><td><ci>@ci</ci></td><td>@z</td><td><pval>@{p:pval}</pval></td></tr></block>
+<tr><th>Parameter</th><th>Coefficient</th><th>IRR</th><th><ci>@{pc:round2}% CI</ci></th><th>z</th><th><pval></pval></th></tr>
+<block name="pred"><tr><td>@lab</td><td>b@idx = @{res:roundu}</td><td>@{irr:roundu}</td><td><ci>@{lci:roundu}  to  @{uci:roundu}</ci></td><td>@{z:roundu}</td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 
 <p>@logit</p>

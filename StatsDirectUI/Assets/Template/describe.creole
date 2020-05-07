@@ -2,6 +2,6 @@
 <title>Descriptive statistics</title>
 <table>
 <tr><th>Variables</th><block name="titles"><th>@title</th></block></tr>
-<block name="fields"><tr><td>@title</td><block name="results"><td>@result</td></block></tr></block>
+<block name="fields"><tr><td>@title</td><block name="results"><td>@{result:roundu}</td></block></tr></block>
 </table>
 </report>

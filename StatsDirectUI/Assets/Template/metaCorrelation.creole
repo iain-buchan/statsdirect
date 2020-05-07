@@ -1,7 +1,7 @@
 <report>
 <title>Correlation meta-analysis</title>
 <table>
-<tr><th>Study</th><th>Size</th><th>@stat</th><th colspan="2"><ci>Approximate @pc% CI</ci></th><th></th></tr>
+<tr><th>Study</th><th>Size</th><th>@stat</th><th colspan="2"><ci>Approximate @{pc:round2}% CI</ci></th><th></th></tr>
 <block name="studies"><tr><td>@st</td><td>@{n:roundu}</td><td>@{y:roundu}</td><td><ci>@{from:roundu}</ci></td><td><ci>@{to:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
 
@@ -11,22 +11,22 @@
 </table>
 
 <p><u>Hedges-Olkin fixed effects</u><br />
-Pooled @stat_fixed = @{rmh:roundu} (<ci>@pc% CI = @{from_fixed:roundu} to @{to_fixed:roundu}</ci>)<br />
+Pooled @stat_fixed = @{rmh:roundu} (<ci>@{pc:round2}% CI = @{from_fixed:roundu} to @{to_fixed:roundu}</ci>)<br />
 Z (test correlation differs from 0) = @{z:roundu}  <pval>@{p_fixed:pval}</pval></p>
 
 <p><u>Non-combinability of studies</u><br />
 Cochran Q = @{qc:roundu}  (df = @df)  <pval>@{xp:pval}</pval><br />
 Moment-based estimate of between studies variance = @{tausq:roundu}<br />
-I&#xb2; (inconsistency) = @isq% (<ci>@pc1% CI = @llisq% to @ulisq%</ci>) </p>
+I&#xb2; (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1}% to @{ulisq:round1}%</ci>) </p>
 
 <p><u>Hedges-Olkin random effects</u><br />
-Pooled @dsstat = @{dsrr:roundu} (<ci>@pc% CI = @{dsll:roundu} to @{dsul:roundu}</ci>)<br />
+Pooled @dsstat = @{dsrr:roundu} (<ci>@{pc:round2}% CI = @{dsll:roundu} to @{dsul:roundu}</ci>)<br />
 Z (test correlation differs from 0) = @{dz:roundu}  <pval>@{dp:pval}</pval></p>
 
 <p><u>Bias indicators</u></p>
 <block name="bias">
-<p>Begg-Mazumdar: Kendall's @tau  <pval>@{p2:pval}</pval><br />
-Egger: bias = @a (<ci>@pc% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>
+<p>Begg-Mazumdar: Kendall's @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}</pval><br />
+Egger: bias = @a (<ci>@{pc:round2}% CI = @cl to @cu</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 
 <p><u>Schmidt-Hunter</u><br />

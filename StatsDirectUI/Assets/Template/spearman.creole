@@ -8,7 +8,7 @@ Spearman's score = @{ix:roundu}</p>
 <p>Spearman's rank correlation coefficient (Rho) =  @{rho:roundu}</p>
 
 <block name="noci"><p><warn>CI not calculated when rho is 1 or -1.</warn></p></block>
-<block name="ci"><p><ci>@pc% CI for rho (Fisher's Z transformed) = @{from:roundu} to @{to:roundu}</ci></p></block>
+<block name="ci"><p><ci>@{pc:round2}% CI for rho (Fisher's Z transformed) = @{from:roundu} to @{to:roundu}</ci></p></block>
 <block name="lown">
 
 <p><warn>Can not consider probability with very small samples (n &lt; 4)</warn></p></block>

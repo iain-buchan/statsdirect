@@ -10,12 +10,12 @@ namespace StatsDirect.Builtins
     public static class Agreement
     {
 
-        public static ParameterBag RptUniversalAgreement(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUniversalAgreement(ParameterBag parameters)
         {
             int nobs = 0;
             string title = null;
             string refIdent = null;
-            GatherUniversalAgreementData(host, parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref nobs, ref title, ref refIdent);
+            GatherUniversalAgreementData(parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref nobs, ref title, ref refIdent);
 
             double delta;
             double edel;
@@ -47,7 +47,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void GatherUniversalAgreementData(ITemplateHost host, ParameterBag parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
+        private static void GatherUniversalAgreementData(ParameterBag parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
@@ -190,7 +190,7 @@ namespace StatsDirect.Builtins
                 title = dataVariable.Title;
         }
 
-        public static ParameterBag RptUniversalRCompare(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUniversalRCompare(ParameterBag parameters)
         {
             double r1 = parameters["r1_in"].AsDouble;
             double r2 = parameters["r2_in"].AsDouble;
@@ -715,12 +715,12 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag RptUniversalAgreementSimulateExactP(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptUniversalAgreementSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
             int nobs = 0;
             string title = null;
             string refIdent = null;
-            GatherUniversalAgreementData(host, parameters, out int n, out int b, out int c, out double[,,] data, out bool _, ref nobs, ref title, ref refIdent);
+            GatherUniversalAgreementData(parameters, out int n, out int b, out int c, out double[,,] data, out bool _, ref nobs, ref title, ref refIdent);
 
             // Agree(n, b, c, data, out double delta, out double edel, out double var, out double gam, out double r, out double t);
             // double prob = Pgamt(t, gam);
@@ -735,16 +735,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", p);
             //  CI
             MathDbl.binci(Convert.ToDouble(ir), Convert.ToDouble(mpd), out double ll, out double ul, ci, out string warn);
-            outputParameters.AddOutput("pc", Formatting.XRound(100.0 * ci, 2));
+            outputParameters.AddOutput("pc", 100.0 * ci);
             outputParameters.AddOutput("ll", ll);
-            outputParameters.AddOutput("ul", host.RoundU(ul) + warn);
-            outputParameters.AddOutput("k", mpd.ToString("N0"));
-            outputParameters.AddOutput("seed_fmt", seed.ToString());
+            outputParameters.AddOutput("ul", ul);
+            outputParameters.AddOutput("warn", warn);
+            outputParameters.AddOutput("k", mpd);
             return outputParameters;
         }
 
 
-        private static void Rmrbp(ITemplateHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
+        private static void Rmrbp(IProgressBarHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
         {
 
             //          THIS FORTRAN PROGRAM COMPUTES THE TEST STATISTIC AND ASSOCIATED
@@ -968,7 +968,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        private static void Calc(ITemplateHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[,,] data, out int mp, out int mpd)
+        private static void Calc(IProgressBarHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[,,] data, out int mp, out int mpd)
         {
 
             double[,] d = new double[kb * (kg - 1) + kb + 1, kb * (kg - 1) + kb + 1];

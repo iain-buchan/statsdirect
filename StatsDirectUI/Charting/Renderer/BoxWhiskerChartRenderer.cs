@@ -4,7 +4,6 @@ using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
@@ -47,7 +46,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a box and whisker chart.
         ///  </summary>
         ///  <remarks></remarks>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

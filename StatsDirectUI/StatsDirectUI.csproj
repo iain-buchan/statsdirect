@@ -304,12 +304,14 @@
     <Compile Include="Charting\ICanvasFactory.cs" />
     <Compile Include="Charting\IChartOptionVisitor.cs" />
     <Compile Include="Charting\IChartSizable.cs" />
+    <Compile Include="Creole\CreoleAttributes.cs" />
     <Compile Include="Creole\CreoleEntity.cs" />
     <Compile Include="Creole\CreoleAttribute.cs" />
     <Compile Include="Creole\CreoleBlock.cs" />
     <Compile Include="Creole\CreoleContainer.cs" />
     <Compile Include="Creole\CreoleFormatting.cs" />
     <Compile Include="Creole\CreoleLineBreak.cs" />
+    <Compile Include="Creole\CreoleParserException.cs" />
     <Compile Include="Creole\CreoleParserVisitor.cs" />
     <Compile Include="Creole\CreoleInclude.cs" />
     <Compile Include="Creole\CreoleParagraph.cs" />
@@ -327,7 +329,10 @@
     <Compile Include="Data\GenericVariable.cs" />
     <Compile Include="Data\BooleanVariable.cs" />
     <Compile Include="Data\IVariableVisitor.cs" />
+    <Compile Include="Expressions\IVariableNameChecker.cs" />
+    <Compile Include="Expressions\TypePromoter.cs" />
     <Compile Include="TemplateProcessing\CreoleHtmlReportRenderer.cs" />
+    <Compile Include="Templates\SafeBuiltin.cs" />
     <Compile Include="Templates\IOperationTestParameter.cs" />
     <Compile Include="TemplateProcessing\OperationTestRenderer.cs" />
     <Compile Include="TemplateProcessing\PrincipledCreoleRtfReportRenderer.cs" />
@@ -349,10 +354,13 @@
     <Compile Include="Templates\FilledParameters\FilledObjectParameter.cs" />
     <Compile Include="Templates\FilledParameters\FilledParameterDirection.cs" />
     <Compile Include="Templates\FilledParameters\IFilledParameterVisitor.cs" />
+    <Compile Include="Templates\IFormatting.cs" />
+    <Compile Include="Templates\ISession.cs" />
     <Compile Include="Templates\IPreferences.cs" />
     <Compile Include="Templates\IProgressBar.cs" />
     <Compile Include="Templates\IPreferencesAndProgressBar.cs" />
     <Compile Include="Templates\IProgressBarHost.cs" />
+    <Compile Include="Templates\IScriptEngineHost.cs" />
     <Compile Include="Templates\IUserInterface.cs" />
     <Compile Include="Templates\OperationTest.cs" />
     <Compile Include="Templates\OperationTestInputParameter.cs" />
@@ -408,7 +416,7 @@
     <Compile Include="Charting\ChartOptionProcessor.cs" />
     <Compile Include="Charting\Options\ChartOptions.cs" />
     <Compile Include="Charting\ChartRendererFactory.cs" />
-    <Compile Include="Charting\Enums\ComparisonValue.cs" />
+    <Compile Include="Charting\Enums\Comparison.cs" />
     <Compile Include="Charting\Options\ControlOptions.cs" />
     <Compile Include="Charting\Renderer\ForestChartRenderer.cs" />
     <Compile Include="Charting\HistogramBinChooser.cs" />
@@ -540,6 +548,12 @@
     <Compile Include="UI\CellSelection.cs" />
     <Compile Include="UI\ChartOptionsParameter.cs" />
     <Compile Include="UI\ClipboardChecker.cs" />
+    <Compile Include="UI\ctlROCCutoffs.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\ctlROCCutoffs.Designer.cs">
+      <DependentUpon>ctlROCCutoffs.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\ctlUpdateStatsDirectCheck.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1044,6 +1058,9 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\ctlROCCutoffs.resx">
+      <DependentUpon>ctlROCCutoffs.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\ctlUpdateStatsDirectCheck.resx">
       <DependentUpon>ctlUpdateStatsDirectCheck.cs</DependentUpon>

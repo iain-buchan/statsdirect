@@ -49,26 +49,23 @@
 <title>Chi-square test (2 by 2)</title>
 <subtitle>Observed values and totals:</subtitle>
 <table>
-<tr><td>@tab3_a1</td><td>@tab3_b1</td><td><subtotal>@tab3_c1</subtotal></td></tr>
-<tr><td>@tab3_a2</td><td>@tab3_b2</td><td><subtotal>@tab3_c2</subtotal></td></tr>
-<tr><td><subtotal>@tab3_a3</subtotal></td><td><subtotal>@tab3_b3</subtotal></td><td><grandtotal>@tab3_c3</grandtotal></td></tr>
+<tr><td>@{tab3_a1:roundu}</td><td>@{tab3_b1:roundu}</td><td><subtotal>@{tab3_c1:roundu}</subtotal></td></tr>
+<tr><td>@{tab3_a2:roundu}</td><td>@{tab3_b2:roundu}</td><td><subtotal>@{tab3_c2:roundu}</subtotal></td></tr>
+<tr><td><subtotal>@{tab3_a3:roundu}</subtotal></td><td><subtotal>@{tab3_b3:roundu}</subtotal></td><td><grandtotal>@{tab3_c3:roundu}</grandtotal></td></tr>
 </table>
 <subtitle>Expected values:</subtitle>
 <table>
-<tr><td>@tab_a1</td><td>@tab_b1</td></tr>
-<tr><td>@tab_a2</td><td>@tab_b2</td></tr>
+<tr><td>@{tab_a1:roundu}</td><td>@{tab_b1:roundu}</td></tr>
+<tr><td>@{tab_a2:roundu}</td><td>@{tab_b2:roundu}</td></tr>
 </table>
 
-<p>Uncorrected Chi&#xb2; = @chi  <pval>@{chi_p:pval}</pval><br />
-Yates-corrected Chi&#xb2; = @yates_chi  <pval>@{yates_chi_p:pval}</pval></p>
+<p>Uncorrected Chi&#xb2; = @{chi:roundu}  <pval>@{chi_p:pval}</pval><br />
+Yates-corrected Chi&#xb2; = @{yates_chi:roundu}  <pval>@{yates_chi_p:pval}</pval></p>
 
 <p>Measures of association:<br />
-Pearson's contingency = @pearson<br />
-Cram&#xe9;r's <i>V</i> (signed) = @vs</p>
-<block name="warn">
-
-<p><warn>@wrn too small for chi-square, please use Fisher's exact test instead</warn></p>
-</block>
+Pearson's contingency = @{pearson:roundu}<br />
+Cram&#xe9;r's <i>V</i> (signed) = @{vs:roundu}</p>
+<block name="warn"><p><warn>@wrn too small for chi-square, please use Fisher's exact test instead</warn></p></block>
 </report>
 <block name="odds"><include src="odds.creole"/></block>
 <block name="relrisk"><include src="relrisk.creole"/></block>

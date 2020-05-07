@@ -148,13 +148,13 @@ namespace StatsDirect.UI
             if (double.TryParse(cboRocCi.Text, out rocOptions.GAMMA))
                 rocOptions.GAMMA /= 100.0;
             if (rdoRocCutOffGe.Checked)
-                rocOptions.Showopts = ComparisonValue.GE;
+                rocOptions.Comparison = Comparison.GreaterEqual;
             else if (rdoRocCutOffGt.Checked)
-                rocOptions.Showopts = ComparisonValue.GT;
+                rocOptions.Comparison = Comparison.GreaterThan;
             else if (rdoRocCutOffLe.Checked)
-                rocOptions.Showopts = ComparisonValue.LE;
+                rocOptions.Comparison = Comparison.LessEqual;
             else if (rdoRocCutOffLt.Checked)
-                rocOptions.Showopts = ComparisonValue.LT;
+                rocOptions.Comparison = Comparison.LessThan;
         }
 
         private void FillScatterXYOptionsFromForm()
@@ -421,18 +421,18 @@ namespace StatsDirect.UI
             chkRocShowCutOffCalculator.Checked = rocOptions.ShowCutOffCalculator;
             cboRocCi.Text = (rocOptions.GAMMA * 100.0).ToString();
             cboRocWeight.Text = rocOptions.Weight.ToString("N1");
-            switch (rocOptions.Showopts)
+            switch (rocOptions.Comparison)
             {
-                case ComparisonValue.GE:
+                case Comparison.GreaterEqual:
                     rdoRocCutOffGe.Checked = true;
                     break;
-                case ComparisonValue.GT:
+                case Comparison.GreaterThan:
                     rdoRocCutOffGt.Checked = true;
                     break;
-                case ComparisonValue.LE:
+                case Comparison.LessEqual:
                     rdoRocCutOffLe.Checked = true;
                     break;
-                case ComparisonValue.LT:
+                case Comparison.LessThan:
                     rdoRocCutOffLt.Checked = true;
                     break;
                 default:

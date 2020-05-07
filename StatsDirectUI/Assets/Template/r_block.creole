@@ -9,6 +9,8 @@
 <tr><td>Treatments:</td><td>@t_out</td></tr>
 </table>
 
+<block name="blockSizeWarn"><p><warn>@warning</warn></p></block>
+
 <table>
 <tr><th>Subject</th><th>Treatment</th></tr>
 <block name="subjects"><tr><td>@id</td><td>@rx</td></tr></block>

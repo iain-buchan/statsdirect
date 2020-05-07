@@ -76,7 +76,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("z", x9);
 
             r = acr;
-            outputParameters.AddOutput("ci", Formatting.XRound(cco * 100, 2));
+            outputParameters.AddOutput("ci", cco * 100);
 
             MathDbl.binci(r, n, out double pil, out double piu, cco, out string warn);
 
@@ -87,7 +87,6 @@ namespace StatsDirect.Builtins
 
             return outputParameters;
         }
-
 
         public static ParameterBag RptExactFisher(ParameterBag parameters)
         {
@@ -101,7 +100,6 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             return outputResult;
         }
-
 
         public static ParameterBag RptExactFisherX(ParameterBag parameters)
         {
@@ -311,7 +309,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptChiWoolf(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptChiWoolf(ParameterBag parameters)
         {
             int rc;
 
@@ -345,15 +343,12 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(host, o, k, showIntermediates, cit, cco, out bool ierr);
+            return Tables.Woolf(o, k, showIntermediates, cit, cco, out bool ierr);
         }
 
 
-        public static ParameterBag RptExactMcNamar(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactMcNamar(ParameterBag parameters)
         {
-            double ul;
-            double ll;
-
             double ba = parameters["a"].AsDouble;
             double bb = parameters["b"].AsDouble;
             double bc = parameters["c"].AsDouble;
@@ -363,10 +358,10 @@ namespace StatsDirect.Builtins
                 gamma = 0.95;
 
             ParameterBag outputParameters = new ParameterBag();
-            outputParameters.AddOutput("tab_a1", Convert.ToInt64(ba));
-            outputParameters.AddOutput("tab_b1", Convert.ToInt64(bb));
-            outputParameters.AddOutput("tab_a2", Convert.ToInt64(bc));
-            outputParameters.AddOutput("tab_b2", Convert.ToInt64(bd));
+            outputParameters.AddOutput("tab_a1", ba);
+            outputParameters.AddOutput("tab_b1", bb);
+            outputParameters.AddOutput("tab_a2", bc);
+            outputParameters.AddOutput("tab_b2", bd);
 
             if (bb + bc <= 0.0)
                 throw new InvalidDataException();
@@ -381,7 +376,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("yates_chi", x2);
             outputParameters.AddOutput("yates_chi_p", PDF.chivalp(x2, 1.0));
 
-            string rr = bc > 0.0 ? host.RoundU(bb / bc) : Formatting.INFRES;
+            double rr = bc > 0.0
+                ? bb / bc
+                : double.PositiveInfinity;
             outputParameters.AddOutput("risk", rr);
 
             double r = bb;
@@ -396,14 +393,12 @@ namespace StatsDirect.Builtins
             dfn = 2.0 * (r + 1.0);
             dfd = 2.0 * s;
             double ulf = PDF.ffromp(dfd, dfn, p);
-            if (llf > 0.0)
-                ll = r / ((s + 1.0) * llf);
-            else
-                ll = Constant.MISSING;
-            if (s > 0.0)
-                ul = (r + 1.0) * ulf / s;
-            else
-                ul = Constant.MISSING;
+            double ll = llf > 0.0
+                ? r / ((s + 1.0) * llf)
+                : Constant.MISSING;
+            double ul = s > 0.0
+                ? (r + 1.0) * ulf / s
+                : Constant.MISSING;
 
             if (bc > bb)
             {
@@ -418,10 +413,12 @@ namespace StatsDirect.Builtins
                     Utilities.Utilities.Swap(ref ll, ref ul);
             }
             outputParameters.AddOutput("pc", gamma * 100);
-            string llx = ll == Constant.MISSING ? Formatting.INFRESNEG : host.RoundU(ll);
-            outputParameters.AddOutput("from", llx);
-            string ulx = ul == Constant.MISSING ? Formatting.INFRES : host.RoundU(ul);
-            outputParameters.AddOutput("to", ulx);
+            if (ll == Constant.MISSING)
+                ll = double.NegativeInfinity;
+            outputParameters.AddOutput("from", ll);
+            if (ul == Constant.MISSING)
+                ul = double.PositiveInfinity;
+            outputParameters.AddOutput("to", ul);
 
             double f = r / (s + 1.0);
             p = PDF.fvalp(f, 2.0 * (s + 1.0), 2.0 * r) * 2.0;
@@ -439,7 +436,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag RptExactORCML(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptExactORCML(IProgressBarHost host, ParameterBag parameters)
         {
             // Gart replaced by CML in May 2001
 
@@ -463,7 +460,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("odds", odr);
 
             outputParameters.AddOutput("eor", eor);
-            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
+            outputParameters.AddOutput("pc", cco * 100);
             outputParameters.AddOutput("llf", llf);
             outputParameters.AddOutput("ulf", ulf);
             outputParameters.AddOutput("p1f", p1f);
@@ -495,7 +492,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("time", tar);
             outputParameters.AddOutput("rate", revents / tar);
 
-            outputParameters.AddOutput("pc", Formatting.XRound(cco * 100, 2));
+            outputParameters.AddOutput("pc", cco * 100);
 
             Rates.poisson_ci(alpha, revents, tar, out double xl, out double xu);
             outputParameters.AddOutput("from", xl);

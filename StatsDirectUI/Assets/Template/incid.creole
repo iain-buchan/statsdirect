@@ -11,18 +11,18 @@
 Non-exposed incidence rate = @{ir2:roundu}</p>
 
 <p>Rate difference = @{ird:roundu}<br />
-<ci>approximate @pc% confidence interval = @{ird_from:roundu}  to  @{ird_to:roundu}</ci></p>
+<ci>approximate @{pc:round2}% confidence interval = @{ird_from:roundu} to  @{ird_to:roundu}</ci></p>
 
 <p>chi-square = @{xmh:roundu}  <pval>@{p:pval}</pval></p>
 
-<p>Rate ratio = @irr</p>
+<p>Rate ratio = @{irr:roundu}</p>
 <block name="exact">
-<p><ci>exact @pc% confidence interval = @irr_from  to  @irr_to </ci></p>
+<p><ci>exact @{pc:round2}% confidence interval = @{irr_from:roundu} to  @{irr_to:roundu}</ci></p>
 
 <p>Conditional maximum likelihood estimate of rate ratio = @{eor:roundu}<br />
-<ci>Exact Fisher @pc% confidence interval = @{llf:roundu}  to  @{ulf:roundu}</ci><br />
+<ci>Exact Fisher @{pc:round2}% confidence interval = @{llf:roundu} to  @{ulf:roundu}</ci><br />
 <pval>Exact Fisher one sided @{p1f:pval}, two sided @{p2f:pval}</pval><br />
-<ci>Exact mid-P @pc% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
+<ci>Exact mid-P @{pc:round2}% confidence interval = @{llm:roundu} to  @{ulm:roundu}</ci><br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 </block>
 </report>
