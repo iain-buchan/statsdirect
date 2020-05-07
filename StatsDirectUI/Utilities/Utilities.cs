@@ -13,6 +13,13 @@ namespace StatsDirect.Utilities
             y = t;
         }
 
+        public static void Swap(ref int x, ref int y)
+        {
+            int t = x;
+            x = y;
+            y = t;
+        }
+
         /// <summary>
         /// Returns a font matching the descriptor appropriate for using in the UI.
         /// </summary>
