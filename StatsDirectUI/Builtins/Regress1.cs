@@ -2089,6 +2089,8 @@ namespace StatsDirect.Builtins
         ///  Link function: log
         ///  </summary>
         /// <param name="selectX">If the nth element is true, include the nth predictor in the regression; if false, exclude it.</param>
+        /// <param name="dropped">Message if any are dropped; unchanged if none are. Passed by ref as callers can make multiple calls in sequence then check for drops.</param>
+        /// <param name="errMsg">Message if any errors; unchanged if none. Passed by ref as callers can make multiple calls in sequence then check for errors.</param>
         public static void X_Poisson_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int predictors, bool[] selectX, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] seBeta, double[] covariance, double accuracy, int maxIterations, double[] fits, double[] devianceResidual, double[] leverage, double[] offset, out int errLevel, ref string dropped, ref string errMsg)
         {
             double ti = 0;
