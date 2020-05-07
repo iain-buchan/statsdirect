@@ -3,7 +3,7 @@ using System.Text;
 
 namespace StatsDirect.Creole
 {
-    public class CreoleReader
+    public static class CreoleReader
     {
         public static bool IsValid(string expr, out string errors)
         {
