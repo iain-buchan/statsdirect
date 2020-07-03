@@ -72,7 +72,6 @@ namespace StatsDirect.Charting.Renderer
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
 
-            // get complete funnel by extending x axis so the funnel does not cut the y axis
             double pool;
             switch (options.xform)
             {
@@ -94,10 +93,10 @@ namespace StatsDirect.Charting.Renderer
             DataMaxY = axisScale.MaximumDataValue;
             double ymn = axisScale.MinimumScaleValue;
             double ymx = axisScale.MaximumScaleValue;
-            double mini = Math.Min(axisScale.Interval, DataMinY);
+            double minInterval = Math.Min(axisScale.Interval, DataMinY);
             if (useCi)
             {
-                double se = MAPlotStandardError(plotMethod == 2 ? ymn : ymx, mini, plotMethod);
+                double se = MAPlotStandardError(plotMethod == 2 ? ymn : ymx, minInterval, plotMethod);
                 if (DataMaxX < pool + se * cit)
                     DataMaxX = pool + se * cit;
                 if (DataMinX > pool - se * cit)
@@ -144,13 +143,13 @@ namespace StatsDirect.Charting.Renderer
                 if (plotMethod == 2)
                 {
                     double ynow = axisScales.Y.MaximumScaleValue;
-                    double xnow = pool + MAPlotStandardError(ynow, mini, plotMethod) * cit;
+                    double xnow = pool + MAPlotStandardError(ynow, minInterval, plotMethod) * cit;
                     double y1 = ynow;
                     double x1 = xnow;
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow -= yinc;
-                        xnow = pool + MAPlotStandardError(ynow, mini, plotMethod) * cit;
+                        xnow = pool + MAPlotStandardError(ynow, minInterval, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
                             MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
@@ -159,13 +158,13 @@ namespace StatsDirect.Charting.Renderer
                         }
                     }
                     ynow = axisScales.Y.MaximumScaleValue;
-                    xnow = pool - MAPlotStandardError(ynow, mini, plotMethod) * cit;
+                    xnow = pool - MAPlotStandardError(ynow, minInterval, plotMethod) * cit;
                     y1 = ynow;
                     x1 = xnow;
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow -= yinc;
-                        xnow = pool - MAPlotStandardError(ynow, mini, plotMethod) * cit;
+                        xnow = pool - MAPlotStandardError(ynow, minInterval, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
                             MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
@@ -176,6 +175,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 else
                 {
+                    // Plot funnel
                     double ynow = axisScales.Y.MinimumScaleValue;
                     double xnow = pool;
                     double y1 = ynow;
@@ -183,10 +183,10 @@ namespace StatsDirect.Charting.Renderer
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow += yinc;
-                        xnow = pool + MAPlotStandardError(ynow, mini, plotMethod) * cit;
+                        xnow = pool + MAPlotStandardError(ynow, minInterval, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
-                            MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
+                            DrawLineInChartCoordinates(GrBlack, x1, y1, xnow, ynow);
                             y1 = ynow;
                             x1 = xnow;
                         }
@@ -198,10 +198,10 @@ namespace StatsDirect.Charting.Renderer
                     for (int r = 1; r <= incs; r++)
                     {
                         ynow += yinc;
-                        xnow = pool - MAPlotStandardError(ynow, mini, plotMethod) * cit;
+                        xnow = pool - MAPlotStandardError(ynow, minInterval, plotMethod) * cit;
                         if (xnow >= axisScales.X.MinimumScaleValue && xnow <= axisScales.X.MaximumScaleValue)
                         {
-                            MaybeDrawLineInChartCoordinates(axisScales, GrBlack, x1, y1, xnow, ynow);
+                            DrawLineInChartCoordinates(GrBlack, x1, y1, xnow, ynow);
                             y1 = ynow;
                             x1 = xnow;
                         }
@@ -394,9 +394,13 @@ namespace StatsDirect.Charting.Renderer
                 case 1:
                     return y;
                 case 2:
-                    return y == 0.0 ? 1.0 / z : 1.0 / y;
+                    return y == 0.0
+                        ? 1.0 / z
+                        : 1.0 / y;
                 case 7:
-                    return y < 0.0 ? 0.0 : Math.Sqrt(y);
+                    return y < 0.0
+                        ? 0.0
+                        : Math.Sqrt(y);
                 default:
                     return 0;
             }
