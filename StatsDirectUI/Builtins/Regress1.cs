@@ -1306,7 +1306,7 @@ namespace StatsDirect.Builtins
             }
 
             //  rescale d1 in the range rg2, g2
-            while (d1 <= 1.0 / g2 & d1 != 0.0)
+            while (d1 <= 1.0 / g2 && d1 != 0.0)
             {
                 p[1] = -1.0;
                 d1 *= g2;

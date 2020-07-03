@@ -92,17 +92,20 @@ namespace StatsDirect.Builtins
             int IComparer<CoxP>.Compare(CoxP x, CoxP y) => Compare(x, y);
         }
 
+        public static ParameterBag RptCoxRegressionPreprocess(ParameterBag parameters)
+        {
+            DataFrame timesFrame = parameters["times"].AsDataFrame;
+            double[] times = ((DoubleVariable)timesFrame.Variables[0]).Data;
+            double adjustment = 0.0;
+            for (int r = 0; r < times.Length; r++)
+                if (times[r] <= 0.0)
+                    if (Math.Abs(times[r]) + 1 > adjustment)
+                        adjustment = Math.Abs(times[r]) + 1;
+            return new ParameterBag("timesAdjustment", new FilledDoubleParameter(FilledParameterDirection.Output, adjustment));
+        }
+        
         public static ParameterBag RptCoxRegression(IUserInterface host, ParameterBag parameters)
         {
-            int i; int ifault = 0; int ncoef = 0;
-            int istrat; int icov = 0;
-            int ncov; int nrmiss = 0;
-            int[] indef;
-            int c;
-            int ifrq;
-            double algl = 0;
-            double xbar = 0;
-
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = (DoubleVariable) timesFrame.Variables[0];
@@ -112,7 +115,7 @@ namespace StatsDirect.Builtins
             double[] x = new double[rows * ic + 1 ];
             bool ok = true;
             int ik = 0;
-            double adjt = 0.0;
+            double adjustment = 0.0;
             for (int r = 1; r <= rows; r++)
             {
                 ik++;
@@ -120,19 +123,18 @@ namespace StatsDirect.Builtins
                 if (x[ik] <= 0.0)
                 {
                     ok = false;
-                    if (Math.Abs(x[ik]) + 1 > adjt)
-                        adjt = Math.Abs(x[ik]) + 1;
+                    if (Math.Abs(x[ik]) + 1 > adjustment)
+                        adjustment = Math.Abs(x[ik]) + 1;
                 }
             }
             if (!ok)
             {
-                bool shouldAdjust = host.GetBoolean($"Times must be > 0: Do you want to add {adjt} to all of your times?", "Cox Regression", true, out bool wasCancelled);
+                bool shouldAdjust = host.GetBoolean($"Times must be > 0: Do you want to add {adjustment} to all of your times?", "Cox Regression", true, out bool wasCancelled);
                 if (wasCancelled || !shouldAdjust)
                     throw new TemplateOperationCancelledException();
 
                 for (int r = 1; r <= rows; r++)
-                    x[r] = x[r] + adjt;
-                ok = true;
+                    x[r] += adjustment;
             }
 
             DataFrame eventsFrame = parameters["events"].AsDataFrame;
@@ -157,22 +159,22 @@ namespace StatsDirect.Builtins
                 else if (x[ik] <= 0)
                     x[ik] = 1;
             }
+            int ifrq;
             // use the frequency variable if data are grouped
             if (ok)
             {
                 ic += 1;
                 ifrq = ic;
                 // create temp variable for copying values 
-                double[] transTemp4 = new double[rows * ic + 1 ];
+                double[] transTemp4 = new double[rows * ic + 1];
                 Array.Copy(x, transTemp4, Math.Min(x.Length, transTemp4.Length));
                 x = transTemp4;
                 for (int r = 1; r <= rows; r++)
                 {
                     ik++;
-                    if (eventsVariable.Data[r - 1] > 1)
-                        x[ik] = eventsVariable.Data[r - 1];
-                    else
-                        x[ik] = 1;
+                    x[ik] = eventsVariable.Data[r - 1] > 1
+                        ? eventsVariable.Data[r - 1]
+                        : 1;
                 }
             }
             else
@@ -181,24 +183,26 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame predictorsFrame = null;
-            if (parameters.ContainsKey("predictors") && parameters["predictors"] != null)
+            int[] indef;
+            int icov = 0;
+            int ncov; if (parameters.ContainsKey("predictors") && parameters["predictors"] != null)
             {
                 predictorsFrame = parameters["predictors"].AsDataFrame;
                 // Store the predictor Data
                 double[,] xx = new double[predictorsFrame.VariableCount, rows + 1];
-                for (c = 0; c < predictorsFrame.VariableCount; c++)
+                for (int c = 0; c < predictorsFrame.VariableCount; c++)
                     for (int r = 1; r <= rows; r++)
                         xx[c, r] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r - 1];
 
                 // load predictors into the master matrix
                 ncov = predictorsFrame.VariableCount;
                 // create temp variable for copying values 
-                double[] transTemp5 = new double[rows * (ic + ncov) + 1 ];
+                double[] transTemp5 = new double[rows * (ic + ncov) + 1];
                 Array.Copy(x, transTemp5, Math.Min(x.Length, transTemp5.Length));
                 x = transTemp5;
                 indef = new int[ncov + 1];
                 icov = ik;
-                for (c = 0; c < predictorsFrame.VariableCount; c++)
+                for (int c = 0; c < predictorsFrame.VariableCount; c++)
                 {
                     indef[c + 1] = ic + c + 1;
                     for (int r = 1; r <= rows; r++)
@@ -217,7 +221,7 @@ namespace StatsDirect.Builtins
 
             // start to fill the holdx matrix needed for the plot function
             double[,] holdx = new double[rows + 2, ncov + 2];
-            for (c = 1; c <= ncov; c++)
+            for (int c = 1; c <= ncov; c++)
             {
                 // If we get here, ncov must be at least 1, so predictorsFrame cannot be null.
                 Debug.Assert(null != predictorsFrame);
@@ -231,7 +235,7 @@ namespace StatsDirect.Builtins
             int binaries = 0;
             if (ncov > 0)
             {
-                for (c = 0; c < predictorsFrame.VariableCount; c++)
+                for (int c = 0; c < predictorsFrame.VariableCount; c++)
                 {
                     xd[c] = new ColumnData();
                     bincov[c + 1] = IsBinary(predictorsFrame.Variables[c] as DoubleVariable, xd[c]);
@@ -241,14 +245,14 @@ namespace StatsDirect.Builtins
             }
 
             // store predictor meta-data
-            for (c = 0; c < predictorsFrame.VariableCount; c++)
+            for (int c = 0; c < predictorsFrame.VariableCount; c++)
             {
                 if (xd[c] == null)
                     xd[c] = new ColumnData();
                 xd[c].Title = predictorsFrame.Variables[c].Title;
             }
 
-            // get strata
+            int istrat;             // get strata
             if (parameters.ContainsKey("strata") && parameters["strata"] != null)
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
@@ -256,7 +260,7 @@ namespace StatsDirect.Builtins
                 ic += 1;
                 istrat = ic;
                 // create temp variable for copying values 
-                double[] transTemp6 = new double[rows * ic + 1 ];
+                double[] transTemp6 = new double[rows * ic + 1];
                 Array.Copy(x, transTemp6, Math.Min(x.Length, transTemp6.Length));
                 x = transTemp6;
                 for (int r = 1; r <= rows; r++)
@@ -292,10 +296,11 @@ namespace StatsDirect.Builtins
 
             if (centre)
             {
-                for (i = 1; i <= nef; i++)
+                for (int i = 1; i <= nef; i++)
                 {
                     if (xd[i - 1].Groups == null || xd[i - 1].Groups.Count > 2)
                     {
+                        double xbar = 0;
                         for (int r = 1; r <= rows; r++)
                             xbar += holdx[r, i];
                         xbar /= rows;
@@ -314,6 +319,9 @@ namespace StatsDirect.Builtins
             double[,] cov = new double[ldcoef + 1, ldcoef + 1];
             double[] GR = new double[ldcoef + 1 ];
             double[] xmean = new double[ldcoef + 1];
+            int ifault = 0; int ncoef = 0;
+            int nrmiss = 0;
+            double algl = 0;
             coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             if (ifault != 0)
             {
@@ -327,7 +335,7 @@ namespace StatsDirect.Builtins
             ColumnData[] CDAT1 = new ColumnData[ncoef + 1 ];
             double[, ,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
             double[,] ARR2 = new double[nobs + 1, 10 + 1];
-            for (i = 1; i <= ncoef; i++)
+            for (int i = 1; i <= ncoef; i++)
             {
                 ARR3[1, i, 1] = coef[i, 1];
                 ARR3[1, i, 2] = coef[i, 2];
@@ -335,7 +343,7 @@ namespace StatsDirect.Builtins
                 CDAT1[i] = xd[i - 1];
             }
 
-            for (i = 1; i <= nobs; i++)
+            for (int i = 1; i <= nobs; i++)
             {
                 ARR2[i, 1] = ccase[i, 1];
                 ARR2[i, 2] = ccase[i, 2];
@@ -362,7 +370,7 @@ namespace StatsDirect.Builtins
             ncov = 1;
             // int ldcov = 1; Never used.  PJC 2012/04/09.
             ldcoef = 1;
-            for (i = icov + 1; i <= icov + nobs; i++)
+            for (int i = icov + 1; i <= icov + nobs; i++)
                 x[i] = 1.0;
             indef[1] = 3;
             igrp = new int[nobs + 1 ];
@@ -383,7 +391,7 @@ namespace StatsDirect.Builtins
             {
                 if (binaries > 0)
                 {
-                    for (i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
+                    for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
                         if (bincov[i])
                             subgroups.Add(CDAT1[i].Title);
                     subgroups.Add("None");
@@ -403,7 +411,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_dev", PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0]));
             IList<ParameterBag> predList = new List<ParameterBag>();
             outputParameters.AddOutput("*pred", predList);
-            for (i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
+            for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
             {
                 ParameterBag predParameters = new ParameterBag();
                 predList.Add(predParameters);
@@ -563,15 +571,14 @@ namespace StatsDirect.Builtins
             double[] smh = new double[2 * Math.Max(ncoef * ncoef, 2) + 1];
             int[] iptr = new int[nRow + ncoef + 1];
             int[] idt = new int[nRow + 1];
-            int[] iwk = new int[3 * Math.Max(nRow, nCol) + 1 ];
-            coxest(nRow, nCol, ref x, ldx, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref iwk, ref ifault);
+            coxest(nRow, nCol, ref x, ldx, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
         }
 
         /// <summary>
         /// ESTIMATES FOR PARAMETERS IN PROPORTIONAL HAZARDS MODEL
         /// </summary>
         private static void coxest(int nRow, int nCol, ref double[] x, int ldx, int irt, int IFRQ, int ifix, int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
-        smg, ref double[] smh, ref int[] iptr, ref int[] idt, ref int[] iwk, ref int ifault)
+        smg, ref double[] smh, ref int[] iptr, ref int[] idt, ref int ifault)
         {
             int nidt = 0; int ik;
             int i;
@@ -702,24 +709,16 @@ namespace StatsDirect.Builtins
                     nkey += 1;
                     indkey[nkey] = icen;
                     for (ik = icen; ik <= nRow * nCol; ik += nCol)
-                    {
                         x[ik] = -1.0 * x[ik];
-                    }
                 }
                 for (ik = irt; ik <= nRow * nCol; ik += nCol)
-                {
                     x[ik] = -1.0 * x[ik];
-                }
-                Matrix.MXSRT(ref nCol, ref nRow, ref x, ref nkey, ref indkey, ref iptr, ref nidt, ref idt, ref ifault);
+                Matrix.MXSRT(nCol, nRow, x, nkey, indkey, iptr, ref nidt, idt, ref ifault);
                 for (ik = irt; ik <= nRow * nCol; ik += nCol)
-                {
                     x[ik] = -1.0 * x[ik];
-                }
                 if (icen > 0)
-                {
                     for (ik = icen; ik <= nRow * nCol; ik += nCol)
                         x[ik] = -1.0 * x[ik];
-                }
             }
             else
             {
@@ -786,19 +785,16 @@ namespace StatsDirect.Builtins
                 }
             }
             if (ncoef > 0)
-            {
                 for (ik = 1; ik <= ncoef; ik++)
                     coef[ik, 1] = 0.0;
-            }
-            coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, istrat, maxit, eps, ratio, nef, nvef, indef, itie, ref ncoef, coef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
+            coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, istrat, maxit, eps, ratio, nef, nvef, indef, itie, ref ncoef, coef, ref algl, cov, ldcov, xmean, caze, ldcase, GR, igrp, ref nrmiss, OBS, smg, smh, iptr, idt, ref ifault);
             if (ifault != 0)
                 return;
 
             MatrixTranspose1D(nCol, ldx, x, out ifault);
         }
 
-        private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int istrat, int maxit, double eps, double ratio, int nef, int[] nvef, int[] indef, int itie, ref /* yes, really */ int ncoef, double[,] coef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[] smg, ref double[]
-         smh, ref int[] iptr, ref int[] idt, ref int ifault)
+        private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int istrat, int maxit, double eps, double ratio, int nef, int[] nvef, int[] indef, int itie, ref /* yes, really */ int ncoef, double[,] coef, ref double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, int[] igrp, ref int nrmiss, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, ref int ifault)
         {
             //   NEWTON-RAPHSON ITERATIONS
             double[] smd = new double[1 + 1];

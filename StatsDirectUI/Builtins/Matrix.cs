@@ -20,11 +20,11 @@ namespace StatsDirect.Builtins
         ///  <param name="ni"></param>
         ///  <param name="ifault"></param>
         ///  <remarks></remarks>
-        public static void MXSRT(ref int nrx, ref int ncx, ref double[] x, ref int nkey, ref int[] indkey, ref int[] iperm, ref int ngroup, ref int[] ni, ref int ifault)
+        public static void MXSRT(int nrx, int ncx, double[] x, int nkey, int[] indkey, int[] iperm, ref int ngroup, int[] ni, ref int ifault)
         {
             int i = ncx > nrx ? ncx : nrx;
             double[] wk = new double[4 * i + 1];
-            int[] iwk = new int[i + Convert.ToInt32(2.8854 * Math.Log(Convert.ToDouble(i))) + 2 + 1];
+            int[] iwk = new int[i + Convert.ToInt32(2.8854 * Math.Log(i)) + 2 + 1];
 
             if (nrx <= 0)
                 ifault = 1;
@@ -103,7 +103,7 @@ namespace StatsDirect.Builtins
                 ix += 1;
                 ib += 1;
             }
-            dqsortperm(ref ljr, ref wk, ref wk, ref iwk);
+            dqsortperm(ljr, wk, wk, iwk);
             pmurc(nrx, ncx, x, iwk, 1, x, wk, ref ifault);
             int lind = 0;
             i = 1;
@@ -161,7 +161,7 @@ namespace StatsDirect.Builtins
                 ix += 1;
                 ib += 1;
             }
-            dqsortperm(ref lir, ref wk, ref wk, ref iperm);
+            dqsortperm(lir, wk, wk, iperm);
             pmurc(nrx, ncx, x, iperm, 2, x, wk, ref ifault);
             ix = 1;
             iy = 1;
@@ -179,9 +179,8 @@ namespace StatsDirect.Builtins
                 ix += 1;
                 ib += 1;
             }
-            dqsortperm(ref lir, ref wk, ref wk, ref iperm);
+            dqsortperm(lir, wk, wk, iperm);
         }
-
 
         ///  <summary>
         ///  nucleus called by mxsrt which sorts a matrix wrt vectors
@@ -434,42 +433,30 @@ namespace StatsDirect.Builtins
         private static void pmurc(int nra, int nca, double[] a, int[] ipermu, int ipath, double[] aper, double[] work, ref int ifault)
         {
             if (nra <= 0)
-            {
                 ifault = 1;
-            }
             if (nca <= 0)
-            {
                 ifault = 2;
-            }
             //if ( nra > nra )
             //{ 
             //    ifault = 3; 
             //} 
             if (ifault != 0)
-            {
                 return;
-            }
 
             if (ipath == 1)
             {
                 for (int j = 1; j <= nca; j++)
-                {
                     vprmuf(nra, a, 1 + (j - 1) * nra, ipermu, aper, 1 + (j - 1) * nra, ref ifault);
-                }
             }
             else if (ipath == 2)
             {
                 for (int i = 1; i <= nra; i++)
                 {
                     for (int j = 1; j <= nca; j++)
-                    {
                         work[j] = a[i + (j - 1) * nra];
-                    }
                     vprmuf(nca, work, 1, ipermu, work, 1, ref ifault);
                     for (int j = 1; j <= nca; j++)
-                    {
                         aper[i + (j - 1) * nra] = work[j];
-                    }
                 }
             }
             else
@@ -491,35 +478,23 @@ namespace StatsDirect.Builtins
         private static void vprmuf(int n, double[] x, int ix, int[] ipermu, double[] xpermu, int ipx, ref int ifault)
         {
             if (n <= 0)
-            {
                 return;
-            }
 
             for (int i = 0; i <= n - 1; i++)
-            {
                 xpermu[ipx + i] = x[ix + i];
-            }
 
             if (n == 1)
-            {
                 return;
-            }
 
             for (int i = 1; i <= n; i++)
             {
-                if (ipermu[i] < 1 | ipermu[i] > n)
-                {
+                if (ipermu[i] < 1 || ipermu[i] > n)
                     ifault = 4;
-                }
                 else
-                {
                     ipermu[i] = -ipermu[i];
-                }
             }
             if (ifault != 0)
-            {
                 return;
-            }
 
             int ipxm1 = ipx - 1;
             for (int i = 1; i <= n; i++)
@@ -540,15 +515,14 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-
         }
 
         /// <summary>
-        /// sort an integer array in increasing order
+        /// sort an ix (indices 1..n) in increasing order, returning in iy.
         /// </summary>
-        /// <param name="n"></param>
-        /// <param name="ix"></param>
-        /// <param name="iy"></param>
+        /// <param name="n">Number of elements to sort, starting from index 1.</param>
+        /// <param name="ix">Unsorted input array; unchanged.</param>
+        /// <param name="iy">Preallocated output array of at least n+1 elements. Returned with elements 1..n of ix sorted in increasing order.</param>
         /// <remarks>Singleton, R. C., Algorithm 347, An Efficient Algorithm for Sorting with Minimal Storage, CACM,12(3),1969,185-7.</remarks>
         private static void iqsort(int n, int[] ix, int[] iy)
         {
@@ -557,25 +531,17 @@ namespace StatsDirect.Builtins
             int i;
 
             for (i = 1; i <= n; i++)
-            {
                 iy[i] = ix[i];
-            }
             if (n <= 0)
-            {
                 return;
-            }
             int m = 1;
             i = 1;
             int j = n;
             double r = 0.375;
             if (r <= 0.5898437)
-            {
                 r += 0.0390625;
-            }
             else
-            {
                 r -= 0.21875;
-            }
             do
             {
                 int k;
@@ -614,9 +580,7 @@ namespace StatsDirect.Builtins
                         {
                             l -= 1;
                             if (iy[l] <= ic)
-                            {
                                 break;
-                            }
                         }
                         while (true);
                         //         find element larger than ic in the first half
@@ -624,15 +588,11 @@ namespace StatsDirect.Builtins
                         {
                             k += 1;
                             if (iy[k] >= ic)
-                            {
                                 break;
-                            }
                         }
                         while (true);
                         if (k > l)
-                        {
                             break;
-                        }
                         if (iy[l] != iy[k])
                         {
                             //          swap elements between halves
@@ -663,22 +623,16 @@ namespace StatsDirect.Builtins
                 {
                     m -= 1;
                     if (m == 0)
-                    {
                         return;
-                    }
                     i = il[m];
                     j = iu[m];
                 }
                 if (j - i < 11)
                 {
                     if (r <= 0.5898437)
-                    {
                         r += 0.0390625;
-                    }
                     else
-                    {
                         r -= 0.21875;
-                    }
                     if (i != 1)
                     {
                         i -= 1;
@@ -686,9 +640,7 @@ namespace StatsDirect.Builtins
                         {
                             i += 1;
                             if (i == j)
-                            {
                                 break;
-                            }
                             ic = iy[i + 1];
                             if (iy[i] > ic)
                             {
@@ -698,9 +650,7 @@ namespace StatsDirect.Builtins
                                     iy[k + 1] = iy[k];
                                     k -= 1;
                                     if (ic >= iy[k])
-                                    {
                                         break;
-                                    }
                                 }
                                 while (true);
                                 iy[k + 1] = ic;
@@ -711,25 +661,19 @@ namespace StatsDirect.Builtins
                 }
             }
             while (true);
-
         }
 
-
-        public static void dqsortperm(ref int n, ref double[] x, ref double[] y, ref int[] ipmu)
+        /// <summary>sort a double array in increasing order and return the permutation that orders the array</summary>
+        /// <remarks>Singleton, R. C., Algorithm 347, An Efficient Algorithm for Sorting with Minimal Storage, CACM,12(3),1969,185-7.</remarks>
+        public static void dqsortperm(int n, double[] x, double[] y, int[] ipmu)
         {
-
-            //  sort a double array in increasing order and return the permutation that orders the array
-            // 
-            //  Singleton, R. C., Algorithm 347, An Efficient Algorithm for Sorting with Minimal Storage, CACM,12(3),1969,185-7.
-
             int[] il = new int[22];
             int[] iu = new int[22];
             int i;
 
             if (n <= 0)
-            {
                 return;
-            }
+
             for (i = 1; i <= n; i++)
             {
                 y[i] = x[i];
@@ -744,13 +688,9 @@ namespace StatsDirect.Builtins
             int j = n;
             double r = 0.375;
             if (r <= 0.5898437)
-            {
                 r += 0.0390625;
-            }
             else
-            {
                 r -= 0.21875;
-            }
             do
             {
                 double cp;
@@ -800,9 +740,7 @@ namespace StatsDirect.Builtins
                         {
                             l -= 1;
                             if (y[l] <= cp)
-                            {
                                 break;
-                            }
                         }
                         while (true);
                         //         find element larger than cp in the first half
@@ -810,15 +748,11 @@ namespace StatsDirect.Builtins
                         {
                             k += 1;
                             if (y[k] >= cp)
-                            {
                                 break;
-                            }
                         }
                         while (true);
                         if (k > l)
-                        {
                             break;
-                        }
                         if (y[l] != y[k])
                         {
                             //          swap elements between halves
@@ -870,13 +804,9 @@ namespace StatsDirect.Builtins
                 if (j - i < 11)
                 {
                     if (r <= 0.5898437)
-                    {
                         r += 0.0390625;
-                    }
                     else
-                    {
                         r -= 0.21875;
-                    }
                     if (i != 1)
                     {
                         i -= 1;
@@ -884,9 +814,7 @@ namespace StatsDirect.Builtins
                         {
                             i += 1;
                             if (i == j)
-                            {
                                 break;
-                            }
                             cp = y[i + 1];
                             it = ipmu[i + 1];
                             if (y[i] > cp)
@@ -898,9 +826,7 @@ namespace StatsDirect.Builtins
                                     ipmu[k + 1] = ipmu[k];
                                     k -= 1;
                                     if (cp >= y[k])
-                                    {
                                         break;
-                                    }
                                 }
                                 while (true);
                                 y[k + 1] = cp;

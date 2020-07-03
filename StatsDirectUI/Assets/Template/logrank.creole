@@ -37,9 +37,9 @@ Relative rate = @{rel:roundu}</p>
 <br />
 
 <p>Hazard Ratio  <ci>(approximate @{pc:round2}% confidence interval)</ci></p>
-<block name="hazard"><p>@vs = @{haz:roundu}  <ci>(@{from:roundu} to @{to:roundu})</ci></p></block>
-<block name="cml">
+<block name="hazard"><p>Group @vs1 vs. Group @vs2 = @{haz:roundu}  <ci>(@{from:roundu} to @{to:roundu})</ci></p></block>
 
+<block name="cml">
 <p>Conditional maximum likelihood estimates:<br />
 Hazard Ratio = @{hr:roundu}<br />
 <ci>Exact Fisher @{pc:round2}% confidence interval = @{llf:roundu} to @{ulf:roundu}</ci><br />
@@ -47,6 +47,7 @@ Hazard Ratio = @{hr:roundu}<br />
 <ci>Exact mid-P @{pc:round2}% confidence interval = @{llm:roundu} to @{ulm:roundu}</ci><br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 </block>
+
 </block>
 </block>
 </report>

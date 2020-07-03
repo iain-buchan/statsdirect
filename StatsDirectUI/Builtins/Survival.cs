@@ -1385,7 +1385,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static void Petoprep(IUserInterface host, ParameterBag parameters, ref int rows, out double gamma, ref double cit, ref int groups, ref int strata, ref double[] score, ref string gid, ref double[] gpid, ref string[] glab, ref string[] slab, out bool ifault, ref double[,] arr2, ref ColumnData[] cdat1)
+        private static void Petoprep(IUserInterface host, ParameterBag parameters, out int rows, out double gamma, out double cit, out int groups, out int strata, out double[] scores, out string gid, out double[] groupIds, out string[] groupLabels, out string[] stratumLabels, out bool ifault, out double[,] arr2, out ColumnData[] cdat1)
         {
             ifault = true;
             gamma = parameters["gamma"].AsDouble;
@@ -1397,47 +1397,45 @@ namespace StatsDirect.Builtins
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
-            glab = new string[gidVariable.GroupCount + 1 ];
+            groupLabels = new string[gidVariable.GroupCount + 1 ];
             for (int j = 1; j <= gidVariable.GroupCount; j++)
-                glab[j] = gidVariable.Groups[j - 1].Label;
+                groupLabels[j] = gidVariable.Groups[j - 1].Label;
             rows = gidVariable.Length;
             gid = gidVariable.Title;
             double[] g = new double[rows + 1];
             for (int r = 1; r <= rows; r++)
                 g[r] = gidVariable.Data[r - 1] + 1;
-            gpid = new double[0 + 1 ];
+            groupIds = new double[rows];
             int igot = 0;
             for (int r = 1; r <= rows; r++)
             {
                 double temp = g[r];
                 if (temp != Constant.MISSING)
                 {
-                    bool ok = true;
+                    bool found = false;
                     for (int j = 1; j <= igot; j++)
                     {
-                        if (temp == gpid[j])
+                        if (temp == groupIds[j])
                         {
-                            ok = false;
+                            found = true;
                             break;
                         }
                     }
-                    if (ok)
-                    {
-                        igot++;
-                        // create temp variable for copying values - TODO: Optimise
-                        double[] gpidCopy = new double[igot + 1 ];
-                        Array.Copy(gpid, gpidCopy, gpid.Length);
-                        gpid = gpidCopy;
-                        gpid[igot] = temp;
-                    }
+                    if (!found)
+                        groupIds[++igot] = temp;
                 }
             }
+            // Trim gpid to the number of groups we got (presently in igot, and gpid[1..igot])
+            double[] tempArray = new double[igot + 1];
+            Array.Copy(groupIds, tempArray, igot + 1);
+            groupIds = tempArray;
+
             groups = igot;
             for (int r = 1; r <= rows; r++)
             {
                 for (int j = 1; j <= groups; j++)
                 {
-                    if (gpid[j] == g[r])
+                    if (groupIds[j] == g[r])
                     {
                         g[r] = j;
                         break;
@@ -1462,9 +1460,9 @@ namespace StatsDirect.Builtins
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 ClassifierVariable strataVariable = strataFrame.Variables[0] as ClassifierVariable;
-                slab = new string[strataVariable.GroupCount + 1];
+                stratumLabels = new string[strataVariable.GroupCount + 1];
                 for (int j = 1; j <= strataVariable.GroupCount; j++)
-                    slab[j] = strataVariable.Title + "=" + strataVariable.Groups[j - 1].Label;
+                    stratumLabels[j] = strataVariable.Title + "=" + strataVariable.Groups[j - 1].Label;
                 for (int r = 1; r <= rows; r++)
                     s[r] = strataVariable.Data[r - 1];
                 double[] sid = new double[0 + 1];
@@ -1507,14 +1505,17 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            else
+            {
+                // No strata
+                stratumLabels = null;
+                strata = 0;
+            }
             int extra = 0;
             for (int r = 1; r <= rows; r++)
-            {
                 if (c[r] > 1)
-                {
                     extra += (int)Math.Floor(c[r]) - 1;
-                }
-            }
+
             // put the data back into the Public array
             arr2 = new double[3 + 1, rows + extra + 1];
             cdat1 = new ColumnData[3 + 1];
@@ -1546,27 +1547,32 @@ namespace StatsDirect.Builtins
                 }
             }
             rows += extra;
+
+            if (groups < 2)
+                throw new TemplateOperationCancelledException();
             if (groups > 2)
             {
-                score = new double[groups + 1 ];
+                scores = new double[groups + 1];
                 bool use123 = parameters["use123"].AsBoolean;
                 if (use123)
                 {
                     for (int j = 1; j <= groups; j++)
-                        score[j] = Convert.ToDouble(j);
+                        scores[j] = j;
                 }
                 else
                 {
                     for (int j = 1; j <= groups; j++)
                     {
-                        score[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out bool wasCancelled);
+                        scores[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out bool wasCancelled);
                         if (wasCancelled)
                             throw new TemplateOperationCancelledException();
                     }
                 }
             }
-            else if (groups < 2)
-                throw new TemplateOperationCancelledException();
+            else
+            {
+                scores = null; // Exactly two groups
+            }
             ifault = false;
         }
 
@@ -2124,11 +2130,9 @@ namespace StatsDirect.Builtins
                 }
                 survivalParameters = new ParameterBag();
                 survivalList.Add(survivalParameters);
-                string xx;
-                if (j < nt - 1)
-                    xx = Convert.ToInt32(t[j + 1]).ToString() + " to " + Convert.ToInt32(t[j + 2]).ToString();
-                else
-                    xx = Convert.ToInt32(t[j + 1]).ToString() + " up";
+                string xx = j < nt - 1
+                    ? Convert.ToInt32(t[j + 1]).ToString() + " to " + Convert.ToInt32(t[j + 2]).ToString()
+                    : Convert.ToInt32(t[j + 1]).ToString() + " up";
                 survivalParameters.AddOutput("int", xx);
                 survivalParameters.AddOutput("p", j < nt - 1 ? xp[j + 1] : Constant.MISSING);
                 survivalParameters.AddOutput("lx", 100.0 * cump);
@@ -2141,25 +2145,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag RptLogRank(ITemplateHost host, ParameterBag parameters)
         {
-            int imfault = 0;
-            int strata = 0; int groups = 0;
-            int stratum = 0;
-            int nt = 0;
-            double p2M = 0; double p1M = 0; double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0;
-            double llf = 0; double ulf = 0; double hr = 0; double x2T = 0;
-            int ne = 0;
-            double wt = 0;
-            double cit = 0; string gid = null;
-            string zx = null;
-            Rec2X2[] tbl = null;
-
-            double[] score = new double[0 + 1];
-            double[] gpid = new double[1 + 1];
-            string[] glab = new string[1 + 1];
-            string[] slab = new string[1 + 1];
-            double[,] arr2 = null;
-            ColumnData[] cdat1 = null;
-            Petoprep(host, parameters, ref nt, out double gamma, ref cit, ref groups, ref strata, ref score, ref gid, ref gpid, ref glab, ref slab, out bool ifault, ref arr2, ref cdat1);
+            Petoprep(host, parameters, out int nt, out double gamma, out double cit, out int groups, out int strata, out double[] score, out string gid, out double[] gpid, out string[] glab, out string[] slab, out bool ifault, out double[,] arr2, out _);
             if (ifault)
                 throw new TemplateOperationCancelledException();
 
@@ -2175,13 +2161,14 @@ namespace StatsDirect.Builtins
             double[] u0Suml = new double[groups + 1];
             double[,] vsumw = new double[groups + 1, groups + 1];
             double[] u0Sumw = new double[groups + 1];
+            int stratum = 0;
             do
             {
                 // stratum loop
                 if (strata != 0)
                     stratum += 1;
                 int[] ng = new int[groups + 1];
-                int[] dg = new int[groups + 1 ];
+                int[] dg = new int[groups + 1];
                 int ntx = 0;
                 for (int j = 1; j <= nt; j++)
                 {
@@ -2209,8 +2196,9 @@ namespace StatsDirect.Builtins
                     int[] rg = new int[groups + 1];
                     int[] dead = new int[groups + 1];
                     double[,] v = new double[groups + 1, groups + 1];
-                    double[] u0 = new double[groups + 1 ];
-                    double[] esum = new double[groups + 1 ];
+                    double[] u0 = new double[groups + 1];
+                    double[] esum = new double[groups + 1];
+                    Rec2X2[] tbl = null;
                     if (groups == 2 && test == 1)
                     {
                         tbl = new Rec2X2[ntx + 1];
@@ -2219,6 +2207,7 @@ namespace StatsDirect.Builtins
                     for (int j = 1; j <= groups; j++)
                         rg[j] = ng[j];
                     double sv = 1.0;
+                    int ne = 0;
                     for (int j = 1; j <= ntx; j++)
                     {
                         //  total number at risk = risktot for time J
@@ -2257,6 +2246,7 @@ namespace StatsDirect.Builtins
                             double jprop = jrisk / risktot;
                             double expect = deadx * jprop;
                             esum[j2] = esum[j2] + expect;
+                            double wt = 0;
                             if (test == 2)
                             {
                                 switch (wtMethod)
@@ -2282,12 +2272,9 @@ namespace StatsDirect.Builtins
                             {
                                 double krisk = rg[k];
                                 if (risktot > 1)
-                                {
-                                    if (k == j2)
-                                        v[j2, k] = v[j2, k] + wt * wt * (jrisk * (risktot - jrisk) * deadx * (risktot - deadx)) / (risktot * risktot * (risktot - 1.0));
-                                    else
-                                        v[j2, k] = v[j2, k] + wt * wt * -(jrisk * krisk * deadx * (risktot - deadx)) / (risktot * risktot * (risktot - 1.0));
-                                }
+                                    v[j2, k] = k == j2
+                                        ? v[j2, k] + wt * wt * (jrisk * (risktot - jrisk) * deadx * (risktot - deadx)) / (risktot * risktot * (risktot - 1.0))
+                                        : v[j2, k] + wt * wt * -(jrisk * krisk * deadx * (risktot - deadx)) / (risktot * risktot * (risktot - 1.0));
                             }
                         }
                         // exact test for 2 groups - a table for each unique survival time
@@ -2332,6 +2319,7 @@ namespace StatsDirect.Builtins
                     for (int j2 = 1; j2 <= groups; j2++)
                         for (int k = 1; k <= groups; k++)
                             vinv[j2, k] = v[j2, k];
+                    int imfault = 0;
                     // invert the matrix by Gauss-Jordan elimination - fault if singular
                     MathDbl.gaussj(vinv, 1, groups - 1, vtemp, 1, ref imfault);
                     double x2;
@@ -2353,6 +2341,7 @@ namespace StatsDirect.Builtins
                     //  trend statistic (c'U0)^2 / c'Vc
                     double x2Den;
                     double x2Num;
+                    double x2T = 0;
                     if (groups > 2)
                     {
                         x2Num = 0.0;
@@ -2368,6 +2357,8 @@ namespace StatsDirect.Builtins
                             x2Den += vtemp[k, 1] * score[k];
                         x2T = x2Num / x2Den;
                     }
+                    double p2M = 0; double p1M = 0; double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0;
+                    double llf = 0; double ulf = 0; double hr = 0;
                     if (test == 1 && groups == 2)
                     {
                         // exact test
@@ -2396,6 +2387,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
+                        string zx = null;
                         switch (wtMethod)
                         {
                             case 1:
@@ -2409,13 +2401,11 @@ namespace StatsDirect.Builtins
                                 break;
                         }
 
-                        testname = "Generalised Wilcoxon (" + zx + ")";
+                        testname = $"Generalised Wilcoxon ({zx})";
                     }
                     outerParameters.AddOutput("title", testname);
                     if (strata != 0)
-                        outerParameters.AddOutput("strata", " * [STRATUM " + stratum + " of " + strata + ": " + slab[stratum] + "]");
-                    else
-                        outerParameters.AddOutput("strata", string.Empty);
+                        outerParameters.AddOutput("strata", $" * [STRATUM {stratum} of {strata}: {slab[stratum]}]");
                     double rr;
                     if (test == 1)
                     {
@@ -2426,15 +2416,14 @@ namespace StatsDirect.Builtins
                         {
                             ParameterBag groupsParameters = new ParameterBag();
                             groupsList.Add(groupsParameters);
-                            groupsParameters.AddOutput("grp", j + " (" + gid + " = " + glab[Convert.ToInt32(gpid[j])] + ")");
+                            groupsParameters.AddOutput("grp", $"{j} ({gid} = {glab[Convert.ToInt32(gpid[j])]})");
                             groupsParameters.AddOutput("obs", dg[j]);
                             groupsParameters.AddOutput("ext", esum[j]);
-                            tesum[j] = tesum[j] + esum[j];
-                            tdg[j] = tdg[j] + dg[j];
-                            if (esum[j] <= 0)
-                                rr = Constant.MISSING;
-                            else
-                                rr = Convert.ToDouble(dg[j]) / esum[j];
+                            tesum[j] += esum[j];
+                            tdg[j] += dg[j];
+                            rr = esum[j] <= 0
+                                ? Constant.MISSING
+                                : dg[j] / esum[j];
                             groupsParameters.AddOutput("rel", rr);
                         }
                     }
@@ -2481,19 +2470,19 @@ namespace StatsDirect.Builtins
                         for (int j2 = 1; j2 <= groups; j2++)
                         {
                             if (test == 1)
-                                u0Suml[j2] = u0Suml[j2] + u0[j2];
+                                u0Suml[j2] += u0[j2];
                             else
-                                u0Sumw[j2] = u0Sumw[j2] + u0[j2];
+                                u0Sumw[j2] += u0[j2];
                             for (int k = 1; k <= groups; k++)
                             {
                                 if (test == 1)
-                                    vsuml[j2, k] = vsuml[j2, k] + v[j2, k];
+                                    vsuml[j2, k] += v[j2, k];
                                 else
-                                    vsumw[j2, k] = vsumw[j2, k] + v[j2, k];
+                                    vsumw[j2, k] += v[j2, k];
                             }
                         }
                     }
-                    if (stratum == strata & strata != 0)
+                    if (stratum == strata && strata != 0)
                     {
                         // combined (deaths, extent of exposure to risk of death, relative rate):
                         IList<ParameterBag> strataList = new List<ParameterBag>();
@@ -2503,15 +2492,14 @@ namespace StatsDirect.Builtins
                         strataParameters.AddOutput("test", testname);
                         IList<ParameterBag> stratumList = new List<ParameterBag>();
                         strataParameters.AddOutput("*stratum", stratumList);
-                        int j3;
-                        for (j3 = 1; j3 <= groups; j3++)
+                        for (int j3 = 1; j3 <= groups; j3++)
                         {
                             ParameterBag stratumParameters = new ParameterBag();
                             stratumList.Add(stratumParameters);
                             stratumParameters.AddOutput("grp", j3);
                             stratumParameters.AddOutput("res", tdg[j3]);
                             stratumParameters.AddOutput("sum", tesum[j3]);
-                            stratumParameters.AddOutput("tot", Convert.ToDouble(tdg[j3]) / tesum[j3]);
+                            stratumParameters.AddOutput("tot", tdg[j3] / tesum[j3]);
                         }
                         // get U0'inv(V)U0 from combined matrices
                         if (test == 1)
@@ -2627,7 +2615,8 @@ namespace StatsDirect.Builtins
                                 }
                                 ParameterBag hazardParameters = new ParameterBag();
                                 hazardList.Add(hazardParameters);
-                                hazardParameters.AddOutput("vs", "Group " + j + " vs. Group " + k);
+                                hazardParameters.AddOutput("vs1", j);
+                                hazardParameters.AddOutput("vs2", k);
                                 hazardParameters.AddOutput("haz", rr);
                                 hazardParameters.AddOutput("from", rl);
                                 hazardParameters.AddOutput("to", ru);
