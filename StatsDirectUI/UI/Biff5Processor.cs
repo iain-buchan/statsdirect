@@ -28,8 +28,8 @@ namespace StatsDirect.UI
             {
                 using (CompoundFile contents = new CompoundFile(s))
                 {
-                    CFStream bookStream = contents.RootStorage.TryGetStream("Book") ?? contents.RootStorage.TryGetStream("Workbook");
-                    if (null == bookStream)
+                    if (!contents.RootStorage.TryGetStream("Book", out CFStream bookStream)
+                        && !contents.RootStorage.TryGetStream("Workbook", out bookStream))
                     {
                         // Nothing named Book or Workbook; not an Excel workbook.
                         return BiffFormat.SomethingElse;
