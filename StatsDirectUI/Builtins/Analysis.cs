@@ -289,17 +289,16 @@ namespace StatsDirect.Builtins
         private static double PropMidPFisher2(int a, int b, int c, int d)
         {
             int fault = 0;
-            int t;
 
             if (a > d)
             {
-                t = a;
+                int t = a;
                 a = d;
                 d = t;
             }
             if (b > c)
             {
-                t = b;
+                int t = b;
                 b = c;
                 c = t;
             }
@@ -383,9 +382,7 @@ namespace StatsDirect.Builtins
                     for (j = 1; j <= a2; j++)
                     {
                         if (h1[j] > h)
-                        {
                             break;
-                        }
                         f = f1[j] - h1[j] / 2.0;
                     }
 
@@ -403,9 +400,7 @@ namespace StatsDirect.Builtins
                     for (j = a2; j >= 1; j--)
                     {
                         if (h1[j] > h)
-                        {
                             break;
-                        }
                         g = g1[j] - h1[j] / 2.0;
                     }
                     /* f2 is never used.  PJC 2012/04/09.
@@ -417,9 +412,7 @@ namespace StatsDirect.Builtins
 
                 double z = f + g;
                 if (z > 1.0)
-                {
                     z = 1.0;
-                }
                 return z;
             }
             return Constant.MISSING;
