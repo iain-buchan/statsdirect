@@ -8,7 +8,7 @@
 
 <table>
 <tr><th>Stratum</th><th>Odds ratio</th><th colspan="3"><ci>@{pc:round2}% CI (@method)</ci></th></tr>
-<block name="or"><tr><td>@st</td><td>@{or:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td><ci>@lb</ci></td></tr></block>
+<block name="or"><tr><td>@st</td><td>@{or:roundu}</td><td><ci>@{lci:roundu}</ci></td><td><ci>@{uci:roundu}</ci></td><td>@lb</td></tr></block>
 </table>
 
 <table>
