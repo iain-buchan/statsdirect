@@ -644,79 +644,55 @@ namespace StatsDirect.Builtins
 
         private static double Value(SummaryType summaryType, Summary sx)
         {
-            double res;
             switch (summaryType)
             {
                 case SummaryType.ValidData:
-                    res = sx.ValidData;
-                    break;
+                    return sx.ValidData;
                 case SummaryType.MissingData:
-                    res = sx.MissingData;
-                    break;
+                    return sx.MissingData;
                 case SummaryType.Sum:
-                    res = sx.Sum;
-                    break;
+                    return sx.Sum;
                 case SummaryType.Mean:
-                    res = sx.Mean;
-                    break;
+                    return sx.Mean;
                 case SummaryType.Variance:
-                    res = sx.Variance;
-                    break;
+                    return sx.Variance;
                 case SummaryType.Sd:
-                    res = sx.SD;
-                    break;
+                    return sx.SD;
                 case SummaryType.VarianceCoefficient:
-                    res = sx.VarianceCoefficient;
-                    break;
+                    return sx.VarianceCoefficient;
                 case SummaryType.Sem:
-                    res = sx.SEM;
-                    break;
+                    return sx.SEM;
                 case SummaryType.MeanUcl:
-                    res = sx.MeanUCL;
-                    break;
+                    return sx.MeanUCL;
                 case SummaryType.MeanLcl:
-                    res = sx.MeanLCL;
-                    break;
+                    return sx.MeanLCL;
                 case SummaryType.GeometricMean:
-                    res = sx.GeometricMean;
-                    break;
+                    return sx.GeometricMean;
                 case SummaryType.Skewness:
-                    res = sx.Skewness;
-                    break;
+                    return sx.Skewness;
                 case SummaryType.Kurtosis:
-                    res = sx.Kurtosis;
-                    break;
+                    return sx.Kurtosis;
                 case SummaryType.Maximum:
-                    res = sx.Maximum;
-                    break;
+                    return sx.Maximum;
                 case SummaryType.UpperQuartile:
-                    res = sx.UpperQuartile;
-                    break;
+                    return sx.UpperQuartile;
                 case SummaryType.Median:
-                    res = sx.Median;
-                    break;
+                    return sx.Median;
                 case SummaryType.LowerQuartile:
-                    res = sx.LowerQuartile;
-                    break;
+                    return sx.LowerQuartile;
                 case SummaryType.InterquartileRange:
-                    res = sx.InterquartileRange;
-                    break;
+                    return sx.InterquartileRange;
                 case SummaryType.Minimum:
-                    res = sx.Minimum;
-                    break;
+                    return sx.Minimum;
                 case SummaryType.Range:
-                    res = sx.Range;
-                    break;
+                    return sx.Range;
                 case SummaryType.Udc1:
-                    res = sx.UserCentileU;
-                    break;
+                    return sx.UserCentileU;
                 case SummaryType.Udc2:
-                    res = sx.UserCentileL;
-                    break;
+                    return sx.UserCentileL;
                 default:
                     throw new ArgumentException("Unknown option", nameof(summaryType));
             }
-            return res;
         }
 
         private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string[] titles)
@@ -826,8 +802,6 @@ namespace StatsDirect.Builtins
                     }
                     resultsParameters.AddOutput("result", res);
                 }
-                string s = resultsList[resultsList.Count - 1]["result"].AsString;
-                resultsList[resultsList.Count - 1]["result"] = FilledParameterFactory.Output(s);
             }
             return fieldParameters;
         }
