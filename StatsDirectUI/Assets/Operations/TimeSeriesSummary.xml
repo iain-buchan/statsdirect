@@ -112,7 +112,6 @@
 <title>Time series summary</title>
 <block name="group">
 <subtitle>Group: @groupName</subtitle>
-
 <table>
 <tr><th>Time</th><th>Observations</th><th>Mean</th><th>SD</th><th>SE</th><th>Median</th><th>IQR</th></tr>
 <block name="time">
@@ -162,7 +161,6 @@ DF: @{df:roundx}<br />
 </block>
 </block>
 <p>@{meanAucChart:chart}</p>
-
 </report>
 ]]>
     </report>

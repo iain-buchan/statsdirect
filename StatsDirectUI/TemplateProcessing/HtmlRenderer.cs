@@ -10,10 +10,10 @@ namespace StatsDirect.TemplateProcessing
     /// </summary>
     class HtmlRenderer : IRenderableVisitor
     {
-        private IPreferences Host { get; }
+        private /* TODO: IPreferences*/ ITemplateHost Host { get; }
         private StringBuilder builder;
 
-        public HtmlRenderer(IPreferences host)
+        public HtmlRenderer(/* TODO: IPreferences*/ ITemplateHost host)
         {
             Host = host;
         }

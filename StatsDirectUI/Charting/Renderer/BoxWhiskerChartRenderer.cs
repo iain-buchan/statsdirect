@@ -46,7 +46,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a box and whisker chart.
         ///  </summary>
         ///  <remarks></remarks>
-        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

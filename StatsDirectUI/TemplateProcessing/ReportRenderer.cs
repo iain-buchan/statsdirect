@@ -14,6 +14,6 @@ namespace StatsDirect.TemplateProcessing
                 return tr.ReadToEnd();
         }
 
-        public abstract string Render(IPreferences host, string content, ParameterBag substitutions);
+        public abstract string Render(/* TODO: IPreferences */ ITemplateHost host, string content, ParameterBag substitutions);
     }
 }

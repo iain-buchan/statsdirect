@@ -5,12 +5,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Text;
+using System.Web.UI;
 
 namespace StatsDirect.TemplateProcessing
 {
     public class CreoleHtmlReportRenderer : ReportRenderer
     {
-        public override string Render(IPreferences host, string template, ParameterBag substitutions)
+        public override string Render(/* TODO: IPreferences */ ITemplateHost host, string template, ParameterBag substitutions)
         {
             ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
             return creole.Accept(new InnerHtmlReportRenderer(host, substitutions));
@@ -38,9 +39,9 @@ namespace StatsDirect.TemplateProcessing
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
-            private readonly IPreferences host;
+            private readonly /* TODO: IPreferences */ ITemplateHost host;
 
-            public InnerHtmlReportRenderer(IPreferences host, ParameterBag substitutions)
+            public InnerHtmlReportRenderer(/* TODO: IPreferences */ ITemplateHost host, ParameterBag substitutions)
             {
                 this.host = host;
                 substitutionStack.Push(substitutions);

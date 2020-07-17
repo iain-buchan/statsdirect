@@ -10,7 +10,7 @@ namespace StatsDirect.TemplateProcessing
     {
         private static readonly ICanvasFactory CANVAS_FACTORY = new SvgCanvasFactory();
 
-        public static ParameterBag PlotAndReturnHtml(IPreferences host, ChartDefinition cd, out string html)
+        public static ParameterBag PlotAndReturnHtml(/* TODO: IPreferences*/ ITemplateHost host, ChartDefinition cd, out string html)
         {
             using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY))
             {

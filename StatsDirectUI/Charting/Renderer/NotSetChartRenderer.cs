@@ -15,7 +15,7 @@ namespace StatsDirect.Charting.Renderer
             throw new NotImplementedException();
         }
 
-        ParameterBag IChartRenderer.Plot(IPreferences _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
         {
             throw new NotImplementedException();
         }

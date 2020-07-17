@@ -15,7 +15,7 @@ namespace StatsDirect.TemplateProcessing
         const string RTF_REPORT_END = @"\par }";
         const string FirstCellOfTableMarker = "!!FIRSTCELLOFTABLE!!";
 
-        public override string Render(IPreferences host, string template, ParameterBag substitutions)
+        public override string Render(/* TODO: IPreferences */ ITemplateHost host, string template, ParameterBag substitutions)
         {
             ICreole<IList<IStringOrDirective>> creole = CreoleReader.Parse<IList<IStringOrDirective>>(template, out string _);
             IList<IStringOrDirective> raw = creole.Accept(new InnerRtfReportRenderer(host, substitutions));
@@ -100,14 +100,14 @@ namespace StatsDirect.TemplateProcessing
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
-            private readonly IPreferences host;
+            private readonly /* TODO: IPreferences */ ITemplateHost host;
 
             /// <summary>
             /// State so that we can inject a little extra marker at the end of the first table cell in each table - used so that the RTF insertion can format the table later.
             /// </summary>
             private bool isFirstCellOfTable;
 
-            public InnerRtfReportRenderer(IPreferences host, ParameterBag substitutions)
+            public InnerRtfReportRenderer(/* TODO: IPreferences */ ITemplateHost host, ParameterBag substitutions)
             {
                 this.host = host;
                 substitutionStack.Push(substitutions);

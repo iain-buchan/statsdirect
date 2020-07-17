@@ -12,7 +12,6 @@ namespace StatsDirect.Charting
         public double Weight;
         public Comparison Comparison;
         private readonly bool showLegendIsRelevant;
-        public IList<ROCSeriesRecord> SeriesRecordCache { get; set; } = new List<ROCSeriesRecord>();
 
         public ROCOptions(IList<ISeries> seriesToUse)
         {

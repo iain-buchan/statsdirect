@@ -806,7 +806,7 @@ namespace StatsDirect.Builtins
             return fieldParameters;
         }
 
-        public static ParameterBag RptTimeSeriesSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static ParameterBag RptTimeSeriesSummary(/* TODO: IPreferencesAndProgressBar */ ITemplateHost host, ParameterBag parameters)
         {
             // Extract our variables from the input
             DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0] as DoubleVariable;

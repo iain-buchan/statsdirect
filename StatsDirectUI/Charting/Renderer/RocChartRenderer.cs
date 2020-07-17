@@ -37,7 +37,7 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a ROC chart.
         ///  </summary>
         /// <param name="host"></param>
-        ParameterBag IChartRenderer.Plot(IPreferences host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool _)
         {
             ROCOptions rOptions = (ROCOptions)Definition.ChartOptions;
             double gamma = rOptions.GAMMA;
@@ -47,7 +47,7 @@ namespace StatsDirect.Charting.Renderer
 
             //  Assume data passed as series - X is positive, Y is negative.
 
-            IList<ROCSeriesRecord> seriesRecords = rOptions.SeriesRecordCache;
+            IList<ROCSeriesRecord> seriesRecords = MakeAndMaybeAmendSeriesRecords(host, Definition);
 
             AssignMarkersToSeries(rOptions);
             Legend legend = new Legend();
@@ -153,7 +153,7 @@ namespace StatsDirect.Charting.Renderer
                     allResults.Add(thisResults);
                     // Wilcoxon estimate for AUC
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
-                    //  Note that mwx and mwr are 1-based
+                    // Note that mwx and mwr are 1-based
                     double[] mwx = new double[seriesRecord.pdata.Length + seriesRecord.adata.Length + 1];
                     Array.Copy(seriesRecord.pdata, 0, mwx, 1, seriesRecord.pdata.Length);
                     Array.Copy(seriesRecord.adata, 0, mwx, 1 + seriesRecord.pdata.Length, seriesRecord.adata.Length);
@@ -170,12 +170,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     else
                     {
-                        // if (thisData.pdata.Length * thisData.adata.Length - u > u)
-                        //     u = thisData.pdata.Length * thisData.adata.Length - u;
                         theta = u / (seriesRecord.pdata.Length * seriesRecord.adata.Length);
-                        // Q1 = theta / (2# - theta)
-                        // Q2 = (2# * (theta ^ 2#)) / (1# + theta)
-                        // sew = Sqr((theta * (1# - theta) + CDbl(rowsp(cs) - 1) * (Q1 - theta ^ 2#) + CDbl(rowsa(cs) - 1) * (Q2 - theta# ^ 2#)) / CDbl(rowsp(cs) * rowsa(cs)))
                         sew = DeLongSE(seriesRecord.pdata, seriesRecord.adata, theta);
                         if (sew == Constant.MISSING)
                         {
@@ -480,24 +475,23 @@ namespace StatsDirect.Charting.Renderer
                 s01 += Math.Pow(v01[j] - auc, 2.0);
             s01 /= y.Length - 1;
             double var = s10 / x.Length + s01 / y.Length;
-            return var < 0.0 ? Constant.MISSING : Math.Sqrt(var);
+            return var < 0.0 
+                ? Constant.MISSING 
+                : Math.Sqrt(var);
         }
 
         private static double DeLongPsi(double x, double y)
         {
             if (y == x)
                 return 0.5;
-            return y < x ? 1.0 : 0.0;
+            return y < x 
+                ? 1.0 
+                : 0.0;
         }
 
         ///  <summary>
         ///  Cause the host to amend the thisData record in-place with any revisions to the cutoff data.
         ///  </summary>
-        ///  <param name="host"></param>
-        ///  <param name="seriesRecord"></param>
-        ///  <param name="weight"></param>
-        ///  <param name="title"></param>
-        ///  <remarks></remarks>
         private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord seriesRecord, string title)
         {
             ROCCutoff payload = new ROCCutoff { SeriesRecord = seriesRecord, Title = title };
