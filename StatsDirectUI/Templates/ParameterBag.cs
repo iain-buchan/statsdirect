@@ -35,14 +35,16 @@ namespace StatsDirect.Templates
             filledParameters.Add(key, value);
         }
 
-        public void AddOutput(string key, object value)
+        public ParameterBag AddOutput(string key, object value)
         {
             filledParameters.Add(key, FilledParameterFactory.Output(value));
+            return this;
         }
-        public void AddOutput(IDictionary<string, object> outputs)
+        public ParameterBag AddOutput(IDictionary<string, object> outputs)
         {
             foreach (KeyValuePair<string, object> pair in outputs)
                 filledParameters.Add(pair.Key, FilledParameterFactory.Output(pair.Value));
+            return this;
         }
 
 

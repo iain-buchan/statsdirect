@@ -2692,13 +2692,17 @@ namespace StatsDirect.Builtins
                     double lci = Formatting.SafeExp(beta[i] - seBeta[i] * cit);
                     double uci = Formatting.SafeExp(beta[i] + seBeta[i] * cit);
                     varParameters.AddOutput("or", odr);
-                    varParameters.AddOutput("lci", lci);
-                    varParameters.AddOutput("uci", uci);
+                    varParameters.AddOutput("*ci",
+                        new List<ParameterBag>()
+                        {
+                            new ParameterBag()
+                                .AddOutput("lci", lci)
+                                .AddOutput("uci", uci)
+                        });
                 }
                 else
                 {
                     varParameters.AddOutput("or", "n/a");
-                    varParameters.AddOutput("ci", string.Empty);
                 }
                 if (seBeta[i] == 0.0)
                 {

@@ -123,8 +123,8 @@
 </table>
 
 <table>
-<tr><th>Parameter</th><th>Odds Ratio</th><th><ci>(@{pc:round2}% Conf. Int.)</ci></th><th>Z Value</th><th><pval>P (>|Z|)</pval></th></tr>
-<block name="var"><tr><td>@par</td><td>@{or:roundu}</td><td><ci>(@{lci:roundu} to @{uci:roundu}})</ci></td><td>@{z:roundu}</td><td><pval>@{p_var:pval}</pval></td></tr>
+<tr><th>Parameter</th><th>Odds Ratio</th><th><ci>@{pc:round2}% Conf. Int.</ci></th><th>Z Value</th><th><pval>P (>|Z|)</pval></th></tr>
+<block name="var"><tr><td>@par</td><td>@{or:roundu}</td><td><block name="ci"><ci>(@{lci:roundu} to @{uci:roundu})</ci></block></td><td>@{z:roundu}</td><td><pval>@{p_var:pval}</pval></td></tr>
 </block>
 </table>
 
