@@ -2434,7 +2434,7 @@ namespace StatsDirect.Builtins
                     }
                     //  test statistics and variance-covariance matrix
                     IList<ParameterBag> rankList = new List<ParameterBag>();
-                    outputParameters.AddOutput("*rank", rankList);
+                    outerParameters.AddOutput("*rank", rankList);
                     for (int j = 1; j <= groups; j++)
                         rankList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, u0[j])));
 
