@@ -933,7 +933,8 @@ namespace StatsDirect.UI
 
         IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
         {
-            MainWindow?.StartProgress(operationDescription, provideProgress);
+            if (display)
+                MainWindow?.StartProgress(operationDescription, provideProgress);
             return new SdProgressBarHolder(display);
         }
 
