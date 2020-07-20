@@ -2097,11 +2097,11 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.comodoca.com /p ***REMOVED*** "$(TargetPath)"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.comodoca.com /td sha256 /as /p ***REMOVED*** "$(TargetPath)"
+    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.digicert.com /p ***REMOVED*** "$(TargetPath)"
+if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.digicert.com /td sha256 /as /p ***REMOVED*** "$(TargetPath)"
 $(SolutionDir)Bin\sgen /n /f  /a:"$(TargetPath)"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.comodoca.com /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.comodoca.com /td sha256 /as /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
+if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.digicert.com /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
+if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.digicert.com /td sha256 /as /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
 xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
