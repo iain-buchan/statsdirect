@@ -60,7 +60,9 @@ namespace StatsDirect.Builtins
             double[] p3 = new double[resultDegree + 1];
             bool couldBeSlow = Convert.ToDouble(deg1) * Convert.ToDouble(deg2) > 300000;
 
-            double initialValue = logScale ? -Constant.MISSING : 0.0;
+            double initialValue = logScale
+                ? -Constant.MISSING
+                : 0.0;
             for (int i = 0; i <= resultDegree; i++)
                 p3[i] = initialValue;
 

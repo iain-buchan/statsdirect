@@ -1796,13 +1796,16 @@ namespace StatsDirect.Builtins
             int ycats = c1Variable.GroupCount;
             Namevar[] ycat = new Namevar[ycats + 1];
             int cnt = 0;
-            for (int i = 0; i <= ycats - 1; i++)
+            for (int i = 0; i < ycats; i++)
             {
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
                     cnt++;
-                    ycat[cnt].Ti = c1Variable.Groups[i].Label;
-                    ycat[cnt].X = Convert.ToDouble(i);
+                    ycat[cnt] = new Namevar()
+                    {
+                        Ti = c1Variable.Groups[i].Label,
+                        X = Convert.ToDouble(i)
+                    };
                 }
             }
             ycats = cnt;
@@ -1841,8 +1844,11 @@ namespace StatsDirect.Builtins
                     if (c2Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
                         cnt++;
-                        xcat[cnt].Ti = c2Variable.Groups[i].Label;
-                        xcat[cnt].X = Convert.ToDouble(i);
+                        xcat[cnt] = new Namevar()
+                        {
+                            Ti = c2Variable.Groups[i].Label,
+                            X = Convert.ToDouble(i)
+                        };
                     }
                 }
                 xcats = cnt;
@@ -1900,8 +1906,11 @@ namespace StatsDirect.Builtins
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
                     cnt++;
-                    ycat[cnt].Ti = c1Variable.Groups[i].Label;
-                    ycat[cnt].X = Convert.ToDouble(i);
+                    ycat[cnt] = new Namevar()
+                    {
+                        Ti = c1Variable.Groups[i].Label,
+                        X = Convert.ToDouble(i)
+                    };
                 }
             }
             ycats = cnt;
@@ -1931,8 +1940,11 @@ namespace StatsDirect.Builtins
                         if (c3Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                         {
                             cnt++;
-                            zcat[cnt].Ti = c3Variable.Groups[i].Label;
-                            zcat[cnt].X = Convert.ToDouble(i);
+                            zcat[cnt] = new Namevar()
+                            {
+                                Ti = c3Variable.Groups[i].Label,
+                                X = Convert.ToDouble(i)
+                            };
                         }
                     }
                     zcats = cnt;
@@ -1959,8 +1971,11 @@ namespace StatsDirect.Builtins
                     if (c2Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
                         cnt++;
-                        xcat[cnt].Ti = c2Variable.Groups[i].Label;
-                        xcat[cnt].X = Convert.ToDouble(i);
+                        xcat[cnt] = new Namevar()
+                        {
+                            Ti = c2Variable.Groups[i].Label,
+                            X = Convert.ToDouble(i)
+                        };
                     }
                 }
                 xcats = cnt;

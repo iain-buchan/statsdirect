@@ -66,10 +66,10 @@ namespace StatsDirect.Utilities
             int decpm = 2;
             try
             {
-                if (Math.Abs(min) < Math.Pow(10D, -decpm) && min != 0D)
+                if (Math.Abs(min) < Math.Pow(10, -decpm) && min != 0)
                 {
                     decpm = 3;
-                    if (Math.Abs(min) < Math.Pow(10D, -decpm) && min != 0D)
+                    if (Math.Abs(min) < Math.Pow(10, -decpm) && min != 0)
                         decpm = 4;
                 }
                 if (Constant.MISSING == x || -Constant.MISSING == x)

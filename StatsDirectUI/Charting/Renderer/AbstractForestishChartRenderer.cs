@@ -9,8 +9,8 @@ namespace StatsDirect.Charting.Renderer
 {
     internal abstract class AbstractForestishChartRenderer : AbstractChartRenderer
     {
-        protected const double featureHeight = 0.667;
-        protected const double arrowWidth = 0.125;
+        protected const double featureHeight = 0.667; // 2/3
+        protected const double arrowWidth = 0.125; // 1/8
         /// <summary>
         /// Default study marker type; may be overwritten if a subclass prefers different details.
         /// </summary>
