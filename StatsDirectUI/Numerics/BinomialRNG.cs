@@ -166,7 +166,7 @@ namespace StatsDirect.Numerics
                 {
                     //  determine the appropriate way to perform acceptance/rejection
                     int k = Math.Abs( ix - M );
-                    if ( k <= 20 | k >= NPQ / 2 - 1 ) 
+                    if ( k <= 20 || k >= NPQ / 2 - 1 ) 
                     { 
                         //  explicit evaluation
                         f = 1.0;

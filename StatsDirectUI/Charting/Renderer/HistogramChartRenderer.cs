@@ -244,7 +244,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     //  Fill in the output in its expected place from our saved place
                     TextCanvas = new string[savedLines.Count];
-                    for (int i = 0; i <= savedLines.Count - 1; i++)
+                    for (int i = 0; i < savedLines.Count; i++)
                         TextCanvas[i] = savedLines[i];
                 }
 

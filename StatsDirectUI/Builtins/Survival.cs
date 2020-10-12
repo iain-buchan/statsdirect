@@ -382,7 +382,7 @@ namespace StatsDirect.Builtins
                 {
                     double asq = 0;
                     int l;
-                    for (l = i; l <= lastk - 1; l++)
+                    for (l = i; l < lastk; l++)
                         asq += s[l, lap] * (stime[l + 1, lap] - stime[l, lap]);
                     if (!lastCen)
                         asq += stk * (tl - tk);
@@ -1354,7 +1354,7 @@ namespace StatsDirect.Builtins
                     dead[nx, lap] = q[j].Cs;
                     if (dead[nx, lap] == 0)
                         wdr = 1;
-                    for (int j2 = j; j2 <= nt - 1; j2++)
+                    for (int j2 = j; j2 < nt; j2++)
                     {
                         if (q[j].Tm == q[j2 + 1].Tm && q[j2 + 1].Gp == q[j].Gp)
                         {
@@ -1607,7 +1607,7 @@ namespace StatsDirect.Builtins
             double[] vs = new double[rows + 1];
             double[] u = new double[rows + 1 ];
             x[1] = 0.0;
-            for (int i = 1; i <= rows - 1; i++)
+            for (int i = 1; i < rows; i++)
             {
                 r[i] = intervalsVariable.Data[i - 1];
                 if (i < rows)
@@ -1633,7 +1633,7 @@ namespace StatsDirect.Builtins
             {
                 DataFrame fractionsFrame = parameters["fractions"].AsDataFrame;
                 DoubleVariable fractionsVariable = fractionsFrame.Variables[0]as DoubleVariable;
-                for (int i = 1; i <= rows - 1; i++)
+                for (int i = 1; i < rows; i++)
                     a[i] = fractionsVariable.Data[i - 1];
             }
             else
@@ -2107,7 +2107,7 @@ namespace StatsDirect.Builtins
             survivalParameters.AddOutput("var", Constant.MISSING);
             survivalParameters.AddOutput("lci", Constant.MISSING);
             survivalParameters.AddOutput("uci", Constant.MISSING);
-            for (int j = 1; j <= nt - 1; j++)
+            for (int j = 1; j < nt; j++)
             {
                 cump = xcump[j];
                 double var = xvar[j];
@@ -2330,12 +2330,12 @@ namespace StatsDirect.Builtins
                     else
                     {
                         // multiply transpose of U0 by inverse of V
-                        for (int j2 = 1; j2 <= groups - 1; j2++)
-                            for (int k = 1; k <= groups - 1; k++)
+                        for (int j2 = 1; j2 < groups; j2++)
+                            for (int k = 1; k < groups; k++)
                                 vtemp[j2, 1] = vtemp[j2, 1] + vinv[j2, k] * u0[k];
                         // multiply tran(U0)*inv(V) by U0 to get the test statistic
                         x2 = 0.0;
-                        for (int k = 1; k <= groups - 1; k++)
+                        for (int k = 1; k < groups; k++)
                             x2 += vtemp[k, 1] * u0[k];
                     }
                     //  trend statistic (c'U0)^2 / c'Vc
@@ -2513,11 +2513,11 @@ namespace StatsDirect.Builtins
                             }
                             else
                             {
-                                for (int j2 = 1; j2 <= groups - 1; j2++)
-                                    for (int k = 1; k <= groups - 1; k++)
+                                for (int j2 = 1; j2 < groups; j2++)
+                                    for (int k = 1; k < groups; k++)
                                         vtemp[j2, 1] = vtemp[j2, 1] + vsuml[j2, k] * u0Suml[k];
                                 x2 = 0.0;
-                                for (int k = 1; k <= groups - 1; k++)
+                                for (int k = 1; k < groups; k++)
                                     x2 += vtemp[k, 1] * u0Suml[k];
                             }
                         }
@@ -2532,11 +2532,11 @@ namespace StatsDirect.Builtins
                             }
                             else
                             {
-                                for (int j2 = 1; j2 <= groups - 1; j2++)
-                                    for (int k = 1; k <= groups - 1; k++)
+                                for (int j2 = 1; j2 < groups; j2++)
+                                    for (int k = 1; k < groups; k++)
                                         vtemp[j2, 1] = vtemp[j2, 1] + vsumw[j2, k] * u0Sumw[k];
                                 x2 = 0.0;
-                                for (int k = 1; k <= groups - 1; k++)
+                                for (int k = 1; k < groups; k++)
                                     x2 += vtemp[k, 1] * u0Sumw[k];
                             }
                         }
@@ -2593,7 +2593,7 @@ namespace StatsDirect.Builtins
 
                         IList<ParameterBag> hazardList = new List<ParameterBag>();
                         hazardsParameters.AddOutput("*hazard", hazardList);
-                        for (int j = 1; j <= groups - 1; j++)
+                        for (int j = 1; j < groups; j++)
                         {
                             for (int k = j + 1; k <= groups; k++)
                             {

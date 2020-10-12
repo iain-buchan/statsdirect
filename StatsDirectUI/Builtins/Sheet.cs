@@ -158,7 +158,7 @@ namespace StatsDirect.Builtins
             {
                 StringVariable v = (StringVariable)data.Variables[c];
                 int rx = 0;
-                for (r = 0; r <= totrows - 1; r++)
+                for (r = 0; r < totrows; r++)
                 {
                     rx++;
                     hold[rx, c] = v.Length <= r || IsMissing(v.Data[r], userNumber, userText) ? string.Empty : v.Data[r];
@@ -1367,7 +1367,7 @@ namespace StatsDirect.Builtins
             DoubleVariable dataVariable = new DoubleVariable(totrows, datti);
             outputFrame.Variables.Add(dataVariable);
             int row = 0;
-            for (int c = 0; c <= data.VariableCount - 1; c++)
+            for (int c = 0; c < data.VariableCount; c++)
             {
                 DoubleVariable v = (DoubleVariable)data.Variables[c];
                 ep = v.Title.IndexOf("=", StringComparison.Ordinal) + 1;
@@ -2102,7 +2102,7 @@ namespace StatsDirect.Builtins
                 t += " (by " + linkVariable.Title + ")";
                 double[] linkArray = new double[rows];
                 nx = 0;
-                for (int i = 0; i <= rows - 1; i++)
+                for (int i = 0; i < rows; i++)
                 {
                     if (dataVariable.Data[i] != Constant.MISSING && linkVariable.Data[i] != Constant.MISSING)
                     {
@@ -2253,7 +2253,7 @@ namespace StatsDirect.Builtins
                 {
                     cons = 0;
                 }
-                for (int n = 0; n <= rows - 1; n++)
+                for (int n = 0; n < rows; n++)
                 {
                     if (inputData[n] == Constant.MISSING)
                     {
@@ -2263,24 +2263,12 @@ namespace StatsDirect.Builtins
                     {
                         double z = inputData[n] + cons;
                         if (z <= 0.0)
-                        {
                             a[n] = Constant.MISSING;
-                        }
                         else
-                        {
                             a[n] = Math.Log(z);
-                        }
                     }
                 }
-                string title;
-                if (cons != 0.0)
-                {
-                    title = "Log(natural): " + cons.ToString() + " + " + inputVariable.Title;
-                }
-                else
-                {
-                    title = "Log(natural): " + inputVariable.Title;
-                }
+                string title = cons != 0.0 ? "Log(natural): " + cons.ToString() + " + " + inputVariable.Title : "Log(natural): " + inputVariable.Title;
                 return WrapDoubleVariable(a, title);
             }
             if (index == 1)
@@ -2296,7 +2284,7 @@ namespace StatsDirect.Builtins
                     cons = 0;
                 }
                 double log10 = Math.Log(10.0);
-                for (int n = 0; n <= rows - 1; n++)
+                for (int n = 0; n < rows; n++)
                 {
                     if (inputData[n] == Constant.MISSING)
                     {
@@ -2306,30 +2294,18 @@ namespace StatsDirect.Builtins
                     {
                         double z = inputData[n] + cons;
                         if (z <= 0.0)
-                        {
                             a[n] = Constant.MISSING;
-                        }
                         else
-                        {
                             a[n] = Math.Log(z) / log10;
-                        }
                     }
                 }
-                string title;
-                if (cons != 0.0)
-                {
-                    title = "Log(base 10): " + cons.ToString() + " + " + inputVariable.Title;
-                }
-                else
-                {
-                    title = "Log(base 10): " + inputVariable.Title;
-                }
+                string title = cons != 0.0 ? "Log(base 10): " + cons.ToString() + " + " + inputVariable.Title : "Log(base 10): " + inputVariable.Title;
                 return WrapDoubleVariable(a, title);
             }
             if (index == 2)
             {
                 double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
-                for (int n = 0; n <= rows - 1; n++)
+                for (int n = 0; n < rows; n++)
                 {
                     if (inputData[n] == Constant.MISSING)
                     {
@@ -2338,20 +2314,16 @@ namespace StatsDirect.Builtins
                     else
                     {
                         double prop = Math.Abs(inputData[n] / maxi);
-                        if (prop == 1 | prop == 0)
+                        if (prop == 1 || prop == 0)
                         {
                             a[n] = Constant.MISSING;
                         }
                         else
                         {
                             if (prop / (1.0 - prop) < 0)
-                            {
                                 a[n] = Constant.MISSING;
-                            }
                             else
-                            {
                                 a[n] = Math.Log(prop / (1.0 - prop));
-                            }
                         }
                     }
                 }
@@ -2360,7 +2332,7 @@ namespace StatsDirect.Builtins
             if (index == 3)
             {
                 double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
-                for (int n = 0; n <= rows - 1; n++)
+                for (int n = 0; n < rows; n++)
                 {
                     if (inputData[n] == Constant.MISSING)
                     {
@@ -2369,7 +2341,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         double prop = Math.Abs(inputData[n] / maxi);
-                        if (prop == 1.0 | prop == 0.0)
+                        if (prop == 1.0 || prop == 0.0)
                         {
                             a[n] = Constant.MISSING;
                         }
@@ -2377,10 +2349,9 @@ namespace StatsDirect.Builtins
                         {
                             double zed = PDF.gauinv(prop, out int fault);
                             if (fault == 0)
-                            {
                                 a[n] = 5 + zed;
-                            }
-                            else { a[n] = Constant.MISSING; }
+                            else
+                                a[n] = Constant.MISSING;
                         }
                     }
                 }
@@ -2389,7 +2360,7 @@ namespace StatsDirect.Builtins
             if (index == 4)
             {
                 double maxi = XAmanipdp(parameters["discrete"].AsString, inputData);
-                for (int n = 0; n <= rows - 1; n++)
+                for (int n = 0; n < rows; n++)
                 {
                     if (inputData[n] == Constant.MISSING)
                     {
@@ -2421,20 +2392,14 @@ namespace StatsDirect.Builtins
             }
             if (index == 5)
             {
-                for (int n = 0; n <= rows - 1; n++)
+                for (int n = 0; n < rows; n++)
                 {
                     if (inputData[n] == Constant.MISSING)
-                    {
                         a[n] = Constant.MISSING;
-                    }
                     else if (n == 0)
-                    {
                         a[n] = inputData[n];
-                    }
                     else
-                    {
                         a[n] = a[n - 1] + inputData[n];
-                    }
                 }
                 return WrapDoubleVariable(a, "Cumulate: " + inputVariable.Title);
             }
@@ -2443,9 +2408,7 @@ namespace StatsDirect.Builtins
                 double[] fn = new double[inputData.Length];
                 MathDbl.ecdf(inputData, fn, out int err);
                 if (err == 0)
-                {
                     return WrapDoubleVariable(fn, "ECDF: " + inputVariable.Title);
-                }
                 throw new ArgumentException("Insufficient data");
             }
             if (index == 7)
@@ -2453,9 +2416,7 @@ namespace StatsDirect.Builtins
                 double[] fn = new double[inputData.Length];
                 MathDbl.zscore(inputData, ref fn, false, out int err);
                 if (err == 0)
-                {
                     return WrapDoubleVariable(fn, "Z: " + inputVariable.Title);
-                }
                 throw new ArgumentException("Insufficient data");
             }
             if (index == 8)
@@ -2468,7 +2429,6 @@ namespace StatsDirect.Builtins
             }
             throw new ArgumentException("Unknown index");
         }
-
 
         private static double XAmanipdp(string discrete, double[] data)
         {

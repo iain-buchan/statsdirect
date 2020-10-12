@@ -112,7 +112,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double v1 = s.Data[r];
                     int r1;
-                    for (r1 = r + 1; r1 <= s.Points - 1; r1++)
+                    for (r1 = r + 1; r1 < s.Points; r1++)
                     {
                         if (Math.Abs(v1 - s.Data[r1]) > xxwid)
                             break;

@@ -56,7 +56,7 @@ namespace StatsDirect.Charting.Renderer
             double[] xdat = xs.Data;
             double[] ydat = ys.Data;
             PointF[] xys = new PointF[xs.Data.Length];
-            for (int r = 0; r <= xs.Data.Length - 1; r++)
+            for (int r = 0; r < xs.Data.Length; r++)
             {
                 if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
                 {

@@ -1634,7 +1634,7 @@ namespace StatsDirect.Numerics
             double znp = n * p;
             if (k >= znp)
             {
-                for (i = 0; i <= k - 1; i++)
+                for (i = 0; i < k; i++)
                 {
                     xi = i;
                     term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);

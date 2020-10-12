@@ -577,11 +577,11 @@ namespace StatsDirect.Charting.Renderer
 
                 //  Max outliers
                 if (gatedInnerT)
-                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    for (int r = 0; r < s.Data.Length; r++)
                         if (s.Data[r] > innerFenceT && (s.Data[r] <= outerFenceT || !gatedOuterT))
                             DrawMarkerInCanvasCoordinates(xc, ToCanvasY(s.Data[r]), 2 * OUTLIER_RADIUS, MarkerShape.Circle, false, blackPen);
                 if (gatedOuterT)
-                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    for (int r = 0; r < s.Data.Length; r++)
                         if (s.Data[r] > outerFenceT)
                             DrawMarkerInCanvasCoordinates(xc, ToCanvasY(s.Data[r]), 2 * OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
             }
@@ -672,7 +672,7 @@ namespace StatsDirect.Charting.Renderer
                     if (l < 2)
                         l = 2;
                     WriteAsciiYX(y2, xl, "|" + new string('-', l - 2) + "[");
-                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    for (int r = 0; r < s.Data.Length; r++)
                     {
                         if (s.Data[r] < outerFenceL)
                         {
@@ -695,7 +695,7 @@ namespace StatsDirect.Charting.Renderer
                     if (l < 2)
                         l = 2;
                     WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "|");
-                    for (int r = 0; r <= s.Data.Length - 1; r++)
+                    for (int r = 0; r < s.Data.Length; r++)
                     {
                         if (s.Data[r] > outerFenceR)
                         {

@@ -338,9 +338,9 @@ namespace StatsDirect.Builtins
                 int it;
                 for (it = 3; it <= b; it++)
                 {
-                    for (ix = 2; ix <= it - 1; ix++)
+                    for (ix = 2; ix < it; ix++)
                     {
-                        for (ir = 1; ir <= ix - 1; ir++)
+                        for (ir = 1; ir < ix; ir++)
                         {
                             wi[ir, ix, it] = zero;
                             wi[ix, ir, it] = zero;
@@ -374,7 +374,7 @@ namespace StatsDirect.Builtins
             }
             for (ix = 2; ix <= b; ix++)
             {
-                for (ir = 1; ir <= ix - 1; ir++)
+                for (ir = 1; ir < ix; ir++)
                 {
                     tij2[ir, ix] = zero;
                     tij3[ir, ix] = zero;
@@ -401,12 +401,10 @@ namespace StatsDirect.Builtins
             double t1 = zero;
             for (ix = 2; ix <= b; ix++)
             {
-                for (ir = 1; ir <= ix - 1; ir++)
+                for (ir = 1; ir < ix; ir++)
                 {
                     if (n > 2)
-                    {
                         t1 = t1 + 4.0 * Math.Pow(sij[ir, ix], 3.0) - sij[ir, ix] * tij2[ir, ix] * 6.0 * n + uij[ir, ix] * 6.0 * n * n + tij3[ir, ix] * 2.0 * n * n + sij[ir, ix] * sij2[ir, ix] * 3.0 * n * n - vi[ir, ix] * 3.0 * n * n * n + sij3[ir, ix] * Math.Pow(n, 4.0);
-                    }
                     edel += sij[ir, ix];
                     var = var + sij[ir, ix] * sij[ir, ix] - tij2[ir, ix] * n + sij2[ir, ix] * n * n;
                 }
@@ -423,7 +421,7 @@ namespace StatsDirect.Builtins
             delta = zero;
             for (ix = 2; ix <= b; ix++)
             {
-                for (ir = 1; ir <= ix - 1; ir++)
+                for (ir = 1; ir < ix; ir++)
                 {
                     for (i = 1; i <= n; i++)
                     {
@@ -536,7 +534,6 @@ namespace StatsDirect.Builtins
         ///  <param name="prob">probability of agreement coefficient</param>
         private static void AgreeStandard(int kn, int km, int kr, double[,,] tdata, out double delta, out double edel, out double var, out double gam, out double rho, out double prob)
         {
-            int i, j;
             double[] c1 = new double[km + 1];
             double[] c2 = new double[km + 1];
             double[] c3 = new double[km + 1];
@@ -548,23 +545,14 @@ namespace StatsDirect.Builtins
             double[,,] sj3 = new double[kn + 1, 3, 3];
             double[,,] uj = new double[kn + 1, 3, 3];
 
-            for (i = 1; i <= kn; i++)
-            {
-                for (j = 1; j <= kr; j++)
-                {
+            for (int i = 1; i <= kn; i++)
+                for (int j = 1; j <= kr; j++)
                     data[i, 1, j] = tdata[i, 1, j];
-                }
-            }
-            for (i = 2; i <= km; i++)
+            for (int i = 2; i <= km; i++)
             {
-                for (j = 1; j <= kn; j++)
-                {
-                    int k;
-                    for (k = 1; k <= kr; k++)
-                    {
+                for (int j = 1; j <= kn; j++)
+                    for (int k = 1; k <= kr; k++)
                         data[j, 2, k] = tdata[j, i, k];
-                    }
-                }
 
                 AgreeStdCalc(kn, kr, d, data, sj1, sj2, sj3, uj, out double cum1, out double cum2, out double cum3, out delta);
 
@@ -577,7 +565,7 @@ namespace StatsDirect.Builtins
             double c11 = 0.0;
             double c22 = 0.0;
             double c33 = 0.0;
-            for (i = 2; i <= km; i++)
+            for (int i = 2; i <= km; i++)
             {
                 delta += del[i];
                 c11 += c1[i];
@@ -593,7 +581,6 @@ namespace StatsDirect.Builtins
             prob = Pgamt(t, gam);
         }
 
-
         private static void AgreeStdCalc(int kn, int kr, double[,] d, double[,,] data, double[,,] sj1, double[,,] sj2, double[,,] sj3, double[,,] uj, out double cum1, out double cum2, out double cum3, out double delta)
         {
             int i;
@@ -607,12 +594,8 @@ namespace StatsDirect.Builtins
             double[,] vi = new double[3, 3];
 
             for (i = 1; i <= 2 * kn; i++)
-            {
                 for (j = 1; j <= 2 * kn; j++)
-                {
                     d[i, j] = 0.0;
-                }
-            }
             for (i = 1; i <= kn; i++)
             {
                 for (j = 1; j <= 2; j++)
@@ -622,9 +605,7 @@ namespace StatsDirect.Builtins
                     {
                         int lo = 1;
                         if (i == k)
-                        {
                             lo = j;
-                        }
                         int l;
                         for (l = lo; l <= 2; l++)
                         {
@@ -633,9 +614,7 @@ namespace StatsDirect.Builtins
                             d[ij, kl] = 0.0;
                             int m;
                             for (m = 1; m <= kr; m++)
-                            {
                                 d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
-                            }
                             d[ij, kl] = Math.Pow(d[ij, kl], 0.5);
                             d[kl, ij] = d[ij, kl];
                         }
@@ -711,9 +690,7 @@ namespace StatsDirect.Builtins
                 delta += d[irr, iss];
             }
             delta /= Convert.ToDouble(kn);
-
         }
-
 
         public static ParameterBag RptUniversalAgreementSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
@@ -742,7 +719,6 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("k", mpd);
             return outputParameters;
         }
-
 
         private static void Rmrbp(IProgressBarHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
         {
@@ -800,15 +776,9 @@ namespace StatsDirect.Builtins
                 if (ia != 0)
                 {
                     for (int i = 1; i <= kg; i++)
-                    {
                         for (int j = 1; j <= kb; j++)
-                        {
                             for (int k = 1; k <= kr; k++)
-                            {
                                 x[i, j, k] = data[i, j, k];
-                            }
-                        }
-                    }
                     for (int j = 1; j <= kb; j++)
                     {
                         for (int k = 1; k <= kr; k++)
@@ -819,9 +789,7 @@ namespace StatsDirect.Builtins
                             {
                                 double sum = 0.0;
                                 for (int i2 = 1; i2 <= kg; i2++)
-                                {
                                     sum += Math.Abs(data[i2, j, k] - x[i1, j, k]);
-                                }
                                 if (sum < a1)
                                 {
                                     dm1 = x[i1, j, k];
@@ -835,22 +803,14 @@ namespace StatsDirect.Builtins
                                 }
                             }
                             if (sum1 > a2)
-                            {
                                 dm2 = dm1;
-                            }
                             xm[j, k] = (dm1 + dm2) / 2.0;
                         }
                     }
                     for (int i = 1; i <= kg; i++)
-                    {
                         for (int j = 1; j <= kb; j++)
-                        {
                             for (int k = 1; k <= kr; k++)
-                            {
                                 data[i, j, k] = data[i, j, k] - xm[j, k];
-                            }
-                        }
-                    }
                 }
                 if (ic != 0 & kr != 1)
                 {
@@ -858,30 +818,16 @@ namespace StatsDirect.Builtins
                     {
                         ad[k] = 0.0;
                         for (int i1 = 1; i1 <= kg; i1++)
-                        {
                             for (int i2 = 1; i2 <= kg; i2++)
-                            {
                                 for (int j1 = 2; j1 <= kb; j1++)
-                                {
-                                    for (int j2 = 1; j2 <= j1 - 1; j2++)
-                                    {
+                                    for (int j2 = 1; j2 < j1; j2++)
                                         ad[k] += Math.Pow(Math.Abs(data[i1, j1, k] - data[i2, j2, k]), v);
-                                    }
-                                }
-                            }
-                        }
                         ad[k] = Math.Pow(ad[k], 1.0 / v);
                     }
                     for (int i = 1; i <= kg; i++)
-                    {
                         for (int j = 1; j <= kb; j++)
-                        {
                             for (int k = 1; k <= kr; k++)
-                            {
                                 data[i, j, k] = data[i, j, k] / ad[k];
-                            }
-                        }
-                    }
                 }
 
             }
@@ -892,76 +838,54 @@ namespace StatsDirect.Builtins
         {
 
             double[] rks = new double[kg + 1];
-            int j;
 
             double ym = 1.0 * (kg + 1) / 2;
-            for (j = 1; j <= kb; j++)
+            for (int j = 1; j <= kb; j++)
             {
-                int k;
-                for (k = 1; k <= kr; k++)
+                for (int k = 1; k <= kr; k++)
                 {
                     double cl = 1.0E+30;
-                    int i;
-                    for (i = 1; i <= kg; i++)
-                    {
+                    for (int i = 1; i <= kg; i++)
                         if (data[i, j, k] < cl)
-                        {
                             cl = data[i, j, k];
-                        }
-                    }
-                    for (i = 1; i <= kg; i++)
-                    {
+                    for (int i = 1; i <= kg; i++)
                         data[i, j, k] = data[i, j, k] - cl + 1.0;
-                    }
                     const double phi = 1.0 + 0.000000000001;
                     double a1 = 0.0;
                     double a2 = 0.0;
                     double a3 = 1.0 * kg - 0.1;
                     double b1 = 0.0 - 1.0E+30;
                     double b2 = 1.0E+30;
-                    double w;
                     while (a2 <= a3)
                     {
-                        for (i = 1; i <= kg; i++)
-                        {
+                        for (int i = 1; i <= kg; i++)
                             if (data[i, j, k] > b1 & data[i, j, k] < b2)
-                            {
                                 b2 = data[i, j, k] * phi;
-                            }
-                        }
-                        for (i = 1; i <= kg; i++)
+                        for (int i = 1; i <= kg; i++)
                         {
-                            w = Math.Abs(1.0 - data[i, j, k] / b2);
+                            double w = Math.Abs(1.0 - data[i, j, k] / b2);
                             if (w < 0.00000000001)
-                            {
                                 a1 += 1;
-                            }
                         }
                         double a4 = a2 + (a1 + 1) / 2;
-                        for (i = 1; i <= kg; i++)
+                        for (int i = 1; i <= kg; i++)
                         {
-                            w = Math.Abs(1.0 - data[i, j, k] / b2);
+                            double w = Math.Abs(1.0 - data[i, j, k] / b2);
                             if (w < 0.00000000001)
-                            {
                                 rks[i] = a4;
-                            }
                         }
                         a2 += a1;
                         a1 = 0.0;
                         b1 = b2;
                         b2 = 1.0E+30;
                     }
-                    for (i = 1; i <= kg; i++)
+                    for (int i = 1; i <= kg; i++)
                     {
-                        w = Math.Abs(rks[i] - ym);
+                        double w = Math.Abs(rks[i] - ym);
                         if (w < 0.001)
-                        {
                             data[i, j, k] = 0.0;
-                        }
                         else
-                        {
                             data[i, j, k] = (rks[i] - ym) * Math.Pow(Math.Abs(rks[i] - ym), h - 1);
-                        }
                     }
                 }
             }
@@ -978,21 +902,16 @@ namespace StatsDirect.Builtins
             int trigger = Convert.ToInt32(ms / 1000) + 1;
 
             if (iseed != 0)
-            {
                 rng.Seed(iseed);
-            }
-            else { rng.Seed(); }
+            else
+                rng.Seed();
 
             double y = v / 2.0;
             double bc2 = 1.0 * kb * (kb - 1) / 2.0;
             int kbg = kb * kg;
             for (i = 1; i <= kbg; i++)
-            {
                 for (j = 1; j <= kbg; j++)
-                {
                     d[i, j] = 0.0;
-                }
-            }
             for (i = 1; i <= kg; i++)
             {
                 for (j = 1; j <= kb; j++)
@@ -1001,18 +920,14 @@ namespace StatsDirect.Builtins
                     {
                         lo = 1;
                         if (i == k)
-                        {
                             lo = j;
-                        }
                         for (l = lo; l <= kb; l++)
                         {
                             ij = kb * (i - 1) + j;
                             kl = kb * (k - 1) + l;
                             d[ij, kl] = 0.0;
                             for (m = 1; m <= kr; m++)
-                            {
                                 d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
-                            }
                             d[ij, kl] = Math.Pow(d[ij, kl], y);
                             d[kl, ij] = d[ij, kl];
                         }
@@ -1059,12 +974,8 @@ namespace StatsDirect.Builtins
                         }
                     }
                     for (i = 1; i <= kbg; i++)
-                    {
                         for (j = 1; j <= kbg; j++)
-                        {
                             d[i, j] = 0.0;
-                        }
-                    }
                     for (i = 1; i <= kg; i++)
                     {
                         for (j = 1; j <= kb; j++)
@@ -1073,18 +984,14 @@ namespace StatsDirect.Builtins
                             {
                                 lo = 1;
                                 if (i == k)
-                                {
                                     lo = j;
-                                }
                                 for (l = lo; l <= kb; l++)
                                 {
                                     ij = kb * (i - 1) + j;
                                     kl = kb * (k - 1) + l;
                                     d[ij, kl] = 0.0;
                                     for (m = 1; m <= kr; m++)
-                                    {
                                         d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
-                                    }
                                     d[ij, kl] = Math.Pow(d[ij, kl], y);
                                     d[kl, ij] = d[ij, kl];
                                 }
@@ -1107,9 +1014,7 @@ namespace StatsDirect.Builtins
                     }
                     dz /= c0;
                     if (dz < dx)
-                    {
                         mp += 1;
-                    }
 
                     ctr += 1;
                     if (ctr > trigger)

@@ -1475,7 +1475,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                     igr = 0;
-                    for (int i = 1; i <= nobs - 1; i++)
+                    for (int i = 1; i < nobs; i++)
                     {
                         int k = iptr[i];
                         if (igrp[k] >= 0 & Convert.ToInt64(caze[k, 4]) == 0)
@@ -1629,9 +1629,9 @@ namespace StatsDirect.Builtins
                 return false;
 
             bool ok = true;
-            for (i = 1; i <= Variable.Length - 1; i++)
+            for (i = 1; i < Variable.Length; i++)
             {
-                if (Variable.Data[i] != x1 & Variable.Data[i] != x2)
+                if (Variable.Data[i] != x1 && Variable.Data[i] != x2)
                 {
                     ok = false;
                     break;
@@ -1678,10 +1678,10 @@ namespace StatsDirect.Builtins
             {
                 double s = 0.0;
                 double x = tol * Math.Sqrt(Math.Abs(r[j, j]));
-                for (int k = 1; k <= j - 1; k++)
+                for (int k = 1; k < j; k++)
                 {
                     double vvdot = 0.0;
-                    for (int ii = 1; ii <= k - 1; ii++)
+                    for (int ii = 1; ii < k; ii++)
                         vvdot += r[ii, k] * r[ii, j];
                     double t = r[k, j] - vvdot;
                     if (r[k, k] != 0.0)
@@ -1721,7 +1721,7 @@ namespace StatsDirect.Builtins
                 ifault = 2;
 
             // fill the lower triangle with zeros
-            for (int i = 1; i <= n - 1; i++)
+            for (int i = 1; i < n; i++)
                 for (int ii = i + 1; ii <= n; ii++)
                     r[ii, i] = 0.0;
         }
@@ -2090,7 +2090,7 @@ namespace StatsDirect.Builtins
             bool[] selectedGroups = (bool[])parameters["group"].AsObject;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
             StringVariable subgroupsVariable = (StringVariable) subgroupsFrame.Variables[0];
-            for (int i = 0; i <= selectedGroups.Length - 1; i++)
+            for (int i = 0; i < selectedGroups.Length; i++)
             {
                 if (selectedGroups[i])
                 {

@@ -1106,13 +1106,6 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// blas modified givens rotations application
         /// </summary>
-        /// <param name="n"></param>
-        /// <param name="sx"></param>
-        /// <param name="ix1"></param>
-        /// <param name="ix2"></param>
-        /// <param name="sy"></param>
-        /// <param name="iy"></param>
-        /// <param name="sparam"></param>
         private static void drotm_21(int n, double[,] sx, int ix1, int ix2, double[] sy, int iy, double[] sparam)
         {
             double sflag = sparam[1];
@@ -1127,7 +1120,7 @@ namespace StatsDirect.Builtins
                 {
                     sh12 = sparam[4];
                     sh21 = sparam[3];
-                    for (i = 0; i <= n - 1; i++)
+                    for (i = 0; i < n; i++)
                     {
                         w = sx[ix1, ix2 + i];
                         z = sy[iy + i];
@@ -1143,7 +1136,7 @@ namespace StatsDirect.Builtins
                     {
                         sh11 = sparam[2];
                         sh22 = sparam[5];
-                        for (i = 0; i <= n - 1; i++)
+                        for (i = 0; i < n; i++)
                         {
                             w = sx[ix1, ix2 + i];
                             z = sy[iy + i];
@@ -1157,7 +1150,7 @@ namespace StatsDirect.Builtins
                         sh12 = sparam[4];
                         sh21 = sparam[3];
                         sh22 = sparam[5];
-                        for (i = 0; i <= n - 1; i++)
+                        for (i = 0; i < n; i++)
                         {
                             w = sx[ix1, ix2 + i];
                             z = sy[iy + i];
@@ -1378,7 +1371,7 @@ namespace StatsDirect.Builtins
                 if (covb[j, j] > 0.0)
                 {
                     double t;
-                    for (int k = 1; k <= j - 1; k++)
+                    for (int k = 1; k < j; k++)
                     {
                         t = covb[k, j];
                         for (int i = 1; i <= k; i++)
@@ -1488,7 +1481,7 @@ namespace StatsDirect.Builtins
                         for (int j = 1; j <= n; j++)
                         {
                             double xddot = 0.0;
-                            for (int k = 1; k <= j - 1; k++)
+                            for (int k = 1; k < j; k++)
                                 xddot += r[k, j] * b[k];
                             b[j] = b[j] - xddot;
                             b[j] = b[j] / r[j, j];
@@ -2053,7 +2046,7 @@ namespace StatsDirect.Builtins
             }
             y = ya[ns];
             ns -= 1;
-            for (int m = 1; m <= n - 1; m++)
+            for (int m = 1; m < n; m++)
             {
                 for (int i = 1; i <= n - m; i++)
                 {
@@ -3177,7 +3170,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            for (int k = 1; k <= n - 1; k++)
+            for (int k = 1; k < n; k++)
             {
                 diag[k] = a[k, k];
                 super_diag[k] = a[k, k + 1];
@@ -3350,10 +3343,8 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            for (int i2 = 1; i2 <= i0 - 1; i2++)
-            {
-                wrk0[i2] = Convert.ToDouble(i2) + 0.25;
-            }
+            for (int i2 = 1; i2 < i0; i2++)
+                wrk0[i2] = i2 + 0.25;
             for (int i2 = i0; i2 <= n; i2++)
             {
                 double bmax = diag[i2];
@@ -3442,7 +3433,7 @@ namespace StatsDirect.Builtins
                                 ix2 += 1;
                             }
                         }
-                        for (int i2 = 1; i2 <= n - i1 - 1; i2++)
+                        for (int i2 = 1; i2 < n - i1; i2++)
                         {
                             if (wrk[i1 + i2] != 1.0 | wrk[n + i1 - 1 + i2] != 0.0)
                             {

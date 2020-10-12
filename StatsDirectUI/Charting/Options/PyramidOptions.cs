@@ -27,7 +27,7 @@ namespace StatsDirect.Charting
 
             //  A pyramid plot has one marker for male and an optional second for female.
             MarkerTypes = new List<MarkerType>();
-            for (int seriesIndex = 0; seriesIndex <= f.VariableCount - 1; seriesIndex++)
+            for (int seriesIndex = 0; seriesIndex < f.VariableCount; seriesIndex++)
             {
                 IVariable v = f.Variables[seriesIndex];
 

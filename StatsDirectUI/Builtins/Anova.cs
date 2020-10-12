@@ -21,7 +21,7 @@ namespace StatsDirect.Builtins
 
             //  Check the expected number of subgroups
             int lsum = 0;
-            for (int i = 0; i <= frame.VariableCount - 1; i++)
+            for (int i = 0; i < frame.VariableCount; i++)
                 lsum += frame.Variables[i].Count;
             if (lsum != L)
                 return;
@@ -48,7 +48,7 @@ namespace StatsDirect.Builtins
             {
                 int ngpi = 0;
                 double yid = 0.0;
-                for (int j = 0; j <= frame.Variables[i].Count - 1; j++)
+                for (int j = 0; j < frame.Variables[i].Count; j++)
                 {
                     double yij = 0.0;
                     nsub += 1;
@@ -85,11 +85,11 @@ namespace StatsDirect.Builtins
             double S2 = 0.0;
             nsub = 0;
 
-            for (int i = 0; i <= frame.VariableCount - 1; i++)
+            for (int i = 0; i < frame.VariableCount; i++)
             {
                 double z = gbar[i + 1] - gm;
                 S1 += z * z * Convert.ToDouble(ngp[i + 1]);
-                for (int j = 0; j <= frame.Variables[i].Count - 1; j++)
+                for (int j = 0; j < frame.Variables[i].Count; j++)
                 {
                     nsub += 1;
                     z = sgbar[nsub] - gbar[i + 1];
@@ -268,7 +268,7 @@ namespace StatsDirect.Builtins
                     using (IProgressBar progress = host.StartProgress("Calculating Kendall", true))
                     {
                         int pn;
-                        for (pn = 1; pn <= nxx - 1; pn++)
+                        for (pn = 1; pn < nxx; pn++)
                         {
                             if (progress.Update(Convert.ToDouble(pn) / gd))
                                 return;
@@ -402,7 +402,7 @@ namespace StatsDirect.Builtins
             for (int r = 0; r < rows; r++)
             {
                 bool ok = true;
-                for (int c = 0; c <= cols - 1; c++)
+                for (int c = 0; c < cols; c++)
                 {
                     if (ARR2[c][r] == Constant.MISSING)
                         ok = false;
@@ -630,7 +630,7 @@ namespace StatsDirect.Builtins
             }
 
             double ssgroup = 0;
-            for (int d = 0; d <= frame.VariableCount - 1; d++)
+            for (int d = 0; d < frame.VariableCount; d++)
                 ssgroup += (mean[d] - gm) * (mean[d] - gm) * tnx[d];
 
             int dftot = ntot - 1;
@@ -1244,8 +1244,8 @@ namespace StatsDirect.Builtins
             Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
             int totn = 0;
-            for (int N = 0; N <= kn - 1; N++)
-                totn += tnx[N];
+            for (int n = 0; n < kn; n++)
+                totn += tnx[n];
 
             double palpha = 1.0 - gamma;
             if (palpha <= 0 || palpha >= 1)
@@ -1262,9 +1262,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("critical", crit);
 
             int ctr = 0;
-            for (int i = 0; i <= frame.VariableCount - 1; i++)
+            for (int i = 0; i < frame.VariableCount; i++)
             {
-                for (int j = i + 1; j <= frame.VariableCount - 1; j++)
+                for (int j = i + 1; j < frame.VariableCount; j++)
                 {
                     ctr += 1;
                     double DELTA = mean[i] - mean[j];
@@ -1388,9 +1388,9 @@ namespace StatsDirect.Builtins
 
             double se = Math.Sqrt(msx / Convert.ToDouble(qx));
             int ctr = 0;
-            for (int i = 0; i <= frame.VariableCount - 2; i++)
+            for (int i = 0; i < frame.VariableCount - 1; i++)
             {
-                for (int j = i + 1; j <= frame.VariableCount - 1; j++)
+                for (int j = i + 1; j < frame.VariableCount; j++)
                 {
                     ctr += 1;
                     double delta = mean[i] - mean[j];
@@ -1420,11 +1420,11 @@ namespace StatsDirect.Builtins
                     }
                     int ismaller = 0;
                     int ibigger = 0;
-                    for (int L = 0; L <= frame.VariableCount - 1; L++)
+                    for (int l = 0; l < frame.VariableCount; l++)
                     {
-                        if (mean[L] < a)
+                        if (mean[l] < a)
                             ismaller += 1;
-                        if (mean[L] > b)
+                        if (mean[l] > b)
                             ibigger += 1;
                     }
                     hold[ctr].Gps = kn - ismaller - ibigger;
@@ -2012,7 +2012,7 @@ namespace StatsDirect.Builtins
             double[] x2d = new double[rows + 1];
             double[] x2p = new double[rows + 1];
             int ng2 = 0;
-            for (int j = 0; j <= rows - 1; j++)
+            for (int j = 0; j < rows; j++)
             {
                 if (group2DrugData[j] != Constant.MISSING & group2PlaceboData[j] != Constant.MISSING)
                 {
@@ -2162,23 +2162,17 @@ namespace StatsDirect.Builtins
 
                 double gm = sumtot / Convert.ToDouble(ntot);
                 double sstot = 0;
-                for (int D = 0; D <= frame.VariableCount - 1; D++)
+                for (int d = 0; d < frame.VariableCount; d++)
                 {
-                    DoubleVariable v = frame.Variables[D]as DoubleVariable;
+                    DoubleVariable v = frame.Variables[d]as DoubleVariable;
                     foreach (double val in v.Data)
-                    {
                         if (val != Constant.MISSING)
-                        {
                             sstot += (val - gm) * (val - gm);
-                        }
-                    }
                 }
 
                 double ssgroup = 0;
-                for (int D = 0; D <= frame.VariableCount - 1; D++)
-                {
-                    ssgroup += (mean[D] - gm) * (mean[D] - gm) * tnx[D];
-                }
+                for (int d = 0; d < frame.VariableCount; d++)
+                    ssgroup += (mean[d] - gm) * (mean[d] - gm) * tnx[d];
 
                 // long dfgroup = frame.VariableCount - 1; Never used.  PJC 2012/04/09.
                 double sserror = sstot - ssgroup;

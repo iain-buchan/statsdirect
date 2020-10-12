@@ -120,7 +120,7 @@ namespace StatsDirect.Charting.Renderer
                 WriteAsciiYX(0, 76 - l, sOptions.XAxisTitle);
 
                 // Work through the columns
-                for (int c = 0; c <= Definition.XSeries.Count - 1; c++)
+                for (int c = 0; c < Definition.XSeries.Count; c++)
                 {
                     DoubleSeries xs = (DoubleSeries)Definition.XSeries[c];
                     DoubleSeries ys = (DoubleSeries)Definition.YSeries[c];

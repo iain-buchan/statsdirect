@@ -373,7 +373,7 @@ namespace StatsDirect.Builtins
                 {
                     int n;
                     int pn;
-                    for (pn = 1; pn <= nxx - 1; pn++)
+                    for (pn = 1; pn < nxx; pn++)
                     {
                         if (progress.Update(Convert.ToDouble(pn) / gd))
                             throw new TemplateOperationCancelledException();
@@ -901,7 +901,7 @@ namespace StatsDirect.Builtins
 
             double[] r = new double[n + 1];
             ExFortran.Rank(t, r, 1, n, 1, out double tie);
-            for (int j = 0; j <= frame.VariableCount - 1; j++)
+            for (int j = 0; j < frame.VariableCount; j++)
             {
                 for (int k = 1; k <= gn[j]; k++)
                 {
@@ -979,7 +979,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             IList<ParameterBag> varList = new List<ParameterBag>();
             outputParameters.AddOutput("*var", varList);
-            for (int k = 0; k <= frame.VariableCount - 1; k++)
+            for (int k = 0; k < frame.VariableCount; k++)
             {
                 DoubleVariable v = (DoubleVariable)frame.Variables[k];
                 using (IProgressBar progress = host.StartProgress("Bootstrapping diversity indices for " + v.Title, true))
@@ -1906,7 +1906,7 @@ namespace StatsDirect.Builtins
                 if (ifault == 0)
                 {
                     cnt = 0;
-                    for (int i = 1; i <= rows - 1; i++)
+                    for (int i = 1; i < rows; i++)
                     {
                         for (int j = i + 1; j <= rows; j++)
                         {
@@ -2277,7 +2277,7 @@ namespace StatsDirect.Builtins
                 for (int k = limit; k >= 1; k--)
                 {
                     prob[k] *= 0.5;
-                    if (shift <= k - 1)
+                    if (shift < k)
                         prob[k] += 0.5 * prob[k - shift];
                 }
             }
@@ -2873,7 +2873,7 @@ namespace StatsDirect.Builtins
             CalcFriedman(frame, out double[] w2, out int n, ref a2, ref b2, ref t1, ref t2, ref nd, out bool allAreBinary, out bool numbersAreSmall);
 
             string tlist = string.Empty; string rlist = string.Empty;
-            for (int d = 0; d <= frame.VariableCount - 1; d++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
                 if (d == 0)
                 {
@@ -2954,10 +2954,10 @@ namespace StatsDirect.Builtins
             allAreBinary = true;
             int qty = 0;
             int positiveCellCount = 0;
-            for (int j = 0; j <= frame.Variables[0].Length - 1; j++)
+            for (int j = 0; j < frame.Variables[0].Length; j++)
             {
                 bool skip = false;
-                for (int d = 0; d <= frame.VariableCount - 1; d++)
+                for (int d = 0; d < frame.VariableCount; d++)
                 {
                     if (((DoubleVariable)frame.Variables[d]).Data[j] == Constant.MISSING)
                         skip = true;
@@ -2965,7 +2965,7 @@ namespace StatsDirect.Builtins
                 if (!skip)
                 {
                     qty += 1;
-                    for (int d = 0; d <= frame.VariableCount - 1; d++)
+                    for (int d = 0; d < frame.VariableCount; d++)
                     {
                         double dat = ((DoubleVariable)frame.Variables[d]).Data[j];
                         x[d + 1, qty] = dat;
@@ -3165,7 +3165,7 @@ namespace StatsDirect.Builtins
             XKwt(x, lx, l, frame.VariableCount, out double h, ref ha, ref t, ref w1, out int ifault);
 
             string tlist = string.Empty;
-            for (int d = 0; d <= frame.VariableCount - 1; d++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
                 if (d > 0)
                 {
@@ -3508,7 +3508,7 @@ namespace StatsDirect.Builtins
             double[] r = new double[nx + 1];
 
             int qty = 0;
-            for (int d = 0; d <= frame.VariableCount - 1; d++)
+            for (int d = 0; d < frame.VariableCount; d++)
             {
                 DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
                 foreach (double val in varbl.Data)

@@ -104,7 +104,7 @@ namespace StatsDirect.Charting.Renderer
                 //  Combined male/female values - assume an even split
                 female = new double[nmale];
                 male = new double[nmale];
-                for (int r = 0; r <= nmale - 1; r++)
+                for (int r = 0; r < nmale; r++)
                 {
                     if (males.Data[r] != Constant.MISSING)
                     {

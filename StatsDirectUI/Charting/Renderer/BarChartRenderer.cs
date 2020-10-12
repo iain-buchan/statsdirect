@@ -31,7 +31,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     double largestSoFar = 0;
 
-                    for (int offset = 0; offset <= ((DoubleSeries)Definition.YSeries[0]).Points - 1; offset++)
+                    for (int offset = 0; offset < ((DoubleSeries)Definition.YSeries[0]).Points; offset++)
                     {
                         double thisTotal = 0;
                         foreach (DoubleSeries s in Definition.YSeries)
@@ -141,11 +141,11 @@ namespace StatsDirect.Charting.Renderer
                 {
                     //  Add up the bars and scale to that maximum
                     double largestSetOfBars = 0;
-                    for (int barIndex = 0; barIndex <= ((DoubleSeries)seriesToUse[0]).Data.Length - 1; barIndex++)
+                    for (int barIndex = 0; barIndex < ((DoubleSeries)seriesToUse[0]).Data.Length; barIndex++)
                     {
                         //  Missing data leads to missing bars
                         double totalOfAllBars = 0;
-                        for (int seriesIndex = 0; seriesIndex <= seriesToUse.Count - 1; seriesIndex++)
+                        for (int seriesIndex = 0; seriesIndex < seriesToUse.Count; seriesIndex++)
                         {
                             double seriesValue = ((DoubleSeries)seriesToUse[seriesIndex]).Data[barIndex];
                             if (seriesValue != Constant.MISSING)
@@ -223,7 +223,7 @@ namespace StatsDirect.Charting.Renderer
                 double eachSideWhiteSpaceHeight = eachSideWhiteSpaceHeightFraction * eachAreaHeight;
 
                 //  Work through the columns - this plots each series in turn, rather than all the bars in increasing Y-order.  It's easier on pen/brush resources but requires a little more calculation.
-                for (int c = 0; c <= seriesToUse.Count - 1; c++)
+                for (int c = 0; c < seriesToUse.Count; c++)
                 {
                     DoubleSeries s = (DoubleSeries)seriesToUse[c];
                     MarkerType mt = bOptions.MarkerTypes[c];
@@ -236,7 +236,7 @@ namespace StatsDirect.Charting.Renderer
                     PenDescriptor barPen = GetLinePen(s.MarkerType, true);
                     BrushDescriptor barBrush = MarkerTypeToBrush(mt);
 
-                    for (int barIndex = 0; barIndex <= s.Data.Length - 1; barIndex++)
+                    for (int barIndex = 0; barIndex < s.Data.Length; barIndex++)
                     {
                         double thisData = s.Data[barIndex];
                         //  Missing data leads to missing bars
@@ -247,7 +247,7 @@ namespace StatsDirect.Charting.Renderer
                             //  Data exists.  For stacked and 100% stacked bars, we now need to position and scale the bar.
                             if (bOptions.Stacked)
                             {
-                                for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
+                                for (int probeIndex = 0; probeIndex < seriesToUse.Count; probeIndex++)
                                 {
                                     double probeValue = ((DoubleSeries)seriesToUse[probeIndex]).Data[barIndex];
                                     if (probeValue != Constant.MISSING)
@@ -357,7 +357,7 @@ namespace StatsDirect.Charting.Renderer
                 double eachSideWhiteSpaceWidth = eachSideWhiteSpaceWidthFraction * eachAreaWidth;
 
                 // work through the columns - this plots each series in turn, rather than all the bars in increasing X-order
-                for (int c = 0; c <= seriesToUse.Count - 1; c++)
+                for (int c = 0; c < seriesToUse.Count; c++)
                 {
                     DoubleSeries s = (DoubleSeries)seriesToUse[c];
                     MarkerType mt = bOptions.MarkerTypes[c];
@@ -369,7 +369,7 @@ namespace StatsDirect.Charting.Renderer
 
                     PenDescriptor barPen = GetLinePen(s.MarkerType, false);
                     BrushDescriptor barBrush = MarkerTypeToBrush(mt);
-                    for (int barIndex = 0; barIndex <= s.Data.Length - 1; barIndex++)
+                    for (int barIndex = 0; barIndex < s.Data.Length; barIndex++)
                     {
                         double thisData = s.Data[barIndex];
                         //  Missing data leads to missing bars
@@ -380,7 +380,7 @@ namespace StatsDirect.Charting.Renderer
                             if (bOptions.Stacked)
                             {
                                 double totalOfAllBars = 0;
-                                for (int probeIndex = 0; probeIndex <= seriesToUse.Count - 1; probeIndex++)
+                                for (int probeIndex = 0; probeIndex < seriesToUse.Count; probeIndex++)
                                 {
                                     double probeValue = ((DoubleSeries)seriesToUse[probeIndex]).Data[barIndex];
                                     if (probeValue != Constant.MISSING)

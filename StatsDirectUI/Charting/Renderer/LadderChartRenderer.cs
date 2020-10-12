@@ -53,7 +53,7 @@ namespace StatsDirect.Charting.Renderer
             DoubleSeries s0 = (DoubleSeries)Definition.YSeries[0];
             DoubleSeries s1 = (DoubleSeries)Definition.YSeries[1];
             //  Points
-            for (int r = 0; r <= s0.Points - 1; r++)
+            for (int r = 0; r < s0.Points; r++)
             {
                 if (s0.Data[r] != Constant.MISSING && s1.Data[r] != Constant.MISSING)
                 {
@@ -70,7 +70,7 @@ namespace StatsDirect.Charting.Renderer
 
             PenDescriptor rungPen = new PenDescriptor(ColorDescriptor.Black, rungMarkerType.Width);
             rungPen.DashStyle = rungMarkerType.LineDashStyle;
-            for (int r = 0; r <= s0.Points - 1; r++)
+            for (int r = 0; r < s0.Points; r++)
             {
                 if (s0.Data[r] != Constant.MISSING && s1.Data[r] != Constant.MISSING)
                 {

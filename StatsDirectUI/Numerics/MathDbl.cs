@@ -54,7 +54,7 @@ namespace StatsDirect.Numerics
             if (noMissing)
             {
                 nx = Convert.ToDouble(n);
-                for (int i = lowerBound; i <= n + lowerBound - 1; i++)
+                for (int i = lowerBound; i < n + lowerBound; i++)
                 {
                     sx = x[i];
                     sy = y[i];
@@ -67,7 +67,7 @@ namespace StatsDirect.Numerics
             }
             else
             {
-                for (int i = lowerBound; i <= n + lowerBound - 1; i++)
+                for (int i = lowerBound; i < n + lowerBound; i++)
                 {
                     if (x[i] != Constant.MISSING & y[i] != Constant.MISSING)
                     {
@@ -301,18 +301,18 @@ namespace StatsDirect.Numerics
                 ifault = 1;
                 return;
             }
-            for (int j = lowerBound; j <= lowerBound + N - 1; j++)
+            for (int j = lowerBound; j < lowerBound + N; j++)
             {
                 ipiv[j] = 0;
             }
-            for (int i = lowerBound; i <= lowerBound + N - 1; i++)
+            for (int i = lowerBound; i < lowerBound + N; i++)
             {
                 double BIG = 0.0;
-                for (int j = lowerBound; j <= lowerBound + N - 1; j++)
+                for (int j = lowerBound; j < lowerBound + N; j++)
                 {
                     if (ipiv[j] != 1)
                     {
-                        for (int k = lowerBound; k <= lowerBound + N - 1; k++)
+                        for (int k = lowerBound; k < lowerBound + N; k++)
                         {
                             if (ipiv[k] == 0)
                             {
@@ -335,13 +335,13 @@ namespace StatsDirect.Numerics
                 ipiv[icol] = ipiv[icol] + 1;
                 if (irow != icol)
                 {
-                    for (int L = lowerBound; L <= lowerBound + N - 1; L++)
+                    for (int L = lowerBound; L < lowerBound + N; L++)
                     {
                         double dum = a[irow, L];
                         a[irow, L] = a[icol, L];
                         a[icol, L] = dum;
                     }
-                    for (int L = lowerBound; L <= lowerBound + M - 1; L++)
+                    for (int L = lowerBound; L < lowerBound + M; L++)
                     {
                         double dum = b[irow, L];
                         b[irow, L] = b[icol, L];
@@ -358,25 +358,25 @@ namespace StatsDirect.Numerics
                 }
                 double pivinv = 1.0 / a[icol, icol];
                 a[icol, icol] = 1.0;
-                for (int L = lowerBound; L <= lowerBound + N - 1; L++)
+                for (int L = lowerBound; L < lowerBound + N; L++)
                 {
                     a[icol, L] = a[icol, L] * pivinv;
                 }
-                for (int L = lowerBound; L <= lowerBound + M - 1; L++)
+                for (int L = lowerBound; L < lowerBound + M; L++)
                 {
                     b[icol, L] = b[icol, L] * pivinv;
                 }
-                for (int ll = lowerBound; ll <= lowerBound + N - 1; ll++)
+                for (int ll = lowerBound; ll < lowerBound + N; ll++)
                 {
                     if (ll != icol)
                     {
                         double dum = a[ll, icol];
                         a[ll, icol] = 0.0;
-                        for (int L = lowerBound; L <= lowerBound + N - 1; L++)
+                        for (int L = lowerBound; L < lowerBound + N; L++)
                         {
                             a[ll, L] = a[ll, L] - a[icol, L] * dum;
                         }
-                        for (int L = lowerBound; L <= lowerBound + M - 1; L++)
+                        for (int L = lowerBound; L < lowerBound + M; L++)
                         {
                             b[ll, L] = b[ll, L] - b[icol, L] * dum;
                         }
@@ -387,7 +387,7 @@ namespace StatsDirect.Numerics
             {
                 if (indxr[L] != indxc[L])
                 {
-                    for (int k = lowerBound; k <= lowerBound + N - 1; k++)
+                    for (int k = lowerBound; k < lowerBound + N; k++)
                     {
                         double dum = a[k, indxr[L]];
                         a[k, indxr[L]] = a[k, indxc[L]];
@@ -1316,7 +1316,7 @@ namespace StatsDirect.Numerics
                 // allow for rounding error
                 pecdf[i] = 10000.0 * (pecdf[i - 1] + f[i] / Convert.ToDouble(n)) / 10000.0;
             }
-            for (i = 0; i <= x.Length - 1; i++)
+            for (i = 0; i < x.Length; i++)
             {
                 for (j = 0; j <= ii; j++)
                 {

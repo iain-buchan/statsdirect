@@ -626,7 +626,7 @@ namespace StatsDirect.Builtins
             {
                 //  Weights aren't in use, use all 1s
                 double[] allOnes = new double[outcomeVariable.Length];
-                for (int i = 0; i <= allOnes.Length - 1; i++)
+                for (int i = 0; i < allOnes.Length; i++)
                     allOnes[i] = 1;
                 weightsVariable = new DoubleVariable(allOnes);
             }
@@ -1831,7 +1831,7 @@ namespace StatsDirect.Builtins
             int ctr = 0;
             for (int i = 2; i <= k; i++)
             {
-                for (int j = 1; j <= i - 1; j++)
+                for (int j = 1; j < i; j++)
                 {
                     rtot += r[j, i];
                     ctr += 1;

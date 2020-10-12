@@ -480,7 +480,7 @@ namespace StatsDirect.Builtins
             if (n <= 0)
                 return;
 
-            for (int i = 0; i <= n - 1; i++)
+            for (int i = 0; i < n; i++)
                 xpermu[ipx + i] = x[ix + i];
 
             if (n == 1)
@@ -876,10 +876,10 @@ namespace StatsDirect.Builtins
             {
                 double s = 0.0;
                 double x = tol * Math.Sqrt(Math.Abs(r[j + ldr * (j - 1)]));
-                for (int k = 1; k <= j - 1; k++)
+                for (int k = 1; k < j; k++)
                 {
                     double vvdot = 0.0;
-                    for (int ii = 1; ii <= k - 1; ii++)
+                    for (int ii = 1; ii < k; ii++)
                     {
                         vvdot += r[ii + ldr * (k - 1)] * r[ii + ldr * (j - 1)];
                     }
@@ -925,7 +925,7 @@ namespace StatsDirect.Builtins
             {
                 ifault = 2;
             }
-            for (int i = 1; i <= n - 1; i++)
+            for (int i = 1; i < n; i++)
             {
                 for (int ii = i + 1 + ldr * (i - 1); ii <= n + ldr * (i - 1); ii++)
                 {
@@ -960,7 +960,7 @@ namespace StatsDirect.Builtins
             {
                 double scale = 0.0;
                 double ssq = 1.0;
-                for (int ix = ixi; ix <= ixi + n - 1; ix++)
+                for (int ix = ixi; ix < ixi + n; ix++)
                 {
                     if (x[ix] != 0.0)
                     {
@@ -1030,27 +1030,21 @@ namespace StatsDirect.Builtins
                 }
             }
             for (int j = 1; j <= n; j++)
-            {
                 x[j] = b[j];
-            }
 
             if (irank < n)
             {
                 for (int j = 1; j <= n; j++)
                 {
                     double dd = 0.0;
-                    for (int i = 1; i <= j - 1; i++)
-                    {
+                    for (int i = 1; i < j; i++)
                         dd += x[i] * r[i + ldr * (j - 1)];
-                    }
                     double temp1 = x[j] - dd;
                     if (r[j + ldr * (j - 1)] == 0.0)
                     {
                         double ap = 0.0;
-                        for (int i = 1; i <= j - 1; i++)
-                        {
+                        for (int i = 1; i < j; i++)
                             ap += Math.Abs(x[i]) * Math.Abs(r[i + ldr * (j - 1)]);
-                        }
                         double temp2 = Math.Abs(x[j] + ap);
                         temp2 = temp2 * 200.0 * Constant.EPSILON;
                         if (Math.Abs(temp1) > temp2)
@@ -1074,7 +1068,7 @@ namespace StatsDirect.Builtins
                     double dd = 0.0;
                     int iix = 1;
                     int iiy = 1 + ldr * (i - 1);
-                    for (int ii = 1; ii <= i - 1; ii++)
+                    for (int ii = 1; ii < i; ii++)
                     {
                         dd += r[iiy] * x[iix];
                         iiy += 1;

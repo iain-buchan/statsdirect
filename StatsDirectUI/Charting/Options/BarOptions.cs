@@ -37,7 +37,7 @@ namespace StatsDirect.Charting
             // ShouldForceFillStyle = True
             // ForcedFillStyle = FillStyle.None
 
-            for (int i = 0; i <= seriesToUse.Count - 1; i++)
+            for (int i = 0; i < seriesToUse.Count; i++)
             {
                 SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
                 {

@@ -37,7 +37,7 @@ namespace StatsDirect.Charting
             MarkerTypes = new List<MarkerType>();
 
             //  One marker type per series
-            for (int seriesIndex = 0; seriesIndex <= SeriesTitles.Length - 1; seriesIndex++)
+            for (int seriesIndex = 0; seriesIndex < SeriesTitles.Length; seriesIndex++)
             {
                 int mkr = SeriesNumberToMarkerNumber(seriesIndex);
                 MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();

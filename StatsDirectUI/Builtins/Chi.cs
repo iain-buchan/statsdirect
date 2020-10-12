@@ -1005,7 +1005,7 @@ namespace StatsDirect.Builtins
                     ierror = 2;
                     return;
                 }
-                for (int i = lowerBound; i <= nrow - 1 + lowerBound; i++)
+                for (int i = lowerBound; i < nrow + lowerBound; i++)
                 {
                     if (nrowt[i] <= 0)
                     {
@@ -1013,7 +1013,7 @@ namespace StatsDirect.Builtins
                         return;
                     }
                 }
-                for (int j = lowerBound; j <= ncol - 1 + lowerBound; j++)
+                for (int j = lowerBound; j < ncol + lowerBound; j++)
                 {
                     if (ncolt[j] <= 0)
                     {
@@ -1023,9 +1023,9 @@ namespace StatsDirect.Builtins
                 }
                 int ncolsum = 0;
                 int nrowsum = 0;
-                for (int i = lowerBound; i <= nrow - 1 + lowerBound; i++)
+                for (int i = lowerBound; i < nrow + lowerBound; i++)
                     nrowsum += nrowt[i];
-                for (int j = lowerBound; j <= ncol - 1 + lowerBound; j++)
+                for (int j = lowerBound; j < ncol + lowerBound; j++)
                     ncolsum += ncolt[j];
                 if (ncolsum != nrowsum)
                 {
@@ -1079,7 +1079,7 @@ namespace StatsDirect.Builtins
                     if (ie == 0)
                     {
                         ia = 0;
-                        for (int j = lowerBound; j <= ncol - 1 + lowerBound; j++)
+                        for (int j = lowerBound; j < ncol + lowerBound; j++)
                             matrix[l, j] = 0;
                         break;
                     }

@@ -221,7 +221,7 @@ namespace StatsDirect.Builtins
             MathDbl.civ(degf, out double cit, gamma, out double p0);
             IList<ParameterBag> slopeList = new List<ParameterBag>();
             outputParameters.AddOutput("*slope", slopeList);
-            for (int g = 1; g <= k - 1; g++)
+            for (int g = 1; g < k; g++)
             {
                 for (int j = g + 1; j <= k; j++)
                 {
@@ -1042,7 +1042,7 @@ namespace StatsDirect.Builtins
                 {
                     double temp = alpha * x[jx];
                     int ix = kx;
-                    for (int k = kk; k <= kk + j - 1; k++)
+                    for (int k = kk; k < kk + j; k++)
                     {
                         ap[k] = ap[k] + x[ix] * temp;
                         ix += incx;
@@ -1227,7 +1227,7 @@ namespace StatsDirect.Builtins
                 dtpmv(true, udiag, j - 1, ap, 1, ap, jc, 1, out info);
                 int ict = jc;
                 int k;
-                for (k = 1; k <= j - 1; k++)
+                for (k = 1; k < j; k++)
                 {
                     ap[ict] = ap[ict] * ajj;
                     ict += 1;

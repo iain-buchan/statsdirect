@@ -242,7 +242,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptFrequency(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
-            for (int v = 0; v <= data.VariableCount - 1; v++)
+            for (int v = 0; v < data.VariableCount; v++)
             {
                 if (!(data.Variables[v] is ClassifierVariable))
                     data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v] as DoubleVariable);

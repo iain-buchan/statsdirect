@@ -19,7 +19,7 @@ namespace StatsDirect.Charting
             //  The ROC plot uses two series per ROC series.  Series 1 is the markers, series 2 is the optimum cut-off marker.
             //  All the "normal" series are set up first, then all the "optimum cut-off" series.
             MarkerTypes = new List<MarkerType>();
-            for (int markerIndex = 0; markerIndex <= seriesToUse.Count - 1; markerIndex++)
+            for (int markerIndex = 0; markerIndex < seriesToUse.Count; markerIndex++)
             {
                 ISeries series = seriesToUse[markerIndex];
                 int mkr = SeriesNumberToMarkerNumber(markerIndex);
@@ -39,7 +39,7 @@ namespace StatsDirect.Charting
             }
 
             //  Now the cut-offs
-            for (int markerIndex = 0; markerIndex <= seriesToUse.Count - 1; markerIndex++)
+            for (int markerIndex = 0; markerIndex < seriesToUse.Count; markerIndex++)
             {
                 ISeries series = seriesToUse[markerIndex];
                 int mkr = SeriesNumberToMarkerNumber(markerIndex);
