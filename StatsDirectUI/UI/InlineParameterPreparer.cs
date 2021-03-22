@@ -20,10 +20,17 @@ namespace StatsDirect.UI
     /// </summary>
     internal class InlineParameterPreparer : IParameterVisitor
     {
-        public ParameterBag Context { get; set; }
-        public frmMain Form { get; set; }
-        public ITemplateProcessor Processor { get; set; }
+        public ParameterBag Context { get; }
+        public frmMain Form { get; }
+        public ITemplateProcessor Processor { get; }
         public FilledParameter FilledParameter { get; private set; }
+
+        public InlineParameterPreparer(ParameterBag context, frmMain form, ITemplateProcessor processor)
+        {
+            Context = context;
+            Form = form;
+            Processor = processor;
+        }
 
         public void Visit(ConfidenceIntervalParameter parameter)
         {
@@ -655,239 +662,276 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
-            if ("chi-2-column".Equals(parameter.SpecialType)
-                || "chi-3-column".Equals(parameter.SpecialType)
-                || "rr-index".Equals(parameter.SpecialType)
-                || "person-time-size".Equals(parameter.SpecialType)
-                || "likelihood".Equals(parameter.SpecialType))
+            switch (parameter.SpecialType)
             {
-                bool isLikelihood = "likelihood".Equals(parameter.SpecialType);
-                bool isRrIndex = "rr-index".Equals(parameter.SpecialType);
-                bool isPersonTimeSize = "person-time-size".Equals(parameter.SpecialType);
-                bool has3Columns = "chi-3-column".Equals(parameter.SpecialType) || isPersonTimeSize;
-
-                TableLayoutPanel ssgContainer = new TableLayoutPanel
-                {
-                    Tag = parameter,
-                    RowCount = 2,
-                    ColumnCount = 2,
-                    AutoSize = true
-                };
-
-                Panel colsPanel = new Panel { Padding = new Padding(0, 0, 0, 0), Margin = new Padding(0, 0, 0, 3), Size = new Size(300, 16), AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink };
-                ssgContainer.Controls.Add(colsPanel, 1, 0);
-
-                if (isLikelihood)
-                {
-                    VerticalLabel rowsLabel = new VerticalLabel
-                    {
-                        Text = "Level",
-                        AutoSize = true
-                    };
-                    ssgContainer.Controls.Add(rowsLabel, 0, 1);
-                }
-
-                WorkbookView grid = new WorkbookView
-                {
-                    ContextMenuStrip = Form.InlineGridContextMenuStrip,
-                    Padding = new Padding(0, 0, 0, 0),
-                    Margin = new Padding(0, 0, 0, 0)
-                };
-                grid.WithLock(() =>
-                {
-                    if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
-                    {
-                        DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
-                        if (sourceFrame.VariableCount >= 2 && sourceFrame.Variables[0] is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
-                        {
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, (DoubleVariable)sourceFrame.Variables[0]);
-                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, (DoubleVariable)sourceFrame.Variables[1]);
-                            if (has3Columns && sourceFrame.VariableCount >= 3)
-                                DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, sourceFrame.Variables[2] as DoubleVariable);
-                        }
-                    }
-                    grid.ActiveWorksheet.WindowInfo.SplitColumns = has3Columns ? 3 : 2;
-                    grid.ActiveWorksheet.WindowInfo.FreezePanes = true;
-                    grid.ActiveWorksheet.Cells[0, has3Columns ? 3 : 2, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
-                    grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
-                    grid.ActiveWorkbook.WindowInfo.DisplayHorizontalScrollBar = false;
-
-                    // Figure out the width of the row header
-                    grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.ColumnWidth = 3; // characters - used to simulate row header, which defaults to 3 character width until 1,000th row visible
-                    double rowHeaderWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.Width; // Simulated row header
-
-                    // Reset column widths to a more useful number (11 characters) and get their visible width
-                    grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.ColumnWidth = 11; // characters
-                    double visibleColumnsWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, has3Columns ? 2 : 1].EntireColumn.Width; // Visible columns excluding row header and scrollbar
-                    double oneColumnWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.Width; // One column
-
-                    // Set the control size
-                    double pointsToPixels = 2; // TODO: HACK: Fudge factor.  How do we get this to be saner?
-                    const int aHair = 3; // Fudge factor: Extra width in pixels for things like scrollbar edges and ensuring that the right-hand end of the last cell is visible
-                    int overallWidthInPixels = (int)((rowHeaderWidthInPoints + visibleColumnsWidthInPoints) * pointsToPixels) + SystemInformation.VerticalScrollBarWidth + aHair;
-                    grid.Size = new Size((int)(overallWidthInPixels * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height));
-                    int rowHeaderWidthInPixels = (int)(rowHeaderWidthInPoints * pointsToPixels);
-                    int oneColumnWidthInPixels = (int)(oneColumnWidthInPoints * pointsToPixels);
-                    int fudge = (int)(3 * pointsToPixels); // Offset of labels from nominal column start, in pixels.  Ideally this should closely match SSG's internal offset.
-
-                    Label col1Label = new Label
-                    {
-                        Text =
-                            isPersonTimeSize
-                                ? "Index events"
-                                : isRrIndex
-                                    ? "Reference rate"
-                                    : isLikelihood ? "+ feature" : "+ success",
-                        AutoSize = true,
-                        Location = new Point(rowHeaderWidthInPixels + 0 * oneColumnWidthInPixels + fudge, 0)
-                    };
-                    colsPanel.Controls.Add(col1Label);
-
-                    Label col2Label = new Label
-                    {
-                        Text =
-                            isPersonTimeSize || isRrIndex
-                                ? "Index Person-time"
-                                : isLikelihood ? "- feature" : "- failure",
-                        AutoSize = true,
-                        Location = new Point(rowHeaderWidthInPixels + 1 * oneColumnWidthInPixels + fudge, 0)
-                    };
-                    colsPanel.Controls.Add(col2Label);
-
-                    if (has3Columns)
-                    {
-                        Label col3Label = new Label
-                        {
-                            Text = isPersonTimeSize ? "Reference size" : "score",
-                            AutoSize = true,
-                            Location = new Point(rowHeaderWidthInPixels + 2 * oneColumnWidthInPixels + fudge, 0)
-                        };
-                        colsPanel.Controls.Add(col3Label);
-                    }
-
-                });
-                ssgContainer.Controls.Add(grid, 1, 1);
-
-                tlp.Controls.Add(ssgContainer);
-                tlp.SetColumnSpan(ssgContainer, 2);
-
-                grid.Focus();
-
-                return;
+                case "1-to-n":
+                    BuildColumnarGrid(parameter, tlp,
+                        1,
+                        new string[] { "score" });
+                    break;
+                case "addedConstant":
+                    VisitSpecialAddedConstant(parameter);
+                    break;
+                case "chi-2-column":
+                    BuildColumnarGrid(parameter, tlp,
+                        2,
+                        new string[] { "+ success", "- failure" });
+                    break;
+                case "chi-3-column":
+                    BuildColumnarGrid(parameter, tlp,
+                        3,
+                        new string[] { "+ success", "- failure", "score" });
+                    break;
+                case "frame":
+                    VisitSpecialFrame(parameter, tlp);
+                    break;
+                case "likelihood":
+                    BuildColumnarGrid(parameter, tlp,
+                        2,
+                        new string[] { "+ feature", "- feature" }, "Level");
+                    break;
+                case "person-time-size":
+                    BuildColumnarGrid(parameter, tlp,
+                        3,
+                        new string[] { "Index events", "Index Person-time", "Reference size" });
+                    break;
+                case "raters-2d":
+                    VisitSpecialRaters2D(parameter, tlp);
+                    break;
+                case "report":
+                    VisitSpecialReport(parameter, tlp);
+                    break;
+                case "rr-index":
+                    BuildColumnarGrid(parameter, tlp,
+                        2,
+                        new string[] { "Reference rate", "Index Person-time" });
+                    break;
+                case "rubric":
+                    VisitSpecialRubric(parameter, tlp);
+                    break;
+                case "scores":
+                    VisitSpecialScores(parameter, tlp);
+                    break;
+                case "textToNumbers":
+                    VisitSpecialTextToNumbers(parameter, tlp);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(parameter), parameter.SpecialType, "parameter.SpecialType: Unknown option");
             }
-            if ("raters-2d".Equals(parameter.SpecialType))
+        }
+
+        /// <summary>
+        /// A convenience function for the many special parameters that build grids with 1-3 columns.
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <param name="tlp">The panel into which to build the grid</param>
+        /// <param name="columnCount"></param>
+        /// <param name="columnTitles"></param>
+        /// <param name="verticalTitle">If non-null, a string that should be shown as a vertical label to the left of the grid</param>
+        private void BuildColumnarGrid(SpecialParameter parameter, TableLayoutPanel tlp, int columnCount, string[] columnTitles, string verticalTitle = null)
+        {
+            TableLayoutPanel ssgContainer = new TableLayoutPanel
             {
-                TableLayoutPanel ssgContainer = new TableLayoutPanel
+                Tag = parameter,
+                RowCount = 2,
+                ColumnCount = 2,
+                AutoSize = true
+            };
+
+            Panel colsPanel = new Panel
+            {
+                Padding = new Padding(0, 0, 0, 0),
+                Margin = new Padding(0, 0, 0, 3),
+                Size = new Size(300, 16),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+            ssgContainer.Controls.Add(colsPanel, 1, 0);
+
+            if (null != verticalTitle)
+            {
+                VerticalLabel rowsLabel = new VerticalLabel
                 {
-                    Tag = parameter,
-                    RowCount = 2,
-                    ColumnCount = 2,
+                    Text = verticalTitle,
                     AutoSize = true
                 };
-
-                Label colsLabel = new Label { Text = "Rater 2", AutoSize = true };
-                ssgContainer.Controls.Add(colsLabel, 1, 0);
-
-                VerticalLabel rowsLabel = new VerticalLabel { Text = "Rater 1", AutoSize = true, TabStop = false };
                 ssgContainer.Controls.Add(rowsLabel, 0, 1);
+            }
 
-                WorkbookView grid = new WorkbookView { Size = new Size((int)(450 * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
-                grid.WithLock(() =>
+            WorkbookView grid = new WorkbookView
+            {
+                ContextMenuStrip = Form.InlineGridContextMenuStrip,
+                Padding = new Padding(0, 0, 0, 0),
+                Margin = new Padding(0, 0, 0, 0)
+            };
+            grid.WithLock(() =>
+            {
+                if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
                 {
-                    if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
+                    DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
+                    if (sourceFrame.VariableCount >= columnCount && sourceFrame.Variables[0] is DoubleVariable v0)
                     {
-                        DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
-                        for (int col = 0; col < sourceFrame.VariableCount; col++)
-                            if (sourceFrame.Variables[col] is DoubleVariable)
-                                DumpIntoSsg((IValues)grid.ActiveWorksheet, col, (DoubleVariable)sourceFrame.Variables[col]);
+                        DumpIntoSsg((IValues)grid.ActiveWorksheet, 0, v0);
+                        if (columnCount >= 2 && sourceFrame.VariableCount >= 2 && sourceFrame.Variables[1] is DoubleVariable v1)
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 1, v1);
+                        if (columnCount >= 3 && sourceFrame.VariableCount >= 3 && sourceFrame.Variables[2] is DoubleVariable v2)
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, 2, v2);
                     }
-                    grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
-                    grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
-                });
-                ssgContainer.Controls.Add(grid, 1, 1);
-
-                tlp.Controls.Add(ssgContainer);
-                tlp.SetColumnSpan(ssgContainer, 2);
-
-                grid.Focus();
-
-                return;
-            }
-            if ("addedConstant".Equals(parameter.SpecialType))
-            {
-                DataFrame frame = Context["data"].AsDataFrame;
-                DoubleVariable dv = (DoubleVariable) frame.Variables[0];
-                double minimumC = Sheet.XConstant(dv.Data);
-                Context.AddOutput("a_min", minimumC);
-
-                if (minimumC != Constant.MISSING)
-                {
-                    DoubleParameter dp = new DoubleParameter
-                    {
-                        Name = parameter.Name,
-                        PromptExpression = parameter.PromptExpression,
-                        MinimumValueExpression = new Expression(minimumC.ToString()),
-                        DefaultValueExpression = new Expression(minimumC.ToString()),
-                        CancelSkipsParameter = "Skip"
-                    };
-                    // Safe to delegate to another Visit rather than going through the Accept.
-                    Visit(dp);
                 }
-                return;
-            }
-            if ("frame".Equals(parameter.SpecialType))
-            {
-                ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Frame, parameter) { Tag = parameter };
-                AddAppropriateEventHandlersTo(ctl);
-                tlp.Controls.Add(ctl);
-                tlp.SetColumnSpan(ctl, 2);
-                return;
-            }
-            if ("report".Equals(parameter.SpecialType))
-            {
-                ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Report, parameter) { Tag = parameter };
-                AddAppropriateEventHandlersTo(ctl);
-                tlp.Controls.Add(ctl);
-                tlp.SetColumnSpan(ctl, 2);
-                return;
-            }
-            if ("rubric".Equals(parameter.SpecialType))
-            {
-                Label ctl = new Label
+                grid.ActiveWorksheet.WindowInfo.SplitColumns = columnCount;
+                grid.ActiveWorksheet.WindowInfo.FreezePanes = true;
+                grid.ActiveWorksheet.Cells[0, columnCount, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
+                grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
+                grid.ActiveWorkbook.WindowInfo.DisplayHorizontalScrollBar = false;
+
+                // Figure out the width of the row header
+                grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.ColumnWidth = 3; // characters - used to simulate row header, which defaults to 3 character width until 1,000th row visible
+                double rowHeaderWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.Width; // Simulated row header
+
+                // Reset column widths to a more useful number (11 characters) and get their visible width
+                grid.ActiveWorksheet.Cells[0, 0, 0, columnCount - 1].EntireColumn.ColumnWidth = 11; // characters
+                double visibleColumnsWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, columnCount - 1].EntireColumn.Width; // Visible columns excluding row header and scrollbar
+                double oneColumnWidthInPoints = grid.ActiveWorksheet.Cells[0, 0, 0, 0].EntireColumn.Width; // One column
+
+                // Set the control size
+                double pointsToPixels = 2; // TODO: HACK: Fudge factor.  How do we get this to be saner?
+                const int aHair = 3; // Fudge factor: Extra width in pixels for things like scrollbar edges and ensuring that the right-hand end of the last cell is visible
+                int overallWidthInPixels = (int)((rowHeaderWidthInPoints + visibleColumnsWidthInPoints) * pointsToPixels) + SystemInformation.VerticalScrollBarWidth + aHair;
+                grid.Size = new Size((int)(overallWidthInPixels * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height));
+                int rowHeaderWidthInPixels = (int)(rowHeaderWidthInPoints * pointsToPixels);
+                int oneColumnWidthInPixels = (int)(oneColumnWidthInPoints * pointsToPixels);
+                int fudge = (int)(3 * pointsToPixels); // Offset of labels from nominal column start, in pixels.  Ideally this should closely match SSG's internal offset.
+
+                if (null != columnTitles && columnTitles.Length > 0)
                 {
-                    AutoSize = true,
-                    Tag = parameter,
-                    Text = parameter.Prompt(Processor, Context)
+                    for (int columnTitleIndex = 0; columnTitleIndex < columnTitles.Length; columnTitleIndex++)
+                    {
+                        colsPanel.Controls.Add(new Label
+                        {
+                            Text = columnTitles[columnTitleIndex],
+                            AutoSize = true,
+                            Location = new Point(rowHeaderWidthInPixels + columnTitleIndex * oneColumnWidthInPixels + fudge, 0)
+                        });
+                    }
+                }
+            });
+            ssgContainer.Controls.Add(grid, 1, 1);
+
+            tlp.Controls.Add(ssgContainer);
+            tlp.SetColumnSpan(ssgContainer, 2);
+
+            grid.Focus();
+        }
+
+        private void VisitSpecialRaters2D(SpecialParameter parameter, TableLayoutPanel tlp)
+        {
+            TableLayoutPanel ssgContainer = new TableLayoutPanel
+            {
+                Tag = parameter,
+                RowCount = 2,
+                ColumnCount = 2,
+                AutoSize = true
+            };
+
+            Label colsLabel = new Label { Text = "Rater 2", AutoSize = true };
+            ssgContainer.Controls.Add(colsLabel, 1, 0);
+
+            VerticalLabel rowsLabel = new VerticalLabel { Text = "Rater 1", AutoSize = true, TabStop = false };
+            ssgContainer.Controls.Add(rowsLabel, 0, 1);
+
+            WorkbookView grid = new WorkbookView { Size = new Size((int)(450 * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
+            grid.WithLock(() =>
+            {
+                if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
+                {
+                    DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
+                    for (int col = 0; col < sourceFrame.VariableCount; col++)
+                        if (sourceFrame.Variables[col] is DoubleVariable dv)
+                            DumpIntoSsg((IValues)grid.ActiveWorksheet, col, dv);
+                }
+                grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
+                grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
+            });
+            ssgContainer.Controls.Add(grid, 1, 1);
+
+            tlp.Controls.Add(ssgContainer);
+            tlp.SetColumnSpan(ssgContainer, 2);
+
+            grid.Focus();
+        }
+
+        private void VisitSpecialScores(SpecialParameter parameter, TableLayoutPanel tlp)
+        {
+            ctlScores ctl = new ctlScores(Context) { Tag = parameter };
+            tlp.Controls.Add(ctl);
+            tlp.SetColumnSpan(ctl, 2);
+        }
+
+        private void VisitSpecialTextToNumbers(SpecialParameter parameter, TableLayoutPanel tlp)
+        {
+            ctlTextToNumbers ctl = new ctlTextToNumbers(Context) { Tag = parameter };
+            tlp.Controls.Add(ctl);
+            tlp.SetColumnSpan(ctl, 2);
+        }
+
+        private void VisitSpecialRubric(SpecialParameter parameter, TableLayoutPanel tlp)
+        {
+            Label ctl = new Label
+            {
+                AutoSize = true,
+                Tag = parameter,
+                Text = parameter.Prompt(Processor, Context)
+            };
+            tlp.Controls.Add(ctl);
+            tlp.SetColumnSpan(ctl, 2);
+        }
+
+        private void VisitSpecialReport(SpecialParameter parameter, TableLayoutPanel tlp)
+        {
+            ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Report, parameter) { Tag = parameter };
+            AddAppropriateEventHandlersTo(ctl);
+            tlp.Controls.Add(ctl);
+            tlp.SetColumnSpan(ctl, 2);
+        }
+
+        private void VisitSpecialFrame(SpecialParameter parameter, TableLayoutPanel tlp)
+        {
+            ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Frame, parameter) { Tag = parameter };
+            AddAppropriateEventHandlersTo(ctl);
+            tlp.Controls.Add(ctl);
+            tlp.SetColumnSpan(ctl, 2);
+        }
+
+        private void VisitSpecialAddedConstant(SpecialParameter parameter)
+        {
+            DataFrame frame = Context["data"].AsDataFrame;
+            DoubleVariable dv = (DoubleVariable)frame.Variables[0];
+            double minimumC = Sheet.XConstant(dv.Data);
+            Context.AddOutput("a_min", minimumC);
+
+            if (minimumC != Constant.MISSING)
+            {
+                DoubleParameter dp = new DoubleParameter
+                {
+                    Name = parameter.Name,
+                    PromptExpression = parameter.PromptExpression,
+                    MinimumValueExpression = new Expression(minimumC.ToString()),
+                    DefaultValueExpression = new Expression(minimumC.ToString()),
+                    CancelSkipsParameter = "Skip"
                 };
-                tlp.Controls.Add(ctl);
-                tlp.SetColumnSpan(ctl, 2);
-                return;
+                // Safe to delegate to another Visit rather than going through the Accept.
+                Visit(dp);
             }
-            if ("textToNumbers".Equals(parameter.SpecialType))
-            {
-                ctlTextToNumbers ctl = new ctlTextToNumbers(Context) { Tag = parameter };
-                tlp.Controls.Add(ctl);
-                tlp.SetColumnSpan(ctl, 2);
-                return;
-            }
-            if ("scores".Equals(parameter.SpecialType))
-            {
-                ctlScores ctl = new ctlScores(Context) { Tag = parameter };
-                tlp.Controls.Add(ctl);
-                tlp.SetColumnSpan(ctl, 2);
-                return;
-            }
-            throw new ArgumentOutOfRangeException(nameof(parameter), parameter.SpecialType, "parameter.SpecialType: Unknown option");
         }
 
         public void Visit(PickFromListParameter parameter)
         {
             DataFrame sourceFrame = Context[parameter.Source].AsDataFrame;
             string[] values;
-            if (sourceFrame.Variables[0] is StringVariable)
-                values = ((StringVariable) sourceFrame.Variables[0]).Data;
-            else if (sourceFrame.Variables[0] is ClassifierVariable)
-                values = ((ClassifierVariable) sourceFrame.Variables[0]).SortedCategoryNames;
+            if (sourceFrame.Variables[0] is StringVariable sv0)
+                values = sv0.Data;
+            else if (sourceFrame.Variables[0] is ClassifierVariable cv0)
+                values = cv0.SortedCategoryNames;
             else
                 throw new ArgumentException("A PickFromListParameter can only pick from string or classifier variables");
 
@@ -1109,8 +1153,8 @@ namespace StatsDirect.UI
             ((ISupportInitialize)gridEditGrid).EndInit();
             EditGridParameter egp = parameter;
             DataFrame sourceFrame = Context[egp.Source].AsDataFrame;
-            StringVariable keyVariable = (StringVariable) sourceFrame.FindVariable(egp.KeyVariable);
-            StringVariable valueVariable = (StringVariable) sourceFrame.FindVariable(egp.ValueVariable);
+            StringVariable keyVariable = (StringVariable)sourceFrame.FindVariable(egp.KeyVariable);
+            StringVariable valueVariable = (StringVariable)sourceFrame.FindVariable(egp.ValueVariable);
             gridEditGrid.Rows.Clear();
             for (int i = 0; i < keyVariable.Length; i++)
                 gridEditGrid.Rows.Add(keyVariable.Data[i], valueVariable.Data[i]);
@@ -1202,10 +1246,8 @@ namespace StatsDirect.UI
             {
                 DataFrame sourceFrame = Context[parameter.Name].AsDataFrame;
                 int tableCount = sourceFrame.MinRows / 2;
-                if (sourceFrame.VariableCount == 2 && sourceFrame.Variables[0] is DoubleVariable && sourceFrame.Variables[1] is DoubleVariable)
+                if (sourceFrame.VariableCount == 2 && sourceFrame.Variables[0] is DoubleVariable var1 && sourceFrame.Variables[1] is DoubleVariable var2)
                 {
-                    DoubleVariable var1 = (DoubleVariable) sourceFrame.Variables[0];
-                    DoubleVariable var2 = (DoubleVariable) sourceFrame.Variables[1];
                     txtTL.Text = var1.Data[0].ToString();
                     txtTR.Text = var2.Data[0].ToString();
                     txtBL.Text = var1.Data[1].ToString();
@@ -1315,16 +1357,16 @@ namespace StatsDirect.UI
         /// </summary>
         void AddAppropriateEventHandlersTo(Control control)
         {
-            if (control is CheckBox)
-                ((CheckBox)control).CheckedChanged += OptionParameter_CheckedChanged;
-            if (control is RadioButton)
-                ((RadioButton)control).CheckedChanged += OptionParameter_CheckedChanged;
-            if (control is ComboBox)
-                ((ComboBox)control).SelectedIndexChanged += OptionParameter_CheckedChanged;
+            if (control is CheckBox checkBox)
+                checkBox.CheckedChanged += OptionParameter_CheckedChanged;
+            if (control is RadioButton radioButton)
+                radioButton.CheckedChanged += OptionParameter_CheckedChanged;
+            if (control is ComboBox comboBox)
+                comboBox.SelectedIndexChanged += OptionParameter_CheckedChanged;
             if (control is ComboBox || control is TextBox)
                 control.KeyPress += EnterMovesDown;
-            if (control is ctlPickAWindow)
-                ((ctlPickAWindow)control).InsideKeyPress += EnterMovesDown;
+            if (control is ctlPickAWindow paw)
+                paw.InsideKeyPress += EnterMovesDown;
             control.LostFocus += RunChecksAfterLostFocus;
         }
 

@@ -1385,7 +1385,49 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static void Petoprep(IUserInterface host, ParameterBag parameters, out int rows, out double gamma, out double cit, out int groups, out int strata, out double[] scores, out string gid, out double[] groupIds, out string[] groupLabels, out string[] stratumLabels, out bool ifault, out double[,] arr2, out ColumnData[] cdat1)
+        public static ParameterBag RptLogRankPreprocess(ParameterBag parameters)
+        {
+            DataFrame gidFrame = parameters["gid"].AsDataFrame;
+            ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
+            int rows = gidVariable.Length;
+            double[] g = new double[rows + 1];
+            for (int r = 1; r <= rows; r++)
+                g[r] = gidVariable.Data[r - 1] + 1;
+            double[] groupIds = new double[rows];
+            int igot = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                double temp = g[r];
+                if (temp != Constant.MISSING)
+                {
+                    bool found = false;
+                    for (int j = 1; j <= igot; j++)
+                    {
+                        if (temp == groupIds[j])
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        groupIds[++igot] = temp;
+                }
+            }
+
+            int groups = igot;
+
+            ParameterBag outputParameters = new ParameterBag();
+            if (groups > 2)
+            {
+                DoubleVariable scores = new DoubleVariable(groups, "scores");
+                for (int j = 1; j <= groups; j++)
+                    scores.Data[j - 1] = j;
+                outputParameters.AddInput("group_scores", new DataFrame(scores));
+            }
+            return outputParameters;
+        }
+
+        private static void Petoprep(ParameterBag parameters, out int rows, out double gamma, out double cit, out int groups, out int strata, out double[] scores, out string gid, out double[] groupIds, out string[] groupLabels, out string[] stratumLabels, out bool ifault, out double[,] arr2, out ColumnData[] cdat1)
         {
             ifault = true;
             gamma = parameters["gamma"].AsDouble;
@@ -1397,7 +1439,7 @@ namespace StatsDirect.Builtins
 
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
-            groupLabels = new string[gidVariable.GroupCount + 1 ];
+            groupLabels = new string[gidVariable.GroupCount + 1];
             for (int j = 1; j <= gidVariable.GroupCount; j++)
                 groupLabels[j] = gidVariable.Groups[j - 1].Label;
             rows = gidVariable.Length;
@@ -1444,13 +1486,13 @@ namespace StatsDirect.Builtins
             }
 
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = timesFrame.Variables[0]as DoubleVariable;
+            DoubleVariable timesVariable = timesFrame.Variables[0] as DoubleVariable;
             double[] t = new double[rows + 1];
             for (int r = 1; r <= rows; r++)
                 t[r] = timesVariable.Data[r - 1];
 
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
+            DoubleVariable deathsVariable = deathsFrame.Variables[0] as DoubleVariable;
             double[] c = new double[rows + 1];
             for (int r = 1; r <= rows; r++)
                 c[r] = deathsVariable.Data[r - 1];
@@ -1552,22 +1594,12 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException();
             if (groups > 2)
             {
+                DataFrame scoresFrame = parameters["group_scores"].AsDataFrame;
+                DoubleVariable scoresVariable = scoresFrame.Variables[0] as DoubleVariable;
+                if (scoresVariable.Length != groups)
+                    throw new ArgumentException("Scores must have the same length as the number of groups");
                 scores = new double[groups + 1];
-                bool use123 = parameters["use123"].AsBoolean;
-                if (use123)
-                {
-                    for (int j = 1; j <= groups; j++)
-                        scores[j] = j;
-                }
-                else
-                {
-                    for (int j = 1; j <= groups; j++)
-                    {
-                        scores[j] = host.GetDouble("Score/weight for group " + j.ToString(), "Log rank & Wilcoxon", j, out bool wasCancelled);
-                        if (wasCancelled)
-                            throw new TemplateOperationCancelledException();
-                    }
-                }
+                Array.Copy(scoresVariable.Data, 0, scores, 1, groups);
             }
             else
             {
@@ -2143,9 +2175,9 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptLogRank(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptLogRank(IProgressBarHost host, ParameterBag parameters)
         {
-            Petoprep(host, parameters, out int nt, out double gamma, out double cit, out int groups, out int strata, out double[] score, out string gid, out double[] gpid, out string[] glab, out string[] slab, out bool ifault, out double[,] arr2, out _);
+            Petoprep(parameters, out int nt, out double gamma, out double cit, out int groups, out int strata, out double[] score, out string gid, out double[] gpid, out string[] glab, out string[] slab, out bool ifault, out double[,] arr2, out _);
             if (ifault)
                 throw new TemplateOperationCancelledException();
 

@@ -280,11 +280,12 @@ namespace StatsDirect.UI
         public void Visit(SpecialParameter parameter)
         {
             SpecialParameter specialParameter = parameter;
-            if ("chi-2-column".Equals(specialParameter.SpecialType)
-                || "likelihood".Equals(specialParameter.SpecialType)
-                || "rr-index".Equals(specialParameter.SpecialType)
+            if ("1-to-n".Equals(specialParameter.SpecialType)
+                || "chi-2-column".Equals(specialParameter.SpecialType)
                 || "chi-3-column".Equals(specialParameter.SpecialType)
-                || "person-time-size".Equals(specialParameter.SpecialType))
+                || "likelihood".Equals(specialParameter.SpecialType)
+                || "person-time-size".Equals(specialParameter.SpecialType)
+                || "rr-index".Equals(specialParameter.SpecialType))
             {
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);

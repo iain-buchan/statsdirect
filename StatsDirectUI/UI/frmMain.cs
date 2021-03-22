@@ -2218,7 +2218,7 @@ namespace StatsDirect.UI
                         }
                     }
 
-                    InlineParameterPreparer preparer = new InlineParameterPreparer { Context = context, Form = this, Processor = processor };
+                    InlineParameterPreparer preparer = new InlineParameterPreparer(context, this, processor);
                     parameter.Accept(preparer);
                     willDisplayAtLeastOneParameter |= null == preparer.FilledParameter;
                     if (null == preparer.FilledParameter)

@@ -1,5 +1,4 @@
-﻿using System;
-using StatsDirect.Data;
+﻿using StatsDirect.Data;
 using StatsDirect.UI;
 
 namespace StatsDirect.Templates
