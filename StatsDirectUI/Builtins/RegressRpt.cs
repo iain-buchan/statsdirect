@@ -104,7 +104,36 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptGroupedCovariance(ITemplateHost host, ParameterBag parameters)
+        public static ParameterBag RptGroupedCovariancePreprocess(ParameterBag parameters)
+        {
+            double grandn = 0; double grandx = 0;
+
+            GroupedCovarianceData groupedCovarianceData = (GroupedCovarianceData)parameters["gcd"].AsObject;
+            int k = groupedCovarianceData.k;
+            int[] nxi = groupedCovarianceData.nxi;
+            int[,] ny = groupedCovarianceData.ny;
+            double[,] xt = groupedCovarianceData.xt;
+
+            for (int g = 1; g <= k; g++)
+            {
+                double sx = 0.0;
+                double tny = 0.0;
+                for (int j = 1; j <= nxi[g]; j++)
+                {
+                    tny += ny[g, j];
+                    sx += ny[g, j] * xt[g, j];
+                }
+                grandn += tny;
+                grandx += sx;
+            }
+            // mean xmean as basline mean x for later corrected y means
+            double mx0 = grandx / grandn;
+            ParameterBag outputParameters = new ParameterBag();
+            outputParameters.AddOutput("mx0", mx0);
+            return outputParameters;
+        }
+
+        public static ParameterBag RptGroupedCovariance(ParameterBag parameters)
         {
             double gtxx = 0; double gtxy = 0; double gtyy = 0; double grandn = 0; double grandx = 0; double grandsqx = 0; double grandsqy = 0;
             double tsy = 0; double tsx = 0; double grandcpr = 0;
@@ -112,27 +141,29 @@ namespace StatsDirect.Builtins
             double residssq = 0; double t;
             double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
 
-            GroupedCovarianceData gcd = (GroupedCovarianceData)parameters["gcd"].AsObject;
-            double[] a = gcd.a;
-            double[] b = gcd.b;
-            string[] bnam = gcd.bnam;
-            ColumnData[] cx = gcd.cx;
-            double gamma = gcd.GAMMA;
-            int k = gcd.k;
-            int maxreps = gcd.maxreps;
-            int[] nxi = gcd.nxi;
-            int[,] ny = gcd.ny;
-            double[] rssx = gcd.rssx;
-            string xlab = gcd.xlab;
-            double[] xmean = gcd.xmean;
-            double[,] xt = gcd.xt;
-            double[, ,] y = gcd.y;
-            double[] ymean = gcd.ymean;
+            GroupedCovarianceData groupedCovarianceData = (GroupedCovarianceData)parameters["gcd"].AsObject;
+            double[] a = groupedCovarianceData.a;
+            double[] b = groupedCovarianceData.b;
+            string[] bnam = groupedCovarianceData.bnam;
+            ColumnData[] cx = groupedCovarianceData.cx;
+            double gamma = groupedCovarianceData.GAMMA;
+            int k = groupedCovarianceData.k;
+            int maxReplicates = groupedCovarianceData.maxreps;
+            int[] nxi = groupedCovarianceData.nxi;
+            int[,] ny = groupedCovarianceData.ny;
+            double[] rssx = groupedCovarianceData.rssx;
+            string xlab = groupedCovarianceData.xlab;
+            double[] xmean = groupedCovarianceData.xmean;
+            double[,] xt = groupedCovarianceData.xt;
+            double[, ,] y = groupedCovarianceData.y;
+            double[] ymean = groupedCovarianceData.ymean;
 
-            bool yrep = maxreps > 1;
+            double mx0 = parameters["mx0-prompted"].AsDouble;
+
+            bool hasYReplicates = maxReplicates > 1;
 
             //  By now:
-            //  yrep is true if y replicates are being used, false otherwise (in which case a single predictor is being used and maxreps = 1)
+            //  hasYReplicates is true if y replicates are being used, false otherwise (in which case a single predictor is being used and maxreps = 1)
             //  - y(k, maxr, maxreps) contains the outcome data for each predictor - the p'th predictor is in y(, , p)
             // main calcs on each xy pair in turn
             for (int g = 1; g <= k; g++)
@@ -184,11 +215,11 @@ namespace StatsDirect.Builtins
                 tn += tny;
                 tnx += nxi[g];
             }
-            // mean xmean as basline mean x for later corrected y means
-            double mx0 = grandx / grandn;
-            mx0 = host.GetDouble("Enter basline mean for predictors (default is the overall mean of predictor values)", "Covariance Analysis", mx0, out bool cancelled);
-            if (cancelled)
-                throw new TemplateOperationCancelledException();
+            // mean xmean as basline mean x for later corrected y means - now acquired between our preprocess and this operation
+            // double mx0 = grandx / grandn;
+            // mx0 = host.GetDouble("Enter basline mean for predictors (default is the overall mean of predictor values)", "Covariance Analysis", mx0, out bool cancelled);
+            // if (cancelled)
+            //     throw new TemplateOperationCancelledException();
 
             ParameterBag outputParameters = new ParameterBag();
             double comssq = grandcpr * grandcpr / grandsqx;
@@ -196,7 +227,7 @@ namespace StatsDirect.Builtins
             double residmsq = residssq / (grandn - 2 * k);
             double vr = comssq / (residssq / (grandn - 2 * k));
             double p = PDF.fvalp(vr, 1.0, grandn - 2 * k);
-            string Q = p > 0.05 ? "NOT " : string.Empty;
+            string q = p > 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("com_ssq", comssq);
             outputParameters.AddOutput("com_df", "1");
             outputParameters.AddOutput("com_msq", comssq);
@@ -215,7 +246,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("res_msq", residmsq);
             outputParameters.AddOutput("grp_ssq", grandsqy);
             outputParameters.AddOutput("grp_df", grandn - k);
-            outputParameters.AddOutput("com", Q);
+            outputParameters.AddOutput("com", q);
             outputParameters.AddOutput("diff", q2);
             int degf = Convert.ToInt32(grandn - 2 * k);
             MathDbl.civ(degf, out double cit, gamma, out double p0);
@@ -283,7 +314,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("cr_with_msq", cssw / crWithDf);
             outputParameters.AddOutput("cr_tot_ssq", csst);
             outputParameters.AddOutput("cr_tot_df", tnx - 2);
-            Q = p <= 0.05 ? "NOT " : string.Empty;
+            q = p <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("p", p);
             double bs = sxyw / sxxw;
             outputParameters.AddOutput("x_mean", mx0);
@@ -335,8 +366,8 @@ namespace StatsDirect.Builtins
                     sepParameters.AddOutput("pSep", p * 2.0);
                 }
             }
-            string ylab = yrep ? "Y Replicates" : "Y";
-            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyr, new XyrOptions(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, gcd.minMax)));
+            string ylab = hasYReplicates ? "Y Replicates" : "Y";
+            outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyr, new XyrOptions(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, groupedCovarianceData.minMax)));
 
             return outputParameters;
         }
