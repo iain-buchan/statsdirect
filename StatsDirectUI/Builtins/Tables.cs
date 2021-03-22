@@ -13,8 +13,14 @@ namespace StatsDirect.Builtins
     {
         private class Namevar
         {
-            public string Ti { get; set; }
-            public double X { get; set; }
+            public string Ti { get; set;  }
+            public double X { get; set;  }
+
+            public Namevar(string ti, double x)
+            {
+                Ti = ti;
+                X = x;
+            }
         }
 
         private class NamevarAscending : IComparer<Namevar>
@@ -756,8 +762,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
-                        ycat[ycats].Ti = v0.Groups[i].Label;
-                        ycat[ycats].X = Convert.ToDouble(i);
+                        ycat[ycats] = new Namevar(v0.Groups[i].Label, i);
                         ycats += 1;
                     }
                 }
@@ -777,8 +782,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
-                        xcat[xcats].Ti = v1.Groups[i].Label;
-                        xcat[xcats].X = Convert.ToDouble(i);
+                        xcat[xcats] = new Namevar(v1.Groups[i].Label, i);
                         xcats++;
                     }
                 }
@@ -1222,8 +1226,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
-                        ycat[ycats].Ti = v0.Groups[i].Label;
-                        ycat[ycats].X = Convert.ToDouble(i);
+                        ycat[ycats] = new Namevar(v0.Groups[i].Label, i);
                         ycats += 1;
                     }
                 }
@@ -1242,8 +1245,7 @@ namespace StatsDirect.Builtins
                 {
                     if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
-                        xcat[xcats].Ti = v1.Groups[i].Label;
-                        xcat[xcats].X = Convert.ToDouble(i);
+                        xcat[xcats] = new Namevar(v1.Groups[i].Label, i);
                         xcats += 1;
                     }
                 }
@@ -1494,8 +1496,7 @@ namespace StatsDirect.Builtins
             {
                 if (v0.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
-                    ycat[ycats].Ti = v0.Groups[i].Label;
-                    ycat[ycats].X = Convert.ToDouble(i);
+                    ycat[ycats] = new Namevar(v0.Groups[i].Label, i);
                     ycats += 1;
                 }
             }
@@ -1504,9 +1505,7 @@ namespace StatsDirect.Builtins
             Array.Copy(ycat, transTemp20, Math.Min(ycat.Length, transTemp20.Length));
             ycat = transTemp20;
             for (int i = 0; i < n; i++)
-            {
                 y[i] = v0.Data[i];
-            }
             SortName(ycats, ycat, 0);
             ClassifierVariable v1 = (ClassifierVariable)frame.Variables[1];
             int xcats = 0;
@@ -1516,8 +1515,7 @@ namespace StatsDirect.Builtins
             {
                 if (v1.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
-                    xcat[xcats].Ti = v1.Groups[i].Label;
-                    xcat[xcats].X = Convert.ToDouble(i);
+                    xcat[xcats] = new Namevar(v1.Groups[i].Label, i);
                     xcats += 1;
                 }
             }
@@ -1526,9 +1524,7 @@ namespace StatsDirect.Builtins
             Array.Copy(xcat, transTemp21, Math.Min(xcat.Length, transTemp21.Length));
             xcat = transTemp21;
             for (int i = 0; i < n; i++)
-            {
                 x[i] = v1.Data[i];
-            }
             SortName(xcats, xcat, 0);
             XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
             ParameterBag outputParameters = new ParameterBag();
@@ -1784,11 +1780,7 @@ namespace StatsDirect.Builtins
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
                     cnt++;
-                    ycat[cnt] = new Namevar()
-                    {
-                        Ti = c1Variable.Groups[i].Label,
-                        X = Convert.ToDouble(i)
-                    };
+                    ycat[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
                 }
             }
             ycats = cnt;
@@ -1827,11 +1819,7 @@ namespace StatsDirect.Builtins
                     if (c2Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
                         cnt++;
-                        xcat[cnt] = new Namevar()
-                        {
-                            Ti = c2Variable.Groups[i].Label,
-                            X = Convert.ToDouble(i)
-                        };
+                        xcat[cnt] = new Namevar(c2Variable.Groups[i].Label, i);
                     }
                 }
                 xcats = cnt;
@@ -1889,11 +1877,7 @@ namespace StatsDirect.Builtins
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
                     cnt++;
-                    ycat[cnt] = new Namevar()
-                    {
-                        Ti = c1Variable.Groups[i].Label,
-                        X = Convert.ToDouble(i)
-                    };
+                    ycat[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
                 }
             }
             ycats = cnt;
@@ -1923,11 +1907,7 @@ namespace StatsDirect.Builtins
                         if (c3Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                         {
                             cnt++;
-                            zcat[cnt] = new Namevar()
-                            {
-                                Ti = c3Variable.Groups[i].Label,
-                                X = Convert.ToDouble(i)
-                            };
+                            zcat[cnt] = new Namevar(c3Variable.Groups[i].Label, i);
                         }
                     }
                     zcats = cnt;
@@ -1954,11 +1934,7 @@ namespace StatsDirect.Builtins
                     if (c2Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
                         cnt++;
-                        xcat[cnt] = new Namevar()
-                        {
-                            Ti = c2Variable.Groups[i].Label,
-                            X = Convert.ToDouble(i)
-                        };
+                        xcat[cnt] = new Namevar(c2Variable.Groups[i].Label, i);
                     }
                 }
                 xcats = cnt;
@@ -3480,40 +3456,26 @@ namespace StatsDirect.Builtins
                 if (irowsc == 1)
                 {
                     for (j = 1; j <= ic; j++)
-                    {
                         rowscr[j] = j;
-                    }
                 }
                 else if (irowsc == 2)
                 {
                     for (j = 1; j <= ic; j++)
-                    {
                         colsum[j] = 0.0;
-                    }
                     for (j = 1; j <= nclvar; j++)
-                    {
                         ix[j] = 1;
-                    }
                     for (m = 1; m <= iq; m++)
                     {
                         if (m > 1)
-                        {
                             Cmhidx(nclvar, nclval, indrow, indcol, ix);
-                        }
                         Cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                         for (j = 1; j <= ic; j++)
-                        {
                             for (i = ir * (j - 1) + 1; i <= ir * (j - 1) + ir; i++)
-                            {
                                 colsum[j] = colsum[j] + f[i];
-                            }
-                        }
                     }
                     Cmhrcs(irowsc, ic, lentbl, colsum, table, rowscr);
                     for (j = 1; j <= nclvar; j++)
-                    {
                         ix[j] = 1;
-                    }
                 }
                 if (itype == 2)
                 {
@@ -3525,26 +3487,18 @@ namespace StatsDirect.Builtins
                     if (icolsc == 1)
                     {
                         for (i = 1; i <= ir; i++)
-                        {
                             colscr[i] = i;
-                        }
                     }
                     else if (icolsc == 2)
                     {
                         for (j = 1; j <= ir; j++)
-                        {
                             rowsum[j] = 0.0;
-                        }
                         for (j = 1; j <= nclvar; j++)
-                        {
                             ix[j] = 1;
-                        }
                         for (m = 1; m <= iq; m++)
                         {
                             if (m > 1)
-                            {
                                 Cmhidx(nclvar, nclval, indrow, indcol, ix);
-                            }
                             Cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                             for (i = 1; i <= ir; i++)
                             {
@@ -3557,9 +3511,7 @@ namespace StatsDirect.Builtins
                         }
                         Cmhrcs(icolsc, ir, lentbl, rowsum, table, colscr);
                         for (j = 1; j <= nclvar; j++)
-                        {
                             ix[j] = 1;
-                        }
                     }
                     //        method based on each table's correlation
                     Cmhcorr(nclvar, nclval, table, indrow, indcol, irowsc, icolsc, rowscr, colscr, stat, ldstat, incrow, inccol, f, ix, colsum, rowsum, out difsum[1], out covsum[1], ref ierr);
@@ -3577,33 +3529,23 @@ namespace StatsDirect.Builtins
             int ic = nclval[indcol];
             int lentbl = 1;
             for (i = 1; i <= nclvar; i++)
-            {
                 lentbl *= nclval[i];
-            }
             int iq = (int)Math.Floor((double)lentbl / (ir * ic));
             int nzt = iq;
             int lm1 = (ir - 1) * (ic - 1);
             int lm2 = lm1 * lm1;
             for (i = 1; i <= lm2; i++)
-            {
                 covsum[i] = 0.0;
-            }
             for (i = 1; i <= lm1; i++)
-            {
                 difsum[i] = 0.0;
-            }
             for (i = 1; i <= nclvar; i++)
-            {
                 ix[i] = 1;
-            }
             //      loop through each table
             for (m = 1; m <= iq; m++)
             {
                 // extract(table)
                 if (m > 1)
-                {
                     Cmhidx(nclvar, nclval, indrow, indcol, ix);
-                }
                 Cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                 // totals()
                 double rnh = 0.0;
@@ -3614,9 +3556,7 @@ namespace StatsDirect.Builtins
                 {
                     tmp = 0.0;
                     for (i = j1; i < j1 + ir; i++)
-                    {
                         tmp += f[i];
-                    }
                     rnh += tmp;
                     colsum[j] = tmp;
                     if (colsum[j] < tol)
@@ -3632,7 +3572,6 @@ namespace StatsDirect.Builtins
                     res[m, 2] = Constant.MISSING;
                     res[m, 3] = Constant.MISSING;
                     nzt -= 1;
-
                 }
                 else
                 {
@@ -3656,38 +3595,28 @@ namespace StatsDirect.Builtins
                         for (i = 1; i <= ir; i++)
                         {
                             if (colsum[j] > tol & rowsum[i] > tol)
-                            {
                                 tmp += Math.Pow(f[ij] - colsum[j] * rowsum[i] / rnh, 2.0) / (colsum[j] * rowsum[i] / rnh);
-                            }
                             ij += 1;
                         }
                     }
                     res[m, 1] = (rnh - 1) / rnh * tmp;
                     res[m, 2] = (nzr - 1) * (nzc - 1);
                     if (res[m, 2] < tol)
-                    {
                         res[m, 3] = Constant.MISSING;
-                    }
                     else
-                    {
                         res[m, 3] = PDF.chivalp(res[m, 1], res[m, 2]);
-                    }
                     // covariance()
                     if (rnh != 1.0)
                     {
                         Cmhcov(ir, ic, lm1, rowsum, colsum, rnh, f, difvec, cov, awk, bwk);
                         for (j = 1; j <= lm1; j++)
-                        {
                             difsum[j] = difsum[j] + difvec[j];
-                        }
                         tmp = rnh * rnh / (rnh - 1.0);
                         j1 = 1;
                         for (j = 1; j <= lm1; j++)
                         {
                             for (i = j1; i < j1 + lm1; i++)
-                            {
                                 covsum[i] = covsum[i] + tmp * cov[i];
-                            }
                             j1 += lm1;
                         }
                     }
@@ -3701,17 +3630,11 @@ namespace StatsDirect.Builtins
                 res[iq + 1, 2] = m;
                 res[iq + 1, 1] = 0.0;
                 for (j = 1; j <= lm1; j++)
-                {
                     res[iq + 1, 1] = res[iq + 1, 1] + difvec[j] * difvec[j];
-                }
                 if (res[iq + 1, 2] > 0.0)
-                {
                     res[iq + 1, 3] = PDF.chivalp(res[iq + 1, 1], res[iq + 1, 2]);
-                }
                 else
-                {
                     res[iq + 1, 3] = Constant.MISSING;
-                }
             }
             else
             {
@@ -3719,7 +3642,6 @@ namespace StatsDirect.Builtins
                 res[iq + 1, 2] = Constant.MISSING;
                 res[iq + 1, 3] = Constant.MISSING;
             }
-
         }
 
         private static void Cmhmean(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, double[] rowscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] fh, ref int ierr)
@@ -3730,31 +3652,21 @@ namespace StatsDirect.Builtins
             int ic = nclval[indcol];
             int lentbl = 1;
             for (int i = 1; i <= nclvar; i++)
-            {
                 lentbl *= nclval[i];
-            }
             int iq = (int)Math.Floor((double)lentbl / (ir * ic));
             int nzt = iq;
             for (int i = 1; i <= ir * ir; i++)
-            {
                 covsum[i] = 0.0;
-            }
             for (int i = 1; i <= ir; i++)
-            {
                 difsum[i] = 0.0;
-            }
             for (int i = 1; i <= nclvar; i++)
-            {
                 ix[i] = 1;
-            }
             //      loop thro table stats
             for (int m = 1; m <= iq; m++)
             {
                 //       find first element of table and pack it into matrix
                 if (m > 1)
-                {
                     Cmhidx(nclvar, nclval, indrow, indcol, ix);
-                }
                 Cmhgetct(table, ir, ic, incrow, inccol, indrow, indcol, nclvar, nclval, f, ix);
                 // totals()
                 double rnh = 0.0;
@@ -3763,9 +3675,7 @@ namespace StatsDirect.Builtins
                 {
                     colsum[j] = 0.0;
                     for (int i = j1; i < j1 + ir; i++)
-                    {
                         colsum[j] = colsum[j] + f[i];
-                    }
                     rnh += colsum[j];
                     j1 += ir;
                 }
@@ -3776,7 +3686,6 @@ namespace StatsDirect.Builtins
                     res[m, 2] = Constant.MISSING;
                     res[m, 3] = Constant.MISSING;
                     nzt -= 1;
-
                 }
                 else
                 {
@@ -3829,21 +3738,15 @@ namespace StatsDirect.Builtins
                     //       between populations variance
                     double delf = 0.0;
                     for (int i = 1; i <= ir; i++)
-                    {
                         delf += Math.Pow(fh[i] - abar, 2.0) * rowsum[i] / rnh;
-                    }
                     if (dela > tol)
                     {
                         res[m, 1] = (rnh - 1.0) * delf / dela;
                         res[m, 2] = nzr - 1;
                         if (res[m, 2] > tol)
-                        {
                             res[m, 3] = PDF.chivalp(res[m, 1], res[m, 2]);
-                        }
                         else
-                        {
                             res[m, 3] = Constant.MISSING;
-                        }
                     }
                     else
                     {
@@ -3862,13 +3765,9 @@ namespace StatsDirect.Builtins
                             for (int j = 1; j <= ir; j++)
                             {
                                 if (i == j)
-                                {
                                     cov[ij] = rowsum[i] / rnh;
-                                }
                                 else
-                                {
                                     cov[ij] = 0.0;
-                                }
                                 cov[ij] = tmp * (cov[ij] - rowsum[i] * rowsum[j] / (rnh * rnh));
                                 covsum[ij] = covsum[ij] + cov[ij];
                                 ij += ir;
@@ -3922,26 +3821,23 @@ namespace StatsDirect.Builtins
 
         private static void Cmhcorr(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, out double difsum, out double covsum, ref int ierr)
         {
-            int i;
-            int m;
-
             double tol = Math.Sqrt(Constant.EPSILON);
             int ir = nclval[indrow];
             int ic = nclval[indcol];
             int lentbl = 1;
-            for (i = 1; i <= nclvar; i++)
+            for (int i = 1; i <= nclvar; i++)
             {
                 lentbl *= nclval[i];
             }
             int iq = (int)Math.Floor((double)lentbl / (ir * ic));
             difsum = 0.0;
             covsum = 0.0;
-            for (i = 1; i <= nclvar; i++)
+            for (int i = 1; i <= nclvar; i++)
             {
                 ix[i] = 1;
             }
             //      loop through stratum stats
-            for (m = 1; m <= iq; m++)
+            for (int m = 1; m <= iq; m++)
             {
                 //       find first element of table and pack table into a matrix
                 if (m > 1)
@@ -3956,7 +3852,7 @@ namespace StatsDirect.Builtins
                 for (j = 1; j <= ic; j++)
                 {
                     colsum[j] = 0.0;
-                    for (i = j1; i < j1 + ir; i++)
+                    for (int i = j1; i < j1 + ir; i++)
                     {
                         colsum[j] = colsum[j] + f[i];
                     }
@@ -3973,7 +3869,7 @@ namespace StatsDirect.Builtins
                 else
                 {
 
-                    for (i = 1; i <= ir; i++)
+                    for (int i = 1; i <= ir; i++)
                     {
                         rowsum[i] = 0.0;
                         for (j = i; j < i + ic * ir; j += ir)
@@ -3998,7 +3894,7 @@ namespace StatsDirect.Builtins
                         abar += rowscr[j] * colsum[j] / rnh;
                     }
                     double bbar = 0.0;
-                    for (i = 1; i <= ir; i++)
+                    for (int i = 1; i <= ir; i++)
                     {
                         bbar += colscr[i] * rowsum[i] / rnh;
                     }
@@ -4010,13 +3906,13 @@ namespace StatsDirect.Builtins
                     }
                     //       col score variance
                     double delb = 0.0;
-                    for (i = 1; i <= ir; i++)
+                    for (int i = 1; i <= ir; i++)
                     {
                         delb += Math.Pow(colscr[i] - bbar, 2.0) * rowsum[i] / rnh;
                     }
                     //       row and col score covariance
                     double delab = 0.0;
-                    for (i = 1; i <= ir; i++)
+                    for (int i = 1; i <= ir; i++)
                     {
                         int ij = i;
                         for (j = 1; j <= ic; j++)
@@ -4459,17 +4355,13 @@ namespace StatsDirect.Builtins
             fact[0] = 0.0;
             fact[1] = 0.0;
             if (ntot >= 2)
-            {
                 fact[2] = Math.Log(2.0);
-            }
             for (i = 3; i <= ntot; i += 2)
             {
                 fact[i] = fact[i - 1] + Math.Log(Convert.ToDouble(i));
                 j = i + 1;
                 if (j <= ntot)
-                {
                     fact[j] = fact[i] + fact[2] + fact[j / 2] - fact[j / 2 - 1];
-                }
             }
             //                                   compute observed path length: obs
             double obs = tol;
@@ -4496,9 +4388,7 @@ namespace StatsDirect.Builtins
             //      denominator of observed table, dro, as multinomial coefficient from log factorials
             double dro = fact[ntot];
             for (i = 1; i <= nro; i++)
-            {
                 dro -= fact[iro[i]];
-            }
 
             prt = Math.Exp(obs - dro);
             //                                   initialize pointers
@@ -6548,10 +6438,7 @@ namespace StatsDirect.Builtins
             Namevar[] ycat = new Namevar[ycats + 1];
             string ylab = rowsVariable.Title;
             for (int i = 1; i <= ycats; i++)
-            {
-                ycat[i].Ti = rowsVariable.Groups[i - 1].Label;
-                ycat[i].X = Convert.ToDouble(i - 1);
-            }
+                ycat[i] = new Namevar(rowsVariable.Groups[i - 1].Label, i - 1);
             for (int i = 1; i <= n; i++)
                 y[i] = rowsVariable.Data[i - 1];
 
@@ -6569,10 +6456,7 @@ namespace StatsDirect.Builtins
                 Namevar[] xcat = new Namevar[xcats + 1];
                 string xlab = cv.Title;
                 for (int i = 1; i <= xcats; i++)
-                {
-                    xcat[i].Ti = cv.Groups[i - 1].Label;
-                    xcat[i].X = Convert.ToDouble(i - 1);
-                }
+                    xcat[i] = new Namevar(cv.Groups[i - 1].Label, i - 1);
                 for (int i = 1; i <= n; i++)
                     x[i] = cv.Data[i - 1];
                 if (sorted)
@@ -6587,20 +6471,14 @@ namespace StatsDirect.Builtins
                     for (int j = 1; j <= ycats; j++)
                     {
                         for (int k = 1; k <= n; k++)
-                        {
                             if (x[k] == xcat[i].X && y[k] == ycat[j].X)
-                            {
                                 xt[i, j] += 1;
-                            }
-                        }
                         tot += xt[i, j];
                     }
                 }
                 v.SetData(pos, "(n = " + tot.ToString() + ")");
                 for (int j = 1; j <= ycats; j++)
-                {
                     v.SetData(pos + j, ylab + ":" + ycat[j].Ti);
-                }
                 for (int i = 1; i <= xcats; i++)
                 {
                     StringVariable vv;
@@ -6615,9 +6493,7 @@ namespace StatsDirect.Builtins
                     }
                     vv.SetData(pos, xlab + ":" + xcat[i].Ti);
                     for (int j = 1; j <= ycats; j++)
-                    {
                         vv.SetData(pos + j, xt[i, j].ToString());
-                    }
                 }
                 pos += ycats + 2;
             }
