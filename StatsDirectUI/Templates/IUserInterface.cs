@@ -9,7 +9,6 @@ namespace StatsDirect.Templates
     public interface IUserInterface
     {
         bool GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled);
-        double GetDouble(string prompt, string Title, double InitialValue, out bool cancelled);
 
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.

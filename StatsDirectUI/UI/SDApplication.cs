@@ -897,21 +897,6 @@ namespace StatsDirect.UI
             return host.FillAndValidateCombinedParameters(processor, context);
         }
 
-        double IUserInterface.GetDouble(string Prompt, string caption, double defaultValue, out bool cancelled)
-        {
-            const string key = "solo";
-            DoubleParameter parameter = new DoubleParameter
-            {
-                Name = key,
-                PromptExpression = new Expression(Prompt),
-                DefaultValueExpression = new Expression(defaultValue.ToString()),
-                CancelSkipsParameter = "Skip"
-            };
-            ParameterBag results = FillSingleParameter(parameter);
-            cancelled = null == results || !results.ContainsKey(key) || null == results[key];
-            return cancelled ? 0.0 : results[key].AsDouble;
-        }
-
         public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string key = "solo";

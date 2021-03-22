@@ -63,11 +63,6 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        double IUserInterface.GetDouble(string prompt, string Title, double InitialValue, out bool cancelled)
-        {
-            throw new NotImplementedException();
-        }
-
         IScriptEngine IScriptEngineHost.GetScriptEngine(string language)
         {
             if (ScriptEngine.CanHandle(language))
