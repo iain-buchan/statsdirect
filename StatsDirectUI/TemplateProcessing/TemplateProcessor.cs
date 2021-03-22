@@ -436,7 +436,7 @@ namespace StatsDirect.TemplateProcessing
                 }
                 return filledParameters;
             }
-            catch (NotAnErrorException)
+            catch (TemplateExecutionHandlesMeSpeciallyException)
             {
                 // We don't ever want this caught by the general exception catcher below, so we make a special case.
                 throw;

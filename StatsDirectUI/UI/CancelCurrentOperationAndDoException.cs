@@ -5,19 +5,15 @@ using StatsDirect.Utilities;
 namespace StatsDirect.UI
 {
     [Serializable]
-    public class CancelCurrentOperationAndDoException : NotAnErrorException
+    public class CancelCurrentOperationAndDoException : TemplateExecutionHandlesMeSpeciallyException
     {
-        private readonly Operation operation;
-        private readonly ParameterBag inputParameters;
+        public Operation Operation { get; }
+        public ParameterBag InputParameters { get; }
 
         public CancelCurrentOperationAndDoException(Operation operation, ParameterBag inputParameters)
         {
-            this.operation = operation;
-            this.inputParameters = inputParameters;
+            Operation = operation;
+            InputParameters = inputParameters;
         }
-
-        public Operation Operation => operation;
-
-        public ParameterBag InputParameters => inputParameters;
     }
 }

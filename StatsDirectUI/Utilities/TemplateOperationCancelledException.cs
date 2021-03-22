@@ -8,7 +8,7 @@ namespace StatsDirect.Utilities
     /// The reason it's in Utilities is because charting also uses this, which would otherwise lead to a circular dependency between templates and charting.
     /// </summary>
     [Serializable]
-    public class TemplateOperationCancelledException: NotAnErrorException
+    public class TemplateOperationCancelledException: TemplateExecutionHandlesMeSpeciallyException
     {
         public TemplateOperationCancelledException()
         {
@@ -23,9 +23,8 @@ namespace StatsDirect.Utilities
         }
 
         public TemplateOperationCancelledException(Exception ex)
-            : base()
+            : base(null, ex)
         {
-            // TODO: Do something with the exception
             Caption = ex.Message;
         }
 

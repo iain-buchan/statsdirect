@@ -2878,7 +2878,7 @@ namespace StatsDirect.UI
         }
 
         [Serializable]
-        private class SelectedOperationChangedException : NotAnErrorException
+        private class SelectedOperationChangedException : TemplateExecutionHandlesMeSpeciallyException
         {
             public ParameterBag InputParameters { get; }
             public SelectedOperationChangedException(ParameterBag inputParameters)
