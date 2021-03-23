@@ -58,7 +58,21 @@
           <default-value>true</default-value>
         </boolean>
       </parameters>
-		<builtin function-name="rptCoxRegression" />
+    <builtin function-name="rptCoxRegressionPreprocess" />
+    <test>
+      <condition>=parameters.ContainsKey("timesAdjustment")</condition>
+      <iftrue>
+        <parameters>
+          <boolean>
+            <name>useTimesAdjustment</name>
+            <prompt>="Times must be > 0: Do you want to add " + parameters["timesAdjustment"].AsDouble.ToString() + " to all of your times?"</prompt>
+            <must-request>true</must-request>
+            <default-value>true</default-value>
+          </boolean>
+        </parameters>
+      </iftrue>
+    </test>
+    <builtin function-name="rptCoxRegression" />
     <report type="application/x-statsdirect-creole" filename="coxreg.creole" />
 	</steps>
   <suggested-operations>

@@ -97,60 +97,58 @@ namespace StatsDirect.Builtins
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             double[] times = ((DoubleVariable)timesFrame.Variables[0]).Data;
             double adjustment = 0.0;
-            for (int r = 0; r < times.Length; r++)
-                if (times[r] <= 0.0)
-                    if (Math.Abs(times[r]) + 1 > adjustment)
-                        adjustment = Math.Abs(times[r]) + 1;
-            return new ParameterBag("timesAdjustment", new FilledDoubleParameter(FilledParameterDirection.Output, adjustment));
+            foreach (double time in times)
+                if (time <= 0.0)
+                    if (Math.Abs(time) + 1 > adjustment)
+                        adjustment = Math.Abs(time) + 1;
+            ParameterBag outputParameters = new ParameterBag();
+            if (adjustment > 0.0)
+                outputParameters.AddOutput("timesAdjustment", adjustment);
+            return outputParameters;
         }
-        
-        public static ParameterBag RptCoxRegression(IUserInterface host, ParameterBag parameters)
+
+        public static ParameterBag RptCoxRegression(ParameterBag parameters)
         {
+            // We don't have a clean way in the operation code to fail an operation if a user answers "no" to a question - in this case, whether they want to apply a calculated adjustment.
+            // So this early code is simply a way of detecting a requirement to bug out.
+            if (parameters.ContainsKey("useTimesAdjustment") && !parameters["useTimesAdjustment"].AsBoolean)
+                throw new TemplateOperationCancelledException();
+
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = (DoubleVariable) timesFrame.Variables[0];
+            DoubleVariable timesVariable = (DoubleVariable)timesFrame.Variables[0];
             ic++;
             int irt = ic;
             int rows = timesVariable.Length;
-            double[] x = new double[rows * ic + 1 ];
-            bool ok = true;
+            double[] x = new double[rows * ic + 1];
             int ik = 0;
-            double adjustment = 0.0;
-            for (int r = 1; r <= rows; r++)
+            for (int r = 0; r < rows; r++)
             {
                 ik++;
-                x[ik] = timesVariable.Data[r - 1];
-                if (x[ik] <= 0.0)
-                {
-                    ok = false;
-                    if (Math.Abs(x[ik]) + 1 > adjustment)
-                        adjustment = Math.Abs(x[ik]) + 1;
-                }
+                x[ik] = timesVariable.Data[r];
             }
-            if (!ok)
-            {
-                bool shouldAdjust = host.GetBoolean($"Times must be > 0: Do you want to add {adjustment} to all of your times?", "Cox Regression", true, out bool wasCancelled);
-                if (wasCancelled || !shouldAdjust)
-                    throw new TemplateOperationCancelledException();
 
+            if (parameters.ContainsKey("timesAdjustment"))
+            {
+                double adjustment = parameters["timesAdjustment"].AsDouble;
                 for (int r = 1; r <= rows; r++)
                     x[r] += adjustment;
             }
 
             DataFrame eventsFrame = parameters["events"].AsDataFrame;
-            DoubleVariable eventsVariable = eventsFrame.Variables[0]as DoubleVariable;
+            DoubleVariable eventsVariable = eventsFrame.Variables[0] as DoubleVariable;
             ic++;
             int icen = ic;
             // create temp variable for copying values 
-            double[] transTemp3 = new double[rows * ic + 1 ];
+            double[] transTemp3 = new double[rows * ic + 1];
             Array.Copy(x, transTemp3, Math.Min(x.Length, transTemp3.Length));
             x = transTemp3;
-            ok = false;
+            bool ok = false;
             double dead = 0;
-            for (int r = 1; r <= rows; r++)
+            for (int r = 0; r < rows; r++)
             {
                 ik++;
-                x[ik] = eventsVariable.Data[r - 1];
+                x[ik] = eventsVariable.Data[r];
                 dead += x[ik];
                 if (x[ik] > 1)
                     ok = true;
@@ -169,11 +167,11 @@ namespace StatsDirect.Builtins
                 double[] transTemp4 = new double[rows * ic + 1];
                 Array.Copy(x, transTemp4, Math.Min(x.Length, transTemp4.Length));
                 x = transTemp4;
-                for (int r = 1; r <= rows; r++)
+                for (int r = 0; r < rows; r++)
                 {
                     ik++;
-                    x[ik] = eventsVariable.Data[r - 1] > 1
-                        ? eventsVariable.Data[r - 1]
+                    x[ik] = eventsVariable.Data[r] > 1
+                        ? eventsVariable.Data[r]
                         : 1;
                 }
             }
@@ -205,10 +203,10 @@ namespace StatsDirect.Builtins
                 for (int c = 0; c < predictorsFrame.VariableCount; c++)
                 {
                     indef[c + 1] = ic + c + 1;
-                    for (int r = 1; r <= rows; r++)
+                    for (int r = 0; r < rows; r++)
                     {
                         ik += 1;
-                        x[ik] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r - 1];
+                        x[ik] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r];
                     }
                 }
                 ic += ncov;
@@ -263,10 +261,10 @@ namespace StatsDirect.Builtins
                 double[] transTemp6 = new double[rows * ic + 1];
                 Array.Copy(x, transTemp6, Math.Min(x.Length, transTemp6.Length));
                 x = transTemp6;
-                for (int r = 1; r <= rows; r++)
+                for (int r = 0; r < rows; r++)
                 {
                     ik += 1;
-                    x[ik] = strataVariable.Data[r - 1];
+                    x[ik] = strataVariable.Data[r];
                 }
             }
             else
@@ -317,7 +315,7 @@ namespace StatsDirect.Builtins
             double[,] ccase = new double[nobs + 1, 6 + 1];
             double[,] coef = new double[ldcoef + 1, 4 + 1];
             double[,] cov = new double[ldcoef + 1, ldcoef + 1];
-            double[] GR = new double[ldcoef + 1 ];
+            double[] GR = new double[ldcoef + 1];
             double[] xmean = new double[ldcoef + 1];
             int ifault = 0; int ncoef = 0;
             int nrmiss = 0;
@@ -332,8 +330,8 @@ namespace StatsDirect.Builtins
                 else
                     throw new TemplateOperationCancelledException("Error in calculation (" + ifault.ToString() + ")", "Cox Regression");
             }
-            ColumnData[] CDAT1 = new ColumnData[ncoef + 1 ];
-            double[, ,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
+            ColumnData[] CDAT1 = new ColumnData[ncoef + 1];
+            double[,,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
             double[,] ARR2 = new double[nobs + 1, 10 + 1];
             for (int i = 1; i <= ncoef; i++)
             {
@@ -373,12 +371,12 @@ namespace StatsDirect.Builtins
             for (int i = icov + 1; i <= icov + nobs; i++)
                 x[i] = 1.0;
             indef[1] = 3;
-            igrp = new int[nobs + 1 ];
+            igrp = new int[nobs + 1];
             ccase = new double[nobs + 1, 6 + 1];
             coef = new double[ldcoef + 1, 4 + 1];
             cov = new double[ldcoef + 1, ldcoef + 1];
-            GR = new double[ldcoef + 1 ];
-            xmean = new double[ldcoef + 1 ];
+            GR = new double[ldcoef + 1];
+            xmean = new double[ldcoef + 1];
             coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             ARR2[3, 0] = algl;
 
@@ -2089,7 +2087,7 @@ namespace StatsDirect.Builtins
         {
             bool[] selectedGroups = (bool[])parameters["group"].AsObject;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
-            StringVariable subgroupsVariable = (StringVariable) subgroupsFrame.Variables[0];
+            StringVariable subgroupsVariable = (StringVariable)subgroupsFrame.Variables[0];
             for (int i = 0; i < selectedGroups.Length; i++)
             {
                 if (selectedGroups[i])
@@ -2110,21 +2108,21 @@ namespace StatsDirect.Builtins
 
             //  baseline S and H and S and H values at mean covariate
             int iobs = Convert.ToInt32(ARR2[0, 0]);
-            CoxP[] z = new CoxP[iobs + 2 ];
+            CoxP[] z = new CoxP[iobs + 2];
             z[0] = new CoxP();
             for (i = 1; i <= iobs; i++)
             {
                 //  use estimates as starting values if needed
                 z[i] = new CoxP
-                           {
-                               Stratum = Convert.ToInt32(ARR2[i, 9]),
-                               Time = ARR2[i, 6],
-                               Censor = Convert.ToInt32(ARR2[i, 7]),
-                               S = ARR2[i, 1],
-                               H = ARR2[i, 4],
-                               Exb = ARR2[i, 10],
-                               Index = i
-                           };
+                {
+                    Stratum = Convert.ToInt32(ARR2[i, 9]),
+                    Time = ARR2[i, 6],
+                    Censor = Convert.ToInt32(ARR2[i, 7]),
+                    S = ARR2[i, 1],
+                    H = ARR2[i, 4],
+                    Exb = ARR2[i, 10],
+                    Index = i
+                };
             }
 
             Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
@@ -2145,7 +2143,7 @@ namespace StatsDirect.Builtins
                     istrata += 1;
                 }
                 watch_time = z[i].Time;
-                double[] dead_theta = new double[30 + 1 ];
+                double[] dead_theta = new double[30 + 1];
                 double dead = 0.0;
                 int iinc = 0;
                 for (int j = i; j <= iobs; j++)
@@ -2161,7 +2159,7 @@ namespace StatsDirect.Builtins
                         if (dead > transTemp0.GetUpperBound(0))
                         {
                             // create temp variable for copying values 
-                            double[] transTemp7 = new double[Convert.ToInt32(dead) + 1 ];
+                            double[] transTemp7 = new double[Convert.ToInt32(dead) + 1];
                             Array.Copy(dead_theta, transTemp7, Math.Min(dead_theta.Length, transTemp7.Length));
                             dead_theta = transTemp7;
                         }
@@ -2271,7 +2269,7 @@ namespace StatsDirect.Builtins
             bool grouped; bool stratified;
 
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
-            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].AsObject;
+            double[,,] ARR3 = (double[,,])parameters["ARR3"].AsObject;
             ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].AsObject;
             double[,] holdx = (double[,])parameters["holdx"].AsObject;
             bool use_tic = parameters["use-tics"].AsBoolean;
@@ -2360,7 +2358,7 @@ namespace StatsDirect.Builtins
                     double surv = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
                     xp[i] = Math.Log(z[i].Time);
                     yp[i] = -Math.Log(-Math.Log(surv));
-                    if (i > 1 && z[i].Id != z[i -1].Id)
+                    if (i > 1 && z[i].Id != z[i - 1].Id)
                         igp++;
                     gn[igp]++;
                 }
@@ -2547,7 +2545,7 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptCoxHazardRatios(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
-            double[, ,] ARR3 = (double[, ,])parameters["ARR3"].AsObject;
+            double[,,] ARR3 = (double[,,])parameters["ARR3"].AsObject;
             ColumnData[] CDAT1 = (ColumnData[])parameters["CDAT1"].AsObject;
 
             double GAMMA = parameters["gamma"].AsDouble;
