@@ -13,28 +13,31 @@ namespace StatsDirect.Builtins
     {
         private class Namevar
         {
-            public string Ti { get; set;  }
+            public string Title { get; set;  }
             public double X { get; set;  }
 
-            public Namevar(string ti, double x)
+            public Namevar(string title, double x)
             {
-                Ti = ti;
+                Title = title;
                 X = x;
             }
         }
 
+        /// <summary>
+        /// If both sides are numeric, compare as numbers.  Otherwise, compare as text.
+        /// </summary>
         private class NamevarAscending : IComparer<Namevar>
         {
             public int Compare(Namevar x, Namevar y)
             {
-                if (double.TryParse(x.Ti, out double nx) && double.TryParse(y.Ti, out double ny))
+                if (double.TryParse(x.Title, out double nx) && double.TryParse(y.Title, out double ny))
                     return nx.CompareTo(ny);
-                return string.CompareOrdinal(x.Ti, y.Ti);
+                return string.CompareOrdinal(x.Title, y.Title);
             }
         }
 
         ///  <summary>
-        ///  Sort data by label
+        ///  Sort data in cat[lowerBound..lowerBound+cats-1] by label
         ///  </summary>
         ///  <param name="cats"></param>
         ///  <param name="cat"></param>
@@ -285,13 +288,13 @@ namespace StatsDirect.Builtins
                 maxcat[xcats + i] = ycat[i];
             SortName(xcats + ycats, maxcat, lowerBound);
             for (int i = lowerBound + 1; i < xcats + ycats + lowerBound; i++)
-                if (maxcat[i - 1].Ti == maxcat[i].Ti)
-                    maxcat[i - 1].Ti = string.Empty;
+                if (maxcat[i - 1].Title == maxcat[i].Title)
+                    maxcat[i - 1].Title = string.Empty;
             SortName(xcats + ycats, maxcat, lowerBound);
             int g = 1;
             for (int i = xcats + ycats - 1 + lowerBound; i >= lowerBound; i--)
             {
-                if (string.IsNullOrEmpty(maxcat[i].Ti))
+                if (string.IsNullOrEmpty(maxcat[i].Title))
                 {
                     g = i + 1;
                     break;
@@ -308,19 +311,19 @@ namespace StatsDirect.Builtins
             ycat = newYcat;
             for (int i = lowerBound; i < maxcats + lowerBound; i++)
             {
-                if (xcat[i].Ti != maxcat[g + i - lowerBound].Ti)
+                if (xcat[i].Title != maxcat[g + i - lowerBound].Title)
                 {
                     //  Shuffle the end of the array up
                     for (int j = maxcats - 2 + lowerBound; j >= i; j--)
                         xcat[j + 1] = xcat[j];
-                    xcat[i].Ti = maxcat[g + i - lowerBound].Ti;
+                    xcat[i].Title = maxcat[g + i - lowerBound].Title;
                     xcat[i].X = -Constant.MISSING;
                 }
-                if (ycat[i].Ti != maxcat[g + i - lowerBound].Ti)
+                if (ycat[i].Title != maxcat[g + i - lowerBound].Title)
                 {
                     for (int j = maxcats - 2 + lowerBound; j >= i; j--)
                         ycat[j + 1] = ycat[j];
-                    ycat[i].Ti = maxcat[g + i - lowerBound].Ti;
+                    ycat[i].Title = maxcat[g + i - lowerBound].Title;
                     ycat[i].X = -Constant.MISSING;
                 }
             }
@@ -844,7 +847,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < xcats; i++)
                 {
                     ParameterBag xValues = new ParameterBag();
-                    xValues.AddOutput("x", xcat[i].Ti);
+                    xValues.AddOutput("x", xcat[i].Title);
                     xList.Add(xValues);
                 }
                 outputParameters.AddOutput("*x", xList);
@@ -852,7 +855,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < ycats; i++)
                 {
                     ParameterBag yValues = new ParameterBag();
-                    yValues.AddOutput("y", ycat[i].Ti);
+                    yValues.AddOutput("y", ycat[i].Title);
                     ICollection<ParameterBag> totList = new List<ParameterBag>();
                     for (int j = 0; j < xcats; j++)
                     {
@@ -1858,21 +1861,24 @@ namespace StatsDirect.Builtins
         public static ParameterBag RptCrosstabs(ITemplateHost host, ParameterBag parameters)
         {
             double[] z = null;
-            string zlab = null;
-            int zcats = 0;
-            bool strat = false;
+            string zLabel = null;
+            int zCategoryCount = 0;
+            bool isStratified = false;
             Namevar[] zcat = null;
 
             //  First classifier
             DataFrame c1Frame = parameters["c1"].AsDataFrame;
             ClassifierVariable c1Variable = (ClassifierVariable)c1Frame.Variables[0];
             int n = c1Variable.Length;
-            int ycats = c1Variable.GroupCount;
+
             double[] y = new double[n + 1];
-            Namevar[] ycat = new Namevar[ycats + 1];
-            string ylab = c1Variable.Title;
+            Array.Copy(c1Variable.Data, 0, y, 1, n);
+
+            int yCategoryCount = c1Variable.GroupCount;
+            Namevar[] ycat = new Namevar[yCategoryCount + 1];
+            string yLabel = c1Variable.Title;
             int cnt = 0;
-            for (int i = 0; i < ycats; i++)
+            for (int i = 0; i < yCategoryCount; i++)
             {
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
@@ -1880,29 +1886,27 @@ namespace StatsDirect.Builtins
                     ycat[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
                 }
             }
-            ycats = cnt;
+            yCategoryCount = cnt;
 
-            for (int r = 1; r <= n; r++)
-                y[r] = c1Variable.Data[r - 1];
-            SortName(ycats, ycat, 1);
+            SortName(yCategoryCount, ycat, 1);
 
-            //  Second classifier
+            //  Second classifier(s)
             DataFrame c2Frame = parameters["c2"].AsDataFrame;
 
-            // Maybe go to three factors if one column classifier
+            // Allow stratification iff one column classifier
             if (c2Frame.VariableCount == 1)
             {
-                strat = parameters.ContainsKey("c3") && parameters["c3"] != null;
-                if (strat)
+                isStratified = parameters.ContainsKey("c3") && parameters["c3"] != null;
+                if (isStratified)
                 {
                     DataFrame c3Frame = parameters["c3"].AsDataFrame;
                     ClassifierVariable c3Variable = (ClassifierVariable)c3Frame.Variables[0];
-                    zcats = c3Variable.GroupCount;
+                    zCategoryCount = c3Variable.GroupCount;
                     z = new double[n + 1];
-                    zcat = new Namevar[zcats + 1];
-                    zlab = c3Variable.Title;
+                    zcat = new Namevar[zCategoryCount + 1];
+                    zLabel = c3Variable.Title;
                     cnt = 0;
-                    for (int i = 0; i < zcats; i++)
+                    for (int i = 0; i < zCategoryCount; i++)
                     {
                         if (c3Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                         {
@@ -1910,11 +1914,11 @@ namespace StatsDirect.Builtins
                             zcat[cnt] = new Namevar(c3Variable.Groups[i].Label, i);
                         }
                     }
-                    zcats = cnt;
+                    zCategoryCount = cnt;
                     for (int r = 1; r <= n; r++)
                         z[r] = c3Variable.Data[r - 1];
-                    SortName(zcats, zcat, 1);
-                    strat = zcats > 1;
+                    SortName(zCategoryCount, zcat, 1);
+                    isStratified = zCategoryCount > 1;
                 }
             }
 
@@ -1924,12 +1928,12 @@ namespace StatsDirect.Builtins
             for (int c = 0; c < c2Frame.VariableCount; c++)
             {
                 ClassifierVariable c2Variable = c2Frame.Variables[c] as ClassifierVariable;
-                int xcats = c2Variable.GroupCount;
+                int xCategoryCount = c2Variable.GroupCount;
                 double[] x = new double[n + 1];
-                Namevar[] xcat = new Namevar[xcats + 1];
-                string xlab = c2Variable.Title;
+                Namevar[] xcat = new Namevar[xCategoryCount + 1];
+                string xLabel = c2Variable.Title;
                 cnt = 0;
-                for (int i = 0; i < xcats; i++)
+                for (int i = 0; i < xCategoryCount; i++)
                 {
                     if (c2Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                     {
@@ -1937,27 +1941,27 @@ namespace StatsDirect.Builtins
                         xcat[cnt] = new Namevar(c2Variable.Groups[i].Label, i);
                     }
                 }
-                xcats = cnt;
+                xCategoryCount = cnt;
                 for (int r = 1; r <= n; r++)
                     x[r] = c2Variable.Data[r - 1];
-                SortName(xcats, xcat, 1);
+                SortName(xCategoryCount, xcat, 1);
 
                 bool ok = true;
                 bool wasCancelled;
-                if (ycats > 10 || xcats > 10)
+                if (yCategoryCount > 10 || xCategoryCount > 10)
                 {
-                    ok = host.GetBoolean("Table = " + ycats.ToString() + " rows by " + xcats.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
+                    ok = host.GetBoolean("Table = " + yCategoryCount.ToString() + " rows by " + xCategoryCount.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                 }
 
-                if (!XSymmetrical(xcats, xcat, ycats, ycat, false))
+                if (!XSymmetrical(xCategoryCount, xcat, yCategoryCount, ycat, false))
                 {
                     bool symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                     if (symmetrise)
-                        XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 1);
+                        XSymmetriseXtab(ref xCategoryCount, ref xcat, ref yCategoryCount, ref ycat, 1);
                 }
 
                 if (!ok)
@@ -1966,17 +1970,17 @@ namespace StatsDirect.Builtins
                 ParameterBag columnsParameters = new ParameterBag();
                 columnsList.Add(columnsParameters);
                 double tot;
-                if (strat)
+                if (isStratified)
                 {
                     // three factor xtab ---->
                     double cco = parameters["cco"].AsDouble;
-                    double[,,] zt = new double[xcats + 1, ycats + 1, zcats + 1];
+                    double[,,] zt = new double[xCategoryCount + 1, yCategoryCount + 1, zCategoryCount + 1];
                     tot = 0.0;
-                    for (int i = 1; i <= xcats; i++)
+                    for (int i = 1; i <= xCategoryCount; i++)
                     {
-                        for (int j = 1; j <= ycats; j++)
+                        for (int j = 1; j <= yCategoryCount; j++)
                         {
-                            for (int m = 1; m <= zcats; m++)
+                            for (int m = 1; m <= zCategoryCount; m++)
                             {
                                 for (int k = 1; k <= n; k++)
                                 {
@@ -1994,34 +1998,34 @@ namespace StatsDirect.Builtins
                     columnsParameters.AddOutput("*xtabz", xtabzList);
                     ParameterBag xtabzParameters = new ParameterBag();
                     xtabzList.Add(xtabzParameters);
-                    xtabzParameters.AddOutput("ylab", ylab);
-                    xtabzParameters.AddOutput("xlab", xlab);
-                    xtabzParameters.AddOutput("zlab", zlab);
+                    xtabzParameters.AddOutput("ylab", yLabel);
+                    xtabzParameters.AddOutput("xlab", xLabel);
+                    xtabzParameters.AddOutput("zlab", zLabel);
                     List<ParameterBag> zList = new List<ParameterBag>();
                     xtabzParameters.AddOutput("*z", zList);
-                    for (int m = 1; m <= zcats; m++)
+                    for (int m = 1; m <= zCategoryCount; m++)
                     {
                         ParameterBag zParameters = new ParameterBag();
                         zList.Add(zParameters);
-                        zParameters.AddOutput("z", zcat[m].Ti);
+                        zParameters.AddOutput("z", zcat[m].Title);
                         List<ParameterBag> xList = new List<ParameterBag>();
                         zParameters.AddOutput("*x", xList);
-                        for (int i = 1; i <= xcats; i++)
+                        for (int i = 1; i <= xCategoryCount; i++)
                         {
                             ParameterBag xParameters = new ParameterBag();
                             xList.Add(xParameters);
-                            xParameters.AddOutput("x", xcat[i].Ti);
+                            xParameters.AddOutput("x", xcat[i].Title);
                         }
                         List<ParameterBag> yList = new List<ParameterBag>();
                         zParameters.AddOutput("*y", yList);
-                        for (int i = 1; i <= ycats; i++)
+                        for (int i = 1; i <= yCategoryCount; i++)
                         {
                             ParameterBag yParameters = new ParameterBag();
                             yList.Add(yParameters);
-                            yParameters.AddOutput("y", ycat[i].Ti);
+                            yParameters.AddOutput("y", ycat[i].Title);
                             List<ParameterBag> totList = new List<ParameterBag>();
                             yParameters.AddOutput("*tot", totList);
-                            for (int j = 1; j <= xcats; j++)
+                            for (int j = 1; j <= xCategoryCount; j++)
                             {
                                 ParameterBag totParameters = new ParameterBag();
                                 totList.Add(totParameters);
@@ -2029,12 +2033,12 @@ namespace StatsDirect.Builtins
                             }
                         }
                     }
-                    if (xcats == 2 && ycats == 2)
+                    if (xCategoryCount == 2 && yCategoryCount == 2)
                     {
                         string studyType = parameters["study_type"].AsString;
                         if ("casecontrol".Equals(studyType))
                         {
-                            ParameterBag mantelParameters = TabMh(host, cco, zcats, zt, zcat);
+                            ParameterBag mantelParameters = TabMh(host, cco, zCategoryCount, zt, zcat);
                             if (mantelParameters != null)
                             {
                                 List<ParameterBag> mantelList = new List<ParameterBag>();
@@ -2044,7 +2048,7 @@ namespace StatsDirect.Builtins
                         }
                         else if ("cohort".Equals(studyType))
                         {
-                            ParameterBag rrmetaParameters = TabRelativeRisk(host, cco, zcats, zt, zcat);
+                            ParameterBag rrmetaParameters = TabRelativeRisk(host, cco, zCategoryCount, zt, zcat);
                             if (rrmetaParameters != null)
                             {
                                 List<ParameterBag> rrmetaList = new List<ParameterBag>();
@@ -2055,7 +2059,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        ParameterBag gencmhParameters = TabCmh(parameters, zcats, ycats, xcats, zt, ylab, xlab, zlab);
+                        ParameterBag gencmhParameters = TabCmh(parameters, zCategoryCount, yCategoryCount, xCategoryCount, zt, yLabel, xLabel, zLabel);
                         if (gencmhParameters != null)
                         {
                             List<ParameterBag> gencmhList = new List<ParameterBag>();
@@ -2069,11 +2073,11 @@ namespace StatsDirect.Builtins
                 {
                     // two factor xtab ---->
                     double cco = parameters["cco"].AsDouble;
-                    double[,] xt = new double[xcats + 1, ycats + 1];
+                    double[,] xt = new double[xCategoryCount + 1, yCategoryCount + 1];
                     tot = 0.0;
-                    for (int i = 1; i <= xcats; i++)
+                    for (int i = 1; i <= xCategoryCount; i++)
                     {
-                        for (int j = 1; j <= ycats; j++)
+                        for (int j = 1; j <= yCategoryCount; j++)
                         {
                             for (int k = 1; k <= n; k++)
                                 if (x[k] == xcat[i].X && y[k] == ycat[j].X)
@@ -2086,26 +2090,26 @@ namespace StatsDirect.Builtins
                     columnsParameters.AddOutput("*xtab", xtabList);
                     ParameterBag xtabParameters = new ParameterBag();
                     xtabList.Add(xtabParameters);
-                    xtabParameters.AddOutput("ylab", ylab);
-                    xtabParameters.AddOutput("xlab", xlab);
+                    xtabParameters.AddOutput("ylab", yLabel);
+                    xtabParameters.AddOutput("xlab", xLabel);
                     List<ParameterBag> xList = new List<ParameterBag>();
                     xtabParameters.AddOutput("*x", xList);
-                    for (int i = 1; i <= xcats; i++)
+                    for (int i = 1; i <= xCategoryCount; i++)
                     {
                         ParameterBag xParameters = new ParameterBag();
                         xList.Add(xParameters);
-                        xParameters.AddOutput("x", xcat[i].Ti);
+                        xParameters.AddOutput("x", xcat[i].Title);
                     }
                     List<ParameterBag> yList = new List<ParameterBag>();
                     xtabParameters.AddOutput("*y", yList);
-                    for (int i = 1; i <= ycats; i++)
+                    for (int i = 1; i <= yCategoryCount; i++)
                     {
                         ParameterBag yParameters = new ParameterBag();
                         yList.Add(yParameters);
-                        yParameters.AddOutput("y", ycat[i].Ti);
+                        yParameters.AddOutput("y", ycat[i].Title);
                         List<ParameterBag> totList = new List<ParameterBag>();
                         yParameters.AddOutput("*tot", totList);
-                        for (int j = 1; j <= xcats; j++)
+                        for (int j = 1; j <= xCategoryCount; j++)
                         {
                             ParameterBag totParameters = new ParameterBag();
                             totList.Add(totParameters);
@@ -2135,7 +2139,7 @@ namespace StatsDirect.Builtins
                         }
 
                         // w() was passed to a FORTRAN routine so must redim to (1 to c, 1 to r)
-                        ParameterBag chirxcParameters = SChi(host, ref cco, w, ycats, xcats, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
+                        ParameterBag chirxcParameters = SChi(host, ref cco, w, yCategoryCount, xCategoryCount, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
                         chirxcList.Add(chirxcParameters);
                     }
                 } // two factor <-----
@@ -2265,7 +2269,7 @@ namespace StatsDirect.Builtins
             string[] title = new string[k + lowerBound];
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                title[i] = zcat[i].Ti;
+                title[i] = zcat[i].Title;
                 if (title[i].Length > 50)
                     title[i] = title[i].Substring(0, 50);
             }
@@ -2962,7 +2966,7 @@ namespace StatsDirect.Builtins
             string[] title = new string[k + lowerBound];
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                title[i] = zcat[i].Ti;
+                title[i] = zcat[i].Title;
                 if (title[i].Length > 50)
                     title[i] = title[i].Substring(0, 50);
             }
@@ -3168,7 +3172,7 @@ namespace StatsDirect.Builtins
             if (strict)
             {
                 for (int i = 1; i <= Math.Min(xcats, ycats); i++)
-                    if (xcat[i].Ti != ycat[i].Ti)
+                    if (xcat[i].Title != ycat[i].Title)
                         return false;
             }
             return xcats == ycats;
@@ -6478,7 +6482,7 @@ namespace StatsDirect.Builtins
                 }
                 v.SetData(pos, "(n = " + tot.ToString() + ")");
                 for (int j = 1; j <= ycats; j++)
-                    v.SetData(pos + j, ylab + ":" + ycat[j].Ti);
+                    v.SetData(pos + j, ylab + ":" + ycat[j].Title);
                 for (int i = 1; i <= xcats; i++)
                 {
                     StringVariable vv;
@@ -6491,7 +6495,7 @@ namespace StatsDirect.Builtins
                         vv = new StringVariable();
                         outputFrame.Variables.Add(vv);
                     }
-                    vv.SetData(pos, xlab + ":" + xcat[i].Ti);
+                    vv.SetData(pos, xlab + ":" + xcat[i].Title);
                     for (int j = 1; j <= ycats; j++)
                         vv.SetData(pos + j, xt[i, j].ToString());
                 }
