@@ -8,6 +8,7 @@
         <integer>
           <name>pairs</name>
           <prompt>Intervention-control pairs to allocate</prompt>
+          <minimum-value>1</minimum-value>
           <must-request>true</must-request>
         </integer>
         <integer>
