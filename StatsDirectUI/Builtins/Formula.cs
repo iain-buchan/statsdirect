@@ -77,7 +77,7 @@ namespace StatsDirect.Builtins
                 do
                 {
                     // curtail the random block size selection if we are at the end of the allocation space
-                    int bs = n - ctr < blockSize * t ? n - ctr : blockSize;
+                    int bs = n - ctr < blockSize ? n - ctr : blockSize;
 
                     // for each block allocate the block pattern as treatments in alphanumeric order
                     for (int j = 1; j <= (int)Math.Floor((double)bs / t); j++)
@@ -158,7 +158,7 @@ namespace StatsDirect.Builtins
                 ParameterBag subjectsParameters = new ParameterBag();
                 subjectsList.Add(subjectsParameters);
                 subjectsParameters.AddOutput("id", i);
-                subjectsParameters.AddOutput("rx", Convert.ToChar(64 + x[i].Rx));
+                subjectsParameters.AddOutput("rx", new string(Convert.ToChar(64 + x[i].Rx), 1));
             }
             return outputParameters;
         }

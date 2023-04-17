@@ -20,7 +20,7 @@
     <ApplicationIcon>UI\sd3.ico</ApplicationIcon>
     <SignAssembly>false</SignAssembly>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <PublishUrl>http://localhost/StatsDirect/</PublishUrl>
     <Install>true</Install>
@@ -96,85 +96,93 @@
     <Reference Include="Antlr4.Runtime, Version=4.6.0.0, Culture=neutral, PublicKeyToken=09abb75b9ed49849, processorArchitecture=MSIL">
       <HintPath>..\packages\Antlr4.Runtime.4.6.6\lib\net45\Antlr4.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Data.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Data.19.2.7\lib\net452\DevExpress.Data.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.Data.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Data.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Images.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Images.19.2.7\lib\net452\DevExpress.Images.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.Docs.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Docs.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Office.v19.2.Core, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Office.Core.19.2.7\lib\net452\DevExpress.Office.v19.2.Core.dll</HintPath>
+    <Reference Include="DevExpress.Images.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Images.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Pdf.v19.2.Core, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Pdf.Core.19.2.7\lib\net452\DevExpress.Pdf.v19.2.Core.dll</HintPath>
+    <Reference Include="DevExpress.Office.v22.2.Core, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Office.v22.2.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Printing.v19.2.Core, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Printing.Core.19.2.7\lib\net452\DevExpress.Printing.v19.2.Core.dll</HintPath>
+    <Reference Include="DevExpress.Printing.v22.2.Core, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Printing.v22.2.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.RichEdit.v19.2.Core, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.RichEdit.Core.19.2.7\lib\net452\DevExpress.RichEdit.v19.2.Core.dll</HintPath>
+    <Reference Include="DevExpress.RichEdit.v22.2.Core, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.RichEdit.v22.2.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Sparkline.v19.2.Core, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Sparkline.Core.19.2.7\lib\net452\DevExpress.Sparkline.v19.2.Core.dll</HintPath>
+    <Reference Include="DevExpress.RichEdit.v22.2.Export, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.RichEdit.v22.2.Export.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Utils.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Utils.19.2.7\lib\net452\DevExpress.Utils.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.Sparkline.v22.2.Core, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Sparkline.v22.2.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraBars.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.Navigation.19.2.7\lib\net452\DevExpress.XtraBars.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.Utils.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.Utils.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraEditors.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.Navigation.19.2.7\lib\net452\DevExpress.XtraEditors.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.XtraBars.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.XtraBars.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraGrid.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.Grid.19.2.7\lib\net452\DevExpress.XtraGrid.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.XtraEditors.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.XtraEditors.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraLayout.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.Navigation.19.2.7\lib\net452\DevExpress.XtraLayout.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.XtraPrinting.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.XtraPrinting.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraPrinting.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.Printing.19.2.7\lib\net452\DevExpress.XtraPrinting.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.XtraRichEdit.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.XtraRichEdit.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraRichEdit.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.RichEdit.19.2.7\lib\net452\DevExpress.XtraRichEdit.v19.2.dll</HintPath>
+    <Reference Include="DevExpress.XtraTreeList.v22.2, Version=22.2.5.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\DevExpress 22.2\Components\Bin\Framework\DevExpress.XtraTreeList.v22.2.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.XtraTreeList.v19.2, Version=19.2.7.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevExpress.Win.TreeList.19.2.7\lib\net452\DevExpress.XtraTreeList.v19.2.dll</HintPath>
-    </Reference>
-    <Reference Include="HtmlAgilityPack, Version=1.11.24.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
-      <HintPath>..\packages\HtmlAgilityPack.1.11.24\lib\Net45\HtmlAgilityPack.dll</HintPath>
+    <Reference Include="HtmlAgilityPack, Version=1.11.46.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
+      <HintPath>..\packages\HtmlAgilityPack.1.11.46\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\MSTest.TestFramework.2.1.2\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+      <HintPath>..\packages\MSTest.TestFramework.3.0.2\lib\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\MSTest.TestFramework.2.1.2\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+      <HintPath>..\packages\MSTest.TestFramework.3.0.2\lib\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="OpenMcdf, Version=2.2.1.4, Culture=neutral, PublicKeyToken=fdbb1629d7c00800, processorArchitecture=MSIL">
-      <HintPath>..\packages\OpenMcdf.2.2.1.4\lib\net40\OpenMcdf.dll</HintPath>
+    <Reference Include="OpenMcdf, Version=2.2.1.12, Culture=neutral, PublicKeyToken=fdbb1629d7c00800, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMcdf.2.2.1.12\lib\net40\OpenMcdf.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2017.Core, Version=8.3.2.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2023.Core, Version=9.1.54.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Core.dll</HintPath>
+      <HintPath>..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2023 for .NET\DotNet46\Bin\SpreadsheetGear2023.Core.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2017.Drawing, Version=8.3.2.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2023.Drawing, Version=9.1.54.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Drawing.dll</HintPath>
+      <HintPath>..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2023 for .NET\DotNet46\Bin\SpreadsheetGear2023.Drawing.dll</HintPath>
     </Reference>
-    <Reference Include="SpreadsheetGear2017.Windows.Forms, Version=8.3.2.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
+    <Reference Include="SpreadsheetGear2023.Windows.Forms, Version=9.1.54.102, Culture=neutral, PublicKeyToken=39c186f5904944ec, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2017 for .NET\DotNet40\Bin\SpreadsheetGear2017.Windows.Forms.dll</HintPath>
+      <HintPath>..\..\..\Program Files (x86)\SpreadsheetGear\SpreadsheetGear 2023 for .NET\DotNet46\Bin\SpreadsheetGear2023.Windows.Forms.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net" />
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
-    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />

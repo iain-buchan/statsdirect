@@ -8,6 +8,7 @@
         <integer>
           <name>high</name>
           <prompt>Number of subjects to allocate as case or control (must be EVEN)</prompt>
+          <minimum-value>2</minimum-value>
           <must-request>true</must-request>
         </integer>
         <integer>

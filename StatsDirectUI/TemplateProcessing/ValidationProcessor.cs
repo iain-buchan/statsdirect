@@ -36,7 +36,7 @@ namespace StatsDirect.TemplateProcessing
         {
             // If we're allowing blank parameters, accept a blank.
             if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
-                return null;
+                return ValidationResult.Valid;
 
             // There's no custom validator with that name (or we would never be called), so use a generic if we have one.
             // Note that some of these validators assume a particular frame name - deal with that here.
@@ -53,7 +53,7 @@ namespace StatsDirect.TemplateProcessing
 
             // If the parameter is missing and it has an AcquireIfTrue, assume it was never acquired and that was OK.
             if (parameter.HasAcquireIfTrue && !filledParameters.ContainsKey(parameterName))
-                return null;
+                return ValidationResult.Valid;
 
             FilledParameter p = filledParameters[parameterName];
             switch (validatorName)

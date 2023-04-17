@@ -9,17 +9,19 @@
           <name>n</name>
           <prompt>Number of subjects in total</prompt>
           <must-request>true</must-request>
-          <minimum-value>0</minimum-value>
+          <minimum-value>2</minimum-value>
         </integer>
         <integer>
           <name>b</name>
           <prompt>Number of subjects per block (blank for random)</prompt>
+          <minimum-value>2</minimum-value>
           <cancel-skips-parameter>Skip</cancel-skips-parameter>
           <must-request>true</must-request>
         </integer>
         <integer>
           <name>t</name>
           <prompt>Number of treatments</prompt>
+          <minimum-value>2</minimum-value>
           <must-request>true</must-request>
         </integer>
         <integer>
