@@ -30,7 +30,7 @@ namespace StatsDirect.Builtins
             return Base.DefaultSeed();
         }
 
-        public static ParameterBag RptRandomBlock(ParameterBag parameters)
+        public static StepOutput RptRandomBlock(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
             MersenneTwister mt = new MersenneTwister(seed);
@@ -160,10 +160,10 @@ namespace StatsDirect.Builtins
                 subjectsParameters.AddOutput("id", i);
                 subjectsParameters.AddOutput("rx", new string(Convert.ToChar(64 + x[i].Rx), 1));
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptSizeCorrelation(ParameterBag parameters)
+        public static StepOutput RptSizeCorrelation(ParameterBag parameters)
         {
             double p = parameters["p"].AsDouble;
             double a = parameters["a"].AsDouble;
@@ -219,10 +219,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("r0Fmt", r0);
             outputParameters.AddOutput("r1Fmt", r1);
             outputParameters.AddOutput("size", Math.Floor(sn) + 1);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptSizeSurvival(ParameterBag parameters)
+        public static StepOutput RptSizeSurvival(ParameterBag parameters)
         {
             double hr = 0;
             double et = 0;
@@ -292,7 +292,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, n));
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
@@ -399,7 +399,7 @@ namespace StatsDirect.Builtins
 
         private static double x_zvalc(double alpha, out int er) => -PDF.gauinv(alpha, out er);
 
-        public static ParameterBag RptRandomPairs(ParameterBag parameters)
+        public static StepOutput RptRandomPairs(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
             MersenneTwister mt = new MersenneTwister(seed);
@@ -424,9 +424,7 @@ namespace StatsDirect.Builtins
                         for (int n = 1; n <= pairs; n++)
                         {
                             int nrp = Convert.ToInt32(Math.Floor(pairs * mt.NextDouble()) + 1);
-                            bool tmpBool = rand[n];
-                            rand[n] = rand[nrp];
-                            rand[nrp] = tmpBool;
+                            (rand[nrp], rand[n]) = (rand[n], rand[nrp]);
                         }
                     }
                 }
@@ -445,12 +443,12 @@ namespace StatsDirect.Builtins
                     pairsParameters.AddOutput("index", n.ToString(f));
                     pairsParameters.AddOutput("random", rand[n] ? "Control - Intervention" : "Intervention - Control");
                 }
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
-        public static ParameterBag RptRandomUnPaired(ParameterBag parameters)
+        public static StepOutput RptRandomUnPaired(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
             MersenneTwister mt = new MersenneTwister(seed);
@@ -467,9 +465,7 @@ namespace StatsDirect.Builtins
                 for (int N = low; N <= high; N++)
                 {
                     int nrp = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
-                    int tmp = rand[N];
-                    rand[N] = rand[nrp];
-                    rand[nrp] = tmp;
+                    (rand[nrp], rand[N]) = (rand[N], rand[nrp]);
                 }
                 int halfHigh = Convert.ToInt32(high / 2);
                 for (int N = low; N <= halfHigh; N++)
@@ -491,23 +487,19 @@ namespace StatsDirect.Builtins
                     allocationsParameters.AddOutput("case", arand[N]);
                     allocationsParameters.AddOutput("control", brand[N]);
                 }
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
-        public static ParameterBag RptRandomXY(ParameterBag parameters)
+        public static StepOutput RptRandomXY(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
             MersenneTwister mt = new MersenneTwister(seed);
             int low = parameters["low"].AsInt32;
             int high = parameters["high"].AsInt32;
             if (low > high)
-            {
-                int t = low;
-                low = high;
-                high = t;
-            }
+                (high, low) = (low, high);
             if (low >= 0 & high >= 1)
             {
                 int[] rand = new int[high + 2 ];
@@ -518,9 +510,7 @@ namespace StatsDirect.Builtins
                     for (int N = low; N <= high; N++)
                     {
                         int nrp = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
-                        int tmp = rand[N];
-                        rand[N] = rand[nrp];
-                        rand[nrp] = tmp;
+                        (rand[nrp], rand[N]) = (rand[N], rand[nrp]);
                     }
                 }
 
@@ -535,12 +525,12 @@ namespace StatsDirect.Builtins
                     allocationsParameters.AddOutput("index", N.ToString("#####"));
                     allocationsParameters.AddOutput("random", rand[N]);
                 }
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
-        public static ParameterBag RptSizeIndCase(ParameterBag parameters)
+        public static StepOutput RptSizeIndCase(ParameterBag parameters)
         {
             double power = parameters["p"].AsDouble;
             double alpha = parameters["a"].AsDouble;
@@ -612,12 +602,12 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * (sigma0 / sigmaa) * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, N));
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
-        public static ParameterBag RptSizeIndProp(ParameterBag parameters)
+        public static StepOutput RptSizeIndProp(ParameterBag parameters)
         {
             double P1;
             double zalpha = 0; double pbar = 0;
@@ -689,12 +679,12 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * (sigma0 / sigmaa) * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, N));
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
-        public static ParameterBag RptSizeMatchCase(ParameterBag parameters)
+        public static StepOutput RptSizeMatchCase(ParameterBag parameters)
         {
 
             double power = parameters["p"].AsDouble;
@@ -736,12 +726,12 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * sigmar * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, N));
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
-        public static ParameterBag RptSizeMatchProp(ParameterBag parameters)
+        public static StepOutput RptSizeMatchProp(ParameterBag parameters)
         {
             double P1;
             double N = 0;
@@ -803,7 +793,7 @@ namespace StatsDirect.Builtins
                 {
                     assumptionsList.Add(x_disclaim(1.0 - BETA, 1.0 - BETA + alpha / 2.0, N));
                 }
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
@@ -900,7 +890,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag RptSizePaired(ParameterBag parameters)
+        public static StepOutput RptSizePaired(ParameterBag parameters)
         {
             double N;
             double xn = 0;
@@ -940,13 +930,13 @@ namespace StatsDirect.Builtins
                 x_tres(outputParameters, false, a, b, P, M, N, D, sd);
                 if (!ok)
                     outputParameters.AddOutput("*sample_size_warn", new List<ParameterBag>{ new ParameterBag() });
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }
 
 
-        public static ParameterBag RptSizePopSurvey(ParameterBag parameters)
+        public static StepOutput RptSizePopSurvey(ParameterBag parameters)
         {
             // double af = 2; 
             double ps = parameters["ps"].AsDouble;
@@ -976,13 +966,13 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("deviation", xd * 100);
                 outputParameters.AddOutput("level", 100 * cco);
                 outputParameters.AddOutput("size", Math.Floor(sn) + 1);
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             return null;
         }
 
 
-        public static ParameterBag RptSizeUnPaired(ParameterBag parameters)
+        public static StepOutput RptSizeUnPaired(ParameterBag parameters)
         {
             double N; double xn = 0;
 
@@ -1024,7 +1014,7 @@ namespace StatsDirect.Builtins
                 x_tres(outputParameters, true, a, b, P, M, N, D, sd);
                 if (!ok)
                     outputParameters.AddOutput("*sample_size_warn", new List<ParameterBag> { new ParameterBag() });
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             throw new InvalidDataException();
         }

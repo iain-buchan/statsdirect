@@ -10,7 +10,7 @@
             this.func = func;
         }
 
-        ParameterBag IBuiltin.Invoke(ITemplateHost host, ParameterBag parameters) => func(host, parameters);
+        StepOutput IBuiltin.Invoke(ITemplateHost host, ParameterBag parameters) => func(host, parameters);
 
         InputDuringStep IMightRequireInput.RequiresInputGiven(ParameterBag parameters) => InputDuringStep.SometimesOrAlways;
 

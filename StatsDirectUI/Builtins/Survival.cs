@@ -62,7 +62,7 @@ namespace StatsDirect.Builtins
 
         }
 
-        public static ParameterBag RptKaplan(IPreferences host, ParameterBag parameters)
+        public static StepOutput RptKaplan(IPreferences host, ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0.0)
@@ -426,10 +426,10 @@ namespace StatsDirect.Builtins
             if (save)
                 outputParameters.AddOutput("results", resultsFrame);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptKaplanMeierPlots(ParameterBag parameters)
+        public static StepOutput RptKaplanMeierPlots(ParameterBag parameters)
         {
             int[] cnx = (int[])parameters["cnx"].AsObject;
             int[,] dead = (int[,])parameters["dead"].AsObject;
@@ -450,7 +450,7 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", renderable);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         public static IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
@@ -811,7 +811,7 @@ namespace StatsDirect.Builtins
             ifault = 0;
         }
 
-        public static ParameterBag RptWeiLachin(ParameterBag parameters)
+        public static StepOutput RptWeiLachin(ParameterBag parameters)
         {
             int gid2 = 0;
             int[,] s;
@@ -922,7 +922,7 @@ namespace StatsDirect.Builtins
             }
             if (ifault != 0)
                 throw new Exception("Error in calculation, report invalid");
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void XWeiLachin(ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
@@ -1385,7 +1385,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptLogRankPreprocess(ParameterBag parameters)
+        public static StepOutput RptLogRankPreprocess(ParameterBag parameters)
         {
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
             ClassifierVariable gidVariable = gidFrame.Variables[0] as ClassifierVariable;
@@ -1424,7 +1424,7 @@ namespace StatsDirect.Builtins
                     scores.Data[j - 1] = j;
                 outputParameters.AddInput("group_scores", new DataFrame(scores));
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void Petoprep(ParameterBag parameters, out int rows, out double gamma, out double cit, out int groups, out int strata, out double[] scores, out string gid, out double[] groupIds, out string[] groupLabels, out string[] stratumLabels, out bool ifault, out double[,] arr2, out ColumnData[] cdat1)
@@ -1608,7 +1608,7 @@ namespace StatsDirect.Builtins
             ifault = false;
         }
 
-        public static ParameterBag RptAbridgedLifetable(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptAbridgedLifetable(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             string uti = null;
 
@@ -1990,10 +1990,10 @@ namespace StatsDirect.Builtins
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptFollowUpLifetableCalculateNatst(ParameterBag parameters)
+        public static StepOutput RptFollowUpLifetableCalculateNatst(ParameterBag parameters)
         {
             DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
             DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
@@ -2012,10 +2012,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("natst-min", natst);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptFollowUpLifetable(ParameterBag parameters)
+        public static StepOutput RptFollowUpLifetable(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             double p = (1.0 - gamma) / 2.0;
@@ -2172,10 +2172,10 @@ namespace StatsDirect.Builtins
                 survivalParameters.AddOutput("lci", lc);
                 survivalParameters.AddOutput("uci", uc);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLogRank(IProgressBarHost host, ParameterBag parameters)
+        public static StepOutput RptLogRank(IProgressBarHost host, ParameterBag parameters)
         {
             Petoprep(parameters, out int nt, out double gamma, out double cit, out int groups, out int strata, out double[] score, out string gid, out double[] gpid, out string[] glab, out string[] slab, out bool ifault, out double[,] arr2, out _);
             if (ifault)
@@ -2685,7 +2685,7 @@ namespace StatsDirect.Builtins
                 while (!(test >= 2));
             }
             while (stratum != strata);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }

@@ -733,7 +733,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptKappa(IPreferences host, ParameterBag parameters)
+        public static StepOutput RptKappa(IPreferences host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             double cit; double p;
@@ -1012,7 +1012,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("pegama", pegama);
                     outputParameters.AddOutput("pegamapc", pegama * 100.0);
 
-                    return outputParameters;
+                    return new StepOutput(outputParameters);
                 }
                 throw new InvalidDataException();
                 // <----wt
@@ -1167,11 +1167,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("kw", r);
                 outputParameters.AddOutput("pw", p);
 
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
         }
 
-        public static ParameterBag RptKappaSimulateExactP(IProgressBarHost host, ParameterBag parameters)
+        public static StepOutput RptKappaSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
             int iter = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
@@ -1360,7 +1360,7 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("p", "P = * (cancelled)");
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
@@ -1486,7 +1486,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptKappaSizeWeights(ParameterBag parameters)
+        public static StepOutput RptKappaSizeWeights(ParameterBag parameters)
         {
             DataFrame frame = parameters["responses"].AsDataFrame;
 
@@ -1533,10 +1533,10 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("ycats", ycats);
             outputParameters.AddOutput("xcats", xcats);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptChiGfSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptChiGfSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
@@ -1576,7 +1576,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("warn", warn);
             outputParameters.AddOutput("k", actualIterations);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
@@ -1655,7 +1655,7 @@ namespace StatsDirect.Builtins
             return x2;
         }
 
-        public static ParameterBag RptChiSquareGoodnessOfFit(ParameterBag parameters)
+        public static StepOutput RptChiSquareGoodnessOfFit(ParameterBag parameters)
         {
             const string cgft = "Chi-square goodness of fit test";
 
@@ -1765,10 +1765,10 @@ namespace StatsDirect.Builtins
             //  Remember a few values in case the user then wants to simulate exact P
             outputParameters.AddInput("x2", x2);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
         {
             bool strat = false;
 
@@ -1855,10 +1855,10 @@ namespace StatsDirect.Builtins
                     outputParameters.AddInput("ycats", ycats);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCrosstabs(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput RptCrosstabs(ITemplateHost host, ParameterBag parameters)
         {
             double[] z = null;
             string zLabel = null;
@@ -2144,7 +2144,7 @@ namespace StatsDirect.Builtins
                     }
                 } // two factor <-----
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static ParameterBag TabCmh(ParameterBag parameters, int istrata, int irows, int icols, double[,,] zt, string ylab, string xlab, string zlab)
@@ -6338,7 +6338,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        public static ParameterBag RptChiWoolfWorksheet(ParameterBag parameters)
+        public static StepOutput RptChiWoolfWorksheet(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0)
@@ -6372,10 +6372,10 @@ namespace StatsDirect.Builtins
             }
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
-            return Woolf(o, k, showIntermediates, cit, cco, out bool _);
+            return new StepOutput(Woolf(o, k, showIntermediates, cit, cco, out bool _));
         }
 
-        public static ParameterBag ShtDetabulate(ParameterBag parameters)
+        public static StepOutput ShtDetabulate(ParameterBag parameters)
         {
             int i; int j;
 
@@ -6429,10 +6429,10 @@ namespace StatsDirect.Builtins
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag ShtTabulate(ParameterBag parameters)
+        public static StepOutput ShtTabulate(ParameterBag parameters)
         {
             DataFrame rowsFrame = parameters["rows"].AsDataFrame;
             ClassifierVariable rowsVariable = (ClassifierVariable)rowsFrame.Variables[0];
@@ -6503,7 +6503,7 @@ namespace StatsDirect.Builtins
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("output", outputFrame);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 

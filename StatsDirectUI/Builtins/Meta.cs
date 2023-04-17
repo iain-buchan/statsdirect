@@ -14,7 +14,7 @@ namespace StatsDirect.Builtins
 {
     public static class Meta
     {
-        public static ParameterBag RptPetoMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptPetoMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double rmh = 0;
 
@@ -254,7 +254,7 @@ namespace StatsDirect.Builtins
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true)));
             }
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         public static void Metabias(IProgressBarHost host, ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
@@ -456,7 +456,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", prob);
         }
 
-        public static ParameterBag RptRiskDifferenceMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptRiskDifferenceMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
@@ -614,10 +614,10 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptRelativeRiskMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptRelativeRiskMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             const int lowerBound = 1;
 
@@ -766,7 +766,7 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         // TODO: Move this somewhere more sensible now that it's used by functions outside meta.
@@ -811,7 +811,7 @@ namespace StatsDirect.Builtins
             return title;
         }
 
-        public static ParameterBag RptEffect(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptEffect(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
@@ -1105,7 +1105,7 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size")));
 
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             else
             {
@@ -1258,7 +1258,7 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference")));
 
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
         }
 
@@ -1672,11 +1672,11 @@ namespace StatsDirect.Builtins
             Ratio = 2
         }
 
-        public static ParameterBag RptMetaIncidenceRateRatio(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Ratio);
+        public static StepOutput RptMetaIncidenceRateRatio(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Ratio);
 
-        public static ParameterBag RptMetaIncidenceRateDifference(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Difference);
+        public static StepOutput RptMetaIncidenceRateDifference(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Difference);
 
-        private static ParameterBag RptMetaIncidenceRate(IPreferencesAndProgressBar host, ParameterBag parameters, MetaIncidenceRateMode mode)
+        private static StepOutput RptMetaIncidenceRate(IPreferencesAndProgressBar host, ParameterBag parameters, MetaIncidenceRateMode mode)
         {
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
@@ -1921,9 +1921,9 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio")));
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
-        public static ParameterBag RptMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double p2M = 0; double p1M = 0;
             double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0;
@@ -2158,7 +2158,7 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         public static void Mantel(IPreferencesAndProgressBar host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr)
@@ -2678,7 +2678,7 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
-        public static ParameterBag RptMetaSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptMetaSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double dsul; double dsll; double dsrr;
             double tausq;
@@ -2940,10 +2940,10 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio)));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptMetaCorrelation(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptMetaCorrelation(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double tausq;
             double cit;
@@ -3223,7 +3223,7 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         public static void OrciCorn(IPreferences host, ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
@@ -3401,7 +3401,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptProportionMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptProportionMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
             VarianceStabilisationMethod method = "doubleArcsine".Equals(parameters["method"].AsString) ? VarianceStabilisationMethod.DoubleArcsine : VarianceStabilisationMethod.ArcsineSquareRoot;
@@ -3627,7 +3627,7 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static double ArcsineP(double r, double n)

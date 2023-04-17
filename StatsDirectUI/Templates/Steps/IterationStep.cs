@@ -85,7 +85,7 @@ namespace StatsDirect.Templates
         /// </summary>
         public IList<Step> Steps => steps;
 
-        public override ParameterBag ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
+        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
         {
             return processor.ExecuteInternal(this, parameters, isRedo);
         }

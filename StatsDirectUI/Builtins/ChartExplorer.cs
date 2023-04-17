@@ -24,7 +24,7 @@ namespace StatsDirect.Builtins
 
     public class ChartExplorer
     {
-        public static ParameterBag ExploreContinuousDistributions(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput ExploreContinuousDistributions(ITemplateHost host, ParameterBag parameters)
         {
             ChartExplorerOptions options = new ChartExplorerOptions {ChartType = ChartExplorerChartType.Histogram, Parameters = parameters};
             if (null == host.Amend(options, parameters))
@@ -34,10 +34,10 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("chart", options.ChartAsRtf);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag CompareSeveralContinuousVariables(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput CompareSeveralContinuousVariables(ITemplateHost host, ParameterBag parameters)
         {
             ChartExplorerOptions options = new ChartExplorerOptions {ChartType = ChartExplorerChartType.BoxWhisker, Parameters = parameters};
             if (null == host.Amend(options, parameters))
@@ -47,7 +47,7 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("chart", options.ChartAsRtf);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }

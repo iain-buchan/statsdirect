@@ -1729,7 +1729,7 @@ namespace StatsDirect.UI
 
                 // Self-referential operations are assumed to be instant and repeatable, so are set up immediately in the interface.  Others are run normally, and only then do they get any follow-on operations.
                 ITemplateProcessor templateProcessor = new TemplateProcessor(SdApplication.SoleInstance);
-                ParameterBag outputParameters;
+                StepOutput outputParameters;
                 SuggestFromOperation(operation, inputParameters, SuggestionTime.BeforeOperation);
                 if (operation.SuggestsSelf)
                 {
@@ -1754,7 +1754,7 @@ namespace StatsDirect.UI
                 else
                 {
                     endingParameters = new ParameterBag();
-                    foreach (KeyValuePair<string, FilledParameter> pair in outputParameters.Pairs)
+                    foreach (KeyValuePair<string, FilledParameter> pair in outputParameters.ParameterBag.Pairs)
                     {
                         if (pair.Value.IsInputParameter)
                             endingParameters.Add(pair);
@@ -1775,15 +1775,15 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="results"></param>
         /// <param name="operation"></param>
-        private static void NoteOperation(ParameterBag results, Operation operation)
+        private static void NoteOperation(StepOutput results, Operation operation)
         {
             if (null == results)
                 return;
 
             // TODO: Do we need to clone the list (or, more likely, the FilledParameter and the list) so that operations that are cancelled don't pollute the list of operations that succeed?
-            if (!results.ContainsKey(OPERATION_MEMORY_NAME))
-                results.AddInput(OPERATION_MEMORY_NAME, new List<string>());
-            IList<string> operations = results[OPERATION_MEMORY_NAME].AsStringList;
+            if (!results.ParameterBag.ContainsKey(OPERATION_MEMORY_NAME))
+                results.ParameterBag.AddInput(OPERATION_MEMORY_NAME, new List<string>());
+            IList<string> operations = results.ParameterBag[OPERATION_MEMORY_NAME].AsStringList;
             string operationName = operation.Name;
             if (!operations.Contains(operationName))
                 operations.Add(operationName);
@@ -1963,7 +1963,7 @@ namespace StatsDirect.UI
         /// <param name="processor"></param>
         /// <param name="operation"></param>
         /// <param name="context"></param>
-        private ParameterBag SetInterfaceAndTryToRun(ITemplateProcessor processor, Operation operation, ParameterBag context)
+        private StepOutput SetInterfaceAndTryToRun(ITemplateProcessor processor, Operation operation, ParameterBag context)
         {
             // Iff the operation has some initial parameters that can be batched, we should start it and let it populate those parameters
             bool shouldRun = ShouldRunOperationOnSelection(operation, context);
@@ -1971,7 +1971,7 @@ namespace StatsDirect.UI
             if (!shouldRun)
                 return null; // Cannot be run now, as the operation has no initial parameters, so no results
 
-            ParameterBag results = processor.Execute(operation, context, false);
+            StepOutput results = processor.Execute(operation, context, false);
             if (null != results)
                 NoteOperation(results, operation);
             return results;

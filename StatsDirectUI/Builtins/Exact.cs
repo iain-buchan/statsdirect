@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
 {
     public static class Exact
     {
-        public static ParameterBag RptExactSign(ParameterBag parameters)
+        public static StepOutput RptExactSign(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
@@ -85,23 +85,23 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("upper", piu);
             outputParameters.AddOutput("warn", warn);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptExactFisher(ParameterBag parameters)
+        public static StepOutput RptExactFisher(ParameterBag parameters)
         {
             int fault = 0;
             int a = Convert.ToInt32(parameters["a"].AsDouble);
             int b = Convert.ToInt32(parameters["b"].AsDouble);
             int c = Convert.ToInt32(parameters["c"].AsDouble);
             int d = Convert.ToInt32(parameters["d"].AsDouble);
-            ParameterBag outputResult = Tables.SFisher(ref a, ref b, ref c, ref d, ref fault);
+            ParameterBag outputParameters = Tables.SFisher(ref a, ref b, ref c, ref d, ref fault);
             if (fault != 0)
                 throw new TemplateOperationCancelledException();
-            return outputResult;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptExactFisherX(ParameterBag parameters)
+        public static StepOutput RptExactFisherX(ParameterBag parameters)
         {
             int fault = 0;
 
@@ -306,10 +306,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("mid_p_2", Math.Min(midP * 2.0, 1.0));
 
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptChiWoolf(ParameterBag parameters)
+        public static StepOutput RptChiWoolf(ParameterBag parameters)
         {
             int rc;
 
@@ -343,11 +343,11 @@ namespace StatsDirect.Builtins
                 o[cnt, 4] = rtd;
             }
 
-            return Tables.Woolf(o, k, showIntermediates, cit, cco, out bool ierr);
+            return new StepOutput(Tables.Woolf(o, k, showIntermediates, cit, cco, out bool ierr));
         }
 
 
-        public static ParameterBag RptExactMcNamar(ParameterBag parameters)
+        public static StepOutput RptExactMcNamar(ParameterBag parameters)
         {
             double ba = parameters["a"].AsDouble;
             double bb = parameters["b"].AsDouble;
@@ -432,11 +432,11 @@ namespace StatsDirect.Builtins
             if (p < 0.05)
                 rPrimeList.Add(new ParameterBag());
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptExactORCML(IProgressBarHost host, ParameterBag parameters)
+        public static StepOutput RptExactORCML(IProgressBarHost host, ParameterBag parameters)
         {
             // Gart replaced by CML in May 2001
 
@@ -469,10 +469,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ulm", ulm);
             outputParameters.AddOutput("p1m", p1m);
             outputParameters.AddOutput("p2m", p2m);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptRatePoissonCI(ParameterBag parameters)
+        public static StepOutput RptRatePoissonCI(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             double alpha = 1.0 - cco;
@@ -497,7 +497,7 @@ namespace StatsDirect.Builtins
             Rates.poisson_ci(alpha, revents, tar, out double xl, out double xu);
             outputParameters.AddOutput("from", xl);
             outputParameters.AddOutput("to", xu);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }

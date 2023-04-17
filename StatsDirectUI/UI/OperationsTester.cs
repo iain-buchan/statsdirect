@@ -35,19 +35,19 @@ namespace StatsDirect.UI
             if (test.Inputs.Count == 0 && test.Outputs.Count == 0)
                 return;
             ITemplateProcessor templateProcessor = new TemplateProcessor(new OperationTestHost(test.Inputs));
-            ParameterBag outputParameters = templateProcessor.Execute(operation, new ParameterBag(), false);
-            VerifyOutputs(operation, outputParameters, test.Outputs);
+            StepOutput stepOutput = templateProcessor.Execute(operation, new ParameterBag(), false);
+            VerifyOutputs(operation, stepOutput, test.Outputs);
         }
 
-        private static void VerifyOutputs(Operation operation, ParameterBag outputParameters, IList<OperationTestOutputParameter> outputs)
+        private static void VerifyOutputs(Operation operation, StepOutput stepOutput, IList<OperationTestOutputParameter> outputs)
         {
-            if (null == outputParameters)
+            if (null == stepOutput.ParameterBag)
                 throw new Exception($"Operation {operation.Name} failed: no output parameter bag");
 
             // Test each output that is present; where nothing is specified for something that is in outputParameters, no assumptions are made.
             foreach (var output in outputs)
             {
-                bool found = TryGetPath(outputParameters, output.Name, out FilledParameter parameter, operation.Name);
+                bool found = TryGetPath(stepOutput.ParameterBag, output.Name, out FilledParameter parameter, operation.Name);
                 if (output.ShouldBeMissing)
                 {
                     // The relevant name shouldn't be mentioned in outputParameters at all

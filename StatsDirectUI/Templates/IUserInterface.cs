@@ -8,7 +8,7 @@ namespace StatsDirect.Templates
     /// </summary>
     public interface IUserInterface
     {
-        bool GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled);
+        bool GetBoolean(string prompt, string title, bool initialValue, out bool cancelled);
 
         /// <summary>
         /// Cause the report to be output in some way, for example by asking the user where to render it, then rendering it.
@@ -75,10 +75,10 @@ namespace StatsDirect.Templates
         /// This must be able to deal with all subclasses of Parameter.
         /// </summary>
         /// <param name="processor"></param>
-        /// <param name="Parameter"></param>
+        /// <param name="parameter"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        void PrepareParameter(ITemplateProcessor processor, Parameter Parameter, ParameterBag context);
+        void PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context);
 
         /// <summary>
         /// Cause the frame to be output in some way, for example by asking the user in which grid to put it, then filling in the grid.

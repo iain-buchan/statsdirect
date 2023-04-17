@@ -13,7 +13,7 @@ namespace StatsDirect.Builtins
 {
     public static class ImportExport
     {
-        public static ParameterBag FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             // import data to the active worksheet
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -34,14 +34,13 @@ namespace StatsDirect.Builtins
 
                 using (IProgressBar progress = host.StartProgress("Importing data", false))
                 {
-                    ParameterBag outputParameters = FileImportAscii(openFileDialog.FileName);
-                    return outputParameters;
+                    return FileImportAscii(openFileDialog.FileName);
                 }
             }
         }
 
 
-        public static ParameterBag FileImportReport()
+        public static StepOutput FileImportReport()
         {
             // import text to the active report
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -60,12 +59,12 @@ namespace StatsDirect.Builtins
                     string fileContents = sr.ReadToEnd();
                     ParameterBag outputParameters = new ParameterBag();
                     outputParameters.AddOutput("rtf", fileContents);
-                    return outputParameters;
+                    return new StepOutput(outputParameters);
                 }
             }
         }
 
-        private static ParameterBag FileImportAscii(string path)
+        private static StepOutput FileImportAscii(string path)
         {
             // If the file contains Tabs read as tab-delimited; otherwise, read as Excel comma-delimited.
             bool isTabDelimited = SniffForTabs(path);
@@ -75,7 +74,7 @@ namespace StatsDirect.Builtins
                 DataFrame outputFrame = isTabDelimited ? ImportTabSeparated(sr) : ImportCommaSeparated(sr);
                 ParameterBag outputParameters = new ParameterBag();
                 outputParameters.AddOutput("output", outputFrame);
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
         }
 
@@ -155,7 +154,7 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static ParameterBag FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
@@ -211,7 +210,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            return new ParameterBag();
+            return StepOutput.Empty();
         }
 
         /// <param name="contents"></param>

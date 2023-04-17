@@ -5,7 +5,7 @@ namespace StatsDirect.Builtins
 {
     static class Options
     {
-        public static ParameterBag SetAnalysisOptions(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput SetAnalysisOptions(ITemplateHost host, ParameterBag parameters)
         {
             SDPreferences preferences = host.Preferences;
             preferences.CanDefaultConfidenceInterval = parameters["use-default-ci"].AsBoolean;
@@ -15,13 +15,13 @@ namespace StatsDirect.Builtins
             preferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
             preferences.ShouldKeepData = parameters["should-keep-data"].AsBoolean;
             preferences.UseScientificNotationForSmallPValues = parameters["use-scientific-notation-for-small-p-values"].AsBoolean;
-            return new ParameterBag();
+            return StepOutput.Empty();
         }
 
-        public static ParameterBag ShowGraphicsOptions(ITemplateHost host, ParameterBag parameters)
+        public static StepOutput ShowGraphicsOptions(ITemplateHost host, ParameterBag parameters)
         {
             host.Amend(new GraphicsOptions(), parameters);
-            return new ParameterBag();
+            return StepOutput.Empty();
         }
     }
 }

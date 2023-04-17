@@ -53,7 +53,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptRateSmr(ParameterBag parameters)
+        public static StepOutput RptRateSmr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 || cco < 0.0)
@@ -128,11 +128,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("p_hi", phi);
                 outputParameters.AddOutput("p_lo", plo);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptRateDirect(ParameterBag parameters)
+        public static StepOutput RptRateDirect(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco > 1.0 || cco < 0.0)
@@ -264,10 +264,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("from_dobson", nunit * xl);
             outputParameters.AddOutput("to_dobson", nunit * xu);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptStdrr(ParameterBag parameters)
+        public static StepOutput RptStdrr(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0)
@@ -653,7 +653,7 @@ namespace StatsDirect.Builtins
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 2, title, rkr, rkrl, rkru, rkw, pg, "Stratified rate ratio plot (direct standardization)", "rate ratio (" + Formatting.XRound(cco * 100, 1) + "% confidence interval)", Transformation.Log, false)));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }

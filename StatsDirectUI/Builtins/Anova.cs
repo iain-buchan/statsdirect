@@ -370,7 +370,7 @@ namespace StatsDirect.Builtins
             isLowPower = nxx < 11;
         }
 
-        public static ParameterBag RptAgreement(IProgressBarHost host, ParameterBag parameters)
+        public static StepOutput RptAgreement(IProgressBarHost host, ParameterBag parameters)
         {
             long ntot = 0;
             double sum;
@@ -584,10 +584,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", df);
             outputParameters.AddOutput("pvalues", new DataFrame(new DoubleVariable(pvalues)));
             outputParameters.AddOutput("xxm", new DataFrame(new DoubleVariable(xxm)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptOneWay(ParameterBag parameters)
+        public static StepOutput RptOneWay(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -662,13 +662,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("msres", mserr);
             outputParameters.AddInput("mean", mean);
             outputParameters.AddInput("tnx", tnx);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
         ///  Given one or more data columns and a grouping column: split each data column in turn into variables based on the grouping column, and run one one-way ANOVA for each data column.
         ///  </summary>
-        public static ParameterBag RptGroupedOneWay(ParameterBag parameters)
+        public static StepOutput RptGroupedOneWay(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DataFrame groupFrame = parameters["groups"].AsDataFrame;
@@ -702,17 +702,17 @@ namespace StatsDirect.Builtins
                 }
 
                 ParameterBag oneWayParameters = new ParameterBag {{"data", FilledParameterFactory.Input(oneWayFrame)}};
-                ParameterBag oneWayResult = RptOneWay(oneWayParameters);
-                oneWayResult.AddOutput("variableName", v.Title);
-                aList.Add(oneWayResult);
+                StepOutput oneWayResult = RptOneWay(oneWayParameters);
+                oneWayResult.ParameterBag.AddOutput("variableName", v.Title);
+                aList.Add(oneWayResult.ParameterBag);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
         ///  Given one or more data columns, a row grouping column and a column grouping column: split each data column in turn into variables based on the grouping columns, and run one two-way ANOVA for each data column.
         ///  </summary>
-        public static ParameterBag RptGroupedTwoWay(ParameterBag parameters)
+        public static StepOutput RptGroupedTwoWay(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DataFrame blocksFrame = parameters["blocks"].AsDataFrame;
@@ -750,15 +750,15 @@ namespace StatsDirect.Builtins
                 }
 
                 ParameterBag twoWayParameters = new ParameterBag {{"data", FilledParameterFactory.Input(twoWayFrame)}};
-                ParameterBag twoWayResult = RptTwoWay(twoWayParameters);
-                twoWayResult.AddOutput("variableName", v.Title);
-                aList.Add(twoWayResult);
+                StepOutput twoWayResult = RptTwoWay(twoWayParameters);
+                twoWayResult.ParameterBag.AddOutput("variableName", v.Title);
+                aList.Add(twoWayResult.ParameterBag);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <remarks>Precondition: the frame passed in has equal-length columns.</remarks>
-        public static ParameterBag RptTwoWay(ParameterBag parameters)
+        public static StepOutput RptTwoWay(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             DoubleVariable v0 = frame.Variables[0]as DoubleVariable;
@@ -844,10 +844,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("ssgp", sscol);
             outputParameters.AddInput("sstot", sstot);
             outputParameters.AddInput("tnx", tnx);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTwoMulti(ParameterBag parameters)
+        public static StepOutput RptTwoMulti(ParameterBag parameters)
         {
             DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
 
@@ -973,10 +973,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("tnx", tnx);
             outputParameters.AddInput("data", outputFrame);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTwoNest(ParameterBag parameters)
+        public static StepOutput RptTwoNest(ParameterBag parameters)
         {
             DataFrame2D frame = parameters["data2d"].AsDataFrame2D;
 
@@ -1071,10 +1071,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("sgbar", sgbar);
             outputParameters.AddInput("gm", gm);
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptBonferroni(ParameterBag parameters)
+        public static StepOutput RptBonferroni(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
@@ -1111,10 +1111,10 @@ namespace StatsDirect.Builtins
             string qx = comparisons + " comparison" + (comparisons == 1 ? string.Empty : "s");
             outputParameters.AddOutput("comp", qx);
             outputParameters.AddOutput("bonf", 0.05 / comparisons);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTukey(ParameterBag parameters)
+        public static StepOutput RptTukey(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
@@ -1228,10 +1228,10 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("*differences", differencesList);
             outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, dalpha));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptScheffe(ParameterBag parameters)
+        public static StepOutput RptScheffe(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
@@ -1312,7 +1312,7 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("*differences", differencesList);
             outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, palpha));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         /// <summary>
@@ -1361,7 +1361,7 @@ namespace StatsDirect.Builtins
             return outputList;
         }
 
-        public static ParameterBag RptNewmanKeuls(ParameterBag parameters)
+        public static StepOutput RptNewmanKeuls(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
@@ -1458,10 +1458,10 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("*differences", differencesList);
             outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, palpha));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptDunnett(ParameterBag parameters)
+        public static StepOutput RptDunnett(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
@@ -1550,10 +1550,10 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("p", hold[i].P);
             }
             outputParameters.AddOutput("*differences", differencesList);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptEqualityOfVariance(ParameterBag parameters)
+        public static StepOutput RptEqualityOfVariance(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
 
@@ -1734,10 +1734,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("dfnWelch", dfGroup);
             outputParameters.AddOutput("dfdWelch", dfdWelch);
             outputParameters.AddOutput("pWelch", pWelch);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptNestMeans(ParameterBag parameters)
+        public static StepOutput RptNestMeans(ParameterBag parameters)
         {
             if (parameters.ContainsKey("data2d") && parameters.ContainsKey("ctr") && parameters.ContainsKey("ngp") && parameters.ContainsKey("gbar") && parameters.ContainsKey("sgbar") && parameters.ContainsKey("gm") && parameters.ContainsKey("ctr"))
             {
@@ -1779,13 +1779,13 @@ namespace StatsDirect.Builtins
                         subGroupList.Add(subGroupParameters);
                     }
                 }
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
 
             throw new Exception("Trying to call rptNestMeans without the prerequisites set");
         }
 
-        public static ParameterBag RptLatin(ParameterBag parameters)
+        public static StepOutput RptLatin(ParameterBag parameters)
         {
             //  Get observations into a temporary vector v - precondition: the number of observations is a square
             DataFrame observationFrame = parameters["observations"].AsDataFrame;
@@ -1943,10 +1943,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_col", PDF.fvalp(fc, df, dfres));
             outputParameters.AddOutput("f_treat", ftr);
             outputParameters.AddOutput("p_treat", PDF.fvalp(ftr, df, dfres));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCrossover(ParameterBag parameters)
+        public static StepOutput RptCrossover(ParameterBag parameters)
         {
             double dif; double difss1 = 0; double sumsum1 = 0; double dsum = 0; double psum = 0;
             double sumss2 = 0; double difss2 = 0;
@@ -2120,7 +2120,7 @@ namespace StatsDirect.Builtins
             if (p > 1.0 - p)
                 p = 1.0 - p;
             outputParameters.AddOutput("tpi_p", p * 2.0);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static ParameterCarrier FindOrCalculateParameters(ParameterBag parameters)

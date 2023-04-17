@@ -119,7 +119,7 @@ namespace StatsDirect.Builtins
             throw new Exception("Expected to find a context parameter and didn't");
         }
 
-        public static ParameterBag RptInterpolateXY(ParameterBag parameters)
+        public static StepOutput RptInterpolateXY(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             double newx = parameters["newx"].AsDouble;
@@ -129,10 +129,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("v1", newx);
             outputParameters.AddOutput("t2", context.YTitle);
             outputParameters.AddOutput("v2", newy);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptInterpolateYX(ParameterBag parameters)
+        public static StepOutput RptInterpolateYX(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             double newy = parameters["newy"].AsDouble;
@@ -142,10 +142,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("v1", newy);
             outputParameters.AddOutput("t2", context.XTitle);
             outputParameters.AddOutput("v2", newx);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptRanv(ParameterBag parameters)
+        public static StepOutput RptRanv(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             ParameterBag outputParameters = new ParameterBag();
@@ -165,10 +165,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", prob);
             outputParameters.AddOutput("r", context.SSREG / context.SSY);
             outputParameters.AddOutput("mse", Math.Sqrt((context.SSY - context.SSREG) / resDf));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptSimpleLinearRegression(ParameterBag parameters)
+        public static StepOutput RptSimpleLinearRegression(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
 
@@ -248,10 +248,10 @@ namespace StatsDirect.Builtins
             }
 
             outputParameters.AddInput("context", context.StripForOutput());
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag PlotSimpleLinearRegression(ParameterBag parameters)
+        public static StepOutput PlotSimpleLinearRegression(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             ParameterBag outputParameters = new ParameterBag();
@@ -260,10 +260,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("xtitle", context.XTitle);
             outputParameters.AddOutput("ytitle", context.YTitle);
             outputParameters.AddOutput("chartIsFullWidth", true);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag PlotResidualsSimple(ParameterBag parameters)
+        public static StepOutput PlotResidualsSimple(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             context.CalculateLeastSquaresMethod();
@@ -292,7 +292,7 @@ namespace StatsDirect.Builtins
                     predicted[j] = Constant.MISSING;
             }
             outputParameters.AddOutput("residualsNormalPlot", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(ranked, ranks, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals [linear regression]", false, DataMinMax.XCalc_YCalc)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace StatsDirect.Builtins
         /// <param name="host"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public static ParameterBag PlotSeCi(ParameterBag parameters)
+        public static StepOutput PlotSeCi(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             context.CalculateLeastSquaresMethod();
@@ -310,10 +310,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LinearRegressionAndMaybeSeCiOrPredictionInterval, new LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions("SE and " + Formatting.XRound((1.0 - context.P0) * 100, 1) + "% CI for regression estimate", context.Slope, context.YIntercept, true, context.XTitle, context.YTitle, context.PERT, context.NX, context.MS, context.SumX, context.SSX, false), new DoubleSeries(context.X, context.XTitle), new DoubleSeries(context.Y, context.YTitle)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag PlotPredictionInterval(ParameterBag parameters)
+        public static StepOutput PlotPredictionInterval(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             context.CalculateLeastSquaresMethod();
@@ -322,10 +322,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LinearRegressionAndMaybeSeCiOrPredictionInterval, new LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions(Formatting.XRound((1.0 - context.P0) * 100, 1) + "% Prediction Interval", context.Slope, context.YIntercept, true, context.XTitle, context.YTitle, context.PERT, context.NX, context.MS, context.SumX, context.SSX, true), new DoubleSeries(context.X, context.XTitle), new DoubleSeries(context.Y, context.YTitle)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCiMeanY(ParameterBag parameters)
+        public static StepOutput RptCiMeanY(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             int nx = context.NX;
@@ -352,10 +352,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pcp", 100 * (1.0 - context.P0));
             outputParameters.AddOutput("fromp", ncon);
             outputParameters.AddOutput("top", pcon);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag CalcSimpleLinearRegressionCi(ParameterBag parameters)
+        public static StepOutput CalcSimpleLinearRegressionCi(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             double REGGAMMA = parameters["gamma"].AsDouble;
@@ -384,17 +384,17 @@ namespace StatsDirect.Builtins
             }
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("data", outputFrame);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPrincipalComponentsRegressionCorrelation(ParameterBag parameters)
+        public static StepOutput RptPrincipalComponentsRegressionCorrelation(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             bool correctForReversal = parameters["correctForReversal"].AsBoolean;
             return CalcPrincipal(frame, out double[,] _, out double[,] _, out double[,] _, out double[,] _, 1, out int _, out int _, correctForReversal);
         }
 
-        public static ParameterBag RptPrincipalComponentsRegressionCovariance(ParameterBag parameters)
+        public static StepOutput RptPrincipalComponentsRegressionCovariance(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             bool correctForReversal = parameters["correctForReversal"].AsBoolean;
@@ -415,7 +415,7 @@ namespace StatsDirect.Builtins
         /// <param name="host"></param>
         /// <param name="correctForReversal"></param>
         /// <remarks></remarks>
-        private static ParameterBag CalcPrincipal(DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int n, out int nx, bool correctForReversal)
+        private static StepOutput CalcPrincipal(DataFrame frame, out double[,] x, out double[,] xc, out double[,] xr, out double[,] v, int irv, out int n, out int nx, bool correctForReversal)
         {
             int ifault = 0;
             double cum = 0; double dsum = 0;
@@ -510,7 +510,7 @@ namespace StatsDirect.Builtins
             }
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { X = x, H = xc, R2 = xr, V = v, M = irv, P = n, N = nx };
             outputParameters.AddInput("context", context.StripForOutput());
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
@@ -611,7 +611,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptMultipleLinearRegression(ParameterBag parameters)
+        public static StepOutput RptMultipleLinearRegression(ParameterBag parameters)
         {
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
             DoubleVariable outcomeVariable = (DoubleVariable)outcomeFrame.Variables[0];
@@ -696,7 +696,7 @@ namespace StatsDirect.Builtins
                 context.N = cnt;
             }
             (context.P, context.M) = x_glin(context, context.P, context.M);
-            return MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, false, context.M, dropWarning);
+            return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, false, context.M, dropWarning));
         }
 
 
@@ -1012,7 +1012,7 @@ namespace StatsDirect.Builtins
             return (bss, ctss, yfit, ifault);
         }
 
-        public static ParameterBag RptMultipleLinearRegressionAnova(IFormatting host, ParameterBag parameters)
+        public static StepOutput RptMultipleLinearRegressionAnova(IFormatting host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double ci = parameters["ci"].AsDouble;
@@ -1069,10 +1069,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ra2", r2 * 100);
             Regress1.x_dwsd(context.R, context.N, out double dw);
             outputParameters.AddOutput("dw", dw);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptMultipleLinearRegressionPrediction(ParameterBag parameters)
+        public static StepOutput RptMultipleLinearRegressionPrediction(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double gamma = parameters["ci"].AsDouble;
@@ -1128,10 +1128,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pred_pc", 100 * (1.0 - p0));
             outputParameters.AddOutput("pred_from", newy - pl);
             outputParameters.AddOutput("pred_to", newy + pl);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag PlotMultipleLinearRegressionResiduals(ParameterBag parameters)
+        public static StepOutput PlotMultipleLinearRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double[] r;
@@ -1165,10 +1165,10 @@ namespace StatsDirect.Builtins
                     r[j] = Constant.MISSING;
             }
             chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptMultipleLinearRegressionParameterDetail(ParameterBag parameters)
+        public static StepOutput RptMultipleLinearRegressionParameterDetail(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             int iq = 0;
@@ -1263,7 +1263,7 @@ namespace StatsDirect.Builtins
                 // not calc if SVD used cos no r matrix
                 outputParameters.AddOutput("meanv", "not calculated");
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         /// <summary>
@@ -1299,7 +1299,7 @@ namespace StatsDirect.Builtins
             return outerList;
         }
 
-        public static ParameterBag RptXxi(ParameterBag parameters)
+        public static StepOutput RptXxi(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
 
@@ -1337,10 +1337,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*xxi", ToOutputParameter(context.H, 1, context.P, 1, context.P, "*col", "x", v => v));
             outputParameters.AddOutput("*covar", ToOutputParameter(context.H, 1, context.P, 1, context.P, "*col", "x", v => rms * v));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptMultipleLinearRegressionResiduals(ParameterBag parameters)
+        public static StepOutput RptMultipleLinearRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double ci = parameters["ci"].AsDouble;
@@ -1490,11 +1490,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("zstu", srcrit);
             outputParameters.AddOutput("zjack", jackcrit);
             outputParameters.AddOutput("zdfit", dfcrit);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptMultipleLinearRegressionBestSubset(ParameterBag parameters)
+        public static StepOutput RptMultipleLinearRegressionBestSubset(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             bool[] selectedPredictors = (bool[])parameters["selectedPredictors"].AsObject;
@@ -1650,7 +1650,7 @@ namespace StatsDirect.Builtins
             foreach (KeyValuePair<string, FilledParameter> pair in otherParameters.Pairs)
                 outputParameters[pair.Key] = pair.Value;
             outputParameters.AddOutput("subsetApplied", true);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static bool x_forceinc(int forced, int[] force, int j, int[] preds)
@@ -1716,7 +1716,7 @@ namespace StatsDirect.Builtins
             return frame;
         }
 
-        public static ParameterBag RptPrincipalComponentsRegressionCoefficients(ParameterBag parameters)
+        public static StepOutput RptPrincipalComponentsRegressionCoefficients(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1745,10 +1745,10 @@ namespace StatsDirect.Builtins
                     resParameters.AddOutput("res", context.V[j, i]);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCronbach(ParameterBag parameters)
+        public static StepOutput RptCronbach(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1882,10 +1882,10 @@ namespace StatsDirect.Builtins
                     standardParameters.AddOutput("x", Formatting.ASTERISK);
                 standardParameters.AddOutput("a-t", alpha - talpha);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPrincipalComponentsRegressionScores(ParameterBag parameters)
+        public static StepOutput RptPrincipalComponentsRegressionScores(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             int n = context.P;
@@ -1939,10 +1939,10 @@ namespace StatsDirect.Builtins
                     resParameters.AddOutput("res", ps);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPrincipalComponentsRegressionMatrix(ParameterBag parameters)
+        public static StepOutput RptPrincipalComponentsRegressionMatrix(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -1975,10 +1975,10 @@ namespace StatsDirect.Builtins
                     resParameters.AddOutput("res", context.M == 1 ? xr[j, i] : xc[j, i]);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLinearizedEstimates(ParameterBag parameters)
+        public static StepOutput RptLinearizedEstimates(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             int model = 0;
@@ -2024,10 +2024,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("r2", context.R * context.R);
             outputParameters.AddOutput("ste", context.SeEst);
             outputParameters.AddInput("context", context.StripForOutput());
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLinearizedEstimateInterpolation(ParameterBag parameters)
+        public static StepOutput RptLinearizedEstimateInterpolation(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
             int model = 0;
@@ -2056,10 +2056,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("res_x", newx);
             outputParameters.AddOutput("lab_y", context.YTitle);
             outputParameters.AddOutput("res_y", newy);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLinearizedEstimatePlot(ParameterBag parameters)
+        public static StepOutput RptLinearizedEstimatePlot(ParameterBag parameters)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
@@ -2072,10 +2072,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LinearizedEstimation, new LinearizedEstimationOptions(string.Empty, model, context.A, context.G, vX.Title, vY.Title), new DoubleSeries(vX.Data, vX.Title), new DoubleSeries(vY.Data, vY.Title)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPolynomialRegression(ParameterBag parameters)
+        public static StepOutput RptPolynomialRegression(ParameterBag parameters)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
@@ -2083,7 +2083,7 @@ namespace StatsDirect.Builtins
             MultipleLinearRegressionContext context = new MultipleLinearRegressionContext { N = vY.Length, P = P, DoC = true };
             CalcPoly(parameters, context);
             (context.P, context.M) = x_glin(context, context.P, context.M);
-            return MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, true, context.M, null);
+            return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, true, context.M, null));
         }
 
         ///  <summary>
@@ -2131,7 +2131,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptPolynomialRegressionInterpolation(ParameterBag parameters)
+        public static StepOutput RptPolynomialRegressionInterpolation(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[,] xtxi = context.H;
@@ -2172,10 +2172,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to_conf", newy + cl);
             outputParameters.AddOutput("from_pred", newy - pl);
             outputParameters.AddOutput("to_pred", newy + pl);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPolynomialRegressionPlot(ParameterBag parameters)
+        public static StepOutput RptPolynomialRegressionPlot(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             ParameterBag outputParameters = new ParameterBag();
@@ -2187,7 +2187,7 @@ namespace StatsDirect.Builtins
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", PlotPoly(parameters, mode, context.H, context.B, context.SSREG - context.SSY, context.N, context.P));
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static IRenderable PlotPoly(ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
@@ -2216,7 +2216,7 @@ namespace StatsDirect.Builtins
             return ChartRendererFactory.PrepForLater(ChartType.PolynomialRegression, new PolynomialRegressionOptions(title, mode, xtxi, bd, rss, nx, P, gamma, vX.Title, vY.Title), new DoubleSeries(vX.Data, vX.Title), new DoubleSeries(vY.Data, vY.Title));
         }
 
-        public static ParameterBag RptAreaUnderCurve(IFormatting host, ParameterBag parameters)
+        public static StepOutput RptAreaUnderCurve(IFormatting host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
@@ -2235,7 +2235,7 @@ namespace StatsDirect.Builtins
                     : Formatting.ERRR);
             double aucg = x_giabaldi(nx, vY.Data, vX.Data);
             outputParameters.AddOutput("trap_auc", aucg);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static bool x_qromb(double a, double b, ref double ss, double[] bd, int p)
@@ -2276,7 +2276,7 @@ namespace StatsDirect.Builtins
             return ss;
         }
 
-        public static ParameterBag RptPolynomialRegressionConfidence(ParameterBag parameters)
+        public static StepOutput RptPolynomialRegressionConfidence(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
@@ -2320,10 +2320,10 @@ namespace StatsDirect.Builtins
             outputFrame.Variables.Add(vpl);
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("results", outputFrame);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPolynomialRegressionBackInterpolation(IFormatting host, ParameterBag parameters)
+        public static StepOutput RptPolynomialRegressionBackInterpolation(IFormatting host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
@@ -2391,10 +2391,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("x", gotx);
             if (fault)
                 outputParameters.AddOutput("*error", new List<ParameterBag>() { new ParameterBag() });
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLogisticRegression(IFormatting host, ParameterBag parameters)
+        public static StepOutput RptLogisticRegression(IFormatting host, ParameterBag parameters)
         {
             int rows;
             int totObs;
@@ -2803,7 +2803,7 @@ namespace StatsDirect.Builtins
             context.LLX = llx;
             context.DFX = idfx;
             outputParameters["candidatePredictors"] = FilledParameterFactory.Input(x_prep_interlr(context));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static double x_loglik_p(bool useWeights, int n, double[] wt, double[] y, double[] fvl)
@@ -2837,7 +2837,7 @@ namespace StatsDirect.Builtins
             warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, q.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup.")));
         }
 
-        public static ParameterBag RptLogisticRegressionFit(ParameterBag parameters)
+        public static StepOutput RptLogisticRegressionFit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
 
@@ -3032,7 +3032,7 @@ namespace StatsDirect.Builtins
                     covarParameters.AddOutput("cov", covariance[(int)Math.Floor((double)j * (j - 1) / 2 + i)]);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static ParameterBag MakeLogisticRegressionFitRow(double[] t, double[] y, double[] dr, double[] hi, string[] label, double[,] x, double[] ry, double[] fit, double[] pxi, double[] xis, double[] cbar, double[] c, double[] d, double[] dc, int arrayOffset, bool includePredictors, DataFrame outputFrame, int outputRow)
@@ -3080,7 +3080,7 @@ namespace StatsDirect.Builtins
             return predictorValuesParameters;
         }
 
-        public static ParameterBag GridLogisticRegressionFit(ParameterBag parameters)
+        public static StepOutput GridLogisticRegressionFit(ParameterBag parameters)
         {
             bool doTrials = parameters["trials"].AsBoolean;
             bool doEvents = parameters["events"].AsBoolean;
@@ -3135,7 +3135,7 @@ namespace StatsDirect.Builtins
                     resultsFrame.Variables.Add(deltaChiSquareVariable);
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static string qlbli(string[] label, int i, bool DoC)
@@ -3151,7 +3151,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag PlotLogisticRegressionDiagnostics(ParameterBag parameters)
+        public static StepOutput PlotLogisticRegressionDiagnostics(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
@@ -3231,7 +3231,7 @@ namespace StatsDirect.Builtins
             chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
             //  delta x2 vs. hi
             chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
@@ -3261,7 +3261,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptPoissonRegressionModel(ParameterBag parameters)
+        public static StepOutput RptPoissonRegressionModel(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
@@ -3410,10 +3410,10 @@ namespace StatsDirect.Builtins
                 scaledParameters.AddOutput("z", z);
                 scaledParameters.AddOutput("p", prob);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLogisticRegressionModel(ParameterBag parameters)
+        public static StepOutput RptLogisticRegressionModel(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
@@ -3580,11 +3580,11 @@ namespace StatsDirect.Builtins
                     parametersParameters.AddOutput("p_var", prob);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptPoissonRegressionIrr(ParameterBag parameters)
+        public static StepOutput RptPoissonRegressionIrr(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
@@ -3691,10 +3691,10 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag OpPoissonRegressionIrrMakeDichotomousCovariates(ParameterBag parameters)
+        public static StepOutput OpPoissonRegressionIrrMakeDichotomousCovariates(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[,] x = context.X;
@@ -3738,10 +3738,10 @@ namespace StatsDirect.Builtins
             dcFrame.Variables.Add(names);
             dcFrame.Variables.Add(offsets);
             outputParameters.AddOutput("dichotomousCovariates", dcFrame);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLogisticRegressionModelSelection(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public static StepOutput RptLogisticRegressionModelSelection(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             bool mean = context.DoC;
@@ -3842,7 +3842,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void LR_ModelSelectionOutput(IFormatting host, List<ParameterBag> parametersList, int fault, string[] label, double[] b, double[] se, bool mean, double dev, double devx, int p, int m, int df, int dfx, string err_msg, bool[] selectX)
@@ -3925,7 +3925,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag RptLogisticRegressionClassification(ParameterBag parameters)
+        public static StepOutput RptLogisticRegressionClassification(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int n = context.N;
@@ -4034,10 +4034,10 @@ namespace StatsDirect.Builtins
             rx[0] = Constant.MISSING;
             ry[0] = Constant.MISSING;
             outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy0To1, new XyOptions(rx, ry, "1-specificity", "sensitivity", string.Empty, false, DataMinMax.XPreset_YPreset)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptLogisticRegressionBootstrap(IProgressBarHost host, ParameterBag parameters)
+        public static StepOutput RptLogisticRegressionBootstrap(IProgressBarHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] se;
@@ -4209,11 +4209,11 @@ namespace StatsDirect.Builtins
                 dropped = string.Empty;
                 errMsg = string.Empty;
                 Regress1.X_Logistic_Regression(mean, false, ref useWeights, n, x, predictors, isx, p, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int _, ref dropped, ref errMsg);
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
         }
 
-        public static ParameterBag RptLogisticRegressionPrediction(ParameterBag parameters)
+        public static StepOutput RptLogisticRegressionPrediction(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] b = context.B;
@@ -4308,7 +4308,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", 100 * (1.0 - P0));
             outputParameters.AddOutput("from", lcl);
             outputParameters.AddOutput("to", ucl);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void x_lrci(double fp, double tp, double column2total, double column1total, double zc, out double thetal, out double thetau)
@@ -4517,7 +4517,7 @@ namespace StatsDirect.Builtins
             return frame;
         }
 
-        public static ParameterBag RptPoissonRegression(IFormatting host, ParameterBag parameters)
+        public static StepOutput RptPoissonRegression(IFormatting host, ParameterBag parameters)
         {
             //  Dim PASSX(4, 1) As Double ' (1, 1) = calc intercept (1 = yes); (2, 1) = accuracy; (3, 1) = weights (1 = yes); (4, 1) = ptime (1 = yes)
             double tol = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
@@ -4817,10 +4817,10 @@ namespace StatsDirect.Builtins
                 Y = y
             };
             outputParameters.AddInput("context", context.StripForOutput());
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptPoissonRegressionFit(ParameterBag parameters)
+        public static StepOutput RptPoissonRegressionFit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
@@ -4933,11 +4933,11 @@ namespace StatsDirect.Builtins
                     covarParameters.AddOutput("cov", covariance[(int)Math.Floor((double)j * (j - 1) / 2 + i)]);
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag GridPoissonRegressionFit(ParameterBag parameters)
+        public static StepOutput GridPoissonRegressionFit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
@@ -5026,48 +5026,34 @@ namespace StatsDirect.Builtins
                     }
                 }
                 if (expectedEvents)
-                {
                     resultsFrame.Variables.Add(expectedEventsVariable);
-                }
                 if (expectedIncidence)
-                {
                     resultsFrame.Variables.Add(expectedIncidenceVariable);
-                }
                 if (residualEvents)
-                {
                     resultsFrame.Variables.Add(residualEventsVariable);
-                }
                 if (freemanTukeyResidual)
-                {
                     resultsFrame.Variables.Add(freemanTukeyResidualVariable);
-                }
                 if (devianceResidual)
-                { // Deviance residuals
-
                     resultsFrame.Variables.Add(devianceResidualVariable);
-                }
                 if (pearsonResidual)
-                { // Pearson residuals
-
                     resultsFrame.Variables.Add(pearsonResidualVariable);
-                }
                 if (leverage)
-                { // Leverage HI
-
+                {
+                    // Leverage HI
                     resultsFrame.Variables.Add(leverageVariable);
                 }
                 if (stdPearsonResidual)
-                { // Standardised Pearson residual
-
+                {
+                    // Standardised Pearson residual
                     resultsFrame.Variables.Add(stdPearsonResidualVariable);
                 }
             }
             outputParameters.AddOutput("results", resultsFrame);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptPoissonRegressionResiduals(ParameterBag parameters)
+        public static StepOutput RptPoissonRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
@@ -5111,7 +5097,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         public enum ProbitModel
@@ -5120,17 +5106,17 @@ namespace StatsDirect.Builtins
             Logit = 2,
         }
 
-        public static ParameterBag RptProbit(ParameterBag parameters)
+        public static StepOutput RptProbit(ParameterBag parameters)
         {
             return RptProbitOrLogit(parameters, ProbitModel.Probit);
         }
 
-        public static ParameterBag RptLogit(ParameterBag parameters)
+        public static StepOutput RptLogit(ParameterBag parameters)
         {
             return RptProbitOrLogit(parameters, ProbitModel.Logit);
         }
 
-        public static ParameterBag ProbitOrLogitDataHasControls(ParameterBag parameters)
+        public static StepOutput ProbitOrLogitDataHasControls(ParameterBag parameters)
         {
             DataFrame doseFrame = parameters["dose"].AsDataFrame;
             DoubleVariable doseVariable = (DoubleVariable)doseFrame.Variables[0];
@@ -5152,10 +5138,10 @@ namespace StatsDirect.Builtins
                     break;
                 }
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        private static ParameterBag RptProbitOrLogit(ParameterBag parameters, ProbitModel model)
+        private static StepOutput RptProbitOrLogit(ParameterBag parameters, ProbitModel model)
         {
             DataFrame doseFrame = parameters["dose"].AsDataFrame;
             DoubleVariable doseVariable = (DoubleVariable)doseFrame.Variables[0];
@@ -5349,7 +5335,7 @@ namespace StatsDirect.Builtins
             context.Labels[1] = subjectsVariable.Title;
             context.Labels[2] = respondersVariable.Title;
             outputParameters.AddInput("context", context.StripForOutput());
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
@@ -5915,7 +5901,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static ParameterBag PlotProbit(ParameterBag parameters)
+        public static StepOutput PlotProbit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
@@ -5936,10 +5922,10 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Logit, new LogitOptions("Proportional Response with " + Formatting.XRound(ici * 100, 1) + "% CI", model, t, sw, s1, a, b, xAxisTitle, yAxisTitle, clog), new DoubleSeries(x, xAxisTitle), new DoubleSeries(y, yAxisTitle)));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptProbitInterpolateX(ParameterBag parameters)
+        public static StepOutput RptProbitInterpolateX(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
@@ -5976,11 +5962,11 @@ namespace StatsDirect.Builtins
             {
                 outputParameters.AddOutput("mort", string.Empty);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptProbitInterpolateY(ParameterBag parameters)
+        public static StepOutput RptProbitInterpolateY(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
@@ -6008,11 +5994,11 @@ namespace StatsDirect.Builtins
                 qdose = Math.Exp(qdose * Math.Log(10.0));
             outputParameters.AddOutput("x_lab", label[0]);
             outputParameters.AddOutput("x", qdose);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
-        public static ParameterBag RptProbitMore(ParameterBag parameters)
+        public static StepOutput RptProbitMore(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;
@@ -6104,7 +6090,7 @@ namespace StatsDirect.Builtins
                 obsParameters.AddOutput("exp", ex);
                 obsParameters.AddOutput("dev", rv[i] - ex);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }

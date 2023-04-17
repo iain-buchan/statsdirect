@@ -42,7 +42,7 @@ namespace StatsDirect.Builtins
 
     public static class RegressRpt
     {
-        public static ParameterBag RptGroupedLinearity(ParameterBag parameters)
+        public static StepOutput RptGroupedLinearity(ParameterBag parameters)
         {
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
             int nx = predictorFrame.Variables[0].Length;
@@ -101,10 +101,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tot_df", totny - 1);
             outputParameters.AddOutput("reg", Q2);
             outputParameters.AddOutput("lin", Q);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptGroupedCovariancePreprocess(ParameterBag parameters)
+        public static StepOutput RptGroupedCovariancePreprocess(ParameterBag parameters)
         {
             double grandn = 0; double grandx = 0;
 
@@ -130,10 +130,10 @@ namespace StatsDirect.Builtins
             double mx0 = grandx / grandn;
             ParameterBag outputParameters = new ParameterBag();
             outputParameters.AddOutput("mx0", mx0);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptGroupedCovariance(ParameterBag parameters)
+        public static StepOutput RptGroupedCovariance(ParameterBag parameters)
         {
             double gtxx = 0; double gtxy = 0; double gtyy = 0; double grandn = 0; double grandx = 0; double grandsqx = 0; double grandsqy = 0;
             double tsy = 0; double tsx = 0; double grandcpr = 0;
@@ -369,10 +369,10 @@ namespace StatsDirect.Builtins
             string ylab = hasYReplicates ? "Y Replicates" : "Y";
             outputParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyr, new XyrOptions(xt, y, k, nxi, ny, b, a, xlab, ylab, "Grouped Linear Regression", bnam, groupedCovarianceData.minMax)));
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptConditionalLogisticRegression(ParameterBag parameters)
+        public static StepOutput RptConditionalLogisticRegression(ParameterBag parameters)
         {
             const string capti = "Conditional logistic regression";
 
@@ -554,7 +554,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("from", lci);
                 orParameters.AddOutput("to", uci);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>

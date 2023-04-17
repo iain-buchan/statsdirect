@@ -10,7 +10,7 @@ namespace StatsDirect.Builtins
     public static class Agreement
     {
 
-        public static ParameterBag RptUniversalAgreement(ParameterBag parameters)
+        public static StepOutput RptUniversalAgreement(ParameterBag parameters)
         {
             int nobs = 0;
             string title = null;
@@ -43,7 +43,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("skewdel", gam);
             outputParameters.AddOutput("R", r);
             outputParameters.AddOutput("p", p);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
@@ -190,7 +190,7 @@ namespace StatsDirect.Builtins
                 title = dataVariable.Title;
         }
 
-        public static ParameterBag RptUniversalRCompare(ParameterBag parameters)
+        public static StepOutput RptUniversalRCompare(ParameterBag parameters)
         {
             double r1 = parameters["r1_in"].AsDouble;
             double r2 = parameters["r2_in"].AsDouble;
@@ -235,7 +235,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p1", p1);
             outputParameters.AddOutput("p2", p2);
             outputParameters.AddOutput("pd", pd * 2.0);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
 
@@ -692,7 +692,7 @@ namespace StatsDirect.Builtins
             delta /= Convert.ToDouble(kn);
         }
 
-        public static ParameterBag RptUniversalAgreementSimulateExactP(IProgressBarHost host, ParameterBag parameters)
+        public static StepOutput RptUniversalAgreementSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
             int nobs = 0;
             string title = null;
@@ -717,7 +717,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ul", ul);
             outputParameters.AddOutput("warn", warn);
             outputParameters.AddOutput("k", mpd);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void Rmrbp(IProgressBarHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)

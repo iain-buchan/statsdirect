@@ -11,7 +11,7 @@
             this.func = func;
         }
 
-        ParameterBag IBuiltin.Invoke(ITemplateHost host, ParameterBag parameters)
+        StepOutput IBuiltin.Invoke(ITemplateHost host, ParameterBag parameters)
         {
             return func(parameters);
         }

@@ -73,7 +73,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptVarianceRatio(ParameterBag parameters)
+        public static StepOutput RptVarianceRatio(ParameterBag parameters)
         {
             int bot; int top;
 
@@ -109,10 +109,10 @@ namespace StatsDirect.Builtins
             if (P > 0.5)
                 P = 0.5;
             outputParameters.AddOutput("p_2", P * 2);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptReferenceRange(ParameterBag parameters)
+        public static StepOutput RptReferenceRange(ParameterBag parameters)
         {
             double xq = 0;
             double o = 0;
@@ -269,7 +269,7 @@ namespace StatsDirect.Builtins
             if (capLower || capUpper)
                 outputParameters.AddOutput("cap_co", "  (* limit capped at min/max)");
 
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void x_poisson(double[] x, int nobs, double percent, out double mean, out double tlower, out double tupper, ref int fault)
@@ -329,7 +329,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptPoissonConfidenceInterval(ParameterBag parameters)
+        public static StepOutput RptPoissonConfidenceInterval(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             double percent2 = parameters["gamma"].AsDouble * 100.0;
@@ -392,14 +392,14 @@ namespace StatsDirect.Builtins
                 sampleParameters.AddOutput("lower1", tlower1);
                 sampleParameters.AddOutput("upper1", tupper1);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptZSingle(ParameterBag parameters) => RptNormalZ(parameters, 1);
+        public static StepOutput RptZSingle(ParameterBag parameters) => RptNormalZ(parameters, 1);
 
-        public static ParameterBag RptZUnpaired(ParameterBag parameters) => RptNormalZ(parameters, 2);
+        public static StepOutput RptZUnpaired(ParameterBag parameters) => RptNormalZ(parameters, 2);
 
-        private static ParameterBag RptNormalZ(ParameterBag parameters, int mode)
+        private static StepOutput RptNormalZ(ParameterBag parameters, int mode)
         {
             double[] mean = new double[1 + 1];
             double[] ss = new double[1 + 1];
@@ -442,7 +442,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("*warn", new List<ParameterBag> { new ParameterBag() });
                 else
                     outputParameters.AddOutput("*warn", null);
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
             else
             {
@@ -528,11 +528,11 @@ namespace StatsDirect.Builtins
                     };
                     outputParameters.AddOutput("*warn", warnList);
                 }
-                return outputParameters;
+                return new StepOutput(outputParameters);
             }
         }
 
-        public static ParameterBag RptNormality(IFormatting host, ParameterBag parameters)
+        public static StepOutput RptNormality(IFormatting host, ParameterBag parameters)
         {
             // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -622,7 +622,7 @@ namespace StatsDirect.Builtins
                 cd.XSeries.Add(new DoubleSeries(data, v0.Title));
                 variableParameters.AddOutput("chart", cd);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
@@ -960,7 +960,7 @@ namespace StatsDirect.Builtins
             p = PDF.alnorm(-z);
         }
 
-        public static ParameterBag RptTUnpairedSummary(ParameterBag parameters)
+        public static StepOutput RptTUnpairedSummary(ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             int nx1 = parameters["nx1"].AsInt32;
@@ -1045,10 +1045,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("say1", "Two sided F test is not significant");
                 outputParameters.AddOutput("say2", "No need to assume unequal variances");
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTSingleSummary(ParameterBag parameters)
+        public static StepOutput RptTSingleSummary(ParameterBag parameters)
         {
 
             double GAMMA = parameters["gamma"].AsDouble;
@@ -1084,10 +1084,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_1", P);
             outputParameters.AddOutput("p_2", P * 2.0);
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - GAMMA));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTUnpaired(ParameterBag parameters)
+        public static StepOutput RptTUnpaired(ParameterBag parameters)
         {
             int bot; int top;
 
@@ -1178,10 +1178,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("say1", "Two sided F test is not significant");
                 outputParameters.AddOutput("say2", "No need to assume unequal variances");
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTSingle(ParameterBag parameters)
+        public static StepOutput RptTSingle(ParameterBag parameters)
         {
             double[] mean = new double[1];
             double[] ss = new double[1];
@@ -1218,10 +1218,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_1", P);
             outputParameters.AddOutput("p_2", P * 2.0);
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - GAMMA));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptTPaired(ParameterBag parameters)
+        public static StepOutput RptTPaired(ParameterBag parameters)
         {
             DataFrame Data = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
@@ -1321,7 +1321,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*twosample", null);
                 outputParameters.AddOutput("*chart", null);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }

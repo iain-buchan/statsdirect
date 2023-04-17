@@ -453,6 +453,7 @@
     <Compile Include="Charting\StringSeries.cs" />
     <Compile Include="Charting\Renderer\SurvivalChartRenderer.cs" />
     <Compile Include="Charting\Options\SurvivalOptions.cs" />
+    <Compile Include="Templates\StepOutput.cs" />
     <Compile Include="Templates\TemplateAndParameters.cs" />
     <Compile Include="Templates\Charting\Tic.cs" />
     <Compile Include="Charting\Enums\Transformation.cs" />

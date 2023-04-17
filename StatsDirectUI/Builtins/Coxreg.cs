@@ -92,7 +92,7 @@ namespace StatsDirect.Builtins
             int IComparer<CoxP>.Compare(CoxP x, CoxP y) => Compare(x, y);
         }
 
-        public static ParameterBag RptCoxRegressionPreprocess(ParameterBag parameters)
+        public static StepOutput RptCoxRegressionPreprocess(ParameterBag parameters)
         {
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             double[] times = ((DoubleVariable)timesFrame.Variables[0]).Data;
@@ -104,10 +104,10 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new ParameterBag();
             if (adjustment > 0.0)
                 outputParameters.AddOutput("timesAdjustment", adjustment);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCoxRegression(ParameterBag parameters)
+        public static StepOutput RptCoxRegression(ParameterBag parameters)
         {
             // We don't have a clean way in the operation code to fail an operation if a user answers "no" to a question - in this case, whether they want to apply a calculated adjustment.
             // So this early code is simply a way of detecting a requirement to bug out.
@@ -424,7 +424,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("ARR3", ARR3);
             outputParameters.AddInput("CDAT1", CDAT1);
             outputParameters.AddInput("holdx", holdx);
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         ///  <summary>
@@ -2073,17 +2073,17 @@ namespace StatsDirect.Builtins
             return iter < 300 ? alpha : Constant.MISSING;
         }
 
-        public static ParameterBag RptCoxBaselineToReport(ParameterBag parameters)
+        public static StepOutput RptCoxBaselineToReport(ParameterBag parameters)
         {
             return RptCoxBaseline(parameters, false, string.Empty, false);
         }
 
-        public static ParameterBag RptCoxBaselineToWorksheet(ParameterBag parameters)
+        public static StepOutput RptCoxBaselineToWorksheet(ParameterBag parameters)
         {
             return RptCoxBaseline(parameters, false, string.Empty, true);
         }
 
-        public static ParameterBag RptCoxHazardPlots(ParameterBag parameters)
+        public static StepOutput RptCoxHazardPlots(ParameterBag parameters)
         {
             bool[] selectedGroups = (bool[])parameters["group"].AsObject;
             DataFrame subgroupsFrame = parameters["subgroups"].AsDataFrame;
@@ -2096,10 +2096,10 @@ namespace StatsDirect.Builtins
                     return RptCoxBaseline(parameters, true, selectedGroup, false);
                 }
             }
-            return new ParameterBag();
+            return StepOutput.Empty();
         }
 
-        private static ParameterBag RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
+        private static StepOutput RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
             double watch_time;
@@ -2259,7 +2259,7 @@ namespace StatsDirect.Builtins
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
         private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
@@ -2369,7 +2369,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static ParameterBag RptCoxResiduals(ParameterBag parameters)
+        public static StepOutput RptCoxResiduals(ParameterBag parameters)
         {
             int istrata = 0;
             int lastStratum = 0;
@@ -2539,10 +2539,10 @@ namespace StatsDirect.Builtins
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCoxHazardRatios(ParameterBag parameters)
+        public static StepOutput RptCoxHazardRatios(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
             double[,,] ARR3 = (double[,,])parameters["ARR3"].AsObject;
@@ -2575,10 +2575,10 @@ namespace StatsDirect.Builtins
                 parameterParameters.AddOutput("coef", ARR3[1, i, 1]);
                 parameterParameters.AddOutput("se", ARR3[1, i, 2]);
             }
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
 
-        public static ParameterBag RptCoxModelAnalysis(ParameterBag parameters)
+        public static StepOutput RptCoxModelAnalysis(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
             ParameterBag outputParameters = new ParameterBag();
@@ -2588,7 +2588,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("x2", x2dev);
             outputParameters.AddOutput("df", ARR2[1, 0]);
             outputParameters.AddOutput("p", PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0]));
-            return outputParameters;
+            return new StepOutput(outputParameters);
         }
     }
 }
