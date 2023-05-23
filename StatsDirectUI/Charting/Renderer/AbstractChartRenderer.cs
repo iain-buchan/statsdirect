@@ -398,8 +398,12 @@ namespace StatsDirect.Charting.Renderer
             // Draw the chart title now that we know it's safe to do so.
             if (IsAscii)
             {
-                int s = 40 - title.Length / 2;
-                WriteAsciiYX(TextCanvas.GetUpperBound(0), s, title);
+                int chartWidth = TextCanvas[0].Length;
+                string limitedTitle = title.Length > chartWidth
+                    ? title.Substring(0, chartWidth - 3) + "..."
+                    : title;
+                int s = (chartWidth - limitedTitle.Length) / 2;
+                WriteAsciiYX(TextCanvas.GetUpperBound(0), s, limitedTitle);
             }
             else
                 DrawTitle(title);
