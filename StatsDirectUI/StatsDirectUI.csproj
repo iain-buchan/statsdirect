@@ -20,7 +20,7 @@
     <ApplicationIcon>UI\sd3.ico</ApplicationIcon>
     <SignAssembly>false</SignAssembly>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <PublishUrl>http://localhost/StatsDirect/</PublishUrl>
     <Install>true</Install>
@@ -2107,10 +2107,8 @@
   -->
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.digicert.com /p ***REMOVED*** "$(TargetPath)"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.digicert.com /td sha256 /as /p ***REMOVED*** "$(TargetPath)"
 $(SolutionDir)Bin\sgen /n /f  /a:"$(TargetPath)"
 if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sdsign.pfx" /t http://timestamp.digicert.com /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
-if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /fd sha256 /tr http://timestamp.digicert.com /td sha256 /as /p ***REMOVED*** "$(TargetDir)$(TargetName).XmlSerializers.dll"
 xcopy /Q /Y /E $(ProjectDir)Assets\* $(TargetDir)
 </PostBuildEvent>
   </PropertyGroup>
