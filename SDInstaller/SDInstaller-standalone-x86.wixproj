@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -88,8 +88,6 @@
   <Target Name="AfterBuild">
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>
-      if $(ConfigurationName) == ReleaseWithSigning "$(SolutionDir)Key\signtool\SignTool" sign /f "$(SolutionDir)Key\sd_sign_sha2.pfx" /t http://timestamp.digicert.com /p ***REMOVED*** "$(TargetPath)"
-      if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
+    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
   </PropertyGroup>
 </Project>

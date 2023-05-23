@@ -93,16 +93,16 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <Target Name="SignBundleEngine">
-    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignBundleEngine.Filename)&quot; &quot;@(SignBundleEngine)&quot;&#xD;&#xA;&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /fd sha256 /p ***REMOVED*** /tr http://timestamp.digicert.com /td sha256 /as /d &quot;%(SignBundleEngine.Filename)&quot; &quot;@(SignBundleEngine)&quot;" />
+    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sdsign.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignBundleEngine.Filename)&quot; &quot;@(SignBundleEngine)&quot;" />
   </Target>
   <Target Name="SignBundle">
-    <Exec Command="rem &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignBundle.Filename)&quot; &quot;@(SignBundle)&quot;&#xD;&#xA;&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /fd sha256 /p ***REMOVED*** /tr http://timestamp.digicert.com /td sha256 /as /d &quot;%(SignBundle.Filename)&quot; &quot;@(SignBundle)&quot;" />
+    <Exec Command="rem &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /fd sha256 /p ***REMOVED*** /tr http://timestamp.digicert.com /td sha256 /as /d &quot;%(SignBundle.Filename)&quot; &quot;@(SignBundle)&quot;" />
   </Target>
   <Target Name="SignMsi">
-    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignMsi.Filename)&quot; &quot;@(SignMsi)&quot;" />
+    <Exec Command="rem &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignMsi.Filename)&quot; &quot;@(SignMsi)&quot;" />
   </Target>
   <Target Name="SignCabs">
-    <Exec Command="&quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignCabs.Filename)&quot; &quot;@(SignCabs)&quot;" />
+    <Exec Command="rem &quot;$(SolutionDir)Key\signtool\signtool.exe&quot; sign /f &quot;$(SolutionDir)Key\sd_sign_sha2.pfx&quot; /p ***REMOVED*** /t http://timestamp.digicert.com /d &quot;%(SignCabs.Filename)&quot; &quot;@(SignCabs)&quot;" />
   </Target>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
