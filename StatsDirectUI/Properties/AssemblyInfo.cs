@@ -13,6 +13,6 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-[assembly: AssemblyVersion("3.3.5.0")]
-[assembly: AssemblyFileVersion("3.3.5.0")]
+[assembly: AssemblyVersion("3.3.6.0")]
+[assembly: AssemblyFileVersion("3.3.6.0")]
 [assembly: CLSCompliant(false)]
