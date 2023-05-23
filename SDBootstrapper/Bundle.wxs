@@ -22,7 +22,7 @@
       <Payload SourceFile="greybar.png" />
     </BootstrapperApplicationRef>
     <Chain>
-      <PackageGroupRef Id="NetFx461Web"/>
+      <PackageGroupRef Id="NetFx462Web"/>
       <MsiPackage Id="MsiForVersionNumber" Compressed="yes" SourceFile="$(var.SDInstaller-x86.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="NOT VersionNT64" ForcePerMachine="yes" />
       <MsiPackage Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" ForcePerMachine="yes" />
     </Chain>

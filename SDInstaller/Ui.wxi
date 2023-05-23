@@ -19,8 +19,8 @@
   <WixVariable Id="WixUILicenseRtf" Value="Licence.rtf"/>
   <!-- Tell the UI what property holds the install directory -->
   <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
-  <!-- Reference the property from netfx that tells us whether framework 4.6.1 is installed or not -->
-  <PropertyRef Id="WIX_IS_NETFRAMEWORK_461_OR_LATER_INSTALLED"/>
+  <!-- Reference the property from netfx that tells us whether framework 4.6.2 is installed or not -->
+  <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED"/>
   <!-- Custom bitmaps -->
   <WixVariable Id="WixUIBannerBmp" Value="bannrbmp-sd.bmp"/>
   <WixVariable Id="WixUIDialogBmp" Value="dlgbmp-sd.bmp"/>
@@ -39,8 +39,8 @@
   <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico"/>
   <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
 
-  <Condition Message="[ProductName] requires .NET Framework 4.6.1 or higher.">
-    <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_461_OR_LATER_INSTALLED]]>
+  <Condition Message="[ProductName] requires .NET Framework 4.6.2 or higher.">
+    <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED]]>
   </Condition>
   <!-- Installation conditions: At least Windows 7, no service pack required, no upper limit on OS version-->
   <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 7, 2012, 8, 8.1, 2012R2, 10, and 2016.">
