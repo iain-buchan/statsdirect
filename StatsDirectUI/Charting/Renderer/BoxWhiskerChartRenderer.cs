@@ -15,6 +15,7 @@ namespace StatsDirect.Charting.Renderer
         private const double OUTLIER_RADIUS = 4;
         private const double BOX_FRACTION_OF_SPACE = 0.667;
         private const double WHISKER_FRACTION_OF_BOX = 0.333;
+        private const int MAX_GRAPHICAL_TITLE_LENGTH = 30;
 
         public BoxWhiskerChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
             : base(definition, canvasFactory)
@@ -62,6 +63,10 @@ namespace StatsDirect.Charting.Renderer
 
             if (IsAscii)
                 return PlotBoxWhiskerAscii(seriesToUse);
+
+            // Choose a sane upper limit for label lengths
+            foreach (ISeries series in seriesToUse)
+                series.Title = series.Title.Length > MAX_GRAPHICAL_TITLE_LENGTH ? series.Title.Substring(0, MAX_GRAPHICAL_TITLE_LENGTH) + "…" : series.Title;
             if (bwOptions.Orientation == ChartOrientation.Horizontal)
                 return PlotBoxWhiskerHorizontal(seriesToUse);
             return PlotBoxWhiskerVertical(seriesToUse);
