@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29905.134
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33717.318
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatsDirectUI", "StatsDirectUI\StatsDirectUI.csproj", "{C73E1B83-A745-4592-92A0-40C5658D6D7C}"
 EndProject
@@ -9,17 +9,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SDLicense", "SDLicense\SDLi
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDBootstrapper", "SDBootstrapper\SDBootstrapper.wixproj", "{E52FA35E-33B1-45D2-B004-CFC5CC7C7EF5}"
 	ProjectSection(ProjectDependencies) = postProject
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648} = {ECFD2CC0-5B2B-4886-9287-01B813A3A648}
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF} = {D9AC87D9-842B-4C52-9F58-8036C0940DAF}
 	EndProjectSection
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller-x64", "SDInstaller\SDInstaller-x64.wixproj", "{D9AC87D9-842B-4C52-9F58-8036C0940DAF}"
 EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller-x86", "SDInstaller\SDInstaller-x86.wixproj", "{ECFD2CC0-5B2B-4886-9287-01B813A3A648}"
-EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller-standalone-x64", "SDInstaller\SDInstaller-standalone-x64.wixproj", "{046BF937-0395-4A59-A4DF-D29314574F41}"
-EndProject
-Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "SDInstaller-standalone-x86", "SDInstaller\SDInstaller-standalone-x86.wixproj", "{5AA25A40-1E22-48B8-961F-1D37C87473A9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Layout", "Layout\Layout.csproj", "{1AA1F23B-BADA-4BBD-9B09-8680188B4D4F}"
 EndProject
@@ -143,30 +138,6 @@ Global
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|x64.ActiveCfg = ReleaseWithSigning|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|x64.Build.0 = ReleaseWithSigning|x64
 		{D9AC87D9-842B-4C52-9F58-8036C0940DAF}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|x64
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|x64.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|x86.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Debug|x86.Build.0 = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|Any CPU.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|x64.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|x86.ActiveCfg = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.DebugWatchExceptions|x86.Build.0 = Debug|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Any CPU.ActiveCfg = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Any CPU.Build.0 = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|Mixed Platforms.Build.0 = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|x64.ActiveCfg = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|x86.ActiveCfg = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.Release|x86.Build.0 = Release|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|Any CPU.ActiveCfg = ReleaseWithSigning|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|Any CPU.Build.0 = ReleaseWithSigning|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = ReleaseWithSigning|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|Mixed Platforms.Build.0 = ReleaseWithSigning|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|x64.ActiveCfg = ReleaseWithSigning|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|x86
-		{ECFD2CC0-5B2B-4886-9287-01B813A3A648}.ReleaseWithSigning|x86.Build.0 = ReleaseWithSigning|x86
 		{046BF937-0395-4A59-A4DF-D29314574F41}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{046BF937-0395-4A59-A4DF-D29314574F41}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
 		{046BF937-0395-4A59-A4DF-D29314574F41}.Debug|x64.ActiveCfg = Debug|x64
@@ -192,31 +163,6 @@ Global
 		{046BF937-0395-4A59-A4DF-D29314574F41}.ReleaseWithSigning|x64.ActiveCfg = ReleaseWithSigning|x64
 		{046BF937-0395-4A59-A4DF-D29314574F41}.ReleaseWithSigning|x64.Build.0 = ReleaseWithSigning|x64
 		{046BF937-0395-4A59-A4DF-D29314574F41}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|x64
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Debug|x64.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Debug|x86.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Debug|x86.Build.0 = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.DebugWatchExceptions|Any CPU.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.DebugWatchExceptions|Mixed Platforms.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.DebugWatchExceptions|x64.ActiveCfg = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.DebugWatchExceptions|x64.Build.0 = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.DebugWatchExceptions|x86.ActiveCfg = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.DebugWatchExceptions|x86.Build.0 = Debug|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|Any CPU.ActiveCfg = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|Any CPU.Build.0 = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|Mixed Platforms.ActiveCfg = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|Mixed Platforms.Build.0 = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|x64.ActiveCfg = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|x86.ActiveCfg = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.Release|x86.Build.0 = Release|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|Any CPU.ActiveCfg = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|Any CPU.Build.0 = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|Mixed Platforms.ActiveCfg = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|Mixed Platforms.Build.0 = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|x64.ActiveCfg = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|x86.ActiveCfg = ReleaseWithSigning|x86
-		{5AA25A40-1E22-48B8-961F-1D37C87473A9}.ReleaseWithSigning|x86.Build.0 = ReleaseWithSigning|x86
 		{1AA1F23B-BADA-4BBD-9B09-8680188B4D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1AA1F23B-BADA-4BBD-9B09-8680188B4D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AA1F23B-BADA-4BBD-9B09-8680188B4D4F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -254,12 +200,12 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		BuildVersion_UseGlobalSettings = False
-		BuildVersion_BuildAction = Both
-		BuildVersion_ConfigurationName = ReleaseWithSigning
-		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
-		BuildVersion_UpdateAssemblyVersion = False
-		BuildVersion_UpdateFileVersion = False
 		SolutionGuid = {2FDBC1DF-95AE-4E49-BA6E-9D86691DEE8D}
+		BuildVersion_UpdateFileVersion = False
+		BuildVersion_UpdateAssemblyVersion = False
+		BuildVersion_BuildVersioningStyle = None.None.Increment.DeltaBaseDate
+		BuildVersion_ConfigurationName = ReleaseWithSigning
+		BuildVersion_BuildAction = Both
+		BuildVersion_UseGlobalSettings = False
 	EndGlobalSection
 EndGlobal
