@@ -48,7 +48,6 @@ namespace StatsDirect.UI
         {
             RefreshVersion();
             RefreshSysInfo();
-            RefreshUserInfo();
         }
 
         private void RefreshSysInfo()
@@ -110,44 +109,6 @@ namespace StatsDirect.UI
             }
             version += " (" + touchTime.ToString("d") + ")";
             lblVersion.Text = "Version: " + version;
-        }
-
-        private void RefreshUserInfo()
-        {
-            UserInfo ui = GetBestUserInfo();
-
-            int d = !DateTime.MinValue.Equals(ui.Expires) ? Math.Abs(DateTime.ParseExact(ui.Expires, "dd/MM/yyyy", CultureInfo.InvariantCulture).Subtract(DateTime.Now).Days) : 0;
-            if (ui.Trial || d < 60)
-            {
-                lblEmail.Text = ui.Name + "\r\n" + "YOUR LICENCE EXPIRES IN " + d + " DAYS.\r\nTO ORDER, CLICK ON THE ABOVE LINK,\r\nTHEN DOUBLE CLICK HERE TO ENTER A NEW LICENCE KEY.";
-                lblEmail.Cursor = Cursors.Hand;
-                lblEmail.DoubleClick += lblEmail_DoubleClick;
-            }
-            else
-            {
-                lblEmail.Text = ui.Name + "\r\n" + ui.Company;
-            }
-            lblExpiry.Text = "The licence for this installation expires on " + ui.Expires;
-        }
-
-        void lblEmail_DoubleClick(object sender, EventArgs e)
-        {
-            UserInfo ui = GetBestUserInfo();
-
-            using (frmLicense f = new frmLicense(ui, false))
-            {
-                f.ShowDialog(this);
-            }
-            RefreshUserInfo();
-        }
-
-        private static UserInfo GetBestUserInfo()
-        {
-            UserInfo ui = License.GetUserInfo(true);
-            bool machineOk = License.Check(ui, out bool _);
-            if (machineOk)
-                return ui;
-            return License.GetUserInfo(false);
         }
 
         public string Platform

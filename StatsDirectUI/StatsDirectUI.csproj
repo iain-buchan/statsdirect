@@ -873,12 +873,6 @@
     <Compile Include="UI\frmExportGraphic.Designer.cs">
       <DependentUpon>frmExportGraphic.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\frmLicense.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\frmLicense.Designer.cs">
-      <DependentUpon>frmLicense.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\frmAbout.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -972,7 +966,6 @@
     <Compile Include="UI\Area.cs" />
     <Compile Include="UI\IReport.cs" />
     <Compile Include="UI\IToolStripHost.cs" />
-    <Compile Include="UI\License.cs" />
     <Compile Include="UI\Pane.cs" />
     <Compile Include="PJLControls\ColourPanel.cs" />
     <Compile Include="PJLControls\ColourPanelForm.cs">
@@ -1188,10 +1181,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmExportGraphic.resx">
       <DependentUpon>frmExportGraphic.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\frmLicense.resx">
-      <DependentUpon>frmLicense.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\frmAbout.resx">

@@ -24,8 +24,6 @@ namespace StatsDirect.UI
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            CheckLicense();
-
             if (args.Length > 0 && "-calculator".Equals(args[0]))
                 StartCalculator();
             else if (args.Length > 0 && "-sanity-check".Equals(args[0]))
@@ -315,32 +313,6 @@ namespace StatsDirect.UI
                         "StatsDirect", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1))
                 {
                     ExcelAddInManager.InstallAddIn();
-                }
-            }
-        }
-
-        private static void CheckLicense()
-        {
-            UserInfo machineUi = License.GetUserInfo(true);
-            bool machineOk = License.Check(machineUi, out bool _);
-            if (machineOk)
-                return;
-            while (true)
-            {
-                UserInfo userUi = License.GetUserInfo(false);
-                bool userOk = License.Check(userUi, out bool userIsPartiallyComplete);
-                if (userOk)
-                    return;
-
-                // If we get here, neither the user nor the machine license are good.  Get the user to start a trial or enter a good key, or exit SD.
-                // The user has no ability to enter a machine key, so always use the user key as the basis of this.
-                using (frmLicense f = new frmLicense(userUi, userIsPartiallyComplete))
-                {
-                    SdApplication.SoleInstance.ShowOrQueueDialog(f, (form, result) => {
-                        if (((frmLicense)form).UserCancelled)
-                            Environment.Exit(1);
-                    });
-                    
                 }
             }
         }
