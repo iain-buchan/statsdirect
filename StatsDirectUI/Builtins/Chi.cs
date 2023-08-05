@@ -34,7 +34,7 @@ namespace StatsDirect.Builtins
             double r = a + c;
             double s = b + d;
             double n = p + q;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (!(fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && p * q * r * s > 0))
                 throw new InvalidDataException();
 
@@ -77,11 +77,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pearson", p1);
             outputParameters.AddOutput("vs", c1);
 
-            List<ParameterBag> warnList = new List<ParameterBag>();
+            List<ParameterBag> warnList = new();
             outputParameters.AddOutput("*warn", warnList);
             if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
             {
-                ParameterBag warnParameters = new ParameterBag();
+                ParameterBag warnParameters = new();
                 warnList.Add(warnParameters);
                 string wrn = n < 20 ? "Number of observations" : "Expected frequencies";
                 warnParameters.AddOutput("wrn", wrn);
@@ -89,13 +89,13 @@ namespace StatsDirect.Builtins
 
             bool doneExact = false;
 
-            List<ParameterBag> oddsList = new List<ParameterBag>();
+            List<ParameterBag> oddsList = new();
             outputParameters.AddOutput("*odds", oddsList);
-            List<ParameterBag> relRiskList = new List<ParameterBag>();
+            List<ParameterBag> relRiskList = new();
             outputParameters.AddOutput("*relrisk", relRiskList);
             if (isCaseControl)
             {
-                ParameterBag oddsParameters = new ParameterBag();
+                ParameterBag oddsParameters = new();
                 oddsList.Add(oddsParameters);
                 // Woolf/logit CI
                 double odr = OddsRatio(a, b, c, d);
@@ -160,7 +160,7 @@ namespace StatsDirect.Builtins
             else if (isCohort)
                 relRiskList.Add(Analysis.RptMiscRelRisk(parameters).ParameterBag);
 
-            List<ParameterBag> fisherList = new List<ParameterBag>();
+            List<ParameterBag> fisherList = new();
             outputParameters.AddOutput("*fisher", fisherList);
             if (!doneExact)
             {
@@ -204,7 +204,7 @@ namespace StatsDirect.Builtins
             double[] h = new double[rows + 1];
             double[] s = new double[rows + 1];
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             double k4 = 0;
             double k2 = 0;
             double k1 = 0;
@@ -234,7 +234,7 @@ namespace StatsDirect.Builtins
                 k4 += s1 * s1 * (a1 + b1);
             }
             double n1 = 0;
-            List<ParameterBag> rowList = new List<ParameterBag>();
+            List<ParameterBag> rowList = new();
             outputParameters.AddOutput("*row", rowList);
             for (int r = 1; r <= rows; r++)
             {
@@ -248,7 +248,7 @@ namespace StatsDirect.Builtins
                 double e2 = b * t1 / t;
                 if (e2 < 5)
                     n1++;
-                ParameterBag rowParameters = new ParameterBag();
+                ParameterBag rowParameters = new();
                 rowList.Add(rowParameters);
                 rowParameters.AddOutput("obs_succ", a1);
                 rowParameters.AddOutput("obs_fail", b1);
@@ -265,11 +265,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tot_tot", t);
             outputParameters.AddOutput("tot_pc", 100 * a / t);
 
-            List<ParameterBag> warnList = new List<ParameterBag>();
+            List<ParameterBag> warnList = new();
             outputParameters.AddOutput("*warn", warnList);
             if (n1 != 0)
             {
-                ParameterBag warnParameters = new ParameterBag();
+                ParameterBag warnParameters = new();
                 warnList.Add(warnParameters);
                 warnParameters.AddOutput("num", n1);
                 warnParameters.AddOutput("den", 2 * rows);
@@ -284,7 +284,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("totdf", n2);
             outputParameters.AddOutput("chi_p", PDF.chivalp(x2, n2));
 
-            List<ParameterBag> zList = new List<ParameterBag>();
+            List<ParameterBag> zList = new();
             outputParameters.AddOutput("*z", zList);
             if (z != Chi2ByNTrend.WithoutTrend)
             {
@@ -297,7 +297,7 @@ namespace StatsDirect.Builtins
                 double x1 = (k1 - k2 / k8) / d;
                 x2 = x1 * x1;
                 n2 = 1;
-                ParameterBag zParameters = new ParameterBag();
+                ParameterBag zParameters = new();
                 zList.Add(zParameters);
 
                 zParameters.AddOutput("chi_lin", x2);
@@ -398,12 +398,12 @@ namespace StatsDirect.Builtins
                 p2M = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> inputsList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -414,11 +414,11 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("pc", cco * 100);
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
-            List<ParameterBag> orList = new List<ParameterBag>();
+            List<ParameterBag> orList = new();
             outputParameters.AddOutput("*or", orList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag orParameters = new ParameterBag();
+                ParameterBag orParameters = new();
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
@@ -467,11 +467,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("chi_mantel", x2);
             outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
 
-            List<ParameterBag> cmlList = new List<ParameterBag>();
+            List<ParameterBag> cmlList = new();
             outputParameters.AddOutput("*cml", cmlList);
             if (ierr != -9)
             {
-                ParameterBag cmlParameters = new ParameterBag();
+                ParameterBag cmlParameters = new();
                 cmlList.Add(cmlParameters);
                 cmlParameters.AddOutput("eor", eor);
                 cmlParameters.AddOutput("llf", llf);
@@ -507,15 +507,15 @@ namespace StatsDirect.Builtins
 
             Meta.GetLogitCi(host, o, k, cit, axll, axul);
 
-            List<ParameterBag> eggerList = new List<ParameterBag>();
+            List<ParameterBag> eggerList = new();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
-            List<ParameterBag> harbordList = new List<ParameterBag>();
+            List<ParameterBag> harbordList = new();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             Meta.ModMetabias(host, harbordParameters, o, k, cco, 1);
 
@@ -524,7 +524,7 @@ namespace StatsDirect.Builtins
 
             if (plotForest)
             {
-                ParameterBag chartParameters = new ParameterBag();
+                ParameterBag chartParameters = new();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
@@ -642,7 +642,7 @@ namespace StatsDirect.Builtins
             int ierror = 0;
             Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, out int r, out int actualIterations, seed, ref ierror);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
             {
                 double p = r / (double)actualIterations;
@@ -685,54 +685,52 @@ namespace StatsDirect.Builtins
             int ntotal = 0;
             int i;
             int j;
-            MersenneTwister rng = new MersenneTwister();
+            MersenneTwister rng = new();
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
+            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            if (iseed != 0)
+                rng.Seed(iseed);
+            else
+                rng.Seed();
+
+            for (j = 1; j <= nrow; j++)
             {
-                if (iseed != 0)
-                    rng.Seed(iseed);
-                else 
-                    rng.Seed();
-
-                for (j = 1; j <= nrow; j++)
+                for (i = 1; i <= ncol; i++)
                 {
-                    for (i = 1; i <= ncol; i++)
-                    {
-                        nrowt[j] += x[j, i];
-                        ncolt[i] += x[j, i];
-                    }
+                    nrowt[j] += x[j, i];
+                    ncolt[i] += x[j, i];
                 }
-
-                int maxtot = 5000000;
-                bool primed = false;
-
-                double[] fact = new double[ncol + 1];
-                int[] jwork = new int[ncol + 1];
-
-                const double tol = Constant.EPSILON * 100.0;
-
-                r = 0;
-                for (i = 1; i <= iter; i++)
-                {
-                    if (i % bootsDivisor == 0)
-                    {
-                        if (progress.Update(i / (double)iter))
-                        {
-                            ierror = -1; //  Interrupted
-                            break;
-                        }
-                    }
-                    Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                    if (ierror != 0)
-                        throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                    double x2Rep = Chi2Trend(x, wt, nrow);
-                    if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
-                        r += 1;
-                }
-                actualIterations = i - 1;
             }
+
+            int maxtot = 5000000;
+            bool primed = false;
+
+            double[] fact = new double[ncol + 1];
+            int[] jwork = new int[ncol + 1];
+
+            const double tol = Constant.EPSILON * 100.0;
+
+            r = 0;
+            for (i = 1; i <= iter; i++)
+            {
+                if (i % bootsDivisor == 0)
+                {
+                    if (progress.Update(i / (double)iter))
+                    {
+                        ierror = -1; //  Interrupted
+                        break;
+                    }
+                }
+                Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                if (ierror != 0)
+                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                double x2Rep = Chi2Trend(x, wt, nrow);
+                if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
+                    r += 1;
+            }
+            actualIterations = i - 1;
         }
 
         private static double Chi2Trend(int[,] x, double[] wt, int rows)
@@ -797,68 +795,66 @@ namespace StatsDirect.Builtins
             int ntotal = 0;
             int i;
             int j;
-            MersenneTwister rng = new MersenneTwister();
+            MersenneTwister rng = new();
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
+            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+
+            if (iseed != 0)
             {
+                rng.Seed(iseed);
+            }
+            else { rng.Seed(); }
 
-                if (iseed != 0)
+            for (j = 1; j <= nrow; j++)
+            {
+                for (i = 1; i <= ncol; i++)
                 {
-                    rng.Seed(iseed);
+                    x[j, i] = Convert.ToInt32(o[j, i]);
+                    nrowt[j] += x[j, i];
+                    ncolt[i] += x[j, i];
                 }
-                else { rng.Seed(); }
+            }
 
-                for (j = 1; j <= nrow; j++)
+            int maxtot = 5000000;
+            bool primed = false;
+
+            double[] fact = new double[ncol + 1];
+            int[] jwork = new int[ncol + 1];
+
+            rx2 = 0;
+            rg2 = 0;
+            rx2Eq = 0;
+            rx2Trend = 0;
+            const double tol = Constant.EPSILON * 100.0;
+            actualIterations = 0;
+
+            for (i = 1; i <= iter; i++)
+            {
+                if (i % bootsDivisor == 0)
                 {
-                    for (i = 1; i <= ncol; i++)
+                    if (progress.Update(i / (double)iter))
                     {
-                        x[j, i] = Convert.ToInt32(o[j, i]);
-                        nrowt[j] += x[j, i];
-                        ncolt[i] += x[j, i];
+                        ierror = -1; //  Interrupted
+                        break;
                     }
                 }
-
-                int maxtot = 5000000;
-                bool primed = false;
-
-                double[] fact = new double[ncol + 1];
-                int[] jwork = new int[ncol + 1];
-
-                rx2 = 0;
-                rg2 = 0;
-                rx2Eq = 0;
-                rx2Trend = 0;
-                const double tol = Constant.EPSILON * 100.0;
-                actualIterations = 0;
-
-                for (i = 1; i <= iter; i++)
+                Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                if (ierror != 0)
+                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
+                if (!faultrep)
                 {
-                    if (i % bootsDivisor == 0)
-                    {
-                        if (progress.Update(i / (double)iter))
-                        {
-                            ierror = -1; //  Interrupted
-                            break;
-                        }
-                    }
-                    Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                    if (ierror != 0)
-                        throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                    ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
-                    if (!faultrep)
-                    {
-                        actualIterations++;
-                        if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
-                            rx2++;
-                        if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
-                            rg2++;
-                        if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
-                            rx2Eq++;
-                        if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
-                            rx2Trend++;
-                    }
+                    actualIterations++;
+                    if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
+                        rx2++;
+                    if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
+                        rg2++;
+                    if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
+                        rx2Eq++;
+                    if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
+                        rx2Trend++;
                 }
             }
         }
@@ -867,7 +863,7 @@ namespace StatsDirect.Builtins
         {
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
             {
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 double p = r / (double)its;
                 MathDbl.binci(r, its, out double ll, out double ul, cco, out string warn);
                 outputParameters.AddOutput(new Dictionary<string, object>

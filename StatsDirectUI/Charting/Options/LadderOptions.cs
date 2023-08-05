@@ -20,7 +20,7 @@ namespace StatsDirect.Charting
 
             //  A ladder plot has a left-hand and a right-hand series, connected by a line.
             //  The line uses the left-hand marker's line type and thickness
-            SeriesOptionsDescriptor leftHandOptions = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor leftHandOptions = new()
             {
                 SeriesName = "Left hand markers",
                 AllowChangeToDashStyle = false,
@@ -30,7 +30,7 @@ namespace StatsDirect.Charting
             };
             SeriesOptions.Add(leftHandOptions);
 
-            SeriesOptionsDescriptor ladderRungOptions = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor ladderRungOptions = new()
             {
                 SeriesName = "Ladder rungs",
                 AllowChangeToMarkerColour = false,
@@ -40,7 +40,7 @@ namespace StatsDirect.Charting
             };
             SeriesOptions.Add(ladderRungOptions);
 
-            SeriesOptionsDescriptor rightHandOptions = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor rightHandOptions = new()
             {
                 SeriesName = "Right hand markers",
                 AllowChangeToDashStyle = false,

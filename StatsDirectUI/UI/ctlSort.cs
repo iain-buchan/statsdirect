@@ -27,7 +27,7 @@ namespace StatsDirect.UI
         {
             gridKeys.Rows.Clear();
             bool useHeaders = chkUseHeaders.Checked;
-            DataTable dt = new DataTable();
+            DataTable dt = new();
             dt.Columns.Add("Offset", typeof(int));
             dt.Columns.Add("Name", typeof(string));
             dt.Rows.Add(-1, "<none>");
@@ -72,7 +72,7 @@ namespace StatsDirect.UI
             // Ignore any new incomplete row at the end of the grid while creating the array and iterating.  ASSUME: New row is always at the end.
             DataGridViewRow candidateNewRow = gridKeys.Rows[gridKeys.Rows.Count - 1];
             int newRowOffset = null == candidateNewRow.Cells[1].Value || null == candidateNewRow.Cells[2].Value ? -1 : 0;
-            List<SortKey> keys = new List<SortKey>();
+            List<SortKey> keys = new();
             for (int i = 0; i < gridKeys.Rows.Count + newRowOffset; i++)
             {
                 DataGridViewRow r = gridKeys.Rows[i];
@@ -90,7 +90,7 @@ namespace StatsDirect.UI
             range.WorkbookSet.WithLock(() =>
             {
                 IRange dataRange = chkUseHeaders.Checked ? range.Range[1, 0, range.RowCount - 1, range.ColumnCount - 1] : range;
-                SortCommand sortCommand = new SortCommand(dataRange, keys.ToArray());
+                SortCommand sortCommand = new(dataRange, keys.ToArray());
                 workbookView.ActiveCommandManager.Execute(sortCommand);
                 // sortCommand.Dispose(); must not be called, otherwise an Undo will fail as the command has already been disposed.
             });
@@ -179,7 +179,7 @@ namespace StatsDirect.UI
         {
             get
             {
-                BindingMemberInfo bmi = new BindingMemberInfo(base.DisplayMember);
+                BindingMemberInfo bmi = new(base.DisplayMember);
                 if (DataGridView != null)
                 {
                     return (CurrencyManager)

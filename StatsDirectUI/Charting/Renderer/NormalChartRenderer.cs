@@ -56,8 +56,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            Range xRange = GetMinMaxArray(x, ScaleType.Linear);
-            Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
+            Layout.Range xRange = GetMinMaxArray(x, ScaleType.Linear);
+            Layout.Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
             return new ScaleParameters
             {
                 X = { AllowedScaleTypes = new[] { ScaleType.Linear }, ScaleType = ScaleType.Linear, Min = xRange.Min, Max = xRange.Max },
@@ -106,27 +106,15 @@ namespace StatsDirect.Charting.Renderer
                     method = NormalOptions.ScoreMethod.VanDerWaerden;
 
             // Set label
-            string lab;
-            if (shouldScaleZ)
-                lab = "Normal (" + Definition.XSeries[0].Title + ")";
-            else
-            {
-                switch (method)
+            string lab = shouldScaleZ
+                ? "Normal (" + Definition.XSeries[0].Title + ")"
+                : method switch
                 {
-                    case NormalOptions.ScoreMethod.VanDerWaerden:
-                        lab = "Normal scores (van der Waerden)";
-                        break;
-                    case NormalOptions.ScoreMethod.Blom:
-                        lab = "Normal scores (Blom)";
-                        break;
-                    case NormalOptions.ScoreMethod.ExpectedNormalOrder:
-                        lab = "Expected normal order scores";
-                        break;
-                    default:
-                        throw new Exception("Unexpected score method");
-                }
-            }
-
+                    NormalOptions.ScoreMethod.VanDerWaerden => "Normal scores (van der Waerden)",
+                    NormalOptions.ScoreMethod.Blom => "Normal scores (Blom)",
+                    NormalOptions.ScoreMethod.ExpectedNormalOrder => "Expected normal order scores",
+                    _ => throw new Exception("Unexpected score method"),
+                };
             int nn = y.Length;
             for (int j = 0; j < rows; j++)
             {
@@ -174,7 +162,7 @@ namespace StatsDirect.Charting.Renderer
             EndVectorPlot();
 
             // Regression results
-            SimpleLinearRegressionContext context = new SimpleLinearRegressionContext(x, y, string.Empty, string.Empty);
+            SimpleLinearRegressionContext context = new(x, y, string.Empty, string.Empty);
             context.CalculateLeastSquaresMethod();
             return new ParameterBag("context", FilledParameterFactory.Output(context));
         }

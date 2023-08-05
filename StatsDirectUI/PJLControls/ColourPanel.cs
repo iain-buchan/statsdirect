@@ -132,14 +132,14 @@ namespace StatsDirect.PJLControls
         internal const ColorSet defaultColorSet = ColorSet.Web;
         internal const BorderStyle defaultBorderStyle = BorderStyle.FixedSingle;
         internal const int defaultPreferredColumns = 0;
-        internal static readonly Size defaultColorWellSize = new Size(16, 16);
+        internal static readonly Size defaultColorWellSize = new(16, 16);
         internal static readonly Color defaultColor = Color.Black;
 
         private ToolTip toolTip;
         private IContainer components;
 
         private BorderStyle borderStyle = defaultBorderStyle;
-        private Size borderSize = new Size(1, 1);
+        private Size borderSize = new(1, 1);
         private Size colorWellSize = defaultColorWellSize;
         private ColorWellInfo[] colorWells;
         private ColorWellInfo pickColor;
@@ -518,7 +518,7 @@ namespace StatsDirect.PJLControls
                 }
                 else
                 {
-                    SolidBrush br = new SolidBrush(Color);
+                    SolidBrush br = new(Color);
                     try
                     {
                         if (pickColor)
@@ -550,15 +550,11 @@ namespace StatsDirect.PJLControls
                         if (isCustomWell)
                         {
                             Color fontColor = Color.GetBrightness() < 0.3 ? Color.White : Color.Black;
-                            using (Font drawFont = new Font("Microsoft Sans Serif", 7.25F))
-                            {
-                                using (SolidBrush drawBrush = new SolidBrush(fontColor))
-                                {
-                                    // Create point for upper-left corner of drawing.
-                                    PointF drawPoint = new PointF(ColorPosition.Left + 1, ColorPosition.Top + 1);
-                                    g.DrawString("Other", drawFont, drawBrush, drawPoint);
-                                }
-                            }
+                            using Font drawFont = new("Microsoft Sans Serif", 7.25F);
+                            using SolidBrush drawBrush = new(fontColor);
+                            // Create point for upper-left corner of drawing.
+                            PointF drawPoint = new(ColorPosition.Left + 1, ColorPosition.Top + 1);
+                            g.DrawString("Other", drawFont, drawBrush, drawPoint);
                         }
                     }
                     finally
@@ -697,7 +693,7 @@ namespace StatsDirect.PJLControls
                 if (currentColor.IsCustomWell)
                 {
                     ColorWellInfo customWell = currentColor;
-                    PopupCustomColorPicker pop = new PopupCustomColorPicker();
+                    PopupCustomColorPicker pop = new();
                     try
                     {
                         pop.CustomColor = currentColor.Color;
@@ -776,7 +772,7 @@ namespace StatsDirect.PJLControls
             if (!Enabled)
                 return;
 
-            Point mousePosition = new Point(e.X, e.Y);
+            Point mousePosition = new(e.X, e.Y);
 
             // Invalidation causes an OnMouseMove event - filter it out so it doesn't
             // interfere with keyboard control
@@ -1206,7 +1202,7 @@ namespace StatsDirect.PJLControls
         /// </summary>
         private void UpdateBorderSize()
         {
-            Size bs = new Size();
+            Size bs = new();
 
             switch (borderStyle)
             {
@@ -1359,12 +1355,10 @@ namespace StatsDirect.PJLControls
         {
             get
             {
-                using (Graphics g = CreateGraphics())
-                {
-                    double xScale = g.DpiX / 96.0;
-                    double yScale = g.DpiY / 96.0;
-                    return new Size((int)(colorWellSize.Width * xScale), (int)(colorWellSize.Height * yScale));
-                }
+                using Graphics g = CreateGraphics();
+                double xScale = g.DpiX / 96.0;
+                double yScale = g.DpiY / 96.0;
+                return new Size((int)(colorWellSize.Width * xScale), (int)(colorWellSize.Height * yScale));
             }
         }
 
@@ -1394,7 +1388,7 @@ namespace StatsDirect.PJLControls
                 }
                 else
                 {
-                    Size min = new Size(
+                    Size min = new(
                         SystemInformation.Border3DSize.Height * 2 + 2,
                         SystemInformation.Border3DSize.Width * 2 + 2);
 

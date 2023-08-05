@@ -41,21 +41,19 @@ namespace StatsDirect.UI
 
         private Font GetChangedOrOriginalFont(Font original)
         {
-            using (FontDialog dlg = new FontDialog())
-            {
-                dlg.Font = original;
-                dlg.ShowColor = false;
-                dlg.ShowApply = false;
-                dlg.ShowEffects = false;
-                dlg.ShowHelp = false;
-                DialogResult result = dlg.ShowDialog(this);
-                return DialogResult.OK == result ? dlg.Font : original;
-            }
+            using FontDialog dlg = new();
+            dlg.Font = original;
+            dlg.ShowColor = false;
+            dlg.ShowApply = false;
+            dlg.ShowEffects = false;
+            dlg.ShowHelp = false;
+            DialogResult result = dlg.ShowDialog(this);
+            return DialogResult.OK == result ? dlg.Font : original;
         }
 
         private static string Describe(Font font)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.Append(font.Name);
             sb.Append(' ');
             sb.Append(font.SizeInPoints.ToString("N0"));

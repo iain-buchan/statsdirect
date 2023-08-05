@@ -2,7 +2,7 @@
 {
     public class SizeD
     {
-        public static SizeD Empty = new SizeD(0, 0);
+        public static SizeD Empty = new(0, 0);
 
         public double Width { get; }
         public double Height { get; }

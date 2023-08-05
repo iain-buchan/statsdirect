@@ -23,7 +23,7 @@ namespace StatsDirect.Creole
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitAttribute(CreoleParser.AttributeContext context)
         {
             string rawValue = context.value.Text;
-            return new CreoleAttribute<TResult> { Name = context.name.Text, Value = rawValue.Substring(1, rawValue.Length - 2) };
+            return new CreoleAttribute<TResult> { Name = context.name.Text, Value = rawValue[1..^1] };
         }
 
         ICreole<TResult> ICreoleParserVisitor<ICreole<TResult>>.VisitAttributes(CreoleParser.AttributesContext context)
@@ -64,7 +64,7 @@ namespace StatsDirect.Creole
             return new CreoleSubstitution<TResult>
             {
                 Path = context.path.Text,
-                Format = context.format.Text.Substring(1) // Token includes the separating colon
+                Format = context.format.Text[1..] // Token includes the separating colon
             };
         }
 
@@ -82,7 +82,7 @@ namespace StatsDirect.Creole
             // Contained text will be # then a string of decimal digits, which should be parsed as a character value.
             return new CreoleEntity<TResult>()
             {
-                Value = (char)int.Parse(context.GetText().Substring(1))
+                Value = (char)int.Parse(context.GetText()[1..])
             };
         }
 
@@ -126,7 +126,7 @@ namespace StatsDirect.Creole
             // Contained text will be #x then a string of hex digits, which should be parsed as a character value.
             return new CreoleEntity<TResult>()
             {
-                Value = (char)int.Parse(context.GetText().Substring(2), System.Globalization.NumberStyles.HexNumber)
+                Value = (char)int.Parse(context.GetText()[2..], System.Globalization.NumberStyles.HexNumber)
             };
         }
 

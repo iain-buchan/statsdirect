@@ -67,11 +67,11 @@ namespace StatsDirect.UI
                 DataType[] dataTypes = new DataType[cols];
                 for (int col = 0; col < cols; col++)
                     dataTypes[col] = DataType.Double;
-                Calcit calcit = new Calcit(expression, dataTypes, false);
+                Calcit calcit = new(expression, dataTypes, false);
 
                 // We now know the output type; set up an output variable appropriately to handle it.
-                DataFrame outputFrame = new DataFrame();
-                DoubleVariable outputVariable = new DoubleVariable(rows, expressionWithOriginalNames);
+                DataFrame outputFrame = new();
+                DoubleVariable outputVariable = new(rows, expressionWithOriginalNames);
                 outputFrame.Variables.Add(outputVariable);
                 int cnt = 0;
                 double[] x = new double[cols];
@@ -109,7 +109,7 @@ namespace StatsDirect.UI
                 DataType[] dataTypes = new DataType[cols];
                 for (int col = 0; col < cols; col++)
                     dataTypes[col] = DataType.Double;
-                Calcit calcit = new Calcit(expression, dataTypes, false);
+                Calcit calcit = new(expression, dataTypes, false);
                 double[] x = new double[cols];
                 for (int n = 0; n < rows; n++)
                 {

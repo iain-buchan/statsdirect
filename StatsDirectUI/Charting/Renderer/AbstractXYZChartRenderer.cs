@@ -13,7 +13,7 @@ namespace StatsDirect.Charting.Renderer
         {
         }
 
-        protected void PlotXYZ(double[] x, double[] y, double[] z, int lowerBound, int rows, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, MarkerType markerType, double? labbePool = default(double?))
+        protected void PlotXYZ(double[] x, double[] y, double[] z, int lowerBound, int rows, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, MarkerType markerType, double? labbePool = default)
         {
             StartVectorPlot();
             double rmh = 0;
@@ -31,12 +31,12 @@ namespace StatsDirect.Charting.Renderer
                 // Get the Min and Max for the data
                 if (minMaxY != DataMinMax.XPreset_YPreset)
                 {
-                    Range dataRangeX = GetMinMaxArray(x, Definition.ScaleParameters.X.ScaleType);
+                    Layout.Range dataRangeX = GetMinMaxArray(x, Definition.ScaleParameters.X.ScaleType);
                     DataMinX = dataRangeX.Min;
                     DataMaxX = dataRangeX.Max;
                     if (minMaxY == DataMinMax.XCalc_YCalc)
                     {
-                        Range dataRangeY = GetMinMaxArray(y, Definition.ScaleParameters.Y.ScaleType);
+                        Layout.Range dataRangeY = GetMinMaxArray(y, Definition.ScaleParameters.Y.ScaleType);
                         DataMinY = dataRangeY.Min;
                         DataMaxY = dataRangeY.Max;
                     }

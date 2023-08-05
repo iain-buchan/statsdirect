@@ -20,7 +20,7 @@ namespace StatsDirect.Builtins
                 r = n;
                 n = temp;
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (n <= 0.0)
                 throw new InvalidDataException();
 
@@ -50,9 +50,9 @@ namespace StatsDirect.Builtins
                 if (p2 > 1.0)
                     p2 = 1.0;
 
-                List<ParameterBag> exactList = new List<ParameterBag>();
+                List<ParameterBag> exactList = new();
                 outputParameters.AddOutput("*exact", exactList);
-                ParameterBag exactParameters = new ParameterBag();
+                ParameterBag exactParameters = new();
                 exactList.Add(exactParameters);
                 exactParameters.AddOutput("prob_2", p2);
                 exactParameters.AddOutput("prob_1", p);
@@ -61,7 +61,7 @@ namespace StatsDirect.Builtins
             else
             {
                 outputParameters.AddOutput("*exact", null);
-                List<ParameterBag> largeList = new List<ParameterBag>();
+                List<ParameterBag> largeList = new();
                 outputParameters.AddOutput("*large", largeList);
                 largeList.Add(new ParameterBag());
             }
@@ -110,7 +110,7 @@ namespace StatsDirect.Builtins
             int c = Convert.ToInt32(parameters["c"].AsDouble);
             int d = Convert.ToInt32(parameters["d"].AsDouble);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tab_a1", a);
             outputParameters.AddOutput("tab_b1", b);
             outputParameters.AddOutput("tab_a2", c);
@@ -170,9 +170,9 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("exp_a", e1);
 
-            List<ParameterBag> headerList = new List<ParameterBag>();
+            List<ParameterBag> headerList = new();
             outputParameters.AddOutput("*header", headerList);
-            List<ParameterBag> rowList = new List<ParameterBag>();
+            List<ParameterBag> rowList = new();
             outputParameters.AddOutput("*row", rowList);
             if (fault != 0)
             {
@@ -211,7 +211,7 @@ namespace StatsDirect.Builtins
                 g1[1] = 1.0;
 
                 headerList.Add(new ParameterBag());
-                ParameterBag rowParameters = new ParameterBag();
+                ParameterBag rowParameters = new();
                 rowList.Add(rowParameters);
                 rowParameters.AddOutput("a", a1);
                 rowParameters.AddOutput("lower", Formatting.pr15(g));
@@ -357,7 +357,7 @@ namespace StatsDirect.Builtins
             if (gamma <= 0.0 || gamma >= 1.0)
                 gamma = 0.95;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tab_a1", ba);
             outputParameters.AddOutput("tab_b1", bb);
             outputParameters.AddOutput("tab_a2", bc);
@@ -427,7 +427,7 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("f", f);
             outputParameters.AddOutput("tail_2", p);
-            List<ParameterBag> rPrimeList = new List<ParameterBag>();
+            List<ParameterBag> rPrimeList = new();
             outputParameters.AddOutput("*r_prime", rPrimeList);
             if (p < 0.05)
                 rPrimeList.Add(new ParameterBag());
@@ -449,7 +449,7 @@ namespace StatsDirect.Builtins
             double c = parameters["c"].AsDouble;
             double d = parameters["d"].AsDouble;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tab_a1", a);
             outputParameters.AddOutput("tab_b1", b);
             outputParameters.AddOutput("tab_a2", c);
@@ -487,7 +487,7 @@ namespace StatsDirect.Builtins
                 parameters["tar"] = FilledParameterFactory.Input(1.0);
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("events", revents);
             outputParameters.AddOutput("time", tar);
             outputParameters.AddOutput("rate", revents / tar);

@@ -17,7 +17,7 @@ namespace StatsDirect.Charting
 
         public static ChartDefinition PrepForLater(ChartType chartType, ChartOptions options, DoubleSeries xSeries, DoubleSeries ySeries)
         {
-            ChartDefinition cd = new ChartDefinition { ChartType = chartType, ChartOptions = options };
+            ChartDefinition cd = new() { ChartType = chartType, ChartOptions = options };
             if (null != xSeries)
                 cd.AddXSeries(xSeries);
             if (null != ySeries)
@@ -29,8 +29,8 @@ namespace StatsDirect.Charting
 
         internal static ParameterBag PlotForResultsOnly(/* TODO: IPreferences*/ ITemplateHost host, ChartDefinition definition)
         {
-            using (IChartRenderer ch = ChartRendererFor(definition, NULL_FACTORY))
-                return ch.Plot(host, true);
+            using IChartRenderer ch = ChartRendererFor(definition, NULL_FACTORY);
+            return ch.Plot(host, true);
         }
 
         public static IChartRenderer ChartRendererFor(ChartDefinition chartDefinition, ICanvasFactory canvasFactory)

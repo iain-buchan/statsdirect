@@ -5,7 +5,7 @@ namespace StatsDirect.CsvParser
 {
     public class CsvRenderer
     {
-        readonly StringBuilder sb = new StringBuilder();
+        readonly StringBuilder sb = new();
 
         public string Render(IList<string> header, IList<IList<string>> rows)
         {

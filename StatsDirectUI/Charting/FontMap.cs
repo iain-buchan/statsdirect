@@ -15,7 +15,7 @@ namespace StatsDirect.Charting
 
         private static FontCache SoleInstance { get; } = new FontCache();
 
-        private readonly Dictionary<FontDescriptor, Font> fonts = new Dictionary<FontDescriptor, Font>();
+        private readonly Dictionary<FontDescriptor, Font> fonts = new();
 
         public static Font Font(FontDescriptor fontDescriptor)
         {

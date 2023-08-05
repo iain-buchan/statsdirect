@@ -18,7 +18,7 @@ namespace StatsDirect.Charting
 
         public void SetOptions()
         {
-            DataFrame f = new DataFrame();
+            DataFrame f = new();
             double maxRow = 0;
             if (MaleFrame != null && MaleFrame.VariableCount > 0)
                 f.Variables.Add(MaleFrame.Variables[0]);
@@ -31,7 +31,7 @@ namespace StatsDirect.Charting
             {
                 IVariable v = f.Variables[seriesIndex];
 
-                MarkerType marker = new MarkerType { MarkerColor = ColorDescriptor.Gray, LineColor = ColorDescriptor.Gray, IsMarkerFilled = false };
+                MarkerType marker = new() { MarkerColor = ColorDescriptor.Gray, LineColor = ColorDescriptor.Gray, IsMarkerFilled = false };
 
                 if (Regex.Match(v.Title, @"\b(male|males|men)\b", RegexOptions.IgnoreCase).Success)
                 {
@@ -45,7 +45,7 @@ namespace StatsDirect.Charting
                 }
                 MarkerTypes.Add(marker);
 
-                SeriesOptionsDescriptor sod = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor sod = new()
                 {
                     SeriesName = v.Title,
                     AllowChangeToDashStyle = false,

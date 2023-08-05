@@ -65,29 +65,19 @@ namespace StatsDirect.Charting.Renderer
 
 
             // get the Min and Max for the data
-            Range dataRangeX = GetMinMaxArray(xx, ScaleType.Linear);
+            Layout.Range dataRangeX = GetMinMaxArray(xx, ScaleType.Linear);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
-            Range dataRangeY = GetMinMaxArray(y, ScaleType.Linear);
+            Layout.Range dataRangeY = GetMinMaxArray(y, ScaleType.Linear);
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
-
-            double pool;
-            switch (options.xform)
+            double pool = options.xform switch
             {
-                case Transformation.Log:
-                    pool = Math.Log(options.rmh);
-                    break;
-                case Transformation.Z:
-                    pool = MathDbl.rtoz(options.rmh);
-                    break;
-                case Transformation.None:
-                    pool = options.rmh;
-                    break;
-                default:
-                    throw new ArgumentException("Unexpected transform: only Log, None, Z known");
-            }
-
+                Transformation.Log => Math.Log(options.rmh),
+                Transformation.Z => MathDbl.rtoz(options.rmh),
+                Transformation.None => options.rmh,
+                _ => throw new ArgumentException("Unexpected transform: only Log, None, Z known")
+            };
             ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).QAxis(DataMinY, 0, DataMaxY, true, false);
             DataMinY = axisScale.MinimumDataValue;
             DataMaxY = axisScale.MaximumDataValue;
@@ -388,22 +378,16 @@ namespace StatsDirect.Charting.Renderer
         }
 
         private static double MAPlotStandardError(double y, double z, int plotMethod)
-        {
-            switch (plotMethod)
+            => plotMethod switch
             {
-                case 1:
-                    return y;
-                case 2:
-                    return y == 0.0
-                        ? 1.0 / z
-                        : 1.0 / y;
-                case 7:
-                    return y < 0.0
-                        ? 0.0
-                        : Math.Sqrt(y);
-                default:
-                    return 0;
-            }
-        }
+                1 => y,
+                2 => y == 0.0
+                    ? 1.0 / z
+                    : 1.0 / y,
+                7 => y < 0.0
+                    ? 0.0
+                    : Math.Sqrt(y),
+                _ => 0,
+            };
     }
 }

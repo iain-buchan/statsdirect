@@ -279,7 +279,7 @@ namespace StatsDirect.TemplateProcessing
 
                 // All integers. How many categories have we got?  If it's 12 or more, we're OK.  If there's only one duplicate, we're also OK.
                 int upperLimitForCategories = Math.Min(data.Length - 1, 11);
-                HashSet<double> distinctValues = new HashSet<double>();
+                HashSet<double> distinctValues = new();
                 foreach (double value in data)
                     if (value != Constant.MISSING)
                     {
@@ -360,6 +360,6 @@ namespace StatsDirect.TemplateProcessing
         public ValidationAction ActionOnMoreInformationNo { get; set; }
 
         public static ValidationResult Valid { get; } = new ValidationResult() { Validity = Validity.Valid };
-        public static ValidationResult Invalid(string failedValidationMessage) => new ValidationResult() { Validity = Validity.Invalid, FailedValidationMessage = failedValidationMessage };
+        public static ValidationResult Invalid(string failedValidationMessage) => new() { Validity = Validity.Invalid, FailedValidationMessage = failedValidationMessage };
     }
 }

@@ -56,7 +56,7 @@ namespace StatsDirect.UI
                 tlp.Controls.Add(cbo);
                 MaybeAddHelpTip(cbo, parameter);
 
-                Label lbl = new Label
+                Label lbl = new()
                 {
                     Tag = parameter,
                     Padding = new Padding(0, 6, 0, 3),
@@ -101,12 +101,12 @@ namespace StatsDirect.UI
         public void Visit(Double2By2Parameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            TableLayoutPanel panel2By2 = new TableLayoutPanel { Tag = parameter, RowCount = 4, ColumnCount = 3, AutoSize = true };
+            TableLayoutPanel panel2By2 = new() { Tag = parameter, RowCount = 4, ColumnCount = 3, AutoSize = true };
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-            Label lblColumnsPrompt = new Label
+            Label lblColumnsPrompt = new()
             {
                 Padding = new Padding(3, 3, 3, 3),
                 AutoSize = true,
@@ -115,7 +115,7 @@ namespace StatsDirect.UI
             panel2By2.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2.SetColumnSpan(lblColumnsPrompt, 3);
 
-            Label lblLeftColumnPrompt = new Label
+            Label lblLeftColumnPrompt = new()
             {
                 Padding = new Padding(3, 6, 3, 3),
                 AutoSize = true,
@@ -123,7 +123,7 @@ namespace StatsDirect.UI
             };
             panel2By2.Controls.Add(lblLeftColumnPrompt, 0, 1);
 
-            Label lblRightColumnPrompt = new Label
+            Label lblRightColumnPrompt = new()
             {
                 Padding = new Padding(3, 6, 3, 3),
                 AutoSize = true,
@@ -131,7 +131,7 @@ namespace StatsDirect.UI
             };
             panel2By2.Controls.Add(lblRightColumnPrompt, 1, 1);
 
-            Label lblRowsPrompt = new Label
+            Label lblRowsPrompt = new()
             {
                 Padding = new Padding(3, 6, 3, 3),
                 AutoSize = true,
@@ -139,19 +139,19 @@ namespace StatsDirect.UI
             };
             panel2By2.Controls.Add(lblRowsPrompt, 2, 1);
 
-            TextBox txtTL = new TextBox { Name = "txtTL", Size = new Size(100, 18) };
+            TextBox txtTL = new() { Name = "txtTL", Size = new Size(100, 18) };
             if (Context.ContainsKey(parameter.TopLeftName) && null != Context[parameter.TopLeftName] && Context[parameter.TopLeftName].IsInputParameter && Context[parameter.TopLeftName].IsDouble)
                 txtTL.Text = Context[parameter.TopLeftName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtTL);
             panel2By2.Controls.Add(txtTL, 0, 2);
 
-            TextBox txtTR = new TextBox { Name = "txtTR", Size = new Size(100, 18) };
+            TextBox txtTR = new() { Name = "txtTR", Size = new Size(100, 18) };
             if (Context.ContainsKey(parameter.TopRightName) && null != Context[parameter.TopRightName] && Context[parameter.TopRightName].IsInputParameter && Context[parameter.TopRightName].IsDouble)
                 txtTR.Text = Context[parameter.TopRightName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtTR);
             panel2By2.Controls.Add(txtTR, 1, 2);
 
-            Label lblTopRowPrompt = new Label
+            Label lblTopRowPrompt = new()
             {
                 Padding = new Padding(3, 6, 3, 3),
                 AutoSize = true,
@@ -159,19 +159,19 @@ namespace StatsDirect.UI
             };
             panel2By2.Controls.Add(lblTopRowPrompt, 2, 2);
 
-            TextBox txtBL = new TextBox { Name = "txtBL", Size = new Size(100, 18) };
+            TextBox txtBL = new() { Name = "txtBL", Size = new Size(100, 18) };
             if (Context.ContainsKey(parameter.BottomLeftName) && null != Context[parameter.BottomLeftName] && Context[parameter.BottomLeftName].IsInputParameter && Context[parameter.BottomLeftName].IsDouble)
                 txtBL.Text = Context[parameter.BottomLeftName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtBL);
             panel2By2.Controls.Add(txtBL, 0, 3);
 
-            TextBox txtBR = new TextBox { Name = "txtBR", Size = new Size(100, 18) };
+            TextBox txtBR = new() { Name = "txtBR", Size = new Size(100, 18) };
             if (Context.ContainsKey(parameter.BottomRightName) && null != Context[parameter.BottomRightName] && Context[parameter.BottomRightName].IsInputParameter && Context[parameter.BottomRightName].IsDouble)
                 txtBR.Text = Context[parameter.BottomRightName].AsDouble.ToString();
             AddAppropriateEventHandlersTo(txtBR);
             panel2By2.Controls.Add(txtBR, 1, 3);
 
-            Label lblBottomRowPrompt = new Label
+            Label lblBottomRowPrompt = new()
             {
                 Padding = new Padding(3, 6, 3, 3),
                 AutoSize = true,
@@ -186,7 +186,7 @@ namespace StatsDirect.UI
         public void Visit(DoubleParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            TextBox txt = new TextBox { Size = new Size(100, 18), Tag = parameter };
+            TextBox txt = new() { Size = new Size(100, 18), Tag = parameter };
             if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDouble)
             {
                 double defaultValue = Context[parameter.Name].AsDouble;
@@ -221,7 +221,7 @@ namespace StatsDirect.UI
                 }
             }
 
-            Label lbl = new Label { Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true, Text = parameter.Prompt(Processor, Context, string.Empty) + suffix };
+            Label lbl = new() { Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true, Text = parameter.Prompt(Processor, Context, string.Empty) + suffix };
 
             MaybeAddHelpTip(lbl, parameter);
             MaybeAddHelpTip(txt, parameter);
@@ -299,7 +299,7 @@ namespace StatsDirect.UI
         public void Visit(FrameParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            WorkbookView grid = new WorkbookView
+            WorkbookView grid = new()
             {
                 Tag = parameter,
                 Name = "grid",
@@ -333,7 +333,7 @@ namespace StatsDirect.UI
             grid.AllowWorkbookExplorer = false;
             tlp.Controls.Add(grid);
 
-            Label lbl = new Label
+            Label lbl = new()
             {
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
@@ -346,7 +346,7 @@ namespace StatsDirect.UI
         public void Visit(IntegerParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            TextBox txt = new TextBox { Size = new Size(100, 18), Tag = parameter };
+            TextBox txt = new() { Size = new Size(100, 18), Tag = parameter };
             if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsInt32)
             {
                 txt.Text = Context[parameter.Name].AsInt32.ToString();
@@ -380,7 +380,7 @@ namespace StatsDirect.UI
                 }
             }
 
-            Label lbl = new Label
+            Label lbl = new()
             {
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
@@ -417,7 +417,7 @@ namespace StatsDirect.UI
             };
             // Add later so that autosizing can size the contained controls as well
 
-            TableLayoutPanel panelOptions = new TableLayoutPanel
+            TableLayoutPanel panelOptions = new()
             {
                 Tag = parameter,
                 RowCount = (parameter.Options.Count + 1) / 2,
@@ -434,7 +434,7 @@ namespace StatsDirect.UI
                 if (Context.ContainsKey(optionsOption.Name) && null != Context[optionsOption.Name] && Context[optionsOption.Name].IsInputParameter)
                     isChecked = Context[optionsOption.Name].AsBoolean;
 
-                CheckBox chk = new CheckBox
+                CheckBox chk = new()
                 {
                     AutoSize = true,
                     Text = optionsOption.Label,
@@ -455,7 +455,7 @@ namespace StatsDirect.UI
             tlp.SetColumnSpan(groupBox, 2);
 
             // "All" tristate checkbox
-            CheckBox chkAll = new CheckBox
+            CheckBox chkAll = new()
             {
                 AutoSize = true,
                 Text = "All",
@@ -560,7 +560,7 @@ namespace StatsDirect.UI
             // Label the parameter above it if required
             if (parameter.HasPrompt)
             {
-                Label lbl = new Label
+                Label lbl = new()
                 {
                     Tag = parameter,
                     Padding = new Padding(0, 6, 0, 3),
@@ -571,7 +571,7 @@ namespace StatsDirect.UI
                 tlp.SetColumnSpan(lbl, 2);
             }
 
-            TableLayoutPanel holder = new TableLayoutPanel
+            TableLayoutPanel holder = new()
             {
                 AutoSize = true,
                 ColumnCount = 2,
@@ -580,7 +580,7 @@ namespace StatsDirect.UI
             };
             for (int v = 0; v < parameter.MaximumVariables; v++)
             {
-                ComboBox cbo = new ComboBox { FormattingEnabled = true };
+                ComboBox cbo = new() { FormattingEnabled = true };
                 for (int i = 0; i < frame.VariableCount; i++)
                 {
                     string rubric = null == frame.Variables[i] ? string.Empty : frame.Variables[i].Title;
@@ -590,7 +590,7 @@ namespace StatsDirect.UI
                     cbo.SelectedIndex = initialState[v];
                 cbo.AutoSizeToList();
                 holder.Controls.Add(cbo);
-                Label l = new Label
+                Label l = new()
                 {
                     Padding = new Padding(3, 6, 3, 3),
                     AutoSize = true,
@@ -605,7 +605,7 @@ namespace StatsDirect.UI
         public void Visit(StringParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            TextBox txt = new TextBox();
+            TextBox txt = new();
             if (parameter.MaxLength <= 0)
                 txt.Size = new Size(250, 18);
             else
@@ -635,7 +635,7 @@ namespace StatsDirect.UI
             }
             AddAppropriateEventHandlersTo(txt);
 
-            Label lbl = new Label
+            Label lbl = new()
             {
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
@@ -730,7 +730,7 @@ namespace StatsDirect.UI
         /// <param name="verticalTitle">If non-null, a string that should be shown as a vertical label to the left of the grid</param>
         private void BuildColumnarGrid(SpecialParameter parameter, TableLayoutPanel tlp, int columnCount, string[] columnTitles, string verticalTitle = null)
         {
-            TableLayoutPanel ssgContainer = new TableLayoutPanel
+            TableLayoutPanel ssgContainer = new()
             {
                 Tag = parameter,
                 RowCount = 2,
@@ -738,7 +738,7 @@ namespace StatsDirect.UI
                 AutoSize = true
             };
 
-            Panel colsPanel = new Panel
+            Panel colsPanel = new()
             {
                 Padding = new Padding(0, 0, 0, 0),
                 Margin = new Padding(0, 0, 0, 3),
@@ -750,7 +750,7 @@ namespace StatsDirect.UI
 
             if (null != verticalTitle)
             {
-                VerticalLabel rowsLabel = new VerticalLabel
+                VerticalLabel rowsLabel = new()
                 {
                     Text = verticalTitle,
                     AutoSize = true
@@ -758,7 +758,7 @@ namespace StatsDirect.UI
                 ssgContainer.Controls.Add(rowsLabel, 0, 1);
             }
 
-            WorkbookView grid = new WorkbookView
+            WorkbookView grid = new()
             {
                 ContextMenuStrip = Form.InlineGridContextMenuStrip,
                 Padding = new Padding(0, 0, 0, 0),
@@ -825,7 +825,7 @@ namespace StatsDirect.UI
 
         private void VisitSpecialRaters2D(SpecialParameter parameter, TableLayoutPanel tlp)
         {
-            TableLayoutPanel ssgContainer = new TableLayoutPanel
+            TableLayoutPanel ssgContainer = new()
             {
                 Tag = parameter,
                 RowCount = 2,
@@ -833,13 +833,13 @@ namespace StatsDirect.UI
                 AutoSize = true
             };
 
-            Label colsLabel = new Label { Text = "Rater 2", AutoSize = true };
+            Label colsLabel = new() { Text = "Rater 2", AutoSize = true };
             ssgContainer.Controls.Add(colsLabel, 1, 0);
 
-            VerticalLabel rowsLabel = new VerticalLabel { Text = "Rater 1", AutoSize = true, TabStop = false };
+            VerticalLabel rowsLabel = new() { Text = "Rater 1", AutoSize = true, TabStop = false };
             ssgContainer.Controls.Add(rowsLabel, 0, 1);
 
-            WorkbookView grid = new WorkbookView { Size = new Size((int)(450 * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
+            WorkbookView grid = new() { Size = new Size((int)(450 * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
             grid.WithLock(() =>
             {
                 if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
@@ -862,21 +862,21 @@ namespace StatsDirect.UI
 
         private void VisitSpecialScores(SpecialParameter parameter, TableLayoutPanel tlp)
         {
-            ctlScores ctl = new ctlScores(Context) { Tag = parameter };
+            ctlScores ctl = new(Context) { Tag = parameter };
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
         }
 
         private void VisitSpecialTextToNumbers(SpecialParameter parameter, TableLayoutPanel tlp)
         {
-            ctlTextToNumbers ctl = new ctlTextToNumbers(Context) { Tag = parameter };
+            ctlTextToNumbers ctl = new(Context) { Tag = parameter };
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
         }
 
         private void VisitSpecialRubric(SpecialParameter parameter, TableLayoutPanel tlp)
         {
-            Label ctl = new Label
+            Label ctl = new()
             {
                 AutoSize = true,
                 Tag = parameter,
@@ -888,7 +888,7 @@ namespace StatsDirect.UI
 
         private void VisitSpecialReport(SpecialParameter parameter, TableLayoutPanel tlp)
         {
-            ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Report, parameter) { Tag = parameter };
+            ctlPickAWindow ctl = new(OutputType.Report, parameter) { Tag = parameter };
             AddAppropriateEventHandlersTo(ctl);
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
@@ -896,7 +896,7 @@ namespace StatsDirect.UI
 
         private void VisitSpecialFrame(SpecialParameter parameter, TableLayoutPanel tlp)
         {
-            ctlPickAWindow ctl = new ctlPickAWindow(OutputType.Frame, parameter) { Tag = parameter };
+            ctlPickAWindow ctl = new(OutputType.Frame, parameter) { Tag = parameter };
             AddAppropriateEventHandlersTo(ctl);
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
@@ -911,7 +911,7 @@ namespace StatsDirect.UI
 
             if (minimumC != Constant.MISSING)
             {
-                DoubleParameter dp = new DoubleParameter
+                DoubleParameter dp = new()
                 {
                     Name = parameter.Name,
                     PromptExpression = parameter.PromptExpression,
@@ -938,7 +938,7 @@ namespace StatsDirect.UI
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
             if (parameter.AllowMultiple)
             {
-                ListBox lstPickFromList = new ListBox
+                ListBox lstPickFromList = new()
                 {
                     Tag = parameter,
                     FormattingEnabled = true,
@@ -952,7 +952,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                ComboBox cbo = new ComboBox { Tag = parameter, MaximumSize = new Size(250, 21) };
+                ComboBox cbo = new() { Tag = parameter, MaximumSize = new Size(250, 21) };
                 if (parameter.IncludeNoneEntry)
                     cbo.Items.Add("(none)");
                 foreach (string value in values)
@@ -965,7 +965,7 @@ namespace StatsDirect.UI
                 tlp.Controls.Add(cbo);
             }
 
-            Label lbl = new Label
+            Label lbl = new()
             {
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
@@ -994,11 +994,11 @@ namespace StatsDirect.UI
                                 defaultValue = Processor.Evaluate(parameter.DefaultValueExpression, Context).ToString();
                         }
 
-                        ComboBoxEx cbo = new ComboBoxEx { Tag = parameter, MaximumSize = new Size(250, 21) };
+                        ComboBoxEx cbo = new() { Tag = parameter, MaximumSize = new Size(250, 21) };
                         ComboBoxExItem defaultItem = null;
                         foreach (OptionOption optionOption in parameter.Options)
                         {
-                            ComboBoxExItem cbi = new ComboBoxExItem { Tag = optionOption, Text = optionOption.Label };
+                            ComboBoxExItem cbi = new() { Tag = optionOption, Text = optionOption.Label };
                             cbo.Items.Add(cbi);
                             if (null != defaultValue)
                                 if (optionOption.Value.Equals(defaultValue))
@@ -1013,7 +1013,7 @@ namespace StatsDirect.UI
                         // There's no way of autosizing a combo... so we do it by hand!
                         cbo.AutoSizeToList();
 
-                        Label lbl = new Label
+                        Label lbl = new()
                         {
                             Tag = parameter,
                             Padding = new Padding(0, 6, 0, 3),
@@ -1054,7 +1054,7 @@ namespace StatsDirect.UI
                             // Add later so that autosizing can size the contained controls as well
                         }
 
-                        TableLayoutPanel panelOptions = new TableLayoutPanel
+                        TableLayoutPanel panelOptions = new()
                         {
                             Tag = parameter,
                             RowCount = (parameter.Options.Count + 1) / 2,
@@ -1077,7 +1077,7 @@ namespace StatsDirect.UI
 
                         foreach (OptionOption optionOption in parameter.Options)
                         {
-                            RadioButton rad = new RadioButton
+                            RadioButton rad = new()
                             {
                                 AutoSize = true,
                                 Text = optionOption.Label,
@@ -1123,10 +1123,10 @@ namespace StatsDirect.UI
         public void Visit(EditGridParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            DataGridView gridEditGrid = new DataGridView();
+            DataGridView gridEditGrid = new();
             ((ISupportInitialize)gridEditGrid).BeginInit();
-            DataGridViewTextBoxColumn colKey = new DataGridViewTextBoxColumn();
-            DataGridViewTextBoxColumn colValue = new DataGridViewTextBoxColumn();
+            DataGridViewTextBoxColumn colKey = new();
+            DataGridViewTextBoxColumn colValue = new();
             gridEditGrid.Tag = parameter;
             gridEditGrid.AllowUserToAddRows = false;
             gridEditGrid.AllowUserToDeleteRows = false;
@@ -1160,7 +1160,7 @@ namespace StatsDirect.UI
                 gridEditGrid.Rows.Add(keyVariable.Data[i], valueVariable.Data[i]);
             gridEditGrid.Visible = true;
 
-            Label lbl = new Label
+            Label lbl = new()
             {
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
@@ -1173,7 +1173,7 @@ namespace StatsDirect.UI
         public void Visit(Double2By2ByKParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            TableLayoutPanel panel2By2ByK = new TableLayoutPanel
+            TableLayoutPanel panel2By2ByK = new()
             {
                 Tag = parameter,
                 RowCount = 5,
@@ -1184,7 +1184,7 @@ namespace StatsDirect.UI
             panel2By2ByK.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             panel2By2ByK.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-            Label lblColumnsPrompt = new Label
+            Label lblColumnsPrompt = new()
             {
                 Padding = new Padding(3, 6, 3, 3),
                 AutoSize = true,
@@ -1193,52 +1193,52 @@ namespace StatsDirect.UI
             panel2By2ByK.Controls.Add(lblColumnsPrompt, 0, 0);
             panel2By2ByK.SetColumnSpan(lblColumnsPrompt, 3);
 
-            Label lblLeftColumnPrompt = new Label { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present" };
+            Label lblLeftColumnPrompt = new() { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present" };
             panel2By2ByK.Controls.Add(lblLeftColumnPrompt, 0, 1);
 
-            Label lblRightColumnPrompt = new Label { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Absent" };
+            Label lblRightColumnPrompt = new() { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Absent" };
             panel2By2ByK.Controls.Add(lblRightColumnPrompt, 1, 1);
 
-            Label lblRowsPrompt = new Label { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Outcome:" };
+            Label lblRowsPrompt = new() { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Outcome:" };
             panel2By2ByK.Controls.Add(lblRowsPrompt, 2, 1);
 
-            TextBox txtTL = new TextBox { Name = "txtTL", Size = new Size(100, 18) };
+            TextBox txtTL = new() { Name = "txtTL", Size = new Size(100, 18) };
             AddAppropriateEventHandlersTo(txtTL);
             panel2By2ByK.Controls.Add(txtTL, 0, 2);
 
-            TextBox txtTR = new TextBox { Name = "txtTR", Size = new Size(100, 18) };
+            TextBox txtTR = new() { Name = "txtTR", Size = new Size(100, 18) };
             AddAppropriateEventHandlersTo(txtTR);
             panel2By2ByK.Controls.Add(txtTR, 1, 2);
 
-            Label lblTopRowPrompt = new Label { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present" };
+            Label lblTopRowPrompt = new() { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Present" };
             panel2By2ByK.Controls.Add(lblTopRowPrompt, 2, 2);
 
-            TextBox txtBL = new TextBox { Name = "txtBL", Size = new Size(100, 18) };
+            TextBox txtBL = new() { Name = "txtBL", Size = new Size(100, 18) };
             AddAppropriateEventHandlersTo(txtBL);
             panel2By2ByK.Controls.Add(txtBL, 0, 3);
 
-            TextBox txtBR = new TextBox { Name = "txtBR", Size = new Size(100, 18) };
+            TextBox txtBR = new() { Name = "txtBR", Size = new Size(100, 18) };
             AddAppropriateEventHandlersTo(txtBR);
             panel2By2ByK.Controls.Add(txtBR, 1, 3);
 
-            FlowLayoutPanel pnlNavigation = new FlowLayoutPanel { AutoSize = true, Tag = new[] { new List<double>(), new List<double>() } };
+            FlowLayoutPanel pnlNavigation = new() { AutoSize = true, Tag = new[] { new List<double>(), new List<double>() } };
             panel2By2ByK.Controls.Add(pnlNavigation, 0, 4);
             panel2By2ByK.SetColumnSpan(pnlNavigation, 3);
 
-            Button cmdPrevious = new Button { Name = "cmdPrevious", Text = "<", Width = 20 };
+            Button cmdPrevious = new() { Name = "cmdPrevious", Text = "<", Width = 20 };
             cmdPrevious.Click += cmdPrevious_KeyPress;
             cmdPrevious.Enabled = false;
             pnlNavigation.Controls.Add(cmdPrevious);
 
-            Label lblStratum = new Label { Padding = new Padding(3, 9, 3, 3), AutoSize = true, Text = "Stratum 1 of 1" };
+            Label lblStratum = new() { Padding = new Padding(3, 9, 3, 3), AutoSize = true, Text = "Stratum 1 of 1" };
             pnlNavigation.Controls.Add(lblStratum);
             lblStratum.Tag = 1;
 
-            Button cmdNext = new Button { Name = "cmdNext", Text = ">", Width = 20 };
+            Button cmdNext = new() { Name = "cmdNext", Text = ">", Width = 20 };
             cmdNext.Click += cmdNext_KeyPress;
             pnlNavigation.Controls.Add(cmdNext);
 
-            Label lblBottomRowPrompt = new Label { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Absent" };
+            Label lblBottomRowPrompt = new() { Padding = new Padding(3, 6, 3, 3), AutoSize = true, Text = "Absent" };
             panel2By2ByK.Controls.Add(lblBottomRowPrompt, 2, 3);
 
             // Fill in data for stratum 1 if present; set number of strata if present
@@ -1267,7 +1267,7 @@ namespace StatsDirect.UI
         public void Visit(DateParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            TextBox txt = new TextBox { Size = new Size(80, 18), Tag = parameter };
+            TextBox txt = new() { Size = new Size(80, 18), Tag = parameter };
             if (!parameter.ForceDefault && Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsInt32)
             {
                 txt.Text = Context[parameter.Name].AsInt32.ToString();
@@ -1281,7 +1281,7 @@ namespace StatsDirect.UI
             MaybeAddHelpTip(txt, parameter);
             tlp.Controls.Add(txt);
 
-            Label lbl = new Label
+            Label lbl = new()
             {
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
@@ -1297,7 +1297,7 @@ namespace StatsDirect.UI
             ChartDefinition chartDefinition = parameter.ChartDefinition;
             ChartOptions chartOptions = chartDefinition.ChartOptions;
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            ChartOptionToControlVisitor visitor = new ChartOptionToControlVisitor(chartDefinition);
+            ChartOptionToControlVisitor visitor = new(chartDefinition);
             chartOptions.Accept(visitor);
             Control ctl = visitor.Control;
             if (null == ctl)
@@ -1315,7 +1315,7 @@ namespace StatsDirect.UI
         public void Visit(BooleanParameter parameter)
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            CheckBox cb = new CheckBox
+            CheckBox cb = new()
             {
                 Padding = new Padding(3, 3, 3, 3),
                 AutoSize = true,
@@ -1347,7 +1347,7 @@ namespace StatsDirect.UI
         {
             if (null != parameter.Help)
             {
-                ToolTip tt = new ToolTip();
+                ToolTip tt = new();
                 tt.SetToolTip(control, parameter.Help.Text);
             }
         }

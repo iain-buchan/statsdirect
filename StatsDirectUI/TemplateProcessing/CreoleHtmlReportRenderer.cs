@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Text;
-using System.Web.UI;
 
 namespace StatsDirect.TemplateProcessing
 {
@@ -19,7 +18,7 @@ namespace StatsDirect.TemplateProcessing
 
         private class InnerHtmlReportRenderer : ICreoleVisitor<string>
         {
-            private static readonly Dictionary<string, IWrapper> rtfFormatting = new Dictionary<string, IWrapper>
+            private static readonly Dictionary<string, IWrapper> rtfFormatting = new()
             {
                 { "b", new TagRenderer("b") },
                 { "ci", new SpanRenderer("ci") },
@@ -38,7 +37,7 @@ namespace StatsDirect.TemplateProcessing
                 { "warn", new SpanRenderer("warn") }
             };
 
-            private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
+            private readonly Stack<ParameterBag> substitutionStack = new();
             private readonly /* TODO: IPreferences */ ITemplateHost host;
 
             public InnerHtmlReportRenderer(/* TODO: IPreferences */ ITemplateHost host, ParameterBag substitutions)
@@ -63,7 +62,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (null == victim.Contents)
                     return string.Empty;
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
                     bool first = true;
@@ -99,7 +98,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleList<string> victim)
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 foreach (ICreole<string> v in victim)
                     sb.Append(v.Accept(this));
                 return sb.ToString();

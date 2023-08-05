@@ -205,7 +205,7 @@ namespace StatsDirect.Charting
 
         public static void SaveMarkerTypes()
         {
-            StringBuilder savedSettings = new StringBuilder();
+            StringBuilder savedSettings = new();
             for (int i = 0; i <= 9; i++)
             {
                 if (i > 0)

@@ -25,7 +25,7 @@ namespace StatsDirect.UI
             lblN.Text = "n = " + options.N.ToString();
             for (int i = 0; i < options.X.Count; i++)
             {
-                ListViewItem item = new ListViewItem(new[] { options.X[i], options.Xn[i].ToString(), options.Xe[i].ToString() });
+                ListViewItem item = new(new[] { options.X[i], options.Xn[i].ToString(), options.Xe[i].ToString() });
                 lstFrequencies.Items.Add(item);
             }
         }

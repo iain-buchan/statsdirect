@@ -151,7 +151,7 @@ namespace StatsDirect.UI
                 double leftPoint = Q0(zMin, zMin + zInt * (i - 0.5));
                 double midPoint = Q0(zMin, zMin + zInt * i);
                 double rightPoint = Q0(zMin, zMin + zInt * (i + 0.5));
-                ListViewItem item = new ListViewItem {Text = Formatting.XRound(leftPoint, 9)};
+                ListViewItem item = new() { Text = Formatting.XRound(leftPoint, 9)};
                 item.SubItems.Add(Formatting.XRound(midPoint, 9));
                 item.SubItems.Add(Formatting.XRound(rightPoint, 9));
                 lstBinValues.Items.Add(item);

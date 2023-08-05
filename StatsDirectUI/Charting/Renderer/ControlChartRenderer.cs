@@ -263,7 +263,7 @@ namespace StatsDirect.Charting.Renderer
 
             int rhDp = cOptions.RightHandDecimalPlaces;
 
-            PenDescriptor blackPen = new PenDescriptor(GrBlack);
+            PenDescriptor blackPen = new(GrBlack);
             if (cOptions.HasUserSpecifiedLimits)
             {
                 // user specified control and warning lines
@@ -274,7 +274,7 @@ namespace StatsDirect.Charting.Renderer
                 y1 = ToCanvasY(cOptions.LowerWarningLimit);
                 DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
                 DrawStringLegendLC(Math.Round(cOptions.LowerWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
-                PenDescriptor redPen = new PenDescriptor(GrRed);
+                PenDescriptor redPen = new(GrRed);
                 {
                     y1 = ToCanvasY(cOptions.UpperControlLimit);
                     DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
@@ -304,7 +304,7 @@ namespace StatsDirect.Charting.Renderer
                 {
                     if (cOptions.Use1SD)
                     {
-                        PenDescriptor greenPen = new PenDescriptor(GrGreen);
+                        PenDescriptor greenPen = new(GrGreen);
                         double x1 = XAxisCanvas + XExtCanvas;
                         double y1 = ToCanvasY(ymean + ysd);
                         DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
@@ -327,7 +327,7 @@ namespace StatsDirect.Charting.Renderer
 
                     if (cOptions.Use3SD)
                     {
-                        PenDescriptor redPen = new PenDescriptor(GrRed);
+                        PenDescriptor redPen = new(GrRed);
                         double x1 = XAxisCanvas + XExtCanvas;
                         double y1 = ToCanvasY(ymean + ysd * 3.0);
                         DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);

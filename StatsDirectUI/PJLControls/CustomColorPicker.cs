@@ -63,7 +63,7 @@ namespace StatsDirect.PJLControls
         private NumericUpDown numericUpDownGreen;
         private NumericUpDown numericUpDownBlue;
 
-        private readonly Bitmap imgColors = new Bitmap(256, 256);
+        private readonly Bitmap imgColors = new(256, 256);
 
         private ZAxis zaxis = ZAxis.Red;
         private bool bContinuousScrollZAxis = defaultContinuousScroll;
@@ -592,20 +592,17 @@ namespace StatsDirect.PJLControls
         {
             if (Enabled)
             {
-                using (Pen p = new Pen(Color.Gray))
-                {
+                using Pen p = new(Color.Gray);
 
-                    const int offset = 5;
+                const int offset = 5;
 
-                    e.Graphics.DrawLine(p, x_val, 0, x_val, y_val - offset);
-                    e.Graphics.DrawLine(p, x_val, y_val + offset, x_val, 255);
+                e.Graphics.DrawLine(p, x_val, 0, x_val, y_val - offset);
+                e.Graphics.DrawLine(p, x_val, y_val + offset, x_val, 255);
 
-                    e.Graphics.DrawLine(p, 0, y_val, x_val - offset, y_val);
-                    e.Graphics.DrawLine(p, x_val + offset, y_val, 255, y_val);
+                e.Graphics.DrawLine(p, 0, y_val, x_val - offset, y_val);
+                e.Graphics.DrawLine(p, x_val + offset, y_val, 255, y_val);
 
-                    e.Graphics.DrawRectangle(p, x_val - offset, y_val - offset, 2 * offset, 2 * offset);
-
-                }
+                e.Graphics.DrawRectangle(p, x_val - offset, y_val - offset, 2 * offset, 2 * offset);
             }
         }
 

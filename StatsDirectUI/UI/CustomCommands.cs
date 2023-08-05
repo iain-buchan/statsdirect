@@ -33,7 +33,7 @@ namespace StatsDirect.UI
                 richEditControl.BeforeExport -= OnBeforeExport;
             }
 
-            DataObject data = new DataObject();
+            DataObject data = new();
             data.SetData(OfficeDataFormats.Rtf, richEditControl.Document.GetRtfText(richEditControl.Document.Selection));
             data.SetData(OfficeDataFormats.UnicodeText, richEditControl.Document.GetText(richEditControl.Document.Selection));
             data.SetData(OfficeDataFormats.Html, htmlForClipboard);

@@ -32,7 +32,7 @@ namespace StatsDirect.Charting.Renderer
             IList<ISeries> SeriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
 
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(SeriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(SeriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -66,7 +66,7 @@ namespace StatsDirect.Charting.Renderer
 
             // Choose a sane upper limit for label lengths
             foreach (ISeries series in seriesToUse)
-                series.Title = series.Title.Length > MAX_GRAPHICAL_TITLE_LENGTH ? series.Title.Substring(0, MAX_GRAPHICAL_TITLE_LENGTH) + "…" : series.Title;
+                series.Title = series.Title.Length > MAX_GRAPHICAL_TITLE_LENGTH ? series.Title[..MAX_GRAPHICAL_TITLE_LENGTH] + "…" : series.Title;
             if (bwOptions.Orientation == ChartOrientation.Horizontal)
                 return PlotBoxWhiskerHorizontal(seriesToUse);
             return PlotBoxWhiskerVertical(seriesToUse);
@@ -77,7 +77,7 @@ namespace StatsDirect.Charting.Renderer
             ScaleHeight(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -97,10 +97,10 @@ namespace StatsDirect.Charting.Renderer
                 false, false);
             MarkerType mt = ChartPreferences.MarkerTypes[10];
             ColorDescriptor black = ColorDescriptor.Black;
-            MarkerType crossMarker = new MarkerType { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
-            MarkerType filledDiamondMarker = new MarkerType { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
-            MarkerType hollowCircleMarker = new MarkerType { MarkerShape = MarkerShape.Circle, MarkerColor = black, MarkerSize = 10 };
-            MarkerType filledCircleMarker = new MarkerType { MarkerShape = MarkerShape.Circle, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
+            MarkerType crossMarker = new() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
+            MarkerType filledDiamondMarker = new() { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
+            MarkerType hollowCircleMarker = new() { MarkerShape = MarkerShape.Circle, MarkerColor = black, MarkerSize = 10 };
+            MarkerType filledCircleMarker = new() { MarkerShape = MarkerShape.Circle, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
 
             PenDescriptor blackPen = GetMarkerPen(mt);
             PenDescriptor dottedBlackPen = GetMarkerPen(mt);
@@ -226,8 +226,8 @@ namespace StatsDirect.Charting.Renderer
                 }
 
                 //  Right-hand fences
-                bool gatedInnerR = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[s.Data.Length - 1] > innerFenceR && innerFenceR > boxR;
-                bool gatedOuterR = s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > boxR;
+                bool gatedInnerR = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[^1] > innerFenceR && innerFenceR > boxR;
+                bool gatedOuterR = s.Data[^1] > outerFenceR && outerFenceR > boxR;
 
                 // double outerFenceRX = ToCanvasX(gatedOuterR ? outerFenceR : s.Data[ s.Data.Length - 1 ]);
 
@@ -281,7 +281,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 else
                 {
-                    maxWhiskerR = s.Data[s.Data.Length - 1];
+                    maxWhiskerR = s.Data[^1];
                 }
                 DrawLineInChartCoordinates(black, maxWhiskerR, yctr, boxR, yctr);
 
@@ -334,7 +334,7 @@ namespace StatsDirect.Charting.Renderer
             ScaleWidth(seriesToUse.Count + 1);
 
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -351,9 +351,7 @@ namespace StatsDirect.Charting.Renderer
 
             //  Swap over the X and Y axis definitions, as we've flipped the drawing
             Definition = Definition.Clone(); //  Make sure the swaps are safe!
-            AxisScaleParameters temp = Definition.ScaleParameters.X;
-            Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
-            Definition.ScaleParameters.Y = temp;
+            (Definition.ScaleParameters.Y, Definition.ScaleParameters.X) = (Definition.ScaleParameters.X, Definition.ScaleParameters.Y);
 
             //  Ensure the X and Y series are where we need them to be for drawing axes
             Definition.SwapXAndYSeries();
@@ -492,8 +490,8 @@ namespace StatsDirect.Charting.Renderer
                             DrawMarkerInCanvasCoordinates(xc, ToCanvasY(s.Data[r]), 2 * OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
 
                 //  Right-hand fences
-                bool gatedInnerT = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[s.Data.Length - 1] > innerFenceT && innerFenceT > boxT;
-                bool gatedOuterT = s.Data[s.Data.Length - 1] > outerFenceT && outerFenceT > boxT;
+                bool gatedInnerT = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[^1] > innerFenceT && innerFenceT > boxT;
+                bool gatedOuterT = s.Data[^1] > outerFenceT && outerFenceT > boxT;
 
                 // double outerFenceTY = ToCanvasY(gatedOuterT ? outerFenceT : s.Data[ s.Data.Length - 1 ]);
 
@@ -554,7 +552,7 @@ namespace StatsDirect.Charting.Renderer
                 }
                 else
                 {
-                    maxWhiskerT = s.Data[s.Data.Length - 1];
+                    maxWhiskerT = s.Data[^1];
                 }
                 double maxWhiskerTY = ToCanvasY(maxWhiskerT);
                 DrawLineInCanvasCoordinates(blackPen, xc, maxWhiskerTY, xc, ToCanvasY(boxT));
@@ -599,7 +597,7 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotBoxWhiskerAscii(IList<ISeries> seriesToUse)
         {
             // sort the array and get the min, max values
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -650,14 +648,14 @@ namespace StatsDirect.Charting.Renderer
 
                 bool gatedr;
                 int xr;
-                if (s.Data[s.Data.Length - 1] > outerFenceR && outerFenceR > q3)
+                if (s.Data[^1] > outerFenceR && outerFenceR > q3)
                 {
                     xr = ToAsciiX(outerFenceR);
                     gatedr = true;
                 }
                 else
                 {
-                    xr = ToAsciiX(s.Data[s.Data.Length - 1]);
+                    xr = ToAsciiX(s.Data[^1]);
                     gatedr = false;
                 }
 
@@ -786,8 +784,8 @@ namespace StatsDirect.Charting.Renderer
                         //  Fences never extend beyond the data
                         if (innerFenceL < s.Data[0])
                             innerFenceL = s.Data[0];
-                        if (innerFenceR > s.Data[s.Data.Length - 1])
-                            innerFenceR = s.Data[s.Data.Length - 1];
+                        if (innerFenceR > s.Data[^1])
+                            innerFenceR = s.Data[^1];
 
                         //  Outer fence
                         switch (method)
@@ -822,8 +820,8 @@ namespace StatsDirect.Charting.Renderer
                         //  Fences never extend beyond the data
                         if (outerFenceL < s.Data[0])
                             outerFenceL = s.Data[0];
-                        if (outerFenceR > s.Data[s.Data.Length - 1])
-                            outerFenceR = s.Data[s.Data.Length - 1];
+                        if (outerFenceR > s.Data[^1])
+                            outerFenceR = s.Data[^1];
 
                         centreIsMedian = true;
                         //  Other centre is the mean

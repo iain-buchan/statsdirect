@@ -25,7 +25,7 @@ namespace StatsDirect.TemplateProcessing
         private string Cook(IList<IStringOrDirective> raw)
         {
             // Smash double new paragraph markers into one; render everything else into one big string and return it.
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             // BEWARE: The inside of this loop may modify the loop variable to prevent testing skipped elements.
             for (int candidateIndex = 0; candidateIndex < raw.Count; candidateIndex++)
             {
@@ -79,7 +79,7 @@ namespace StatsDirect.TemplateProcessing
 
         private class InnerRtfReportRenderer : ICreoleVisitor<IList<IStringOrDirective>>
         {
-            private static readonly Dictionary<string, RtfFormatHolder> rtfFormatting = new Dictionary<string, RtfFormatHolder>
+            private static readonly Dictionary<string, RtfFormatHolder> rtfFormatting = new()
             {
                 // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal).
                 { "b", new RtfFormatHolder(@"\b") },
@@ -99,7 +99,7 @@ namespace StatsDirect.TemplateProcessing
                 { "warn", new RtfFormatHolder(@"\cf6") }
             };
 
-            private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
+            private readonly Stack<ParameterBag> substitutionStack = new();
             private readonly /* TODO: IPreferences */ ITemplateHost host;
 
             /// <summary>
@@ -129,7 +129,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (null == victim.Contents)
                     return Array.Empty<IStringOrDirective>();
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
                     bool first = true;
@@ -149,7 +149,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleFormatting<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 list.Add(new RtfThatIsNotANewParagraph("{"));
                 list.AddRange(ToRtfPrefix(victim.Format));
                 list.Add(new RtfThatIsNotANewParagraph(" "));
@@ -173,7 +173,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleList<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 foreach (ICreole<IList<IStringOrDirective>> v in victim)
                     list.AddRange(v.Accept(this));
                 return list;
@@ -240,7 +240,7 @@ namespace StatsDirect.TemplateProcessing
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTable<IList<IStringOrDirective>> victim)
             {
                 isFirstCellOfTable = true;
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 list.Add(new NewParagraph());
                 list.Add(new RtfThatIsNotANewParagraph("{"));
                 list.AddRange(MaybeAccept(victim.Contents));
@@ -251,7 +251,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableRow<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 list.Add(new RtfThatIsNotANewParagraph(@"\trowd\trgaph135\trleft0\trautofit1"));
                 list.AddRange(MaybeToCellsDefinition(victim.Contents));
                 list.Add(new RtfThatIsNotANewParagraph(@" "));
@@ -269,7 +269,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableDetail<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 list.Add(new RtfThatIsNotANewParagraph(@"\pard\intbl "));
                 list.AddRange(MaybeAccept(victim.Contents));
                 if (isFirstCellOfTable)
@@ -285,7 +285,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleTableHeader<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 list.Add(new RtfThatIsNotANewParagraph(@"\pard\intbl {\ul "));
                 list.AddRange(MaybeAccept(victim.Contents));
                 list.Add(new RtfThatIsNotANewParagraph(@"}"));
@@ -306,7 +306,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleParagraph<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 list.Add(new NewParagraph());
                 list.AddRange(MaybeAccept(victim.Contents));
                 list.Add(new NewParagraph());
@@ -366,7 +366,7 @@ namespace StatsDirect.TemplateProcessing
 
         private class CellsDefinitionRenderer : ICreoleVisitor<IList<IStringOrDirective>>
         {
-            private readonly Stack<ParameterBag> substitutionStack = new Stack<ParameterBag>();
+            private readonly Stack<ParameterBag> substitutionStack = new();
 
             public CellsDefinitionRenderer(ParameterBag substitutions)
             {
@@ -375,7 +375,7 @@ namespace StatsDirect.TemplateProcessing
 
             IList<IStringOrDirective> ICreoleVisitor<IList<IStringOrDirective>>.Visit(CreoleList<IList<IStringOrDirective>> victim)
             {
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 foreach (ICreole<IList<IStringOrDirective>> v in victim)
                     list.AddRange(v.Accept(this));
                 return list;
@@ -387,7 +387,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (null == victim.Contents)
                     return Array.Empty<IStringOrDirective>();
-                List<IStringOrDirective> list = new List<IStringOrDirective>();
+                List<IStringOrDirective> list = new();
                 if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
                 {
                     bool first = true;
@@ -425,7 +425,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (colspan == 1)
                     return new IStringOrDirective[] { new RtfThatIsNotANewParagraph(@"\cellx0") };
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 sb.Append(@"\clmgf\cellx0");
                 for (int spanner = 1; spanner < colspan; spanner++)
                     sb.Append(@"\clmrg\cellx0");

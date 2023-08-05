@@ -14,14 +14,14 @@ namespace StatsDirect.Expressions
             if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
                 expr = expr.Replace(" ", string.Empty);
 
-            AntlrInputStream input = new AntlrInputStream(expr);
-            StatsDirectExpressionLexer lexer = new StatsDirectExpressionLexer(input)
+            AntlrInputStream input = new(expr);
+            StatsDirectExpressionLexer lexer = new(input)
             {
                 Separators = GetSeparatorStructure()
             };
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            StatsDirectExpressionParser parser = new StatsDirectExpressionParser(tokenStream);
-            StringBuilder errorBuilder = new StringBuilder();
+            CommonTokenStream tokenStream = new(lexer);
+            StatsDirectExpressionParser parser = new(tokenStream);
+            StringBuilder errorBuilder = new();
             parser.RemoveErrorListeners();
             parser.AddErrorListener(new AccumulateErrors(errorBuilder));
             StatsDirectExpressionParser.RContext retval = parser.r();
@@ -43,14 +43,14 @@ namespace StatsDirect.Expressions
             if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
                 expr = expr.Replace(" ", string.Empty);
 
-            AntlrInputStream input = new AntlrInputStream(expr);
-            StatsDirectExpressionLexer lexer = new StatsDirectExpressionLexer(input)
+            AntlrInputStream input = new(expr);
+            StatsDirectExpressionLexer lexer = new(input)
             {
                 Separators = GetSeparatorStructure()
             };
-            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-            StatsDirectExpressionParser parser = new StatsDirectExpressionParser(tokenStream);
-            StringBuilder errorBuilder = new StringBuilder();
+            CommonTokenStream tokenStream = new(lexer);
+            StatsDirectExpressionParser parser = new(tokenStream);
+            StringBuilder errorBuilder = new();
             parser.RemoveErrorListeners();
             parser.AddErrorListener(new AccumulateErrors(errorBuilder));
             StatsDirectExpressionParser.RContext retval = parser.r();

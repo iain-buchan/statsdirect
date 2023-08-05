@@ -77,9 +77,9 @@ namespace StatsDirect.Builtins
                 title = "series=" + formula;
 
             double currentval = startval;
-            DoubleVariable v = new DoubleVariable(rows, title);
-            Calcit c = new Calcit(formula, new[] { DataType.Double }, false);
-            DataFrame outputFrame = new DataFrame(v);
+            DoubleVariable v = new(rows, title);
+            Calcit c = new(formula, new[] { DataType.Double }, false);
+            DataFrame outputFrame = new(v);
             double[] x = new double[1];
             for (int i = 0; i < rows; i++)
             {
@@ -87,7 +87,7 @@ namespace StatsDirect.Builtins
                 x[0] = currentval;
                 currentval = c.Evaluate<double>(x);
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -98,15 +98,15 @@ namespace StatsDirect.Builtins
             string[] splitConversion = conversion.Split('|');
             string formula = splitConversion[0];
             string outputUnits = splitConversion[1];
-            Calcit c = new Calcit(formula, new[] { DataType.Double }, false);
+            Calcit c = new(formula, new[] { DataType.Double }, false);
             double[] x = new double[1];
 
             DataFrame dataFrame = parameters["data"].AsDataFrame;
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             foreach (IVariable inputVariable in dataFrame.Variables)
             {
                 DoubleVariable dataVariable = (DoubleVariable)inputVariable;
-                DoubleVariable outputVariable = new DoubleVariable(dataVariable.Length, inputVariable.Title + " {" + outputUnits + "}");
+                DoubleVariable outputVariable = new(dataVariable.Length, inputVariable.Title + " {" + outputUnits + "}");
                 outputFrame.Variables.Add(outputVariable);
                 double[] data = dataVariable.Data;
                 double[] output = outputVariable.Data;
@@ -121,7 +121,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -169,13 +169,13 @@ namespace StatsDirect.Builtins
             // int lc = totcols; 
 
             //  Set up the output
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             for (int c = 0; c < totcols; c++)
             {
                 string outputName = ((StringVariable)data.Variables[c]).Title;
                 if (outputName.Length > 0)
                     outputName += " [no gaps]";
-                StringVariable outputVariable = new StringVariable(totrows, outputName);
+                StringVariable outputVariable = new(totrows, outputName);
                 outputFrame.Variables.Add(outputVariable);
             }
             // lc = lc + 1; 
@@ -222,7 +222,7 @@ namespace StatsDirect.Builtins
                     outputFrame.Variables[c].EnsureLength(ctr);
                 }
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -248,7 +248,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             ClassifierVariable categoryVariable = data.Variables[0] as ClassifierVariable;
             DataFrame outputFrame = ToDummyVariables(host, categoryVariable, false);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -327,14 +327,14 @@ namespace StatsDirect.Builtins
             // sort categories by label to be consistent with Stata xi etc.
             Array.Sort(gcat, 0, ng);
 
-            DummyOptions dm = new DummyOptions { LargestCategoryTitle = maxcatti, CategoryNames = new List<string>(), VariableName = categoryVariable.Title, AllowUserToTreatAsContinuous = allowContinuous };
+            DummyOptions dm = new() { LargestCategoryTitle = maxcatti, CategoryNames = new List<string>(), VariableName = categoryVariable.Title, AllowUserToTreatAsContinuous = allowContinuous };
             for (int j = 0; j < ng; j++)
                 dm.CategoryNames.Add(gcat[j].Title);
             bool wasOk = null != host.Amend(dm, new ParameterBag());
             if (!wasOk)
                 throw new TemplateOperationCancelledException();
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             if (dm.TreatAsContinuous)
                 return null;
             // Split to multiple dummies
@@ -343,7 +343,7 @@ namespace StatsDirect.Builtins
                 if (j != dm.JDrop)
                 {
                     string title = categoryVariable.Title + "(" + gcat[j].Title + ")";
-                    DoubleVariable outputVariable = new DoubleVariable(rows, title);
+                    DoubleVariable outputVariable = new(rows, title);
                     for (int r = 0; r < rows; r++)
                     {
                         // only enter if not missing category mc
@@ -374,18 +374,18 @@ namespace StatsDirect.Builtins
                 logTitle = "ln" + titleCore;
             }
 
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable minusTwoVariable = new DoubleVariable(inputVariable.Length, titleCore + "^-2");
+            DataFrame outputFrame = new();
+            DoubleVariable minusTwoVariable = new(inputVariable.Length, titleCore + "^-2");
             outputFrame.Variables.Add(minusTwoVariable);
-            DoubleVariable minusOneVariable = new DoubleVariable(inputVariable.Length, titleCore + "^-1");
+            DoubleVariable minusOneVariable = new(inputVariable.Length, titleCore + "^-1");
             outputFrame.Variables.Add(minusOneVariable);
-            DoubleVariable minusHalfVariable = new DoubleVariable(inputVariable.Length, titleCore + "^-0.5");
+            DoubleVariable minusHalfVariable = new(inputVariable.Length, titleCore + "^-0.5");
             outputFrame.Variables.Add(minusHalfVariable);
-            DoubleVariable logVariable = new DoubleVariable(inputVariable.Length, logTitle);
+            DoubleVariable logVariable = new(inputVariable.Length, logTitle);
             outputFrame.Variables.Add(logVariable);
-            DoubleVariable halfVariable = new DoubleVariable(inputVariable.Length, titleCore + "^0.5");
+            DoubleVariable halfVariable = new(inputVariable.Length, titleCore + "^0.5");
             outputFrame.Variables.Add(halfVariable);
-            DoubleVariable squaredVariable = new DoubleVariable(inputVariable.Length, titleCore + "^2");
+            DoubleVariable squaredVariable = new(inputVariable.Length, titleCore + "^2");
             outputFrame.Variables.Add(squaredVariable);
 
             for (int n = 0; n < inputVariable.Length; n++)
@@ -465,7 +465,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -673,8 +673,8 @@ namespace StatsDirect.Builtins
             }
 
             // Work out which tables to use
-            List<string> maleTableNames = new List<string>();
-            List<string> femaleTableNames = new List<string>();
+            List<string> maleTableNames = new();
+            List<string> femaleTableNames = new();
             string parameterName = dataIs + "-" + standardiseIs + "-" + standard;
             foreach (KeyValuePair<string, FilledParameter> pair in parameters)
             {
@@ -691,8 +691,8 @@ namespace StatsDirect.Builtins
             maleTableNames = maleTableNames.OrderByDescending(name => name).ToList();
             femaleTableNames = femaleTableNames.OrderByDescending(name => name).ToList();
 
-            List<LmsTable> maleTables = new List<LmsTable>(maleTableNames.Count);
-            List<LmsTable> femaleTables = new List<LmsTable>(femaleTableNames.Count);
+            List<LmsTable> maleTables = new(maleTableNames.Count);
+            List<LmsTable> femaleTables = new(femaleTableNames.Count);
             foreach (string name in maleTableNames)
                 maleTables.Add(ToLmsTable(parameters[name].AsDataFrame));
             foreach (string name in femaleTableNames)
@@ -730,8 +730,8 @@ namespace StatsDirect.Builtins
                     bmiCategory[i] = ChildGrowthCalculateBmiCategory(isMale[i] ? maleBmiCategories : femaleBmiCategories, measure[i], ageInYears[i]);
             }
 
-            ParameterBag outputParameters = new ParameterBag();
-            DataFrame outputFrame = new DataFrame();
+            ParameterBag outputParameters = new();
+            DataFrame outputFrame = new();
             outputFrame.Variables.Add(new DoubleVariable(correctedZ, "z " + dataIs));
             if (includeCentiles)
                 outputFrame.Variables.Add(new DoubleVariable(centile, "Percentile"));
@@ -774,7 +774,7 @@ namespace StatsDirect.Builtins
         {
             // Assumption: Columns are xmrg, 4 x xvar, 4 x l, 4 x m, 4 x s.
             // Assumption: l, m, s all have _pre, unnamed, _nx, _nx2 in that order.
-            LmsTable table = new LmsTable { Rows = new LambdaMuSigmaTableRow[frame.MinRows] };
+            LmsTable table = new() { Rows = new LambdaMuSigmaTableRow[frame.MinRows] };
             double[] variable0 = ((DoubleVariable)frame.Variables[0]).Data;
             double[] variable1 = ((DoubleVariable)frame.Variables[1]).Data;
             double[] variable2 = ((DoubleVariable)frame.Variables[2]).Data;
@@ -834,7 +834,7 @@ namespace StatsDirect.Builtins
         {
             // Assumption: Columns are age, 4 x 16, 4 x 17, 4 x 18.5, 4 x 25, 4 x 30.
             // Assumption: The quads all have _pre, unnamed, _nx, _nx2 in that order.
-            BmiCategoryTable table = new BmiCategoryTable { Rows = new BmiCategoryTableRow[frame.MinRows] };
+            BmiCategoryTable table = new() { Rows = new BmiCategoryTableRow[frame.MinRows] };
             double[] variable0 = ((DoubleVariable)frame.Variables[0]).Data;
             double[] variable1 = ((DoubleVariable)frame.Variables[1]).Data;
             double[] variable2 = ((DoubleVariable)frame.Variables[2]).Data;
@@ -1135,7 +1135,7 @@ namespace StatsDirect.Builtins
                 default:
                     throw new Exception("Unknown operation");
             }
-            Calcit searcher = new Calcit(searchExpression, new[] { inputType }, true);
+            Calcit searcher = new(searchExpression, new[] { inputType }, true);
             if (searcher.OutputType != DataType.Boolean)
                 throw new Exception("Please specify a valid search expression");
 
@@ -1150,7 +1150,7 @@ namespace StatsDirect.Builtins
             if (replacingWithExpression)
                 replacer = new Calcit(replaceExpression, new[] { inputType }, true);
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             bool[] rowsToDelete = new bool[inputFrame.MaxRows];
             int matches = 0;
             object[] values = new object[1];
@@ -1202,7 +1202,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("matches", matches);
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
@@ -1261,8 +1261,8 @@ namespace StatsDirect.Builtins
             // int lc = 1; 
             string pre = "Std (" + lab + "): ";
 
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(inputVariable.Length, pre + inputVariable.Title);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(inputVariable.Length, pre + inputVariable.Title);
             outputFrame.Variables.Add(outputVariable);
             if (method == 4)
             {
@@ -1306,7 +1306,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -1361,10 +1361,10 @@ namespace StatsDirect.Builtins
                 datti = "Data";
                 gpti = "Group ID";
             }
-            DataFrame outputFrame = new DataFrame();
-            StringVariable groupVariable = new StringVariable(totrows, gpti);
+            DataFrame outputFrame = new();
+            StringVariable groupVariable = new(totrows, gpti);
             outputFrame.Variables.Add(groupVariable);
-            DoubleVariable dataVariable = new DoubleVariable(totrows, datti);
+            DoubleVariable dataVariable = new(totrows, datti);
             outputFrame.Variables.Add(dataVariable);
             int row = 0;
             for (int c = 0; c < data.VariableCount; c++)
@@ -1384,7 +1384,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -1425,8 +1425,8 @@ namespace StatsDirect.Builtins
             }
 
             string outputTitle = inputVariable.Title + "~" + q + " from " + indate;
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(inputVariable.Length, outputTitle);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(inputVariable.Length, outputTitle);
             outputFrame.Variables.Add(outputVariable);
             for (int i = 0; i < inputVariable.Length; i++)
             {
@@ -1436,7 +1436,7 @@ namespace StatsDirect.Builtins
                     outputVariable.Data[i] = DateAndTime.DateDiff(interval, indate, inputVariable.Data[i]);
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -1462,7 +1462,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             int lc = 0;
             for (int j = 0; j < ng; j++)
             {
@@ -1488,7 +1488,7 @@ namespace StatsDirect.Builtins
                 lc += cols;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("ng", ng);
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
@@ -1528,8 +1528,8 @@ namespace StatsDirect.Builtins
                 }
             }
             string pre = "Nml Score (" + lab + "): ";
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(rows, pre + dataVariable.Title);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(rows, pre + dataVariable.Title);
             outputFrame.Variables.Add(outputVariable);
             double den;
             if (method == 1)
@@ -1572,7 +1572,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -1708,8 +1708,8 @@ namespace StatsDirect.Builtins
 
             string t = qx;
 
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(limit, t);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(limit, t);
             outputFrame.Variables.Add(outputVariable);
             int cnt = 0;
             switch (index)
@@ -1806,7 +1806,7 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -1977,7 +1977,7 @@ namespace StatsDirect.Builtins
 
         private static StepOutput WrapFrame(string name, DataFrame frame)
         {
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput(name, frame);
             return new StepOutput(outputParameters);
         }
@@ -1998,8 +1998,8 @@ namespace StatsDirect.Builtins
             double[] r = new double[nx + 1];
             ExFortran.Rank(prk, r, 1, nx, q, out double tie);
             string title = "Rank: " + inputVariable.Title + (q < 2 ? string.Empty : " [tie correction = " + tie.ToString(CultureInfo.CurrentCulture) + "]");
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(rows, title);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(rows, title);
             outputFrame.Variables.Add(outputVariable);
             int cx = 0;
             for (int c = 0; c < rows; c++)
@@ -2026,10 +2026,10 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             int cols = data.VariableCount;
             int rows = data.MaxRows;
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             for (int row = 0; row < rows; row++)
             {
-                StringVariable v = new StringVariable(cols, null); //  Prevent title being emitted on output
+                StringVariable v = new(cols, null); //  Prevent title being emitted on output
                 outputFrame.Variables.Add(v);
                 for (int col = 0; col < cols; col++)
                 {
@@ -2127,8 +2127,8 @@ namespace StatsDirect.Builtins
                 Array.Sort(dataArray, 0, nx, comp);
             }
 
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(dataArray, t);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(dataArray, t);
             outputVariable.TruncateDataToLength(nx);
             outputFrame.Variables.Add(outputVariable);
             return WrapFrame("output", outputFrame);
@@ -2146,7 +2146,7 @@ namespace StatsDirect.Builtins
             DataType[] dataTypes = new DataType[cols];
             for (int col = 0; col < cols; col++)
                 dataTypes[col] = DataType.Double;
-            Calcit clc = new Calcit(expression, dataTypes, false);
+            Calcit clc = new(expression, dataTypes, false);
 
             double[] x = new double[cols];
             SortPair[] sortArray = new SortPair[rows];
@@ -2158,7 +2158,7 @@ namespace StatsDirect.Builtins
             }
             Array.Sort(sortArray);
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             foreach (IVariable v in data.Variables)
                 outputFrame.Variables.Add(new DoubleVariable(rows, "Sort(" + expression + "): " + v.Title));
             for (int col = 0; col < cols; col++)
@@ -2453,8 +2453,8 @@ namespace StatsDirect.Builtins
 
         private static StepOutput WrapDoubleVariable(double[] a, string title)
         {
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable outputVariable = new DoubleVariable(a, title);
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(a, title);
             outputFrame.Variables.Add(outputVariable);
             return WrapFrame("output", outputFrame);
         }
@@ -2465,7 +2465,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = (DoubleVariable)data.Variables[0];
             int rows = inputVariable.Length;
-            CategoriseOptions options = new CategoriseOptions
+            CategoriseOptions options = new()
             {
                 Title = "Categorised: " + inputVariable.Title,
                 PassX = new double[rows],
@@ -2474,17 +2474,17 @@ namespace StatsDirect.Builtins
             if (null == host.Amend(options, parameters))
                 throw new TemplateOperationCancelledException();
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             if (options.PassX != null && options.PassX.Length > 0)
             {
-                DoubleVariable boundariesVariable = new DoubleVariable(options.PassX, options.Title);
+                DoubleVariable boundariesVariable = new(options.PassX, options.Title);
                 outputFrame.Variables.Add(boundariesVariable);
             }
             if (options.Categories != null)
             {
-                StringVariable categoryVariable = new StringVariable(options.Categories, "category");
+                StringVariable categoryVariable = new(options.Categories, "category");
                 outputFrame.Variables.Add(categoryVariable);
-                DoubleVariable countVariable = new DoubleVariable(options.Counts.Length, "count");
+                DoubleVariable countVariable = new(options.Counts.Length, "count");
                 outputFrame.Variables.Add(countVariable);
                 for (int r = 0; r < options.Counts.Length; r++)
                     countVariable.SetData(r, options.Counts[r]);
@@ -2500,7 +2500,7 @@ namespace StatsDirect.Builtins
 
             if (isFindAndReplace)
             {
-                ExtractionOptions options = new ExtractionOptions { DataFrame = data };
+                ExtractionOptions options = new() { DataFrame = data };
                 ParameterBag outputParameters = host.Amend(options, parameters);
                 return new StepOutput(outputParameters);
             }
@@ -2516,7 +2516,7 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= cols; j++)
                     l += "X" + j + ": " + identifiersFrame.Variables[j - 1].Title + "\r\n";
 
-                ExtractionOptions options = new ExtractionOptions
+                ExtractionOptions options = new()
                 {
                     Title = dtitle,
                     IdentifierNames = l,
@@ -2530,7 +2530,7 @@ namespace StatsDirect.Builtins
 
         public static StepOutput ConvertUnits(ITemplateHost host, ParameterBag parameters)
         {
-            ConvertUnitsOptions convertUnitsOptions = new ConvertUnitsOptions();
+            ConvertUnitsOptions convertUnitsOptions = new();
             ParameterBag outputParameters = host.Amend(convertUnitsOptions, parameters);
             return new StepOutput(outputParameters);
         }
@@ -2596,7 +2596,7 @@ namespace StatsDirect.Builtins
                 // Gather counts and sequencing for later use
                 int[] differenceValuesInOrder = new int[nextDifferentValue];
                 int nextInOrderOffset = 0;
-                Dictionary<int, RespondersCountAndRowIndex> countMap = new Dictionary<int, RespondersCountAndRowIndex>();
+                Dictionary<int, RespondersCountAndRowIndex> countMap = new();
                 for (int sourceIndex = 0; sourceIndex < differenceArray.Length; sourceIndex++)
                 {
                     int value = differenceArray[sourceIndex];
@@ -2627,7 +2627,7 @@ namespace StatsDirect.Builtins
                     outputNonResponders[i] = rcari.NonResponders;
                     outputProportionsResponding[i] = rcari.ProportionResponding;
                 }
-                DataFrame outputFrame = new DataFrame();
+                DataFrame outputFrame = new();
                 string group = parameters["group"].AsString;
                 if (group.Contains("totals"))
                     outputFrame.Variables.Add(new DoubleVariable(outputTotals, "Total"));
@@ -2649,7 +2649,7 @@ namespace StatsDirect.Builtins
                         outputFrame.Variables.Add(outputCovariant);
                     }
                 }
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("output", outputFrame);
                 return new StepOutput(outputParameters);
 
@@ -2666,7 +2666,7 @@ namespace StatsDirect.Builtins
                 // Gather counts and sequencing for later use
                 int[] differenceValuesInOrder = new int[nextDifferentValue];
                 int nextInOrderOffset = 0;
-                Dictionary<int, CountAndRowIndex> countMap = new Dictionary<int, CountAndRowIndex>();
+                Dictionary<int, CountAndRowIndex> countMap = new();
                 for (int sourceIndex = 0; sourceIndex < differenceArray.Length; sourceIndex++)
                 {
                     int value = differenceArray[sourceIndex];
@@ -2698,9 +2698,9 @@ namespace StatsDirect.Builtins
                 string frequenciesTitle = categoriesVariable.Title;
                 if (frequenciesTitle.EndsWith("_Individual"))
                     frequenciesTitle = frequenciesTitle.Replace("_Individual", string.Empty);
-                StringVariable valuesVariable = new StringVariable(outputValues, valuesTitle);
-                DoubleVariable frequenciesVariable = new DoubleVariable(outputFrequencies, frequenciesTitle);
-                DataFrame outputFrame = new DataFrame();
+                StringVariable valuesVariable = new(outputValues, valuesTitle);
+                DoubleVariable frequenciesVariable = new(outputFrequencies, frequenciesTitle);
+                DataFrame outputFrame = new();
                 outputFrame.Variables.Add(valuesVariable);
                 outputFrame.Variables.Add(frequenciesVariable);
 
@@ -2709,13 +2709,13 @@ namespace StatsDirect.Builtins
                     // Add covariates.
                     foreach (IVariable inputCovariant in covariatesOrNull.Variables)
                     {
-                        VariantVariable outputCovariant = new VariantVariable(nextDifferentValue, inputCovariant.Title);
+                        VariantVariable outputCovariant = new(nextDifferentValue, inputCovariant.Title);
                         for (int i = 0; i < nextDifferentValue; i++)
                             outputCovariant.Data[i] = inputCovariant.DataAsObject(countMap[differenceValuesInOrder[i]].RowIndex);
                         outputFrame.Variables.Add(outputCovariant);
                     }
                 }
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("output", outputFrame);
                 return new StepOutput(outputParameters);
 
@@ -2806,7 +2806,7 @@ namespace StatsDirect.Builtins
             bool hasLabels = null != labelsOrNull;
             int covariatesCount = covariatesOrNull?.VariableCount ?? 0;
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             // Add label variable if we have it
             StringVariable outputLabels;
             if (hasLabels)
@@ -2849,7 +2849,7 @@ namespace StatsDirect.Builtins
                     nextOutputOffset = FillExtractOutputRow(covariatesOrNull, labelsOrNull, noPerGroup[srcRow], 0, hasResponses, hasLabels, covariatesCount, outputLabels, outputResponses, outputCovariates, nextOutputOffset, srcRow);
 
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -2938,12 +2938,12 @@ namespace StatsDirect.Builtins
         private static int ClassifyObjectsInOneVariable<T>(int[] differenceArray, GenericVariable<T> variable, int nextDifferentValue)
         {
             T[] testArray = variable.Data;
-            HashSet<int> seenDifferences = new HashSet<int>();
-            Dictionary<IntAndSomething<T>, int> differenceMapper = new Dictionary<IntAndSomething<T>, int>();
+            HashSet<int> seenDifferences = new();
+            Dictionary<IntAndSomething<T>, int> differenceMapper = new();
             for (int i = 0; i < differenceArray.Length; i++)
             {
                 int differenceValue = differenceArray[i];
-                IntAndSomething<T> probe = new IntAndSomething<T>(differenceValue, i < testArray.Length ? testArray[i] : default);
+                IntAndSomething<T> probe = new(differenceValue, i < testArray.Length ? testArray[i] : default);
                 // Holds the value we'll use
                 if (differenceMapper.TryGetValue(probe, out int target))
                 {
@@ -2985,8 +2985,8 @@ namespace StatsDirect.Builtins
             DataFrame rawValuesFrame = parameters["rawValues"].AsDataFrame;
 
             // Gather all labels mentioned, and construct counts for each one of those labels
-            List<string> labelsByDiscoveryOrder = new List<string>();
-            Dictionary<string, int[]> countsByLabelAndVariable = new Dictionary<string, int[]>();
+            List<string> labelsByDiscoveryOrder = new();
+            Dictionary<string, int[]> countsByLabelAndVariable = new();
             for (int variableIndex = 0; variableIndex < rawValuesFrame.Variables.Count; variableIndex++)
             {
                 ClassifierVariable cv = (ClassifierVariable)rawValuesFrame.Variables[variableIndex];
@@ -3011,11 +3011,11 @@ namespace StatsDirect.Builtins
             bool shouldUseProportions = rawValuesFrame.Variables.Count > 1;
 
             // Synthesise "values" and "labels" variables suitable for a bar plot
-            ParameterBag outputParameters = new ParameterBag();
-            DataFrame labelsFrame = new DataFrame(new StringVariable(labelsByDiscoveryOrder.ToArray()));
+            ParameterBag outputParameters = new();
+            DataFrame labelsFrame = new(new StringVariable(labelsByDiscoveryOrder.ToArray()));
             outputParameters.AddOutput("labels", labelsFrame);
 
-            DataFrame valuesFrame = new DataFrame() { Name = rawValuesFrame.Name };
+            DataFrame valuesFrame = new() { Name = rawValuesFrame.Name };
             outputParameters.AddOutput("values", valuesFrame);
             // A bit of rotation - we've stored counts in rows, the output variables want them by column.
             for (int valueIndex = 0; valueIndex < rawValuesFrame.Variables.Count; valueIndex++)
@@ -3033,7 +3033,7 @@ namespace StatsDirect.Builtins
                 if (shouldUseProportions && sum > 0)
                     for (int labelIndex = 0; labelIndex < labelsByDiscoveryOrder.Count; labelIndex++)
                         data[labelIndex] /= sum;
-                DoubleVariable values = new DoubleVariable(data, rawValuesFrame.Variables[valueIndex].Title);
+                DoubleVariable values = new(data, rawValuesFrame.Variables[valueIndex].Title);
                 valuesFrame.Variables.Add(values);
             }
             return new StepOutput(outputParameters);

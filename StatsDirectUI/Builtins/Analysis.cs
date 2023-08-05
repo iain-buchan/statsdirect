@@ -73,17 +73,17 @@ namespace StatsDirect.Builtins
             poisVar /= (refntot * refntot);
             binoVar /= (refntot * refntot);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (nunit == 1.0)
                 outputParameters.AddOutput("units", "1 unit");
             else
                 outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
 
-            List<ParameterBag> inputsList = new List<ParameterBag>();
+            List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int j = 1; j <= rows; j++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("idxy", idxy[j]);
                 inputsParameters.AddOutput("idxn", idxn[j]);
@@ -94,13 +94,13 @@ namespace StatsDirect.Builtins
 
             // CIs for the single Poisson parameter (stratum specific rate)
             outputParameters.AddOutput("pc", cco * 100);
-            List<ParameterBag> cisList = new List<ParameterBag>();
+            List<ParameterBag> cisList = new();
             outputParameters.AddOutput("*cis", cisList);
             double xu;
             double xl;
             for (int j = 1; j <= rows; j++)
             {
-                ParameterBag cisParameters = new ParameterBag();
+                ParameterBag cisParameters = new();
                 cisList.Add(cisParameters);
                 cisParameters.AddOutput("idxr", idxr[j] * nunit);
                 Rates.poisson_ci(alpha, idxy[j], idxn[j], out xl, out xu);
@@ -230,7 +230,7 @@ namespace StatsDirect.Builtins
                 return null;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             outputParameters.AddOutput("a_out", a);
             outputParameters.AddOutput("b_out", b);
@@ -268,9 +268,9 @@ namespace StatsDirect.Builtins
                 if (ierr != 0)
                     host.Error(Formatting.ERRCOLON + "Error in calculation", "StatsDirect");
 
-                List<ParameterBag> exactList = new List<ParameterBag>();
+                List<ParameterBag> exactList = new();
                 outputParameters.AddOutput("*exact", exactList);
-                ParameterBag exactParameters = new ParameterBag();
+                ParameterBag exactParameters = new();
                 exactList.Add(exactParameters);
                 exactParameters.AddOutput("eor", eor);
                 exactParameters.AddOutput("llf", llf);
@@ -465,7 +465,7 @@ namespace StatsDirect.Builtins
                 parUl = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("aa", a);
             outputParameters.AddOutput("bb", b);
             outputParameters.AddOutput("cc", c);
@@ -477,11 +477,11 @@ namespace StatsDirect.Builtins
             double power = Power.fishpower(1.0 - gamma, a, b, n1, n2, ref dofish);
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - gamma));
 
-            List<ParameterBag> powerList = new List<ParameterBag>();
+            List<ParameterBag> powerList = new();
             outputParameters.AddOutput("*power", powerList);
             if (b * c > 0 && a * d > 0)
             {
-                ParameterBag powerParameters = new ParameterBag();
+                ParameterBag powerParameters = new();
                 powerList.Add(powerParameters);
                 double seodr = Math.Sqrt(1 / a + 1 / b + 1 / c + 1 / d);
                 double yodr = Math.Log(odr) - zp * seodr;
@@ -526,11 +526,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p1m", p1m);
             outputParameters.AddOutput("p2m", p2m);
 
-            List<ParameterBag> riskList = new List<ParameterBag>();
+            List<ParameterBag> riskList = new();
             outputParameters.AddOutput("*risk", riskList);
             if (par != Constant.MISSING)
             {
-                ParameterBag riskParameters = new ParameterBag();
+                ParameterBag riskParameters = new();
                 riskList.Add(riskParameters);
                 riskParameters.AddOutput("pe", pe * 100.0);
                 riskParameters.AddOutput("par", par * 100.0);
@@ -581,7 +581,7 @@ namespace StatsDirect.Builtins
             if (n <= 0.0)
                 throw new InvalidDataException();
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("aa", a);
             outputParameters.AddOutput("bb", b);
             outputParameters.AddOutput("ab", a + b);
@@ -801,7 +801,7 @@ namespace StatsDirect.Builtins
 
             double pd = 1.0 / parameters["pd"].AsDouble;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             outputParameters.AddOutput("population", pd * 10000);
 
@@ -880,7 +880,7 @@ namespace StatsDirect.Builtins
             if (ierror)
                 return null;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("po", po * 100);
             outputParameters.AddOutput("pe", pe * 100);
             outputParameters.AddOutput("kappa", k);
@@ -906,17 +906,17 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            List<ParameterBag> weightsList = new List<ParameterBag>();
+            List<ParameterBag> weightsList = new();
             outputParameters.AddOutput("*weights", weightsList);
             for (int i = 1; i <= g; i++)
             {
-                ParameterBag weightsParameters = new ParameterBag();
+                ParameterBag weightsParameters = new();
                 weightsList.Add(weightsParameters);
-                List<ParameterBag> totList = new List<ParameterBag>();
+                List<ParameterBag> totList = new();
                 weightsParameters.AddOutput("*tot", totList);
                 for (int j = 1; j <= g; j++)
                 {
-                    ParameterBag totParameters = new ParameterBag();
+                    ParameterBag totParameters = new();
                     totList.Add(totParameters);
                     totParameters.AddOutput("tot", Formatting.XRound(w[i - 1, j - 1], host.Preferences.PDecimalPlaces));
                 }
@@ -936,14 +936,14 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("spe", spe * 100);
             outputParameters.AddOutput("spi", spi);
-            List<ParameterBag> deciList = new List<ParameterBag>();
+            List<ParameterBag> deciList = new();
             outputParameters.AddOutput("*deci", deciList);
             if (g == 2)
             {
                 Tables.XKappaCI22(Convert.ToInt32(o[0, 0]), Convert.ToInt32(o[0, 1] + o[1, 0]), Convert.ToInt32(o[1, 1]), cit, out double _, out double lwr, out double upr, out fault);
                 if (fault == 0)
                 {
-                    ParameterBag deciParameters = new ParameterBag();
+                    ParameterBag deciParameters = new();
                     deciList.Add(deciParameters);
                     deciParameters.AddOutput("pc", cco * 100);
                     deciParameters.AddOutput("lwr", lwr);
@@ -1023,14 +1023,14 @@ namespace StatsDirect.Builtins
             double zc = 1.0 - (1.0 - zl) / 2.0;
             zc = PDF.gauinv(zc);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", 100 * zl);
 
-            List<ParameterBag> rowList = new List<ParameterBag>();
+            List<ParameterBag> rowList = new();
             outputParameters.AddOutput("*row", rowList);
             for (int i = 1; i <= rows; i++)
             {
-                ParameterBag rowParameters = new ParameterBag();
+                ParameterBag rowParameters = new();
                 rowList.Add(rowParameters);
                 rowParameters.AddOutput("result", i);
                 rowParameters.AddOutput("plusfeature", c1[i]);
@@ -1105,7 +1105,7 @@ namespace StatsDirect.Builtins
             }
             double pt = xt / nt;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", 100.0 * zl);
 
             outputParameters.AddOutput("ce", xc.ToString() + "/" + nc.ToString() + " = " + host.RoundU(pc));
@@ -1212,11 +1212,11 @@ namespace StatsDirect.Builtins
             // **************************************************************************************
             // substitute external baseline event rate (brr) for control event rate (pc) if brr given
             bool hasBrr = parameters.ContainsKey("brr") && parameters["brr"] != null;
-            List<ParameterBag> adjustedList = new List<ParameterBag>();
+            List<ParameterBag> adjustedList = new();
             outputParameters.AddOutput("*adjusted", adjustedList);
             if (hasBrr)
             {
-                ParameterBag adjustedParameters = new ParameterBag();
+                ParameterBag adjustedParameters = new();
                 adjustedList.Add(adjustedParameters);
                 double brr = parameters["brr"].AsDouble;
                 string brt;
@@ -1385,7 +1385,7 @@ namespace StatsDirect.Builtins
 
             if (fault == 0)
             {
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 MathDbl.lr_ci(b, a, b + d, a + c, zp, out double ll, out double ul);
                 outputParameters.AddOutput("a_out", a);
                 outputParameters.AddOutput("b_out", b);
@@ -1402,11 +1402,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("miettinen_from", difLl);
                 outputParameters.AddOutput("miettinen_to", difUl);
 
-                List<ParameterBag> exposureList = new List<ParameterBag>();
+                List<ParameterBag> exposureList = new();
                 outputParameters.AddOutput("*exposure", exposureList);
                 if (par != Constant.MISSING)
                 {
-                    ParameterBag exposureParameters = new ParameterBag();
+                    ParameterBag exposureParameters = new();
                     exposureList.Add(exposureParameters);
                     exposureParameters.AddOutput("pe", pe * 100.0);
                     exposureParameters.AddOutput("par", par * 100.0);
@@ -1445,7 +1445,7 @@ namespace StatsDirect.Builtins
             double p2 = (r + t) / n;
             double p3 = (s - t) / n;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("prop_1", p1);
             outputParameters.AddOutput("prop_2", p2);
             outputParameters.AddOutput("prop_diff", p3);
@@ -1458,13 +1458,13 @@ namespace StatsDirect.Builtins
                 rx = nx - rx;
             double fl = Math.Pow(0.5, nx);
 
-            List<ParameterBag> exactList = new List<ParameterBag>();
+            List<ParameterBag> exactList = new();
             outputParameters.AddOutput("*exact", exactList);
-            List<ParameterBag> approxList = new List<ParameterBag>();
+            List<ParameterBag> approxList = new();
             outputParameters.AddOutput("*approx", approxList);
             if (fl > 0)
             {
-                ParameterBag exactParameters = new ParameterBag();
+                ParameterBag exactParameters = new();
                 exactList.Add(exactParameters);
                 double pl = fl;
                 if (rx != 0)
@@ -1498,7 +1498,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                ParameterBag approxParameters = new ParameterBag();
+                ParameterBag approxParameters = new();
                 approxList.Add(approxParameters);
 
                 double d = Math.Abs(nx / 2 - rx) - 0.5;
@@ -1575,7 +1575,7 @@ namespace StatsDirect.Builtins
                 cco = 0.95;
             double cit = PDF.gauinv(cco + (1 - cco) / 2, out int fault);
             double p = r / n;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("prop", p);
 
             // Clopper Pearson by F distribution
@@ -1690,7 +1690,7 @@ namespace StatsDirect.Builtins
             double p2 = r2 / n2;
             double p = (r1 + r2) / (n1 + n2);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("n_1", n1);
             outputParameters.AddOutput("r_1", r1);
             outputParameters.AddOutput("prop_1", p1);
@@ -1706,11 +1706,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to", cu);
 
             double mp = PropMidPFisher2(Convert.ToInt32(r1), Convert.ToInt32(n1 - r1), Convert.ToInt32(r2), Convert.ToInt32(n2 - r2));
-            List<ParameterBag> exact2List = new List<ParameterBag>();
+            List<ParameterBag> exact2List = new();
             outputParameters.AddOutput("*exact2", exact2List);
             if (mp != Constant.MISSING)
             {
-                ParameterBag exact2Parameters = new ParameterBag();
+                ParameterBag exact2Parameters = new();
                 exact2List.Add(exact2Parameters);
                 exact2Parameters.AddOutput("mp", mp);
             }
@@ -1730,11 +1730,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("se", sepest);
             outputParameters.AddOutput("z", z);
 
-            List<ParameterBag> approx2List = new List<ParameterBag>();
+            List<ParameterBag> approx2List = new();
             outputParameters.AddOutput("*approx2", approx2List);
             if (z != Constant.MISSING)
             {
-                ParameterBag approx2Parameters = new ParameterBag();
+                ParameterBag approx2Parameters = new();
                 approx2List.Add(approx2Parameters);
                 // Duplicate - we could use the outside version, but that would leave this bag puzzlingly empty for anyone who doesn't read it along with the report and realise that it's solely there to trigger display of a section.
                 approx2Parameters.AddOutput("z", z);

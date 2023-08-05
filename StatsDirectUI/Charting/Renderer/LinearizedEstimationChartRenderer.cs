@@ -74,7 +74,7 @@ namespace StatsDirect.Charting.Renderer
             double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2;
 
             // Plot regression
-            PenDescriptor p = new PenDescriptor(GrBlack, 2);
+            PenDescriptor p = new(GrBlack, 2);
             double oldx = Constant.MISSING;
             double oldy = Constant.MISSING;
             for (double calcx = axisScales.X.MinimumScaleValue; calcx <= axisScales.X.MaximumScaleValue; calcx += xstep)

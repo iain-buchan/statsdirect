@@ -183,7 +183,7 @@ namespace StatsDirect.Charting.Renderer
                 if (doCi)
                 {
                     ColorDescriptor ciPenColour = sOptions.UseSeriesColourForConfidenceIntervals ? p.Color : ciMarkerType.LineColor;
-                    PenDescriptor ciPen = new PenDescriptor(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle };
+                    PenDescriptor ciPen = new(ciPenColour, ciMarkerType.Width) { DashStyle = ciMarkerType.LineDashStyle };
                     for (int r = ydat.GetLowerBound(0); r <= ydat.GetUpperBound(0); r++)
                     {
                         if (ydat[r] != Constant.MISSING && ydatL[r] != Constant.MISSING && ydatU[r] != Constant.MISSING && xdat[r] != Constant.MISSING && cdat[r] != -1)

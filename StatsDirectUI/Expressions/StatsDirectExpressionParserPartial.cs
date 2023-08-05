@@ -8,7 +8,7 @@ namespace StatsDirect.Expressions
         private static VariableNode ParseVariable(string variableName)
         {
             // Variables are V, Vn, X, or Xn.  Anything else is an error.
-            Regex r = new Regex("^[VvXx]([1-9][0-9]*)?$");
+            Regex r = new("^[VvXx]([1-9][0-9]*)?$");
             if (!r.Match(variableName).Success)
                 throw new Exception("'" + variableName + "' is not a valid variable reference. Variable references must be of the form X, X1, X2, X27 etc. If you used " + variableName + " as a named parameter in a function, make sure you have specified '" + variableName + " := value', not '" + variableName + " = value'");
 

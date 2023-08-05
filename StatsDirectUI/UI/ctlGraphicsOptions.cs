@@ -216,35 +216,31 @@ namespace StatsDirect.UI
 
         private void cmdChangeTitleFont_Click(object sender, EventArgs e)
         {
-            using (FontDialog dlg = new FontDialog())
+            using FontDialog dlg = new();
+            dlg.Font = lblTitleFont.Font;
+            dlg.ShowColor = false;
+            dlg.ShowApply = false;
+            dlg.ShowEffects = false;
+            dlg.ShowHelp = false;
+            DialogResult result = dlg.ShowDialog(this);
+            if (DialogResult.OK == result)
             {
-                dlg.Font = lblTitleFont.Font;
-                dlg.ShowColor = false;
-                dlg.ShowApply = false;
-                dlg.ShowEffects = false;
-                dlg.ShowHelp = false;
-                DialogResult result = dlg.ShowDialog(this);
-                if (DialogResult.OK == result)
-                {
-                    lblTitleFont.Font = dlg.Font;
-                }
+                lblTitleFont.Font = dlg.Font;
             }
         }
 
         private void cmdChangeAxisLabelFont_Click(object sender, EventArgs e)
         {
-            using (FontDialog dlg = new FontDialog())
+            using FontDialog dlg = new();
+            dlg.Font = lblAxisLabelFont.Font;
+            dlg.ShowColor = false;
+            dlg.ShowApply = false;
+            dlg.ShowEffects = false;
+            dlg.ShowHelp = false;
+            DialogResult result = dlg.ShowDialog(this);
+            if (DialogResult.OK == result)
             {
-                dlg.Font = lblAxisLabelFont.Font;
-                dlg.ShowColor = false;
-                dlg.ShowApply = false;
-                dlg.ShowEffects = false;
-                dlg.ShowHelp = false;
-                DialogResult result = dlg.ShowDialog(this);
-                if (DialogResult.OK == result)
-                {
-                    lblAxisLabelFont.Font = dlg.Font;
-                }
+                lblAxisLabelFont.Font = dlg.Font;
             }
         }
 

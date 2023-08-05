@@ -26,7 +26,7 @@ namespace StatsDirect.UI
             {
                 if (!string.IsNullOrWhiteSpace(Application.ProductName))
                     return Application.ProductName;
-                FileInfo fi = new FileInfo(Application.ExecutablePath);
+                FileInfo fi = new(Application.ExecutablePath);
                 return fi.Name.Substring(0, fi.Name.Length - fi.Extension.Length);
             }
             set
@@ -63,13 +63,13 @@ namespace StatsDirect.UI
         public override SettingsPropertyValueCollection GetPropertyValues(SettingsContext context, SettingsPropertyCollection props)
         {
             // Create new collection of values
-            SettingsPropertyValueCollection values = new SettingsPropertyValueCollection();
+            SettingsPropertyValueCollection values = new();
 
             // Iterate through the settings to be retrieved
             foreach (SettingsProperty setting in props)
             {
                 string sv = GetValue(setting, out bool _);
-                SettingsPropertyValue value = new SettingsPropertyValue(setting) {IsDirty = false, SerializedValue = sv};
+                SettingsPropertyValue value = new(setting) {IsDirty = false, SerializedValue = sv};
                 values.Add(value);
             }
             return values;

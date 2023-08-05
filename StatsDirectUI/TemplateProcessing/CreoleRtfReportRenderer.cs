@@ -27,7 +27,7 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         private static string Prettify(string substitutedTemplate)
         {
-            Dictionary<string, string> substitutions = new Dictionary<string, string>
+            Dictionary<string, string> substitutions = new()
             {
                 // Colour table entries: 1=black, 2=white, 3=dark cyan, 4=blue (CI), 5=green (pval), 6=red (warn), 7=dark red (subtotal), 8=dark blue (model/grandtotal).
                 { "<report>", string.Empty },
@@ -96,8 +96,8 @@ namespace StatsDirect.TemplateProcessing
             // ASSUMPTION: An entire table row is on one line in the source and hence in the translated data.
             // ASSUMPTION: There is at lease one non-table line between tables.  This is used to detect the first row of a table in order to insert some text that is later removed when fixing up the table.
             string[] splitResults = afterSubstitutions.Split('\n');
-            StringBuilder finalOutput = new StringBuilder();
-            Regex cellFinder = new Regex(@"\\intbl(?:!!(?<span>[A-Z]+)!!)?");
+            StringBuilder finalOutput = new();
+            Regex cellFinder = new(@"\\intbl(?:!!(?<span>[A-Z]+)!!)?");
             bool wasInTable = false;
             finalOutput.Append(RTF_REPORT_START);
             foreach (string unchangedLine in splitResults)
@@ -116,7 +116,7 @@ namespace StatsDirect.TemplateProcessing
                     {
                         isInTable = true;
                         // If we get here, there are some cells in this line.  We need one \cellx<width> for each \cell, placed at the end of the row data (which we know ends with \!!CELLSHERE!! from the translation of </tr>).
-                        StringBuilder cellxs = new StringBuilder();
+                        StringBuilder cellxs = new();
                         foreach (Match m in matches)
                         {
                             string spanString = m.Groups["span"].Value;
@@ -157,7 +157,7 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         private static string RemoveBlocks(string templateWithPossibleDeadBlocks)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             int sourcePosition = 0;
             do
             {
@@ -192,7 +192,7 @@ namespace StatsDirect.TemplateProcessing
         /// <returns>The RTF with inclusions replaced</returns>
         private static string ResolveTemplates(string rawCreole, ICollection<string> knownInclusions)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             int sourcePosition = 0;
             do
             {

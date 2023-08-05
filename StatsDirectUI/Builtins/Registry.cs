@@ -11,7 +11,7 @@ namespace StatsDirect.Builtins
         /// </summary>
         public static ICollection<IBuiltin> GetFunctionRegistry()
         {
-            List<IBuiltin> functionRegistry = new List<IBuiltin>
+            List<IBuiltin> functionRegistry = new()
             {
                 new Builtin("chartCompareSeveralContinuousVariables", ChartExplorer.CompareSeveralContinuousVariables),
                 new Builtin("chartExploreContinuousDistributions", ChartExplorer.ExploreContinuousDistributions),

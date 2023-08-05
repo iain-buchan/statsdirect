@@ -58,7 +58,7 @@ namespace StatsDirect.UI
             get
             {
                 Contract.Ensures(null != Contract.Result<SdApplication>());
-                return soleInstance ?? (soleInstance = new SdApplication());
+                return soleInstance ??= new SdApplication();
             }
         }
 
@@ -185,12 +185,10 @@ namespace StatsDirect.UI
             {
                 try
                 {
-                    BinaryFormatter fmt = new BinaryFormatter();
-                    using (Stream ws = new FileStream(loadPath, FileMode.Open, FileAccess.Read))
-                    {
-                        sessionParametersAcrossOperations = (ParameterBag)fmt.Deserialize(ws);
-                        sessionParametersPerOperation = (Dictionary<string, ParameterBag>)fmt.Deserialize(ws);
-                    }
+                    BinaryFormatter fmt = new();
+                    using Stream ws = new FileStream(loadPath, FileMode.Open, FileAccess.Read);
+                    sessionParametersAcrossOperations = (ParameterBag)fmt.Deserialize(ws);
+                    sessionParametersPerOperation = (Dictionary<string, ParameterBag>)fmt.Deserialize(ws);
                 }
                 catch (Exception)
                 {
@@ -220,18 +218,16 @@ namespace StatsDirect.UI
             try
             {
                 string savePath = Path.Combine(SDConfiguration.MyStatsDirectFolder, SDConfiguration.PERSISTENT_VALUE_FILE_NAME);
-                BinaryFormatter fmt = new BinaryFormatter();
-                using (Stream ws = new FileStream(savePath, FileMode.Create, FileAccess.Write))
-                {
-                    if (null == sessionParametersAcrossOperations)
-                        sessionParametersAcrossOperations = new ParameterBag();
-                    fmt.Serialize(ws, sessionParametersAcrossOperations);
-                    if (null == sessionParametersPerOperation)
-                        sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
-                    fmt.Serialize(ws, sessionParametersPerOperation);
-                    // #760
-                    Application.DoEvents();
-                }
+                BinaryFormatter fmt = new();
+                using Stream ws = new FileStream(savePath, FileMode.Create, FileAccess.Write);
+                if (null == sessionParametersAcrossOperations)
+                    sessionParametersAcrossOperations = new ParameterBag();
+                fmt.Serialize(ws, sessionParametersAcrossOperations);
+                if (null == sessionParametersPerOperation)
+                    sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
+                fmt.Serialize(ws, sessionParametersPerOperation);
+                // #760
+                Application.DoEvents();
             }
             catch (IOException)
             {
@@ -257,7 +253,7 @@ namespace StatsDirect.UI
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Data "))
                         {
-                            string windowNumberAsString = windowName.Substring(5).Trim();
+                            string windowNumberAsString = windowName[5..].Trim();
                             if (int.TryParse(windowNumberAsString, out int windowNumber))
                             {
                                 if (windowNumber == candidateNumber)
@@ -289,7 +285,7 @@ namespace StatsDirect.UI
                 bool acceptable = true;
                 foreach (WindowInformation wi in Windows)
                 {
-                    if (!(wi.Window is IReport))
+                    if (wi.Window is not IReport)
                         continue;
 
                     string windowName = wi.FriendlyName;
@@ -299,7 +295,7 @@ namespace StatsDirect.UI
                     // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
                     if (Path.HasExtension(windowName))
                         windowName = Path.GetFileNameWithoutExtension(windowName);
-                    string windowNumberAsString = windowName.Substring(7).Trim();
+                    string windowNumberAsString = windowName[7..].Trim();
                     if (int.TryParse(windowNumberAsString, out int windowNumber))
                     {
                         if (windowNumber == candidateNumber)
@@ -334,7 +330,7 @@ namespace StatsDirect.UI
                         string windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Script "))
                         {
-                            string windowNumberAsString = windowName.Substring(7).Trim();
+                            string windowNumberAsString = windowName[7..].Trim();
                             if (int.TryParse(windowNumberAsString, out int windowNumber))
                             {
                                 if (windowNumber == candidateNumber)
@@ -547,7 +543,7 @@ namespace StatsDirect.UI
                 if (availableWindows.Count > 0)
                 {
                     const string KEY = "solo";
-                    SpecialParameter parameter = new SpecialParameter
+                    SpecialParameter parameter = new()
                     {
                         SpecialType = "frame",
                         Name = KEY,
@@ -673,8 +669,8 @@ namespace StatsDirect.UI
 
         void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
         {
-            if (parameter is PickFromListParameter)
-                PrepareParameter(processor, (PickFromListParameter)parameter, context);
+            if (parameter is PickFromListParameter pickFromListParameter)
+                PrepareParameter(processor, pickFromListParameter, context);
         }
 
         bool IUserInterface.CanCombine(Parameter parameter)
@@ -683,10 +679,10 @@ namespace StatsDirect.UI
                 return false;
             if (parameter is GroupedCovarianceParameter)
                 return false;
-            if (parameter is FrameParameter)
+            if (parameter is FrameParameter frameParameter)
             {
                 // Grids that must be entered rather than selected can be combined, as an entry grid will appear at the top.
-                return !((FrameParameter)parameter).CanSelect;
+                return !frameParameter.CanSelect;
             }
             return true;
         }
@@ -728,7 +724,7 @@ namespace StatsDirect.UI
             bool lastHadValidationError = false;
             while (true)
             {
-                ImmediateParameterFiller filler = new ImmediateParameterFiller { Context = context, Processor = processor, IsRepeatAfterValidationError = lastHadValidationError };
+                ImmediateParameterFiller filler = new() { Context = context, Processor = processor, IsRepeatAfterValidationError = lastHadValidationError };
                 parameter.Accept(filler);
 
                 // Validate; if no errors, stop.  If there are errors, show them and go round again.
@@ -789,7 +785,7 @@ namespace StatsDirect.UI
         {
             ITemplateHost ith = this;
             ITemplateProcessor processor = new TemplateProcessor(ith);
-            ChartOptionsParameter chartOptionsParameter = new ChartOptionsParameter("dummy", ChartDefinition);
+            ChartOptionsParameter chartOptionsParameter = new("dummy", ChartDefinition);
             ith.FillParameter(processor, chartOptionsParameter, context, true);
             return ith.FillAndValidateCombinedParameters(processor, context);
         }
@@ -892,7 +888,7 @@ namespace StatsDirect.UI
         {
             ITemplateHost host = this;
             ITemplateProcessor processor = new TemplateProcessor(host);
-            ParameterBag context = new ParameterBag();
+            ParameterBag context = new();
             host.FillParameter(processor, parameter, context, true);
             return host.FillAndValidateCombinedParameters(processor, context);
         }
@@ -900,7 +896,7 @@ namespace StatsDirect.UI
         public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string key = "solo";
-            IntegerParameter parameter = new IntegerParameter
+            IntegerParameter parameter = new()
             {
                 Name = key,
                 PromptExpression = new Expression(prompt),
@@ -940,32 +936,16 @@ namespace StatsDirect.UI
 
         ParameterBag IUserInterface.Amend(IFillable fillable, ParameterBag context)
         {
-            switch (fillable.FillerToUse)
+            return fillable.FillerToUse switch
             {
-                case "ChiSquareGoodnessOfFit":
-                case "ConvertUnits":
-                case "Distribution":
-                case "Dummy":
-                case "Extraction":
-                case "GraphicsOptions":
-                case "ROCCutoff":
-                case "Scores":
-                case "SortInPlace":
-                    return AmendUsingControl(fillable);
-                case "ToggleFilters":
-                    return ToggleFilters();
-                case "Categorise":
-                    return Amend((Builtins.CategoriseOptions)fillable);
-                case "ChartExplorer":
-                    throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0");
-                    // return Amend((Builtins.ChartExplorerOptions)fillable);
-                case "ChartOptions":
-                    return FillChartOptions((Charting.ChartDefinition)fillable, context);
-                case "SummaryStatistics":
-                    return Amend((Builtins.SummaryStatisticsOptions)fillable);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(fillable), fillable, "fillable.FillerToUse: Unknown option");
-            }
+                "ChiSquareGoodnessOfFit" or "ConvertUnits" or "Distribution" or "Dummy" or "Extraction" or "GraphicsOptions" or "ROCCutoff" or "Scores" or "SortInPlace" => AmendUsingControl(fillable),
+                "ToggleFilters" => ToggleFilters(),
+                "Categorise" => Amend((Builtins.CategoriseOptions)fillable),
+                "ChartExplorer" => throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0"),
+                "ChartOptions" => FillChartOptions((Charting.ChartDefinition)fillable, context),
+                "SummaryStatistics" => Amend((Builtins.SummaryStatisticsOptions)fillable),
+                _ => throw new ArgumentOutOfRangeException(nameof(fillable), fillable, "fillable.FillerToUse: Unknown option"),
+            };
         }
 
         private ParameterBag ToggleFilters()
@@ -978,8 +958,8 @@ namespace StatsDirect.UI
         {
             ITemplateHost ith = this;
             ITemplateProcessor processor = new TemplateProcessor(ith);
-            ParameterBag context = new ParameterBag();
-            FillableParameter fillableParameter = new FillableParameter("dummy", fillable);
+            ParameterBag context = new();
+            FillableParameter fillableParameter = new("dummy", fillable);
             ith.FillParameter(processor, fillableParameter, context, true);
             ParameterBag filledParameters = ith.FillAndValidateCombinedParameters(processor, context);
             return filledParameters;
@@ -987,14 +967,12 @@ namespace StatsDirect.UI
 
         private ParameterBag Amend(Builtins.CategoriseOptions categoriseOptions)
         {
-            using (frmCategorise options = new frmCategorise(categoriseOptions))
+            using frmCategorise options = new(categoriseOptions);
+            using (new DefaultCursor())
             {
-                using (new DefaultCursor())
-                {
-                    options.ShowDialog(MainWindow);
-                }
-                return options.UserCancelled ? null : new ParameterBag();
+                options.ShowDialog(MainWindow);
             }
+            return options.UserCancelled ? null : new ParameterBag();
         }
 
         /*
@@ -1011,17 +989,15 @@ namespace StatsDirect.UI
 
         private ParameterBag Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
         {
-            using (frmSummaryStatistics options = new frmSummaryStatistics(summaryStatisticsOptions))
+            using frmSummaryStatistics options = new(summaryStatisticsOptions);
+            using (new DefaultCursor())
             {
-                using (new DefaultCursor())
-                {
-                    options.ShowDialog(MainWindow);
-                }
-                return new ParameterBag();
+                options.ShowDialog(MainWindow);
             }
+            return new ParameterBag();
         }
 
-        public SDPreferences Preferences => preferences ?? (preferences = LoadPreferences());
+        public SDPreferences Preferences => preferences ??= LoadPreferences();
 
         private class SDPreferencesImpl : SDPreferences
         {
@@ -1133,13 +1109,11 @@ namespace StatsDirect.UI
         /// <returns>null if the user cancelled, otherwise the entered value.</returns>
         private string Prompt(string prompt, string caption, string defaultValue)
         {
-            using (frmInputBox ib = new frmInputBox(prompt, caption, defaultValue))
-            {
-                ib.ShowDialog(MainWindow);
-                if (ib.UserCancelled)
-                    return null;
-                return ib.Value;
-            }
+            using frmInputBox ib = new(prompt, caption, defaultValue);
+            ib.ShowDialog(MainWindow);
+            if (ib.UserCancelled)
+                return null;
+            return ib.Value;
         }
 
         internal void NoteRecentFile(string path, bool openedOk)
@@ -1212,7 +1186,7 @@ namespace StatsDirect.UI
         void IRefillSource.Refill(IList<IVariable> variables)
         {
             // Split up the variables, which might occasionally have come from more than one selection, into their different selections.
-            Dictionary<int, List<IVariable>> variablesByOriginGroup = new Dictionary<int, List<IVariable>>();
+            Dictionary<int, List<IVariable>> variablesByOriginGroup = new();
             foreach (IVariable variable in variables)
             {
                 if (null == variable.Origin)
@@ -1232,12 +1206,11 @@ namespace StatsDirect.UI
                 bool atLeastOneFailedVariable = false;
                 foreach (IVariable candidate in candidates)
                 {
-                    if (!(candidate.Origin is WorksheetOrigin))
+                    if (candidate.Origin is not WorksheetOrigin worksheetOrigin)
                     {
                         atLeastOneFailedVariable = true;
                         break;
                     }
-                    WorksheetOrigin worksheetOrigin = (WorksheetOrigin)candidate.Origin;
                     if (null == worksheetOrigin.WorkbookPath)
                     {
                         atLeastOneFailedVariable = true;
@@ -1271,9 +1244,9 @@ namespace StatsDirect.UI
             }
         }
 
-        IDictionary<string, ParameterBag> ISession.SessionParametersPerOperation => sessionParametersPerOperation ?? (sessionParametersPerOperation = new Dictionary<string, ParameterBag>());
+        IDictionary<string, ParameterBag> ISession.SessionParametersPerOperation => sessionParametersPerOperation ??= new Dictionary<string, ParameterBag>();
 
-        ParameterBag ISession.SessionParametersAcrossOperations => sessionParametersAcrossOperations ?? (sessionParametersAcrossOperations = new ParameterBag());
+        ParameterBag ISession.SessionParametersAcrossOperations => sessionParametersAcrossOperations ??= new ParameterBag();
 
         public string TemplateFileForNewReports => Path.Combine(SDConfiguration.TemplatePath, "blank.rtf");
 
@@ -1315,20 +1288,18 @@ namespace StatsDirect.UI
         {
             try
             {
-                using (Stream boxStream = File.OpenWrite(Path.Combine(SDConfiguration.MyStatsDirectFolder, "Blackbox.txt")))
-                using (TextWriter boxWriter = new StreamWriter(boxStream, Encoding.UTF8))
+                using Stream boxStream = File.OpenWrite(Path.Combine(SDConfiguration.MyStatsDirectFolder, "Blackbox.txt"));
+                using TextWriter boxWriter = new StreamWriter(boxStream, Encoding.UTF8);
+                boxWriter.WriteLine("StatsDirect exception log generated at {0} local time ({1} UTC)", DateTime.Now, DateTime.UtcNow);
+                boxWriter.WriteLine();
+                boxWriter.WriteLine("This file contains a trace of what StatsDirect was doing when your error occurred. If we've asked you for it, please attach the file or, if you prefer, paste the contents into an email to us.");
+                boxWriter.WriteLine();
+                if (null != message)
                 {
-                    boxWriter.WriteLine("StatsDirect exception log generated at {0} local time ({1} UTC)", DateTime.Now, DateTime.UtcNow);
+                    boxWriter.WriteLine("Message generated from StatsDirect: {0}", message);
                     boxWriter.WriteLine();
-                    boxWriter.WriteLine("This file contains a trace of what StatsDirect was doing when your error occurred. If we've asked you for it, please attach the file or, if you prefer, paste the contents into an email to us.");
-                    boxWriter.WriteLine();
-                    if (null != message)
-                    {
-                        boxWriter.WriteLine("Message generated from StatsDirect: {0}", message);
-                        boxWriter.WriteLine();
-                    }
-                    WriteExceptionToBlackbox(boxWriter, ex, false);
                 }
+                WriteExceptionToBlackbox(boxWriter, ex, false);
             }
             catch (Exception)
             {
@@ -1402,7 +1373,7 @@ namespace StatsDirect.UI
 
             bool IProgressBar.Update(double fractionComplete)
             {
-                return Display ? SoleInstance.UpdateProgress(fractionComplete) : false;
+                return Display && SoleInstance.UpdateProgress(fractionComplete);
             }
 
             #region IDisposable Support

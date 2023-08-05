@@ -36,7 +36,7 @@ namespace StatsDirect.Charting
 
         private static BinsDescriptor ChooseBinsFreedmanDaconis(double[] sortedX, int length)
         {
-            Summary sx = new Summary();
+            Summary sx = new();
             sx.FullSummaryFromX(sortedX, length, null, 0.95, 5, 95, 1);
 
             // Note that this calculates the bin width, not the number of bins
@@ -51,7 +51,7 @@ namespace StatsDirect.Charting
 
         private static BinsDescriptor ChooseBinsDoane(double[] sortedX, int length)
         {
-            Summary sx = new Summary();
+            Summary sx = new();
             sx.FullSummaryFromX(sortedX, length, null, 0.95, 5, 95, 1);
 
             double sigmaG1 = Math.Sqrt(6.0 * (length - 2.0) / ((length + 1.0) * (length + 3.0)));
@@ -368,7 +368,7 @@ namespace StatsDirect.Charting
             // Found what we're going to use; return the data.
             double[] edges = Linspace(minimumMidpoint - 0.5 * midpointInterval, minimumMidpoint + midpointInterval * (bestBins - 0.5), bestBins);
             int[] counts = SortedHist(sortedData, length, edges);
-            BinsDescriptor descriptor = new BinsDescriptor() { Edges = edges, Counts = counts };
+            BinsDescriptor descriptor = new() { Edges = edges, Counts = counts };
             return descriptor;
         }
 

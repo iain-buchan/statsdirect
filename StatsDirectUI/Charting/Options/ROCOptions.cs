@@ -28,7 +28,7 @@ namespace StatsDirect.Charting
                 MarkerTypes.Add(markerType);
 
                 //  Can change the shape, size and filled/unfilled for series
-                SeriesOptionsDescriptor descriptor = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor descriptor = new()
                 {
                     SeriesName = series.Title,
                     AllowChangeToDashStyle = false,
@@ -49,7 +49,7 @@ namespace StatsDirect.Charting
                 MarkerTypes.Add(markerType);
 
                 //  Can change the shape, size and filled/unfilled for series
-                SeriesOptionsDescriptor descriptor = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor descriptor = new()
                 {
                     SeriesName = series.Title + " optimum cut-off",
                     AllowChangeToDashStyle = false,

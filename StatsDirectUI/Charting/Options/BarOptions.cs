@@ -39,7 +39,7 @@ namespace StatsDirect.Charting
 
             for (int i = 0; i < seriesToUse.Count; i++)
             {
-                SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor soleOptions = new()
                 {
                     SeriesName = seriesToUse[i].Title,
                     AllowChangeToMarkerSize = false,

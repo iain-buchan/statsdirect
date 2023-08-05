@@ -14,7 +14,7 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// Default study marker type; may be overwritten if a subclass prefers different details.
         /// </summary>
-        protected MarkerType studyMarkerType = new MarkerType
+        protected MarkerType studyMarkerType = new()
         {
             MarkerColor = ColorDescriptor.Gray,
             LineColor = ColorDescriptor.Black,
@@ -26,7 +26,7 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// Default pooled marker type; may be overwritten if a subclass prefers different details.
         /// </summary>
-        protected MarkerType pooledMarkerType = new MarkerType
+        protected MarkerType pooledMarkerType = new()
         {
             MarkerColor = ColorDescriptor.Gray,
             LineColor = ColorDescriptor.Black,

@@ -48,7 +48,7 @@ namespace StatsDirect.Charting
         ///  </summary>
         public ChartDefinition Clone()
         {
-            ChartDefinition copy = new ChartDefinition
+            ChartDefinition copy = new()
             {
                 ChartOptions = ChartOptions.Clone(),
                 ChartType = ChartType,
@@ -63,7 +63,7 @@ namespace StatsDirect.Charting
 
         public void AddXSeries(double[] data, string title)
         {
-            DoubleSeries s = new DoubleSeries { Data = new double[data.Length] };
+            DoubleSeries s = new() { Data = new double[data.Length] };
             Array.Copy(data, s.Data, data.Length);
             s.Title = title;
             AddXSeries(s);
@@ -85,7 +85,7 @@ namespace StatsDirect.Charting
 
         public void AddYSeries(double[] data, string title)
         {
-            DoubleSeries s = new DoubleSeries { Data = new double[data.Length] };
+            DoubleSeries s = new() { Data = new double[data.Length] };
             Array.Copy(data, s.Data, data.Length);
             s.Title = title;
             AddYSeries(s);
@@ -124,8 +124,8 @@ namespace StatsDirect.Charting
 
         private ScaleParameters GetScaleParameters()
         {
-            using (IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(this, null))
-                return renderer.GetScaleParameters();
+            using IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(this, null);
+            return renderer.GetScaleParameters();
         }
 
         private void CheckXSeriesData(ISeries series)

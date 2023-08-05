@@ -82,7 +82,7 @@ namespace StatsDirect.Charting.Renderer
 
             AssignMarkersToSeries();
 
-            Legend legend = new Legend();
+            Legend legend = new();
             if (options.grouped)
             {
                 for (int k = 1; k <= options.igroups; k++)

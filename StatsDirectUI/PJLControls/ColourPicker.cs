@@ -48,7 +48,7 @@ namespace StatsDirect.PJLControls
 
         private BorderStyle borderStyle = defaultBorderStyle;
         private Size borderSize = defaultBorderSize;
-        private Size padding = new Size(1, 2);
+        private Size padding = new(1, 2);
         private ButtonState buttonState = ButtonState.Normal;
         private Rectangle comboButtonRectangle;
         private bool bDisplayColor = defaultDisplayColor;
@@ -137,7 +137,7 @@ namespace StatsDirect.PJLControls
 
             // fill rectangle with window color or control color if disabled
             KnownColor color_background = Enabled ? KnownColor.Window : KnownColor.Control;
-            using (SolidBrush br = new SolidBrush(Color.FromKnownColor(color_background)))
+            using (SolidBrush br = new(Color.FromKnownColor(color_background)))
             {
 
                 Rectangle r = ClientRectangle;
@@ -147,7 +147,7 @@ namespace StatsDirect.PJLControls
                 if (Focused && Enabled)
                 {
                     // add focus rectangle
-                    Rectangle rh = new Rectangle(r.Location, new Size(r.Width - GetComboButtonRectangle().Width, r.Height));
+                    Rectangle rh = new(r.Location, new Size(r.Width - GetComboButtonRectangle().Width, r.Height));
                     rh.Inflate(-1, -1);
                     br.Color = Color.FromKnownColor(KnownColor.Highlight);
                     e.Graphics.FillRectangle(br, rh);
@@ -282,35 +282,33 @@ namespace StatsDirect.PJLControls
         /// </summary>
         public void ShowDropdown()
         {
-            Point p = new Point(Left, Bottom);
+            Point p = new(Left, Bottom);
             Point q = Parent.PointToScreen(p);
 
-            using (ColorPanelForm popup = new ColorPanelForm())
+            using ColorPanelForm popup = new();
+            popup.Top = q.Y;
+            popup.Left = q.X;
+            popup.ColorSet = panel_colorSet;
+            popup.ColorSortOrder = panel_colorSortOrder;
+            popup.ColorWellSize = panel_colorWellSize;
+            popup.PanelBorderStyle = panel_PanelBorderStyle;
+            popup.Columns = panel_columns;
+            popup.CustomColors = panel_customColors;
+            popup.Color = panel_color;
+
+            // set color after colorSet since changing the colorSet
+            // resets the color to black
+
+            if (panel_columns <= 0)
             {
-                popup.Top = q.Y;
-                popup.Left = q.X;
-                popup.ColorSet = panel_colorSet;
-                popup.ColorSortOrder = panel_colorSortOrder;
-                popup.ColorWellSize = panel_colorWellSize;
-                popup.PanelBorderStyle = panel_PanelBorderStyle;
-                popup.Columns = panel_columns;
-                popup.CustomColors = panel_customColors;
-                popup.Color = panel_color;
+                Trace.WriteLine(string.Format("Setting '{0}' width = {1}", popup.Name, Width));
+                popup.ParentWidth = Width;
+            }
 
-                // set color after colorSet since changing the colorSet
-                // resets the color to black
-
-                if (panel_columns <= 0)
-                {
-                    Trace.WriteLine(string.Format("Setting '{0}' width = {1}", popup.Name, Width));
-                    popup.ParentWidth = Width;
-                }
-
-                if (DialogResult.OK == popup.ShowDialog(this))
-                {
-                    panel_color = popup.Color;
-                    OnColorChanged(new ColorChangedEventArgs(panel_color));
-                }
+            if (DialogResult.OK == popup.ShowDialog(this))
+            {
+                panel_color = popup.Color;
+                OnColorChanged(new ColorChangedEventArgs(panel_color));
             }
         }
 
@@ -388,7 +386,7 @@ namespace StatsDirect.PJLControls
             get => borderStyle;
             set
             {
-                Size bs = new Size();
+                Size bs = new();
 
                 switch (value)
                 {

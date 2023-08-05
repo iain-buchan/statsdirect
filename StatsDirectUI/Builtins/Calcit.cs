@@ -38,7 +38,7 @@ namespace StatsDirect.Builtins
             string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out DataType retval);
 
             // By now, cSharpExpression will either be safe (every character has been through the parser) or an exception will have been thrown.  Therefore, it's reasonable to throw the expression at the compiler.
-            StringBuilder functionBuilder = new StringBuilder();
+            StringBuilder functionBuilder = new();
             functionBuilder.AppendLine("using System;");
             functionBuilder.AppendLine("using StatsDirect.Expressions;");
             functionBuilder.Append("public class ");
@@ -56,7 +56,7 @@ namespace StatsDirect.Builtins
             functionBuilder.AppendLine("}");
             functionBuilder.AppendLine("}");
             string cSharpFunction = functionBuilder.ToString();
-            CompilerParameters compilerParameters = new CompilerParameters();
+            CompilerParameters compilerParameters = new();
             string mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
             string assemblyPath = Path.GetDirectoryName(mainModulePath);
             Debug.Assert(null != assemblyPath);
@@ -67,7 +67,7 @@ namespace StatsDirect.Builtins
                 CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, cSharpFunction);
                 if (compilerResults.Errors.HasErrors)
                 {
-                    StringBuilder errorBuilder = new StringBuilder();
+                    StringBuilder errorBuilder = new();
                     errorBuilder.AppendLine("Errors in compilation:");
                     foreach (CompilerError error in compilerResults.Errors)
                     {

@@ -13,7 +13,7 @@ namespace StatsDirect.R
     {
         public static string ToRVariableName(string rawVariableName)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             ToRName(sb, rawVariableName);
             return sb.ToString();
         }
@@ -21,7 +21,7 @@ namespace StatsDirect.R
         public static void ToRName(StringBuilder sb, string rawVariableName)
         {
             string[] reservedWords = { "if", "else", "repeat", "while", "function", "for", "in", "next", "break", "TRUE", "FALSE", "NULL", "Inf", "NaN", "NA", "NA_integer_", "NA_real_", "NA_complex_", "NA_character_" };
-            List<string> rw = new List<string>(reservedWords);
+            List<string> rw = new(reservedWords);
             string lowerName = rawVariableName.ToLower(CultureInfo.InvariantCulture);
             if (rw.Contains(lowerName))
             {
@@ -76,11 +76,11 @@ namespace StatsDirect.R
 
         public static void ToR(StringBuilder sb, string frameName, DataFrame frame, FrameType frameTypePreference)
         {
-            List<string> variableNames = new List<string>();
-            List<string> columnNames = new List<string>();
+            List<string> variableNames = new();
+            List<string> columnNames = new();
             foreach (IVariable variable in frame.Variables)
             {
-                StringBuilder nameBuilder = new StringBuilder();
+                StringBuilder nameBuilder = new();
                 ToRName(nameBuilder, variable.Title);
                 string variableName = nameBuilder.ToString();
                 sb.Append(variableName);
@@ -288,14 +288,14 @@ namespace StatsDirect.R
             IVariable v;
             if (allDouble)
             {
-                DoubleVariable dv = new DoubleVariable(data.Count, variableName);
+                DoubleVariable dv = new(data.Count, variableName);
                 for (int i = 0; i < data.Count; i++)
                     dv.Data[i] = (double)data[i];
                 v = dv;
             }
             else
             {
-                StringVariable dv = new StringVariable(data.Count, variableName);
+                StringVariable dv = new(data.Count, variableName);
                 for (int i = 0; i < data.Count; i++)
                     dv.Data[i] = data[i].ToString();
                 v = dv;

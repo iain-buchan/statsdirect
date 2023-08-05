@@ -13,7 +13,7 @@ namespace StatsDirect.UI
     {
         private string labelText;
 
-        private readonly Container components = new Container();
+        private readonly Container components = new();
 
         /// <summary>
         /// VerticalLabel constructor
@@ -51,36 +51,30 @@ namespace StatsDirect.UI
         protected override void OnPaint(PaintEventArgs e)
         {
             Color controlBackColor = BackColor;
-            using (Pen labelBorderPen = new Pen(TransparentBackground ? Color.Empty : controlBackColor, 0))
-            {
-                using (SolidBrush labelBackColorBrush = new SolidBrush(TransparentBackground ? Color.Empty : controlBackColor))
-                {
-                    using (SolidBrush labelForeColorBrush = new SolidBrush(ForeColor))
-                    {
-                        base.OnPaint(e);
-                        float vlblControlWidth = Size.Width;
-                        float vlblControlHeight = Size.Height;
-                        e.Graphics.DrawRectangle(labelBorderPen, 0, 0, vlblControlWidth, vlblControlHeight);
-                        e.Graphics.FillRectangle(labelBackColorBrush, 0, 0, vlblControlWidth, vlblControlHeight);
-                        e.Graphics.TextRenderingHint = RenderingMode;
-                        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            using Pen labelBorderPen = new(TransparentBackground ? Color.Empty : controlBackColor, 0);
+            using SolidBrush labelBackColorBrush = new(TransparentBackground ? Color.Empty : controlBackColor);
+            using SolidBrush labelForeColorBrush = new(ForeColor);
+            base.OnPaint(e);
+            float vlblControlWidth = Size.Width;
+            float vlblControlHeight = Size.Height;
+            e.Graphics.DrawRectangle(labelBorderPen, 0, 0, vlblControlWidth, vlblControlHeight);
+            e.Graphics.FillRectangle(labelBackColorBrush, 0, 0, vlblControlWidth, vlblControlHeight);
+            e.Graphics.TextRenderingHint = RenderingMode;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
 
-                        if (TextDrawMode == VerticalLabelDrawMode.BottomUp)
-                        {
-                            const float vlblTransformX = 0;
-                            float vlblTransformY = vlblControlHeight;
-                            e.Graphics.TranslateTransform(vlblTransformX, vlblTransformY);
-                            e.Graphics.RotateTransform(270);
-                            e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0);
-                        }
-                        else
-                        {
-                            e.Graphics.TranslateTransform(vlblControlWidth, 0);
-                            e.Graphics.RotateTransform(90);
-                            e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0, StringFormat.GenericTypographic);
-                        }
-                    }
-                }
+            if (TextDrawMode == VerticalLabelDrawMode.BottomUp)
+            {
+                const float vlblTransformX = 0;
+                float vlblTransformY = vlblControlHeight;
+                e.Graphics.TranslateTransform(vlblTransformX, vlblTransformY);
+                e.Graphics.RotateTransform(270);
+                e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0);
+            }
+            else
+            {
+                e.Graphics.TranslateTransform(vlblControlWidth, 0);
+                e.Graphics.RotateTransform(90);
+                e.Graphics.DrawString(labelText, Font, labelForeColorBrush, 0, 0, StringFormat.GenericTypographic);
             }
         }
         /// <summary>

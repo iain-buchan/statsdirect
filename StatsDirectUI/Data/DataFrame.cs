@@ -114,7 +114,7 @@ namespace StatsDirect.Data
 
         public object CopyAndStripForRedo(bool shouldKeepData)
         {
-            DataFrame copy = new DataFrame { Name = Name };
+            DataFrame copy = new() { Name = Name };
             foreach (IVariable v in Variables)
                 copy.Variables.Add((IVariable)v.CopyAndStripForRedo(shouldKeepData));
             return copy;

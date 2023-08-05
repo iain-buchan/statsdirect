@@ -87,7 +87,7 @@ namespace StatsDirect.Data
 
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
-            DoubleVariable copy = new DoubleVariable();
+            DoubleVariable copy = new();
             CopyAndStripForRedoInto(copy, shouldKeepData);
             return copy;
         }

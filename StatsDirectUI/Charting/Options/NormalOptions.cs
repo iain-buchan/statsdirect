@@ -30,7 +30,7 @@ namespace StatsDirect.Charting
             MarkerTypes.Add(markerType);
 
             //  A normal plot has a single series with no lines.
-            SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor soleOptions = new()
             {
                 SeriesName = "Markers",
                 AllowChangeToDashStyle = false,

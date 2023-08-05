@@ -36,8 +36,8 @@ namespace StatsDirect.UI
 
         private static void StartCalculator()
         {
-            using (frmStatsDirectCalculator mainWindow = new frmStatsDirectCalculator())
-                Application.Run(mainWindow);
+            using frmStatsDirectCalculator mainWindow = new();
+            Application.Run(mainWindow);
         }
 
         private static void StartStatsDirect(string[] args)
@@ -64,7 +64,7 @@ namespace StatsDirect.UI
                     smallestSquaredDistanceSoFar = squaredDistanceBetweenCentres;
                 }
             }
-            using (frmLoading loader = new frmLoading())
+            using (frmLoading loader = new())
             {
                 loader.Top = bestSoFar.Bounds.Top + (bestSoFar.Bounds.Height - loader.Height) / 2;
                 loader.Left = bestSoFar.Bounds.Left + (bestSoFar.Bounds.Width - loader.Width) / 2;
@@ -108,23 +108,21 @@ namespace StatsDirect.UI
         /// <remarks>Requires frmReportRichEditDummy to close itself once it has shown itself.</remarks>
         private static void PreloadReport()
         {
-            using (frmReportRichEditDummy f = new frmReportRichEditDummy())
+            using frmReportRichEditDummy f = new();
+            // Ensure the form loads off the visible area on any screen - it'll load just to the right of the furthest-right screen.
+            int largestVisibleX = int.MinValue;
+            int smallestVisibleY = int.MaxValue;
+            foreach (Screen screen in Screen.AllScreens)
             {
-                // Ensure the form loads off the visible area on any screen - it'll load just to the right of the furthest-right screen.
-                int largestVisibleX = int.MinValue;
-                int smallestVisibleY = int.MaxValue;
-                foreach (Screen screen in Screen.AllScreens)
-                {
-                    if (screen.Bounds.Right > largestVisibleX)
-                        largestVisibleX = screen.Bounds.Right;
-                    if (screen.Bounds.Top < smallestVisibleY)
-                        smallestVisibleY = screen.Bounds.Top;
-                }
-                f.Left = largestVisibleX + 10;
-                f.Top = smallestVisibleY;
-                f.ShowDialog();
-                // f will auto-close itself once it's shown itself
+                if (screen.Bounds.Right > largestVisibleX)
+                    largestVisibleX = screen.Bounds.Right;
+                if (screen.Bounds.Top < smallestVisibleY)
+                    smallestVisibleY = screen.Bounds.Top;
             }
+            f.Left = largestVisibleX + 10;
+            f.Top = smallestVisibleY;
+            f.ShowDialog();
+            // f will auto-close itself once it's shown itself
         }
 
         private static void SetupUserInterface()
@@ -182,10 +180,8 @@ namespace StatsDirect.UI
         {
             SdApplication.WriteToBlackbox("Uncaught exception", ex);
             string message = ex.Message + Environment.NewLine + ex.StackTrace;
-            using (frmErrorMessage e = new frmErrorMessage(message))
-            {
-                e.ShowDialog();
-            }
+            using frmErrorMessage e = new(message);
+            e.ShowDialog();
             return DialogResult.Abort;
         }
 
@@ -267,7 +263,7 @@ namespace StatsDirect.UI
                 return;
             File.Copy(distTestXlsx, myTestXlsx, false);
             // Set the copied file read-only
-            FileInfo tx = new FileInfo(myTestXlsx) {IsReadOnly = true};
+            FileInfo tx = new(myTestXlsx) {IsReadOnly = true};
         }
 
         /// <summary>

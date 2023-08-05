@@ -26,29 +26,27 @@ namespace StatsDirect.UI
         {
             try
             {
-                using (CompoundFile contents = new CompoundFile(s))
+                using CompoundFile contents = new(s);
+                if (!contents.RootStorage.TryGetStream("Book", out CFStream bookStream)
+                    && !contents.RootStorage.TryGetStream("Workbook", out bookStream))
                 {
-                    if (!contents.RootStorage.TryGetStream("Book", out CFStream bookStream)
-                        && !contents.RootStorage.TryGetStream("Workbook", out bookStream))
-                    {
-                        // Nothing named Book or Workbook; not an Excel workbook.
-                        return BiffFormat.SomethingElse;
-                    }
-
-                    // By now, bookStream is known to be non-null.  Test the first few bytes (no need to read the whole lot) to see whether this is an Excel Biff5 workbook.
-                    if (bookStream.Size < 6)
-                        return BiffFormat.SomethingElse;
-                    byte[] bytes = new byte[6];
-                    bookStream.Read(bytes, 0, 6);
-                    // Excel BIFF, BOF record, at least BIFF5 starts with 0x0809 (little-endian).  Version is at offset 4: 0x0500 (again little-endian) for BIFF5/BIFF7, 0x0600 for BIFF8.
-                    if (bytes.Length < 6 || bytes[0] != 9 || bytes[1] != 8)
-                        return BiffFormat.SomethingElse;
-                    if (bytes[4] == 0 && bytes[5] == 5)
-                        return BiffFormat.Biff5Or7;
-                    if (bytes[4] == 0 && bytes[5] == 6)
-                        return BiffFormat.Biff8;
+                    // Nothing named Book or Workbook; not an Excel workbook.
                     return BiffFormat.SomethingElse;
                 }
+
+                // By now, bookStream is known to be non-null.  Test the first few bytes (no need to read the whole lot) to see whether this is an Excel Biff5 workbook.
+                if (bookStream.Size < 6)
+                    return BiffFormat.SomethingElse;
+                byte[] bytes = new byte[6];
+                bookStream.Read(bytes, 0, 6);
+                // Excel BIFF, BOF record, at least BIFF5 starts with 0x0809 (little-endian).  Version is at offset 4: 0x0500 (again little-endian) for BIFF5/BIFF7, 0x0600 for BIFF8.
+                if (bytes.Length < 6 || bytes[0] != 9 || bytes[1] != 8)
+                    return BiffFormat.SomethingElse;
+                if (bytes[4] == 0 && bytes[5] == 5)
+                    return BiffFormat.Biff5Or7;
+                if (bytes[4] == 0 && bytes[5] == 6)
+                    return BiffFormat.Biff8;
+                return BiffFormat.SomethingElse;
             }
             catch (CFFileFormatException)
             {
@@ -79,7 +77,7 @@ namespace StatsDirect.UI
             if (null == excelCnvPath)
                 throw new Exception("Cannot find an installed Excel converter. Please ensure Microsoft Office is installed, and ensure the Office format conversion is ticked in the installer.");
             string arguments = string.Join(" ", "-oice", Quote(biff5FileName), Quote(xlsxTempFileName));
-            ProcessStartInfo psi = new ProcessStartInfo { WorkingDirectory = tempPath, FileName = excelCnvPath, Arguments = arguments };
+            ProcessStartInfo psi = new() { WorkingDirectory = tempPath, FileName = excelCnvPath, Arguments = arguments };
             using (Process excelcnvProcess = Process.Start(psi))
             {
                 excelcnvProcess.WaitForExit();
@@ -140,7 +138,7 @@ namespace StatsDirect.UI
         private static string GetStringValueOrNull(RegistryKey root, string[] subkeyNames, string valueName)
         {
             RegistryKey here = root;
-            Stack<IDisposable> toDispose = new Stack<IDisposable>();
+            Stack<IDisposable> toDispose = new();
             try
             {
                 foreach (string subkeyName in subkeyNames)

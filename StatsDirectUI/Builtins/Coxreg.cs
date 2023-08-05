@@ -101,7 +101,7 @@ namespace StatsDirect.Builtins
                 if (time <= 0.0)
                     if (Math.Abs(time) + 1 > adjustment)
                         adjustment = Math.Abs(time) + 1;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (adjustment > 0.0)
                 outputParameters.AddOutput("timesAdjustment", adjustment);
             return new StepOutput(outputParameters);
@@ -380,7 +380,7 @@ namespace StatsDirect.Builtins
             coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             ARR2[3, 0] = algl;
 
-            List<string> subgroups = new List<string>();
+            List<string> subgroups = new();
             if (istrat > 0)
             {
                 subgroups.Add("Strata");
@@ -400,7 +400,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("n", ARR2[0, 0]);
             outputParameters.AddOutput("d", ARR2[4, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
@@ -411,7 +411,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*pred", predList);
             for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
             {
-                ParameterBag predParameters = new ParameterBag();
+                ParameterBag predParameters = new();
                 predList.Add(predParameters);
                 predParameters.AddOutput("lab", CDAT1[i].Title);
                 predParameters.AddOutput("i", i);
@@ -2210,7 +2210,7 @@ namespace StatsDirect.Builtins
                 i = i + iinc - 1;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (!plot)
             {
                 // write to report in time-sorted order
@@ -2222,7 +2222,7 @@ namespace StatsDirect.Builtins
                     if (z[i].Censor != 0.0 & watch_time != z[i].Time)
                     {
                         watch_time = z[i].Time;
-                        ParameterBag timeParameters = new ParameterBag();
+                        ParameterBag timeParameters = new();
                         timeList.Add(timeParameters);
                         timeParameters.AddOutput("time", z[i].Time);
                         timeParameters.AddOutput("sur", z[i].S);
@@ -2244,10 +2244,10 @@ namespace StatsDirect.Builtins
             else if (createGrid)
             {
                 // save to worksheet if requested
-                DoubleVariable survivalVariable = new DoubleVariable(iobs, "Survival (baseline)");
-                DoubleVariable hazardVariable = new DoubleVariable(iobs, "Hazard (baseline cumulative)");
-                DoubleVariable hazardRatioVariable = new DoubleVariable(iobs, "Hazard ratio");
-                DataFrame resultsFrame = new DataFrame();
+                DoubleVariable survivalVariable = new(iobs, "Survival (baseline)");
+                DoubleVariable hazardVariable = new(iobs, "Hazard (baseline cumulative)");
+                DoubleVariable hazardRatioVariable = new(iobs, "Hazard ratio");
+                DataFrame resultsFrame = new();
                 resultsFrame.Variables.Add(survivalVariable);
                 resultsFrame.Variables.Add(hazardVariable);
                 resultsFrame.Variables.Add(hazardRatioVariable);
@@ -2337,7 +2337,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            ParameterBag cox1Parameters = new ParameterBag();
+            ParameterBag cox1Parameters = new();
             chartList.Add(cox1Parameters);
             cox1Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.CoxSurvivalOrHazard, new CoxSurvivalOrHazardOptions(z, iobs, istrata, CoxPlotMode.Survival, igroups, groupid, grouped, stratified, ARR3, CDAT1, use_tic, use_marker)));
             cox1Parameters = new ParameterBag();
@@ -2363,7 +2363,7 @@ namespace StatsDirect.Builtins
                     gn[igp]++;
                 }
                 // Plot a metafile version
-                ParameterBag cox2Parameters = new ParameterBag();
+                ParameterBag cox2Parameters = new();
                 chartList.Add(cox2Parameters);
                 cox2Parameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Cox2, new Cox2Options(gn, igroups, xp, yp, CDAT1, groupid)));
             }
@@ -2494,11 +2494,11 @@ namespace StatsDirect.Builtins
             }
 
             ExFortran.Rank(xp, xr, 0, ictr, 1, out double _);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            ParameterBag chartParameters = new ParameterBag();
+            ParameterBag chartParameters = new();
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xp, yp, "Time to event", "Deviance residual", "Deviance residuals vs. times", false, DataMinMax.XCalc_YCalc)));
 
@@ -2512,13 +2512,13 @@ namespace StatsDirect.Builtins
                 // restore the original record order if calling plot function or output to worksheet
                 Array.Sort(z, 1, iobs, new CoxpByIndex());
 
-                DoubleVariable leverageVariable = new DoubleVariable(iobs, "Leverage");
-                DoubleVariable proportionalityVariable = new DoubleVariable(iobs, "Proportionality");
-                DoubleVariable coxOakesResidualVariable = new DoubleVariable(iobs, "Cox-Oakes residual");
-                DoubleVariable coxSnellResidualVariable = new DoubleVariable(iobs, "Cox-Snell residual");
-                DoubleVariable martingaleResidualVariable = new DoubleVariable(iobs, "Martingale residual");
-                DoubleVariable devianceResidualVariable = new DoubleVariable(iobs, "Deviance residual");
-                DataFrame resultsFrame = new DataFrame();
+                DoubleVariable leverageVariable = new(iobs, "Leverage");
+                DoubleVariable proportionalityVariable = new(iobs, "Proportionality");
+                DoubleVariable coxOakesResidualVariable = new(iobs, "Cox-Oakes residual");
+                DoubleVariable coxSnellResidualVariable = new(iobs, "Cox-Snell residual");
+                DoubleVariable martingaleResidualVariable = new(iobs, "Martingale residual");
+                DoubleVariable devianceResidualVariable = new(iobs, "Deviance residual");
+                DataFrame resultsFrame = new();
                 resultsFrame.Variables.Add(leverageVariable);
                 resultsFrame.Variables.Add(proportionalityVariable);
                 resultsFrame.Variables.Add(coxOakesResidualVariable);
@@ -2550,7 +2550,7 @@ namespace StatsDirect.Builtins
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out double cit, GAMMA, out double _);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", 100 * GAMMA);
             outputParameters.AddOutput("pc2", 100 * GAMMA);
 
@@ -2558,7 +2558,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*hazard", hazardList);
             for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
             {
-                ParameterBag hazardParameters = new ParameterBag();
+                ParameterBag hazardParameters = new();
                 hazardList.Add(hazardParameters);
                 hazardParameters.AddOutput("par", CDAT1[i].Title);
                 hazardParameters.AddOutput("ec", Formatting.SafeExp(ARR3[1, i, 1]));
@@ -2569,7 +2569,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*parameter", parameterList);
             for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
             {
-                ParameterBag parameterParameters = new ParameterBag();
+                ParameterBag parameterParameters = new();
                 parameterList.Add(parameterParameters);
                 parameterParameters.AddOutput("par", CDAT1[i].Title);
                 parameterParameters.AddOutput("coef", ARR3[1, i, 1]);
@@ -2581,7 +2581,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptCoxModelAnalysis(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("ll0", ARR2[3, 0]);
             outputParameters.AddOutput("ll", ARR2[2, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);

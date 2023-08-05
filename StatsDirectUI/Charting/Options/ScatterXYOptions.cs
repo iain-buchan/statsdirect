@@ -26,7 +26,7 @@ namespace StatsDirect.Charting
                 MarkerTypes.Add(markerType);
 
                 //  A scatter plot has series with no lines.
-                SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor soleOptions = new()
                 {
                     SeriesName = xSeries[i].Title,
                     AllowChangeToDashStyle = useLines,

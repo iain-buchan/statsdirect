@@ -18,7 +18,7 @@ namespace StatsDirect.Charting
         {
             //  A forest plot has one marker for the study and a second for the pooled effect
             MarkerTypes = new List<MarkerType>();
-            MarkerType studyMarkerType = new MarkerType
+            MarkerType studyMarkerType = new()
             {
                 MarkerColor = ColorDescriptor.Gray,
                 LineColor = ColorDescriptor.Black,
@@ -28,7 +28,7 @@ namespace StatsDirect.Charting
                 Width = 1
             };
             MarkerTypes.Add(studyMarkerType);
-            MarkerType pooledMarkerType = new MarkerType
+            MarkerType pooledMarkerType = new()
             {
                 MarkerColor = ColorDescriptor.Gray,
                 LineColor = ColorDescriptor.Black,
@@ -39,7 +39,7 @@ namespace StatsDirect.Charting
             };
             MarkerTypes.Add(pooledMarkerType);
 
-            SeriesOptionsDescriptor studyOptions = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor studyOptions = new()
             {
                 SeriesName = "Study",
                 AllowChangeToDashStyle = false,
@@ -49,7 +49,7 @@ namespace StatsDirect.Charting
             };
             SeriesOptions.Add(studyOptions);
 
-            SeriesOptionsDescriptor pooledOptions = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor pooledOptions = new()
             {
                 SeriesName = "Pooled effect",
                 AllowChangeToDashStyle = false,

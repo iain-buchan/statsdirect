@@ -49,7 +49,7 @@ namespace StatsDirect.Charting.Renderer
                 if (seriesMaxY > maxY)
                     maxY = seriesMaxY;
             }
-            ScaleParameters sp = new ScaleParameters
+            ScaleParameters sp = new()
             {
                 X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = minX, Max = maxX },
                 Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = 0, Max = maxY }
@@ -69,7 +69,7 @@ namespace StatsDirect.Charting.Renderer
             List<string> savedLines = null;
 
             //  Ensure the data is sorted
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -223,9 +223,9 @@ namespace StatsDirect.Charting.Renderer
 
                         WriteAsciiYX(descriptor.Bins + AsciiYTxt, 16, "Mid-points");
                         WriteAsciiYX(descriptor.Bins + AsciiYTxt, 1, "Counts");
-                        TextCanvas[2] = "     " + TextCanvas[2].Substring(0, Math.Min(TextCanvas[2].Length, 85));
-                        TextCanvas[1] = "     " + TextCanvas[1].Substring(0, Math.Min(TextCanvas[1].Length, 85));
-                        TextCanvas[0] = "     " + TextCanvas[0].Substring(0, Math.Min(TextCanvas[0].Length, 85));
+                        TextCanvas[2] = string.Concat("     ", TextCanvas[2].AsSpan(0, Math.Min(TextCanvas[2].Length, 85)));
+                        TextCanvas[1] = string.Concat("     ", TextCanvas[1].AsSpan(0, Math.Min(TextCanvas[1].Length, 85)));
+                        TextCanvas[0] = string.Concat("     ", TextCanvas[0].AsSpan(0, Math.Min(TextCanvas[0].Length, 85)));
 
                         //  Save this plot
                         for (int i = TextCanvas.Length - 1; i >= 0; i--)

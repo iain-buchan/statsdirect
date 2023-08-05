@@ -28,16 +28,16 @@ namespace StatsDirect.Charting.Renderer
                 return new ParameterBag();
 
             Cox2Options options = (Cox2Options)Definition.ChartOptions;
-            Legend legend = new Legend();
+            Legend legend = new();
             for (int i = 1; i <= options.igroups; i++)
             {
-                MarkerType mt = new MarkerType { MarkerShape = (MarkerShape)i, MarkerColor = GrBlack, MarkerSize = 6 };
-                string vq = options.cdat1[options.groupid].Title.Substring(0, Math.Min(20, options.cdat1[options.groupid].Title.Length)) + "=" + options.cdat1[options.groupid].Groups[i - 1].Label;
+                MarkerType mt = new() { MarkerShape = (MarkerShape)i, MarkerColor = GrBlack, MarkerSize = 6 };
+                string vq = options.cdat1[options.groupid].Title[..Math.Min(20, options.cdat1[options.groupid].Title.Length)] + "=" + options.cdat1[options.groupid].Groups[i - 1].Label;
                 legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = mt });
             }
 
-            Range xRange = GetMinMaxArray(options.xp, Definition.ScaleParameters.X.ScaleType);
-            Range yRange = GetMinMaxArray(options.yp, Definition.ScaleParameters.Y.ScaleType);
+            Layout.Range xRange = GetMinMaxArray(options.xp, Definition.ScaleParameters.X.ScaleType);
+            Layout.Range yRange = GetMinMaxArray(options.yp, Definition.ScaleParameters.Y.ScaleType);
             DataMinX = xRange.Min;
             DataMaxX = xRange.Max;
             DataMinY = yRange.Min;
@@ -52,7 +52,7 @@ namespace StatsDirect.Charting.Renderer
                 false, false,
                 legend);
 
-            PenDescriptor p = new PenDescriptor(GrBlack, 1);
+            PenDescriptor p = new(GrBlack, 1);
             int istart = 0;
             for (int k = 1; k <= 2; k++)
             {

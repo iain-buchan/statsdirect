@@ -10,11 +10,11 @@ namespace StatsDirect.CsvParser
     {
             public static List<List<string>> Read(TextReader csvReader)
             {
-                AntlrInputStream input = new AntlrInputStream(csvReader);
-                CsvLexer lexer = new CsvLexer(input);
-                CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-                CsvParser parser = new CsvParser(tokenStream);
-                StringBuilder errorBuilder = new StringBuilder();
+                AntlrInputStream input = new(csvReader);
+                CsvLexer lexer = new(input);
+                CommonTokenStream tokenStream = new(lexer);
+                CsvParser parser = new(tokenStream);
+                StringBuilder errorBuilder = new();
                 parser.RemoveErrorListeners();
                 parser.AddErrorListener(new AccumulateErrors(errorBuilder));
                 CsvParser.FileContext fileContext = parser.file();

@@ -31,7 +31,7 @@ namespace StatsDirect.Templates
         /// </summary>
         public IList<Tic> Tics()
         {
-            List<Tic> tics = new List<Tic>();
+            List<Tic> tics = new();
             for (int power = MinimumPower; power < MaximumPower; power++)
             {
                 double basePower = Math.Pow(10, power);

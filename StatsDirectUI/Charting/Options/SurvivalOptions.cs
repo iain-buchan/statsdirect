@@ -43,7 +43,7 @@ namespace StatsDirect.Charting
                 MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
                 MarkerTypes.Add(markerType);
 
-                SeriesOptionsDescriptor sod = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor sod = new()
                 {
                     MarkerIndex = seriesIndex,
                     SeriesName = SeriesTitles[seriesIndex]
@@ -55,7 +55,7 @@ namespace StatsDirect.Charting
             MarkerType ciMarkerType = ChartPreferences.MarkerTypes[10].Clone();
             MarkerTypes.Add(ciMarkerType);
 
-            SeriesOptionsDescriptor cisod = new SeriesOptionsDescriptor
+            SeriesOptionsDescriptor cisod = new()
             {
                 AllowChangeToMarkerSize = false,
                 AllowChangeToMarkerType = false,

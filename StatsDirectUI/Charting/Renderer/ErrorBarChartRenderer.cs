@@ -115,14 +115,14 @@ namespace StatsDirect.Charting.Renderer
                 legend);
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
-            Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new Dictionary<int, List<MultiDoublePoint>>();
+            Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new();
             double aboutALineWidth = ToCanvasWidth(1);
 
             // Work through the series
             for (int seriesIndex = 0; seriesIndex < eOptions.Series.Count; seriesIndex++)
             {
                 MultiDoubleSeries s = eOptions.Series[seriesIndex];
-                List<MultiDoublePoint> safesBySeries = new List<MultiDoublePoint>();
+                List<MultiDoublePoint> safesBySeries = new();
 
                 // Draw the error bars first so we don't interfere with connection lines
                 PenDescriptor p = GetMarkerPen(eOptions.MarkerTypes[seriesIndex]);

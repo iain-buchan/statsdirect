@@ -65,15 +65,15 @@ namespace StatsDirect.UI
 
         private static bool TryGetPath(ParameterBag outputParameters, string path, out FilledParameter parameter, string operationName)
         {
-            if (path.Contains("$"))
+            if (path.Contains('$'))
             {
                 // Split on the first $ in the path: we want the item in here that matches the prefix, then we'll work on the rest.
-                string prefix = path.Substring(0, path.IndexOf("$"));
-                string suffix = path.Substring(prefix.Length + 1);
+                string prefix = path[..path.IndexOf("$")];
+                string suffix = path[(prefix.Length + 1)..];
                 if (!outputParameters.TryGetValue(prefix, out FilledParameter subParameter))
                     throw new Exception($"Operation {operationName} failed: parameter {path} must be present in the output but there's no output named {prefix}");
                 // Check subParameter for the rest of the path
-                PathFollower pathFollower = new PathFollower(operationName, suffix);
+                PathFollower pathFollower = new(operationName, suffix);
                 subParameter.Accept(pathFollower);
                 parameter = pathFollower.ResolvedParameter;
                 return null != parameter;
@@ -229,15 +229,15 @@ namespace StatsDirect.UI
 
             void IFilledParameterVisitor.Visit(FilledParameterBagParameter victim)
             {
-                if (Path.Contains("$"))
+                if (Path.Contains('$'))
                 {
                     // Split on the first $ in the path: we want the item in here that matches the prefix, then we'll work on the rest.
-                    string prefix = Path.Substring(0, Path.IndexOf("$"));
-                    string suffix = Path.Substring(prefix.Length + 1);
+                    string prefix = Path[..Path.IndexOf("$")];
+                    string suffix = Path[(prefix.Length + 1)..];
                     if (!victim.Data.TryGetValue(prefix, out FilledParameter subParameter))
                         throw new Exception($"Operation {OperationName} failed: parameter {Path} must be present in the output but there's no output named {prefix}");
                     // Check subParameter for the rest of the path
-                    PathFollower pathFollower = new PathFollower(OperationName, suffix);
+                    PathFollower pathFollower = new(OperationName, suffix);
                     subParameter.Accept(pathFollower);
                     ResolvedParameter = pathFollower.ResolvedParameter;
                 }
@@ -252,18 +252,18 @@ namespace StatsDirect.UI
             void IFilledParameterVisitor.Visit(FilledParameterBagListParameter victim)
             {
                 // The next path element should be an index - go for it, then try the path again
-                if (!Path.Contains("$"))
+                if (!Path.Contains('$'))
                     throw new Exception($"Operation {OperationName} failed: parameter {Path} represents a list of parameter bags, so should be of the form ...$1$value");
                 // Split on the first $ in the path: we want the item in here that matches the prefix (which should be a 1-based index), then we'll work on the rest.
-                string prefix = Path.Substring(0, Path.IndexOf("$"));
-                string suffix = Path.Substring(prefix.Length + 1);
+                string prefix = Path[..Path.IndexOf("$")];
+                string suffix = Path[(prefix.Length + 1)..];
                 if (!int.TryParse(prefix, out int indexPlusOne))
                     throw new Exception($"Operation {OperationName} failed: parameter {Path} should have a 1-based numeric index as its next component, not {prefix}");
                 if (indexPlusOne < 1 || indexPlusOne > victim.Data.Count)
                     throw new Exception($"Operation {OperationName} failed: parameter {Path} contains 1 to {victim.Data.Count} elements, we're checking {prefix}");
                 FilledParameter subParameter = FilledParameterFactory.Output(victim.Data[indexPlusOne - 1]);
                 // Check subParameter for the rest of the path
-                PathFollower pathFollower = new PathFollower(OperationName, suffix);
+                PathFollower pathFollower = new(OperationName, suffix);
                 subParameter.Accept(pathFollower);
                 ResolvedParameter = pathFollower.ResolvedParameter;
             }

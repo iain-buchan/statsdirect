@@ -278,7 +278,7 @@ namespace StatsDirect.UI
                 if (ao[i] != Constant.MISSING)
                     reali += 1;
             }
-            Summary sx = new Summary();
+            Summary sx = new();
             const double gamma = 0.95;
             const double userCentL = 5;
             const double userCentU = 95;
@@ -288,7 +288,7 @@ namespace StatsDirect.UI
             sx.FullSummaryFromXSort(ao, out ao, rows, title, gamma, userCentL, userCentU, centileDef);
             const int flt = 6;
             const int k = 19;
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.AppendLine("Title: " + v.Title + "\r\n");
             sb.AppendLine(Formatting.PadTo("Valid data", k) + sx.ValidData.ToString());
             sb.AppendLine(Formatting.PadTo("Missing", k) + sx.MissingData.ToString());

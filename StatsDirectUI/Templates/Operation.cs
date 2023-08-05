@@ -232,7 +232,7 @@ namespace StatsDirect.Templates
 
         public IList<SuggestedOperation> AvailableSuggestedOperations(ITemplateProcessor processor, ParameterBag parameters)
         {
-            List<SuggestedOperation> availableSuggestedOperations = new List<SuggestedOperation>();
+            List<SuggestedOperation> availableSuggestedOperations = new();
             foreach (SuggestedOperation su in suggestedOperations)
             {
                 if (null == su.SuggestIf || (bool)processor.Evaluate(su.SuggestIf, parameters))

@@ -16,7 +16,7 @@ namespace StatsDirect.Charting.Renderer
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
-            Range xRange = GetMinMaxSort(seriesToUse);
+            Layout.Range xRange = GetMinMaxSort(seriesToUse);
 
             return new ScaleParameters
             {
@@ -39,9 +39,7 @@ namespace StatsDirect.Charting.Renderer
             {
                 Definition = Definition.Clone();
                 Definition.SwapXAndYSeries();
-                AxisScaleParameters tempAxisScaleParameters = Definition.ScaleParameters.X;
-                Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
-                Definition.ScaleParameters.Y = tempAxisScaleParameters;
+                (Definition.ScaleParameters.Y, Definition.ScaleParameters.X) = (Definition.ScaleParameters.X, Definition.ScaleParameters.Y);
             }
             return PlotSpreadVertical();
         }
@@ -53,7 +51,7 @@ namespace StatsDirect.Charting.Renderer
 
             ScaleHeight(seriesToUse.Count);
 
-            Range dataRangeX = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeX = GetMinMaxSort(seriesToUse);
             DataMinX = dataRangeX.Min;
             DataMaxX = dataRangeX.Max;
 
@@ -144,7 +142,7 @@ namespace StatsDirect.Charting.Renderer
 
             ScaleWidth(seriesToUse.Count);
 
-            Range dataRangeY = GetMinMaxSort(seriesToUse);
+            Layout.Range dataRangeY = GetMinMaxSort(seriesToUse);
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
 

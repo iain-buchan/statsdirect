@@ -31,19 +31,15 @@ namespace StatsDirect.Charting
         {
             outputStream = new MemoryStream();
             //  Create temporary graphics object for metafile creation and get handle to its device context.
-            using (Bitmap b = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
-            {
-                using (Graphics newGraphics = Graphics.FromImage(b))
-                {
-                    //  Create metafile object to do the recording.
-                    IntPtr hdc = newGraphics.GetHdc();
-                    metafile = new Metafile(outputStream, hdc, new RectangleF(0, 0, (float)Width, (float)Height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
-                    newGraphics.ReleaseHdc(hdc);
+            using Bitmap b = new(1, 1, PixelFormat.Format32bppArgb);
+            using Graphics newGraphics = Graphics.FromImage(b);
+            //  Create metafile object to do the recording.
+            IntPtr hdc = newGraphics.GetHdc();
+            metafile = new Metafile(outputStream, hdc, new RectangleF(0, 0, (float)Width, (float)Height), MetafileFrameUnit.Pixel, EmfType.EmfPlusDual);
+            newGraphics.ReleaseHdc(hdc);
 
-                    metafileGraphics = Graphics.FromImage(metafile);
-                    metafileGraphics.SmoothingMode = SmoothingMode.AntiAlias;
-                }
-            }
+            metafileGraphics = Graphics.FromImage(metafile);
+            metafileGraphics.SmoothingMode = SmoothingMode.AntiAlias;
         }
 
         public void DrawString(string s, FontDescriptor font, BrushDescriptor b, double x, double y, StringFormat txtFormat)
@@ -247,10 +243,8 @@ namespace StatsDirect.Charting
         {
             if (fill)
             {
-                using (Brush b = new SolidBrush(ToColor(p.Color)))
-                {
-                    metafileGraphics.FillPolygon(b, pt);
-                }
+                using Brush b = new SolidBrush(ToColor(p.Color));
+                metafileGraphics.FillPolygon(b, pt);
             }
             // Draw the diamond
             metafileGraphics.DrawPolygon(GetPen(p), pt);

@@ -17,10 +17,8 @@ namespace StatsDirect.R
                 width = i.Width;
                 height = i.Height;
             }
-            using (Stream s = File.OpenRead(path))
-            {
-                return RtfImageConverter.MetastreamToRtf(s, width, height);
-            }
+            using Stream s = File.OpenRead(path);
+            return RtfImageConverter.MetastreamToRtf(s, width, height);
         }
 
         private static string PathToName(string path)
@@ -35,7 +33,7 @@ namespace StatsDirect.R
 
         private static Dictionary<string, object> CoalesceNamesAndValues(List<string> names, List<object> values, List<string> titles)
         {
-            Dictionary<string, object> coalesced = new Dictionary<string,object>();
+            Dictionary<string, object> coalesced = new();
             for (int i = 0; i < names.Count; i++)
             {
                 string name = names[i];

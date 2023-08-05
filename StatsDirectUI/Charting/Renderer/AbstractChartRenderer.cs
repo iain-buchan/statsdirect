@@ -231,12 +231,10 @@ namespace StatsDirect.Charting.Renderer
 
             if (!string.IsNullOrEmpty(title))
             {
-                using (StringFormat txtFormat = new StringFormat())
-                {
-                    txtFormat.Alignment = StringAlignment.Center;
-                    txtFormat.LineAlignment = StringAlignment.Far;
-                    Canvas.DrawStringAtAngle(title, AxisTitleFontDescriptor, BrushDescriptor.Black, rightOfYAxisTitle, YExtCanvas / 2.0 + YAxisCanvas, txtFormat, LabelDirection.Up);
-                }
+                using StringFormat txtFormat = new();
+                txtFormat.Alignment = StringAlignment.Center;
+                txtFormat.LineAlignment = StringAlignment.Far;
+                Canvas.DrawStringAtAngle(title, AxisTitleFontDescriptor, BrushDescriptor.Black, rightOfYAxisTitle, YExtCanvas / 2.0 + YAxisCanvas, txtFormat, LabelDirection.Up);
             }
         }
 
@@ -257,7 +255,7 @@ namespace StatsDirect.Charting.Renderer
             if (null != legend)
                 legendSize = ChartPartSizer.Size(this, legend);
 
-            Margin plotAreaMargins = new Margin
+            Margin plotAreaMargins = new()
             {
                 Bottom = y.ExtraSpaceBeforeAxisStarts + (null != legend && legend.Position == LegendPosition.Bottom ? legendSize.Height : 0),
                 Left = x.ExtraSpaceBeforeAxisStarts + (null != legend && legend.Position == LegendPosition.Left ? legendSize.Width : 0),
@@ -387,7 +385,7 @@ namespace StatsDirect.Charting.Renderer
                     throw new NotImplementedException("Unknown X axis scale mode");
             }
 
-            AxisScales axisScales = new AxisScales { X = xAxisScale, Y = yAxisScale };
+            AxisScales axisScales = new() { X = xAxisScale, Y = yAxisScale };
 
             if (!IsAscii)
             {
@@ -495,7 +493,7 @@ namespace StatsDirect.Charting.Renderer
                     hasGridLines = Definition.ScaleParameters.X.HasGridLines;
                     gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
                 }
-                PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
+                PenDescriptor gridLinePen = new(AxisPen.Color, 1)
                 {
                     DashStyle = gridLineDashStyle
                 };
@@ -611,7 +609,7 @@ namespace StatsDirect.Charting.Renderer
 
             if (!IsAscii)
             {
-                PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
+                PenDescriptor gridLinePen = new(AxisPen.Color, 1)
                 {
                     DashStyle = gridLineDashStyle
                 };
@@ -686,33 +684,31 @@ namespace StatsDirect.Charting.Renderer
             if (!IsAscii)
             {
                 // Vector
-                using (StringFormat txtFormat = new StringFormat())
+                using StringFormat txtFormat = new();
+                txtFormat.Alignment = StringAlignment.Far;
+                txtFormat.LineAlignment = StringAlignment.Center;
+                LabelDirection direction = LabelDirection.Across;
+                bool hasGridLines = false;
+                DashStyleDescriptor gridLineDashStyle = DashStyleDescriptor.Solid;
+                if (HasScaleParameters && Definition.ScaleParameters.Y != null)
                 {
-                    txtFormat.Alignment = StringAlignment.Far;
-                    txtFormat.LineAlignment = StringAlignment.Center;
-                    LabelDirection direction = LabelDirection.Across;
-                    bool hasGridLines = false;
-                    DashStyleDescriptor gridLineDashStyle = DashStyleDescriptor.Solid;
-                    if (HasScaleParameters && Definition.ScaleParameters.Y != null)
-                    {
-                        direction = Definition.ScaleParameters.Y.LabelDirection;
-                        hasGridLines = Definition.ScaleParameters.Y.HasGridLines;
-                        gridLineDashStyle = Definition.ScaleParameters.Y.GridLineDashStyle;
-                    }
-                    PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
-                    {
-                        DashStyle = gridLineDashStyle
-                    };
-                    double count = labels.Count;
-                        for (int y = 0; y < labels.Count; y++)
-                        {
-                            double yctr = YAxisCanvas + YExtCanvas - (y + 0.5) / count * YExtCanvas;
-                            double ytic = YAxisCanvas + YExtCanvas - y / count * YExtCanvas;
-                            Canvas.DrawStringAtAngle(labels[y], AxisLabelFontDescriptor, axisBrush, XAxisCanvas - (AxisBigTick + axisLabelOffsetFromTick), yctr, txtFormat, direction);
-                            AxisDrawline(XAxisCanvas - AxisBigTick, ytic, XAxisCanvas, ytic);
-                            if (hasGridLines)
-                                Canvas.DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
-                        }
+                    direction = Definition.ScaleParameters.Y.LabelDirection;
+                    hasGridLines = Definition.ScaleParameters.Y.HasGridLines;
+                    gridLineDashStyle = Definition.ScaleParameters.Y.GridLineDashStyle;
+                }
+                PenDescriptor gridLinePen = new(AxisPen.Color, 1)
+                {
+                    DashStyle = gridLineDashStyle
+                };
+                double count = labels.Count;
+                for (int y = 0; y < labels.Count; y++)
+                {
+                    double yctr = YAxisCanvas + YExtCanvas - (y + 0.5) / count * YExtCanvas;
+                    double ytic = YAxisCanvas + YExtCanvas - y / count * YExtCanvas;
+                    Canvas.DrawStringAtAngle(labels[y], AxisLabelFontDescriptor, axisBrush, XAxisCanvas - (AxisBigTick + axisLabelOffsetFromTick), yctr, txtFormat, direction);
+                    AxisDrawline(XAxisCanvas - AxisBigTick, ytic, XAxisCanvas, ytic);
+                    if (hasGridLines)
+                        Canvas.DrawLine(gridLinePen, XAxisCanvas, ytic, XAxisCanvas + XExtCanvas, ytic);
                 }
             }
             else
@@ -758,33 +754,31 @@ namespace StatsDirect.Charting.Renderer
         {
             if (!IsAscii)
             {
-                using (StringFormat txtFormat = new StringFormat())
+                using StringFormat txtFormat = new();
+                txtFormat.Alignment = StringAlignment.Center;
+                txtFormat.LineAlignment = StringAlignment.Near;
+                LabelDirection direction = LabelDirection.Across;
+                bool hasGridLines = false;
+                DashStyleDescriptor gridLineDashStyle = DashStyleDescriptor.Solid;
+                if (HasScaleParameters && Definition.ScaleParameters.X != null)
                 {
-                    txtFormat.Alignment = StringAlignment.Center;
-                    txtFormat.LineAlignment = StringAlignment.Near;
-                    LabelDirection direction = LabelDirection.Across;
-                    bool hasGridLines = false;
-                    DashStyleDescriptor gridLineDashStyle = DashStyleDescriptor.Solid;
-                    if (HasScaleParameters && Definition.ScaleParameters.X != null)
-                    {
-                        direction = Definition.ScaleParameters.X.LabelDirection;
-                        hasGridLines = Definition.ScaleParameters.X.HasGridLines;
-                        gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
-                    }
-                    PenDescriptor gridLinePen = new PenDescriptor(AxisPen.Color, 1)
-                    {
-                        DashStyle = gridLineDashStyle
-                    };
-                    double count = labels.Count;
-                        for (int x = 0; x < labels.Count; x++)
-                        {
-                            double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
-                            double xtic = XAxisCanvas + (x + 1.0) / count * XExtCanvas;
-                            Canvas.DrawStringAtAngle(labels[x], AxisLabelFontDescriptor, axisBrush, xctr, YAxisCanvas - AxisBigTick, txtFormat, direction);
-                            AxisDrawline(xtic, YAxisCanvas - AxisBigTick, xtic, YAxisCanvas);
-                            if (hasGridLines)
-                                Canvas.DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
-                        }
+                    direction = Definition.ScaleParameters.X.LabelDirection;
+                    hasGridLines = Definition.ScaleParameters.X.HasGridLines;
+                    gridLineDashStyle = Definition.ScaleParameters.X.GridLineDashStyle;
+                }
+                PenDescriptor gridLinePen = new(AxisPen.Color, 1)
+                {
+                    DashStyle = gridLineDashStyle
+                };
+                double count = labels.Count;
+                for (int x = 0; x < labels.Count; x++)
+                {
+                    double xctr = XAxisCanvas + (x + 0.5) / count * XExtCanvas;
+                    double xtic = XAxisCanvas + (x + 1.0) / count * XExtCanvas;
+                    Canvas.DrawStringAtAngle(labels[x], AxisLabelFontDescriptor, axisBrush, xctr, YAxisCanvas - AxisBigTick, txtFormat, direction);
+                    AxisDrawline(xtic, YAxisCanvas - AxisBigTick, xtic, YAxisCanvas);
+                    if (hasGridLines)
+                        Canvas.DrawLine(gridLinePen, xtic, YAxisCanvas, xtic, YAxisCanvas + YExtCanvas);
                 }
             }
             return new CategoryAxisScale(labels.Count);
@@ -814,12 +808,10 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         protected void AxisDrawStringAtAngleRM(string txt, double x1, double y1, LabelDirection direction)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = StringAlignment.Far;
-                alignTxt.LineAlignment = StringAlignment.Center;
-                Canvas.DrawStringAtAngle(txt, AxisLabelFontDescriptor, axisBrush, x1, y1, alignTxt, direction);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = StringAlignment.Far;
+            alignTxt.LineAlignment = StringAlignment.Center;
+            Canvas.DrawStringAtAngle(txt, AxisLabelFontDescriptor, axisBrush, x1, y1, alignTxt, direction);
         }
 
         /// <summary>
@@ -827,12 +819,10 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         protected SizeD AxisMeasureStringAtAngle(string txt, LabelDirection direction)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = StringAlignment.Far;
-                alignTxt.LineAlignment = StringAlignment.Center;
-                return Canvas.MeasureStringAtAngle(txt, AxisLabelFontDescriptor, direction);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = StringAlignment.Far;
+            alignTxt.LineAlignment = StringAlignment.Center;
+            return Canvas.MeasureStringAtAngle(txt, AxisLabelFontDescriptor, direction);
         }
 
         ///  <summary>
@@ -840,12 +830,10 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         protected void AxisDrawStringAtAngleCT(string txt, double x1, double y1, LabelDirection direction)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = StringAlignment.Center;
-                alignTxt.LineAlignment = StringAlignment.Near;
-                Canvas.DrawStringAtAngle(txt, AxisLabelFontDescriptor, axisBrush, x1, y1, alignTxt, direction);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = StringAlignment.Center;
+            alignTxt.LineAlignment = StringAlignment.Near;
+            Canvas.DrawStringAtAngle(txt, AxisLabelFontDescriptor, axisBrush, x1, y1, alignTxt, direction);
         }
 
         ///  <summary>
@@ -853,12 +841,10 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         protected void AxisDrawStringAtAngleLT(string txt, double x1, double y1, LabelDirection direction)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = StringAlignment.Near;
-                alignTxt.LineAlignment = StringAlignment.Near;
-                Canvas.DrawStringAtAngle(txt, AxisLabelFontDescriptor, axisBrush, x1, y1, alignTxt, direction);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = StringAlignment.Near;
+            alignTxt.LineAlignment = StringAlignment.Near;
+            Canvas.DrawStringAtAngle(txt, AxisLabelFontDescriptor, axisBrush, x1, y1, alignTxt, direction);
         }
 
         ///  <summary>
@@ -883,11 +869,9 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         protected void DrawStringLegend(string txt, double x, double y, StringAlignment alignment)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = alignment;
-                Canvas.DrawString(txt, LegendFontDescriptor, axisBrush, x, y, alignTxt);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = alignment;
+            Canvas.DrawString(txt, LegendFontDescriptor, axisBrush, x, y, alignTxt);
         }
 
         ///  <summary>
@@ -895,31 +879,25 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         protected void DrawStringLabel(string txt, double x, double y, StringAlignment alignment)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = alignment;
-                Canvas.DrawString(txt, LabelFontDescriptor, axisBrush, x, y, alignTxt);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = alignment;
+            Canvas.DrawString(txt, LabelFontDescriptor, axisBrush, x, y, alignTxt);
         }
 
         protected void DrawStringLabel(string txt, double x, double y, StringAlignment alignment, StringAlignment lineAlignment)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = alignment;
-                alignTxt.LineAlignment = lineAlignment;
-                Canvas.DrawString(txt, LabelFontDescriptor, axisBrush, x, y, alignTxt);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = alignment;
+            alignTxt.LineAlignment = lineAlignment;
+            Canvas.DrawString(txt, LabelFontDescriptor, axisBrush, x, y, alignTxt);
         }
 
         protected void DrawStringInCanvasCoordinates(string txt, FontDescriptor f, BrushDescriptor b, double x, double y, StringAlignment alignment, StringAlignment lineAlignment)
         {
-            using (StringFormat alignTxt = new StringFormat())
-            {
-                alignTxt.Alignment = alignment;
-                alignTxt.LineAlignment = lineAlignment;
-                Canvas.DrawString(txt, f, b, x, y, alignTxt);
-            }
+            using StringFormat alignTxt = new();
+            alignTxt.Alignment = alignment;
+            alignTxt.LineAlignment = lineAlignment;
+            Canvas.DrawString(txt, f, b, x, y, alignTxt);
         }
 
 #if WARN_OBSOLETES
@@ -1319,7 +1297,7 @@ namespace StatsDirect.Charting.Renderer
         /// </summary>
         protected PenDescriptor GetLinePen(MarkerType mt, bool ignoreStyle)
         {
-            PenDescriptor p = new PenDescriptor(ShouldUseColour ? mt.LineColor : GrBlack, mt.Width);
+            PenDescriptor p = new(ShouldUseColour ? mt.LineColor : GrBlack, mt.Width);
             if (!ignoreStyle)
                 p.DashStyle = mt.LineDashStyle;
             return p;
@@ -1355,7 +1333,7 @@ namespace StatsDirect.Charting.Renderer
             if (!IsAscii)
                 throw new InvalidOperationException("Trying to get ASCII string for a non-ASCII chart");
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             for (int i = TextCanvas.GetUpperBound(0); i >= TextCanvas.GetLowerBound(0); i--)
                 sb.AppendLine(TextCanvas[i]);
             return sb.ToString();

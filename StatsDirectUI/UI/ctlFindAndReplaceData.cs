@@ -27,15 +27,15 @@ namespace StatsDirect.UI
             if (0 == searchExpression.Length || !Calcit.IsValid(searchExpression))
                 return txtExpression;
             DataType[] oneDouble = { DataType.Double };
-            Calcit finder = new Calcit(searchExpression, oneDouble, false);
+            Calcit finder = new(searchExpression, oneDouble, false);
             string replaceExpression = txtReplace.Text.Trim();
             if (0 == replaceExpression.Length || !Calcit.IsValid(replaceExpression))
                 return txtReplace;
-            Calcit replacer = new Calcit(replaceExpression, oneDouble, false);
+            Calcit replacer = new(replaceExpression, oneDouble, false);
 
             using (new WaitCursor())
             {
-                DataFrame outputFrame = new DataFrame();
+                DataFrame outputFrame = new();
                 double[] x = new double[1];
                 foreach (IVariable source in options.DataFrame.Variables)
                 {

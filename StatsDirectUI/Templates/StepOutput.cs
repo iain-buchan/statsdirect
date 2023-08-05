@@ -15,6 +15,6 @@ namespace StatsDirect.Templates
             ParameterBag = parameterBag;
         }
 
-        internal static StepOutput Empty() => new StepOutput(new ParameterBag());
+        internal static StepOutput Empty() => new(new ParameterBag());
     }
 }

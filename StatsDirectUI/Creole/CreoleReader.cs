@@ -7,7 +7,7 @@ namespace StatsDirect.Creole
     {
         public static bool IsValid(string expr, out string errors)
         {
-            CreoleParser parser = new CreoleParser(new CommonTokenStream(new CreoleLexer(new AntlrInputStream(expr))));
+            CreoleParser parser = new(new CommonTokenStream(new CreoleLexer(new AntlrInputStream(expr))));
             StringBuilder errorBuilder = AccumulateErrors.Wrap(parser);
             CreoleParser.DocumentContext retval = parser.document();
             if (parser.NumberOfSyntaxErrors > 0)
@@ -27,7 +27,7 @@ namespace StatsDirect.Creole
 
         public static ICreole<TResult> Parse<TResult>(string expr, out string errors)
         {
-            CreoleParser parser = new CreoleParser(new CommonTokenStream(new CreoleLexer(new AntlrInputStream(expr))));
+            CreoleParser parser = new(new CommonTokenStream(new CreoleLexer(new AntlrInputStream(expr))));
             StringBuilder errorBuilder = AccumulateErrors.Wrap(parser);
             CreoleParser.DocumentContext retval = parser.document();
             if (parser.NumberOfSyntaxErrors > 0)
@@ -51,7 +51,7 @@ namespace StatsDirect.Creole
 
             public static StringBuilder Wrap(Parser parser)
             {
-                StringBuilder errorBuilder = new StringBuilder();
+                StringBuilder errorBuilder = new();
                 parser.RemoveErrorListeners();
                 parser.AddErrorListener(new AccumulateErrors(errorBuilder));
                 return errorBuilder;

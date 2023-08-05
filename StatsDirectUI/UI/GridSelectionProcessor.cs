@@ -99,7 +99,7 @@ namespace StatsDirect.UI
                 }
                 if (null != frame)
                 {
-                    ParameterBag outputParameters = new ParameterBag();
+                    ParameterBag outputParameters = new();
                     if (!string.IsNullOrEmpty(frameParameter.AppendToFrame))
                     {
                         DataFrame targetFrame;
@@ -163,7 +163,7 @@ namespace StatsDirect.UI
                 {
                     case DataAcquisitionMode2D.GroupThenBlock:
                         {
-                            DataFrame2D frame = new DataFrame2D();
+                            DataFrame2D frame = new();
                             int groups = SdApplication.SoleInstance.GetInteger("Number of groups", frame2dParameter.Operation.ToString(), 1, out bool userCancelled);
                             if (userCancelled || groups < 1 || groups > 10)
                             {
@@ -211,7 +211,7 @@ namespace StatsDirect.UI
                         break;
                     case DataAcquisitionMode2D.BlockThenGroup:
                         {
-                            DataFrame2D frame = new DataFrame2D();
+                            DataFrame2D frame = new();
                             int repeats = SdApplication.SoleInstance.GetInteger("Number of repeats", frame2dParameter.Operation.ToString(), 2, out bool userCancelled);
                             if (userCancelled || repeats <= 1)
                             {
@@ -255,7 +255,7 @@ namespace StatsDirect.UI
                                     {
                                         for (int i = 0; i < vl.Count; i++)
                                         {
-                                            DoubleVariable v = new DoubleVariable();
+                                            DoubleVariable v = new();
                                             v.EnsureLength(repeats);
                                             vl[i] = v;
                                         }
@@ -332,11 +332,11 @@ namespace StatsDirect.UI
                             }
                         }
                         ITemplateHost host = SdApplication.SoleInstance;
-                        ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
+                        ConfidenceIntervalParameter ciParam = new() { CanDefault = true, Name = "ci" };
                         ParameterBag filledCi = host.FillParameter(processor, ciParam, new ParameterBag(), false);
 
                         // If we get here, the operation acquired all its parameters successfully
-                        GroupedCovarianceData gcd = new GroupedCovarianceData
+                        GroupedCovarianceData gcd = new()
                         {
                             a = a,
                             b = b,
@@ -479,11 +479,11 @@ namespace StatsDirect.UI
                         }
                     }
 
-                    ConfidenceIntervalParameter ciParam = new ConfidenceIntervalParameter { CanDefault = true, Name = "ci" };
+                    ConfidenceIntervalParameter ciParam = new() { CanDefault = true, Name = "ci" };
                     ParameterBag filledCi = SdApplication.TemplateHost.FillParameter(new TemplateProcessor(SdApplication.TemplateHost), ciParam, new ParameterBag(), false);
 
                     // If we get here, the operation acquired all its parameters successfully
-                    GroupedCovarianceData gcd = new GroupedCovarianceData
+                    GroupedCovarianceData gcd = new()
                     {
                         a = a,
                         b = b,
@@ -662,11 +662,11 @@ namespace StatsDirect.UI
 
                 DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
 
-                DataFrame outputFrame = new DataFrame();
+                DataFrame outputFrame = new();
                 for (int i = 0; i < groupIdVariable.GroupCount; i++)
                 {
                     double thisGroupId = groupIdVariable.Groups[i].Id;
-                    DoubleVariable v = new DoubleVariable();
+                    DoubleVariable v = new();
                     outputFrame.Variables.Add(v);
                     v.EnsureLength(maxgn);
 
@@ -777,7 +777,7 @@ namespace StatsDirect.UI
                 DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
                 double[] dt = dataVariable.Data;
 
-                DataFrame outputFrame = new DataFrame();
+                DataFrame outputFrame = new();
                 // fill the transport matrix with data arranged in treatments (columns) and blocks (rows)
                 for (int i = 0; i < treatment_cats; i++)
                 {
@@ -890,7 +890,7 @@ namespace StatsDirect.UI
                 case DataAcquisitionMode2D.GroupThenBlock:
                     {
                         // Major axis: group.  Minor axis: subgroup.  Variable contents: Repeated data values, may be jagged.
-                        DataFrame2D resultFrame = new DataFrame2D();
+                        DataFrame2D resultFrame = new();
                         for (int groupNumber = 0; groupNumber < numberOfGroups; groupNumber++)
                         {
                             for (int subGroupNumber = 0; subGroupNumber < numberOfSubGroups; subGroupNumber++)
@@ -916,7 +916,7 @@ namespace StatsDirect.UI
                 case DataAcquisitionMode2D.BlockThenGroup:
                     {
                         // Major axis: Block/subject.  Minor axis: group.  Variable contents: data values ordered by repeat, padded with MISSING.
-                        DataFrame2D resultFrame = new DataFrame2D();
+                        DataFrame2D resultFrame = new();
                         resultFrame.EnsureVariablesSquare(numberOfSubGroups, numberOfGroups);
 
                         int highestCnt = 0;
@@ -931,7 +931,7 @@ namespace StatsDirect.UI
                                     {
                                         if (null == resultFrame.Variables[subGroup][group])
                                         {
-                                            DoubleVariable v = new DoubleVariable { Title = groupVariable.Title + "_" + gcat[(int)g[group]] + " (" + subGroupVariable.Title + "_" + sgcat[(int)sg[subGroup]] + ")" }; // TODO: Origin
+                                            DoubleVariable v = new() { Title = groupVariable.Title + "_" + gcat[(int)g[group]] + " (" + subGroupVariable.Title + "_" + sgcat[(int)sg[subGroup]] + ")" }; // TODO: Origin
                                             v.EnsureLength(maxsgn, Constant.MISSING);
                                             resultFrame.Variables[subGroup][group] = v;
                                         }

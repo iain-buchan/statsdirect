@@ -227,13 +227,13 @@ namespace StatsDirect.Builtins
 
             bool save = parameters["save"].AsBoolean;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> groupList = new List<ParameterBag>();
             outputParameters.AddOutput("*group", groupList);
-            DataFrame resultsFrame = new DataFrame();
+            DataFrame resultsFrame = new();
             for (int lap = 1; lap <= groups; lap++)
             {
-                ParameterBag groupParameters = new ParameterBag();
+                ParameterBag groupParameters = new();
                 groupList.Add(groupParameters);
 
                 int[] nat = new int[gnx[lap] + 2];
@@ -250,7 +250,7 @@ namespace StatsDirect.Builtins
                 {
                     IList<ParameterBag> grpList = new List<ParameterBag>();
                     groupParameters.AddOutput("*grp", grpList);
-                    ParameterBag grpParameters = new ParameterBag();
+                    ParameterBag grpParameters = new();
                     grpList.Add(grpParameters);
                     grpParameters.AddOutput("grp", gid + " = " + groupLabels[Convert.ToInt32(gpid[lap])]);
                 }
@@ -440,13 +440,13 @@ namespace StatsDirect.Builtins
             double[,] stime = (double[,])parameters["stime"].AsObject;
             bool useMarkers = parameters["use-markers"].AsBoolean;
             bool useTics = parameters["use-tics"].AsBoolean;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
             IList<IRenderable> imageList = x_plgraph(h, s, stime, dead, groups, cnx, glab, useTics, useMarkers);
             foreach (IRenderable renderable in imageList)
             {
-                ParameterBag chartParameters = new ParameterBag();
+                ParameterBag chartParameters = new();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", renderable);
             }
@@ -716,7 +716,7 @@ namespace StatsDirect.Builtins
                     vs[j] = Constant.MISSING;
                     vh[j] = Constant.MISSING;
                 }
-                ParameterBag estParameters = new ParameterBag();
+                ParameterBag estParameters = new();
                 estList.Add(estParameters);
                 estParameters.AddOutput("time", stime[j, lap]);
                 estParameters.AddOutput("risk", nat[j]);
@@ -908,10 +908,10 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException("Must have at least one repeat", "Wei-Lachin");
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);
-            ParameterBag outerParameters = new ParameterBag();
+            ParameterBag outerParameters = new();
             outerList.Add(outerParameters);
             XWeiLachin(outerParameters, nr, rows, n, g, s, x, 1, out int ifault);
             if (ifault == 0)
@@ -1038,7 +1038,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*repeats", repeatsList);
             for (int k = 1; k <= nr; k++)
             {
-                ParameterBag repeatsParameters = new ParameterBag();
+                ParameterBag repeatsParameters = new();
                 repeatsList.Add(repeatsParameters);
                 wlt[k] = Math.Abs(ees[1, k] - ees[2, k]) < Constant.EPSILON * 100.0
                     ? 0.0
@@ -1215,16 +1215,16 @@ namespace StatsDirect.Builtins
             double sumd = 0.0;
             string g = Formatting.XRound(gamma * 100, 1);
             string grp = dead.GetUpperBound(1) > 1 ? " (group " + lap.ToString() + ")" : string.Empty;
-            DoubleVariable timeVariable = new DoubleVariable(nx, "Time" + grp);
-            StringVariable deathVariable = new StringVariable(nx, "Death/Event" + grp);
-            DoubleVariable survivalVariable = new DoubleVariable(nx, "Survival Proportion (S)" + grp);
-            DoubleVariable seVariable = new DoubleVariable(nx, "Approx. SE(S)" + grp);
-            DoubleVariable selVariable = new DoubleVariable(nx, g + "% LCI S" + grp);
-            DoubleVariable seuVariable = new DoubleVariable(nx, g + "% UCI S" + grp);
-            DoubleVariable cumhVariable = new DoubleVariable(nx, "Cumulative Hazard (H)" + grp);
-            DoubleVariable sehVariable = new DoubleVariable(nx, "Approx. SE(H)" + grp);
-            DoubleVariable sehlVariable = new DoubleVariable(nx, g + "% LCI H" + grp);
-            DoubleVariable sehuVariable = new DoubleVariable(nx, g + "% UCI H" + grp);
+            DoubleVariable timeVariable = new(nx, "Time" + grp);
+            StringVariable deathVariable = new(nx, "Death/Event" + grp);
+            DoubleVariable survivalVariable = new(nx, "Survival Proportion (S)" + grp);
+            DoubleVariable seVariable = new(nx, "Approx. SE(S)" + grp);
+            DoubleVariable selVariable = new(nx, g + "% LCI S" + grp);
+            DoubleVariable seuVariable = new(nx, g + "% UCI S" + grp);
+            DoubleVariable cumhVariable = new(nx, "Cumulative Hazard (H)" + grp);
+            DoubleVariable sehVariable = new(nx, "Approx. SE(H)" + grp);
+            DoubleVariable sehlVariable = new(nx, g + "% LCI H" + grp);
+            DoubleVariable sehuVariable = new(nx, g + "% UCI H" + grp);
             resultsFrame.Variables.Add(timeVariable);
             resultsFrame.Variables.Add(deathVariable);
             resultsFrame.Variables.Add(survivalVariable);
@@ -1416,10 +1416,10 @@ namespace StatsDirect.Builtins
 
             int groups = igot;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (groups > 2)
             {
-                DoubleVariable scores = new DoubleVariable(groups, "scores");
+                DoubleVariable scores = new(groups, "scores");
                 for (int j = 1; j <= groups; j++)
                     scores.Data[j - 1] = j;
                 outputParameters.AddInput("group_scores", new DataFrame(scores));
@@ -1705,7 +1705,7 @@ namespace StatsDirect.Builtins
             double[] esim = new double[simits + 1 ];
             double[] emdsim = new double[simits + 1 ];
             double emd;
-            PoissonRNG rng = new PoissonRNG();
+            PoissonRNG rng = new();
             //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
             using (IProgressBar progress = host.StartProgress("Simulating...", true))
             {
@@ -1751,12 +1751,12 @@ namespace StatsDirect.Builtins
             AbridgedLifetableMedianMode(rows, dd, out _, out emd, sl, x);
 
             // population, deaths, death rate
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= rows; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 inputsParameters.AddOutput("pop", p[i]);
@@ -1771,7 +1771,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*pdying", pdyingList);
             for (int i = 1; i <= rows; i++)
             {
-                ParameterBag pdyingParameters = new ParameterBag();
+                ParameterBag pdyingParameters = new();
                 pdyingList.Add(pdyingParameters);
                 pdyingParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 pdyingParameters.AddOutput("q", q[i]);
@@ -1798,7 +1798,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*living", livingList);
             for (int i = 1; i <= rows; i++)
             {
-                ParameterBag livingParameters = new ParameterBag();
+                ParameterBag livingParameters = new();
                 livingList.Add(livingParameters);
                 livingParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 livingParameters.AddOutput("l", Convert.ToInt32(sl[i]).ToString());
@@ -1811,7 +1811,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*years", yearsList);
             for (int i = 1; i <= rows; i++)
             {
-                ParameterBag yearsParameters = new ParameterBag();
+                ParameterBag yearsParameters = new();
                 yearsList.Add(yearsParameters);
                 yearsParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 yearsParameters.AddOutput("L", Convert.ToInt32(yl[i]).ToString());
@@ -1823,7 +1823,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*expectation", expectationList);
             for (int i = 1; i <= rows; i++)
             {
-                ParameterBag expectationParameters = new ParameterBag();
+                ParameterBag expectationParameters = new();
                 expectationList.Add(expectationParameters);
                 expectationParameters.AddOutput("int", LifetabInterval(i, rows, x));
                 expectationParameters.AddOutput("e", e[i]);
@@ -1850,14 +1850,14 @@ namespace StatsDirect.Builtins
             {
                 IList<ParameterBag> utilList = new List<ParameterBag>();
                 outputParameters.AddOutput("*util", utilList);
-                ParameterBag utilParameters = new ParameterBag();
+                ParameterBag utilParameters = new();
                 utilList.Add(utilParameters);
                 utilParameters.AddOutput("uti", uti);
                 IList<ParameterBag> adjustedList = new List<ParameterBag>();
                 utilParameters.AddOutput("*adjusted", adjustedList);
                 for (int i = 1; i <= rows; i++)
                 {
-                    ParameterBag adjustedParameters = new ParameterBag();
+                    ParameterBag adjustedParameters = new();
                     adjustedList.Add(adjustedParameters);
                     adjustedParameters.AddOutput("int", LifetabInterval(i, rows, x));
                     double eh;
@@ -1900,23 +1900,23 @@ namespace StatsDirect.Builtins
 
             if (saveDetails)
             {
-                DataFrame resultsFrame = new DataFrame();
+                DataFrame resultsFrame = new();
                 string g = Formatting.XRound(gamma * 100, 1);
-                StringVariable intervalVariable = new StringVariable(rows, "Interval");
-                DoubleVariable qHatVariable = new DoubleVariable(rows, "Prob of dying [q hat]");
-                DoubleVariable varQVariable = new DoubleVariable(rows, "Var [q]");
-                DoubleVariable lciQVariable = new DoubleVariable(rows, g + "% LCI [q]");
-                DoubleVariable uciQVariable = new DoubleVariable(rows, g + "% UCI [q]");
-                DoubleVariable lVariable = new DoubleVariable(rows, "Alive at start [l]");
-                DoubleVariable dVariable = new DoubleVariable(rows, "Dying in interval [d]");
-                DoubleVariable fractionAVariable = new DoubleVariable(rows, "Fraction a");
-                DoubleVariable ylVariable = new DoubleVariable(rows, "Years in interval [L]");
-                DoubleVariable tVariable = new DoubleVariable(rows, "Years beyond [T]");
-                DoubleVariable eVariable = new DoubleVariable(rows, "Expectation of life [e]");
-                DoubleVariable varEVariable = new DoubleVariable(rows, "Var [e]");
-                DoubleVariable lciEVariable = new DoubleVariable(rows, g + "% LCI [e]");
-                DoubleVariable uciEVariable = new DoubleVariable(rows, g + "% UCI [e]");
-                DoubleVariable aEVariable = new DoubleVariable(rows, "Adj. expectn. of life [Ae]");
+                StringVariable intervalVariable = new(rows, "Interval");
+                DoubleVariable qHatVariable = new(rows, "Prob of dying [q hat]");
+                DoubleVariable varQVariable = new(rows, "Var [q]");
+                DoubleVariable lciQVariable = new(rows, g + "% LCI [q]");
+                DoubleVariable uciQVariable = new(rows, g + "% UCI [q]");
+                DoubleVariable lVariable = new(rows, "Alive at start [l]");
+                DoubleVariable dVariable = new(rows, "Dying in interval [d]");
+                DoubleVariable fractionAVariable = new(rows, "Fraction a");
+                DoubleVariable ylVariable = new(rows, "Years in interval [L]");
+                DoubleVariable tVariable = new(rows, "Years beyond [T]");
+                DoubleVariable eVariable = new(rows, "Expectation of life [e]");
+                DoubleVariable varEVariable = new(rows, "Var [e]");
+                DoubleVariable lciEVariable = new(rows, g + "% LCI [e]");
+                DoubleVariable uciEVariable = new(rows, g + "% UCI [e]");
+                DoubleVariable aEVariable = new(rows, "Adj. expectn. of life [Ae]");
 
                 resultsFrame.Variables.Add(intervalVariable);
                 resultsFrame.Variables.Add(qHatVariable);
@@ -2010,7 +2010,7 @@ namespace StatsDirect.Builtins
                 if (w != Constant.MISSING)
                     natst += w;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("natst-min", natst);
             return new StepOutput(outputParameters);
         }
@@ -2082,7 +2082,7 @@ namespace StatsDirect.Builtins
                 }
                 j = j + cnt - 1;
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             double cump = 1.0;
             double var1 = 0.0;
             double natr = natst;
@@ -2103,7 +2103,7 @@ namespace StatsDirect.Builtins
                 xp[j] = p;
                 xcump[j] = cump;
                 xvar[j] = var;
-                ParameterBag deathsParameters = new ParameterBag();
+                ParameterBag deathsParameters = new();
                 deathsList.Add(deathsParameters);
                 string xx;
                 if (j < nt)
@@ -2131,7 +2131,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> survivalList = new List<ParameterBag>();
             outputParameters.AddOutput("*survival", survivalList);
 
-            ParameterBag survivalParameters = new ParameterBag();
+            ParameterBag survivalParameters = new();
             survivalList.Add(survivalParameters);
             survivalParameters.AddOutput("int", Convert.ToInt32(t[1]) + " to " + Convert.ToInt32(t[2]));
             survivalParameters.AddOutput("p", xp[1]);
@@ -2183,7 +2183,7 @@ namespace StatsDirect.Builtins
 
             int wtMethod = Parsing.Cint_Txt(parameters["wt_method"].AsString);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);
             double[] tesum = new double[groups + 1];
@@ -2410,7 +2410,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                     // Start of data output
-                    ParameterBag outerParameters = new ParameterBag();
+                    ParameterBag outerParameters = new();
                     outerList.Add(outerParameters);
                     string testname;
                     if (test == 1)
@@ -2446,7 +2446,7 @@ namespace StatsDirect.Builtins
                         outerParameters.AddOutput("*groups", groupsList);
                         for (int j = 1; j <= groups; j++)
                         {
-                            ParameterBag groupsParameters = new ParameterBag();
+                            ParameterBag groupsParameters = new();
                             groupsList.Add(groupsParameters);
                             groupsParameters.AddOutput("grp", $"{j} ({gid} = {glab[Convert.ToInt32(gpid[j])]})");
                             groupsParameters.AddOutput("obs", dg[j]);
@@ -2487,7 +2487,7 @@ namespace StatsDirect.Builtins
                     {
                         IList<ParameterBag> trendsList = new List<ParameterBag>();
                         outerParameters.AddOutput("*trends", trendsList);
-                        ParameterBag trendsParameters = new ParameterBag();
+                        ParameterBag trendsParameters = new();
                         trendsList.Add(trendsParameters);
                         trendsParameters.AddOutput("trend", x2T);
                         trendsParameters.AddOutput("p_trend", PDF.chivalp(x2T, 1.0));
@@ -2519,14 +2519,14 @@ namespace StatsDirect.Builtins
                         // combined (deaths, extent of exposure to risk of death, relative rate):
                         IList<ParameterBag> strataList = new List<ParameterBag>();
                         outerParameters.AddOutput("*strata", strataList);
-                        ParameterBag strataParameters = new ParameterBag();
+                        ParameterBag strataParameters = new();
                         strataList.Add(strataParameters);
                         strataParameters.AddOutput("test", testname);
                         IList<ParameterBag> stratumList = new List<ParameterBag>();
                         strataParameters.AddOutput("*stratum", stratumList);
                         for (int j3 = 1; j3 <= groups; j3++)
                         {
-                            ParameterBag stratumParameters = new ParameterBag();
+                            ParameterBag stratumParameters = new();
                             stratumList.Add(stratumParameters);
                             stratumParameters.AddOutput("grp", j3);
                             stratumParameters.AddOutput("res", tdg[j3]);
@@ -2600,7 +2600,7 @@ namespace StatsDirect.Builtins
                             x2T = x2Num / x2Den;
                             IList<ParameterBag> strataTrendList = new List<ParameterBag>();
                             strataParameters.AddOutput("*strata_trend", strataTrendList);
-                            ParameterBag strataTrendParameters = new ParameterBag();
+                            ParameterBag strataTrendParameters = new();
                             strataTrendList.Add(strataTrendParameters);
                             strataTrendParameters.AddOutput("strata_trend", x2T);
                             strataTrendParameters.AddOutput("p_strata_trend", PDF.chivalp(x2T, 1.0));
@@ -2619,7 +2619,7 @@ namespace StatsDirect.Builtins
                         // Hazard Ratio" + " & approximate "
                         IList<ParameterBag> hazardsList = new List<ParameterBag>();
                         outerParameters.AddOutput("*hazards", hazardsList);
-                        ParameterBag hazardsParameters = new ParameterBag();
+                        ParameterBag hazardsParameters = new();
                         hazardsList.Add(hazardsParameters);
                         hazardsParameters.AddOutput("pc", gamma * 100);
 
@@ -2645,7 +2645,7 @@ namespace StatsDirect.Builtins
                                     ru = Constant.MISSING;
                                     rl = Constant.MISSING;
                                 }
-                                ParameterBag hazardParameters = new ParameterBag();
+                                ParameterBag hazardParameters = new();
                                 hazardList.Add(hazardParameters);
                                 hazardParameters.AddOutput("vs1", j);
                                 hazardParameters.AddOutput("vs2", k);
@@ -2658,7 +2658,7 @@ namespace StatsDirect.Builtins
                         {
                             IList<ParameterBag> cmlList = new List<ParameterBag>();
                             hazardsParameters.AddOutput("*cml", cmlList);
-                            ParameterBag cmlParameters = new ParameterBag();
+                            ParameterBag cmlParameters = new();
                             cmlList.Add(cmlParameters);
                             // exact Hazard Ratio
                             cmlParameters.AddOutput("hr", hr);

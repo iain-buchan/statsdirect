@@ -5,17 +5,17 @@ namespace StatsDirect.Charting
     [Serializable]
     public class CorrelationOptions : GenericOptions
     {
-        public int k;
-        public string[] title;
-        public double[] odr;
-        public double[] odrl;
-        public double[] odru;
-        public double[] gn;
-        public CorrelationRowType[] pg;
-        public string cap;
-        public string qid;
-        public Transformation xform;
-        public bool isDifference;
+        public int K { get; }
+        public string[] Titles { get; }
+        public double[] Odr { get; }
+        public double[] Odrl { get; }
+        public double[] Odru { get; }
+        public double[] Gn { get; }
+        public CorrelationRowType[] Pg { get; }
+        public string Cap { get; }
+        public string Qid { get; }
+        public Transformation Xform { get; }
+        public bool IsDifference { get; }
         public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
@@ -23,19 +23,19 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public CorrelationOptions(int k, string[] title, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        public CorrelationOptions(int k, string[] titles, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
         {
-            this.k = k;
-            this.title = title;
-            this.odr = odr;
-            this.odrl = odrl;
-            this.odru = odru;
-            this.gn = gn;
-            this.pg= pg;
-            this.cap = cap;
-            this.qid = qid;
-            this.xform = xform;
-            this.isDifference = isDifference;
+            K = k;
+            Titles = titles;
+            Odr = odr;
+            Odrl = odrl;
+            Odru = odru;
+            Gn = gn;
+            Pg = pg;
+            Cap = cap;
+            Qid = qid;
+            Xform = xform;
+            IsDifference = isDifference;
         }
     }
 }

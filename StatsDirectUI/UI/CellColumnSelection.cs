@@ -141,7 +141,7 @@ namespace StatsDirect.UI
         /// <returns></returns>
         private static string SafeTitle(string candidateTitle)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             foreach (char ch in candidateTitle)
             {
                 if (char.IsWhiteSpace(ch))

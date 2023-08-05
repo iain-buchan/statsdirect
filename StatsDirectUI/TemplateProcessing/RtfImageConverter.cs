@@ -39,7 +39,7 @@ namespace StatsDirect.TemplateProcessing
 
         public static string MetastreamToRtf(Stream metaStream, int widthInPixels, int heightInPixels)
         {
-            StringBuilder rtf = new StringBuilder();
+            StringBuilder rtf = new();
 
             // Append the RTF header
             rtf.Append(RTF_HEADER);
@@ -90,70 +90,68 @@ namespace StatsDirect.TemplateProcessing
         {
             string[] parts = rtf.Split(new[] { '\\', '\r', '\n', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             ImageFormat imageFormat = null;
-            using (MemoryStream bytes = new MemoryStream())
+            using MemoryStream bytes = new();
+            foreach (string s in parts)
             {
-                foreach (string s in parts)
+                if (s.StartsWith("wmetafile"))
                 {
-                    if (s.StartsWith("wmetafile"))
+                    imageFormat = ImageFormat.Emf;
+                    int.TryParse(s.Substring(9), out int _);
+                }
+                else if (s.StartsWith("pngblip"))
+                    imageFormat = ImageFormat.Png;
+                else if (s.StartsWith("picwgoal"))
+                {
+                    int.TryParse(s.Substring(8), out int _);
+                }
+                else if (s.StartsWith("pichgoal"))
+                {
+                    int.TryParse(s.Substring(8), out int _);
+                }
+                else if (s.StartsWith("picw"))
+                {
+                    int.TryParse(s.Substring(4), out int _);
+                }
+                else if (s.StartsWith("pich"))
+                {
+                    int.TryParse(s.Substring(4), out int _);
+                }
+                else if (s.StartsWith("emfblip"))
+                {
+                    imageFormat = ImageFormat.Emf;
+                }
+                else if (s.StartsWith("picscale"))
+                {
+                    // Do nothing
+                }
+                else if (s.Length < 16)
+                {
+                    if (IsHex(s))
                     {
-                        imageFormat = ImageFormat.Emf;
-                        int.TryParse(s.Substring(9), out int _);
-                    }
-                    else if (s.StartsWith("pngblip"))
-                        imageFormat = ImageFormat.Png;
-                    else if (s.StartsWith("picwgoal"))
-                    {
-                        int.TryParse(s.Substring(8), out int _);
-                    }
-                    else if (s.StartsWith("pichgoal"))
-                    {
-                        int.TryParse(s.Substring(8), out int _);
-                    }
-                    else if (s.StartsWith("picw"))
-                    {
-                        int.TryParse(s.Substring(4), out int _);
-                    }
-                    else if (s.StartsWith("pich"))
-                    {
-                        int.TryParse(s.Substring(4), out int _);
-                    }
-                    else if (s.StartsWith("emfblip"))
-                    {
-                        imageFormat = ImageFormat.Emf;
-                    }
-                    else if (s.StartsWith("picscale"))
-                    {
-                        // Do nothing
-                    }
-                    else if (s.Length < 16)
-                    {
-                        if (IsHex(s))
-                        {
-                            AccumulateHex(bytes, s);
-                        }
-                        // Else not a header value we know, and less than an 8-byte hex value - so a very small image!
-                        // Assume another header value that we don't yet know about.
-                        // On the principle of "be liberal in what you accept", ignore it.
-                    }
-                    else
-                    {
-                        // Assume bytes encoded as hex
                         AccumulateHex(bytes, s);
                     }
+                    // Else not a header value we know, and less than an 8-byte hex value - so a very small image!
+                    // Assume another header value that we don't yet know about.
+                    // On the principle of "be liberal in what you accept", ignore it.
                 }
-                rawBytes = bytes.ToArray();
-                bytes.Position = 0;
-                Image img = null;
-                if (imageFormat == ImageFormat.Emf)
+                else
                 {
-                    img = Image.FromStream(bytes);
+                    // Assume bytes encoded as hex
+                    AccumulateHex(bytes, s);
                 }
-                else if (imageFormat == ImageFormat.Png)
-                {
-                    img = Image.FromStream(bytes);
-                }
-                return img;
             }
+            rawBytes = bytes.ToArray();
+            bytes.Position = 0;
+            Image img = null;
+            if (imageFormat == ImageFormat.Emf)
+            {
+                img = Image.FromStream(bytes);
+            }
+            else if (imageFormat == ImageFormat.Png)
+            {
+                img = Image.FromStream(bytes);
+            }
+            return img;
         }
 
         private static bool IsHex(string s)

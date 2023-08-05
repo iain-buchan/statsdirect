@@ -32,7 +32,7 @@ namespace StatsDirect.Calculator
                 string equation = txtExpression.Text;
                 if (equation.Length > 0)
                 {
-                    Calcit c = new Calcit(equation, new DataType[0], false);
+                    Calcit c = new(equation, new DataType[0], false);
                     object res = c.EvaluateObject<object>(null);
                     txtResult.Text = res is double && Constant.MISSING == (double)res ? Formatting.ERRR : res.ToString();
                 }
@@ -196,7 +196,7 @@ namespace StatsDirect.Calculator
                 {
                     if (DialogResult.Yes == MessageBox.Show(this, "Copy saved results to clipboard?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 0))
                     {
-                        StringBuilder sb = new StringBuilder();
+                        StringBuilder sb = new();
                         foreach (object os in lstSavedExpressions.Items)
                         {
                             string s = (string)os;

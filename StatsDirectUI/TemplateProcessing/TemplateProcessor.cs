@@ -125,7 +125,7 @@ namespace StatsDirect.TemplateProcessing
                             result.ParameterBag.Add(inputParameter.Key, inputParameter.Value);
                 }
                 // Remove explicit blanks now that they have prevented copying.
-                List<string> keysToRemove = new List<string>();
+                List<string> keysToRemove = new();
                 foreach (KeyValuePair<string, FilledParameter> pair in result.ParameterBag.Pairs)
                     if (null == pair.Value)
                         keysToRemove.Add(pair.Key);
@@ -205,7 +205,7 @@ namespace StatsDirect.TemplateProcessing
 
         public StepOutput ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo)
         {
-            ChartDefinition definition = new ChartDefinition { ChartType = step.ChartType };
+            ChartDefinition definition = new() { ChartType = step.ChartType };
             // Series: First X...
             string dataName = null;
             if (null != step.XSeriesDataName)
@@ -270,7 +270,7 @@ namespace StatsDirect.TemplateProcessing
             if (null != step.UpperBoundParameterName)
                 if (parms.ContainsKey(step.UpperBoundParameterName))
                     upper = parms[step.UpperBoundParameterName].AsInt32;
-            ParameterBag filledParameters = new ParameterBag();
+            ParameterBag filledParameters = new();
             for (int i = lower; i <= upper; i++)
             {
                 if (null != step.LoopVariableName)
@@ -318,8 +318,8 @@ namespace StatsDirect.TemplateProcessing
 
             try
             {
-                ParameterBag filledParameters = new ParameterBag();
-                List<Parameter> outstandingParameters = new List<Parameter>();
+                ParameterBag filledParameters = new();
+                List<Parameter> outstandingParameters = new();
                 foreach (Parameter parameter in step.Parameters)
                 {
                     // If the parameter is already present in the input bag, and we're copying the input, skip acquiring it again.
@@ -420,7 +420,7 @@ namespace StatsDirect.TemplateProcessing
                     {
                         RelativePosition rp = null == frameStep ? RelativePosition.AfterSelection : ((OutputFrameStep)frameStep).DefaultPlacement;
                         string missingIndicator = null == frameStep ? Formatting.ASTERISK : ((OutputFrameStep)frameStep).MissingIndicator;
-                        SpecialParameter frameParameter = new SpecialParameter { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { rp, missingIndicator } };
+                        SpecialParameter frameParameter = new() { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { rp, missingIndicator } };
                         host.FillParameter(this, frameParameter, parmsAndFilledParameters, true);
                     }
 
@@ -459,7 +459,7 @@ namespace StatsDirect.TemplateProcessing
         /// <returns></returns>
         private static ParameterBag CombinePreferringLater(ParameterBag bag1, ParameterBag bag2)
         {
-            ParameterBag combinedParameters = new ParameterBag();
+            ParameterBag combinedParameters = new();
             if (null != bag2)
                 foreach (KeyValuePair<string, FilledParameter> pair in bag2.Pairs)
                     combinedParameters.Add(pair);
@@ -588,7 +588,7 @@ namespace StatsDirect.TemplateProcessing
 
         public StepOutput ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
         {
-            ReportTemplateAndParameters filledTemplate = new ReportTemplateAndParameters(new ReportTemplate(reportStep.GetContent(), reportStep.MimeType), parameters);
+            ReportTemplateAndParameters filledTemplate = new(new ReportTemplate(reportStep.GetContent(), reportStep.MimeType), parameters);
 
             object /* Pane */ preferredPane = null;
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
@@ -607,7 +607,7 @@ namespace StatsDirect.TemplateProcessing
             preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, xml, preferredPane);
 
             // Log the ID of the report that was actually used
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             // outputParameters.Add(REPORT_ID_NAME, FilledParameterFactory.Input(reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
                 outputParameters.AddInput(STATSDIRECT_REPORT_PANE, preferredPane);
@@ -708,7 +708,7 @@ namespace StatsDirect.TemplateProcessing
                 }
             }
 
-            ClassifierVariable cv = new ClassifierVariable { Title = v.Title, Data = v.Data };
+            ClassifierVariable cv = new() { Title = v.Title, Data = v.Data };
             for (int i = 0; i < ng; i++)
                 cv.Groups.Add(new Group(g[i].ToString(), g[i]) { NBin = gin[i] });
             return cv;

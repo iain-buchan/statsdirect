@@ -60,7 +60,7 @@ namespace StatsDirect.Templates
         {
             // Assumes NumericReplaceMissing.  TODO: Fix this!
             List<List<string>> strings = CsvReader.Read(new StringReader(rawData));
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             int row = 0;
             // Skip blank rows at the top - deliberate so that someone can have a CDATA section with the header row on the next line.
             while (strings[row].Count == 0 || strings[row].Count == 1 && string.IsNullOrWhiteSpace(strings[row][0]))

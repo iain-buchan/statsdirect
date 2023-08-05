@@ -19,58 +19,48 @@ namespace StatsDirect.Utilities
         {
             try
             {
-                using (RegistryKey hkcu = Registry.CurrentUser)
+                using RegistryKey hkcu = Registry.CurrentUser;
+                using RegistryKey softwareKey = hkcu.OpenSubKey("Software", true);
+                if (null == softwareKey)
+                    return false;
+
+                // Create VB/VBA key if not present
+                if (!new List<string>(softwareKey.GetSubKeyNames()).Contains("VB and VBA Program Settings"))
                 {
-                    using (RegistryKey softwareKey = hkcu.OpenSubKey("Software", true))
-                    {
-                        if (null == softwareKey)
-                            return false;
-
-                        // Create VB/VBA key if not present
-                        if (!new List<string>(softwareKey.GetSubKeyNames()).Contains("VB and VBA Program Settings"))
-                        {
-                            RegistryKey scrap = softwareKey.CreateSubKey("VB and VBA Program Settings");
-                            if (null == scrap)
-                                return false;
-                            scrap.Close();
-                        }
-                        using (RegistryKey vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings", true))
-                        {
-                            if (null == vbKey)
-                                return false;
-
-                            // We may or may not have our own subkey now
-                            if (!new List<string>(vbKey.GetSubKeyNames()).Contains(app))
-                            {
-                                RegistryKey scrap = vbKey.CreateSubKey(app);
-                                if (null == scrap)
-                                    return false;
-                                scrap.Close();
-                            }
-                            using (RegistryKey appKey = vbKey.OpenSubKey(app, true))
-                            {
-                                if (null == appKey)
-                                    return false;
-
-                                if (!new List<string>(appKey.GetSubKeyNames()).Contains(key))
-                                {
-                                    RegistryKey scrap = appKey.CreateSubKey(key);
-                                    if (null == scrap)
-                                        return false;
-                                    scrap.Close();
-                                }
-                                using (RegistryKey keyKey = appKey.OpenSubKey(key, true))
-                                {
-                                    if (null == keyKey)
-                                        return false;
-
-                                    keyKey.SetValue(valueName, value, RegistryValueKind.String);
-                                }
-                                return true;
-                            }
-                        }
-                    }
+                    RegistryKey scrap = softwareKey.CreateSubKey("VB and VBA Program Settings");
+                    if (null == scrap)
+                        return false;
+                    scrap.Close();
                 }
+                using RegistryKey vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings", true);
+                if (null == vbKey)
+                    return false;
+
+                // We may or may not have our own subkey now
+                if (!new List<string>(vbKey.GetSubKeyNames()).Contains(app))
+                {
+                    RegistryKey scrap = vbKey.CreateSubKey(app);
+                    if (null == scrap)
+                        return false;
+                    scrap.Close();
+                }
+                using RegistryKey appKey = vbKey.OpenSubKey(app, true);
+                if (null == appKey)
+                    return false;
+
+                if (!new List<string>(appKey.GetSubKeyNames()).Contains(key))
+                {
+                    RegistryKey scrap = appKey.CreateSubKey(key);
+                    if (null == scrap)
+                        return false;
+                    scrap.Close();
+                }
+                using RegistryKey keyKey = appKey.OpenSubKey(key, true);
+                if (null == keyKey)
+                    return false;
+
+                keyKey.SetValue(valueName, value, RegistryValueKind.String);
+                return true;
             }
             catch (Exception /* ex */)
             {
@@ -95,15 +85,13 @@ namespace StatsDirect.Utilities
         {
             try
             {
-                using (RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
+                using RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
                     softwareKey = root.OpenSubKey("Software"),
                     vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"),
                     appKey = vbKey.OpenSubKey(app),
-                    keyKey = appKey.OpenSubKey(key))
-                {
-                    object val = keyKey.GetValue(valueName);
-                    return (string)val;
-                }
+                    keyKey = appKey.OpenSubKey(key);
+                object val = keyKey.GetValue(valueName);
+                return (string)val;
             }
             catch (Exception)
             {
@@ -127,15 +115,13 @@ namespace StatsDirect.Utilities
         {
             try
             {
-                using (RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
+                using RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
                     softwareKey = root.OpenSubKey("Software"),
                     vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"),
                     appKey = vbKey.OpenSubKey(app),
-                    keyKey = appKey.OpenSubKey(key))
-                {
-                    object val = keyKey.GetValue(valueName);
-                    return (int)val;
-                }
+                    keyKey = appKey.OpenSubKey(key);
+                object val = keyKey.GetValue(valueName);
+                return (int)val;
             }
             catch (Exception)
             {

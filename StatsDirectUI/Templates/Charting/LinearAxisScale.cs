@@ -31,7 +31,7 @@ namespace StatsDirect.Templates
         public IList<Tic> Tics()
         {
             string msk = LinearAxisMasker.AxisMask(this);
-            List<Tic> tics = new List<Tic>(Intervals + 1);
+            List<Tic> tics = new(Intervals + 1);
             double interval = (MaximumScaleValue - MinimumScaleValue) / Intervals;
             for (int i = 0; i <= Intervals; i++)
             {

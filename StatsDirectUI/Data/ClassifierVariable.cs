@@ -35,7 +35,7 @@ namespace StatsDirect.Data
 
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
-            ClassifierVariable copy = new ClassifierVariable();
+            ClassifierVariable copy = new();
             CopyAndStripForRedoInto(copy, shouldKeepData);
             if (Origin == null || shouldKeepData)
             {
@@ -49,7 +49,7 @@ namespace StatsDirect.Data
         {
             get
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 bool first = true;
                 foreach (Group g in Groups)
                 {
@@ -68,7 +68,7 @@ namespace StatsDirect.Data
         {
             get
             {
-                List<string> n = new List<string>();
+                List<string> n = new();
                 foreach (Group g in Groups)
                     n.Add(g.Label);
                 n.Sort();

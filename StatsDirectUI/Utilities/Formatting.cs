@@ -252,7 +252,7 @@ namespace StatsDirect.Utilities
             int pos1 = zeroBasedColumnNumber < 26 ? -1 : (zeroBasedColumnNumber - 26) / 26 % 26;
             int pos0 = zeroBasedColumnNumber % 26;
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             if (pos2 >= 0)
                 sb.Append((char)('A' + pos2));
             if (pos1 >= 0)

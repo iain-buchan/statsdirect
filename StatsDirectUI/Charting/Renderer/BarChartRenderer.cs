@@ -104,7 +104,7 @@ namespace StatsDirect.Charting.Renderer
                     newSeriesTitles[i] = seriesToUse[i].Title;
 
                 // One new series for each old title
-                List<ISeries> newSeriesToUse = new List<ISeries>(oldSeriesTitles.Length);
+                List<ISeries> newSeriesToUse = new(oldSeriesTitles.Length);
                 foreach (string t in oldSeriesTitles)
                 {
                     ISeries s = new DoubleSeries(new double[seriesToUse.Count], t);

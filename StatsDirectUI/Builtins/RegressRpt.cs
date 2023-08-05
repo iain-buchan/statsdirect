@@ -80,7 +80,7 @@ namespace StatsDirect.Builtins
             double vr = regssq / (rsdssq / (totny - nx));
             double P = PDF.fvalp(vr, 1.0, totny - nx);
             string Q2 = P > 0.05 ? "NOT " : string.Empty;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("reg_ssq", regssq);
             outputParameters.AddOutput("reg_df", "1");
             outputParameters.AddOutput("reg_msq", regssq);
@@ -128,7 +128,7 @@ namespace StatsDirect.Builtins
             }
             // mean xmean as basline mean x for later corrected y means
             double mx0 = grandx / grandn;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("mx0", mx0);
             return new StepOutput(outputParameters);
         }
@@ -221,7 +221,7 @@ namespace StatsDirect.Builtins
             // if (cancelled)
             //     throw new TemplateOperationCancelledException();
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             double comssq = grandcpr * grandcpr / grandsqx;
             double btwnssq = grandbit - comssq;
             double residmsq = residssq / (grandn - 2 * k);
@@ -256,7 +256,7 @@ namespace StatsDirect.Builtins
             {
                 for (int j = g + 1; j <= k; j++)
                 {
-                    ParameterBag slopeParameters = new ParameterBag();
+                    ParameterBag slopeParameters = new();
                     slopeList.Add(slopeParameters);
                     slopeParameters.AddOutput("lab1", bnam[g]);
                     slopeParameters.AddOutput("lab2", bnam[j]);
@@ -322,7 +322,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*cmy", cmyList);
             for (int g = 1; g <= k; g++)
             {
-                ParameterBag cmyParameters = new ParameterBag();
+                ParameterBag cmyParameters = new();
                 cmyList.Add(cmyParameters);
                 double cmy = ymean[g] + bs * (mx0 - xmean[g]);
                 double secmy = Math.Sqrt(cssw / crWithDf * (1.0 / nxi[g] + (mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw));
@@ -348,7 +348,7 @@ namespace StatsDirect.Builtins
                 for (int j = g + 1; j <= k; j++)
                 {
                     t = ymean[g] - ymean[j] - bs * (xmean[g] - xmean[j]);
-                    ParameterBag sepParameters = new ParameterBag();
+                    ParameterBag sepParameters = new();
                     sepList.Add(sepParameters);
                     sepParameters.AddOutput("lab1", bnam[g]);
                     sepParameters.AddOutput("lab2", bnam[j]);
@@ -481,18 +481,18 @@ namespace StatsDirect.Builtins
                     break;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (show_counts)
             {
                 IList<ParameterBag> countsList = new List<ParameterBag>();
                 outputParameters.AddOutput("*counts", countsList);
-                ParameterBag countsParameters = new ParameterBag();
+                ParameterBag countsParameters = new();
                 countsList.Add(countsParameters);
                 IList<ParameterBag> countList = new List<ParameterBag>();
                 countsParameters.AddOutput("*count", countList);
                 for (int i = 1; i <= strata; i++)
                 {
-                    ParameterBag countParameters = new ParameterBag();
+                    ParameterBag countParameters = new();
                     countList.Add(countParameters);
                     countParameters.AddOutput("st", stratlab[i]);
                     countParameters.AddOutput("ca", NCA[i]);
@@ -514,7 +514,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*est", estList);
             for (int i = 1; i <= cols; i++)
             {
-                ParameterBag estParameters = new ParameterBag();
+                ParameterBag estParameters = new();
                 estList.Add(estParameters);
                 estParameters.AddOutput("lab", cd[i].Title);
                 estParameters.AddOutput("b", -b[i]);
@@ -543,7 +543,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*or", orList);
             for (int i = 1; i <= cols; i++)
             {
-                ParameterBag orParameters = new ParameterBag();
+                ParameterBag orParameters = new();
                 orList.Add(orParameters);
                 orParameters.AddOutput("lab", cd[i].Title);
                 orParameters.AddOutput("or", Formatting.SafeExp(-b[i]));

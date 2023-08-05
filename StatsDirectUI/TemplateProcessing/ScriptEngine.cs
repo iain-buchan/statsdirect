@@ -73,7 +73,7 @@ namespace StatsDirect.TemplateProcessing
 
         private static object RunR(ITemplateHost host, string code, ParameterBag parameters)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             if (null != parameters)
             {
                 foreach (KeyValuePair<string, FilledParameter> pair in parameters.Pairs)
@@ -83,29 +83,27 @@ namespace StatsDirect.TemplateProcessing
             }
             sb.AppendLine(code);
             string modifiedCode = sb.ToString();
-            using (IProgressBar progress = host.StartProgress("Running R script", false))
+            using IProgressBar progress = host.StartProgress("Running R script", false);
+            Process p = RController.RunScriptAndQuit(host, modifiedCode, out string codeForEmit);
+            while (true)
             {
-                Process p = RController.RunScriptAndQuit(host, modifiedCode, out string codeForEmit);
-                while (true)
+                bool exited = p.WaitForExit(50);
+                if (exited)
+                    break;
+                if (progress.Update(0))
                 {
-                    bool exited = p.WaitForExit(50);
-                    if (exited)
-                        break;
-                    if (progress.Update(0))
-                    {
-                        p.Kill();
-                        throw new TemplateOperationCancelledException();
-                    }
+                    p.Kill();
+                    throw new TemplateOperationCancelledException();
                 }
-                int exitCode = p.ExitCode;
-                if (0 != exitCode)
-                    throw new Exception(RController.GetErrorText() ?? "R did not complete successfully and did not save an error message");
-                else
-                {
-                    ParameterBag pb = RController.FilesToParameterBag();
-                    pb.AddOutput("formattedRScript", codeForEmit);
-                    return pb;
-                }
+            }
+            int exitCode = p.ExitCode;
+            if (0 != exitCode)
+                throw new Exception(RController.GetErrorText() ?? "R did not complete successfully and did not save an error message");
+            else
+            {
+                ParameterBag pb = RController.FilesToParameterBag();
+                pb.AddOutput("formattedRScript", codeForEmit);
+                return pb;
             }
         }
 
@@ -160,7 +158,7 @@ namespace StatsDirect.TemplateProcessing
         private static CompiledScript CompileDotNet(string scriptLanguage, string code, ScriptType scriptType, string entryPoint)
         {
             // Build up the source in sourceBuilder
-            StringBuilder sourceBuilder = new StringBuilder();
+            StringBuilder sourceBuilder = new();
             CodeDomProvider codeProvider;
             switch (scriptLanguage)
             {
@@ -275,7 +273,7 @@ namespace StatsDirect.TemplateProcessing
                     throw new ArgumentOutOfRangeException(nameof(scriptLanguage), scriptLanguage, "Only CSharp and VB are known");
             }
             const string typeName = "StatsDirect.Templates.Temp1";
-            CompilerParameters compilerParameters = new CompilerParameters();
+            CompilerParameters compilerParameters = new();
             string mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
             string assemblyPath = Path.GetDirectoryName(mainModulePath);
             Debug.Assert(null != assemblyPath);
@@ -288,7 +286,7 @@ namespace StatsDirect.TemplateProcessing
             codeProvider.Dispose();
             if (compilerResults.Errors.Count > 0)
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 sb.AppendLine("Errors in compilation:");
                 foreach (CompilerError error in compilerResults.Errors)
                 {

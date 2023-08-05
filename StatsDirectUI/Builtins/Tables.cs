@@ -47,7 +47,7 @@ namespace StatsDirect.Builtins
 
         public static ParameterBag SFisher(ref int a, ref int b, ref int c, ref int d, ref int fault)
         {
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tab_a1", a);
             outputParameters.AddOutput("tab_b1", b);
             outputParameters.AddOutput("tab_a2", c);
@@ -840,13 +840,13 @@ namespace StatsDirect.Builtins
                     }
                 }
                 // ---> write crosstab if 2 raters
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("ylab", ylab);
                 outputParameters.AddOutput("xlab", xlab);
                 ICollection<ParameterBag> xList = new List<ParameterBag>();
                 for (int i = 0; i < xcats; i++)
                 {
-                    ParameterBag xValues = new ParameterBag();
+                    ParameterBag xValues = new();
                     xValues.AddOutput("x", xcat[i].Title);
                     xList.Add(xValues);
                 }
@@ -854,12 +854,12 @@ namespace StatsDirect.Builtins
                 ICollection<ParameterBag> yList = new List<ParameterBag>();
                 for (int i = 0; i < ycats; i++)
                 {
-                    ParameterBag yValues = new ParameterBag();
+                    ParameterBag yValues = new();
                     yValues.AddOutput("y", ycat[i].Title);
                     ICollection<ParameterBag> totList = new List<ParameterBag>();
                     for (int j = 0; j < xcats; j++)
                     {
-                        ParameterBag totValues = new ParameterBag();
+                        ParameterBag totValues = new();
                         totValues.AddOutput("tot", xt[j, i]);
                         totList.Add(totValues);
                     }
@@ -922,11 +922,11 @@ namespace StatsDirect.Builtins
                     ICollection<ParameterBag> weightList = new List<ParameterBag>();
                     for (int i = 0; i < ycats; i++)
                     {
-                        ParameterBag weightValues = new ParameterBag();
+                        ParameterBag weightValues = new();
                         ICollection<ParameterBag> totList = new List<ParameterBag>();
                         for (int j = 0; j < xcats; j++)
                         {
-                            ParameterBag totValues = new ParameterBag();
+                            ParameterBag totValues = new();
                             totValues.AddOutput("tot", w[i, j]);
                             totList.Add(totValues);
                         }
@@ -957,7 +957,7 @@ namespace StatsDirect.Builtins
                         if (fault == 0)
                         {
                             ICollection<ParameterBag> deciList = new List<ParameterBag>();
-                            ParameterBag deciValues = new ParameterBag();
+                            ParameterBag deciValues = new();
                             deciValues.AddOutput("pc", cco * 100.0);
                             deciValues.AddOutput("lwr", lwr);
                             deciValues.AddOutput("upr", upr);
@@ -1035,7 +1035,7 @@ namespace StatsDirect.Builtins
                 for (int i = 0; i < cats; i++)
                     catz[i] = categoryList[i];
                 Array.Sort(catz, 0, cats);
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("categories", cats); //  To ensure that any test on the result can find the number of categories
                 if (cats == 2)
                 {
@@ -1104,7 +1104,7 @@ namespace StatsDirect.Builtins
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
                         for (int i = 0; i < cats; i++)
                         {
-                            ParameterBag catValues = new ParameterBag();
+                            ParameterBag catValues = new();
                             catValues.AddOutput("resp", catz[i]);
                             catValues.AddOutput("k", kj[i]);
                             catValues.AddOutput("se", sej[i]);
@@ -1137,7 +1137,7 @@ namespace StatsDirect.Builtins
                         ICollection<ParameterBag> catList = new List<ParameterBag>();
                         for (int i = 0; i < cats; i++)
                         {
-                            ParameterBag catValues = new ParameterBag();
+                            ParameterBag catValues = new();
                             catValues.AddOutput("resp", catz[i]);
                             catValues.AddOutput("k", kj[i]);
                             catValues.AddOutput("se", Constant.MISSING);
@@ -1333,7 +1333,7 @@ namespace StatsDirect.Builtins
             int exactIterW = 0;
             KappaResample(host, o, w, g, cit, originalK, originalKw, iter, ref exactR, ref exactIter, ref exactRw, ref exactIterW, seed, ref ierror);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (ierror == 0)
             {
                 //  Kappa
@@ -1388,102 +1388,100 @@ namespace StatsDirect.Builtins
             int ntotal = 0;
             int i;
             int j;
-            MersenneTwister rng = new MersenneTwister();
+            MersenneTwister rng = new();
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
+            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+
+            if (iseed != 0)
+                rng.Seed(iseed);
+            else
+                rng.Seed();
+
+            for (j = 0; j < g; j++)
             {
-
-                if (iseed != 0)
-                    rng.Seed(iseed);
-                else
-                    rng.Seed();
-
-                for (j = 0; j < g; j++)
+                for (i = 0; i < g; i++)
                 {
-                    for (i = 0; i < g; i++)
+                    nrowt[j] += o[j, i];
+                    ncolt[i] += o[j, i];
+                }
+            }
+
+            int maxtot = 5000000;
+            bool primed = false;
+
+            double[] fact = new double[g];
+            int[] jwork = new int[g];
+
+            int missingSek = 0;
+            int missingSekw = 0;
+            int r = 0;
+            int rw = 0;
+            double tol = 100.0 * Constant.EPSILON;
+            for (i = 1; i <= iter; i++)
+            {
+                if (i % bootsDivisor == 0)
+                {
+                    if (progress.Update(i / (double)iter))
                     {
-                        nrowt[j] += o[j, i];
-                        ncolt[i] += o[j, i];
+                        ierror = -1; //  Interrupted
+                        break;
                     }
                 }
-
-                int maxtot = 5000000;
-                bool primed = false;
-
-                double[] fact = new double[g];
-                int[] jwork = new int[g];
-
-                int missingSek = 0;
-                int missingSekw = 0;
-                int r = 0;
-                int rw = 0;
-                double tol = 100.0 * Constant.EPSILON;
-                for (i = 1; i <= iter; i++)
+                Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
+                if (ierror != 0)
+                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                double k = 0.0;
+                double sek = 0;
+                double sekci = 0;
+                double kcil = 0;
+                double kciu = 0;
+                double kw = 0;
+                double sekw = 0;
+                double sekwci = 0;
+                double kwcil = 0;
+                double kwciu = 0;
+                double po = 0;
+                double pe = 0;
+                double pow = 0;
+                double pew = 0;
+                double spe = 0;
+                double spi = 0;
+                Kappa(o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
+                if (!wasError)
                 {
-                    if (i % bootsDivisor == 0)
+                    if (sek != 0.0)
                     {
-                        if (progress.Update(i / (double)iter))
-                        {
-                            ierror = -1; //  Interrupted
-                            break;
-                        }
-                    }
-                    Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
-                    if (ierror != 0)
-                        throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
-                    double k = 0.0;
-                    double sek = 0;
-                    double sekci = 0;
-                    double kcil = 0;
-                    double kciu = 0;
-                    double kw = 0;
-                    double sekw = 0;
-                    double sekwci = 0;
-                    double kwcil = 0;
-                    double kwciu = 0;
-                    double po = 0;
-                    double pe = 0;
-                    double pow = 0;
-                    double pew = 0;
-                    double spe = 0;
-                    double spi = 0;
-                    Kappa(o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
-                    if (!wasError)
-                    {
-                        if (sek != 0.0)
-                        {
-                            if (k > originalK || Math.Abs(k - originalK) < tol)
-                                r += 1;
-                        }
-                        else
-                        {
-                            missingSek += 1;
-                        }
-
-                        if (sekw != 0.0)
-                        {
-                            if (kw > originalKw || Math.Abs(kw - originalKw) < tol)
-                                rw += 1;
-                        }
-                        else
-                        {
-                            missingSekw += 1;
-                        }
+                        if (k > originalK || Math.Abs(k - originalK) < tol)
+                            r += 1;
                     }
                     else
                     {
-                        throw new InvalidDataException();
+                        missingSek += 1;
+                    }
+
+                    if (sekw != 0.0)
+                    {
+                        if (kw > originalKw || Math.Abs(kw - originalKw) < tol)
+                            rw += 1;
+                    }
+                    else
+                    {
+                        missingSekw += 1;
                     }
                 }
-
-                //  Ensure we deal with zero results by removing them from numerator (already done, they never got in there) and denominator
-                exactR = r;
-                exactIter = iter - missingSek;
-                exactRw = rw;
-                exactIterW = iter - missingSekw;
+                else
+                {
+                    throw new InvalidDataException();
+                }
             }
+
+            //  Ensure we deal with zero results by removing them from numerator (already done, they never got in there) and denominator
+            exactR = r;
+            exactIter = iter - missingSek;
+            exactRw = rw;
+            exactIterW = iter - missingSekw;
         }
 
         public static StepOutput RptKappaSizeWeights(ParameterBag parameters)
@@ -1530,7 +1528,7 @@ namespace StatsDirect.Builtins
                 x[i] = v1.Data[i];
             SortName(xcats, xcat, 0);
             XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 0);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("ycats", ycats);
             outputParameters.AddOutput("xcats", xcats);
             return new StepOutput(outputParameters);
@@ -1565,7 +1563,7 @@ namespace StatsDirect.Builtins
 
             ResampleX2Gf(host, xn, p, observed.Length, x2, out int r, iterations, seed, out int actualIterations);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             double exactP = r / (double)actualIterations;
             outputParameters.AddOutput("p", exactP);
             //  CI
@@ -1602,35 +1600,33 @@ namespace StatsDirect.Builtins
             for (int i = 2; i <= k; i++)
                 pp[i] = Math.Round(p[i] + pp[i - 1], 12);
             r = 0;
-            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
+            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            MersenneTwister rng = new(iseed);
+            for (int l = 1; l <= iter; l++)
             {
-                MersenneTwister rng = new MersenneTwister(iseed);
-                for (int l = 1; l <= iter; l++)
+                Array.Clear(x, 1, k);
+                for (int i = 1; i <= ntot; i++)
                 {
-                    Array.Clear(x, 1, k);
-                    for (int i = 1; i <= ntot; i++)
+                    double pr = rng.NextDouble();
+                    int j;
+                    for (j = 1; j <= k; j++)
                     {
-                        double pr = rng.NextDouble();
-                        int j;
-                        for (j = 1; j <= k; j++)
-                        {
-                            if (pr <= pp[j])
-                                break;
-                        }
-                        if (j > k)
-                            j = k;
-                        x[j]++;
+                        if (pr <= pp[j])
+                            break;
                     }
-                    if (X2Gf(x, p, k) >= x2)
-                        r++;
-                    if (progress.Update(Convert.ToDouble(l) / iter))
-                    {
-                        actualIterations = l;
-                        return;
-                    }
+                    if (j > k)
+                        j = k;
+                    x[j]++;
                 }
-                actualIterations = iter;
+                if (X2Gf(x, p, k) >= x2)
+                    r++;
+                if (progress.Update(Convert.ToDouble(l) / iter))
+                {
+                    actualIterations = l;
+                    return;
+                }
             }
+            actualIterations = iter;
         }
 
         ///  <summary>
@@ -1726,7 +1722,7 @@ namespace StatsDirect.Builtins
                 warn += "TEST MAY NOT BE RELIABLE";
             if (w2.Length > 0)
                 warn += "  *(" + w2 + ")*";
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("ti", observed.Title);
             outputParameters.AddOutput("n", observedTotal);
 
@@ -1734,7 +1730,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> frequenciesList = new List<ParameterBag>();
             for (int i = 0; i < nx; i++)
             {
-                ParameterBag frequenciesParameters = new ParameterBag();
+                ParameterBag frequenciesParameters = new();
                 string tx = (i + 1).ToString();
                 if (null != names)
                     tx = names[i];
@@ -1752,7 +1748,7 @@ namespace StatsDirect.Builtins
             if (warn.Length > 0)
             {
                 IList<ParameterBag> warnList = new List<ParameterBag>();
-                ParameterBag warnParameters = new ParameterBag();
+                ParameterBag warnParameters = new();
                 warnParameters.AddOutput("warn", warn);
                 warnList.Add(warnParameters);
                 outputParameters.AddOutput("*warn", warnList);
@@ -1809,7 +1805,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddInput("strat", strat);
             for (int c = 0; c < c2Frame.VariableCount; c++)
             {
@@ -1922,8 +1918,8 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> columnsList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> columnsList = new();
             outputParameters.AddOutput("*columns", columnsList);
             for (int c = 0; c < c2Frame.VariableCount; c++)
             {
@@ -1967,7 +1963,7 @@ namespace StatsDirect.Builtins
                 if (!ok)
                     continue;
 
-                ParameterBag columnsParameters = new ParameterBag();
+                ParameterBag columnsParameters = new();
                 columnsList.Add(columnsParameters);
                 double tot;
                 if (isStratified)
@@ -1994,40 +1990,40 @@ namespace StatsDirect.Builtins
                     y = null;
                     z = null;
 
-                    List<ParameterBag> xtabzList = new List<ParameterBag>();
+                    List<ParameterBag> xtabzList = new();
                     columnsParameters.AddOutput("*xtabz", xtabzList);
-                    ParameterBag xtabzParameters = new ParameterBag();
+                    ParameterBag xtabzParameters = new();
                     xtabzList.Add(xtabzParameters);
                     xtabzParameters.AddOutput("ylab", yLabel);
                     xtabzParameters.AddOutput("xlab", xLabel);
                     xtabzParameters.AddOutput("zlab", zLabel);
-                    List<ParameterBag> zList = new List<ParameterBag>();
+                    List<ParameterBag> zList = new();
                     xtabzParameters.AddOutput("*z", zList);
                     for (int m = 1; m <= zCategoryCount; m++)
                     {
-                        ParameterBag zParameters = new ParameterBag();
+                        ParameterBag zParameters = new();
                         zList.Add(zParameters);
                         zParameters.AddOutput("z", zcat[m].Title);
-                        List<ParameterBag> xList = new List<ParameterBag>();
+                        List<ParameterBag> xList = new();
                         zParameters.AddOutput("*x", xList);
                         for (int i = 1; i <= xCategoryCount; i++)
                         {
-                            ParameterBag xParameters = new ParameterBag();
+                            ParameterBag xParameters = new();
                             xList.Add(xParameters);
                             xParameters.AddOutput("x", xcat[i].Title);
                         }
-                        List<ParameterBag> yList = new List<ParameterBag>();
+                        List<ParameterBag> yList = new();
                         zParameters.AddOutput("*y", yList);
                         for (int i = 1; i <= yCategoryCount; i++)
                         {
-                            ParameterBag yParameters = new ParameterBag();
+                            ParameterBag yParameters = new();
                             yList.Add(yParameters);
                             yParameters.AddOutput("y", ycat[i].Title);
-                            List<ParameterBag> totList = new List<ParameterBag>();
+                            List<ParameterBag> totList = new();
                             yParameters.AddOutput("*tot", totList);
                             for (int j = 1; j <= xCategoryCount; j++)
                             {
-                                ParameterBag totParameters = new ParameterBag();
+                                ParameterBag totParameters = new();
                                 totList.Add(totParameters);
                                 totParameters.AddOutput("tot", zt[j, i, m]);
                             }
@@ -2041,7 +2037,7 @@ namespace StatsDirect.Builtins
                             ParameterBag mantelParameters = TabMh(host, cco, zCategoryCount, zt, zcat);
                             if (mantelParameters != null)
                             {
-                                List<ParameterBag> mantelList = new List<ParameterBag>();
+                                List<ParameterBag> mantelList = new();
                                 columnsParameters.AddOutput("*mantel", mantelList);
                                 mantelList.Add(mantelParameters);
                             }
@@ -2051,7 +2047,7 @@ namespace StatsDirect.Builtins
                             ParameterBag rrmetaParameters = TabRelativeRisk(host, cco, zCategoryCount, zt, zcat);
                             if (rrmetaParameters != null)
                             {
-                                List<ParameterBag> rrmetaList = new List<ParameterBag>();
+                                List<ParameterBag> rrmetaList = new();
                                 columnsParameters.AddOutput("*rrmeta", rrmetaList);
                                 rrmetaList.Add(rrmetaParameters);
                             }
@@ -2062,7 +2058,7 @@ namespace StatsDirect.Builtins
                         ParameterBag gencmhParameters = TabCmh(parameters, zCategoryCount, yCategoryCount, xCategoryCount, zt, yLabel, xLabel, zLabel);
                         if (gencmhParameters != null)
                         {
-                            List<ParameterBag> gencmhList = new List<ParameterBag>();
+                            List<ParameterBag> gencmhList = new();
                             columnsParameters.AddOutput("*gencmh", gencmhList);
                             gencmhList.Add(gencmhParameters);
                         }
@@ -2086,37 +2082,37 @@ namespace StatsDirect.Builtins
                         }
                     }
 
-                    List<ParameterBag> xtabList = new List<ParameterBag>();
+                    List<ParameterBag> xtabList = new();
                     columnsParameters.AddOutput("*xtab", xtabList);
-                    ParameterBag xtabParameters = new ParameterBag();
+                    ParameterBag xtabParameters = new();
                     xtabList.Add(xtabParameters);
                     xtabParameters.AddOutput("ylab", yLabel);
                     xtabParameters.AddOutput("xlab", xLabel);
-                    List<ParameterBag> xList = new List<ParameterBag>();
+                    List<ParameterBag> xList = new();
                     xtabParameters.AddOutput("*x", xList);
                     for (int i = 1; i <= xCategoryCount; i++)
                     {
-                        ParameterBag xParameters = new ParameterBag();
+                        ParameterBag xParameters = new();
                         xList.Add(xParameters);
                         xParameters.AddOutput("x", xcat[i].Title);
                     }
-                    List<ParameterBag> yList = new List<ParameterBag>();
+                    List<ParameterBag> yList = new();
                     xtabParameters.AddOutput("*y", yList);
                     for (int i = 1; i <= yCategoryCount; i++)
                     {
-                        ParameterBag yParameters = new ParameterBag();
+                        ParameterBag yParameters = new();
                         yList.Add(yParameters);
                         yParameters.AddOutput("y", ycat[i].Title);
-                        List<ParameterBag> totList = new List<ParameterBag>();
+                        List<ParameterBag> totList = new();
                         yParameters.AddOutput("*tot", totList);
                         for (int j = 1; j <= xCategoryCount; j++)
                         {
-                            ParameterBag totParameters = new ParameterBag();
+                            ParameterBag totParameters = new();
                             totList.Add(totParameters);
                             totParameters.AddOutput("tot", xt[j, i]);
                         }
                     }
-                    List<ParameterBag> chirxcList = new List<ParameterBag>();
+                    List<ParameterBag> chirxcList = new();
                     columnsParameters.AddOutput("*chirxc", chirxcList);
                     if (tot > 0.0)
                     {
@@ -2230,7 +2226,7 @@ namespace StatsDirect.Builtins
                 rscores = rscores + colScore[i].ToString() + ender;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("ylab", ylab);
             outputParameters.AddOutput("xlab", xlab);
             outputParameters.AddOutput("zlab", zlab);
@@ -2289,13 +2285,13 @@ namespace StatsDirect.Builtins
             if (ierr == -1)
                 throw new InvalidDataException();
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
-            List<ParameterBag> inputsList = new List<ParameterBag>();
+            List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -2306,11 +2302,11 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddOutput("pc", cco * 100);
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Koopman" : "approximate");
-            List<ParameterBag> risksList = new List<ParameterBag>();
+            List<ParameterBag> risksList = new();
             outputParameters.AddOutput("*risks", risksList);
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                ParameterBag risksParameters = new ParameterBag();
+                ParameterBag risksParameters = new();
                 risksList.Add(risksParameters);
                 risksParameters.AddOutput("st", i);
                 risksParameters.AddOutput("rr", rkr[i]);
@@ -2351,13 +2347,13 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Meta.Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             Meta.ModMetabias(host, harbordParameters, o, k, cco, 2);
 
@@ -2426,7 +2422,7 @@ namespace StatsDirect.Builtins
             if (specifyScores)
             {
                 xs = true;
-                ScoresOptions sOptions = new ScoresOptions { Title1 = "Column Scores", Title2 = "Row Scores" };
+                ScoresOptions sOptions = new() { Title1 = "Column Scores", Title2 = "Row Scores" };
                 for (int r = 1; r <= rows; r++)
                     sOptions.Values1.Add(r);
                 for (int c = 1; c <= cols; c++)
@@ -2588,37 +2584,37 @@ namespace StatsDirect.Builtins
             double setaub = 1.0 / (drx * dcx) * Math.Sqrt(vt);
             double setaubi = 2.0 * Math.Sqrt(vgi / (drx * dcx));
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> rowsList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> rowsList = new();
             outputParameters.AddOutput("*rows", rowsList);
             for (int r = 1; r <= rows; r++)
             {
-                ParameterBag rowsParameters = new ParameterBag();
+                ParameterBag rowsParameters = new();
                 rowsList.Add(rowsParameters);
 
-                List<ParameterBag> obsList = new List<ParameterBag>();
+                List<ParameterBag> obsList = new();
                 rowsParameters.AddOutput("*obs", obsList);
                 // observed counts
                 for (int c = 1; c <= cols; c++)
                 {
-                    ParameterBag obsParameters = new ParameterBag();
+                    ParameterBag obsParameters = new();
                     obsList.Add(obsParameters);
                     obsParameters.AddOutput("obs", o[r, c]);
                 }
 
                 // Use the last field for the totals
-                List<ParameterBag> rtotList = new List<ParameterBag>();
+                List<ParameterBag> rtotList = new();
                 rowsParameters.AddOutput("*rtot", rtotList);
-                ParameterBag rtotParameters = new ParameterBag();
+                ParameterBag rtotParameters = new();
                 rtotList.Add(rtotParameters);
                 rtotParameters.AddOutput("rtot", rtot[r]);
 
                 // trend score for row
                 if (xs)
                 {
-                    List<ParameterBag> scoreList = new List<ParameterBag>();
+                    List<ParameterBag> scoreList = new();
                     rowsParameters.AddOutput("*score", scoreList);
-                    ParameterBag scoreParameters = new ParameterBag();
+                    ParameterBag scoreParameters = new();
                     scoreList.Add(scoreParameters);
                     scoreParameters.AddOutput("score", rowScore[r]);
                 }
@@ -2637,15 +2633,15 @@ namespace StatsDirect.Builtins
                 // expected value for cell
                 if (xp)
                 {
-                    List<ParameterBag> expsList = new List<ParameterBag>();
+                    List<ParameterBag> expsList = new();
                     rowsParameters.AddOutput("*exps", expsList);
-                    ParameterBag expsParameters = new ParameterBag();
+                    ParameterBag expsParameters = new();
                     expsList.Add(expsParameters);
-                    List<ParameterBag> expList = new List<ParameterBag>();
+                    List<ParameterBag> expList = new();
                     expsParameters.AddOutput("*exp", expList);
                     for (int c = 1; c <= cols; c++)
                     {
-                        ParameterBag expParameters = new ParameterBag();
+                        ParameterBag expParameters = new();
                         expList.Add(expParameters);
                         expParameters.AddOutput("exp", ex[r, c]);
                     }
@@ -2670,16 +2666,16 @@ namespace StatsDirect.Builtins
                 // cell chi-square
                 if (cs)
                 {
-                    List<ParameterBag> chisList = new List<ParameterBag>();
+                    List<ParameterBag> chisList = new();
                     rowsParameters.AddOutput("*chis", chisList);
-                    ParameterBag chisParameters = new ParameterBag();
+                    ParameterBag chisParameters = new();
                     chisList.Add(chisParameters);
-                    List<ParameterBag> chiList = new List<ParameterBag>();
+                    List<ParameterBag> chiList = new();
                     chisParameters.AddOutput("*chi", chiList);
                     for (int c = 1; c <= cols; c++)
                     {
                         double dchi2 = ex[r, c] != 0.0 ? Math.Pow(o[r, c] - ex[r, c], 2.0) / ex[r, c] : Constant.MISSING;
-                        ParameterBag chiParameters = new ParameterBag();
+                        ParameterBag chiParameters = new();
                         chiList.Add(chiParameters);
                         chiParameters.AddOutput("chi", dchi2);
                     }
@@ -2688,21 +2684,21 @@ namespace StatsDirect.Builtins
                 // cell, row and column percentages
                 if (pc)
                 {
-                    List<ParameterBag> pcrsList = new List<ParameterBag>();
+                    List<ParameterBag> pcrsList = new();
                     rowsParameters.AddOutput("*pcrs", pcrsList);
-                    ParameterBag pcrsParameters = new ParameterBag();
+                    ParameterBag pcrsParameters = new();
                     pcrsList.Add(pcrsParameters);
 
-                    List<ParameterBag> pcrList = new List<ParameterBag>();
+                    List<ParameterBag> pcrList = new();
                     pcrsParameters.AddOutput("*pcr", pcrList);
                     for (int c = 1; c <= cols; c++)
                     {
-                        ParameterBag pcrParameters = new ParameterBag();
+                        ParameterBag pcrParameters = new();
                         pcrList.Add(pcrParameters);
                         pcrParameters.AddOutput("pcr", rtot[r] != 0.0 ? 100.0 * o[r, c] / rtot[r] : Constant.MISSING);
                     }
 
-                    List<ParameterBag> pccList = new List<ParameterBag>();
+                    List<ParameterBag> pccList = new();
                     pcrsParameters.AddOutput("*pcc", pccList);
                     ParameterBag pccParameters;
                     for (int c = 1; c <= cols; c++)
@@ -2717,7 +2713,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            List<ParameterBag> totList = new List<ParameterBag>();
+            List<ParameterBag> totList = new();
             outputParameters.AddOutput("*tot", totList);
             ParameterBag totParameters;
             for (int c = 1; c <= cols; c++)
@@ -2734,15 +2730,15 @@ namespace StatsDirect.Builtins
 
             if (pc)
             {
-                List<ParameterBag> pcgsList = new List<ParameterBag>();
+                List<ParameterBag> pcgsList = new();
                 outputParameters.AddOutput("*pcgs", pcgsList);
-                ParameterBag pcgsParameters = new ParameterBag();
+                ParameterBag pcgsParameters = new();
                 pcgsList.Add(pcgsParameters);
-                List<ParameterBag> pcgList = new List<ParameterBag>();
+                List<ParameterBag> pcgList = new();
                 pcgsParameters.AddOutput("*pcg", pcgList);
                 for (int c = 1; c <= cols; c++)
                 {
-                    ParameterBag pcgParameters = new ParameterBag();
+                    ParameterBag pcgParameters = new();
                     pcgList.Add(pcgParameters);
                     pcgParameters.AddOutput("pcg", 100.0 * (ctot[c] / gtot));
                 }
@@ -2751,15 +2747,15 @@ namespace StatsDirect.Builtins
             // trend scores for cols
             if (xs)
             {
-                List<ParameterBag> scoresList = new List<ParameterBag>();
+                List<ParameterBag> scoresList = new();
                 outputParameters.AddOutput("*scores", scoresList);
-                ParameterBag scoresParameters = new ParameterBag();
+                ParameterBag scoresParameters = new();
                 scoresList.Add(scoresParameters);
-                List<ParameterBag> scoreList = new List<ParameterBag>();
+                List<ParameterBag> scoreList = new();
                 scoresParameters.AddOutput("*score", scoreList);
                 for (int c = 1; c <= cols; c++)
                 {
-                    ParameterBag scoreParameters = new ParameterBag();
+                    ParameterBag scoreParameters = new();
                     scoreList.Add(scoreParameters);
                     scoreParameters.AddOutput("score", colScore[c]);
                 }
@@ -2767,18 +2763,18 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("tot", n);
 
-            List<ParameterBag> warnList = new List<ParameterBag>();
+            List<ParameterBag> warnList = new();
             outputParameters.AddOutput("*warn", warnList);
             if (n1 > 0)
             {
-                ParameterBag warnParameters = new ParameterBag();
+                ParameterBag warnParameters = new();
                 warnList.Add(warnParameters);
                 warnParameters.AddOutput("warn", Formatting.WRNCOLON + n1 + " out of " + trueN + " cells have EXPECTATION < 1");
             }
 
             if (n5 > 0)
             {
-                ParameterBag warnParameters = new ParameterBag();
+                ParameterBag warnParameters = new();
                 warnList.Add(warnParameters);
                 warnParameters.AddOutput("warn", Formatting.WRNCOLON + n5 + " out of " + trueN + " cells have EXPECTATION < 5");
             }
@@ -3016,12 +3012,12 @@ namespace StatsDirect.Builtins
                 p2M = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> inputsList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -3033,11 +3029,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", cco * 100);
             outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
 
-            List<ParameterBag> orList = new List<ParameterBag>();
+            List<ParameterBag> orList = new();
             outputParameters.AddOutput("*or", orList);
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                ParameterBag orParameters = new ParameterBag();
+                ParameterBag orParameters = new();
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
@@ -3085,11 +3081,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("chi_mantel", x2);
             outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
 
-            List<ParameterBag> cmlList = new List<ParameterBag>();
+            List<ParameterBag> cmlList = new();
             outputParameters.AddOutput("*cml", cmlList);
             if (ierr != -9)
             {
-                ParameterBag cmlParameters = new ParameterBag();
+                ParameterBag cmlParameters = new();
                 cmlList.Add(cmlParameters);
                 cmlParameters.AddOutput("eor", eor);
                 cmlParameters.AddOutput("pc", cco * 100);
@@ -3128,13 +3124,13 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             Meta.ModMetabias(host, harbordParameters, o, k, cco, 1);
 
@@ -6129,9 +6125,9 @@ namespace StatsDirect.Builtins
         {
             ierr = true;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", cco * 100);
-            List<ParameterBag> tableList = new List<ParameterBag>();
+            List<ParameterBag> tableList = new();
             outputParameters.AddOutput("*table", tableList);
             double s1X = 0; double s1 = 0; double t1 = 0; double t1X = 0; double w1 = 0; double w1X = 0; double n1 = 0; double n1X = 0;
             for (int idx = 1; idx <= k; idx++)
@@ -6148,7 +6144,7 @@ namespace StatsDirect.Builtins
                 if (p <= 0.0 || n <= 0.0 || q <= 0.0)
                     throw new InvalidDataException();
 
-                ParameterBag tableParameters = new ParameterBag();
+                ParameterBag tableParameters = new();
                 if (showIntermediates)
                 {
                     tableList.Add(tableParameters);
@@ -6165,7 +6161,7 @@ namespace StatsDirect.Builtins
                 {
                     if (showIntermediates)
                     {
-                        List<ParameterBag> warnSmallList = new List<ParameterBag>();
+                        List<ParameterBag> warnSmallList = new();
                         tableParameters.AddOutput("*warn_small", warnSmallList);
                         warnSmallList.Add(new ParameterBag());
                     }
@@ -6174,7 +6170,7 @@ namespace StatsDirect.Builtins
                 {
                     if (showIntermediates)
                     {
-                        List<ParameterBag> warnSmallList = new List<ParameterBag>();
+                        List<ParameterBag> warnSmallList = new();
                         tableParameters.AddOutput("*warn_small", warnSmallList);
                     }
                 }
@@ -6209,13 +6205,13 @@ namespace StatsDirect.Builtins
 
                 if (a > 0 && b > 0 && c > 0 && d > 0)
                 {
-                    ParameterBag noHaldaneParameters = new ParameterBag();
+                    ParameterBag noHaldaneParameters = new();
                     if (showIntermediates)
                     {
-                        List<ParameterBag> noHaldaneList = new List<ParameterBag>();
+                        List<ParameterBag> noHaldaneList = new();
                         tableParameters.AddOutput("*no_haldane", noHaldaneList);
                         noHaldaneList.Add(noHaldaneParameters);
-                        List<ParameterBag> warnNoHaldaneList = new List<ParameterBag>();
+                        List<ParameterBag> warnNoHaldaneList = new();
                         tableParameters.AddOutput("*warn_no_haldane", warnNoHaldaneList);
                     }
                     a1 = a;
@@ -6233,9 +6229,9 @@ namespace StatsDirect.Builtins
                 {
                     if (showIntermediates)
                     {
-                        List<ParameterBag> noHaldaneList = new List<ParameterBag>();
+                        List<ParameterBag> noHaldaneList = new();
                         tableParameters.AddOutput("*no_haldane", noHaldaneList);
-                        List<ParameterBag> warnNoHaldaneList = new List<ParameterBag>();
+                        List<ParameterBag> warnNoHaldaneList = new();
                         tableParameters.AddOutput("*warn_no_haldane", warnNoHaldaneList);
                         warnNoHaldaneList.Add(new ParameterBag());
                     }
@@ -6245,8 +6241,8 @@ namespace StatsDirect.Builtins
                 c1 = c + 0.5;
                 d1 = d + 0.5;
                 vs = 1.0 / (a + 1.0) + 1.0 / (b + 1.0) + 1.0 / (c + 1.0) + 1.0 / (d + 1.0);
-                ParameterBag haldaneParameters = new ParameterBag();
-                List<ParameterBag> haldaneList = new List<ParameterBag>();
+                ParameterBag haldaneParameters = new();
+                List<ParameterBag> haldaneList = new();
                 tableParameters.AddOutput("*haldane", haldaneList);
                 haldaneList.Add(haldaneParameters);
                 WoolfStratum(haldaneParameters, showIntermediates, a1, b1, c1, d1, vs, cit, out y, out w);
@@ -6256,11 +6252,11 @@ namespace StatsDirect.Builtins
                 s1 += w * y * y;
             }
 
-            List<ParameterBag> combinedNoHaldaneList = new List<ParameterBag>();
+            List<ParameterBag> combinedNoHaldaneList = new();
             outputParameters.AddOutput("*combined_no_haldane", combinedNoHaldaneList);
             if (n1 > 1 && n1X == n1)
             {
-                ParameterBag combinedNoHaldaneParameters = new ParameterBag();
+                ParameterBag combinedNoHaldaneParameters = new();
                 combinedNoHaldaneList.Add(combinedNoHaldaneParameters);
                 combinedNoHaldaneParameters.AddOutput("tables", n1);
                 double m1X = t1X / w1X;
@@ -6296,11 +6292,11 @@ namespace StatsDirect.Builtins
                 combinedNoHaldaneParameters.AddOutput("het_chi_p", PDF.chivalp(x2X, n2X));
             }
 
-            List<ParameterBag> combinedWithHaldaneList = new List<ParameterBag>();
+            List<ParameterBag> combinedWithHaldaneList = new();
             outputParameters.AddOutput("*combined_with_haldane", combinedWithHaldaneList);
             if (n1 > 1)
             {
-                ParameterBag combinedWithHaldaneParameters = new ParameterBag();
+                ParameterBag combinedWithHaldaneParameters = new();
                 combinedWithHaldaneList.Add(combinedWithHaldaneParameters);
                 combinedWithHaldaneParameters.AddOutput("tablesx", n1);
                 double m1 = t1 / w1;
@@ -6402,12 +6398,12 @@ namespace StatsDirect.Builtins
                 for (j = 1; j <= v.Length; j++)
                     xt[j, i] = Convert.ToInt32(v.Data[j - 1]);
             }
-            DataFrame outputFrame = new DataFrame();
-            DoubleVariable rowVariable = new DoubleVariable { Title = "Row Category" };
+            DataFrame outputFrame = new();
+            DoubleVariable rowVariable = new() { Title = "Row Category" };
             //  TODO: Some attempt to size to avoid repeated redims
 
             outputFrame.Variables.Add(rowVariable);
-            DoubleVariable columnVariable = new DoubleVariable { Title = "Column Category" };
+            DoubleVariable columnVariable = new() { Title = "Column Category" };
 
             outputFrame.Variables.Add(columnVariable);
             int ctr = 0;
@@ -6427,7 +6423,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
@@ -6448,8 +6444,8 @@ namespace StatsDirect.Builtins
 
             DataFrame columnsFrame = parameters["columns"].AsDataFrame;
             bool sorted = parameters["sorted"].AsBoolean;
-            DataFrame outputFrame = new DataFrame();
-            StringVariable v = new StringVariable();
+            DataFrame outputFrame = new();
+            StringVariable v = new();
             outputFrame.Variables.Add(v);
             int pos = 0;
             for (int c = 0; c < columnsFrame.VariableCount; c++)
@@ -6501,7 +6497,7 @@ namespace StatsDirect.Builtins
                 }
                 pos += ycats + 2;
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }

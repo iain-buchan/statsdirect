@@ -177,13 +177,13 @@ namespace StatsDirect.UI
             WorkbookView grid = (WorkbookView)Control;
             IWorksheet sheet = grid.ActiveWorksheet;
             // TODO: Force end edit if one is current
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             grid.WithLock(() =>
             {
                 IRange usedRange = sheet.UsedRange;
                 for (int col = 0; col < usedRange.ColumnCount; col++)
                 {
-                    DoubleVariable v = new DoubleVariable(usedRange.RowCount, string.Empty);
+                    DoubleVariable v = new(usedRange.RowCount, string.Empty);
                     frame.Variables.Add(v);
                     for (int row = 0; row < usedRange.RowCount; row++)
                     {
@@ -302,10 +302,10 @@ namespace StatsDirect.UI
                 {
                     object[,] ary = (object[,])value;
 
-                    DataFrame frame = new DataFrame();
+                    DataFrame frame = new();
                     for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                     {
-                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "Column " + (col + 1).ToString());
+                        DoubleVariable dv = new(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "Column " + (col + 1).ToString());
                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
                         frame.Variables.Add(dv);
@@ -330,10 +330,10 @@ namespace StatsDirect.UI
                 {
                     object[,] ary = (object[,])value;
 
-                    DataFrame frame = new DataFrame();
+                    DataFrame frame = new();
                     for (int col = ary.GetLowerBound(1); col <= ary.GetUpperBound(1); col++)
                     {
-                        DoubleVariable dv = new DoubleVariable(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
+                        DoubleVariable dv = new(ary.GetUpperBound(0) - ary.GetLowerBound(0) + 1, "R2(" + col.ToString() + ")");
                         for (int row = ary.GetLowerBound(0); row <= ary.GetUpperBound(0); row++)
                             dv.Data[row] = frmSpreadsheetGear.ToCellValue(ary[row, col]);
                         frame.Variables.Add(dv);
@@ -433,9 +433,9 @@ namespace StatsDirect.UI
             string[] data = new string[gridEditGrid.Rows.Count];
             for (int i = 0; i < gridEditGrid.Rows.Count; i++)
                 data[i] = (string)gridEditGrid.Rows[i].Cells[1].Value;
-            StringVariable newValues = new StringVariable(data, parameter.ValueVariable);
+            StringVariable newValues = new(data, parameter.ValueVariable);
             DataFrame oldFrame = Context[parameter.Source].AsDataFrame;
-            DataFrame newFrame = new DataFrame();
+            DataFrame newFrame = new();
             foreach (IVariable v in oldFrame.Variables)
                 newFrame.Variables.Add(parameter.ValueVariable.Equals(v.Title) ? newValues : v);
             OutputParameters[parameter.Name] = FilledParameterFactory.Input(newFrame);
@@ -564,9 +564,9 @@ namespace StatsDirect.UI
                 }
             }
 
-            DataFrame frame = new DataFrame();
-            DoubleVariable var1 = new DoubleVariable(var1Data.ToArray());
-            DoubleVariable var2 = new DoubleVariable(var2Data.ToArray());
+            DataFrame frame = new();
+            DoubleVariable var1 = new(var1Data.ToArray());
+            DoubleVariable var2 = new(var2Data.ToArray());
             frame.Variables.Add(var1);
             frame.Variables.Add(var2);
             OutputParameters[parameter.Name] = FilledParameterFactory.Input(frame);

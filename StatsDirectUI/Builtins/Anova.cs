@@ -535,12 +535,12 @@ namespace StatsDirect.Builtins
                 p2 = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             outputParameters.AddOutput("tlist", tlist);
             if (cols == 2)
             {
-                ParameterBag blockParameters = new ParameterBag();
+                ParameterBag blockParameters = new();
                 blockParameters.AddOutput("pc", 100 * (1 - P0));
                 blockParameters.AddOutput("from", lla);
                 blockParameters.AddOutput("to", ula);
@@ -640,7 +640,7 @@ namespace StatsDirect.Builtins
             double msgroup = ssgroup / dfgroup;
             double mserr = sserror / dferr;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tlist", tlist);
             outputParameters.AddOutput("b_sum", ssgroup);
             outputParameters.AddOutput("b_df", dfgroup);
@@ -674,17 +674,17 @@ namespace StatsDirect.Builtins
             DataFrame groupFrame = parameters["groups"].AsDataFrame;
             ClassifierVariable groupVariable = groupFrame.Variables[0] as ClassifierVariable;
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> aList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> aList = new();
             outputParameters.AddOutput("*a", aList);
             foreach (DoubleVariable v in data.Variables)
             {
-                DataFrame oneWayFrame = new DataFrame();
+                DataFrame oneWayFrame = new();
                 foreach (Group g in groupVariable.Groups)
                 {
                     double groupId = g.Id;
                     string oneWayTitle = g.Label;
-                    DoubleVariable oneWayVariable = new DoubleVariable(g.NBin, oneWayTitle);
+                    DoubleVariable oneWayVariable = new(g.NBin, oneWayTitle);
                     int oneWayIndex = 0;
                     //  Use the shorter of the group variable and the data variable
                     int vLimit = Math.Min(groupVariable.Length - 1, v.Length - 1);
@@ -701,7 +701,7 @@ namespace StatsDirect.Builtins
                     oneWayFrame.Variables.Add(oneWayVariable);
                 }
 
-                ParameterBag oneWayParameters = new ParameterBag {{"data", FilledParameterFactory.Input(oneWayFrame)}};
+                ParameterBag oneWayParameters = new() { {"data", FilledParameterFactory.Input(oneWayFrame)}};
                 StepOutput oneWayResult = RptOneWay(oneWayParameters);
                 oneWayResult.ParameterBag.AddOutput("variableName", v.Title);
                 aList.Add(oneWayResult.ParameterBag);
@@ -720,18 +720,18 @@ namespace StatsDirect.Builtins
             DataFrame treatmentsFrame = parameters["treatments"].AsDataFrame;
             ClassifierVariable treatmentsVariable = treatmentsFrame.Variables[0] as ClassifierVariable;
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> aList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> aList = new();
             outputParameters.AddOutput("*a", aList);
             int maxBlocks = blocksVariable.GroupCount;
             foreach (DoubleVariable v in data.Variables)
             {
-                DataFrame twoWayFrame = new DataFrame();
+                DataFrame twoWayFrame = new();
                 //  One variable per treatment - this assumes the groups are ordered with their IDs starting from 0 at index 0.
                 //  All are initially filled with Constant.MISSING
                 foreach (Group g in treatmentsVariable.Groups)
                 {
-                    DoubleVariable newV = new DoubleVariable(maxBlocks, g.Label);
+                    DoubleVariable newV = new(maxBlocks, g.Label);
                     for (int i = 0; i < maxBlocks; i++)
                         newV.Data[i] = Constant.MISSING;
                     twoWayFrame.Variables.Add(newV);
@@ -749,7 +749,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag twoWayParameters = new ParameterBag {{"data", FilledParameterFactory.Input(twoWayFrame)}};
+                ParameterBag twoWayParameters = new() { {"data", FilledParameterFactory.Input(twoWayFrame)}};
                 StepOutput twoWayResult = RptTwoWay(twoWayParameters);
                 twoWayResult.ParameterBag.AddOutput("variableName", v.Title);
                 aList.Add(twoWayResult.ParameterBag);
@@ -818,7 +818,7 @@ namespace StatsDirect.Builtins
 
             if (wrn.Length > 0)
                 tlist = tlist + "\r\n" + wrn;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tlist", tlist);
             outputParameters.AddOutput("sub_sum", ssrow);
             outputParameters.AddOutput("sub_df", dfrow);
@@ -858,7 +858,7 @@ namespace StatsDirect.Builtins
             double[,,] y = new double[nm + 1, nr + 1, nc + 1];
             int absconders = 0;
 
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             outputFrame.EnsureVariables(frame.VariableCount);
 
             for (int d = 0; d < nc; d++)
@@ -919,7 +919,7 @@ namespace StatsDirect.Builtins
             double msres = ssres / Convert.ToDouble(dfres);
             // double mstot = sstot / Convert.ToDouble( dftot ); mstot is unused.  PJC 2012/04/09
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tlist", frame.Name);
 
             outputParameters.AddOutput("sub_sum", ssrow);
@@ -954,7 +954,7 @@ namespace StatsDirect.Builtins
             if (absconders != 0)
             {
                 IList<ParameterBag> warnList = new List<ParameterBag>();
-                ParameterBag warnParameters = new ParameterBag();
+                ParameterBag warnParameters = new();
                 warnParameters.AddOutput("warn", "WARNING - " + absconders.ToString() + " missing data - substitution made");
                 warnList.Add(warnParameters);
                 outputParameters.AddOutput("*warn", warnList);
@@ -1033,7 +1033,7 @@ namespace StatsDirect.Builtins
             double gm = 0;
             XTwoHier(frame, y, ctr, nobs, ivar, ref ngp, ref gbar, ref sgbar, ref gm, ref ss, ref idf, ref f, ref fp, out bool fault);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (!fault)
             {
                 outputParameters.AddOutput("tlist", tlist);
@@ -1093,7 +1093,7 @@ namespace StatsDirect.Builtins
             double tav = means / se;
             MathDbl.civ(carrier.Dferr, out double cit, GAMMA, out double P0);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("var_a", frame.Variables[z_va].Title);
             outputParameters.AddOutput("var_b", frame.Variables[z_vb].Title);
             outputParameters.AddOutput("a-b", means);
@@ -1154,7 +1154,7 @@ namespace StatsDirect.Builtins
             if (q == Constant.MISSING)
                 throw new TemplateOperationCancelledException("Fault in calculation", "Tukey Contrasts");
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             string lab = nSame ? "Tukey" : "Tukey-Kramer";
             outputParameters.AddOutput("method", lab);
@@ -1211,7 +1211,7 @@ namespace StatsDirect.Builtins
             bool halted = false;
             for (int i = 1; i <= ctr; i++)
             {
-                ParameterBag differencesParameters = new ParameterBag();
+                ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
@@ -1258,7 +1258,7 @@ namespace StatsDirect.Builtins
             if (f == Constant.MISSING)
                 crit = Constant.MISSING;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("critical", crit);
 
             int ctr = 0;
@@ -1295,7 +1295,7 @@ namespace StatsDirect.Builtins
             bool halted = false;
             for (int i = 1; i <= ctr; i++)
             {
-                ParameterBag differencesParameters = new ParameterBag();
+                ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
@@ -1325,7 +1325,7 @@ namespace StatsDirect.Builtins
         /// <returns></returns>
         private static List<ParameterBag> ContrasterSummary(Contraster[] contrasters, int lowerBound, int upperBound, double palpha)
         {
-            Dictionary<string, SignificantContrasts> contrasts = new Dictionary<string, SignificantContrasts>();
+            Dictionary<string, SignificantContrasts> contrasts = new();
             for (int i = lowerBound; i <= upperBound; i++)
             {
                 Contraster contraster = contrasters[i];
@@ -1349,10 +1349,10 @@ namespace StatsDirect.Builtins
                         contrast2.Significant.Add(contraster.Lab1);
                 }
             }
-            List<ParameterBag> outputList = new List<ParameterBag>(contrasts.Count);
+            List<ParameterBag> outputList = new(contrasts.Count);
             foreach (KeyValuePair<string, SignificantContrasts> pair in contrasts)
             {
-                ParameterBag output = new ParameterBag();
+                ParameterBag output = new();
                 outputList.Add(output);
                 output.AddOutput("cf1", pair.Key);
                 output.AddOutput("mean", pair.Value.Mean);
@@ -1438,11 +1438,11 @@ namespace StatsDirect.Builtins
             Array.Sort(hold, 1, ctr);
 
             bool halted = false;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> differencesList = new List<ParameterBag>();
             for (int i = 1; i <= ctr; i++)
             {
-                ParameterBag differencesParameters = new ParameterBag();
+                ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("cf1", hold[i].Lab1);
                 differencesParameters.AddOutput("cf2", hold[i].Lab2);
@@ -1503,7 +1503,7 @@ namespace StatsDirect.Builtins
             if (ifault != 0)
                 throw new TemplateOperationCancelledException("Fault in calculation", "Dunnett Contrasts");
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("d", d);
             outputParameters.AddOutput("psd", pse);
             outputParameters.AddOutput("control", frame.Variables[ic].Title);
@@ -1540,7 +1540,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> differencesList = new List<ParameterBag>();
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag differencesParameters = new ParameterBag();
+                ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("level", hold[i].Lab1);
                 differencesParameters.AddOutput("cn", hold[i].Gps);
@@ -1710,7 +1710,7 @@ namespace StatsDirect.Builtins
             int dferr = ntot - frame.VariableCount;
             double msgroup = ssgroup / dfGroup;
             double mserr = sserror / dferr;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             // Levene
             outputParameters.AddOutput("f", msgroup / mserr);
@@ -1748,13 +1748,13 @@ namespace StatsDirect.Builtins
                 double[] sgbar = (double[])parameters["sgbar"].AsObject;
                 double gm = parameters["gm"].AsDouble;
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
 
                 IList<ParameterBag> groupList = new List<ParameterBag>();
                 outputParameters.AddOutput("*group", groupList);
                 for (int j = 1; j <= frame.VariableCount; j++)
                 {
-                    ParameterBag groupParameters = new ParameterBag();
+                    ParameterBag groupParameters = new();
                     groupParameters.AddOutput("ggrp", j);
                     groupParameters.AddOutput("gmean", gbar[j]);
                     groupParameters.AddOutput("gn", ngp[j]);
@@ -1770,7 +1770,7 @@ namespace StatsDirect.Builtins
                 {
                     for (int i = 0; i < frame.Variables[j].Count; i++)
                     {
-                        ParameterBag subGroupParameters = new ParameterBag();
+                        ParameterBag subGroupParameters = new();
                         ii += 1;
                         subGroupParameters.AddOutput("sggrp", j + 1);
                         subGroupParameters.AddOutput("sgsub_grp", i + 1);
@@ -1921,7 +1921,7 @@ namespace StatsDirect.Builtins
             double fr = vr / vres;
             double fc = vc / vres;
             double ftr = vtr / vres;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("tlist", tlist);
             outputParameters.AddOutput("row_sum", ssqr);
             outputParameters.AddOutput("row_f", ndf);
@@ -2059,7 +2059,7 @@ namespace StatsDirect.Builtins
             double sumbar2 = sumsum2 / ng2;
             double dbar2 = dsum / ng2;
             double pbar2 = psum / ng2;
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("grp1_p1", dbar1);
             outputParameters.AddOutput("grp1_p2", pbar1);
             outputParameters.AddOutput("grp1_diff", difbar1);
@@ -2125,7 +2125,7 @@ namespace StatsDirect.Builtins
 
         private static ParameterCarrier FindOrCalculateParameters(ParameterBag parameters)
         {
-            ParameterCarrier carrier = new ParameterCarrier();
+            ParameterCarrier carrier = new();
             if (parameters.ContainsKey("dfres") && parameters.ContainsKey("msres") && parameters.ContainsKey("mean") && parameters.ContainsKey("tnx"))
             {
                 carrier.Dferr = parameters["dfres"].AsInt32;

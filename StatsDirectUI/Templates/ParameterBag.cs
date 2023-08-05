@@ -153,7 +153,7 @@ namespace StatsDirect.Templates
         /// </summary>
         public ParameterBag Copy()
         {
-            ParameterBag copy = new ParameterBag();
+            ParameterBag copy = new();
             foreach (KeyValuePair<string, FilledParameter> filledParameterPair in filledParameters)
                 copy.Add(filledParameterPair);
             return copy;
@@ -165,7 +165,7 @@ namespace StatsDirect.Templates
         /// <returns>a new ParameterBag containing only the input parameters</returns>
         public ParameterBag CopyWithoutOutputParameters()
         {
-            ParameterBag copy = new ParameterBag();
+            ParameterBag copy = new();
             foreach (KeyValuePair<string, FilledParameter> filledParameterPair in filledParameters)
                 if (filledParameterPair.Value.IsInputParameter)
                     copy.Add(filledParameterPair);
@@ -178,7 +178,7 @@ namespace StatsDirect.Templates
         /// <returns>a new ParameterBag containing only details that will be required when the corresponding Operation is redone.</returns>
         public ParameterBag CopyAndStripForRedo(bool shouldKeepData)
         {
-            ParameterBag copy = new ParameterBag();
+            ParameterBag copy = new();
             foreach (KeyValuePair<string, FilledParameter> filledParameterPair in filledParameters)
                 if (filledParameterPair.Value.IsInputParameter)
                 {
@@ -205,7 +205,7 @@ namespace StatsDirect.Templates
                 int index = 0;
                 foreach (KeyValuePair<string, FilledParameter> pair in filledParameters)
                 {
-                    ParameterForXml p = new ParameterForXml {Name = pair.Key, Value = pair.Value};
+                    ParameterForXml p = new() { Name = pair.Key, Value = pair.Value};
                     ps[index++] = p;
                 }
                 return ps;
@@ -255,35 +255,29 @@ namespace StatsDirect.Templates
 
         public string SerializeForRedo(bool shouldKeepData)
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                ParameterBag strippedParameters = CopyAndStripForRedo(shouldKeepData);
-                bf.Serialize(ms, strippedParameters);
-                byte[] strippedBytes = ms.ToArray();
-                return Convert.ToBase64String(strippedBytes);
-            }
+            using MemoryStream ms = new();
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new();
+            ParameterBag strippedParameters = CopyAndStripForRedo(shouldKeepData);
+            bf.Serialize(ms, strippedParameters);
+            byte[] strippedBytes = ms.ToArray();
+            return Convert.ToBase64String(strippedBytes);
         }
 
         public static ParameterBag DeserializeAndRefillForRedo(string serializedBag, IRefillSource refillSource)
         {
-            using (StringReader sr = new StringReader(serializedBag))
-            {
-                return DeserializeAndRefillForRedo(sr, refillSource);
-            }
+            using StringReader sr = new(serializedBag);
+            return DeserializeAndRefillForRedo(sr, refillSource);
         }
 
         public static ParameterBag DeserializeAndRefillForRedo(StringReader xr, IRefillSource refillSource)
         {
             string strippedString = xr.ReadToEnd();
             byte[] strippedBytes = Convert.FromBase64String(strippedString);
-            using (MemoryStream ms = new MemoryStream(strippedBytes))
-            {
-                System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                ParameterBag restoredParameters = (ParameterBag) bf.Deserialize(ms);
-                restoredParameters.RefillForRedo(refillSource);
-                return restoredParameters;
-            }
+            using MemoryStream ms = new(strippedBytes);
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new();
+            ParameterBag restoredParameters = (ParameterBag)bf.Deserialize(ms);
+            restoredParameters.RefillForRedo(refillSource);
+            return restoredParameters;
         }
     }
 }

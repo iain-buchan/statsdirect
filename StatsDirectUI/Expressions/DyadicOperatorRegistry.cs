@@ -14,17 +14,17 @@ namespace StatsDirect.Expressions
         private DyadicOperatorRegistry()
         {
             // A few useful parameters that can be re-used
-            InOutDataTypeDefinition bbb = new InOutDataTypeDefinition(DataType.Boolean, new[] { DataType.Boolean, DataType.Boolean });
-            InOutDataTypeDefinition bdd = new InOutDataTypeDefinition(DataType.Boolean, new[] { DataType.Double, DataType.Double });
-            InOutDataTypeDefinition bii = new InOutDataTypeDefinition(DataType.Boolean, new[] { DataType.Integer, DataType.Integer });
-            InOutDataTypeDefinition bss = new InOutDataTypeDefinition(DataType.Boolean, new[] { DataType.String, DataType.String });
-            InOutDataTypeDefinition ddd = new InOutDataTypeDefinition(DataType.Double, new[] { DataType.Double, DataType.Double });
-            InOutDataTypeDefinition idd = new InOutDataTypeDefinition(DataType.Integer, new[] { DataType.Double, DataType.Double });
-            InOutDataTypeDefinition iii = new InOutDataTypeDefinition(DataType.Integer, new[] { DataType.Integer, DataType.Integer });
-            InOutDataTypeDefinition ssb = new InOutDataTypeDefinition(DataType.String, new[] { DataType.String, DataType.Boolean });
-            InOutDataTypeDefinition ssd = new InOutDataTypeDefinition(DataType.String, new[] { DataType.String, DataType.Double });
-            InOutDataTypeDefinition ssi = new InOutDataTypeDefinition(DataType.String, new[] { DataType.String, DataType.Integer });
-            InOutDataTypeDefinition sss = new InOutDataTypeDefinition(DataType.String, new[] { DataType.String, DataType.String });
+            InOutDataTypeDefinition bbb = new(DataType.Boolean, new[] { DataType.Boolean, DataType.Boolean });
+            InOutDataTypeDefinition bdd = new(DataType.Boolean, new[] { DataType.Double, DataType.Double });
+            InOutDataTypeDefinition bii = new(DataType.Boolean, new[] { DataType.Integer, DataType.Integer });
+            InOutDataTypeDefinition bss = new(DataType.Boolean, new[] { DataType.String, DataType.String });
+            InOutDataTypeDefinition ddd = new(DataType.Double, new[] { DataType.Double, DataType.Double });
+            InOutDataTypeDefinition idd = new(DataType.Integer, new[] { DataType.Double, DataType.Double });
+            InOutDataTypeDefinition iii = new(DataType.Integer, new[] { DataType.Integer, DataType.Integer });
+            InOutDataTypeDefinition ssb = new(DataType.String, new[] { DataType.String, DataType.Boolean });
+            InOutDataTypeDefinition ssd = new(DataType.String, new[] { DataType.String, DataType.Double });
+            InOutDataTypeDefinition ssi = new(DataType.String, new[] { DataType.String, DataType.Integer });
+            InOutDataTypeDefinition sss = new(DataType.String, new[] { DataType.String, DataType.String });
             definitions = new Dictionary<DyadicOperator, DyadicOperatorDefinition>();
             AddAll(new[]
             {

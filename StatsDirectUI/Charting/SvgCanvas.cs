@@ -356,7 +356,7 @@ namespace StatsDirect.Charting
 
         private static string ToCss(PenDescriptor p)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.AppendFormat("stroke:{0};", ToCss(p.Color));
             if (!(p.CapStyle == CapStyle.Butt))
                 sb.AppendFormat("stroke-linecap:{0};", ToCss(p.CapStyle));
@@ -427,8 +427,8 @@ namespace StatsDirect.Charting
 
         public Stream DetachAndReturnImageStream()
         {
-            MemoryStream ms = new MemoryStream();
-            StreamWriter sw = new StreamWriter(ms, Encoding.UTF8);
+            MemoryStream ms = new();
+            StreamWriter sw = new(ms, Encoding.UTF8);
             sw.Write(root.ToString());
             sw.Flush();
             ms.Position = 0;

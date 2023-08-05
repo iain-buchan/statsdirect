@@ -26,32 +26,26 @@ namespace StatsDirect.R
         public static List<RVersion> CheckR()
         {
             string[] rLocations = { @"Software\R-core\R", @"Software\R-core\R64" };
-            List<RVersion> installedVersions = new List<RVersion>();
+            List<RVersion> installedVersions = new();
             try
             {
-                using (RegistryKey hklm = Registry.LocalMachine)
+                using RegistryKey hklm = Registry.LocalMachine;
+                foreach (string rLocation in rLocations)
                 {
-                    foreach (string rLocation in rLocations)
+                    using RegistryKey rKey = hklm.OpenSubKey(rLocation);
+                    foreach (string version32 in rKey.GetSubKeyNames())
                     {
-                        using (RegistryKey rKey = hklm.OpenSubKey(rLocation))
+                        using RegistryKey versionKey = rKey.OpenSubKey(version32);
+                        object installPathObject = versionKey.GetValue("InstallPath");
+                        if (null != installPathObject)
                         {
-                            foreach (string version32 in rKey.GetSubKeyNames())
-                            {
-                                using (RegistryKey versionKey = rKey.OpenSubKey(version32))
-                                {
-                                    object installPathObject = versionKey.GetValue("InstallPath");
-                                    if (null != installPathObject)
-                                    {
-                                        bool isX64 = rLocation.EndsWith("64");
-                                        string installPath = (string)installPathObject;
-                                        RVersion version = new RVersion { IsX64 = isX64, VersionString = version32, InstallPath = installPath };
-                                        // Probe for a binary there to check it's still around and hasn't been uninstalled/deleted
-                                        string binaryPath = Path.Combine(version.BinPath, "Rscript.exe");
-                                        if (File.Exists(binaryPath))
-                                            installedVersions.Add(version);
-                                    }
-                                }
-                            }
+                            bool isX64 = rLocation.EndsWith("64");
+                            string installPath = (string)installPathObject;
+                            RVersion version = new() { IsX64 = isX64, VersionString = version32, InstallPath = installPath };
+                            // Probe for a binary there to check it's still around and hasn't been uninstalled/deleted
+                            string binaryPath = Path.Combine(version.BinPath, "Rscript.exe");
+                            if (File.Exists(binaryPath))
+                                installedVersions.Add(version);
                         }
                     }
                 }
@@ -122,7 +116,7 @@ namespace StatsDirect.R
                 preferredVersion = PreferredRVersion();
             }
 
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            ProcessStartInfo startInfo = new()
             {
                 FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME),
                 WorkingDirectory = rFolder,
@@ -139,35 +133,31 @@ namespace StatsDirect.R
         /// <returns></returns>
         public static bool UserMightHaveInstalledR()
         {
-            using (frmInstallR f = new frmInstallR())
-            {
-                f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
-                return f.UserThinksRIsInstalled;
-            }
+            using frmInstallR f = new();
+            f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            return f.UserThinksRIsInstalled;
         }
 
         internal static ParameterBag FilesToParameterBag()
         {
             string rFolder = SDConfiguration.MyStatsDirectRFolder;
             string resultsPath = Path.Combine(rFolder, RESULTS_FILE_NAME);
-            using (Stream s = File.OpenRead(resultsPath))
+            using Stream s = File.OpenRead(resultsPath);
+            AntlrInputStream input = new(s);
+            RResultsLexer lexer = new(input);
+            CommonTokenStream tokenStream = new(lexer);
+            RResultsParser parser = new(tokenStream);
+            RResultsParser.CompileUnitContext retval = parser.compileUnit();
+            if (parser.NumberOfSyntaxErrors > 0)
             {
-                AntlrInputStream input = new AntlrInputStream(s);
-                RResultsLexer lexer = new RResultsLexer(input);
-                CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-                RResultsParser parser = new RResultsParser(tokenStream);
-                RResultsParser.CompileUnitContext retval = parser.compileUnit();
-                if (parser.NumberOfSyntaxErrors > 0)
-                {
-                    throw new Exception("Couldn't parse file: " + parser.NumberOfSyntaxErrors + " error(s)");
-                }
-                // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
-                if (!"<EOF>".Equals(parser.CurrentToken.Text))
-                    throw new Exception("Couldn't parse file: syntax error near \"" + parser.CurrentToken.Text + "\"");
-                //if (null == retval || null == retval.builtExpression)
-                //    throw new Exception("Syntax error");
-                return DictionaryToParameterBag(retval.Values);
+                throw new Exception("Couldn't parse file: " + parser.NumberOfSyntaxErrors + " error(s)");
             }
+            // The parser seems to dislike recognising EOF (for some reason - TODO: find out why) so instead test that we're at EOF at the end of the parse
+            if (!"<EOF>".Equals(parser.CurrentToken.Text))
+                throw new Exception("Couldn't parse file: syntax error near \"" + parser.CurrentToken.Text + "\"");
+            //if (null == retval || null == retval.builtExpression)
+            //    throw new Exception("Syntax error");
+            return DictionaryToParameterBag(retval.Values);
         }
 
         /// <summary>
@@ -222,7 +212,7 @@ namespace StatsDirect.R
 
         private static ParameterBag DictionaryToParameterBag(Dictionary<string, object> dictionary)
         {
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             foreach (KeyValuePair<string, object> pair in dictionary)
             {
                 ParameterBag thisBag = GetBag(pair.Key, outputParameters, out string leafName);
@@ -248,10 +238,8 @@ namespace StatsDirect.R
             if (!File.Exists(errorFilePath))
                 return null;
 
-            using (TextReader tr = new StreamReader(errorFilePath))
-            {
-                return tr.ReadToEnd().Replace("\r", string.Empty);
-            }
+            using TextReader tr = new StreamReader(errorFilePath);
+            return tr.ReadToEnd().Replace("\r", string.Empty);
         }
     }
 }

@@ -93,7 +93,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             // Plot mean
-            PenDescriptor greenPen = new PenDescriptor(GrGreen, 2);
+            PenDescriptor greenPen = new(GrGreen, 2);
             DrawLineInChartCoordinates(greenPen, axisScales.X.MinimumScaleValue, aOptions.mean, axisScales.X.MaximumScaleValue, aOptions.mean);
             if (aOptions.HasLimits)
             {

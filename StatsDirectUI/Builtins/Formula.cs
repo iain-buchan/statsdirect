@@ -33,7 +33,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptRandomBlock(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
-            MersenneTwister mt = new MersenneTwister(seed);
+            MersenneTwister mt = new(seed);
             int n = parameters["n"].AsInt32;
             if (n < 4)
                 n = 4;
@@ -52,7 +52,7 @@ namespace StatsDirect.Builtins
             if (n / (double)t != Math.Floor(n / (double)t))
                 throw new InvalidDataException("Number of subjects must be divisible by the number of treatments");
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("seed_out", seed);
             outputParameters.AddOutput("n_out", n);
             outputParameters.AddOutput("t_out", t);
@@ -151,11 +151,11 @@ namespace StatsDirect.Builtins
             //  sort the id numbers within blocks
             Array.Sort(x, 1, ctr);
 
-            List<ParameterBag> subjectsList = new List<ParameterBag>();
+            List<ParameterBag> subjectsList = new();
             outputParameters.AddOutput("*subjects", subjectsList);
             for (int i = 1; i <= n; i++)
             {
-                ParameterBag subjectsParameters = new ParameterBag();
+                ParameterBag subjectsParameters = new();
                 subjectsList.Add(subjectsParameters);
                 subjectsParameters.AddOutput("id", i);
                 subjectsParameters.AddOutput("rx", new string(Convert.ToChar(64 + x[i].Rx), 1));
@@ -213,7 +213,7 @@ namespace StatsDirect.Builtins
             }
             while (true);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("alpha", a);
             outputParameters.AddOutput("power", p);
             outputParameters.AddOutput("r0Fmt", r0);
@@ -271,7 +271,7 @@ namespace StatsDirect.Builtins
                     n = -1.0;
                 }
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("ctFmt", ct);
                 outputParameters.AddOutput("hrFmt", hr);
                 outputParameters.AddOutput("atFmt", at);
@@ -288,7 +288,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("size", n);
                     outputParameters.AddOutput("controls", n * M);
                 }
-                List<ParameterBag> assumptionsList = new List<ParameterBag>();
+                List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, n));
@@ -402,11 +402,11 @@ namespace StatsDirect.Builtins
         public static StepOutput RptRandomPairs(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
-            MersenneTwister mt = new MersenneTwister(seed);
+            MersenneTwister mt = new(seed);
             int pairs = parameters["pairs"].AsInt32;
             bool balance = pairs >= 1 && Math.Floor(pairs / 2.0) == pairs / 2.0 && parameters["balance"].AsBoolean;
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             if (balance)
                 outputParameters.AddOutput("seedAndNote", seed + ",  balanced allocation");
             else
@@ -433,12 +433,12 @@ namespace StatsDirect.Builtins
                     for (int n = 1; n <= pairs; n++)
                         rand[n] = mt.NextDouble() >= 0.5;
                 }
-                List<ParameterBag> pairsList = new List<ParameterBag>();
+                List<ParameterBag> pairsList = new();
                 outputParameters.AddOutput("*pairs", pairsList);
                 for (int n = 1; n <= pairs; n++)
                 {
                     string f = n < 10000 ? "####  " : "#####  ";
-                    ParameterBag pairsParameters = new ParameterBag();
+                    ParameterBag pairsParameters = new();
                     pairsList.Add(pairsParameters);
                     pairsParameters.AddOutput("index", n.ToString(f));
                     pairsParameters.AddOutput("random", rand[n] ? "Control - Intervention" : "Intervention - Control");
@@ -451,7 +451,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptRandomUnPaired(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
-            MersenneTwister mt = new MersenneTwister(seed);
+            MersenneTwister mt = new(seed);
             const int low = 1;
             int high = parameters["high"].AsInt32;
             if (high >= 2 && high % high / 2 == 0)
@@ -476,13 +476,13 @@ namespace StatsDirect.Builtins
                 Array.Sort(arand, 1, halfHigh);
                 Array.Sort(brand, 1, halfHigh);
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
-                List<ParameterBag> allocationsList = new List<ParameterBag>();
+                List<ParameterBag> allocationsList = new();
                 outputParameters.AddOutput("*allocations", allocationsList);
                 for (int N = 1; N <= halfHigh; N++)
                 {
-                    ParameterBag allocationsParameters = new ParameterBag();
+                    ParameterBag allocationsParameters = new();
                     allocationsList.Add(allocationsParameters);
                     allocationsParameters.AddOutput("case", arand[N]);
                     allocationsParameters.AddOutput("control", brand[N]);
@@ -495,7 +495,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptRandomXY(ParameterBag parameters)
         {
             int seed = AutoSeed(parameters);
-            MersenneTwister mt = new MersenneTwister(seed);
+            MersenneTwister mt = new(seed);
             int low = parameters["low"].AsInt32;
             int high = parameters["high"].AsInt32;
             if (low > high)
@@ -514,13 +514,13 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
-                List<ParameterBag> allocationsList = new List<ParameterBag>();
+                List<ParameterBag> allocationsList = new();
                 outputParameters.AddOutput("*allocations", allocationsList);
                 for (int N = low; N <= high; N++)
                 {
-                    ParameterBag allocationsParameters = new ParameterBag();
+                    ParameterBag allocationsParameters = new();
                     allocationsList.Add(allocationsParameters);
                     allocationsParameters.AddOutput("index", N.ToString("#####"));
                     allocationsParameters.AddOutput("random", rand[N]);
@@ -575,7 +575,7 @@ namespace StatsDirect.Builtins
                     N = -1.0;
                 }
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("pc", p0);
                 outputParameters.AddOutput("ps", p1);
                 outputParameters.AddOutput("cpc", M);
@@ -598,7 +598,7 @@ namespace StatsDirect.Builtins
                 double sigmaa = Math.Sqrt(p0 * (1.0 - p0) / M + p1 * (1.0 - p1));
                 double sigma0 = Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar));
                 double zbeta = zcvalue(1.0 - power);
-                List<ParameterBag> assumptionsList = new List<ParameterBag>();
+                List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * (sigma0 / sigmaa) * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, N));
@@ -652,7 +652,7 @@ namespace StatsDirect.Builtins
                     N = -1.0;
                 }
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("pc", P0);
                 outputParameters.AddOutput("ps", P1);
                 outputParameters.AddOutput("cpc", M);
@@ -675,7 +675,7 @@ namespace StatsDirect.Builtins
                 double sigmaa = Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1));
                 double sigma0 = Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar));
                 double zbeta = zcvalue(1.0 - power);
-                List<ParameterBag> assumptionsList = new List<ParameterBag>();
+                List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * (sigma0 / sigmaa) * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, N));
@@ -696,14 +696,14 @@ namespace StatsDirect.Builtins
             double M = parameters["m"].AsDouble;
             ssize(alpha, beta, ph, p0, M, ps, out double N, out double FM, out double sigmar, out int fault);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("corr", ph);
             outputParameters.AddOutput("pc", p0);
             outputParameters.AddOutput("odds", ps);
             outputParameters.AddOutput("cpc", M);
             outputParameters.AddOutput("alpha", alpha);
             outputParameters.AddOutput("power", power);
-            List<ParameterBag> lowerList = new List<ParameterBag>();
+            List<ParameterBag> lowerList = new();
             outputParameters.AddOutput("*lower", lowerList);
             if (beta >= 0.8)
                 lowerList.Add(new ParameterBag());
@@ -711,18 +711,18 @@ namespace StatsDirect.Builtins
             {
                 //  TODO: RTF_DeleteBlock() on the illegal piece, which is always removed in valid cases.
                 outputParameters.AddOutput("size", N);
-                List<ParameterBag> reductionList = new List<ParameterBag>();
+                List<ParameterBag> reductionList = new();
                 outputParameters.AddOutput("*reduction", reductionList);
                 if (M > 1)
                 {
-                    ParameterBag reductionParameters = new ParameterBag();
+                    ParameterBag reductionParameters = new();
                     reductionList.Add(reductionParameters);
                     reductionParameters.AddOutput("controls", M);
                     reductionParameters.AddOutput("reduction", FM);
                 }
                 double zalpha = zcvalue(alpha / 2.0);
                 double zbeta = zcvalue(beta);
-                List<ParameterBag> assumptionsList = new List<ParameterBag>();
+                List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2.0 * sigmar * zalpha + zbeta <= 3.1)
                     assumptionsList.Add(x_disclaim(1.0 - beta, 1.0 - beta + alpha / 2.0, N));
@@ -762,7 +762,7 @@ namespace StatsDirect.Builtins
                 P1 = 0.0;
             if (P1 != P0 && ph > -1.0 && ph < 1.0)
             {
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("pc", P0);
                 outputParameters.AddOutput("ps", P1);
                 outputParameters.AddOutput("r", ph);
@@ -787,7 +787,7 @@ namespace StatsDirect.Builtins
                 {
                     outputParameters.AddOutput("size", BigErr);
                 }
-                List<ParameterBag> assumptionsList = new List<ParameterBag>();
+                List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
                 if (2 * (0.5 / Math.Sqrt(Math.Abs(pa * qa))) * zalpha + zbeta <= 3.1)
                 {
@@ -925,7 +925,7 @@ namespace StatsDirect.Builtins
             }
             if (flt == 0 || flt == 2)
             {
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("tt", "a paired or single sample");
                 x_tres(outputParameters, false, a, b, P, M, N, D, sd);
                 if (!ok)
@@ -960,7 +960,7 @@ namespace StatsDirect.Builtins
                 double sn = xza * xza * P * (1.0 - P) / (xd * xd);
                 sn /= (1.0 + sn / ps);
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("estimate", ps);
                 outputParameters.AddOutput("rate", P * 100);
                 outputParameters.AddOutput("deviation", xd * 100);
@@ -1009,7 +1009,7 @@ namespace StatsDirect.Builtins
             }
             if (fault == 0 || fault == 2)
             {
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("tt", "an unpaired two sample");
                 x_tres(outputParameters, true, a, b, P, M, N, D, sd);
                 if (!ok)
@@ -1021,7 +1021,7 @@ namespace StatsDirect.Builtins
 
         private static ParameterBag x_disclaim(double ll, double ul, double N)
         {
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("cases", N);
             outputParameters.AddOutput("no_less", ll);
             outputParameters.AddOutput("no_greater", ul);
@@ -1038,24 +1038,24 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("delta", delta);
             outputParameters.AddOutput("sd", sd);
             double df = n - 1.0;
-            List<ParameterBag> controlsList = new List<ParameterBag>();
+            List<ParameterBag> controlsList = new();
             outputParameters.AddOutput("*controls", controlsList);
             if (unpaired)
             {
-                ParameterBag controlsParameters = new ParameterBag();
+                ParameterBag controlsParameters = new();
                 controlsList.Add(controlsParameters);
                 controlsParameters.AddOutput("con_per", m);
                 df = n * (m + 1) - 2.0;
             }
             outputParameters.AddOutput("size", n);
 
-            List<ParameterBag> pairsList = new List<ParameterBag>();
+            List<ParameterBag> pairsList = new();
             outputParameters.AddOutput("*pairs", pairsList);
-            List<ParameterBag> subjectsList = new List<ParameterBag>();
+            List<ParameterBag> subjectsList = new();
             outputParameters.AddOutput("*subjects", subjectsList);
             if (unpaired)
             {
-                ParameterBag subjectsParameters = new ParameterBag();
+                ParameterBag subjectsParameters = new();
                 subjectsList.Add(subjectsParameters);
                 subjectsParameters.AddOutput("con_tot", Math.Floor(m * n));
             }
@@ -1066,7 +1066,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", df);
             double ta = PDF.tfromp(alpha / 2.0, df);
             double tb = PDF.tfromp(b / 2.0, df);
-            List<ParameterBag> assumptionsList = new List<ParameterBag>();
+            List<ParameterBag> assumptionsList = new();
             outputParameters.AddOutput("*assumptions", assumptionsList);
             if (ierr == 0 & 2.0 * ta + tb <= 3.1)
                 assumptionsList.Add(x_disclaim(1.0 - b, 1.0 - b + alpha / 2.0, n));

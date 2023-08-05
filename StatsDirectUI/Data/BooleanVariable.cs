@@ -26,7 +26,7 @@ namespace StatsDirect.Data
 
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
-            BooleanVariable copy = new BooleanVariable();
+            BooleanVariable copy = new();
             CopyAndStripForRedoInto(copy, shouldKeepData);
             return copy;
         }

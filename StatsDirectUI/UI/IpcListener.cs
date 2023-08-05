@@ -60,16 +60,14 @@ namespace StatsDirect.UI
                     {
                         // If we get here, there must have been a signal.
                         string path;
-                        using (Semaphore accessSemaphore = new Semaphore(1, 1, MEMORY_SEMAPHORE_NAME))
+                        using (Semaphore accessSemaphore = new(1, 1, MEMORY_SEMAPHORE_NAME))
                         {
                             accessSemaphore.WaitOne();
                             try
                             {
-                                using (MemoryMappedViewStream s = memoryMappedFile.CreateViewStream())
-                                {
-                                    StreamReader sr = new StreamReader(s);
-                                    path = sr.ReadLine();
-                                }
+                                using MemoryMappedViewStream s = memoryMappedFile.CreateViewStream();
+                                StreamReader sr = new(s);
+                                path = sr.ReadLine();
                             }
                             finally
                             {

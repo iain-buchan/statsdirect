@@ -12,7 +12,7 @@ namespace StatsDirect.UI
     {
         public static void Check()
         {
-            List<Operation> operations = new List<Operation>();
+            List<Operation> operations = new();
             operations.AddRange(TemplateFactory.Operations.Values);
             operations.AddRange(TemplateFactory.UserOperations);
             CheckAllTemplatesParse(operations);

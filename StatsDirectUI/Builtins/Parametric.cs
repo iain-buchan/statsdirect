@@ -96,7 +96,7 @@ namespace StatsDirect.Builtins
                 bot = 0;
             }
             double f = var[top] / var[bot];
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", data.Variables[top].Title);
             outputParameters.AddOutput("df_0", tnx[top] - 1);
             outputParameters.AddOutput("var_0", var[top]);
@@ -146,7 +146,7 @@ namespace StatsDirect.Builtins
             double xbar = mean[0];
             double s = sd[(int)Math.Floor(o)];
             int N = tnx[0];
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("name", variable.Title);
             outputParameters.AddOutput("mean", xbar);
             outputParameters.AddOutput("size", N);
@@ -201,7 +201,7 @@ namespace StatsDirect.Builtins
             {
                 IList<ParameterBag> lognormalList = new List<ParameterBag>();
                 outputParameters.AddOutput("*lognormal", lognormalList);
-                ParameterBag lognormalParameters = new ParameterBag();
+                ParameterBag lognormalParameters = new();
                 lognormalList.Add(lognormalParameters);
                 xbar = sum / Convert.ToDouble(N);
                 double sumsqdev = 0.0;
@@ -337,7 +337,7 @@ namespace StatsDirect.Builtins
                 percent2 = 95.0;
             double percent1 = 100.0 - 2.0 * (100.0 - percent2);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> sampleList = new List<ParameterBag>();
             outputParameters.AddOutput("*sample", sampleList);
             foreach (IVariable varbl in data.Variables)
@@ -359,7 +359,7 @@ namespace StatsDirect.Builtins
                             non_neg = true;
                     }
                 }
-                ParameterBag sampleParameters = new ParameterBag();
+                ParameterBag sampleParameters = new();
                 sampleList.Add(sampleParameters);
                 sampleParameters.AddOutput("ti", variable.Title);
                 string wrn = non_neg
@@ -414,12 +414,12 @@ namespace StatsDirect.Builtins
                 DataFrame Data = parameters["data"].AsDataFrame;
                 MathDbl.civ(0, out double cit, GAMMA, out double P0);
                 Para(Data, mean, ss, var, sd, sem, tnx);
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 IList<ParameterBag> sampleList = new List<ParameterBag>();
                 outputParameters.AddOutput("*sample", sampleList);
                 for (int d = 0; d <= 1; d++)
                 {
-                    ParameterBag sampleParameters = new ParameterBag();
+                    ParameterBag sampleParameters = new();
                     sampleList.Add(sampleParameters);
                     sampleParameters.AddOutput("name", Data.Variables[d].Title);
                     sampleParameters.AddOutput("mean", mean[d]);
@@ -454,7 +454,7 @@ namespace StatsDirect.Builtins
                     : Constant.MISSING;
                 MathDbl.civ(0, out double cit, GAMMA, out double P0);
                 Para(Data, mean, ss, var, sd, sem, tnx);
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("name", v0.Title);
                 outputParameters.AddOutput("mean", mean[0]);
                 outputParameters.AddOutput("pop_mean", pm);
@@ -537,8 +537,8 @@ namespace StatsDirect.Builtins
             // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
             DataFrame frame = parameters["data"].AsDataFrame;
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> outputList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> outputList = new();
             outputParameters.AddOutput("*variable", outputList);
 
             foreach (IVariable v in frame.Variables)
@@ -548,7 +548,7 @@ namespace StatsDirect.Builtins
                 int n = data.Length;
 
                 // variable
-                ParameterBag variableParameters = new ParameterBag();
+                ParameterBag variableParameters = new();
                 outputList.Add(variableParameters);
                 variableParameters.AddOutput("sample", v0.Title);
                 variableParameters.AddOutput("n", n);
@@ -617,8 +617,8 @@ namespace StatsDirect.Builtins
                     variableParameters.AddOutput("result", "Error in calculation");
                 }
 
-                NormalOptions nOptions = new NormalOptions { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
-                ChartDefinition cd = new ChartDefinition { ChartOptions = nOptions, ChartType = ChartType.Normal };
+                NormalOptions nOptions = new() { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
+                ChartDefinition cd = new() { ChartOptions = nOptions, ChartType = ChartType.Normal };
                 cd.XSeries.Add(new DoubleSeries(data, v0.Title));
                 variableParameters.AddOutput("chart", cd);
             }
@@ -980,7 +980,7 @@ namespace StatsDirect.Builtins
             if (um1 < um2)
                 Utilities.Utilities.Swap(ref um1, ref um2);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", "* sample 1 from summary");
             outputParameters.AddOutput("mean_0", xm1);
             outputParameters.AddOutput("n0", nx1);
@@ -1063,7 +1063,7 @@ namespace StatsDirect.Builtins
 
             double se = sd / Math.Sqrt(nx);
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("name", "* from summary data");
             outputParameters.AddOutput("sam_mean", mu);
             outputParameters.AddOutput("pop_mean", mu0);
@@ -1110,7 +1110,7 @@ namespace StatsDirect.Builtins
                 um1 = um2;
                 um2 = um;
             }
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", data.Variables[0].Title);
             outputParameters.AddOutput("mean_0", mean[0]);
             outputParameters.AddOutput("n0", tnx[0]);
@@ -1197,7 +1197,7 @@ namespace StatsDirect.Builtins
             Para(Data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] - 1;
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("name", Data.Variables[0].Title);
             outputParameters.AddOutput("sam_mean", mean[0]);
             outputParameters.AddOutput("pop_mean", mu0);
@@ -1262,7 +1262,7 @@ namespace StatsDirect.Builtins
             double sem = sd / Math.Sqrt(nx);
             int degf = nx - 1;
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("label", txc);
             outputParameters.AddOutput("mean", mean);
             outputParameters.AddOutput("n", nx);
@@ -1289,7 +1289,7 @@ namespace StatsDirect.Builtins
             {
                 IList<ParameterBag> twosampleList = new List<ParameterBag>();
                 outputParameters.AddOutput("*twosample", twosampleList);
-                ParameterBag twosampleParameters = new ParameterBag();
+                ParameterBag twosampleParameters = new();
                 twosampleList.Add(twosampleParameters);
                 twosampleParameters.AddOutput("from2", lla);
                 twosampleParameters.AddOutput("to2", ula);
@@ -1312,7 +1312,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag chartParameters = new ParameterBag();
+                ParameterBag chartParameters = new();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Ties, new TiesOptions(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean)));
             }

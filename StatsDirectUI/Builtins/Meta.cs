@@ -140,12 +140,12 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -161,7 +161,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*odds", oddsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag oddsParameters = new ParameterBag();
+                ParameterBag oddsParameters = new();
                 oddsList.Add(oddsParameters);
                 oddsParameters.AddOutput("st", i);
                 oddsParameters.AddOutput("oe", oe[i]);
@@ -178,7 +178,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*z", zList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag zParameters = new ParameterBag();
+                ParameterBag zParameters = new();
                 zList.Add(zParameters);
                 zParameters.AddOutput("st", i);
                 zParameters.AddOutput("v", odw[i]);
@@ -218,13 +218,13 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, odr, odrl, odru, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 1);
 
@@ -510,13 +510,13 @@ namespace StatsDirect.Builtins
             if (ierr == -1)
                 throw new InvalidDataException();
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -541,7 +541,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*differences", differencesList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag differencesParameters = new ParameterBag();
+                ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("st", i);
                 differencesParameters.AddOutput("rd", rkr[i]);
@@ -586,7 +586,7 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, Transformation.None);
 
@@ -667,13 +667,13 @@ namespace StatsDirect.Builtins
             if (ierr == -1)
                 throw new InvalidDataException("relriskma() returned an error");
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -690,7 +690,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*risks", risksList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag risksParameters = new ParameterBag();
+                ParameterBag risksParameters = new();
                 risksList.Add(risksParameters);
                 risksParameters.AddOutput("st", i);
                 risksParameters.AddOutput("rr", rkr[i]);
@@ -733,13 +733,13 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 2);
 
@@ -946,14 +946,14 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("pc", cco * 100);
 
                 IList<ParameterBag> exactList = new List<ParameterBag>();
                 outputParameters.AddOutput("*exact", exactList);
                 for (int i = 1; i <= k; i++)
                 {
-                    ParameterBag exactParameters = new ParameterBag();
+                    ParameterBag exactParameters = new();
                     exactList.Add(exactParameters);
                     exactParameters.AddOutput("st", i);
                     exactParameters.AddOutput("gj", gj[i]);
@@ -967,7 +967,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*approximate", approximateList);
                 for (int i = 1; i <= k; i++)
                 {
-                    ParameterBag approximateParameters = new ParameterBag();
+                    ParameterBag approximateParameters = new();
                     approximateList.Add(approximateParameters);
                     approximateParameters.AddOutput("st", i);
                     approximateParameters.AddOutput("ne", en[i]);
@@ -1045,7 +1045,7 @@ namespace StatsDirect.Builtins
                     dsll = dsd - cit / Math.Sqrt(sumwt);
                     dsul = dsd + cit / Math.Sqrt(sumwt);
 
-                    ParameterBag poolOkParameters = new ParameterBag();
+                    ParameterBag poolOkParameters = new();
                     poolOkList.Add(poolOkParameters);
                     poolOkParameters.AddOutput("dplus", dplus);
                     poolOkParameters.AddOutput("from", dplusll);
@@ -1071,7 +1071,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("*weights", weightsList);
                     for (int i = 1; i <= k; i++)
                     {
-                        ParameterBag weightsParameters = new ParameterBag();
+                        ParameterBag weightsParameters = new();
                         weightsList.Add(weightsParameters);
                         weightsParameters.AddOutput("st", i);
                         weightsParameters.AddOutput("howt", 100.0 * hedgesOlkinWeights[i] / sumHedgesOlkinWeights);
@@ -1082,7 +1082,7 @@ namespace StatsDirect.Builtins
 
                 IList<ParameterBag> eggerList = new List<ParameterBag>();
                 outputParameters.AddOutput("*egger", eggerList);
-                ParameterBag eggerParameters = new ParameterBag();
+                ParameterBag eggerParameters = new();
                 eggerList.Add(eggerParameters);
                 Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
 
@@ -1137,13 +1137,13 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 outputParameters.AddOutput("pc", cco * 100);
                 IList<ParameterBag> approximateList = new List<ParameterBag>();
                 outputParameters.AddOutput("*approximate", approximateList);
                 for (int i = 1; i <= k; i++)
                 {
-                    ParameterBag approximateParameters = new ParameterBag();
+                    ParameterBag approximateParameters = new();
                     approximateList.Add(approximateParameters);
                     approximateParameters.AddOutput("st", i);
                     approximateParameters.AddOutput("ne", en[i]);
@@ -1209,7 +1209,7 @@ namespace StatsDirect.Builtins
                     dsll = dsd - cit / Math.Sqrt(sumwt);
                     dsul = dsd + cit / Math.Sqrt(sumwt);
 
-                    ParameterBag poolOkParameters = new ParameterBag();
+                    ParameterBag poolOkParameters = new();
                     poolOkList.Add(poolOkParameters);
                     poolOkParameters.AddOutput("dplus", dplus);
                     poolOkParameters.AddOutput("from", dplusll);
@@ -1234,7 +1234,7 @@ namespace StatsDirect.Builtins
 
                 IList<ParameterBag> eggerList = new List<ParameterBag>();
                 outputParameters.AddOutput("*egger", eggerList);
-                ParameterBag eggerParameters = new ParameterBag();
+                ParameterBag eggerParameters = new();
                 eggerList.Add(eggerParameters);
                 Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
 
@@ -1762,14 +1762,14 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", a[i]);
@@ -1783,7 +1783,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*ir", irList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag irParameters = new ParameterBag();
+                ParameterBag irParameters = new();
                 irList.Add(irParameters);
                 irParameters.AddOutput("st", i);
                 irParameters.AddOutput(mode == MetaIncidenceRateMode.Difference ? "ird" : "irr", rkr[i]);
@@ -1825,7 +1825,7 @@ namespace StatsDirect.Builtins
                 {
                     IList<ParameterBag> poolokList = new List<ParameterBag>();
                     outputParameters.AddOutput("*poolok", poolokList);
-                    ParameterBag poolokParameters = new ParameterBag();
+                    ParameterBag poolokParameters = new();
                     poolokList.Add(poolokParameters);
                     poolokParameters.AddOutput("eor", eor);
                     poolokParameters.AddOutput("llf", llf);
@@ -1862,7 +1862,7 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Transformation xform = Transformation.None;
             if (mode != MetaIncidenceRateMode.Difference)
@@ -2010,14 +2010,14 @@ namespace StatsDirect.Builtins
                 p2M = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", cco * 100);
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("a", o[i, 1]);
@@ -2033,7 +2033,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*or", orList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag orParameters = new ParameterBag();
+                ParameterBag orParameters = new();
                 orList.Add(orParameters);
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
@@ -2084,7 +2084,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*cml", cmlList);
             if (ierr != -9)
             {
-                ParameterBag cmlParameters = new ParameterBag();
+                ParameterBag cmlParameters = new();
                 cmlList.Add(cmlParameters);
                 cmlParameters.AddOutput("eor", eor);
                 cmlParameters.AddOutput("llf", llf);
@@ -2123,13 +2123,13 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 1);
 
@@ -2857,7 +2857,7 @@ namespace StatsDirect.Builtins
                 Utilities.Utilities.Swap(ref dsll, ref dsul);
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("stat", stat);
             outputParameters.AddOutput("pc", cco * 100);
 
@@ -2865,7 +2865,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*studies", studiesList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag studiesParameters = new ParameterBag();
+                ParameterBag studiesParameters = new();
                 studiesList.Add(studiesParameters);
                 studiesParameters.AddOutput("st", i);
                 studiesParameters.AddOutput("y", y[i]);
@@ -2908,7 +2908,7 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> biasList = new List<ParameterBag>();
             outputParameters.AddOutput("*bias", biasList);
-            ParameterBag biasParameters = new ParameterBag();
+            ParameterBag biasParameters = new();
             biasList.Add(biasParameters);
             Transformation xform = Transformation.None;
             if (useRatio)
@@ -3119,7 +3119,7 @@ namespace StatsDirect.Builtins
             double hetP = PDF.chivalp(hetX2, Convert.ToDouble(k - 1));
 
             const string stat = "Correlation";
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             outputParameters.AddOutput("stat", stat);
             outputParameters.AddOutput("pc", cco * 100);
 
@@ -3127,7 +3127,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*studies", studiesList);
             for (i = 1; i <= k; i++)
             {
-                ParameterBag studiesParameters = new ParameterBag();
+                ParameterBag studiesParameters = new();
                 studiesList.Add(studiesParameters);
                 studiesParameters.AddOutput("st", i);
                 studiesParameters.AddOutput("n", ss[i]);
@@ -3187,7 +3187,7 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> biasList = new List<ParameterBag>();
             outputParameters.AddOutput("*bias", biasList);
-            ParameterBag biasParameters = new ParameterBag();
+            ParameterBag biasParameters = new();
             biasList.Add(biasParameters);
             Metabias(host, biasParameters, y, llY, ulY, k, ref cco, Transformation.Z);
 
@@ -3533,13 +3533,13 @@ namespace StatsDirect.Builtins
                 o[i, 3] = rmh;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             IList<ParameterBag> inputsList = new List<ParameterBag>();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("st", i);
                 inputsParameters.AddOutput("r", sr[i]);
@@ -3553,7 +3553,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*proportions", proportionsList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag proportionsParameters = new ParameterBag();
+                ParameterBag proportionsParameters = new();
                 proportionsList.Add(proportionsParameters);
                 proportionsParameters.AddOutput("st", i);
                 proportionsParameters.AddOutput("p", sr[i] / sn[i]);
@@ -3591,13 +3591,13 @@ namespace StatsDirect.Builtins
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
-            ParameterBag eggerParameters = new ParameterBag();
+            ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
             Metabias(host, eggerParameters, y, llY, ulY, k, ref cco, Transformation.None);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
-            ParameterBag harbordParameters = new ParameterBag();
+            ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 3);
 

@@ -47,7 +47,7 @@ namespace StatsDirect.UI
 
             string description = string.Format(EmptyDescription, descriptionOffset, endHTMLOffset, startFragmentOffset, endFragmentOffset);
 
-            StringBuilder content = new StringBuilder();
+            StringBuilder content = new();
             content.Append(description);
             content.Append(contentBeforeFragment);
             content.Append(fragment);

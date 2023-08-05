@@ -26,7 +26,7 @@ namespace StatsDirect.Builtins
 
         private static StepOutput DistributionOf(IUserInterface host, ParameterBag parameters, DistributionType selectedTest)
         {
-            DistributionOptions distributionOptions = new DistributionOptions { SelectedTest = selectedTest };
+            DistributionOptions distributionOptions = new() { SelectedTest = selectedTest };
             ParameterBag outputParameters = host.Amend(distributionOptions, parameters);
             return new StepOutput(outputParameters);
         }

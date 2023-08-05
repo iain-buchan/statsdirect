@@ -19,7 +19,7 @@ namespace StatsDirect.Charting.Renderer
             CorrelationOptions options = (CorrelationOptions)Definition.ChartOptions;
             return new ScaleParameters
             {
-                X = new AxisScaleParameters { ScaleType = Transformation.Log == options.xform ? ScaleType.Log10 : ScaleType.Linear },
+                X = new AxisScaleParameters { ScaleType = Transformation.Log == options.Xform ? ScaleType.Log10 : ScaleType.Linear },
                 Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
             };
         }
@@ -30,12 +30,12 @@ namespace StatsDirect.Charting.Renderer
                 return new ParameterBag();
 
             CorrelationOptions options = (CorrelationOptions)Definition.ChartOptions;
-            double[] odr = options.odr;
-            double[] odrl = options.odrl;
-            double[] odru = options.odru;
-            CorrelationRowType[] pg = options.pg;
-            double[] gn = options.gn;
-            ScaleHeight(options.k);
+            double[] odr = options.Odr;
+            double[] odrl = options.Odrl;
+            double[] odru = options.Odru;
+            CorrelationRowType[] pg = options.Pg;
+            double[] gn = options.Gn;
+            ScaleHeight(options.K);
 
             StartVectorPlot();
 
@@ -46,11 +46,11 @@ namespace StatsDirect.Charting.Renderer
             double orlmin = double.PositiveInfinity;
             double maxGn = double.NegativeInfinity;
 
-            switch (options.xform)
+            switch (options.Xform)
             {
                 case Transformation.Log:
                     {
-                        for (int i = 1; i <= options.k; i++)
+                        for (int i = 1; i <= options.K; i++)
                         {
                             if (pg[i] == CorrelationRowType.Study)
                             {
@@ -80,7 +80,7 @@ namespace StatsDirect.Charting.Renderer
                     break;
                 case Transformation.Z:
                     {
-                        for (int i = 1; i <= options.k; i++)
+                        for (int i = 1; i <= options.K; i++)
                         {
                             if (pg[i] == CorrelationRowType.Study)
                             {
@@ -109,7 +109,7 @@ namespace StatsDirect.Charting.Renderer
                     }
                     break;
                 case Transformation.None:
-                    for (int i = 1; i <= options.k; i++)
+                    for (int i = 1; i <= options.K; i++)
                     {
                         if (pg[i] == CorrelationRowType.Study)
                         {
@@ -139,7 +139,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             double absmin = Constant.MISSING;
-            for (int i = 1; i <= options.k; i++)
+            for (int i = 1; i <= options.K; i++)
             {
                 if (Math.Abs(odr[i]) < absmin & odr[i] != 0.0)
                     absmin = Math.Abs(odr[i]);
@@ -160,11 +160,11 @@ namespace StatsDirect.Charting.Renderer
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            for (int i = 1; i <= options.k; i++)
+            for (int i = 1; i <= options.K; i++)
             {
                 if (odr[i] != Constant.MISSING)
                 {
-                    double w = LabelWidthInCanvasCoordinates(options.title[i]);
+                    double w = LabelWidthInCanvasCoordinates(options.Titles[i]);
                     if (w > xtra)
                         xtra = w;
                     w = LabelWidthInCanvasCoordinates(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")");
@@ -174,21 +174,21 @@ namespace StatsDirect.Charting.Renderer
             }
 
             AxisScales axisScales;
-            switch (options.xform)
+            switch (options.Xform)
             {
                 case Transformation.Log:
-                    axisScales = LayoutChartAndDrawAxes(options.cap,
+                    axisScales = LayoutChartAndDrawAxes(options.Cap,
                         new AxisDefinition(null, AxisMode.Scale, ScaleType.Log10) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
                         new AxisDefinition(null, AxisMode.None, ScaleType.Linear),
                         false, false);
                     break;
                 default:
-                    if (options.cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
+                    if (options.Cap.IndexOf("Correlation (", StringComparison.Ordinal) >= 0)
                     {
                         DataMinX = DataMinX >= 0.0 ? 0.0 : -1.0;
                         DataMaxX = DataMaxX <= 0.0 ? 0.0 : 1.0;
                     }
-                    axisScales = LayoutChartAndDrawAxes(options.cap,
+                    axisScales = LayoutChartAndDrawAxes(options.Cap,
                         new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
                         new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
                         false, false);
@@ -201,7 +201,7 @@ namespace StatsDirect.Charting.Renderer
             DivY = kok;
             OffY = YAxisCanvas;
 
-            MarkerType studyMarkerType = new MarkerType
+            MarkerType studyMarkerType = new()
             {
                 MarkerColor = ColorDescriptor.Gray,
                 LineColor = ColorDescriptor.Black,
@@ -210,7 +210,7 @@ namespace StatsDirect.Charting.Renderer
                 LineDashStyle = DashStyleDescriptor.Solid,
                 Width = 1
             };
-            MarkerType pooledMarkerType = new MarkerType
+            MarkerType pooledMarkerType = new()
             {
                 MarkerColor = ColorDescriptor.Gray,
                 LineColor = ColorDescriptor.Black,
@@ -226,10 +226,10 @@ namespace StatsDirect.Charting.Renderer
             {
                 double rmh = -99;
                 int r = 0;
-                double txh = LabelHeightInCanvasCoordinates(options.title[1]);
+                double txh = LabelHeightInCanvasCoordinates(options.Titles[1]);
                 double botlim = double.NegativeInfinity;
                 double yt = 0;
-                for (int i = options.k; i >= 1; i--)
+                for (int i = options.K; i >= 1; i--)
                 {
                     if (odr[i] != Constant.MISSING)
                     {
@@ -243,7 +243,7 @@ namespace StatsDirect.Charting.Renderer
                         }
                         else
                         {
-                            switch (options.xform)
+                            switch (options.Xform)
                             {
                                 case Transformation.Z:
                                     xm = ToCanvasX(MathDbl.rtoz(odr[i]));
@@ -262,7 +262,7 @@ namespace StatsDirect.Charting.Renderer
                         }
                         else
                         {
-                            switch (options.xform)
+                            switch (options.Xform)
                             {
                                 case Transformation.Log:
                                     xl = ToCanvasX(odrl[i]);
@@ -271,13 +271,13 @@ namespace StatsDirect.Charting.Renderer
                                     xl = ToCanvasX(MathDbl.rtoz(odrl[i]));
                                     break;
                                 case Transformation.None:
-                                    xl = ToCanvasX(Math.Max(odrl[i], options.isDifference ? double.MinValue : -1));
+                                    xl = ToCanvasX(Math.Max(odrl[i], options.IsDifference ? double.MinValue : -1));
                                     break;
                             }
 
                         }
                         double xr = 0;
-                        switch (options.xform)
+                        switch (options.Xform)
                         {
                             case Transformation.Log:
                                 xr = ToCanvasX(odru[i]);
@@ -286,7 +286,7 @@ namespace StatsDirect.Charting.Renderer
                                 xr = ToCanvasX(MathDbl.rtoz(odru[i]));
                                 break;
                             case Transformation.None:
-                                xr = ToCanvasX(Math.Min(odru[i], options.isDifference ? double.MaxValue : 1));
+                                xr = ToCanvasX(Math.Min(odru[i], options.IsDifference ? double.MaxValue : 1));
                                 break;
                         }
 
@@ -303,7 +303,7 @@ namespace StatsDirect.Charting.Renderer
                             // CI line
                             DrawLineInCanvasCoordinates(linePen, xl, yc, xr, yc);
                             // Arrow ends if not plottable
-                            if (odrl[i] <= 0 && options.xform == Transformation.Log || odrl[i] == Constant.MISSING)
+                            if (odrl[i] <= 0 && options.Xform == Transformation.Log || odrl[i] == Constant.MISSING)
                             {
                                 DrawLineInCanvasCoordinates(linePen, xl + y2, yc + y2, xl, yc);
                                 DrawLineInCanvasCoordinates(linePen, xl, yc, xl + y2, yc - y2);
@@ -325,16 +325,16 @@ namespace StatsDirect.Charting.Renderer
                             {
                                 rmh = odr[i];
                                 // pooled effect marker
-                                DrawLineInCanvasCoordinates(pooledEffectPen, xm, yt, xm, ToCanvasY(options.k - 0.5));
+                                DrawLineInCanvasCoordinates(pooledEffectPen, xm, yt, xm, ToCanvasY(options.K - 0.5));
                             }
                         }
-                        DrawStringLabel(options.title[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
+                        DrawStringLabel(options.Titles[i], XAxisCanvas - 15, yc + txh / 2, StringAlignment.Far);
                         DrawStringLabel(Formatting.RoundMeta(odr[i], absmin) + " (" + Formatting.RoundMeta(odrl[i], absmin) + ", " + Formatting.RoundMeta(odru[i], absmin) + ")", XAxisCanvas + XExtCanvas + 10, yc + txh / 2, StringAlignment.Near);
                     }
                 }
 
                 double noEffectPosition = 0;
-                switch (options.xform)
+                switch (options.Xform)
                 {
                     case Transformation.Z:
                         // Don't care
@@ -346,11 +346,11 @@ namespace StatsDirect.Charting.Renderer
                         noEffectPosition = 0;
                         break;
                 }
-                if (DataMinX <= noEffectPosition && options.xform != Transformation.Z)
+                if (DataMinX <= noEffectPosition && options.Xform != Transformation.Z)
                 {
                     // no effect marker
                     double xm;
-                    switch (options.xform)
+                    switch (options.Xform)
                     {
                         case Transformation.Z:
                             throw new Exception("Shouldn't be plotting no effect marker with a correlation plot");
@@ -363,7 +363,7 @@ namespace StatsDirect.Charting.Renderer
 
                 if (rmh != -99)
                 {
-                    string buf = options.qid;
+                    string buf = options.Qid;
                     DrawStringLabel(buf, XAxisCanvas + XExtCanvas / 2, 50, StringAlignment.Center);
                 }
             }

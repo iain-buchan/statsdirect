@@ -39,11 +39,9 @@ namespace StatsDirect.UI
                 string fontString = Properties.Settings.Default.DefaultWorkbookFont;
                 if (null != fontString)
                 {
-                    using (Font f = Utilities.Utilities.FontFromSaveString(fontString))
-                    {
-                        workbookView.ActiveWorkbookSet.DefaultFontName = f.Name;
-                        workbookView.ActiveWorkbookSet.DefaultFontSize = f.SizeInPoints;
-                    }
+                    using Font f = Utilities.Utilities.FontFromSaveString(fontString);
+                    workbookView.ActiveWorkbookSet.DefaultFontName = f.Name;
+                    workbookView.ActiveWorkbookSet.DefaultFontSize = f.SizeInPoints;
                 }
                 else
                 {
@@ -207,7 +205,7 @@ namespace StatsDirect.UI
 
         void IGrid.Refill(List<IVariable> variables)
         {
-            CellSelection revisedCellSelection = new CellSelection();
+            CellSelection revisedCellSelection = new();
 
             foreach (IVariable variable in variables)
             {
@@ -224,7 +222,7 @@ namespace StatsDirect.UI
                     workbookView.ActiveSheet = worksheet;
                 });
 
-                CellColumnSelection cellColumnSelection = new CellColumnSelection(this) { ColumnIndex = worksheetOrigin.Column, RowCount = worksheetOrigin.Rows, RowIndex = worksheetOrigin.TopRow };
+                CellColumnSelection cellColumnSelection = new(this) { ColumnIndex = worksheetOrigin.Column, RowCount = worksheetOrigin.Rows, RowIndex = worksheetOrigin.TopRow };
                 MaybeExpandCellColumnSelection(cellColumnSelection);
                 revisedCellSelection.ColumnSelections.Add(cellColumnSelection);
                 revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
@@ -348,7 +346,7 @@ namespace StatsDirect.UI
 
                 IRange range = worksheet.Range[0, firstColumnOfData, usedRange.Row + usedRange.RowCount + offsetForTitles - 1, firstColumnOfData + frame.VariableCount - 1];
                 // Create a holder that can be captured by the lambda but then can be cleared out so that it doesn't retain large amounts of data
-                WriteDataFrameParametersHolder holder = new WriteDataFrameParametersHolder { Frame = frame, IsFormulae = isFormulae, MissingIndicator = missingIndicator, Range = range, ShouldMove = shouldMove, OffsetForTitles = offsetForTitles };
+                WriteDataFrameParametersHolder holder = new() { Frame = frame, IsFormulae = isFormulae, MissingIndicator = missingIndicator, Range = range, ShouldMove = shouldMove, OffsetForTitles = offsetForTitles };
                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(range.EntireColumn, "Insert data", () => { if (null != holder.Frame) WriteDataFrameInternal(holder.Frame, holder.IsFormulae, holder.MissingIndicator, holder.Range, holder.ShouldMove, holder.OffsetForTitles); return true; }));
                 // Clear down reference variables
                 holder.Range = null;
@@ -627,7 +625,7 @@ namespace StatsDirect.UI
             const string msgTi = "StatsDirect Data Selection";
 
             // Get the number of selections & Last Row, Col info
-            CellSelection sel = new CellSelection();
+            CellSelection sel = new();
             while (true)
             {
                 // Get total number of columns and indexes to them
@@ -649,7 +647,7 @@ namespace StatsDirect.UI
                             // For each selected column, record the column index and how many rows it has
                             for (int c = usedFrom.Left; c <= usedFrom.Right; c++)
                             {
-                                CellColumnSelection ccs = new CellColumnSelection(this) { WorkbookPath = grid.WorkbookPath, WorksheetName = grid.ActiveWorksheetName, ColumnIndex = c, RowIndex = usedFrom.Top, RowCount = rows };
+                                CellColumnSelection ccs = new(this) { WorkbookPath = grid.WorkbookPath, WorksheetName = grid.ActiveWorksheetName, ColumnIndex = c, RowIndex = usedFrom.Top, RowCount = rows };
                                 sel.ColumnSelections.Add(ccs);
                             }
                         }
@@ -958,7 +956,7 @@ namespace StatsDirect.UI
             {
                 WindowInformation info = WindowInformation;
                 string prefix = Text;
-                List<Pane> panes = new List<Pane>();
+                List<Pane> panes = new();
                 workbookView.WithLock(() =>
                 {
                     foreach (IWorksheet sheet in workbookView.ActiveWorkbook.Worksheets)
@@ -1051,12 +1049,10 @@ namespace StatsDirect.UI
 
         private void PasteSpecial()
         {
-            using (frmPasteSpecial frm = new frmPasteSpecial())
-            {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
-                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
-            }
+            using frmPasteSpecial frm = new();
+            frm.ShowDialog(this);
+            if (!frm.UserCancelled)
+                workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
         }
 
         private void printToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1081,33 +1077,31 @@ namespace StatsDirect.UI
                 IPageSetup pageSetup = workbookView.ActiveWorksheet.PageSetup;
 
                 // Show the dialog
-                using (PageSetupDialog pageSetupDialog = new PageSetupDialog())
+                using PageSetupDialog pageSetupDialog = new();
+                workbookView.WithLock(() =>
                 {
+                    // Pull settings into the page setup dialog
+                    pageSetupDialog.PageSettings = new System.Drawing.Printing.PageSettings { Color = !pageSetup.BlackAndWhite, Landscape = pageSetup.Orientation == PageOrientation.Landscape, Margins = { Top = PointsToHundredths(pageSetup.TopMargin), Bottom = PointsToHundredths(pageSetup.BottomMargin), Left = PointsToHundredths(pageSetup.LeftMargin), Right = PointsToHundredths(pageSetup.RightMargin) } };
+                    // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
+                });
+
+                pageSetupDialog.AllowOrientation = true;
+                pageSetupDialog.AllowMargins = true;
+                // pageSetupDialog.AllowPaper = true;
+                DialogResult res = pageSetupDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                if (res == DialogResult.OK)
+                {
+                    // Save settings into SSG's sheet settings
                     workbookView.WithLock(() =>
                     {
-                        // Pull settings into the page setup dialog
-                        pageSetupDialog.PageSettings = new System.Drawing.Printing.PageSettings { Color = !pageSetup.BlackAndWhite, Landscape = pageSetup.Orientation == PageOrientation.Landscape, Margins = { Top = PointsToHundredths(pageSetup.TopMargin), Bottom = PointsToHundredths(pageSetup.BottomMargin), Left = PointsToHundredths(pageSetup.LeftMargin), Right = PointsToHundredths(pageSetup.RightMargin) } };
+                        pageSetup.BlackAndWhite = !pageSetupDialog.PageSettings.Color;
+                        pageSetup.Orientation = pageSetupDialog.PageSettings.Landscape ? PageOrientation.Landscape : PageOrientation.Portrait;
+                        pageSetup.TopMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Top);
+                        pageSetup.BottomMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Bottom);
+                        pageSetup.LeftMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Left);
+                        pageSetup.RightMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Right);
                         // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
                     });
-
-                    pageSetupDialog.AllowOrientation = true;
-                    pageSetupDialog.AllowMargins = true;
-                    // pageSetupDialog.AllowPaper = true;
-                    DialogResult res = pageSetupDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
-                    if (res == DialogResult.OK)
-                    {
-                        // Save settings into SSG's sheet settings
-                        workbookView.WithLock(() =>
-                        {
-                            pageSetup.BlackAndWhite = !pageSetupDialog.PageSettings.Color;
-                            pageSetup.Orientation = pageSetupDialog.PageSettings.Landscape ? PageOrientation.Landscape : PageOrientation.Portrait;
-                            pageSetup.TopMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Top);
-                            pageSetup.BottomMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Bottom);
-                            pageSetup.LeftMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Left);
-                            pageSetup.RightMargin = HundredthsToPoints(pageSetupDialog.PageSettings.Margins.Right);
-                            // pageSetupDialog.PageSettings.PaperSize = pageSetup.PaperSize;
-                        });
-                    }
                 }
             }
         }
@@ -1197,43 +1191,41 @@ namespace StatsDirect.UI
 
         private void InsertCells()
         {
-            using (frmInsertCells frm = new frmInsertCells())
+            using frmInsertCells frm = new();
+            frm.ShowDialog(this);
+            if (!frm.UserCancelled)
             {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
+                workbookView.WithLock(() =>
                 {
-                    workbookView.WithLock(() =>
+                    if (frm.IsEntire)
                     {
-                        if (frm.IsEntire)
+                        if (InsertShiftDirection.Right == frm.InsertShiftDirection)
                         {
-                            if (InsertShiftDirection.Right == frm.InsertShiftDirection)
+                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert column", () =>
                             {
-                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Insert column", () =>
-                                {
-                                    workbookView.RangeSelection.EntireColumn.Insert();
-                                    return true;
-                                }));
-                            }
-                            else
-                            {
-                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Insert row", () =>
-                                {
-                                    workbookView.RangeSelection.EntireRow.Insert();
-                                    return true;
-                                }));
-                            }
-                        }
-                        else
-                        {
-                            InsertShiftDirection isd = frm.InsertShiftDirection; // Cached as frm is disposed before any undo might be called.
-                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Insert area", () =>
-                            {
-                                workbookView.RangeSelection.Insert(isd);
+                                workbookView.RangeSelection.EntireColumn.Insert();
                                 return true;
                             }));
                         }
-                    });
-                }
+                        else
+                        {
+                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Insert row", () =>
+                            {
+                                workbookView.RangeSelection.EntireRow.Insert();
+                                return true;
+                            }));
+                        }
+                    }
+                    else
+                    {
+                        InsertShiftDirection isd = frm.InsertShiftDirection; // Cached as frm is disposed before any undo might be called.
+                        workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Insert area", () =>
+                        {
+                            workbookView.RangeSelection.Insert(isd);
+                            return true;
+                        }));
+                    }
+                });
             }
         }
 
@@ -1247,7 +1239,7 @@ namespace StatsDirect.UI
             workbookView.WithLock(() =>
             {
                 IWorkbookSet workbookSet = workbookView.ActiveWorkbookSet;
-                WorkbookExplorer explorer = new WorkbookExplorer(workbookSet) { Text = "Sheet settings" };
+                WorkbookExplorer explorer = new(workbookSet) { Text = "Sheet settings" };
                 explorer.Show(workbookView);
             });
         }
@@ -1312,43 +1304,41 @@ namespace StatsDirect.UI
 
         private void DeleteSpecial()
         {
-            using (frmDeleteSpecial frm = new frmDeleteSpecial())
+            using frmDeleteSpecial frm = new();
+            frm.ShowDialog(this);
+            if (!frm.UserCancelled)
             {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
+                workbookView.WithLock(() =>
                 {
-                    workbookView.WithLock(() =>
+                    if (frm.IsEntire)
                     {
-                        if (frm.IsEntire)
+                        if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
                         {
-                            if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
+                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Delete column", () =>
                             {
-                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireColumn, "Delete column", () =>
-                                {
-                                    workbookView.RangeSelection.EntireColumn.Delete();
-                                    return true;
-                                }));
-                            }
-                            else
-                            {
-                                workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Delete row", () =>
-                                {
-                                    workbookView.RangeSelection.EntireRow.Delete();
-                                    return true;
-                                }));
-                            }
-                        }
-                        else
-                        {
-                            DeleteShiftDirection dsd = frm.DeleteShiftDirection; // Cached as frm may be disposed before this is used
-                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Delete area", () =>
-                            {
-                                workbookView.RangeSelection.Delete(dsd);
+                                workbookView.RangeSelection.EntireColumn.Delete();
                                 return true;
                             }));
                         }
-                    });
-                }
+                        else
+                        {
+                            workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection.EntireRow, "Delete row", () =>
+                            {
+                                workbookView.RangeSelection.EntireRow.Delete();
+                                return true;
+                            }));
+                        }
+                    }
+                    else
+                    {
+                        DeleteShiftDirection dsd = frm.DeleteShiftDirection; // Cached as frm may be disposed before this is used
+                        workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Delete area", () =>
+                        {
+                            workbookView.RangeSelection.Delete(dsd);
+                            return true;
+                        }));
+                    }
+                });
             }
 
         }
@@ -1538,7 +1528,7 @@ namespace StatsDirect.UI
 
         private void SetDefaultFont()
         {
-            FontDialog dlg = new FontDialog
+            FontDialog dlg = new()
             {
                 Font = new Font(workbookView.ActiveWorkbookSet.DefaultFontName, (float)workbookView.ActiveWorkbookSet.DefaultFontSize),
                 ShowApply = false,
@@ -1845,7 +1835,7 @@ namespace StatsDirect.UI
             {
                 const RangeExplorerCategoryFlags categoryFlags = RangeExplorerCategoryFlags.All;
                 IWorkbookSet workbookSet = workbookView.ActiveWorkbookSet;
-                RangeExplorer explorer = new RangeExplorer(workbookSet, categoryFlags);
+                RangeExplorer explorer = new(workbookSet, categoryFlags);
                 explorer.Show(workbookView);
             });
         }
@@ -1872,7 +1862,7 @@ namespace StatsDirect.UI
             DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out bool userCancelled, out bool wasPivoted, 0);
             if (userCancelled)
                 return;
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             RConvert.ToR(sb, "copied.data", frame, FrameType.Long);
             Clipboard.Clear();
             Clipboard.SetText(sb.ToString(), TextDataFormat.Text);

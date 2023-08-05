@@ -29,7 +29,7 @@ namespace StatsDirect.Data
 
         public override object CopyAndStripForRedo(bool shouldKeepData)
         {
-            VariantVariable copy = new VariantVariable();
+            VariantVariable copy = new();
             CopyAndStripForRedoInto(copy, shouldKeepData);
             return copy;
         }

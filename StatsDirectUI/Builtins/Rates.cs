@@ -88,12 +88,12 @@ namespace StatsDirect.Builtins
 
             double dead = parameters["dead"].AsDouble;
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> groupsList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> groupsList = new();
             outputParameters.AddOutput("*groups", groupsList);
             for (int j = 1; j <= rows; j++)
             {
-                ParameterBag groupsParameters = new ParameterBag();
+                ParameterBag groupsParameters = new();
                 groupsList.Add(groupsParameters);
                 groupsParameters.AddOutput("group", asm[j]);
                 groupsParameters.AddOutput("observed", spop[j]);
@@ -176,7 +176,7 @@ namespace StatsDirect.Builtins
             if (refntot <= 0.0 || ntot <= 0.0)
                 throw new InvalidDataException();
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             double[] refw = new double[rows + 1];
             for (int j = 1; j <= rows; j++)
                 refw[j] = refn[j] / refntot;
@@ -198,11 +198,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("units", "1 unit");
             else
                 outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
-            List<ParameterBag> inputsList = new List<ParameterBag>();
+            List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int j = 1; j <= rows; j++)
             {
-                ParameterBag inputsParameters = new ParameterBag();
+                ParameterBag inputsParameters = new();
                 inputsList.Add(inputsParameters);
                 inputsParameters.AddOutput("idxy", idxy[j]);
                 inputsParameters.AddOutput("idxn", idxn[j]);
@@ -213,11 +213,11 @@ namespace StatsDirect.Builtins
             double xu; double xl;
             // CIs for the single Poisson parameter (stratum specific rate)
             outputParameters.AddOutput("pc", cco * 100.0);
-            List<ParameterBag> cisList = new List<ParameterBag>();
+            List<ParameterBag> cisList = new();
             outputParameters.AddOutput("*cis", cisList);
             for (int j = 1; j <= rows; j++)
             {
-                ParameterBag cisParameters = new ParameterBag();
+                ParameterBag cisParameters = new();
                 cisList.Add(cisParameters);
                 cisParameters.AddOutput("idxr", idxr[j] * nunit);
                 poisson_ci(alpha, idxy[j], idxn[j], out xl, out xu);
@@ -552,12 +552,12 @@ namespace StatsDirect.Builtins
                 srru_bino = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new ParameterBag();
-            List<ParameterBag> strataList = new List<ParameterBag>();
+            ParameterBag outputParameters = new();
+            List<ParameterBag> strataList = new();
             outputParameters.AddOutput("*strata", strataList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag strataParameters = new ParameterBag();
+                ParameterBag strataParameters = new();
                 strataList.Add(strataParameters);
                 strataParameters.AddOutput("st", i);
                 strataParameters.AddOutput("a", a[i]);
@@ -569,11 +569,11 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", cco * 100.0);
             string meth = model == 1 ? "exact Poisson" : "Koopman";
             outputParameters.AddOutput("method", meth);
-            List<ParameterBag> ratesList = new List<ParameterBag>();
+            List<ParameterBag> ratesList = new();
             outputParameters.AddOutput("*rates", ratesList);
             for (int i = 1; i <= k; i++)
             {
-                ParameterBag ratesParameters = new ParameterBag();
+                ParameterBag ratesParameters = new();
                 ratesList.Add(ratesParameters);
                 ratesParameters.AddOutput("st", i <= k ? i.ToString() : "All");
                 ratesParameters.AddOutput("rr", rkr[i]);
@@ -649,7 +649,7 @@ namespace StatsDirect.Builtins
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
 
-            ParameterBag chartParameters = new ParameterBag();
+            ParameterBag chartParameters = new();
             chartList.Add(chartParameters);
             chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 2, title, rkr, rkrl, rkru, rkw, pg, "Stratified rate ratio plot (direct standardization)", "rate ratio (" + Formatting.XRound(cco * 100, 1) + "% confidence interval)", Transformation.Log, false)));
 

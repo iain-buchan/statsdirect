@@ -23,38 +23,34 @@ namespace StatsDirect.UI
             Size imageSize = null != ImageList ? ImageList.ImageSize : Size.Empty;
             Rectangle bounds = e.Bounds;
 
-            using (Brush foreBrush = new SolidBrush(e.ForeColor))
+            using Brush foreBrush = new SolidBrush(e.ForeColor);
+            if (e.Index >= 0 && Items[e.Index] is ComboBoxExItem)
             {
-                if (e.Index >= 0 && Items[e.Index] is ComboBoxExItem)
-                {
-                    ComboBoxExItem item = (ComboBoxExItem)Items[e.Index];
+                ComboBoxExItem item = (ComboBoxExItem)Items[e.Index];
 
-                    int textOffset = 0;
-                    if (item.ImageIndex != -1)
-                    {
-                        ImageList.Draw(e.Graphics, bounds.Left, bounds.Top, item.ImageIndex);
-                        textOffset = imageSize.Width;
-                    }
-                    if (null != item.Text)
-                    {
-                        if (item.Enabled)
-                        { 
-                            e.Graphics.DrawString(item.Text, e.Font, foreBrush, bounds.Left + textOffset, bounds.Top);
-                        }
-                        else
-                        {
-                            using (Font f = new Font(e.Font, FontStyle.Strikeout))
-                            {
-                                e.Graphics.DrawString(item.Text, f, SystemBrushes.GrayText, bounds.Left + textOffset, bounds.Top);
-                            }
-                        }
-                    }
-                }
-                else
+                int textOffset = 0;
+                if (item.ImageIndex != -1)
                 {
-                    // Mimic the usual ComboBox behaviour of allowing any item and rendering it to a string for drawing.
-                    e.Graphics.DrawString(e.Index != -1 ? Items[e.Index].ToString() : Text, e.Font, foreBrush, bounds.Left, bounds.Top);
+                    ImageList.Draw(e.Graphics, bounds.Left, bounds.Top, item.ImageIndex);
+                    textOffset = imageSize.Width;
                 }
+                if (null != item.Text)
+                {
+                    if (item.Enabled)
+                    {
+                        e.Graphics.DrawString(item.Text, e.Font, foreBrush, bounds.Left + textOffset, bounds.Top);
+                    }
+                    else
+                    {
+                        using Font f = new(e.Font, FontStyle.Strikeout);
+                        e.Graphics.DrawString(item.Text, f, SystemBrushes.GrayText, bounds.Left + textOffset, bounds.Top);
+                    }
+                }
+            }
+            else
+            {
+                // Mimic the usual ComboBox behaviour of allowing any item and rendering it to a string for drawing.
+                e.Graphics.DrawString(e.Index != -1 ? Items[e.Index].ToString() : Text, e.Font, foreBrush, bounds.Left, bounds.Top);
             }
 
             // e.DrawFocusRectangle();

@@ -26,7 +26,7 @@ namespace StatsDirect.UI
                 suspendCounter--;
             if (0 == suspendCounter)
             {
-                IntPtr wparam = new IntPtr(1);
+                IntPtr wparam = new(1);
                 Message msgResumeUpdate = Message.Create(parent.Handle, WM_SETREDRAW, wparam, IntPtr.Zero);
                 NativeWindow window = NativeWindow.FromHandle(parent.Handle);
                 window.DefWndProc(ref msgResumeUpdate);

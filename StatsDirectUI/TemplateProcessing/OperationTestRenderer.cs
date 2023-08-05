@@ -45,7 +45,7 @@ namespace StatsDirect.TemplateProcessing
 
             public static IList<T> Render(string nameOrPrefix, FilledParameter victim)
             {
-                InputOrOutputVisitor<T> inputVisitor = new InputOrOutputVisitor<T>(nameOrPrefix);
+                InputOrOutputVisitor<T> inputVisitor = new(nameOrPrefix);
                 if (null != victim && victim.HasData)
                     victim.Accept(inputVisitor);
                 return inputVisitor.inputs;
@@ -75,7 +75,7 @@ namespace StatsDirect.TemplateProcessing
                 List<string> header = frame.Variables
                     .Select(variable => string.IsNullOrWhiteSpace(variable.Title) ? string.Empty : variable.Title)
                     .ToList();
-                List<IList<string>> rows = new List<IList<string>>();
+                List<IList<string>> rows = new();
                 for (int rowIndex = 0; rowIndex < frame.MaxRows; rowIndex++)
                     rows.Add(frame.Variables
                         .Select(variable => rowIndex < variable.Length ? variable.DataAsObject(rowIndex).ToString() : string.Empty)

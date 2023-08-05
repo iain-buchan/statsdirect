@@ -52,7 +52,7 @@ namespace StatsDirect.Charting.Renderer
             DrawLineInChartCoordinates(GrRed, 0, 0, 1, 1);
 
             // Draw Lorenz polygon
-            PenDescriptor greenPen = new PenDescriptor(GrGreen);
+            PenDescriptor greenPen = new(GrGreen);
             double lastX = OffX;
             double lastY = OffY;
             for (int j = 0; j < xs0.Points; j++)

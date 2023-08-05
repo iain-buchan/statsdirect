@@ -67,7 +67,7 @@ namespace StatsDirect.Charting
 
         private static SurvivalOptions PreprocessSurvivalOptions(ParameterBag parameters, string dataName)
         {
-            SurvivalOptions survivalOptions = new SurvivalOptions
+            SurvivalOptions survivalOptions = new()
             {
                 ShouldAutoscale =
                     !ChartPreferences.DefaultRequestScaleLimits,
@@ -103,7 +103,7 @@ namespace StatsDirect.Charting
 
             for (int i = 0; i < groupCount; i++)
             {
-                SurvivalOptions.SurvivalSeries ser = new SurvivalOptions.SurvivalSeries();
+                SurvivalOptions.SurvivalSeries ser = new();
                 // Series: xdat...
                 DoubleVariable xdatVariable = (DoubleVariable)xdatFrame.Variables[i];
                 ser.XDat = xdatVariable.Data;
@@ -154,7 +154,7 @@ namespace StatsDirect.Charting
                 throw new ArgumentException("Cannot plot a spread plot with both X and Y series");
             IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
 
-            SpreadOptions spreadOptions = new SpreadOptions
+            SpreadOptions spreadOptions = new()
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -202,7 +202,7 @@ namespace StatsDirect.Charting
                 amn = ys.Sum / ys.Points;
             }
 
-            ROCOptions rocOptions = new ROCOptions(definition.XSeries)
+            ROCOptions rocOptions = new(definition.XSeries)
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title = null == dataName
@@ -226,7 +226,7 @@ namespace StatsDirect.Charting
 
         private static ScatterXYOptions PreprocessScatterXYOptions(ChartStep step, ChartDefinition definition, string dataName)
         {
-            ScatterXYOptions sOptions = new ScatterXYOptions(definition.XSeries, false)
+            ScatterXYOptions sOptions = new(definition.XSeries, false)
             {
                 IsAscii = step.IsAscii,
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
@@ -246,7 +246,7 @@ namespace StatsDirect.Charting
 
         private static PyramidOptions PreprocessPyramidOptions(ParameterBag parameters, string dataName)
         {
-            PyramidOptions pOptions = new PyramidOptions { ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits };
+            PyramidOptions pOptions = new() { ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits };
             if (parameters.ContainsKey("male"))
                 pOptions.MaleFrame = parameters["male"].AsDataFrame;
             if (parameters.ContainsKey("female"))
@@ -260,7 +260,7 @@ namespace StatsDirect.Charting
 
         private static NormalOptions PreprocessNormalOptions(ParameterBag parameters, string dataName)
         {
-            NormalOptions nOptions = new NormalOptions
+            NormalOptions nOptions = new()
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Method = parameters.ContainsKey("ScoreMethod")
@@ -276,7 +276,7 @@ namespace StatsDirect.Charting
 
         private static LinearRegressionOptions PreprocessLinearRegressionOptions(ChartStep step, ParameterBag parameters)
         {
-            LinearRegressionOptions lrOptions = new LinearRegressionOptions
+            LinearRegressionOptions lrOptions = new()
             {
                 Slope = parameters["mdnValue"].AsDouble,
                 Intercept = parameters["interceptValue"].AsDouble,
@@ -292,7 +292,7 @@ namespace StatsDirect.Charting
 
         private static ScatterXYOptions PreprocessLineXYOptions(ChartDefinition definition, string dataName)
         {
-            ScatterXYOptions sOptions = new ScatterXYOptions(definition.XSeries, true)
+            ScatterXYOptions sOptions = new(definition.XSeries, true)
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -315,7 +315,7 @@ namespace StatsDirect.Charting
             if (2 != definition.YSeries.Count || 0 != definition.XSeries.Count)
                 throw new ArgumentException("Must have exactly two Y series for a ladder plot");
 
-            LadderOptions ladderOptions = new LadderOptions
+            LadderOptions ladderOptions = new()
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -333,7 +333,7 @@ namespace StatsDirect.Charting
         private static HistogramOptions PreprocessHistogramOptions(ChartStep step, ChartDefinition definition)
         {
             IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-            HistogramOptions hOptions = new HistogramOptions
+            HistogramOptions hOptions = new()
             {
                 IsAscii = step.IsAscii,
                 BinChoiceMethod = step.IsAscii ? BinChoiceMethod.OldStatsDirect : BinChoiceMethod.Doane,
@@ -344,7 +344,7 @@ namespace StatsDirect.Charting
             // Series
             foreach (ISeries t in series)
             {
-                HistogramSeriesOptions hso = new HistogramSeriesOptions
+                HistogramSeriesOptions hso = new()
                 {
                     ChartTitle = "Distribution of " + t.Title,
                     YAxisTitle = "Counts",
@@ -357,7 +357,7 @@ namespace StatsDirect.Charting
 
         private static GiniOptions PreprocessGiniOptions(ChartDefinition definition, string dataName)
         {
-            GiniOptions giniOptions = new GiniOptions
+            GiniOptions giniOptions = new()
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -374,7 +374,7 @@ namespace StatsDirect.Charting
 
         private static ForestOptions PreprocessForestOptions(ParameterBag parameters, string dataName)
         {
-            ForestOptions fOptions = new ForestOptions
+            ForestOptions fOptions = new()
             {
                 cco = 0.95,
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
@@ -458,7 +458,7 @@ namespace StatsDirect.Charting
             DataFrame ydatlFrame = parameters["ydatl"].AsDataFrame;
             DataFrame ydatuFrame = parameters["ydatu"].AsDataFrame;
 
-            List<MultiDoubleSeries> allSeries = new List<MultiDoubleSeries>(xdatFrame.VariableCount);
+            List<MultiDoubleSeries> allSeries = new(xdatFrame.VariableCount);
 
             for (int sIndex = 0; sIndex < xdatFrame.VariableCount; sIndex++)
             {
@@ -474,7 +474,7 @@ namespace StatsDirect.Charting
                 MultiDoublePoint[] data = new MultiDoublePoint[noMissings.ArraysWithMissingRowsRemoved[0].Length];
                 for (int i = 0; i < noMissings.ArraysWithMissingRowsRemoved[0].Length; i++)
                 {
-                    MultiDoublePoint p = new MultiDoublePoint { X = noMissings.ArraysWithMissingRowsRemoved[0][i] };
+                    MultiDoublePoint p = new() { X = noMissings.ArraysWithMissingRowsRemoved[0][i] };
                     // Ordinate
                     // Y values for error bars: [0] is centre, [1] is lower bound, [2] is upper bound.
                     p.set_Y(0, noMissings.ArraysWithMissingRowsRemoved[1][i]);
@@ -485,7 +485,7 @@ namespace StatsDirect.Charting
                 allSeries.Add(new MultiDoubleSeries { Title = seriesTitle, Data = data });
             }
 
-            ErrorBarOptions errorBarOptions = new ErrorBarOptions
+            ErrorBarOptions errorBarOptions = new()
             {
                 ShouldAutoscale =
                     !ChartPreferences.DefaultRequestScaleLimits,
@@ -510,7 +510,7 @@ namespace StatsDirect.Charting
 
         private static ControlOptions PreprocessControlOptions(ChartDefinition definition, string dataName)
         {
-            ControlOptions controlOptions = new ControlOptions
+            ControlOptions controlOptions = new()
             {
                 ShouldBoxAxes = ChartPreferences.DefaultBoxAxes,
                 ShouldAutoscale =
@@ -560,7 +560,7 @@ namespace StatsDirect.Charting
 
         private static BoxWhiskerOptions PreprocessBoxWhiskerOptions(ChartStep step, ChartDefinition definition, string dataName)
         {
-            BoxWhiskerOptions bwOptions = new BoxWhiskerOptions
+            BoxWhiskerOptions bwOptions = new()
             {
                 Title = null == dataName
                             ? "Box & whisker plot"
@@ -587,7 +587,7 @@ namespace StatsDirect.Charting
 
         private static BarOptions PreprocessBarOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName)
         {
-            BarOptions barOptions = new BarOptions
+            BarOptions barOptions = new()
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title =
@@ -621,7 +621,7 @@ namespace StatsDirect.Charting
 
         private static AgreementOptions PreprocessAgreementOptions(ChartStep step, ParameterBag parameters)
         {
-            AgreementOptions aOptions = new AgreementOptions
+            AgreementOptions aOptions = new()
             {
                 ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
                 Title = step.ChartTitle,
@@ -644,7 +644,7 @@ namespace StatsDirect.Charting
                 case ChartType.StackedBar100Percent:
                     {
                         BarOptions barOptions = (BarOptions)definition.ChartOptions;
-                        StringSeries labelsSeries = new StringSeries(barOptions.SeriesTitles.Length);
+                        StringSeries labelsSeries = new(barOptions.SeriesTitles.Length);
                         for (int i = 0; i < barOptions.SeriesTitles.Length; i++)
                             labelsSeries.Data[i] = barOptions.SeriesTitles[i];
                         definition.XSeries.Clear();

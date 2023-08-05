@@ -50,7 +50,7 @@ namespace StatsDirect.Charting.Renderer
             IList<ROCSeriesRecord> seriesRecords = MakeAndMaybeAmendSeriesRecords(host, Definition);
 
             AssignMarkersToSeries(rOptions);
-            Legend legend = new Legend();
+            Legend legend = new();
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
                 legend.LegendEntries.Add(new LegendEntry { Label = rOptions.SeriesTitles[cs], MarkerType = ((DoubleSeries)Definition.YSeries[cs]).MarkerType });
 
@@ -69,14 +69,14 @@ namespace StatsDirect.Charting.Renderer
                 legend, ChartAreaShape.Square);
 
             // null effect diagonal
-            PenDescriptor tenPenDiagonal = new PenDescriptor(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness);
+            PenDescriptor tenPenDiagonal = new(ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness);
             DrawLineInCanvasCoordinates(tenPenDiagonal, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
 
             // get the offsets for the markers
             OffX = XAxisCanvas;
             OffY = YAxisCanvas;
 
-            ParameterBag results = new ParameterBag();
+            ParameterBag results = new();
             IList<ParameterBag> allResults = new List<ParameterBag>();
             results.AddOutput("*datasets", allResults);
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
@@ -149,7 +149,7 @@ namespace StatsDirect.Charting.Renderer
 
                 if (rOptions.ShowOptimumCutOff)
                 {
-                    ParameterBag thisResults = new ParameterBag();
+                    ParameterBag thisResults = new();
                     allResults.Add(thisResults);
                     // Wilcoxon estimate for AUC
                     // Hanley JA, mcNeil BJ, Radiology 143:29-36
@@ -494,7 +494,7 @@ namespace StatsDirect.Charting.Renderer
         ///  </summary>
         private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord seriesRecord, string title)
         {
-            ROCCutoff payload = new ROCCutoff { SeriesRecord = seriesRecord, Title = title };
+            ROCCutoff payload = new() { SeriesRecord = seriesRecord, Title = title };
             host.Amend(payload, null);
             return payload.SeriesRecord;
         }

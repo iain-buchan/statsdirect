@@ -14,25 +14,25 @@ namespace StatsDirect.Expressions
         private FunctionRegistry()
         {
             // A few useful parameters that can be re-used
-            ArgumentDefinition df = new ArgumentDefinition("df", DataType.Double);
-            ArgumentDefinition df1 = new ArgumentDefinition("df1", DataType.Double);
-            ArgumentDefinition df2 = new ArgumentDefinition("df2", DataType.Double);
-            ArgumentDefinition dfd = new ArgumentDefinition("dfd", DataType.Double);
-            ArgumentDefinition dfn = new ArgumentDefinition("dfn", DataType.Double);
-            ArgumentDefinition k = new ArgumentDefinition("k", DataType.Double);
-            ArgumentDefinition logDefFalse = new ArgumentDefinition("log", DataType.Boolean, false, "false");
-            ArgumentDefinition mean = new ArgumentDefinition("mean", DataType.Double);
-            ArgumentDefinition meanDef0 = new ArgumentDefinition("mean", DataType.Double, false, "0");
-            ArgumentDefinition n = new ArgumentDefinition("n", DataType.Double);
-            ArgumentDefinition ncp = new ArgumentDefinition("Simple linear regression ncp", DataType.Double);
-            ArgumentDefinition ncpDefMissing = new ArgumentDefinition("ncp", DataType.Double, false, "StatsDirect.Numerics.Constant.MISSING");
-            ArgumentDefinition p = new ArgumentDefinition("p", DataType.Double);
-            ArgumentDefinition q = new ArgumentDefinition("q", DataType.Double);
-            ArgumentDefinition r = new ArgumentDefinition("r", DataType.Double);
-            ArgumentDefinition sdDef1 = new ArgumentDefinition("sd", DataType.Double, false, "1");
-            ArgumentDefinition x = new ArgumentDefinition("x", DataType.Double);
-            ArgumentDefinition logP = new ArgumentDefinition("log.p", DataType.Boolean, true, "false");
-            ArgumentDefinition lowerTail = new ArgumentDefinition("lower.tail", DataType.Boolean, true, "true");
+            ArgumentDefinition df = new("df", DataType.Double);
+            ArgumentDefinition df1 = new("df1", DataType.Double);
+            ArgumentDefinition df2 = new("df2", DataType.Double);
+            ArgumentDefinition dfd = new("dfd", DataType.Double);
+            ArgumentDefinition dfn = new("dfn", DataType.Double);
+            ArgumentDefinition k = new("k", DataType.Double);
+            ArgumentDefinition logDefFalse = new("log", DataType.Boolean, false, "false");
+            ArgumentDefinition mean = new("mean", DataType.Double);
+            ArgumentDefinition meanDef0 = new("mean", DataType.Double, false, "0");
+            ArgumentDefinition n = new("n", DataType.Double);
+            ArgumentDefinition ncp = new("Simple linear regression ncp", DataType.Double);
+            ArgumentDefinition ncpDefMissing = new("ncp", DataType.Double, false, "StatsDirect.Numerics.Constant.MISSING");
+            ArgumentDefinition p = new("p", DataType.Double);
+            ArgumentDefinition q = new("q", DataType.Double);
+            ArgumentDefinition r = new("r", DataType.Double);
+            ArgumentDefinition sdDef1 = new("sd", DataType.Double, false, "1");
+            ArgumentDefinition x = new("x", DataType.Double);
+            ArgumentDefinition logP = new("log.p", DataType.Boolean, true, "false");
+            ArgumentDefinition lowerTail = new("lower.tail", DataType.Boolean, true, "true");
 
             ArgumentDefinition[] xOnly = new[] { x };
 

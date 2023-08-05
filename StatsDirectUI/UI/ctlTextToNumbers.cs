@@ -11,7 +11,7 @@ namespace StatsDirect.UI
 {
     public partial class ctlTextToNumbers : UserControl, IFillParameterBag
     {
-        private readonly Dictionary<string, int> textsToNumbers = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> textsToNumbers = new();
         private DataFrame data;
         private readonly ParameterBag context;
 
@@ -41,7 +41,7 @@ namespace StatsDirect.UI
         {
             textsToNumbers.Clear();
             MakeTable(context, !chkIgnoreTitle.Checked);
-            SortedDictionary<int, string> numbersToTexts = new SortedDictionary<int, string>();
+            SortedDictionary<int, string> numbersToTexts = new();
             foreach (KeyValuePair<string, int> pair in textsToNumbers)
                 numbersToTexts.Add(pair.Value, pair.Key);
             gridNumbers.Rows.Clear();
@@ -58,11 +58,11 @@ namespace StatsDirect.UI
 
         private void ProduceOutput(ParameterBag outputParameters)
         {
-            DataFrame outputFrame = new DataFrame();
+            DataFrame outputFrame = new();
             for (int c = 0; c < data.VariableCount; c++)
             {
                 StringVariable v = (StringVariable)data.Variables[c];
-                DoubleVariable outputVariable = new DoubleVariable(v.Length, v.Title);
+                DoubleVariable outputVariable = new(v.Length, v.Title);
                 outputFrame.Variables.Add(outputVariable);
                 for (int r = 0; r < v.Length; r++)
                 {

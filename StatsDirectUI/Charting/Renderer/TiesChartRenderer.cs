@@ -61,8 +61,8 @@ namespace StatsDirect.Charting.Renderer
             // Draw the limits
             double x1 = XAxisCanvas + XExtCanvas;
             double y1 = ToCanvasY(options.ula);
-            PenDescriptor redPen = new PenDescriptor(GrRed);
-            PenDescriptor blackPen = new PenDescriptor(GrBlack);
+            PenDescriptor redPen = new(GrRed);
+            PenDescriptor blackPen = new(GrBlack);
             DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
             y1 = ToCanvasY(options.lla);
             DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);

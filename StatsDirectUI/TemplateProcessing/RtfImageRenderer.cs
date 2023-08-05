@@ -12,18 +12,16 @@ namespace StatsDirect.TemplateProcessing
 
         public static ParameterBag PlotAndReturnRtf(/* TODO: IPreferences*/ ITemplateHost host, ChartDefinition cd, out string rtf)
         {
-            using (IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY))
+            using IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY);
+            ParameterBag results = ch.Plot(host, false);
+            if (cd.IsAscii)
+                rtf = ch.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF);
+            else
             {
-                ParameterBag results = ch.Plot(host, false);
-                if (cd.IsAscii)
-                    rtf = ch.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF);
-                else
-                {
-                    EmfCanvas emfCanvas = (EmfCanvas)ch.Canvas;
-                    rtf = ImageStreamToRtf(emfCanvas.DetachAndReturnImageStream(), (int)emfCanvas.Width, (int)emfCanvas.Height);
-                }
-                return results;
+                EmfCanvas emfCanvas = (EmfCanvas)ch.Canvas;
+                rtf = ImageStreamToRtf(emfCanvas.DetachAndReturnImageStream(), (int)emfCanvas.Width, (int)emfCanvas.Height);
             }
+            return results;
         }
 
         public static string ImageStreamToRtf(Stream stream, int width, int height)

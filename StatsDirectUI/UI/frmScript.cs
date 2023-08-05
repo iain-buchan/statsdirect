@@ -117,7 +117,7 @@ namespace StatsDirect.UI
                 rtbDoc.LoadFile(filename, RichTextBoxStreamType.RichText);
             else
             {
-                using (StreamReader txtReader = new StreamReader(filename))
+                using (StreamReader txtReader = new(filename))
                 {
                     rtbDoc.Text = txtReader.ReadToEnd();
                 }
@@ -153,7 +153,7 @@ namespace StatsDirect.UI
             else
             {
                 // to save as plain text
-                using (StreamWriter txtWriter = new StreamWriter(currentFile))
+                using (StreamWriter txtWriter = new(currentFile))
                 {
                     txtWriter.Write(rtbDoc.Text);
                 }
@@ -182,7 +182,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                using (StreamWriter txtWriter = new StreamWriter(SaveFileDialog1.FileName))
+                using (StreamWriter txtWriter = new(SaveFileDialog1.FileName))
                 {
                     txtWriter.Write(rtbDoc.Text);
                 }
@@ -266,13 +266,13 @@ namespace StatsDirect.UI
 
         private void FindToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            frmScriptFind f = new frmScriptFind(this);
+            frmScriptFind f = new(this);
             f.Show();
         }
 
         private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            frmScriptReplace f = new frmScriptReplace(this);
+            frmScriptReplace f = new(this);
             f.Show();
         }
 
@@ -312,7 +312,7 @@ namespace StatsDirect.UI
 
         private void tbrFind_Click(object sender, EventArgs e)
         {
-            frmScriptFind f = new frmScriptFind(this);
+            frmScriptFind f = new(this);
             f.Show();
         }
 
@@ -442,12 +442,12 @@ namespace StatsDirect.UI
         {
             get
             {
-                List<Pane> panes = new List<Pane> {((IForm) this).SelectedPane};
+                List<Pane> panes = new() { ((IForm) this).SelectedPane};
                 return panes;
             }
         }
 
-        public override Pane SelectedPane => new Pane(Text, WindowInformation, 0);
+        public override Pane SelectedPane => new(Text, WindowInformation, 0);
 
         public override bool SelectPane(Pane pane)
         {

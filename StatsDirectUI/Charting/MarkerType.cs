@@ -28,8 +28,8 @@ namespace StatsDirect.Charting
 
         public MarkerType Clone()
         {
-            MarkerType m = new MarkerType
-                               {
+            MarkerType m = new()
+            {
                                    MarkerColor = MarkerColor,
                                    LineColor = LineColor,
                                    MarkerShape = MarkerShape,

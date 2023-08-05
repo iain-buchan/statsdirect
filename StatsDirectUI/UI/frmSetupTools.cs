@@ -58,13 +58,13 @@ namespace StatsDirect.UI
 
         private static StringCollection ParseXmlToStringCollection(string rawXml)
         {
-            XmlDocument doc = new XmlDocument();
-            using (StringReader sr = new StringReader(rawXml))
+            XmlDocument doc = new();
+            using (StringReader sr = new(rawXml))
             {
                 doc.Load(sr);
             }
             XmlNodeList elements = doc.GetElementsByTagName("string");
-            StringCollection coll = new StringCollection();
+            StringCollection coll = new();
             foreach (XmlNode element in elements)
                 coll.Add(element.InnerText);
             return coll;
@@ -72,8 +72,8 @@ namespace StatsDirect.UI
 
         private void SaveData()
         {
-            StringCollection names = new StringCollection();
-            StringCollection paths = new StringCollection();
+            StringCollection names = new();
+            StringCollection paths = new();
             foreach (DataGridViewRow row in grid.Rows)
             {
                 if (null != row.Cells[0].Value && null != row.Cells[1].Value)

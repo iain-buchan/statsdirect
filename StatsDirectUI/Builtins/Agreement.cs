@@ -29,7 +29,7 @@ namespace StatsDirect.Builtins
             else
                 Agree(n, b, c, data, out delta, out edel, out var, out gam, out r, out p);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             outputParameters.AddOutput("name", title);
             outputParameters.AddOutput("nobs", nobs);
@@ -218,7 +218,7 @@ namespace StatsDirect.Builtins
             double p2 = Pgamt((mu2 - e2) / sig2, gam2);
             double pd = Pgamt(t, gamd);
 
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
 
             outputParameters.AddOutput("r1", r1);
             outputParameters.AddOutput("r2", r2);
@@ -707,7 +707,7 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
 
             Rmrbp(host, 1.0, n, b, c, 0, 0, 0, data, 0, seed, iterations, out int ir, out int mpd);
-            ParameterBag outputParameters = new ParameterBag();
+            ParameterBag outputParameters = new();
             double p = Convert.ToDouble(ir) / Convert.ToDouble(mpd);
             outputParameters.AddOutput("p", p);
             //  CI
@@ -898,7 +898,7 @@ namespace StatsDirect.Builtins
             double[,] d = new double[kb * (kg - 1) + kb + 1, kb * (kg - 1) + kb + 1];
             // double[,] dt = new double[kg + 1, kr + 1]; Array never referenced.  PJC 2012/04/09.
             int lo, l, ij, kl, is0, is1, irr, iss, i, j, k, iw, m;
-            MersenneTwister rng = new MersenneTwister();
+            MersenneTwister rng = new();
             int trigger = Convert.ToInt32(ms / 1000) + 1;
 
             if (iseed != 0)
@@ -953,82 +953,80 @@ namespace StatsDirect.Builtins
             double dx = delta * 1.000000000001;
             mp = 0;
 
-            using (IProgressBar progress = host.StartProgress("Simulating exact P", true))
-            {
-                int ctr = 0;
+            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            int ctr = 0;
 
-                mpd = ms;
-                for (iw = 1; iw <= ms; iw++)
+            mpd = ms;
+            for (iw = 1; iw <= ms; iw++)
+            {
+                for (j = 2; j <= kb; j++)
                 {
-                    for (j = 2; j <= kb; j++)
+                    for (i = 1; i <= kg; i++)
+                    {
+                        int ix = rng.NextInteger(1, kg);
+                        for (k = 1; k <= kr; k++)
+                        {
+                            double tmp = data[i, j, k];
+                            data[i, j, k] = data[ix, j, k];
+                            data[ix, j, k] = tmp;
+                        }
+                    }
+                }
+                for (i = 1; i <= kbg; i++)
+                    for (j = 1; j <= kbg; j++)
+                        d[i, j] = 0.0;
+                for (i = 1; i <= kg; i++)
+                {
+                    for (j = 1; j <= kb; j++)
+                    {
+                        for (k = i; k <= kg; k++)
+                        {
+                            lo = 1;
+                            if (i == k)
+                                lo = j;
+                            for (l = lo; l <= kb; l++)
+                            {
+                                ij = kb * (i - 1) + j;
+                                kl = kb * (k - 1) + l;
+                                d[ij, kl] = 0.0;
+                                for (m = 1; m <= kr; m++)
+                                    d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
+                                d[ij, kl] = Math.Pow(d[ij, kl], y);
+                                d[kl, ij] = d[ij, kl];
+                            }
+                        }
+                    }
+                }
+                double dz = 0.0;
+                for (is0 = 2; is0 <= kb; is0++)
+                {
+                    is1 = is0 - 1;
+                    for (int ir = 1; ir <= is1; ir++)
                     {
                         for (i = 1; i <= kg; i++)
                         {
-                            int ix = rng.NextInteger(1, kg);
-                            for (k = 1; k <= kr; k++)
-                            {
-                                double tmp = data[i, j, k];
-                                data[i, j, k] = data[ix, j, k];
-                                data[ix, j, k] = tmp;
-                            }
+                            irr = (i - 1) * kb + ir;
+                            iss = (i - 1) * kb + is0;
+                            dz += d[irr, iss];
                         }
                     }
-                    for (i = 1; i <= kbg; i++)
-                        for (j = 1; j <= kbg; j++)
-                            d[i, j] = 0.0;
-                    for (i = 1; i <= kg; i++)
-                    {
-                        for (j = 1; j <= kb; j++)
-                        {
-                            for (k = i; k <= kg; k++)
-                            {
-                                lo = 1;
-                                if (i == k)
-                                    lo = j;
-                                for (l = lo; l <= kb; l++)
-                                {
-                                    ij = kb * (i - 1) + j;
-                                    kl = kb * (k - 1) + l;
-                                    d[ij, kl] = 0.0;
-                                    for (m = 1; m <= kr; m++)
-                                        d[ij, kl] = d[ij, kl] + Math.Pow(data[i, j, m] - data[k, l, m], 2.0);
-                                    d[ij, kl] = Math.Pow(d[ij, kl], y);
-                                    d[kl, ij] = d[ij, kl];
-                                }
-                            }
-                        }
-                    }
-                    double dz = 0.0;
-                    for (is0 = 2; is0 <= kb; is0++)
-                    {
-                        is1 = is0 - 1;
-                        for (int ir = 1; ir <= is1; ir++)
-                        {
-                            for (i = 1; i <= kg; i++)
-                            {
-                                irr = (i - 1) * kb + ir;
-                                iss = (i - 1) * kb + is0;
-                                dz += d[irr, iss];
-                            }
-                        }
-                    }
-                    dz /= c0;
-                    if (dz < dx)
-                        mp += 1;
-
-                    ctr += 1;
-                    if (ctr > trigger)
-                    {
-                        bool bailout = progress.Update(Convert.ToDouble(iw) / Convert.ToDouble(ms));
-                        ctr = 0;
-                        if (bailout)
-                        {
-                            mpd = iw;
-                            break;
-                        }
-                    }
-
                 }
+                dz /= c0;
+                if (dz < dx)
+                    mp += 1;
+
+                ctr += 1;
+                if (ctr > trigger)
+                {
+                    bool bailout = progress.Update(Convert.ToDouble(iw) / Convert.ToDouble(ms));
+                    ctr = 0;
+                    if (bailout)
+                    {
+                        mpd = iw;
+                        break;
+                    }
+                }
+
             }
         }
     }

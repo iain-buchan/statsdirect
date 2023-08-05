@@ -80,7 +80,7 @@ namespace StatsDirect.UI
                 // TODO: How does this affect minimum-column requirements?  Do they need checking later?
                 if (null != frame && frame.VariableCount > 1)
                 {
-                    List<IVariable> toRemove = new List<IVariable>();
+                    List<IVariable> toRemove = new();
                     foreach (IVariable v in frame.Variables)
                         if (v.Length == 0)
                             toRemove.Add(v);
@@ -99,7 +99,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayNumericCodingTextToSomething(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
@@ -133,11 +133,11 @@ namespace StatsDirect.UI
                 }
                 if (isTextual)
                 {
-                    ClassifierVariable variable = new ClassifierVariable();
+                    ClassifierVariable variable = new();
                     variable.EnsureLength(lastRow + 1);
 
                     // Code text categories as numbers
-                    Dictionary<string, Group> groupsByLabel = new Dictionary<string, Group>();
+                    Dictionary<string, Group> groupsByLabel = new();
                     int nextGroupNumber = 0;
 
                     for (int row = 0; row <= lastRow; row++)
@@ -186,7 +186,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    DoubleVariable variable = new DoubleVariable(lastRow + 1, ccs.ColumnTitle);
+                    DoubleVariable variable = new(lastRow + 1, ccs.ColumnTitle);
                     for (int row = 0; row <= lastRow; row++)
                     {
                         double v = numericValues[row];
@@ -203,7 +203,7 @@ namespace StatsDirect.UI
                     {
                         // Dummies?
                         // Look for 2-12 non-unique integer values: if so, ask if categorical and dummy them
-                        Dictionary<int, Group> groupsByLabel = new Dictionary<int, Group>();
+                        Dictionary<int, Group> groupsByLabel = new();
                         bool allInteger = true;
                         int nextGroupNumber = 0;
                         double[] classifierData = new double[variable.Length];
@@ -238,7 +238,7 @@ namespace StatsDirect.UI
                         }
                         else
                         {
-                            ClassifierVariable cv = new ClassifierVariable { Title = variable.Title, Data = classifierData };
+                            ClassifierVariable cv = new() { Title = variable.Title, Data = classifierData };
                             cv.EnsureLength(variable.Data.Length);
                             cv.EnsureGroups(groupsByLabel.Count);
                             foreach (Group group in groupsByLabel.Values)
@@ -426,7 +426,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayNumericSkipMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
 
             // read in the cells, skipping any missing data
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -438,7 +438,7 @@ namespace StatsDirect.UI
                 if (null == values)
                     continue;
 
-                DoubleVariable variable = new DoubleVariable(values.Length, ccs.ColumnTitle);
+                DoubleVariable variable = new(values.Length, ccs.ColumnTitle);
 
                 // Eliminate MISSING values by copying, then truncating the array
                 int size = 0;
@@ -463,7 +463,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayText(CellSelection cellSelection, DataAcquisitionMode mode, int topRow, string[,] hold, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
@@ -477,7 +477,7 @@ namespace StatsDirect.UI
                                    : ccs.GetFirstCellText().Trim();
                 if (totRows > topRow || !string.IsNullOrEmpty(title))
                 {
-                    StringVariable variable = new StringVariable(totRows - topRow, title);
+                    StringVariable variable = new(totRows - topRow, title);
                     int size = 0;
                     for (int r = topRow; r < totRows; r++)
                         variable.Data[size++] = hold[r, c];
@@ -498,11 +498,11 @@ namespace StatsDirect.UI
             int[] nbin = new int[totRows];
             int found = 0;
             int size = 0;
-            ClassifierVariable variable = new ClassifierVariable();
+            ClassifierVariable variable = new();
             for (int r = topRow; r < totRows; r++)
             {
                 // Build the pattern for row r
-                StringBuilder patternBuilder = new StringBuilder();
+                StringBuilder patternBuilder = new();
                 for (int c = 0; c < totCols; c++)
                 {
                     if (null == hold[r, c] || hold[r, c].Length == 0 || "*".Equals(hold[r, c]))
@@ -550,13 +550,13 @@ namespace StatsDirect.UI
             variable.EnsureGroups(found);
             for (int i = 0; i < found; i++)
             {
-                Group group = new Group(foundwhat[i], i);
+                Group group = new(foundwhat[i], i);
                 group.NBin = nbin[i];
                 variable.Groups[i] = group;
             }
 
             // column title is a hybrid of all columns
-            StringBuilder titleBuilder = new StringBuilder();
+            StringBuilder titleBuilder = new();
             for (int c = 0; c < totCols; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
@@ -574,7 +574,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayCategoriesPerColumn(CellSelection cellSelection, DataAcquisitionMode mode, int topRow, string[,] hold, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
 
             // Modes 3, 4 or 6: categories per column
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -585,7 +585,7 @@ namespace StatsDirect.UI
                 int[] nbin = new int[totRows];
                 int found = 0;
                 int size = 0;
-                ClassifierVariable variable = new ClassifierVariable();
+                ClassifierVariable variable = new();
                 frame.Variables.Add(variable);
                 for (int r = topRow; r < totRows; r++)
                 {
@@ -629,7 +629,7 @@ namespace StatsDirect.UI
                 variable.EnsureGroups(found);
                 for (int i = 0; i < found; i++)
                 {
-                    Group group = new Group(foundwhat[i], i);
+                    Group group = new(foundwhat[i], i);
                     group.NBin = nbin[i];
                     variable.Groups[i] = group;
                 }
@@ -645,7 +645,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayNumericReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
 
             // Read in the cells replacing missing data with Constant.MISSING
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -663,7 +663,7 @@ namespace StatsDirect.UI
                     if (values[lrow] != Constant.MISSING)
                         break;
 
-                DoubleVariable variable = new DoubleVariable(lrow + 1, ccs.ColumnTitle);
+                DoubleVariable variable = new(lrow + 1, ccs.ColumnTitle);
                 frame.Variables.Add(variable);
 
                 variable.Data = new double[lrow + 1];
@@ -681,7 +681,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayDateReplaceMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             // Read in the cells replacing missing data with Constant.MISSING
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -707,7 +707,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayTextWithFormulae(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             int longestColumnLengthSoFar = 0;
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -724,7 +724,7 @@ namespace StatsDirect.UI
                 while (lastNonBlank > 0 && string.IsNullOrWhiteSpace(formulae[lastNonBlank - 1]))
                     --lastNonBlank;
                 longestColumnLengthSoFar = Math.Max(longestColumnLengthSoFar, lastNonBlank);
-                StringVariable variable = new StringVariable(formulae, null);
+                StringVariable variable = new(formulae, null);
                 IOrigin origin = ccs.GetWorksheetOrigin(mode, false, originGroup);
                 variable.Origin = origin;
                 frame.Variables.Add(variable);
@@ -736,7 +736,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayVariant(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
                 CellColumnSelection ccs = cellSelection.ColumnSelections[c];
@@ -777,7 +777,7 @@ namespace StatsDirect.UI
 
         private static DataFrame ProcessCellArrayTextNoTitles(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
-            DataFrame frame = new DataFrame();
+            DataFrame frame = new();
             int longestColumnLengthSoFar = 0;
             for (int c = 0; c < cellSelection.TotalColumns; c++)
             {
@@ -794,7 +794,7 @@ namespace StatsDirect.UI
                 while (lastNonBlank > 0 && string.IsNullOrWhiteSpace(texts[lastNonBlank - 1]))
                     --lastNonBlank;
                 longestColumnLengthSoFar = Math.Max(longestColumnLengthSoFar, lastNonBlank);
-                StringVariable variable = new StringVariable(texts, null)
+                StringVariable variable = new(texts, null)
                 {
                     Origin = ccs.GetWorksheetOrigin(mode, false, originGroup)
                 };

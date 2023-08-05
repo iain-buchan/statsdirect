@@ -16,39 +16,33 @@ namespace StatsDirect.UI
             if (path.Length > IpcListener.MAXIMUM_PATH_LENGTH / 6 - 20)
                 return false;
 
-            using (Semaphore semaphore = new Semaphore(1, 1, IpcListener.WAIT_SEMAPHORE_NAME, out bool wasCreated))
+            using Semaphore semaphore = new(1, 1, IpcListener.WAIT_SEMAPHORE_NAME, out bool wasCreated);
+            // If the semaphore was created new, there can't be another process at the far end.
+            if (wasCreated)
+                return false;
+
+            // Otherwise, something's there.  Either we're very unlucky and have hit another probe like this one, or a StatsDirect process is waiting to handle the call.
+            using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.OpenExisting(IpcListener.MEMORY_FILE_NAME))
             {
-                // If the semaphore was created new, there can't be another process at the far end.
-                if (wasCreated)
-                    return false;
-
-                // Otherwise, something's there.  Either we're very unlucky and have hit another probe like this one, or a StatsDirect process is waiting to handle the call.
-                using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.OpenExisting(IpcListener.MEMORY_FILE_NAME))
+                using Semaphore accessSemaphore = new(1, 1, IpcListener.MEMORY_SEMAPHORE_NAME);
+                accessSemaphore.WaitOne();
+                try
                 {
-                    using (Semaphore accessSemaphore = new Semaphore(1, 1, IpcListener.MEMORY_SEMAPHORE_NAME))
-                    {
-                        accessSemaphore.WaitOne();
-                        try
-                        {
-                            using (MemoryMappedViewStream s = memoryMappedFile.CreateViewStream())
-                            {
-                                StreamWriter sw = new StreamWriter(s);
-                                sw.WriteLine(path);
-                                sw.WriteLine(); // Just to ensure there's extra space available
-                                sw.Flush();
-                            }
-                        }
-                        finally
-                        {
-                            // Don't let an exception prevent us releasing the access semaphore.
-                            accessSemaphore.Release();
-                        }
-                    }
+                    using MemoryMappedViewStream s = memoryMappedFile.CreateViewStream();
+                    StreamWriter sw = new(s);
+                    sw.WriteLine(path);
+                    sw.WriteLine(); // Just to ensure there's extra space available
+                    sw.Flush();
                 }
-                semaphore.Release();
-
-                return true;
+                finally
+                {
+                    // Don't let an exception prevent us releasing the access semaphore.
+                    accessSemaphore.Release();
+                }
             }
+            semaphore.Release();
+
+            return true;
         }
     }
 }

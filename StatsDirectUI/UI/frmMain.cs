@@ -246,7 +246,7 @@ namespace StatsDirect.UI
 
         private static object ToTagObject(string s)
         {
-            Dictionary<string, string> output = new Dictionary<string, string>();
+            Dictionary<string, string> output = new();
             string trimmedS = s.Substring(2, s.Length - 3);
             string[] pairs = trimmedS.Split(BAR);
             foreach (string pairString in pairs)
@@ -264,7 +264,7 @@ namespace StatsDirect.UI
             {
                 return new ToolStripSeparator { Size = new Size(167, 6) };
             }
-            ToolStripMenuItem menuItem = new ToolStripMenuItem
+            ToolStripMenuItem menuItem = new()
             {
                 DisplayStyle = ToolStripItemDisplayStyle.Text,
                 Size = new Size(167, 22),
@@ -273,7 +273,7 @@ namespace StatsDirect.UI
             // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
             if (!string.IsNullOrEmpty(sdMenuItem.Tooltip))
                 menuItem.ToolTipText = sdMenuItem.Tooltip;
-            Dictionary<string, string> tags = new Dictionary<string, string>();
+            Dictionary<string, string> tags = new();
             if (null != sdMenuItem.Operation && TemplateFactory.Operations.ContainsKey(sdMenuItem.Operation))
             {
                 tags.Add("operation", sdMenuItem.Operation);
@@ -301,7 +301,7 @@ namespace StatsDirect.UI
         {
             if (null == tags || tags.Count == 0)
                 return null;
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             sb.Append("#{");
             bool first = true;
             foreach (KeyValuePair<string, string> pair in tags)
@@ -330,16 +330,14 @@ namespace StatsDirect.UI
 
         public static SDMenuItem LoadMenuItems(string pathName)
         {
-            XmlSerializer s = new XmlSerializer(typeof(SDMenuItem));
-            using (TextReader r = new StreamReader(pathName))
-            {
-                return (SDMenuItem)s.Deserialize(r);
-            }
+            XmlSerializer s = new(typeof(SDMenuItem));
+            using TextReader r = new StreamReader(pathName);
+            return (SDMenuItem)s.Deserialize(r);
         }
 
         public static SDMenuItem UserMenuItems()
         {
-            List<SDMenuItem> items = new List<SDMenuItem>();
+            List<SDMenuItem> items = new();
 
             // Not in use for 3.0 release.  TODO: Enable
             /**
@@ -489,7 +487,7 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                frmSpreadsheetGear child = new frmSpreadsheetGear();
+                frmSpreadsheetGear child = new();
                 child.SetUnsavedName(unsavedName ?? child.Text + " " + SdApplication.SoleInstance.GetGridNumber());
                 SetUpForm(child);
                 return child;
@@ -585,7 +583,7 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                frmScript child = new frmScript();
+                frmScript child = new();
                 string childName = child.Text + " " + SdApplication.SoleInstance.GetScriptWindowNumber();
                 child.Text = childName;
                 SetUpForm(child);
@@ -627,20 +625,20 @@ namespace StatsDirect.UI
                 child.MdiParent = this;
 
                 // Make and add the corresponding tab(page)
-                TabPage tabPage = new TabPage(child.Text);
+                TabPage tabPage = new(child.Text);
                 tabWindows.TabPages.Add(tabPage);
                 tabWindows.SelectedTab = tabPage;
 
                 // Add the report to the drop-down reports list
                 if (child is IReport)
                 {
-                    ComboFormAdapter cfa = new ComboFormAdapter(child);
+                    ComboFormAdapter cfa = new(child);
                     cboActiveReport.Items.Add(cfa);
                     cboActiveReport.SelectedItem = cfa;
                 }
 
                 // Store the information about the window
-                WindowInformation info = new WindowInformation { TabPage = tabPage, Window = child };
+                WindowInformation info = new() { TabPage = tabPage, Window = child };
                 child.Tag = info;
                 tabPage.Tag = info;
                 SdApplication.SoleInstance.AddWindow(info);
@@ -855,7 +853,7 @@ namespace StatsDirect.UI
                     if (screen.Primary)
                     {
                         const double inflation = 0.0 - (1.0 - FRACTION_OF_PRIMARY) / 2.0;
-                        Rectangle windowBounds = new Rectangle(screen.Bounds.Location, screen.Bounds.Size);
+                        Rectangle windowBounds = new(screen.Bounds.Location, screen.Bounds.Size);
                         windowBounds.Inflate((int)(screen.Bounds.Width * inflation), (int)(screen.Bounds.Height * inflation));
                         Bounds = windowBounds;
                     }
@@ -874,7 +872,7 @@ namespace StatsDirect.UI
                     // If the window's title bar is completely invisible, force it onto the main screen.
                     Screen primaryScreen = null;
                     bool titleBarIsVisible = false;
-                    Rectangle titleBarRect = new Rectangle(Left, Top, Width, 20); // Assume a 20 pixel high title bar - TODO: get from system structures
+                    Rectangle titleBarRect = new(Left, Top, Width, 20); // Assume a 20 pixel high title bar - TODO: get from system structures
                     foreach (Screen screen in Screen.AllScreens)
                     {
                         // Fast test, save the primary screen in case we need it later
@@ -883,7 +881,7 @@ namespace StatsDirect.UI
 
                         // Can we see enough of the title bar on this screen to be useful?
                         // Clone the rect as intersect is destructive
-                        Rectangle visibleTitleBar = new Rectangle(titleBarRect.X, titleBarRect.Y, titleBarRect.Width, titleBarRect.Height);
+                        Rectangle visibleTitleBar = new(titleBarRect.X, titleBarRect.Y, titleBarRect.Width, titleBarRect.Height);
                         visibleTitleBar.Intersect(screen.Bounds);
                         // For the sake of argument, a 40x10 pixel rectangle of the title bar is "good enough" to drag it on.
                         if (visibleTitleBar.Height > 10 && visibleTitleBar.Width > 40)
@@ -1150,7 +1148,7 @@ namespace StatsDirect.UI
 
         private IEnumerable<Parameter> GetAllOutstandingParameters()
         {
-            List<Parameter> parameters = new List<Parameter>();
+            List<Parameter> parameters = new();
             TableLayoutPanel tlp = GetUserInputTable();
             if (null != tlp)
             {
@@ -1285,7 +1283,7 @@ namespace StatsDirect.UI
                 }
 
                 string arguments = "/FileConvert \"" + sdwPath + "\"";
-                ProcessStartInfo startInfo = new ProcessStartInfo { UseShellExecute = false, FileName = sd2Path, Arguments = arguments, WindowStyle = ProcessWindowStyle.Minimized, CreateNoWindow = true };
+                ProcessStartInfo startInfo = new() { UseShellExecute = false, FileName = sd2Path, Arguments = arguments, WindowStyle = ProcessWindowStyle.Minimized, CreateNoWindow = true };
                 Process p = Process.Start(startInfo);
                 while (true)
                 {
@@ -1324,11 +1322,9 @@ namespace StatsDirect.UI
 
         private bool PromptUserToInstallOrUpgradeSd2(bool isUpgrade)
         {
-            using (frmInstallStatsDirect2 f = new frmInstallStatsDirect2(isUpgrade))
-            {
-                f.ShowDialog(this);
-                return f.UserThinksStatsDirect2IsInstalled;
-            }
+            using frmInstallStatsDirect2 f = new(isUpgrade);
+            f.ShowDialog(this);
+            return f.UserThinksStatsDirect2IsInstalled;
         }
 
         private static bool FindStatsDirect2(out string sd2Path)
@@ -2190,7 +2186,7 @@ namespace StatsDirect.UI
             try
             {
                 DrawingControl.SuspendDrawing(this);
-                ParameterBag outputParameters = new ParameterBag();
+                ParameterBag outputParameters = new();
                 StartCombinedParameters();
                 bool willDisplayAtLeastOneParameter = false;
                 string cancelSkipsParameterString = null;
@@ -2205,7 +2201,7 @@ namespace StatsDirect.UI
                         {
                             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
-                            Label lbl = new Label
+                            Label lbl = new()
                             {
                                 Tag = parameter,
                                 Padding = new Padding(0, 3, 0, 3),
@@ -2218,7 +2214,7 @@ namespace StatsDirect.UI
                         }
                     }
 
-                    InlineParameterPreparer preparer = new InlineParameterPreparer(context, this, processor);
+                    InlineParameterPreparer preparer = new(context, this, processor);
                     parameter.Accept(preparer);
                     willDisplayAtLeastOneParameter |= null == preparer.FilledParameter;
                     if (null == preparer.FilledParameter)
@@ -2301,7 +2297,7 @@ namespace StatsDirect.UI
         private void MaybeShowVariables(ParameterBag context)
         {
             bool shouldShow = false;
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             IList<Operation> ops = BuildOperationHistory(context);
             foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
             {
@@ -2329,7 +2325,7 @@ namespace StatsDirect.UI
 
         private IList<Operation> BuildOperationHistory(ParameterBag context)
         {
-            List<Operation> ops = new List<Operation>();
+            List<Operation> ops = new();
             if (null != mostRecentOperation)
                 ops.Add(mostRecentOperation);
             if (null != context)
@@ -2411,7 +2407,7 @@ namespace StatsDirect.UI
 
         private static TableLayoutPanel CreateUserInputColumn()
         {
-            TableLayoutPanel tlp = new TableLayoutPanel
+            TableLayoutPanel tlp = new()
             {
                 ColumnCount = 2,
                 GrowStyle = TableLayoutPanelGrowStyle.AddRows,
@@ -2428,7 +2424,7 @@ namespace StatsDirect.UI
 
         private TableLayoutPanel CreateUserInputTable()
         {
-            TableLayoutPanel tlp = new TableLayoutPanel
+            TableLayoutPanel tlp = new()
             {
                 Name = USER_INPUT_TABLE_NAME,
                 ColumnCount = 1,
@@ -2492,7 +2488,7 @@ namespace StatsDirect.UI
             }
             if (null != sender)
             {
-                ParameterBag ambientParameters = new ParameterBag();
+                ParameterBag ambientParameters = new();
                 ParameterBag context = fillCombinedParametersContext;
                 ExtractCurrentValues(new TemplateProcessor(SdApplication.SoleInstance), ambientParameters, context, false);
                 if (null != context)
@@ -2505,7 +2501,7 @@ namespace StatsDirect.UI
                     }
                 }
                 // Remove empty optional parameters
-                List<string> keysToRemove = new List<string>();
+                List<string> keysToRemove = new();
                 foreach (KeyValuePair<string, FilledParameter> pair in ambientParameters.Pairs)
                     if (null == pair.Value)
                         keysToRemove.Add(pair.Key);
@@ -2868,7 +2864,7 @@ namespace StatsDirect.UI
                     return null;
 
                 Parameter parameter = (Parameter)control.Tag;
-                InlineParameterValueExtractor extractor = new InlineParameterValueExtractor { Context = context, Control = control, DoValidation = doValidation, OutputParameters = outputParameters, Processor = processor };
+                InlineParameterValueExtractor extractor = new() { Context = context, Control = control, DoValidation = doValidation, OutputParameters = outputParameters, Processor = processor };
                 parameter.Accept(extractor);
                 return extractor.FailedValidationControl;
             }
@@ -2975,7 +2971,7 @@ namespace StatsDirect.UI
             for (int i = 0; i < recentFiles.Count; i++)
             {
                 string recentFile = recentFiles[i];
-                ToolStripMenuItem menuItem = new ToolStripMenuItem
+                ToolStripMenuItem menuItem = new()
                 {
                     DisplayStyle = ToolStripItemDisplayStyle.Text,
                     Size = new Size(167, 22)
@@ -3040,7 +3036,7 @@ namespace StatsDirect.UI
             {
                 string name = names[i];
                 string path = paths[i];
-                ToolStripMenuItem menuItem = new ToolStripMenuItem
+                ToolStripMenuItem menuItem = new()
                 {
                     DisplayStyle = ToolStripItemDisplayStyle.Text,
                     Size = new Size(167, 22),
@@ -3276,7 +3272,7 @@ namespace StatsDirect.UI
             get
             {
                 // Walk the stack, finding out how many times we're defended against changed operations.  If we are, we must be in one.
-                StackTrace trc = new StackTrace();
+                StackTrace trc = new();
                 // Start at frame 1 (our caller) as we know that we don't have the attribute
                 for (int frameOffset = 1; frameOffset < trc.FrameCount; frameOffset++)
                 {
@@ -3321,7 +3317,7 @@ namespace StatsDirect.UI
 
 
                     // flag indicating whether to activate previous or next MDIChild
-                    IntPtr direction = new IntPtr(pos == 0 ? 1 : 0);
+                    IntPtr direction = new(pos == 0 ? 1 : 0);
                     NativeMethods.SendMessage(mdiClient.Handle, NativeMethods.WM_MDINEXT, form.Handle, direction);
                 }
             }
@@ -3599,12 +3595,10 @@ namespace StatsDirect.UI
                 WorkbookView workbookView = FindGridOrNull();
                 if (null == workbookView)
                     return;
-                using (frmPasteSpecial frm = new frmPasteSpecial())
-                {
-                    frm.ShowDialog(this);
-                    if (!frm.UserCancelled)
-                        workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
-                }
+                using frmPasteSpecial frm = new();
+                frm.ShowDialog(this);
+                if (!frm.UserCancelled)
+                    workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
             }
             catch (Exception ex)
             {
@@ -3629,30 +3623,28 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            using (frmInsertCells frm = new frmInsertCells())
+            using frmInsertCells frm = new();
+            frm.ShowDialog(this);
+            if (!frm.UserCancelled)
             {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
+                workbookView.WithLock(() =>
                 {
-                    workbookView.WithLock(() =>
+                    if (frm.IsEntire)
                     {
-                        if (frm.IsEntire)
+                        if (InsertShiftDirection.Right == frm.InsertShiftDirection)
                         {
-                            if (InsertShiftDirection.Right == frm.InsertShiftDirection)
-                            {
-                                workbookView.RangeSelection.EntireColumn.Insert();
-                            }
-                            else
-                            {
-                                workbookView.RangeSelection.EntireRow.Insert();
-                            }
+                            workbookView.RangeSelection.EntireColumn.Insert();
                         }
                         else
                         {
-                            workbookView.RangeSelection.Insert(frm.InsertShiftDirection);
+                            workbookView.RangeSelection.EntireRow.Insert();
                         }
-                    });
-                }
+                    }
+                    else
+                    {
+                        workbookView.RangeSelection.Insert(frm.InsertShiftDirection);
+                    }
+                });
             }
         }
 
@@ -3673,26 +3665,24 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            using (frmDeleteSpecial frm = new frmDeleteSpecial())
+            using frmDeleteSpecial frm = new();
+            frm.ShowDialog(this);
+            if (!frm.UserCancelled)
             {
-                frm.ShowDialog(this);
-                if (!frm.UserCancelled)
+                workbookView.WithLock(() =>
                 {
-                    workbookView.WithLock(() =>
+                    if (frm.IsEntire)
                     {
-                        if (frm.IsEntire)
-                        {
-                            if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
-                                workbookView.RangeSelection.EntireColumn.Delete();
-                            else
-                                workbookView.RangeSelection.EntireRow.Delete();
-                        }
+                        if (DeleteShiftDirection.Left == frm.DeleteShiftDirection)
+                            workbookView.RangeSelection.EntireColumn.Delete();
                         else
-                        {
-                            workbookView.RangeSelection.Delete(frm.DeleteShiftDirection);
-                        }
-                    });
-                }
+                            workbookView.RangeSelection.EntireRow.Delete();
+                    }
+                    else
+                    {
+                        workbookView.RangeSelection.Delete(frm.DeleteShiftDirection);
+                    }
+                });
             }
         }
 
@@ -4039,8 +4029,8 @@ namespace StatsDirect.UI
             }
             if (null == rawIcon)
                 return null;
-            System.Drawing.Icon sizedIcon = new System.Drawing.Icon(rawIcon, 40, 40);
-            Bitmap bmp = new Bitmap(sizedIcon.Width, sizedIcon.Height);
+            System.Drawing.Icon sizedIcon = new(rawIcon, 40, 40);
+            Bitmap bmp = new(sizedIcon.Width, sizedIcon.Height);
             Graphics gxMem = Graphics.FromImage(bmp);
             gxMem.DrawIcon(sizedIcon, 0, 0);
             gxMem.Dispose();
@@ -4139,7 +4129,7 @@ namespace StatsDirect.UI
             }
 
             // Insert the new candidate at the top, removing it if it was further down the list.
-            SDListItem candidate = new SDListItem(operation.FriendlyName, operation.Name);
+            SDListItem candidate = new(operation.FriendlyName, operation.Name);
             if (cboRecentOperations.Items.Contains(candidate))
                 cboRecentOperations.Items.Remove(candidate);
             cboRecentOperations.Items.Insert(1, candidate);

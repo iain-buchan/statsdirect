@@ -120,7 +120,7 @@ namespace StatsDirect.Templates
             // Approach: Go through the operation (found = false) until we find the given step (found = true).
             // Then keep going until we hit something else that will request input (can't aggregate) or something of the relevant step type (can aggregate) or the end of the report (don't know).
             // TODO: Do we ever need to pass real parameters into this?
-            ParameterBag parameters = new ParameterBag();
+            ParameterBag parameters = new();
             foreach (Step candidate in steps)
             {
                 if (found)

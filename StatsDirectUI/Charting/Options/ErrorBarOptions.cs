@@ -22,7 +22,7 @@ namespace StatsDirect.Charting
                 MarkerTypes.Add(markerType);
 
                 //  An error plot has series with possible lines.
-                SeriesOptionsDescriptor soleOptions = new SeriesOptionsDescriptor
+                SeriesOptionsDescriptor soleOptions = new()
                 {
                     SeriesName = Series[i].Title,
                     AllowChangeToDashStyle = true,

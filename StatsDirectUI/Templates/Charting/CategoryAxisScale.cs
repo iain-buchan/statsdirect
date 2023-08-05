@@ -22,7 +22,7 @@ namespace StatsDirect.Templates
         /// </summary>
         public IList<Tic> Tics()
         {
-            List<Tic> tics = new List<Tic>(Categories + 1);
+            List<Tic> tics = new(Categories + 1);
             for (int i = 0; i <= Categories; i++)
                 tics.Add(new Tic(i, i.ToString()));
             return tics;

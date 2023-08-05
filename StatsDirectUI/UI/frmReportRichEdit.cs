@@ -29,7 +29,7 @@ namespace StatsDirect.UI
 
         private void SetCustomCommandFactory()
         {
-            CustomRichEditCommandFactoryService commandFactory = new CustomRichEditCommandFactoryService(richEditControl1, richEditControl1.GetService<IRichEditCommandFactoryService>());
+            CustomRichEditCommandFactoryService commandFactory = new(richEditControl1, richEditControl1.GetService<IRichEditCommandFactoryService>());
             richEditControl1.RemoveService(typeof(IRichEditCommandFactoryService));
             richEditControl1.AddService(typeof(IRichEditCommandFactoryService), commandFactory);
         }
@@ -69,8 +69,8 @@ namespace StatsDirect.UI
                 richEditControl1.LoadDocument(filename, DocumentFormat.Mht);
             else
             {
-                using (StreamReader txtReader = new StreamReader(filename))
-                    richEditControl1.Text = txtReader.ReadToEnd();
+                using StreamReader txtReader = new(filename);
+                richEditControl1.Text = txtReader.ReadToEnd();
             }
             if (!isTempFile)
             {
@@ -405,10 +405,10 @@ namespace StatsDirect.UI
                 int secondBoundary = textToSelectionPoint.IndexOf(enclosedEnclosureEnd, firstBoundary + enclosedEnclosureStart.Length, StringComparison.Ordinal);
                 if (secondBoundary >= 0)
                 {
-                    string middle = textToSelectionPoint.Substring(firstBoundary + enclosedEnclosureStart.Length, secondBoundary - (firstBoundary + enclosedEnclosureStart.Length));
+                    string middle = textToSelectionPoint[(firstBoundary + enclosedEnclosureStart.Length)..secondBoundary];
                     return middle.Trim();
                 }
-                textToSelectionPoint = textToSelectionPoint.Substring(0, firstBoundary);
+                textToSelectionPoint = textToSelectionPoint[..firstBoundary];
                 firstBoundary = textToSelectionPoint.LastIndexOf(enclosedEnclosureStart, StringComparison.Ordinal);
             }
 
@@ -454,7 +454,7 @@ namespace StatsDirect.UI
 
         public override IList<Pane> AvailablePanes => new List<Pane> { ((IForm)this).SelectedPane };
 
-        public override Pane SelectedPane => new Pane(Text, WindowInformation, 0);
+        public override Pane SelectedPane => new(Text, WindowInformation, 0);
 
         public override bool SelectPane(Pane pane)
         {
@@ -583,10 +583,8 @@ namespace StatsDirect.UI
             Image img = GetSelectedImage(out byte[] bytes);
             if (null != bytes)
             {
-                using (frmExportGraphic f = new frmExportGraphic(img, bytes))
-                {
-                    f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
-                }
+                using frmExportGraphic f = new(img, bytes);
+                f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
             }
             else
                 SdApplication.SoleInstance.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
@@ -601,11 +599,11 @@ namespace StatsDirect.UI
             if (!rtf.Contains(@"{\pict"))
                 return null;
 
-            string rtfFromPict = rtf.Substring(rtf.IndexOf(@"{\pict", StringComparison.Ordinal) + 6);
-            if (!rtfFromPict.Contains("}"))
+            string rtfFromPict = rtf[(rtf.IndexOf(@"{\pict", StringComparison.Ordinal) + 6)..];
+            if (!rtfFromPict.Contains('}'))
                 return null;
 
-            string trimmedRtf = rtfFromPict.Substring(0, rtfFromPict.IndexOf("}", StringComparison.Ordinal));
+            string trimmedRtf = rtfFromPict[..rtfFromPict.IndexOf("}", StringComparison.Ordinal)];
             return 0 == trimmedRtf.Length ? null : RtfImageConverter.ParseRtfToImage(trimmedRtf, out rawBytes);
         }
 
@@ -621,10 +619,10 @@ namespace StatsDirect.UI
                 string rtf = richEditControl1.Document.GetRtfText(richEditControl1.Document.Selection);
                 if (rtf.Contains(@"{\pict"))
                 {
-                    string rtfFromPict = rtf.Substring(rtf.IndexOf(@"{\pict", StringComparison.Ordinal) + 6);
-                    if (rtfFromPict.Contains("}"))
+                    string rtfFromPict = rtf[(rtf.IndexOf(@"{\pict", StringComparison.Ordinal) + 6)..];
+                    if (rtfFromPict.Contains('}'))
                     {
-                        string trimmedRtf = rtfFromPict.Substring(0, rtfFromPict.IndexOf("}", StringComparison.Ordinal));
+                        string trimmedRtf = rtfFromPict[..rtfFromPict.IndexOf("}", StringComparison.Ordinal)];
                         return trimmedRtf.Length > 0;
                     }
                 }
@@ -722,8 +720,8 @@ namespace StatsDirect.UI
                 // Operation is delimited by quotes and comes first
                 int firstQuote = freezeDriedData.IndexOf('"');
                 int secondQuote = freezeDriedData.IndexOf('"', firstQuote + 1);
-                string operationName = freezeDriedData.Substring(firstQuote + 1, secondQuote - (firstQuote + 1));
-                string freezeDriedParameters = freezeDriedData.Substring(secondQuote + 1).Trim();
+                string operationName = freezeDriedData[(firstQuote + 1)..secondQuote];
+                string freezeDriedParameters = freezeDriedData[(secondQuote + 1)..].Trim();
                 SdApplication.SoleInstance.ReplayWithCurrentData(operationName, freezeDriedParameters);
             }
         }
