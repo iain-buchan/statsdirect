@@ -54,7 +54,7 @@ namespace StatsDirect.UI
                 MarkerShapeChanged(this, e);
         }
 
-        private void cboMarkerShape_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboMarkerShape_SelectedIndexChanged(object? sender, EventArgs e)
         {
             MarkerShape = (Charting.MarkerShape)(cboMarkerShape.SelectedIndex + 1);
         }

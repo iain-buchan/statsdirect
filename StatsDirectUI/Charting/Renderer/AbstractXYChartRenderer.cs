@@ -8,8 +8,8 @@ namespace StatsDirect.Charting.Renderer
 {
     internal abstract class AbstractXYChartRenderer : AbstractChartRenderer
     {
-        protected AbstractXYChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        protected AbstractXYChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -73,18 +73,18 @@ namespace StatsDirect.Charting.Renderer
                     break;
                 case DataMinMax.XY_CalcTogether:
                     // X and Y must have the same scale
-                    GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
-                    GetMinMaxArray(y, out axisYMin, out axisYMax, out axisYMinGreaterThanZero);
+                    (axisXMin, axisXMax, axisXMinGreaterThanZero) = GetMinMaxArray(x);
+                    (axisYMin, axisYMax, axisYMinGreaterThanZero) = GetMinMaxArray(y);
                     axisYMin = axisXMin = Math.Min(axisYMin, axisXMin);
                     axisYMinGreaterThanZero = axisXMinGreaterThanZero = Math.Min(axisYMinGreaterThanZero, axisXMinGreaterThanZero);
                     axisYMax = axisXMax = Math.Max(axisYMax, axisXMax);
                     break;
                 case DataMinMax.XCalc_YCalc:
-                    GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
-                    GetMinMaxArray(y, out axisYMin, out axisYMax, out axisYMinGreaterThanZero);
+                    (axisXMin, axisXMax, axisXMinGreaterThanZero) = GetMinMaxArray(x);
+                    (axisYMin, axisYMax, axisYMinGreaterThanZero) = GetMinMaxArray(y);
                     break;
                 case DataMinMax.XCalc_YPreset:
-                    GetMinMaxArray(x, out axisXMin, out axisXMax, out axisXMinGreaterThanZero);
+                    (axisXMin, axisXMax, axisXMinGreaterThanZero) = GetMinMaxArray(x);
                     axisYMin = presetYMin;
                     axisYMinGreaterThanZero = presetYMin;
                     axisYMax = presetYMax;

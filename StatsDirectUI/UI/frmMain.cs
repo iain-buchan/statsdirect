@@ -5,36 +5,34 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+
+using SpreadsheetGear;
+using SpreadsheetGear.Windows.Forms;
+using StatsDirect.Charting;
 using StatsDirect.Configuration;
 using StatsDirect.Data;
-using StatsDirect.Templates;
-using StatsDirect.UI.Properties;
-using StatsDirect.Utilities;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.IO;
-using SpreadsheetGear.Windows.Forms;
-using SpreadsheetGear;
-using Color = System.Drawing.Color;
 using StatsDirect.R;
+using StatsDirect.Templates;
+using StatsDirect.Utilities;
+
+using Color = System.Drawing.Color;
 using InvalidDataException = StatsDirect.Templates.InvalidDataException;
-using System.Globalization;
-using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.UI
 {
-    public partial class frmMain : Form, IToolStripHost
+    internal partial class frmMain : Form, IToolStripHost
     {
-        private static readonly char[] BAR = { '|' };
-        private static readonly char[] EQUALS = { '=' };
         private const string USER_INPUT_TABLE_NAME = "table";
 
         /// <summary>
@@ -61,7 +59,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// A holder where we are activating a window via a tab.
         /// </summary>
-        private Form mostRecentlySelectedWindow;
+        private Form? mostRecentlySelectedWindow;
 
         /// <summary>
         /// If true, a grid selection is in progress
@@ -83,22 +81,22 @@ namespace StatsDirect.UI
         /// <summary>
         /// A way of keeping starting parameters between operations, where follow-on operations are in use.
         /// </summary>
-        private ParameterBag knownParameters;
+        private ParameterBag? knownParameters;
 
         /// <summary>
         /// A way of passing the ambient parameters into the visibility checks.
         /// This should be null except during a FillCombinedParameters call.
         /// </summary>
-        private ParameterBag fillCombinedParametersContext;
+        private ParameterBag? fillCombinedParametersContext;
 
-        private List<ToolStripMenuItem> recentFileEntries;
+        private List<ToolStripMenuItem>? recentFileEntries;
 
-        private object lastSeenMenuItemTag;
+        private object? lastSeenMenuItemTag;
 
         PanelType currentPanelType;
-        readonly Stack<PanelType> panelTypeStack;
+        readonly Stack<PanelType>? panelTypeStack;
 
-        private Operation mostRecentOperation;
+        private Operation? mostRecentOperation;
         private bool settingUpSubOperations /* = false */;
         private bool settingUpRecentOperations /* = false */;
 
@@ -109,7 +107,7 @@ namespace StatsDirect.UI
         private int pendingPanelPops /* = 0 */;
 
         // Record the running scale factor used, for sizing controls we add dynamically where they don't do it themselves
-        internal SizeF currentScaleFactor { get; private set; }
+        internal SizeF CurrentScaleFactor { get; private set; }
 
         /// <summary>
         /// Outside the debugger, the runtime cannot propagate exception through native code - the native handler gets them and fails.
@@ -120,7 +118,15 @@ namespace StatsDirect.UI
         /// Look for users of this variable for the gory details.
         /// Ideally the entire template system would be rebuilt to not steal the flow of control, at which point the system could be turned inside-out and there would be no need for this code (it would also work better in, say, an asp.net environment).
         /// </summary>
-        private Exception puntedException;
+        private Exception? puntedException;
+
+        private IChartPreferences ChartPreferences { get; }
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private ISdApplication SdApplication { get; }
+        private ISdPreferences SdPreferences { get; }
+        private ITemplateHost TemplateHost{ get; }
+        private ITemplateProcessorFactory TemplateProcessorFactory { get; }
+        private IUiPreferences UiPreferences { get; }
 
         private enum PanelType
         {
@@ -146,9 +152,17 @@ namespace StatsDirect.UI
             ModalMessage
         };
 
-        public frmMain()
+        internal frmMain(IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, ISdApplication sdApplication, ISdPreferences sdPreferences, ITemplateHost templateHost, ITemplateProcessorFactory templateProcessorFactory, IUiPreferences uiPreferences)
         {
-            currentScaleFactor = new SizeF(1f, 1f);
+            ChartPreferences = chartPreferences;
+            ChartRendererFactory = chartRendererFactory;
+            SdApplication = sdApplication;
+            SdPreferences = sdPreferences;
+            TemplateHost = templateHost;
+            TemplateProcessorFactory = templateProcessorFactory;
+            UiPreferences = uiPreferences;
+
+            CurrentScaleFactor = new SizeF(1f, 1f);
             InitializeComponent();
             tipBatch.SetToolTip(chkBatchMode, "Run this function again automatically");
             panelTypeStack = new Stack<PanelType>();
@@ -160,23 +174,27 @@ namespace StatsDirect.UI
             cboRecentOperations.SelectedIndex = 0;
         }
 
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        private void exitToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             Close();
         }
 
         private void AddTemplates()
         {
-            SDMenuItem rootItem = LoadMenuItems(Path.Combine(SDConfiguration.InstallationDirectory, Settings.Default.MenuFileName));
-            foreach (SDMenuItem sdMenuItem in rootItem.SubItems)
+            SDMenuItem? rootItem = LoadMenuItems(SDConfiguration.MenuFilePath);
+            if (rootItem is not null)
             {
-                ToolStripItem menuItem = MakeMenuItem(sdMenuItem);
-                menuItem.MergeAction = MergeAction.Replace;
-                mnuMain.Items.Insert(mnuMain.Items.Count - 3, menuItem);
+                // TODO: Probably worth a warning if there are genuinely no menu items.
+                foreach (SDMenuItem sdMenuItem in rootItem.SubItems)
+                {
+                    ToolStripItem menuItem = MakeMenuItem(sdMenuItem);
+                    menuItem.MergeAction = MergeAction.Replace;
+                    mnuMain.Items.Insert(mnuMain.Items.Count - 3, menuItem);
+                }
             }
 
-            SDMenuItem userDefinedItem = UserMenuItems();
-            if (null != userDefinedItem)
+            SDMenuItem? userDefinedItem = UserMenuItems();
+            if (userDefinedItem is not null)
             {
                 ToolStripItem userDefinedMenuItem = MakeMenuItem(userDefinedItem);
                 userDefinedMenuItem.MergeAction = MergeAction.Replace;
@@ -185,7 +203,7 @@ namespace StatsDirect.UI
 
             // #844: Templates can be loaded with windows open (for example from the Excel add-in).  Make sure that menus are set up for the active window if there is one.
             if (ActiveMdiChild is StatsDirectForm)
-                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)ActiveMdiChild.Tag);
+                SdApplication.NoteFormActivated((WindowInformation)ActiveMdiChild.Tag);
             else
                 SetMenuVisibility(false);
         }
@@ -193,9 +211,7 @@ namespace StatsDirect.UI
         internal void SetMenuVisibility(bool isGridVisible)
         {
             foreach (ToolStripItem item in mnuMain.Items)
-            {
                 SetMenuVisibility(item, isGridVisible);
-            }
         }
 
         private static bool SetMenuVisibility(ToolStripItem item, bool isGridVisible)
@@ -203,9 +219,9 @@ namespace StatsDirect.UI
             // Do the sub-items first; this gives us a chance to detect the case of all sub-items being disabled.
             bool atLeastOneSub = false;
             bool atLeastOneSubVisible = false;
-            if (item is ToolStripMenuItem)
+            if (item is ToolStripMenuItem toolStripMenuItem)
             {
-                foreach (ToolStripItem subItem in ((ToolStripMenuItem)item).DropDownItems)
+                foreach (ToolStripItem subItem in toolStripMenuItem.DropDownItems)
                 {
                     atLeastOneSub = true;
                     atLeastOneSubVisible |= SetMenuVisibility(subItem, isGridVisible);
@@ -213,10 +229,10 @@ namespace StatsDirect.UI
             }
 
             bool enabledViaGrid = true;
-            object tagObject = ToTagObject(item);
+            object? tagObject = ToTagObject(item);
             if (tagObject is Dictionary<string, string> tagDictionary)
             {
-                if (tagDictionary.TryGetValue("operation", out string operationName))
+                if (tagDictionary.TryGetValue("operation", out string? operationName))
                 {
                     Operation operation = TemplateFactory.Operations[operationName]; // TODO: User operations
                     enabledViaGrid = isGridVisible || !operation.RequiresGrid;
@@ -227,11 +243,11 @@ namespace StatsDirect.UI
             return item.Enabled;
         }
 
-        private static object ToTagObject(ToolStripItem item)
+        private static object? ToTagObject(ToolStripItem? item)
         {
-            object o = item?.Tag;
+            object? o = item?.Tag;
 
-            if (o == null)
+            if (o is null)
                 return null;
 
             // Check for one of our specially formatted key-value strings
@@ -247,11 +263,11 @@ namespace StatsDirect.UI
         private static object ToTagObject(string s)
         {
             Dictionary<string, string> output = new();
-            string trimmedS = s.Substring(2, s.Length - 3);
-            string[] pairs = trimmedS.Split(BAR);
+            string trimmedS = s[2..^1];
+            string[] pairs = trimmedS.Split('|');
             foreach (string pairString in pairs)
             {
-                string[] keyValue = pairString.Split(EQUALS);
+                string[] keyValue = pairString.Split('=');
                 if (keyValue.Length == 2)
                     output[keyValue[0]] = keyValue[1];
             }
@@ -274,12 +290,12 @@ namespace StatsDirect.UI
             if (!string.IsNullOrEmpty(sdMenuItem.Tooltip))
                 menuItem.ToolTipText = sdMenuItem.Tooltip;
             Dictionary<string, string> tags = new();
-            if (null != sdMenuItem.Operation && TemplateFactory.Operations.ContainsKey(sdMenuItem.Operation))
+            if (sdMenuItem.Operation is not null && TemplateFactory.Operations.ContainsKey(sdMenuItem.Operation))
             {
                 tags.Add("operation", sdMenuItem.Operation);
                 // menuItem.BackColor = Color.PaleGreen;
             }
-            if (sdMenuItem.Help?.ChmId != null)
+            if (sdMenuItem.Help?.ChmId is not null)
             {
                 // Prevent string injection into tags
                 int chmId = int.Parse(sdMenuItem.Help.ChmId);
@@ -289,7 +305,7 @@ namespace StatsDirect.UI
             menuItem.Click += OperationMenuHandler;
             menuItem.MouseEnter += menuItem_MouseEnter;
             menuItem.MouseLeave += menuItem_MouseLeave;
-            if (null != sdMenuItem.SubItems)
+            if (sdMenuItem.SubItems is not null)
             {
                 foreach (SDMenuItem subMenuItem in sdMenuItem.SubItems)
                     menuItem.DropDownItems.Add(MakeMenuItem(subMenuItem));
@@ -297,7 +313,7 @@ namespace StatsDirect.UI
             return menuItem;
         }
 
-        private static string ToTagString(Dictionary<string, string> tags)
+        private static string? ToTagString(Dictionary<string, string>? tags)
         {
             if (null == tags || tags.Count == 0)
                 return null;
@@ -318,24 +334,24 @@ namespace StatsDirect.UI
             return sb.ToString();
         }
 
-        private void menuItem_MouseLeave(object sender, EventArgs e)
+        private void menuItem_MouseLeave(object? sender, EventArgs e)
         {
             lastSeenMenuItemTag = null;
         }
 
-        private void menuItem_MouseEnter(object sender, EventArgs e)
+        private void menuItem_MouseEnter(object? sender, EventArgs e)
         {
-            lastSeenMenuItemTag = ToTagObject((ToolStripItem)sender);
+            lastSeenMenuItemTag = ToTagObject((ToolStripItem?)sender);
         }
 
-        public static SDMenuItem LoadMenuItems(string pathName)
+        public static SDMenuItem? LoadMenuItems(string pathName)
         {
             XmlSerializer s = new(typeof(SDMenuItem));
             using TextReader r = new StreamReader(pathName);
-            return (SDMenuItem)s.Deserialize(r);
+            return (SDMenuItem?)s.Deserialize(r);
         }
 
-        public static SDMenuItem UserMenuItems()
+        public static SDMenuItem? UserMenuItems()
         {
             List<SDMenuItem> items = new();
 
@@ -357,22 +373,22 @@ namespace StatsDirect.UI
             return new SDMenuItem { Label = "&User-defined", SubItems = items.ToArray() };
         }
 
-        private void OperationMenuHandler(object sender, EventArgs e)
+        private void OperationMenuHandler(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
             {
 #endif
             ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
-            if (null != menuItem.Tag)
+            if (menuItem.Tag is not null)
                 Debug.Print((string)menuItem.Tag);
-            object tagObject = ToTagObject(menuItem);
-            if (!(tagObject is Dictionary<string, string>))
+            object? tagObject = ToTagObject(menuItem);
+            if (tagObject is not Dictionary<string, string>)
                 return;
             Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
-                if (!tags.TryGetValue("operation", out string operationName))
+                if (!tags.TryGetValue("operation", out string? operationName))
                     return;
-                if (!TemplateFactory.Operations.TryGetValue(operationName, out Operation operation))
+                if (!TemplateFactory.Operations.TryGetValue(operationName, out Operation? operation))
                     return;
                 DoOperationWithPossibleBatching(operation);
 #if !WATCH_EXCEPTIONS
@@ -402,18 +418,17 @@ namespace StatsDirect.UI
                     if (chkBatchMode.Checked)
                     {
                         // Ensure the next loop doesn't start with the data that's currently highlighted.
-                        if (null != SdApplication.SoleInstance
-                            && null != SdApplication.SoleInstance.ActiveGrid
-                            && SdApplication.SoleInstance.ActiveGrid.HasWindow)
+                        if (SdApplication is not null
+                            && SdApplication.ActiveGrid is not null
+                            && SdApplication.ActiveGrid.HasWindow)
                         {
-                            ((IGrid)SdApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
+                            ((IGrid)SdApplication.ActiveGrid.Window).ClearSelection();
                         }
                     }
                     // If we're batching, then we must be doing something with grid input.  So, if we're going round again, ensure our grid is visible.
                     if (chkBatchMode.Checked)
                     {
-                        if (SdApplication.SoleInstance.ActiveGrid != null)
-                            SdApplication.SoleInstance.ActiveGrid.Window.Activate();
+                        SdApplication.ActiveGrid?.Window.Activate();
                     }
                 } while (chkBatchMode.Checked);
             }
@@ -431,8 +446,8 @@ namespace StatsDirect.UI
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.EraseAnyOutstandingParameters();
-                SdApplication.SoleInstance.FriendlyError(string.Format("Error while running operation '{0}'", operation.Name), ex, false);
+                SdApplication.EraseAnyOutstandingParameters();
+                SdApplication.FriendlyError(string.Format("Error while running operation '{0}'", operation.Name), ex, false);
             }
 #endif
         }
@@ -441,7 +456,7 @@ namespace StatsDirect.UI
         {
             chkBatchMode.Checked = false;
             // Ensure there are no remembered batch details
-            SdApplication.SoleInstance.ClearBatchMode();
+            SdApplication.ClearBatchMode();
         }
 
         public void DoOperation(string operationName)
@@ -449,7 +464,7 @@ namespace StatsDirect.UI
             try
             {
                 Operation operation = TemplateFactory.Operations[operationName];
-                SdApplication.SoleInstance.DoOperationOnceOrUntilCancelled(operation, null);
+                SdApplication.DoOperationOnceOrUntilCancelled(operation, null);
             }
             catch (CancelCurrentOperationAndDoException ex)
             {
@@ -465,8 +480,8 @@ namespace StatsDirect.UI
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.EraseAnyOutstandingParameters();
-                SdApplication.SoleInstance.FriendlyError(string.Format("Error while running operation '{0}'", operationName), ex, false);
+                SdApplication.EraseAnyOutstandingParameters();
+                SdApplication.FriendlyError(string.Format("Error while running operation '{0}'", operationName), ex, false);
             }
 #endif
         }
@@ -482,25 +497,23 @@ namespace StatsDirect.UI
         /// <summary>
         /// Create and add a new grid window
         /// </summary>
-        internal StatsDirectForm CreateGrid(string unsavedName)
+        internal StatsDirectForm CreateGrid(string? unsavedName)
         {
             // Make and add the child window
             using (new WaitCursor())
             {
-                frmSpreadsheetGear child = new();
-                child.SetUnsavedName(unsavedName ?? child.Text + " " + SdApplication.SoleInstance.GetGridNumber());
+                frmSpreadsheetGear child = new(SdApplication, SdPreferences, TemplateProcessorFactory, UiPreferences, TemplateHost);
+                child.SetUnsavedName(unsavedName ?? child.Text + " " + SdApplication.GetGridNumber());
                 SetUpForm(child);
                 return child;
             }
         }
 
-        internal StatsDirectForm FindOrOpenGrid(string filename)
+        internal StatsDirectForm? FindOrOpenGrid(string filename)
         {
-            foreach (WindowInformation wi in SdApplication.SoleInstance.Windows)
-            {
-                if (wi.IsFile(filename))
-                    return wi.Window;
-            }
+            WindowInformation? wi = SdApplication.FindWindowInformationForPath(filename);
+            if (wi is not null)
+                return wi.Window;
             // If we get here, no existing grid has the file open - we'll have to reopen it if we can.
 
             // Check that the grid was, in fact, a file.  If it doesn't contain a directory separator, it wasn't - it was therefore almost certainly never saved and we can't recover it.
@@ -509,7 +522,7 @@ namespace StatsDirect.UI
             return CreateGrid(filename, true, null);
         }
 
-        internal StatsDirectForm CreateGrid(string filename, bool isTempFile, string nameToDisplay)
+        internal StatsDirectForm? CreateGrid(string filename, bool isTempFile, string? nameToDisplay)
         {
             using (new WaitCursor())
             {
@@ -519,17 +532,17 @@ namespace StatsDirect.UI
                 {
                     opened = newGrid.OpenFile(filename, isTempFile, nameToDisplay);
                     if (!isTempFile)
-                        SdApplication.SoleInstance.NoteRecentFile(filename, opened);
+                        SdApplication.NoteRecentFile(filename, opened);
                 }
                 catch (IOException ex)
                 {
-                    SdApplication.SoleInstance.FriendlyError("Couldn't open spreadsheet", ex, true);
-                    SdApplication.SoleInstance.NoteRecentFile(filename, false);
+                    SdApplication.FriendlyError("Couldn't open spreadsheet", ex, true);
+                    SdApplication.NoteRecentFile(filename, false);
                 }
                 if (!opened)
                 {
                     newGrid.Close();
-                    SdApplication.SoleInstance.NoteFormClosing(newGrid, new FormClosingEventArgs(CloseReason.None, false));
+                    SdApplication.NoteFormClosing(newGrid, new FormClosingEventArgs(CloseReason.None, false));
                 }
                 return opened ? newGrid : null;
             }
@@ -543,16 +556,16 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                StatsDirectForm child = new frmReportRichEdit();
+                StatsDirectForm child = new frmReportRichEdit(ChartRendererFactory, SdApplication, SdPreferences);
                 // StatsDirectForm child = new frmReportDotNetBrowser();
-                string childName = child.Text + " " + SdApplication.SoleInstance.GetReportNumber();
+                string childName = child.Text + " " + SdApplication.GetReportNumber();
                 child.Text = childName;
                 SetUpForm(child);
                 return child;
             }
         }
 
-        internal StatsDirectForm CreateReport(string filename, bool isTempFile)
+        internal StatsDirectForm? CreateReport(string filename, bool isTempFile)
         {
             StatsDirectForm newReport = CreateReport();
             bool opened = false;
@@ -560,17 +573,17 @@ namespace StatsDirect.UI
             {
                 opened = newReport.OpenFile(filename, isTempFile, null);
                 if (!isTempFile)
-                    SdApplication.SoleInstance.NoteRecentFile(filename, opened);
+                    SdApplication.NoteRecentFile(filename, opened);
             }
             catch (IOException ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't open report", ex, true);
-                SdApplication.SoleInstance.NoteRecentFile(filename, false);
+                SdApplication.FriendlyError("Couldn't open report", ex, true);
+                SdApplication.NoteRecentFile(filename, false);
             }
             if (!opened)
             {
                 newReport.Close();
-                SdApplication.SoleInstance.NoteFormClosing(newReport, new FormClosingEventArgs(CloseReason.None, false));
+                SdApplication.NoteFormClosing(newReport, new FormClosingEventArgs(CloseReason.None, false));
             }
             return opened ? newReport : null;
         }
@@ -583,15 +596,15 @@ namespace StatsDirect.UI
             // Make and add the child window
             using (new WaitCursor())
             {
-                frmScript child = new();
-                string childName = child.Text + " " + SdApplication.SoleInstance.GetScriptWindowNumber();
+                frmScript child = new(SdApplication);
+                string childName = child.Text + " " + SdApplication.GetScriptWindowNumber();
                 child.Text = childName;
                 SetUpForm(child);
                 return child;
             }
         }
 
-        internal StatsDirectForm CreateScriptWindow(string filename, bool isTempFile)
+        internal StatsDirectForm? CreateScriptWindow(string filename, bool isTempFile)
         {
             StatsDirectForm newScriptWindow = CreateScriptWindow();
             bool opened = false;
@@ -599,17 +612,17 @@ namespace StatsDirect.UI
             {
                 opened = newScriptWindow.OpenFile(filename, isTempFile, null);
                 if (!isTempFile)
-                    SdApplication.SoleInstance.NoteRecentFile(filename, opened);
+                    SdApplication.NoteRecentFile(filename, opened);
             }
             catch (IOException ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't open script", ex, true);
-                SdApplication.SoleInstance.NoteRecentFile(filename, false);
+                SdApplication.FriendlyError("Couldn't open script", ex, true);
+                SdApplication.NoteRecentFile(filename, false);
             }
             if (!opened)
             {
                 newScriptWindow.Close();
-                SdApplication.SoleInstance.NoteFormClosing(newScriptWindow, new FormClosingEventArgs(CloseReason.None, false));
+                SdApplication.NoteFormClosing(newScriptWindow, new FormClosingEventArgs(CloseReason.None, false));
             }
             return opened ? newScriptWindow : null;
         }
@@ -641,7 +654,7 @@ namespace StatsDirect.UI
                 WindowInformation info = new() { TabPage = tabPage, Window = child };
                 child.Tag = info;
                 tabPage.Tag = info;
-                SdApplication.SoleInstance.AddWindow(info);
+                SdApplication.AddWindow(info);
 
                 // Update the display
                 closeToolStripMenuItem.Enabled = tabWindows.TabPages.Count > 0;
@@ -658,7 +671,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void newGridToolStripMenuItem_Click(object sender, EventArgs e)
+        private void newGridToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -666,11 +679,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Creating a new grid failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Creating a new grid failed due to an internal error", ex, false);
             }
         }
 
-        private void tabWindows_Selecting(object sender, TabControlCancelEventArgs e)
+        private void tabWindows_Selecting(object? sender, TabControlCancelEventArgs e)
         {
             try
             {
@@ -680,14 +693,14 @@ namespace StatsDirect.UI
 
                 WindowInformation info = (WindowInformation)e.TabPage.Tag;
                 // The tab may be asked to activate while it is still being set up, hence before it has an associated window.  Handle that case.
-                if (null != info && info.HasWindow && !activatingViaWindow)
+                if (info is not null && info.HasWindow && !activatingViaWindow)
                 {
                     ActivateWindowViaTab(info.Window);
                 }
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Swapping windows failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Swapping windows failed due to an internal error", ex, false);
             }
         }
 
@@ -722,27 +735,23 @@ namespace StatsDirect.UI
             closeToolStripMenuItem.Enabled = tabWindows.TabPages.Count > 0;
         }
 
-        private void closeTabToolStripMenuItem_Click(object sender, EventArgs e)
+        private void closeTabToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                WindowInformation lastClickedTab = TabStripLastClickedTab();
-                lastClickedTab?.Window.Close();
+                WindowInformation? lastClickedTab = TabStripLastClickedTab();
+                lastClickedTab?.Window?.Close();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Closing the tab failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Closing the tab failed due to an internal error", ex, false);
             }
         }
 
-        private WindowInformation TabStripLastClickedTab()
-        {
-            if (lastClickedTabIndex >= 0)
-            {
-                return (WindowInformation)tabWindows.TabPages[lastClickedTabIndex].Tag;
-            }
-            return null;
-        }
+        private WindowInformation? TabStripLastClickedTab() =>
+            lastClickedTabIndex >= 0
+                ? (WindowInformation)tabWindows.TabPages[lastClickedTabIndex].Tag
+                : null;
 
         /// <summary>
         /// A window has been activated and wants to synchronise its tab.
@@ -759,8 +768,8 @@ namespace StatsDirect.UI
             }
             if (null == cboActiveReport.SelectedItem)
             {
-                WindowInformation wi = (WindowInformation)tabPage.Tag;
-                if (null != wi)
+                WindowInformation? wi = (WindowInformation?)tabPage.Tag;
+                if (wi is not null)
                 {
                     if (wi.HasWindow)
                     {
@@ -771,7 +780,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void newReportToolStripMenuItem_Click(object sender, EventArgs e)
+        private void newReportToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -779,20 +788,20 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Creating a report failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Creating a report failed due to an internal error", ex, false);
             }
         }
 
-        private void saveToolStripButton_Click(object sender, EventArgs e)
+        private void saveToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
-                WindowInformation activeInfo = ActiveWindowInformation();
+                WindowInformation? activeInfo = ActiveWindowInformation();
                 activeInfo?.Window.SaveContents();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Save failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Save failed due to an internal error", ex, false);
             }
         }
 
@@ -800,12 +809,12 @@ namespace StatsDirect.UI
         /// Returns the active window's WindowInformation object, or null if there is no active window or the active window has no WindowInformation.
         /// </summary>
         /// <returns>the active window's WindowInformation object, or null if there is no active window or the active window has no WindowInformation</returns>
-        private WindowInformation ActiveWindowInformation()
+        private WindowInformation? ActiveWindowInformation()
         {
-            return (WindowInformation) ActiveMdiChild?.Tag;
+            return (WindowInformation?)ActiveMdiChild?.Tag;
         }
 
-        private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
+        private void frmMain_FormClosing(object? sender, FormClosingEventArgs e)
         {
             try
             {
@@ -816,7 +825,7 @@ namespace StatsDirect.UI
                 bool cancel = false;
                 foreach (Form child in MdiChildren)
                 {
-                    if (child is StatsDirectForm && !((StatsDirectForm)child).SafeToClose)
+                    if (child is StatsDirectForm form && !form.SafeToClose)
                         cancel = true;
                 }
                 if (cancel)
@@ -834,7 +843,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Closing the main form failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Closing the main form failed due to an internal error", ex, false);
             }
         }
 
@@ -846,7 +855,7 @@ namespace StatsDirect.UI
             const double FRACTION_OF_PRIMARY = 0.75;
 
             // If our settings have previously been saved, load them now.  Otherwise, default to 75% width and height, centred, on the primary screen.
-            if (Settings.Default.MainWidth <= 0)
+            if (UiPreferences.MainDimensions.Width <= 0)
             {
                 foreach (Screen screen in Screen.AllScreens)
                 {
@@ -863,14 +872,14 @@ namespace StatsDirect.UI
             {
                 try
                 {
-                    Top = Settings.Default.MainTop;
-                    Left = Settings.Default.MainLeft;
-                    Width = Settings.Default.MainWidth;
-                    Height = Settings.Default.MainHeight;
+                    Top = UiPreferences.MainDimensions.Top;
+                    Left = UiPreferences.MainDimensions.Left;
+                    Width = UiPreferences.MainDimensions.Width;
+                    Height = UiPreferences.MainDimensions.Height;
 
                     // Check against current screen settings - on remote desktops, for example, a user may now have a smaller screen.
                     // If the window's title bar is completely invisible, force it onto the main screen.
-                    Screen primaryScreen = null;
+                    Screen? primaryScreen = null;
                     bool titleBarIsVisible = false;
                     Rectangle titleBarRect = new(Left, Top, Width, 20); // Assume a 20 pixel high title bar - TODO: get from system structures
                     foreach (Screen screen in Screen.AllScreens)
@@ -890,7 +899,7 @@ namespace StatsDirect.UI
                             break;
                         }
                     }
-                    if (null != primaryScreen && !titleBarIsVisible)
+                    if (primaryScreen is not null && !titleBarIsVisible)
                     {
                         // Move the window onto the primary display
                         Rectangle bounds = primaryScreen.WorkingArea;
@@ -904,10 +913,9 @@ namespace StatsDirect.UI
                 {
                     // The window was saved maximised, so we don't have sizes
                 }
-                WindowState = Settings.Default.MainWindowState;
-                // Prevent starting in a minimised state
-                if (FormWindowState.Minimized == WindowState)
-                    WindowState = FormWindowState.Normal;
+                WindowState = UiPreferences.MainDimensions.IsMaximized
+                    ? FormWindowState.Maximized
+                    : FormWindowState.Normal;
             }
         }
 
@@ -919,24 +927,26 @@ namespace StatsDirect.UI
             // No point saving maximised or minimised settings, they're 0,0 when minimised or screen size when maximised
             if (FormWindowState.Normal == WindowState)
             {
-                Settings.Default.MainTop = Top;
-                Settings.Default.MainLeft = Left;
-                Settings.Default.MainWidth = Width;
-                Settings.Default.MainHeight = Height;
+                UiPreferences.MainDimensions.Top = Top;
+                UiPreferences.MainDimensions.Left = Left;
+                UiPreferences.MainDimensions.Width = Width;
+                UiPreferences.MainDimensions.Height = Height;
             }
-            Settings.Default.MainWindowState = WindowState;
+            UiPreferences.MainDimensions.IsMaximized = WindowState == FormWindowState.Maximized;
         }
 
         /// <summary>
-        /// Save any window state we need to persistent storage.
+        /// Save any state we need to persistent storage.
         /// </summary>
         private void SaveApplicationState()
         {
             SaveWindowState();
-            Settings.Default.Save();
+            ChartPreferences.Save();
+            SdPreferences.Save();
+            UiPreferences.Save();
         }
 
-        private void frmMain_Load(object sender, EventArgs e)
+        private void frmMain_Load(object? sender, EventArgs e)
         {
             LoadWindowState();
             AddTemplates();
@@ -976,13 +986,13 @@ namespace StatsDirect.UI
         public bool SelectCells(string selectionMessage, string cancelButtonLabel, out bool wasPivoted)
         {
             bool status;
-            bool oldSelectGroupsByIdentifier = SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
+            bool oldSelectGroupsByIdentifier = UiPreferences.SelectGroupsByIdentifier;
             using (new DefaultCursor())
             {
                 lblSelectionMessage.Text = selectionMessage;
                 ShowPanel(PanelType.Selection, false);
                 string oldCancelText = cmdCancel.Text;
-                if (null != cancelButtonLabel)
+                if (cancelButtonLabel is not null)
                     cmdCancel.Text = cancelButtonLabel;
                 selectingData = true;
                 okPressed = false;
@@ -993,7 +1003,7 @@ namespace StatsDirect.UI
                     Application.DoEvents(); // HACK: Force an inner event loop
                     Thread.Sleep(5);
                 } while (selectingData);
-                if (null != puntedException)
+                if (puntedException is not null)
                 {
                     Exception ex = puntedException;
                     puntedException = null;
@@ -1007,7 +1017,7 @@ namespace StatsDirect.UI
                 else
                 {
                     status = false;
-                    wasPivoted = oldSelectGroupsByIdentifier != SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier;
+                    wasPivoted = oldSelectGroupsByIdentifier != UiPreferences.SelectGroupsByIdentifier;
                 }
                 if (!wasPivoted)
                     ShowPanel(PanelType.Default, false);
@@ -1017,7 +1027,7 @@ namespace StatsDirect.UI
             return status;
         }
 
-        private void cmdOK_Click(object sender, EventArgs e)
+        private void cmdOK_Click(object? sender, EventArgs e)
         {
             NoteEndOfSelection(true);
         }
@@ -1037,7 +1047,7 @@ namespace StatsDirect.UI
 
         public bool IsInputtingData => inputtingData;
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void cmdCancel_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -1110,7 +1120,7 @@ namespace StatsDirect.UI
             bool atLeastOneNonCancel = false;
             foreach (Parameter parameter in parametersBeingCollected)
             {
-                atLeastOneCancel |= null != parameter.CancelSkipsParameter;
+                atLeastOneCancel |= parameter.CancelSkipsParameter is not null;
                 atLeastOneNonCancel |= null == parameter.CancelSkipsParameter;
             }
             // If all the parameters we're gathering are skipped if a cancel happens, skip - and don't close the operation
@@ -1150,13 +1160,13 @@ namespace StatsDirect.UI
         {
             List<Parameter> parameters = new();
             TableLayoutPanel tlp = GetUserInputTable();
-            if (null != tlp)
+            if (tlp is not null)
             {
                 foreach (Control column in tlp.Controls)
                 {
                     foreach (Control control in column.Controls)
                     {
-                        if (null != control.Tag)
+                        if (control.Tag is not null)
                         {
                             Parameter parameter = (Parameter)control.Tag;
                             if (!parameters.Contains(parameter))
@@ -1168,7 +1178,7 @@ namespace StatsDirect.UI
             return parameters;
         }
 
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        private void openToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -1176,7 +1186,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Open failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Open failed due to an internal error", ex, false);
             }
         }
 
@@ -1198,9 +1208,9 @@ namespace StatsDirect.UI
             using (new WaitCursor())
             {
                 string fileName = Path.GetFileName(path);
-                bool isTempFile = null != fileName && fileName.StartsWith("~");
+                bool isTempFile = fileName is not null && fileName.StartsWith("~");
                 // User wants to open the file - but which file type?
-                string extension = Path.GetExtension(path);
+                string? extension = Path.GetExtension(path);
                 extension = extension?.ToLower(CultureInfo.InvariantCulture);
                 if (".xls".Equals(extension) || ".xlsx".Equals(extension))
                 {
@@ -1221,8 +1231,8 @@ namespace StatsDirect.UI
                 {
                     return OpenSdwOrPrompt(path);
                 }
-                SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
-                SdApplication.SoleInstance.NoteRecentFile(path, false);
+                SdApplication.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                SdApplication.NoteRecentFile(path, false);
                 return false;
             }
         }
@@ -1236,7 +1246,7 @@ namespace StatsDirect.UI
                     return ConvertSdwAndOpen(path, sd2Path);
 
                 // If we get here, SD2 exists but does not support conversion (path not null) or does not exist at all (path null)
-                bool tryToOpen = PromptUserToInstallOrUpgradeSd2(null != sd2Path);
+                bool tryToOpen = PromptUserToInstallOrUpgradeSd2(sd2Path is not null);
                 if (!tryToOpen)
                     return false;
             }
@@ -1244,16 +1254,16 @@ namespace StatsDirect.UI
 
         private bool ConvertSdwAndOpen(string sdwPath, string sd2Path)
         {
-            SdApplication.TemplateHost.StartProgress("Converting file", false);
+            TemplateHost.StartProgress("Converting file", false);
             string originalSdwPath = sdwPath;
 
-            IProgressBar progress = SdApplication.TemplateHost.StartProgress("Converting", false);
+            IProgressBar progress = TemplateHost.StartProgress("Converting", false);
 
             try
             {
                 // Name our converted file and try to create one to see if we can (and hence if we believe SD2 will be able to).
                 // Assume the filename ends with ".sdw".  The converted file will be "~fromsd2.xls".
-                string convertedPath = sdwPath.Substring(0, sdwPath.Length - 4) + "~fromsd2.xls";
+                string convertedPath = sdwPath[..^4] + "~fromsd2.xls";
                 // If we can convert the file in situ, do so.  If not (because we can't write the new file), copy to a temporary location which we expect to be writable, then convert.
                 bool canWrite;
                 try
@@ -1279,12 +1289,12 @@ namespace StatsDirect.UI
                     string copiedSdwPath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), Path.GetFileName(sdwPath));
                     File.Copy(sdwPath, copiedSdwPath);
                     sdwPath = copiedSdwPath;
-                    convertedPath = sdwPath.Substring(0, sdwPath.Length - 4) + "~fromsd2.xls";
+                    convertedPath = sdwPath[..^4] + "~fromsd2.xls";
                 }
 
                 string arguments = "/FileConvert \"" + sdwPath + "\"";
                 ProcessStartInfo startInfo = new() { UseShellExecute = false, FileName = sd2Path, Arguments = arguments, WindowStyle = ProcessWindowStyle.Minimized, CreateNoWindow = true };
-                Process p = Process.Start(startInfo);
+                Process? p = Process.Start(startInfo);
                 while (true)
                 {
                     bool exited = p.WaitForExit(50);
@@ -1349,7 +1359,7 @@ namespace StatsDirect.UI
             return versionInfo.ProductMajorPart == 2 && versionInfo.ProductMinorPart >= 8;
         }
 
-        private void newScriptToolStripMenuItem_Click(object sender, EventArgs e)
+        private void newScriptToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -1357,11 +1367,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Creating a script window failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Creating a script window failed due to an internal error", ex, false);
             }
         }
 
-        private void cmdClose_Click(object sender, EventArgs e)
+        private void cmdClose_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -1487,15 +1497,9 @@ namespace StatsDirect.UI
             }
         }
 
-        internal bool IsCalculateButton(Control control)
-        {
-            return control == cmdCalculate;
-        }
+        internal bool IsCalculateButton(Control? control) => control == cmdCalculate;
 
-        private bool HasUserInputTable()
-        {
-            return pnlUser.Controls.ContainsKey(USER_INPUT_TABLE_NAME);
-        }
+        private bool HasUserInputTable() => pnlUser.Controls.ContainsKey(USER_INPUT_TABLE_NAME);
 
         private void PushPanel(PanelType panelType, bool enforceHeightOnOperations)
         {
@@ -1523,7 +1527,7 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void cmdCalculate_Click(object sender, EventArgs e)
+        private void cmdCalculate_Click(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -1561,7 +1565,7 @@ namespace StatsDirect.UI
 #if !WATCH_EXCEPTIONS
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Error while running operation", ex, false);
+                SdApplication.FriendlyError("Error while running operation", ex, false);
             }
 #endif
         }
@@ -1579,14 +1583,14 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="inputParameters"></param>
         /// <returns></returns>
-        internal bool DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag inputParameters)
+        internal bool DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag? inputParameters)
         {
-            Operation currentOperation = DoOperation(operation, inputParameters, false);
+            Operation? currentOperation = DoOperation(operation, inputParameters, false);
             // If we're in batch mode and an operation failed or was cancelled, return indicating failure.  This should cause the calling loop to quit.
             if (null == currentOperation && chkBatchMode.Checked)
                 return false;
             // Re-run the same operation if it's a repeated one (such as an instant function)
-            while (null != currentOperation && currentOperation.SuggestsSelf)
+            while (currentOperation is not null && currentOperation.SuggestsSelf)
             {
                 currentOperation = DoOperation(currentOperation, knownParameters, false);
                 // If we're in batch mode and an operation failed or was cancelled, return indicating failure.  This should cause the calling loop to quit.
@@ -1594,7 +1598,7 @@ namespace StatsDirect.UI
                     return false;
             }
             // If we get here, the operation may or may not have succeeded.
-            return null != currentOperation;
+            return currentOperation is not null;
         }
 
         /// <summary>
@@ -1604,7 +1608,7 @@ namespace StatsDirect.UI
         /// <param name="inputParameters"></param>
         /// <param name="isRedo"></param>
         /// <returns>The operation most recently run to completion (as it can change), or null if the most recent operation was cancelled or otherwise didn't complete</returns>
-        internal Operation DoOperation(Operation operation, ParameterBag inputParameters, bool isRedo)
+        internal Operation? DoOperation(Operation operation, ParameterBag? inputParameters, bool isRedo)
         {
             // If we're already running an operation, another DoOperation further up the stack has control.  Punt this operation to it!
             if (InOperation)
@@ -1621,7 +1625,7 @@ namespace StatsDirect.UI
                 catch (InvalidDataException ex)
                 {
                     string errorMessage = ex.Message;
-                    SdApplication.SoleInstance.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                    SdApplication.MsgboxX(errorMessage, MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                     // Treat this as a restart of the operation, without keeping any data - we don't know which data is bad, and if we keep it we risk getting stuck in a loop
                     /*
                     // That one failed due to invalid data - keep the same data and try it again, which should prompt the user to fix it!
@@ -1668,10 +1672,10 @@ namespace StatsDirect.UI
             }
         }
 
-        private static void ResetHelp()
+        private void ResetHelp()
         {
-            SdApplication.SoleInstance.ActiveHelpUrl = null;
-            SdApplication.SoleInstance.ActiveHelpTopic = 0; // ToC
+            SdApplication.ActiveHelpUrl = null;
+            SdApplication.ActiveHelpTopic = 0; // ToC
         }
 
         private void CloseCurrentOperation()
@@ -1694,7 +1698,7 @@ namespace StatsDirect.UI
             }
             // We may have had one or more parameters displayed
             ClearCombinedParameters();
-            SdApplication.SoleInstance.EraseAnyOutstandingParameters();
+            SdApplication.EraseAnyOutstandingParameters();
         }
 
         /// <summary>
@@ -1708,7 +1712,7 @@ namespace StatsDirect.UI
         /// Similarly, it's decorated in such a way that the compiler won't inline it, even though the method is only called in one place.  This ensures the attribute is preserved for the stack walk we do in InOperation.</remarks>
         [CallerHandlesChangedOperation]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private Operation DoOperationInternal(Operation operation, ParameterBag inputParameters, bool isRedo)
+        private Operation? DoOperationInternal(Operation operation, ParameterBag inputParameters, bool isRedo)
         {
             using (new WaitCursor())
             {
@@ -1716,16 +1720,16 @@ namespace StatsDirect.UI
                 NoteRecentOperation(operation);
 
                 // Set help
-                if (null != operation.HelpContext)
+                if (operation.HelpContext is not null)
                 {
-                    SdApplication.SoleInstance.ActiveHelpTopic = operation.HelpContext.ChmId;
-                    if (null != operation.HelpContext.Url)
-                        SdApplication.SoleInstance.ActiveHelpUrl = operation.HelpContext.Url;
+                    SdApplication.ActiveHelpTopic = operation.HelpContext.ChmId;
+                    if (operation.HelpContext.Url is not null)
+                        SdApplication.ActiveHelpUrl = operation.HelpContext.Url;
                 }
 
                 // Self-referential operations are assumed to be instant and repeatable, so are set up immediately in the interface.  Others are run normally, and only then do they get any follow-on operations.
-                ITemplateProcessor templateProcessor = new TemplateProcessor(SdApplication.SoleInstance);
-                StepOutput outputParameters;
+                ITemplateProcessor templateProcessor = TemplateProcessorFactory.CreateTemplateProcessor();
+                StepOutput? outputParameters;
                 SuggestFromOperation(operation, inputParameters, SuggestionTime.BeforeOperation);
                 if (operation.SuggestsSelf)
                 {
@@ -1737,7 +1741,7 @@ namespace StatsDirect.UI
                 {
                     outputParameters = templateProcessor.Execute(operation, inputParameters, isRedo); // Keep the results of this; some functions (notably the best subset of multiple linear regression) relies on replacing parameters
                     // Null output parameters indicate a cancelled operation
-                    if (null != outputParameters)
+                    if (outputParameters is not null)
                         NoteOperation(outputParameters, operation);
                 }
 
@@ -1759,7 +1763,7 @@ namespace StatsDirect.UI
                 knownParameters = endingParameters;
 
                 // If the operation succeeded and there are any follow-up operations, suggest them to the user now.
-                if (null != outputParameters)
+                if (outputParameters is not null)
                     SuggestFromOperation(operation, endingParameters, SuggestionTime.AfterOperation);
 
                 return null == outputParameters ? null : operation;
@@ -1793,10 +1797,10 @@ namespace StatsDirect.UI
             // 2. If a previous operation that has run with this set of parameters defines any, use the operations on the earliest such operation that ran.
             // 3. Otherwise, there are no follow-up operations.
             Operation suggestingOperation = operation;
-            bool hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters).Count > 0;
+            bool hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(TemplateProcessorFactory.CreateTemplateProcessor(), inputParameters).Count > 0;
             if (!hasSuggestedOperations)
             {
-                if (null != inputParameters)
+                if (inputParameters is not null)
                 {
                     if (inputParameters.ContainsKey(OPERATION_MEMORY_NAME))
                     {
@@ -1805,7 +1809,7 @@ namespace StatsDirect.UI
                             if (TemplateFactory.Operations.ContainsKey(operationName))
                             {
                                 suggestingOperation = TemplateFactory.Operations[operationName];
-                                hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters).Count > 0;
+                                hasSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(TemplateProcessorFactory.CreateTemplateProcessor(), inputParameters).Count > 0;
                                 if (hasSuggestedOperations)
                                     break;
                             }
@@ -1813,7 +1817,7 @@ namespace StatsDirect.UI
                     }
                 }
             }
-            IList<SuggestedOperation> availableSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(new TemplateProcessor(SdApplication.SoleInstance), inputParameters);
+            IList<SuggestedOperation> availableSuggestedOperations = suggestingOperation.AvailableSuggestedOperations(TemplateProcessorFactory.CreateTemplateProcessor(), inputParameters);
             bool suggestsOthers = availableSuggestedOperations.Count > 1
                 || availableSuggestedOperations.Count == 1 && TemplateFactory.Operations.ContainsKey(availableSuggestedOperations[0].Name) && suggestingOperation != TemplateFactory.Operations[availableSuggestedOperations[0].Name];
             bool onlySuggestsFollowOns = !operation.SuggestsSelf && suggestingOperation == operation;
@@ -1915,7 +1919,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private static bool ShouldRunOperationOnSelection(Operation operation, ParameterBag inputParameters)
+        private bool ShouldRunOperationOnSelection(Operation operation, ParameterBag? inputParameters)
         {
             // If the operation has some initial parameters that can be batched, we should start it and let it populate those parameters
             if (operation.Steps.Count > 0)
@@ -1925,25 +1929,25 @@ namespace StatsDirect.UI
                 {
                     foreach (Parameter p in pStep.Parameters)
                     {
-                        if (p.MustRequest || null != inputParameters && (null == p.Name || !inputParameters.ContainsKey(p.Name)))
+                        if (p.MustRequest || inputParameters is not null && (null == p.Name || !inputParameters.ContainsKey(p.Name)))
                         {
                             // The parameter will probably be requested, unless it will be defaulted.
                             // CI parameters can be defaulted
                             if (p is ConfidenceIntervalParameter cip)
                             {
-                                if (cip.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+                                if (cip.CanDefault && SdPreferences.CanDefaultConfidenceInterval)
                                 {
                                     // The CI can be defaulted; no decision!
                                 }
                                 else
                                 {
                                     // The CI cannot be defaulted; use our standard decision
-                                    return SdApplication.TemplateHost.CanCombine(p);
+                                    return TemplateHost.CanCombine(p);
                                 }
                             }
                             else
                             {
-                                return SdApplication.TemplateHost.CanCombine(p);
+                                return TemplateHost.CanCombine(p);
                             }
                         }
                     }
@@ -1959,7 +1963,7 @@ namespace StatsDirect.UI
         /// <param name="processor"></param>
         /// <param name="operation"></param>
         /// <param name="context"></param>
-        private StepOutput SetInterfaceAndTryToRun(ITemplateProcessor processor, Operation operation, ParameterBag context)
+        private StepOutput? SetInterfaceAndTryToRun(ITemplateProcessor processor, Operation operation, ParameterBag context)
         {
             // Iff the operation has some initial parameters that can be batched, we should start it and let it populate those parameters
             bool shouldRun = ShouldRunOperationOnSelection(operation, context);
@@ -1968,12 +1972,12 @@ namespace StatsDirect.UI
                 return null; // Cannot be run now, as the operation has no initial parameters, so no results
 
             StepOutput results = processor.Execute(operation, context, false);
-            if (null != results)
+            if (results is not null)
                 NoteOperation(results, operation);
             return results;
         }
 
-        private void cboOperation_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboOperation_SelectedIndexChanged(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -2022,33 +2026,33 @@ namespace StatsDirect.UI
 
         public bool IsOperationsPanelVisible => pnlOperations.Visible;
 
-        private void optGroupsByColumn_CheckedChanged(object sender, EventArgs e)
+        private void optGroupsByColumn_CheckedChanged(object? sender, EventArgs e)
         {
-            SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = !optGroupsByColumn.Checked;
+            UiPreferences.SelectGroupsByIdentifier = !optGroupsByColumn.Checked;
             selectingData = false;
         }
 
-        private void optGroupsByIdentifier_CheckedChanged(object sender, EventArgs e)
+        private void optGroupsByIdentifier_CheckedChanged(object? sender, EventArgs e)
         {
-            SdApplication.SoleInstance.Preferences.SelectGroupsByIdentifier = optGroupsByIdentifier.Checked;
+            UiPreferences.SelectGroupsByIdentifier = optGroupsByIdentifier.Checked;
             selectingData = false;
         }
 
         internal bool SelectingData => selectingData;
 
-        private void frmMain_HelpButtonClicked(object sender, CancelEventArgs e)
+        private void frmMain_HelpButtonClicked(object? sender, CancelEventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ShowHelp(this);
+                SdApplication.ShowHelp(this);
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Showing help failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Showing help failed due to an internal error", ex, false);
             }
         }
 
-        private void frmMain_HelpRequested(object sender, HelpEventArgs hlpevent)
+        private void frmMain_HelpRequested(object? sender, HelpEventArgs hlpevent)
         {
             try
             {
@@ -2056,7 +2060,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Showing help failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Showing help failed due to an internal error", ex, false);
             }
         }
 
@@ -2065,19 +2069,19 @@ namespace StatsDirect.UI
             // Check for hovering over a menu item
             if (lastSeenMenuItemTag is Dictionary<string, string> tags)
             {
-                if (tags.TryGetValue("help", out string menuTopic))
+                if (tags.TryGetValue("help", out string? menuTopic))
                 {
-                    SdApplication.SoleInstance.ShowHelp(this, menuTopic);
+                    SdApplication.ShowHelp(this, menuTopic);
                     return;
                 }
-                if (tags.TryGetValue("operation", out string operationName))
+                if (tags.TryGetValue("operation", out string? operationName))
                 {
-                    if (TemplateFactory.Operations.TryGetValue(operationName, out Operation operation))
+                    if (TemplateFactory.Operations.TryGetValue(operationName, out Operation? operation))
                     {
-                        if (null != operation.HelpContext)
+                        if (operation.HelpContext is not null)
                         {
                             string operationTopic = operation.HelpContext.Url ?? operation.HelpContext.ChmId.ToString();
-                            SdApplication.SoleInstance.ShowHelp(this, operationTopic);
+                            SdApplication.ShowHelp(this, operationTopic);
                             return;
                         }
                     }
@@ -2085,35 +2089,35 @@ namespace StatsDirect.UI
             }
             if (null == ActiveMdiChild)
             {
-                SdApplication.SoleInstance.ShowHelp(this);
+                SdApplication.ShowHelp(this);
                 return;
             }
-            SdApplication.SoleInstance.ActiveWindow.Window.ShowHelp();
+            SdApplication.ActiveWindow.Window.ShowHelp();
         }
 
-        private void contentsAndIndexToolStripMenuItem_Click(object sender, EventArgs e)
+        private void contentsAndIndexToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ActiveHelpTopic = 0;
-                SdApplication.SoleInstance.ShowHelp(this);
+                SdApplication.ActiveHelpTopic = 0;
+                SdApplication.ShowHelp(this);
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Showing help contents failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Showing help contents failed due to an internal error", ex, false);
             }
         }
 
-        private void methodSelectionToolStripMenuItem_Click(object sender, EventArgs e)
+        private void methodSelectionToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ActiveHelpTopic = 1213;
-                SdApplication.SoleInstance.ShowHelp(this);
+                SdApplication.ActiveHelpTopic = 1213;
+                SdApplication.ShowHelp(this);
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Showing help failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Showing help failed due to an internal error", ex, false);
             }
         }
 
@@ -2156,7 +2160,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void tabWindows_MouseDown(object sender, MouseEventArgs e)
+        private void tabWindows_MouseDown(object? sender, MouseEventArgs e)
         {
             try
             {
@@ -2181,7 +2185,7 @@ namespace StatsDirect.UI
         }
 
         /// <remarks>The return value may contain key->null for optional blank parameters.  It is up to the caller to handle this.</remarks>
-        internal ParameterBag FillAndValidateCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, IList<Parameter> outstandingParameters)
+        internal ParameterBag FillAndValidateCombinedParameters(ParameterBag context, IList<Parameter> outstandingParameters)
         {
             try
             {
@@ -2189,15 +2193,15 @@ namespace StatsDirect.UI
                 ParameterBag outputParameters = new();
                 StartCombinedParameters();
                 bool willDisplayAtLeastOneParameter = false;
-                string cancelSkipsParameterString = null;
+                string? cancelSkipsParameterString = null;
                 bool atLeastOneNonCancel = false;
                 foreach (Parameter parameter in outstandingParameters)
                 {
                     // Common preprocessing: 
-                    if (null != parameter.RubricExpression)
+                    if (parameter.RubricExpression is not null)
                     {
-                        string rubric = parameter.Rubric(processor, context);
-                        if (null != rubric)
+                        string? rubric = parameter.Rubric(TemplateProcessorFactory.CreateTemplateProcessor(), context);
+                        if (rubric is not null)
                         {
                             TableLayoutPanel tlp = GetUserInputTableForColumn(parameter.Column);
 
@@ -2214,20 +2218,19 @@ namespace StatsDirect.UI
                         }
                     }
 
-                    InlineParameterPreparer preparer = new(context, this, processor);
+                    InlineParameterPreparer preparer = new(context, this, ChartPreferences, ChartRendererFactory, SdPreferences, SdApplication, TemplateProcessorFactory);
                     parameter.Accept(preparer);
-                    willDisplayAtLeastOneParameter |= null == preparer.FilledParameter;
-                    if (null == preparer.FilledParameter)
+                    willDisplayAtLeastOneParameter |= preparer.FilledParameter is null;
+                    if (preparer.FilledParameter is null)
                     {
                         // The parameter will be displayed.
 
                         // Check to see whether this parameter defines a value for skipping.  If so, set it.
-                        if (null == parameter.CancelSkipsParameter)
+                        if (parameter.CancelSkipsParameter is null)
                             atLeastOneNonCancel = true;
                         else
                         {
-                            if (null == cancelSkipsParameterString)
-                                cancelSkipsParameterString = parameter.CancelSkipsParameter;
+                            cancelSkipsParameterString ??= parameter.CancelSkipsParameter;
                         }
                     }
                     else
@@ -2243,14 +2246,14 @@ namespace StatsDirect.UI
 
                 // Some parameters (notably CI parameters) may be defaulted - none will be shown.  If that's the case, don't show; just default them all!
                 DrawingControl.ResumeDrawing(this);
-                FillCombinedParameters(host, processor, context, willDisplayAtLeastOneParameter, atLeastOneNonCancel ? null : cancelSkipsParameterString, parametersToValidate, ref outputParameters);
+                FillCombinedParameters(context, willDisplayAtLeastOneParameter, atLeastOneNonCancel ? null : cancelSkipsParameterString, parametersToValidate, ref outputParameters);
                 return outputParameters;
             }
             finally
             {
                 // Make absolutely certain we haven't suspended layout on pnlUser and not fixed that.
                 TableLayoutPanel tlp = GetUserInputTable();
-                if (null != tlp)
+                if (tlp is not null)
                 {
                     foreach (Control col in tlp.Controls)
                     {
@@ -2299,21 +2302,19 @@ namespace StatsDirect.UI
             bool shouldShow = false;
             StringBuilder sb = new();
             IList<Operation> ops = BuildOperationHistory(context);
-            foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
+            foreach (KeyValuePair<string, FilledParameter?> pair in context.Pairs)
             {
-                if (null != pair.Value && pair.Value.IsInputParameter && pair.Value.IsDataFrame)
+                if (pair.Value is not null && pair.Value.IsInputParameter && pair.Value.IsDataFrame)
                 {
                     // Find the parameter corresponding to the key
                     // Go back through the operation list - in the case of follow-ons, the variable is often from a precursor.  Use more recent operations in preference to older ones.
-                    string parameterTitle = TryToFindParameterLabel(ops, context, pair.Key);
-                    if (null != parameterTitle)
+                    string? parameterTitle = TryToFindParameterLabel(ops, context, pair.Key);
+                    if (parameterTitle is not null)
                     {
                         shouldShow = true;
                         sb.AppendLine(parameterTitle);
                         foreach (IVariable v in pair.Value.AsDataFrame.Variables)
-                        {
                             sb.AppendLine("   " + (v?.Title ?? "(unnamed)"));
-                        }
                     }
                 }
             }
@@ -2323,18 +2324,18 @@ namespace StatsDirect.UI
             tipVariables.SetToolTip(cmdVariables, toolTipText);
         }
 
-        private IList<Operation> BuildOperationHistory(ParameterBag context)
+        private IList<Operation> BuildOperationHistory(ParameterBag? context)
         {
             List<Operation> ops = new();
-            if (null != mostRecentOperation)
+            if (mostRecentOperation is not null)
                 ops.Add(mostRecentOperation);
-            if (null != context)
+            if (context is not null)
             {
                 if (context.ContainsKey(OPERATION_MEMORY_NAME))
                 {
                     foreach (string operationName in context[OPERATION_MEMORY_NAME].AsStringList)
                     {
-                        if (TemplateFactory.Operations.TryGetValue(operationName, out Operation op))
+                        if (TemplateFactory.Operations.TryGetValue(operationName, out Operation? op))
                         {
                             if (!ops.Contains(op))
                                 ops.Add(op);
@@ -2345,35 +2346,35 @@ namespace StatsDirect.UI
             return ops;
         }
 
-        private static string TryToFindParameterLabel(IEnumerable<Operation> ops, ParameterBag context, string parameterName)
+        private string? TryToFindParameterLabel(IEnumerable<Operation> ops, ParameterBag context, string parameterName)
         {
             foreach (Operation op in ops)
             {
-                string parameterTitle = TryToFindParameterLabel(op.Steps, context, parameterName);
-                if (null != parameterTitle)
+                string? parameterTitle = TryToFindParameterLabel(op.Steps, context, parameterName);
+                if (parameterTitle is not null)
                     return parameterTitle;
             }
             return null;
         }
 
-        private static string TryToFindParameterLabel(IEnumerable<Step> steps, ParameterBag context, string parameterName)
+        private string? TryToFindParameterLabel(IEnumerable<Step> steps, ParameterBag context, string parameterName)
         {
             foreach (Step step in steps)
             {
                 // TODO: Handle branches correctly!
-                if (step is ParametersStep)
+                if (step is ParametersStep parametersStep)
                 {
-                    foreach (Parameter p in ((ParametersStep)step).Parameters)
+                    foreach (Parameter p in parametersStep.Parameters)
                     {
                         if (parameterName.Equals(p.Name))
                         {
                             // This parameter is providing the input
-                            if (null != p.Title)
+                            if (p.Title is not null)
                             {
                                 // If there's a title, use it as the title of the parameter
                                 return p.Title;
                             }
-                            return p.Prompt(new TemplateProcessor(SdApplication.SoleInstance), context);
+                            return p.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), context);
                         }
                     }
                 }
@@ -2456,21 +2457,21 @@ namespace StatsDirect.UI
         /// If there is a grid presently displayed in the top bar, return it.  Otherwise return null.
         /// </summary>
         /// <returns></returns>
-        private WorkbookView FindGridOrNull()
+        private WorkbookView? FindGridOrNull()
         {
             return FindGridOrNull(GetUserInputTable());
         }
 
-        private static WorkbookView FindGridOrNull(Control root)
+        private static WorkbookView? FindGridOrNull(Control root)
         {
             foreach (Control child in root.Controls)
             {
-                if (child is WorkbookView)
-                    return (WorkbookView)child;
+                if (child is WorkbookView workbookView)
+                    return workbookView;
                 if (child.Controls.Count > 0)
                 {
-                    WorkbookView found = FindGridOrNull(child);
-                    if (null != found)
+                    WorkbookView? found = FindGridOrNull(child);
+                    if (found is not null)
                         return found;
                 }
             }
@@ -2478,20 +2479,20 @@ namespace StatsDirect.UI
             return null;
         }
 
-        internal void CheckCombinedParameterVisibilityAndMaybeResize(Control sender)
+        internal void CheckCombinedParameterVisibilityAndMaybeResize(Control? sender)
         {
-            while (null != sender)
+            while (sender is not null)
             {
                 if ("TopLevelUserTable".Equals(sender.Tag))
                     break;
                 sender = sender.Parent;
             }
-            if (null != sender)
+            if (sender is not null)
             {
                 ParameterBag ambientParameters = new();
-                ParameterBag context = fillCombinedParametersContext;
-                ExtractCurrentValues(new TemplateProcessor(SdApplication.SoleInstance), ambientParameters, context, false);
-                if (null != context)
+                ParameterBag? context = fillCombinedParametersContext;
+                ExtractCurrentValues(ambientParameters, context, false);
+                if (context is not null)
                 {
                     // Add in ambient parameters; do not overwrite current parameters (which will include key->null for empty optional parameters)
                     foreach (KeyValuePair<string, FilledParameter> pair in context.Pairs)
@@ -2517,7 +2518,7 @@ namespace StatsDirect.UI
         private bool CheckCombinedParameterVisibility(ParameterBag ambientParameters)
         {
             TableLayoutPanel tlp = GetUserInputTable();
-            ITemplateProcessor processor = null;
+            ITemplateProcessor? processor = null;
             bool layoutSuspended = false;
             bool atLeastOneVisibilityChange = false;
 
@@ -2529,7 +2530,7 @@ namespace StatsDirect.UI
                     TableLayoutPanel thisColumn = (TableLayoutPanel)column;
                     foreach (Control control in thisColumn.Controls)
                     {
-                        if (null != control.Tag)
+                        if (control.Tag is not null)
                         {
                             Parameter parameter = (Parameter)control.Tag;
 
@@ -2537,7 +2538,7 @@ namespace StatsDirect.UI
                             if (parameter.HasAcquireIfTrue)
                             {
                                 if (null == processor)
-                                    processor = new TemplateProcessor(SdApplication.SoleInstance);
+                                    processor = TemplateProcessorFactory.CreateTemplateProcessor();
                                 bool shouldAcquire = parameter.AcquireIfTrue(processor, ambientParameters);
                                 if (control.Visible != shouldAcquire)
                                 {
@@ -2565,7 +2566,7 @@ namespace StatsDirect.UI
                                         if (oo.HasAvailableIf)
                                         {
                                             if (null == processor)
-                                                processor = new TemplateProcessor(SdApplication.SoleInstance);
+                                                processor = TemplateProcessorFactory.CreateTemplateProcessor();
                                             bool available = oo.AvailableIf(processor, ambientParameters);
                                             ComboBoxExItem item = (ComboBoxExItem)cbo.Items[i];
                                             item.Enabled = available;
@@ -2621,7 +2622,7 @@ namespace StatsDirect.UI
             if (outputControlsAreUseful)
                 return true;
 
-            return !(c.Tag is Parameter && c.Tag is SpecialParameter && "report".Equals(((SpecialParameter)c.Tag).SpecialType));
+            return !(c.Tag is SpecialParameter specialParameter && "report".Equals(specialParameter.SpecialType));
         }
 
         internal void SelectFirstUsefulControlIn(Control c)
@@ -2637,7 +2638,7 @@ namespace StatsDirect.UI
                 if (next == c)
                     break;
             } while (!IsUsefulControl(next, true));
-            if (null != next)
+            if (next is not null)
             {
                 next.Select();
                 next.Focus();
@@ -2646,18 +2647,8 @@ namespace StatsDirect.UI
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="host"></param>
-        /// <param name="processor"></param>
-        /// <param name="context"></param>
-        /// <param name="shouldShow"></param>
-        /// <param name="cancelSkipsParameterString"></param>
-        /// <param name="parametersToValidate"></param>
-        /// <param name="outputParameters"></param>
         /// <remarks>This may return key->null in outputParameters for optional empty parameters.  It is up to the caller to deal with this.</remarks>
-        internal void FillCombinedParameters(ITemplateHost host, ITemplateProcessor processor, ParameterBag context, bool shouldShow, string cancelSkipsParameterString, ICollection<Parameter> parametersToValidate, ref ParameterBag outputParameters)
+        internal void FillCombinedParameters(ParameterBag context, bool shouldShow, string? cancelSkipsParameterString, ICollection<Parameter> parametersToValidate, ref ParameterBag outputParameters)
         {
             TableLayoutPanel tlp = GetUserInputTable();
             foreach (Control col in tlp.Controls)
@@ -2671,7 +2662,7 @@ namespace StatsDirect.UI
 
             if (!shouldShow)
             {
-                bool allValid = ExtractCurrentValues(processor, outputParameters, context, true);
+                bool allValid = ExtractCurrentValues(outputParameters, context, true);
                 if (!allValid)
                 {
                     // TODO: How on earth do we get people to set valid parameters when the defaults are invalid and we're not supposed to show them anything?
@@ -2689,7 +2680,7 @@ namespace StatsDirect.UI
                 using (new DefaultCursor())
                 {
                     cmdCalculate.Text = "R&un";
-                    if (cancelSkipsParameterString != null)
+                    if (cancelSkipsParameterString is not null)
                         cmdClose.Text = cancelSkipsParameterString;
                     else
                     {
@@ -2721,29 +2712,29 @@ namespace StatsDirect.UI
                             outputParameters = allSkippable ? new ParameterBag() : null;
                             return;
                         }
-                        bool allValid = ExtractCurrentValues(processor, outputParameters, context, true);
+                        bool allValid = ExtractCurrentValues(outputParameters, context, true);
                         if (allValid)
                         {
-                            string validationResult = null;
+                            string? validationResult = null;
                             foreach (Parameter outstandingParameter in parametersToValidate)
                             {
-                                if (null != outstandingParameter.Validators)
+                                if (outstandingParameter.Validators is not null)
                                     foreach (Validator validator in outstandingParameter.Validators)
                                     {
-                                        bool shouldTest = (!validator.HasTestIfTrueExpression) || (bool)processor.Evaluate(validator.TestIfTrueExpression, outputParameters);
+                                        bool shouldTest = (!validator.HasTestIfTrueExpression) || (bool)TemplateProcessorFactory.CreateTemplateProcessor().Evaluate(validator.TestIfTrueExpression, outputParameters);
                                         if (shouldTest)
                                         {
-                                            validationResult = SdApplication.SoleInstance.Validate(validator, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
-                                            if (null != validationResult)
+                                            validationResult = SdApplication.Validate(validator, outstandingParameter, outputParameters, outstandingParameter.ValidationFailMessage);
+                                            if (validationResult is not null)
                                                 break;
                                         }
                                     }
-                                if (null != validationResult)
+                                if (validationResult is not null)
                                     break;
                             }
                             allValid &= null == validationResult;
                             if (!allValid)
-                                SdApplication.SoleInstance.MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
+                                SdApplication.MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Warning, "StatsDirect", false);
                         }
                         if (allValid)
                         {
@@ -2774,7 +2765,7 @@ namespace StatsDirect.UI
                 Application.DoEvents(); // HACK: Force an inner event loop
                 Thread.Sleep(5);
             } while (inputtingData);
-            if (null != puntedException)
+            if (puntedException is not null)
             {
                 Exception ex = puntedException;
                 puntedException = null;
@@ -2784,31 +2775,30 @@ namespace StatsDirect.UI
 
         /// <remarks>Note that outputParameters will contain key->null for parameters that are optional and missing.  Callers must be able to deal with this.</remarks>
         /// <returns>true if doValidation is false, true if everything's valid, false if there are any validation errors</returns>
-        bool ExtractCurrentValues(ITemplateProcessor processor, ParameterBag outputParameters, ParameterBag context, bool doValidation)
+        bool ExtractCurrentValues(ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
             bool allValid = true;
-            Control firstInvalidControl = null;
+            Control? firstInvalidControl = null;
             TableLayoutPanel tlp = GetUserInputTable();
-            if (null != tlp)
+            if (tlp is not null)
             {
                 foreach (Control column in tlp.Controls)
                 {
                     foreach (Control control in column.Controls)
                     {
-                        Control invalidControlOrNull = ExtractCurrentValue(processor, control, outputParameters, context,
-                                                                           doValidation);
-                        if (null != invalidControlOrNull && null == firstInvalidControl)
+                        Control? invalidControlOrNull = ExtractCurrentValue(control, outputParameters, context, doValidation);
+                        if (invalidControlOrNull is not null && null == firstInvalidControl)
                             firstInvalidControl = invalidControlOrNull;
                         allValid &= null == invalidControlOrNull;
                     }
                 }
             }
             // The CI combo may also be in use
-            Control iC = ExtractCurrentValue(processor, cboConfidenceInterval, outputParameters, context, doValidation);
+            Control? iC = ExtractCurrentValue(cboConfidenceInterval, outputParameters, context, doValidation);
             allValid &= null == iC;
-            if (null != iC && null == firstInvalidControl)
+            if (iC is not null && null == firstInvalidControl)
                 firstInvalidControl = iC;
-            if (!allValid /* && null != firstInvalidControl - always the case */)
+            if (!allValid && firstInvalidControl is not null /* firstInvalidControl is always non-null but this placates the null checker */)
             {
                 // Set focus to the first invalid control.
                 firstInvalidControl.BackColor = Color.FromArgb(192, 255, 255);
@@ -2842,29 +2832,25 @@ namespace StatsDirect.UI
         {
             // We're interested in non-label controls that have been tagged with parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
-            if (control.Tag is Parameter && !(control is Label))
-            {
-                Parameter parameter = (Parameter)control.Tag;
-                return null != parameter.CancelSkipsParameter;
-            }
+            if (control.Tag is Parameter parameter && control is not Label)
+                return parameter.CancelSkipsParameter is not null;
 
             // Don't care... so it's OK.
             return true;
         }
 
         /// <returns>null if the parameter is valid (or has no validation or validation is disabled), the control to be selected if the parameter fails validation.</returns>
-        static Control ExtractCurrentValue(ITemplateProcessor processor, Control control, ParameterBag outputParameters, ParameterBag context, bool doValidation)
+        Control? ExtractCurrentValue(Control control, ParameterBag outputParameters, ParameterBag context, bool doValidation)
         {
             // We're interested in non-label controls that have been tagged with parameters.
             // Labels are uninteresting as they'll never contain a useful user-entered value.
-            if (control.Tag is Parameter && !(control is Label))
+            if (control.Tag is Parameter parameter && control is not Label)
             {
                 // Hidden controls should never have their values extracted and are always OK.
                 if (!control.Visible)
                     return null;
 
-                Parameter parameter = (Parameter)control.Tag;
-                InlineParameterValueExtractor extractor = new() { Context = context, Control = control, DoValidation = doValidation, OutputParameters = outputParameters, Processor = processor };
+                InlineParameterValueExtractor extractor = new(context, control, doValidation, outputParameters, TemplateProcessorFactory);
                 parameter.Accept(extractor);
                 return extractor.FailedValidationControl;
             }
@@ -2876,19 +2862,18 @@ namespace StatsDirect.UI
         [Serializable]
         private class SelectedOperationChangedException : TemplateExecutionHandlesMeSpeciallyException
         {
-            public ParameterBag InputParameters { get; }
-            public SelectedOperationChangedException(ParameterBag inputParameters)
+            public ParameterBag? InputParameters { get; }
+            public SelectedOperationChangedException(ParameterBag? inputParameters)
             {
                 InputParameters = inputParameters;
             }
         }
 
-        private void frmMain_FormClosed(object sender, FormClosedEventArgs e)
+        private void frmMain_FormClosed(object? sender, FormClosedEventArgs e)
         {
             try
             {
-                if (SdApplication.HasInstance)
-                    SdApplication.SoleInstance.Shutdown();
+                SdApplication.Shutdown();
             }
             catch (Exception ex)
             {
@@ -2899,7 +2884,7 @@ namespace StatsDirect.UI
             Environment.Exit(0);
         }
 
-        private void frmMain_Shown(object sender, EventArgs e)
+        private void frmMain_Shown(object? sender, EventArgs e)
         {
             try
             {
@@ -2910,7 +2895,7 @@ namespace StatsDirect.UI
 
                 // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
                 if (MdiChildren.Length == 0)
-                    SdApplication.SoleInstance.ShowOrQueueDialog(new frmOpening(), null);
+                    SdApplication.ShowOrQueueDialog(new frmOpening(SdApplication), null);
             }
             catch (Exception ex)
             {
@@ -2922,15 +2907,15 @@ namespace StatsDirect.UI
         {
             foreach (ToolStripItem candidate in toolStrip.Items)
             {
-                if (candidate.Tag is string && ((string)candidate.Tag).StartsWith("#{") && ((string)candidate.Tag).Contains("help="))
+                if (candidate.Tag is string tag && tag.StartsWith("#{") && tag.Contains("help="))
                 {
                     candidate.MouseEnter += menuItem_MouseEnter;
                     candidate.MouseLeave += menuItem_MouseLeave;
                     // candidate.BackColor = Color.PaleGreen;
                 }
-                if (candidate is ToolStripMenuItem && null != ((ToolStripMenuItem)candidate).DropDown)
+                if (candidate is ToolStripMenuItem item && item.DropDown is not null)
                 {
-                    EnsureBuiltInMenuItemsCanShowHelp(((ToolStripMenuItem)candidate).DropDown);
+                    EnsureBuiltInMenuItemsCanShowHelp(item.DropDown);
                 }
             }
         }
@@ -2939,13 +2924,12 @@ namespace StatsDirect.UI
         {
             foreach (ToolStripItem candidate in toolStripDropDown.Items)
             {
-                if (candidate.Tag is string && ((string)candidate.Tag).StartsWith("#{") && ((string)candidate.Tag).Contains("help="))
+                if (candidate.Tag is string tag && tag.StartsWith("#{") && tag.Contains("help="))
                 {
                     candidate.MouseEnter += menuItem_MouseEnter;
                     candidate.MouseLeave += menuItem_MouseLeave;
-                    // candidate.BackColor = Color.PaleGreen;
                 }
-                if ((candidate as ToolStripMenuItem)?.DropDown != null)
+                if (candidate is ToolStripMenuItem { DropDown: not null })
                 {
                     EnsureBuiltInMenuItemsCanShowHelp(((ToolStripMenuItem)candidate).DropDown);
                 }
@@ -2967,7 +2951,7 @@ namespace StatsDirect.UI
                 }
                 recentFileEntries.Clear();
             }
-            IList<string> recentFiles = SdApplication.SoleInstance.RecentFiles;
+            IReadOnlyList<string> recentFiles = SdApplication.RecentFiles;
             for (int i = 0; i < recentFiles.Count; i++)
             {
                 string recentFile = recentFiles[i];
@@ -2993,14 +2977,13 @@ namespace StatsDirect.UI
             fileListToolStripSeparator.Visible = recentFiles.Count > 0;
         }
 
-        private void RecentFileHandler(object sender, EventArgs e)
+        private void RecentFileHandler(object? sender, EventArgs? e)
         {
             ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
             object tagObject = ToTagObject(menuItem);
-            if (!(tagObject is Dictionary<string, string>))
+            if (tagObject is not Dictionary<string, string> tagDictionary)
                 return;
-            Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
-            if (!tagDictionary.TryGetValue("path", out string fileName))
+            if (!tagDictionary.TryGetValue("path", out string? fileName))
                 return;
             if (null == fileName)
                 return;
@@ -3008,7 +2991,7 @@ namespace StatsDirect.UI
             OpenFile(fileName, true);
         }
 
-        private List<ToolStripMenuItem> toolsMenuItems;
+        private List<ToolStripMenuItem>? toolsMenuItems;
 
         /// <summary>
         /// We have reason to believe the tools menu may not be populated (for example at the start of the program) or may not be up to date (for example after the list of tools has been changed by the user).  Set it up.
@@ -3030,18 +3013,14 @@ namespace StatsDirect.UI
             }
 
             // Set up the new items
-            StringCollection names = Settings.Default.ToolsNames;
-            StringCollection paths = Settings.Default.ToolsPrograms;
-            for (int i = 0; i < names.Count; i++)
+            foreach (var tool in UiPreferences.Tools)
             {
-                string name = names[i];
-                string path = paths[i];
                 ToolStripMenuItem menuItem = new()
                 {
                     DisplayStyle = ToolStripItemDisplayStyle.Text,
                     Size = new Size(167, 22),
-                    Text = name,
-                    Tag = "#{help=1156|cmd=" + path + "}"
+                    Text = tool.Label,
+                    Tag = "#{help=1156|cmd=" + tool.Program + "}"
                 };
                 // 167,22 is merely a convenient magic size that came from the VS2005 designer; it may not be "right", but it works.
                 menuItem.Click += ToolsMenuItemHandler;
@@ -3049,19 +3028,18 @@ namespace StatsDirect.UI
                 toolsToolStripMenuItem.DropDownItems.Insert(toolsToolStripMenuItem.DropDownItems.Count - 3, menuItem);
                 toolsMenuItems.Add(menuItem);
             }
-            fileListToolStripSeparator.Visible = names.Count > 0;
+            fileListToolStripSeparator.Visible = UiPreferences.Tools.Count > 0;
         }
 
-        private void ToolsMenuItemHandler(object sender, EventArgs e)
+        private void ToolsMenuItemHandler(object? sender, EventArgs e)
         {
-            ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
+            ToolStripMenuItem? menuItem = (ToolStripMenuItem)sender;
             try
             {
-                object tagObject = ToTagObject(menuItem);
-                if (!(tagObject is Dictionary<string, string>))
+                object? tagObject = ToTagObject(menuItem);
+                if (tagObject is not Dictionary<string, string> tagDictionary)
                     return;
-                Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
-                if (!tagDictionary.TryGetValue("cmd", out string commandLine))
+                if (!tagDictionary.TryGetValue("cmd", out string? commandLine))
                     return;
                 if (null == commandLine)
                     return;
@@ -3071,58 +3049,58 @@ namespace StatsDirect.UI
                 int firstSpace = commandLine.IndexOf(' ');
                 if (firstSpace >= 0)
                 {
-                    arguments = commandLine.Substring(firstSpace + 1);
-                    commandLine = commandLine.Substring(0, firstSpace);
+                    arguments = commandLine[(firstSpace + 1)..];
+                    commandLine = commandLine[..firstSpace];
                 }
                 // Perform any required substitutions
                 Assembly mainAssembly = GetType().Assembly;
                 string mainFileName = mainAssembly.Location;
-                string installPath = Path.GetDirectoryName(mainFileName);
+                string? installPath = Path.GetDirectoryName(mainFileName);
                 commandLine = commandLine.Replace("%STATSDIRECT%", installPath);
                 Process.Start(commandLine, arguments);
             }
             catch (Win32Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
+                SdApplication.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
             }
             catch (IOException ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
+                SdApplication.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
+                SdApplication.FriendlyError("Couldn't start " + menuItem.Text, ex, false);
             }
         }
 
-        private void setupToolsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void setupToolsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ShowOrQueueDialog(new frmSetupTools(), (f, result) =>
+                SdApplication.ShowOrQueueDialog(new frmSetupTools(SdApplication, UiPreferences), (f, result) =>
                 {
                     UpdateToolsMenu();
                 });
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't show tools setup form due to an internal error", ex, false);
+                SdApplication.FriendlyError("Couldn't show tools setup form due to an internal error", ex, false);
             }
         }
 
-        private void aboutsStatsDirectToolStripMenuItem_Click(object sender, EventArgs e)
+        private void aboutsStatsDirectToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ShowOrQueueDialog(new frmAbout(), null);
+                SdApplication.ShowOrQueueDialog(new frmAbout(), null);
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't show About form due to an internal error", ex, false);
+                SdApplication.FriendlyError("Couldn't show About form due to an internal error", ex, false);
             }
         }
 
-        private void openToolStripButton_Click(object sender, EventArgs e)
+        private void openToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3130,11 +3108,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't open file due to an internal error", ex, false);
+                SdApplication.FriendlyError("Couldn't open file due to an internal error", ex, false);
             }
         }
 
-        private void helpToolStripButton_Click(object sender, EventArgs e)
+        private void helpToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3142,71 +3120,71 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't show help due to an internal error", ex, false);
+                SdApplication.FriendlyError("Couldn't show help due to an internal error", ex, false);
             }
         }
 
-        private void cutToolStripButton_Click(object sender, EventArgs e)
+        private void cutToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.EditCut();
+                SdApplication.ActiveWindow.EditCut();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Cut failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Cut failed due to an internal error", ex, false);
             }
         }
 
-        private void copyToolStripButton_Click(object sender, EventArgs e)
+        private void copyToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.EditCopy();
+                SdApplication.ActiveWindow.EditCopy();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Copy failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Copy failed due to an internal error", ex, false);
             }
         }
 
-        private void pasteToolStripButton_Click(object sender, EventArgs e)
+        private void pasteToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.EditPaste();
+                SdApplication.ActiveWindow.EditPaste();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Paste failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Paste failed due to an internal error", ex, false);
             }
         }
 
-        private void printToolStripButton_Click(object sender, EventArgs e)
+        private void printToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ActiveWindow.Print();
+                SdApplication.ActiveWindow.Print();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Print failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Print failed due to an internal error", ex, false);
             }
         }
 
-        private void cmdHelp_Click(object sender, EventArgs e)
+        private void cmdHelp_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ShowCurrentHelp();
+                SdApplication.ShowCurrentHelp();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Show help failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Show help failed due to an internal error", ex, false);
             }
         }
 
-        private void cascadeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void cascadeToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3214,11 +3192,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Layout failed due to an internal error", ex, false);
             }
         }
 
-        private void tileHorizontallyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void tileHorizontallyToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3226,11 +3204,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Layout failed due to an internal error", ex, false);
             }
         }
 
-        private void tileVerticallyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void tileVerticallyToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3238,11 +3216,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Layout failed due to an internal error", ex, false);
             }
         }
 
-        private void arrangeIconsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void arrangeIconsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3250,20 +3228,20 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Layout failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Layout failed due to an internal error", ex, false);
             }
         }
 
-        private void maximiseToolStripMenuItem_Click(object sender, EventArgs e)
+        private void maximiseToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                if (null != ActiveMdiChild)
+                if (ActiveMdiChild is not null)
                     ActiveMdiChild.WindowState = FormWindowState.Maximized;
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Maximise failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Maximise failed due to an internal error", ex, false);
             }
         }
 
@@ -3276,7 +3254,7 @@ namespace StatsDirect.UI
                 // Start at frame 1 (our caller) as we know that we don't have the attribute
                 for (int frameOffset = 1; frameOffset < trc.FrameCount; frameOffset++)
                 {
-                    StackFrame frame = trc.GetFrame(frameOffset);
+                    StackFrame? frame = trc.GetFrame(frameOffset);
                     object[] customAttributes = frame.GetMethod().GetCustomAttributes(typeof(CallerHandlesChangedOperationAttribute), true);
                     if (customAttributes.Length > 0)
                         return true;
@@ -3332,31 +3310,31 @@ namespace StatsDirect.UI
         {
             foreach (Control c in Controls)
             {
-                if (c is MdiClient)
-                    return (MdiClient)c;
+                if (c is MdiClient mdiClient)
+                    return mdiClient;
             }
             throw new InvalidOperationException("No MDIClient !!!");
         }
 #endif
 
-        private void cmdSelectionHelp_Click(object sender, EventArgs e)
+        private void cmdSelectionHelp_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ShowCurrentHelp();
+                SdApplication.ShowCurrentHelp();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Show help failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Show help failed due to an internal error", ex, false);
             }
         }
 
-        private void cmdCancelProgress_Click(object sender, EventArgs e)
+        private void cmdCancelProgress_Click(object? sender, EventArgs e)
         {
             cancelProgressPressed = true;
         }
 
-        private void newToolStripButton_Click(object sender, EventArgs e)
+        private void newToolStripButton_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3364,20 +3342,20 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Create new window failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Create new window failed due to an internal error", ex, false);
             }
         }
 
         private void CreateNewInstanceOfCurrentWindow()
         {
-            if (null == SdApplication.SoleInstance.ActiveWindow
-                || null == SdApplication.SoleInstance.ActiveWindow.Window)
+            if (null == SdApplication.ActiveWindow
+                || null == SdApplication.ActiveWindow.Window)
             {
                 CreateGrid();
             }
             else
             {
-                StatsDirectForm activeWindow = SdApplication.SoleInstance.ActiveWindow.Window;
+                StatsDirectForm activeWindow = SdApplication.ActiveWindow.Window;
                 if (activeWindow is IGrid)
                     CreateGrid();
                 else if (activeWindow is IReport)
@@ -3403,7 +3381,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void saveContextMenuToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveContextMenuToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3412,11 +3390,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Save failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Save failed due to an internal error", ex, false);
             }
         }
 
-        private void saveAsContextToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveAsContextToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3425,11 +3403,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Save failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Save failed due to an internal error", ex, false);
             }
         }
 
-        private void printToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void printToolStripMenuItem1_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3438,11 +3416,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Print failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Print failed due to an internal error", ex, false);
             }
         }
 
-        private void renameContextMenuToolStripTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        private void renameContextMenuToolStripTextBox_KeyPress(object? sender, KeyPressEventArgs e)
         {
             try
             {
@@ -3452,7 +3430,7 @@ namespace StatsDirect.UI
                     if (!string.IsNullOrEmpty(newName))
                     {
                         WindowInformation lastClickedTab = TabStripLastClickedTab();
-                        if (null != lastClickedTab)
+                        if (lastClickedTab is not null)
                         {
                             lastClickedTab.FriendlyName = newName;
 
@@ -3474,11 +3452,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Rename failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Rename failed due to an internal error", ex, false);
             }
         }
 
-        private void renameContextMenutoolStripMenuItem_Click(object sender, EventArgs e)
+        private void renameContextMenutoolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3490,12 +3468,12 @@ namespace StatsDirect.UI
             }
         }
 
-        private void tabContextMenuStrip_Opening(object sender, CancelEventArgs e)
+        private void tabContextMenuStrip_Opening(object? sender, CancelEventArgs e)
         {
             try
             {
                 WindowInformation lastClickedTab = TabStripLastClickedTab();
-                if (null != lastClickedTab)
+                if (lastClickedTab is not null)
                 {
                     bool isNew = lastClickedTab.IsNew;
                     renameContextMenuToolStripTextBox.Enabled = isNew;
@@ -3519,12 +3497,12 @@ namespace StatsDirect.UI
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <remarks>Required because tabs select themselves on the way out of the event handling, after we have the opportunity to select anything else.</remarks>
-        private void postTabTimer_Tick(object sender, EventArgs e)
+        private void postTabTimer_Tick(object? sender, EventArgs e)
         {
             try
             {
                 postTabTimer.Enabled = false;
-                if (null != mostRecentlySelectedWindow)
+                if (mostRecentlySelectedWindow is not null)
                 {
                     ActivateMdiChild(mostRecentlySelectedWindow);
                     mostRecentlySelectedWindow = null;
@@ -3543,7 +3521,7 @@ namespace StatsDirect.UI
         {
         }
 
-        private void cutContextMenuItem1_Click(object sender, EventArgs e)
+        private void cutContextMenuItem1_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3554,11 +3532,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Cut failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Cut failed due to an internal error", ex, false);
             }
         }
 
-        private void copyContextMenuItem_Click(object sender, EventArgs e)
+        private void copyContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3569,11 +3547,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Copy failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Copy failed due to an internal error", ex, false);
             }
         }
 
-        private void pasteContextMenuItem_Click(object sender, EventArgs e)
+        private void pasteContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3584,11 +3562,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Paste failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Paste failed due to an internal error", ex, false);
             }
         }
 
-        private void pasteSpecialContextMenuItem_Click(object sender, EventArgs e)
+        private void pasteSpecialContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3602,11 +3580,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Paste Special due to an internal error", ex, false);
+                SdApplication.FriendlyError("Paste Special due to an internal error", ex, false);
             }
         }
 
-        private void insertContextMenuItem_Click(object sender, EventArgs e)
+        private void insertContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3614,7 +3592,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Insert Cells failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Insert Cells failed due to an internal error", ex, false);
             }
         }
 
@@ -3648,7 +3626,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void deleteContextMenuItem_Click(object sender, EventArgs e)
+        private void deleteContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3656,7 +3634,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Delete cells failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Delete cells failed due to an internal error", ex, false);
             }
         }
 
@@ -3686,7 +3664,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void clearContentsContextMenuItem_Click(object sender, EventArgs e)
+        private void clearContentsContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3699,11 +3677,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Clear Contents failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Clear Contents failed due to an internal error", ex, false);
             }
         }
 
-        private void goToContextMenuItem_Click(object sender, EventArgs e)
+        private void goToContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3711,7 +3689,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Go to cell failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Go to cell failed due to an internal error", ex, false);
             }
         }
 
@@ -3720,15 +3698,15 @@ namespace StatsDirect.UI
             WorkbookView workbookView = FindGridOrNull();
             if (null == workbookView)
                 return;
-            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            string cell = SdApplication.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
             workbookView.WithLock(() =>
             {
-                if (null != cell)
+                if (cell is not null)
                     workbookView.ActiveWorksheet.Cells[cell].Activate();
             });
         }
 
-        private void findAndReplaceContextMenuItem_Click(object sender, EventArgs e)
+        private void findAndReplaceContextMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -3742,19 +3720,19 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Showing the find+replace dialog failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Showing the find+replace dialog failed due to an internal error", ex, false);
             }
         }
 
-        private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void checkForUpdatesToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.CheckForUpdates();
+                SdApplication.CheckForUpdates();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Checking for updates failed due to an internal error", ex, false);
+                SdApplication.FriendlyError("Checking for updates failed due to an internal error", ex, false);
             }
         }
 
@@ -3770,8 +3748,8 @@ namespace StatsDirect.UI
             IButtonControl oldAcceptButton = AcceptButton;
             IButtonControl oldCancelButton = CancelButton;
             lblModalMessageText.Text = text;
-            Bitmap rawIcon = IconFromMessageBoxIcon(icon);
-            if (null != rawIcon)
+            Bitmap? rawIcon = IconFromMessageBoxIcon(icon);
+            if (rawIcon is not null)
                 picModalMessageIcon.Image = rawIcon;
             SetupModalButtons(buttons, defaultButton);
             PushPanel(PanelType.ModalMessage, false);
@@ -3855,83 +3833,55 @@ namespace StatsDirect.UI
                     db = cmdModalMessage3;
                     break;
             }
-            if (null != db)
+            if (db is not null)
             {
                 AcceptButton = db;
                 db.Focus();
             }
         }
 
-        private DialogResult DecodeModalButtons(MessageBoxButtons buttons)
-        {
-            switch (buttons)
+        private DialogResult DecodeModalButtons(MessageBoxButtons buttons) =>
+            buttons switch
             {
-                case MessageBoxButtons.AbortRetryIgnore:
-                    switch (mostRecentModalMessageButtonPressed)
-                    {
-                        case 1:
-                            return DialogResult.Abort;
-                        case 2:
-                            return DialogResult.Retry;
-                        case 3:
-                            return DialogResult.Ignore;
-                        default:
-                            return DialogResult.None;
-                    }
-                case MessageBoxButtons.OK:
-                    switch (mostRecentModalMessageButtonPressed)
-                    {
-                        case 1:
-                            return DialogResult.OK;
-                        default:
-                            return DialogResult.None;
-                    }
-                case MessageBoxButtons.OKCancel:
-                    switch (mostRecentModalMessageButtonPressed)
-                    {
-                        case 1:
-                            return DialogResult.OK;
-                        case 2:
-                            return DialogResult.Cancel;
-                        default:
-                            return DialogResult.None;
-                    }
-                case MessageBoxButtons.RetryCancel:
-                    switch (mostRecentModalMessageButtonPressed)
-                    {
-                        case 1:
-                            return DialogResult.Retry;
-                        case 2:
-                            return DialogResult.Cancel;
-                        default:
-                            return DialogResult.None;
-                    }
-                case MessageBoxButtons.YesNo:
-                    switch (mostRecentModalMessageButtonPressed)
-                    {
-                        case 1:
-                            return DialogResult.Yes;
-                        case 2:
-                            return DialogResult.No;
-                        default:
-                            return DialogResult.None;
-                    }
-                case MessageBoxButtons.YesNoCancel:
-                    switch (mostRecentModalMessageButtonPressed)
-                    {
-                        case 1:
-                            return DialogResult.Yes;
-                        case 2:
-                            return DialogResult.No;
-                        case 3:
-                            return DialogResult.Cancel;
-                        default:
-                            return DialogResult.None;
-                    }
-                default:
-                    return DialogResult.None;
-            }
-        }
+                MessageBoxButtons.AbortRetryIgnore => mostRecentModalMessageButtonPressed switch
+                {
+                    1 => DialogResult.Abort,
+                    2 => DialogResult.Retry,
+                    3 => DialogResult.Ignore,
+                    _ => DialogResult.None,
+                },
+                MessageBoxButtons.OK => mostRecentModalMessageButtonPressed switch
+                {
+                    1 => DialogResult.OK,
+                    _ => DialogResult.None,
+                },
+                MessageBoxButtons.OKCancel => mostRecentModalMessageButtonPressed switch
+                {
+                    1 => DialogResult.OK,
+                    2 => DialogResult.Cancel,
+                    _ => DialogResult.None,
+                },
+                MessageBoxButtons.RetryCancel => mostRecentModalMessageButtonPressed switch
+                {
+                    1 => DialogResult.Retry,
+                    2 => DialogResult.Cancel,
+                    _ => DialogResult.None,
+                },
+                MessageBoxButtons.YesNo => mostRecentModalMessageButtonPressed switch
+                {
+                    1 => DialogResult.Yes,
+                    2 => DialogResult.No,
+                    _ => DialogResult.None,
+                },
+                MessageBoxButtons.YesNoCancel => mostRecentModalMessageButtonPressed switch
+                {
+                    1 => DialogResult.Yes,
+                    2 => DialogResult.No,
+                    3 => DialogResult.Cancel,
+                    _ => DialogResult.None,
+                },
+                _ => DialogResult.None,
+            };
 
         private void WaitForModalMessage()
         {
@@ -3952,7 +3902,7 @@ namespace StatsDirect.UI
             {
                 // Do nothing; the world has changed behind the scenes.
             }
-            if (null != activeForm)
+            if (activeForm is not null)
                 activeForm.Enabled = false;
             do
             {
@@ -3961,7 +3911,7 @@ namespace StatsDirect.UI
             } while (waitingForModalMessage);
 
             // If we still have a main form and menus (the user might have done strange things like close the window), re-enable them.
-            if (null != mnuMain)
+            if (mnuMain is not null)
                 mnuMain.Enabled = true;
             // Beware!  If the message is popping up that there's unsaved data, then MdiChildren may change behind the scenes.  Be cautious.
             try
@@ -3973,7 +3923,7 @@ namespace StatsDirect.UI
             {
                 // Do nothing; the world has changed behind the scenes.
             }
-            if (null != puntedException)
+            if (puntedException is not null)
             {
                 Exception ex = puntedException;
                 puntedException = null;
@@ -3981,52 +3931,35 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cmdModalMessage1_Click(object sender, EventArgs e)
+        private void cmdModalMessage1_Click(object? sender, EventArgs e)
         {
             mostRecentModalMessageButtonPressed = 1;
             waitingForModalMessage = false;
         }
 
-        private void cmdModalMessage2_Click(object sender, EventArgs e)
+        private void cmdModalMessage2_Click(object? sender, EventArgs e)
         {
             mostRecentModalMessageButtonPressed = 2;
             waitingForModalMessage = false;
         }
 
-        private void cmdModalMessage3_Click(object sender, EventArgs e)
+        private void cmdModalMessage3_Click(object? sender, EventArgs e)
         {
             mostRecentModalMessageButtonPressed = 3;
             waitingForModalMessage = false;
         }
 
-        private static Bitmap IconFromMessageBoxIcon(MessageBoxIcon icon)
+        private static Bitmap? IconFromMessageBoxIcon(MessageBoxIcon icon)
         {
-            System.Drawing.Icon rawIcon;
-            switch (icon)
+            System.Drawing.Icon? rawIcon = icon switch
             {
-                case MessageBoxIcon.Asterisk:
-                    // case MessageBoxIcon.Information:
-                    rawIcon = SystemIcons.Asterisk;
-                    break;
-                case MessageBoxIcon.Error:
-                    // case MessageBoxIcon.Hand:
-                    // case MessageBoxIcon.Stop:
-                    rawIcon = SystemIcons.Error;
-                    break;
-                case MessageBoxIcon.Exclamation:
-                    // case MessageBoxIcon.Warning:
-                    rawIcon = SystemIcons.Exclamation;
-                    break;
-                case MessageBoxIcon.None:
-                    rawIcon = null;
-                    break;
-                case MessageBoxIcon.Question:
-                    rawIcon = SystemIcons.Question;
-                    break;
-                default:
-                    rawIcon = null;
-                    break;
-            }
+                MessageBoxIcon.Asterisk => SystemIcons.Asterisk,
+                MessageBoxIcon.Error => SystemIcons.Error,
+                MessageBoxIcon.Exclamation => SystemIcons.Exclamation,
+                MessageBoxIcon.None => null,
+                MessageBoxIcon.Question => SystemIcons.Question,
+                _ => null,
+            };
             if (null == rawIcon)
                 return null;
             System.Drawing.Icon sizedIcon = new(rawIcon, 40, 40);
@@ -4037,13 +3970,13 @@ namespace StatsDirect.UI
             return bmp;
         }
 
-        private void cmdVariables_Click(object sender, EventArgs e)
+        private void cmdVariables_Click(object? sender, EventArgs e)
         {
             const int durationMilliseconds = 10000;
             tipVariables.Show(tipVariables.GetToolTip(cmdVariables), cmdVariables, durationMilliseconds);
         }
 
-        private void cmdModalMessageKeyPress(object sender, KeyPressEventArgs e)
+        private void cmdModalMessageKeyPress(object? sender, KeyPressEventArgs e)
         {
             switch (e.KeyChar)
             {
@@ -4080,7 +4013,7 @@ namespace StatsDirect.UI
             return found;
         }
 
-        private void cboRecentOperations_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboRecentOperations_SelectedIndexChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -4097,10 +4030,10 @@ namespace StatsDirect.UI
                 // If it's a grid operation, ensure the most recently used one is visible (#696)
                 if (operation.RequiresGrid)
                 {
-                    if (null != SdApplication.SoleInstance && null != SdApplication.SoleInstance.ActiveGrid && SdApplication.SoleInstance.ActiveGrid.HasWindow)
+                    if (SdApplication.ActiveGrid is not null && SdApplication.ActiveGrid.HasWindow)
                     {
-                        ((IGrid)SdApplication.SoleInstance.ActiveGrid.Window).ClearSelection();
-                        ActivateMdiChild(SdApplication.SoleInstance.ActiveGrid.Window);
+                        ((IGrid)SdApplication.ActiveGrid.Window).ClearSelection();
+                        ActivateMdiChild(SdApplication.ActiveGrid.Window);
                         Application.DoEvents();
                     }
                 }
@@ -4163,15 +4096,15 @@ namespace StatsDirect.UI
         {
             base.ScaleControl(factor, specified);
             // Record the running scale factor used, for sizing controls we add dynamically where they don't do it themselves
-            currentScaleFactor = new SizeF(currentScaleFactor.Width * factor.Width, currentScaleFactor.Height * factor.Height);
+            CurrentScaleFactor = new SizeF(CurrentScaleFactor.Width * factor.Width, CurrentScaleFactor.Height * factor.Height);
         }
 
-        private void rGuiToolStripMenuItem_Click(object sender, EventArgs e)
+        private void rGuiToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             StartRGui();
         }
 
-        private static void StartRGui()
+        private void StartRGui()
         {
             try
             {
@@ -4187,7 +4120,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start R", ex, false);
+                SdApplication.FriendlyError("Couldn't start R", ex, false);
             }
         }
 

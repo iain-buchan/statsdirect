@@ -2,7 +2,7 @@
 
 namespace StatsDirect.UI
 {
-    public partial class ctlAxisOptions : UserControl
+    internal partial class ctlAxisOptions : UserControl
     {
         private bool axisLabelsAreSwapped;
         private bool xIsVisible = true;

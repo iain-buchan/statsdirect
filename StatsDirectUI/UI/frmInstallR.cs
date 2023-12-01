@@ -13,22 +13,22 @@ namespace StatsDirect.UI
             InitializeComponent();
         }
 
-        private void lnkInstallR_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void lnkInstallR_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://cran.r-project.org/bin/windows/base/release.htm");
         }
 
-        private void lnkMoreInformation_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void lnkMoreInformation_LinkClicked(object? sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://www.r-project.org/");
         }
 
-        private void cmdDoNotInstall_Click(object sender, EventArgs e)
+        private void cmdDoNotInstall_Click(object? sender, EventArgs e)
         {
             Close();
         }
 
-        private void cmdInstalled_Click(object sender, EventArgs e)
+        private void cmdInstalled_Click(object? sender, EventArgs e)
         {
             userThinksRIsInstalled = true;
             Close();

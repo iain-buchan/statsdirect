@@ -8,8 +8,13 @@ using StatsDirect.Charting;
 
 namespace StatsDirect.Builtins
 {
-    public static class Parametric
+    public class Parametric : RendererBase
     {
+        public Parametric(ISdPreferences sdPreferences)
+            : base(sdPreferences)
+        {
+        }
+
         private static void Univariate(double[] arr1, int nx, out double sum, out double mean, out double var)
         {
             sum = 0;
@@ -112,8 +117,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        static void AssertAlwaysPresentAndOfCorrectType<TIn, TOut>(TIn foo, out TOut baz) where TIn: class where TOut: class
+        {
+            if (foo is not TOut bar)
+                throw new ArgumentException("Couldn't convert TIn to TOut - TODO: Better comment");
+            baz = bar;
+        }
+
         public static StepOutput RptReferenceRange(ParameterBag parameters)
         {
+
             double xq = 0;
             double o = 0;
             int k = 0;
@@ -126,16 +139,15 @@ namespace StatsDirect.Builtins
             int[] tnx = new int[2];
 
             DataFrame data = parameters["data"].AsDataFrame;
-            DoubleVariable variable = data.Variables[0]as DoubleVariable;
+            AssertAlwaysPresentAndOfCorrectType(data.Variables[0], out DoubleVariable variable);
             if (variable.Data.Length < 8)
                 throw new TemplateOperationCancelledException("Too few data for this method (minimum 8)", "Reference Range");
 
             bool do_conservative = parameters["do_conservative"].AsBoolean;
             double GAMMA = parameters["gamma"].AsDouble;
             if (GAMMA <= 0.0 || GAMMA >= 1.0)
-            {
                 GAMMA = 0.95;
-            }
+
             double qrr = parameters["reference-interval"].AsDouble;
             double qrz = Math.Abs(PDF.gauinv((1.0 - qrr) / 2.0, out int fault));
             if (fault != 0 || qrr < 0.0 || qrr > 1.0)
@@ -342,7 +354,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*sample", sampleList);
             foreach (IVariable varbl in data.Variables)
             {
-                DoubleVariable variable = varbl as DoubleVariable;
+                AssertAlwaysPresentAndOfCorrectType(varbl, out DoubleVariable variable);
                 double[] x = new double[variable.Length + 1 ];
                 int nobs = 0;
                 bool not_int = false;
@@ -446,14 +458,14 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                DataFrame Data = parameters["data"].AsDataFrame;
-                DoubleVariable v0 = Data.Variables[0]as DoubleVariable;
+                DataFrame data = parameters["data"].AsDataFrame;
+                AssertAlwaysPresentAndOfCorrectType(data.Variables[0], out DoubleVariable v0);
                 double pm = parameters["popmean"].AsDouble;
-                double psd = parameters.ContainsKey("popsd") && parameters["popsd"] != null
+                double psd = parameters.ContainsKey("popsd") && parameters["popsd"] is not null
                     ? parameters["popsd"].AsDouble
                     : Constant.MISSING;
                 MathDbl.civ(0, out double cit, GAMMA, out double P0);
-                Para(Data, mean, ss, var, sd, sem, tnx);
+                Para(data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("name", v0.Title);
                 outputParameters.AddOutput("mean", mean[0]);
@@ -532,7 +544,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepOutput RptNormality(IFormatting host, ParameterBag parameters)
+        public StepOutput RptNormality(ParameterBag parameters)
         {
             // ASSUME: Data passed in was acquired with NumericSkipMissing and has no missing values.
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -543,7 +555,7 @@ namespace StatsDirect.Builtins
 
             foreach (IVariable v in frame.Variables)
             {
-                DoubleVariable v0 = v as DoubleVariable;
+                AssertAlwaysPresentAndOfCorrectType(v, out DoubleVariable v0);
                 double[] data = v0.Data;
                 int n = data.Length;
 
@@ -565,34 +577,34 @@ namespace StatsDirect.Builtins
                 {
                     variableParameters.AddOutput("b1_p", b1P);
                     variableParameters.AddOutput("b2_p", b2P);
-                    variableParameters.AddOutput("k2", host.RoundU(k2) + ",");
+                    variableParameters.AddOutput("k2", RoundU(k2) + ",");
                     variableParameters.AddOutput("k2_p", k2P);
                 }
 
                 // Shapiro-Wilk
-                normality_sw(data, 0, n, out double sw_w, out double sw_p, out double _, out double sw_v);
+                NormalityShapiroWilk(data, 0, n, out double sw_w, out double sw_p, out double _, out double sw_v);
                 if (n < 3)
                 {
                     variableParameters.AddOutput("sw_w", "Not calculated if sample size < 3");
                 }
                 else
                 {
-                    variableParameters.AddOutput("sw_w", host.RoundU(sw_w) + ",");
-                    variableParameters.AddOutput("sw_v", "V = " + host.RoundU(sw_v) + ",");
+                    variableParameters.AddOutput("sw_w", RoundU(sw_w) + ",");
+                    variableParameters.AddOutput("sw_v", "V = " + RoundU(sw_v) + ",");
                     variableParameters.AddOutput("sw_p", sw_p);
                     if (n > 2000)
                         variableParameters.AddOutput("sw_p_warn", ": Test unreliable with more than 2000 observations.");
                 }
 
-                normality_sf(data, 0, n, out double sf_w, out double sf_v, out double _, out double sf_p);
+                NormalityShapiroFrancia(data, 0, n, out double sf_w, out double sf_v, out double _, out double sf_p);
                 if (n < 5)
                 {
                     variableParameters.AddOutput("sf_w", "Not calculated if sample size < 5");
                 }
                 else
                 {
-                    variableParameters.AddOutput("sf_w", host.RoundU(sf_w) + ",");
-                    variableParameters.AddOutput("sf_v", "V' = " + host.RoundU(sf_v) + ",");
+                    variableParameters.AddOutput("sf_w", RoundU(sf_w) + ",");
+                    variableParameters.AddOutput("sf_v", "V' = " + RoundU(sf_v) + ",");
                     variableParameters.AddOutput("sf_p", sf_p);
                     if (n > 5000)
                         variableParameters.AddOutput("sf_p_warn", ": Test unreliable with more than 5000 observations.");
@@ -618,7 +630,7 @@ namespace StatsDirect.Builtins
                 }
 
                 NormalOptions nOptions = new() { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
-                ChartDefinition cd = new() { ChartOptions = nOptions, ChartType = ChartType.Normal };
+                ChartDefinition cd = new(ChartType.Normal) { ChartOptions = nOptions};
                 cd.XSeries.Add(new DoubleSeries(data, v0.Title));
                 variableParameters.AddOutput("chart", cd);
             }
@@ -762,8 +774,7 @@ namespace StatsDirect.Builtins
         ///  <param name="p">Significance of W</param>
         ///  <param name="z">Normalised test statistic for W</param>
         ///  <param name="v">(1-W)/(median of 1-W)</param>
-        ///  <remarks></remarks>
-        private static void normality_sw(double[] x, int lowerBound, int n, out double w, out double p, out double z, out double v)
+        private static void NormalityShapiroWilk(double[] x, int lowerBound, int n, out double w, out double p, out double z, out double v)
         {
             // set on error exit values first
             w = Constant.MISSING;
@@ -789,7 +800,7 @@ namespace StatsDirect.Builtins
             // ranks
             double[] r = new double[n + 1];
             Array.Sort(q, 1, k);
-            ExFortran.Rank(q, r, 1, k, 1, out double xf);
+            ExFortran.Rank(q, r, 1, k, 1, out double _);
 
             // normalised coefficients
             double nx = Convert.ToDouble(k);
@@ -865,7 +876,7 @@ namespace StatsDirect.Builtins
                 ang = Constant.PI / 2.0 - ang * Math.Sqrt(1.0 - sw);
                 double stqr = Math.Asin(Math.Sqrt(0.75));
                 p = 6 / Constant.PI * (ang - stqr);
-                z = -PDF.gauinv(p, out int ifault);
+                z = -PDF.gauinv(p, out int _);
                 v = (1.0 - w) / (1 - Math.Pow(Math.Sin(Constant.PI / 12.0 + stqr), 2.0));
             }
             else
@@ -909,7 +920,7 @@ namespace StatsDirect.Builtins
         ///  <param name="p">Significance</param>
         /// <param name="lowerBound"> </param>
         /// <remarks></remarks>
-        private static void normality_sf(double[] x, int lowerBound, int n, out double w, out double v, out double z, out double p)
+        private static void NormalityShapiroFrancia(double[] x, int lowerBound, int n, out double w, out double v, out double z, out double p)
         {
             // set on error exit values first
             w = Constant.MISSING;
@@ -937,7 +948,7 @@ namespace StatsDirect.Builtins
             // ranks
             double[] r = new double[n + 1 ];
             Array.Sort(q, 1, k);
-            ExFortran.Rank(q, r, 1, k, 1, out double xf);
+            ExFortran.Rank(q, r, 1, k, 1, out double _);
 
             // Shapiro-Francia by Patrick Royston
             double nx = Convert.ToDouble(k);
@@ -978,7 +989,7 @@ namespace StatsDirect.Builtins
             double xm1 = um1;
             double xm2 = um2;
             if (um1 < um2)
-                Utilities.Utilities.Swap(ref um1, ref um2);
+                (um2, um1) = (um1, um2);
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", "* sample 1 from summary");
@@ -1105,11 +1116,7 @@ namespace StatsDirect.Builtins
             double um1 = mean[0];
             double um2 = mean[1];
             if (um1 < um2)
-            {
-                double um = um1;
-                um1 = um2;
-                um2 = um;
-            }
+                (um2, um1) = (um1, um2);
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", data.Variables[0].Title);
             outputParameters.AddOutput("mean_0", mean[0]);
@@ -1223,15 +1230,15 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptTPaired(ParameterBag parameters)
         {
-            DataFrame Data = parameters["data"].AsDataFrame;
+            DataFrame data = parameters["data"].AsDataFrame;
             double GAMMA = parameters["gamma"].AsDouble;
-            bool DoAgree = Data.VariableCount > 1 && parameters.ContainsKey("doAgreement") && parameters["doAgreement"].AsBoolean;
+            bool DoAgree = data.VariableCount > 1 && parameters.ContainsKey("doAgreement") && parameters["doAgreement"].AsBoolean;
 
-            double[] arr1 = new double[Data.MaxRows + 1 ]; // New array to replace Arr2(0,n)
-            DoubleVariable v0 = Data.Variables[0]as DoubleVariable;
+            double[] arr1 = new double[data.MaxRows + 1 ]; // New array to replace Arr2(0,n)
+            AssertAlwaysPresentAndOfCorrectType(data.Variables[0], out DoubleVariable v0);
             int nx = 0;
             string txc;
-            if (Data.VariableCount == 1)
+            if (data.VariableCount == 1)
             {
                 for (int n = 0; n < v0.Length; n++)
                 {
@@ -1245,7 +1252,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                DoubleVariable v1 = Data.Variables[1]as DoubleVariable;
+                AssertAlwaysPresentAndOfCorrectType(data.Variables[1], out DoubleVariable v1);
                 for (int n = 0; n < v0.Length; n++)
                 {
                     if (v0.Data[n] != Constant.MISSING && v1.Data[n] != Constant.MISSING)
@@ -1257,7 +1264,7 @@ namespace StatsDirect.Builtins
                 txc = "differences between " + v0.Title + " and " + v1.Title;
             }
 
-            Univariate(arr1, nx, out double sum, out double mean, out double var);
+            Univariate(arr1, nx, out double _, out double mean, out double var);
             double sd = Math.Sqrt(var);
             double sem = sd / Math.Sqrt(nx);
             int degf = nx - 1;
@@ -1296,7 +1303,7 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
 
-                DoubleVariable v1 = Data.Variables[1]as DoubleVariable;
+                AssertAlwaysPresentAndOfCorrectType(data.Variables[1], out DoubleVariable v1);
                 double[] x = new double[v0.Length + 1 ];
                 double[] y = new double[v1.Length + 1 ];
                 x[0] = Constant.MISSING;

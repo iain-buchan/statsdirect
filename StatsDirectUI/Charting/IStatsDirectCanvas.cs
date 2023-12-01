@@ -10,7 +10,7 @@ namespace StatsDirect.Charting
     /// </summary>
     public interface IStatsDirectCanvas : IDisposable
     {
-        void DrawString(string text, FontDescriptor font, BrushDescriptor brush, double x, double y, StringFormat txtFormat);
+        void DrawString(string? text, FontDescriptor? font, BrushDescriptor? brush, double x, double y, StringFormat txtFormat);
 
         ///  <summary>
         ///  Cases:
@@ -24,10 +24,10 @@ namespace StatsDirect.Charting
         ///  <param name="y"></param>
         ///  <param name="txtFormat"></param>
         ///  <param name="direction"></param>
-        void DrawStringAtAngle(string s, FontDescriptor font, BrushDescriptor brush, double x, double y, StringFormat txtFormat, LabelDirection direction);
+        void DrawStringAtAngle(string? s, FontDescriptor? font, BrushDescriptor? brush, double x, double y, StringFormat txtFormat, LabelDirection direction);
 
         ///  <returns>The bounding size of s drawn with txtFormat</returns>
-        SizeD MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction);
+        SizeD MeasureStringAtAngle(string? s, FontDescriptor font, LabelDirection direction);
 
         ///  <summary>
         ///  Draw a square of side size, centred on (x, y).
@@ -52,10 +52,9 @@ namespace StatsDirect.Charting
         void DrawDiamond(PenDescriptor p, double x, double y, double size, bool fill);
 
         void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, PenDescriptor p);
-        void DrawRectangle(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h);
+        void DrawRectangle(PenDescriptor? p, BrushDescriptor? b, double x, double y, double w, double h);
         void DrawLine(PenDescriptor p, double x1, double y1, double x2, double y2);
-        double GetFontHeight(FontDescriptor f);
-        SizeD MeasureString(string s, FontDescriptor font);
+        SizeD MeasureString(string? s, FontDescriptor? font);
 
         double Width { get; }
         double Height { get; }

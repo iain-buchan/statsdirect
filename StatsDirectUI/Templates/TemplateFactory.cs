@@ -9,8 +9,8 @@ namespace StatsDirect.Templates
 {
     public static class TemplateFactory
     {
-        private static IDictionary<string, Operation> operations;
-        private static IList<Operation> userOperations;
+        private static IDictionary<string, Operation>? operations;
+        private static IList<Operation>? userOperations;
         private static readonly object lockObject = new();
         private static bool loading;
 
@@ -49,7 +49,7 @@ namespace StatsDirect.Templates
             new Thread(BackgroundLoader).Start();
         }
 
-        private static void BackgroundLoader(object obj)
+        private static void BackgroundLoader(object? _)
         {
             LoadOperations();
         }
@@ -64,7 +64,7 @@ namespace StatsDirect.Templates
                 Dictionary<string, Exception> loadErrors = new();
                 operations = new Dictionary<string, Operation>();
                 System.Xml.Serialization.XmlSerializer s = new(typeof(Operation));
-                DirectoryInfo di = new(Path.Combine(SDConfiguration.InstallationDirectory, UI.Properties.Settings.Default.OperationsDirectory));
+                DirectoryInfo di = new(SDConfiguration.OperationsPath);
                 FileInfo[] knownOperations = di.GetFiles();
                 foreach (FileInfo info in knownOperations)
                 {
@@ -90,7 +90,7 @@ namespace StatsDirect.Templates
                 }
 
                 userOperations = new List<Operation>();
-                string userOperationDir = Path.Combine(SDConfiguration.InstallationDirectory, System.Configuration.ConfigurationManager.AppSettings["UserOperationDir"]);
+                string? userOperationDir = Path.Combine(SDConfiguration.InstallationPath, System.Configuration.ConfigurationManager.AppSettings["UserOperationDir"]);
                 if (Directory.Exists(userOperationDir))
                 {
                     di = new DirectoryInfo(userOperationDir);
@@ -100,11 +100,14 @@ namespace StatsDirect.Templates
                         // Asking a DirectoryInfo for all files of the pattern "*.xml" gets eg. "scatter.xml~" - so we do it the hard way.
                         if (".xml".Equals(info.Extension.ToLower(CultureInfo.InvariantCulture)))
                         {
-                            TextReader fs = info.OpenText();
-                            Operation o = (Operation)s.Deserialize(fs);
+                            using TextReader fs = info.OpenText();
+                            Operation? o = (Operation?)s.Deserialize(fs);
                             fs.Close();
-                            o.FixAfterLoading();
-                            userOperations.Add(o);
+                            if (o is not null)
+                            {
+                                o.FixAfterLoading();
+                                userOperations.Add(o);
+                            }
                         }
                     }
                 }

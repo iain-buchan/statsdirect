@@ -8,9 +8,9 @@ namespace StatsDirect.Charting
     /// </summary>
     public class AxisDefinition
     {
-        public string Title { get; set; }
+        public string? Title { get; }
 
-        public AxisMode Mode { get; set; }
+        public AxisMode Mode { get; }
 
         public bool Reverse => (Mode & AxisMode.Reverse) != 0;
 
@@ -23,15 +23,15 @@ namespace StatsDirect.Charting
         ///  </summary>
         public double ExtraSpaceAfterAxisEnds { get; set; }
 
-        public ScaleType ScaleType { get; set; }
+        public ScaleType ScaleType { get; }
 
         /// <summary>
         /// For ScaleType.Series, this is the series to use for the names
         /// </summary>
-        public IList<ISeries> Series { get; set; }
-        public IList<string> Labels { get; set; }
+        public IReadOnlyList<ISeries>? Series { get; set; }
+        public IReadOnlyList<string>? Labels { get; set; }
 
-        public AxisDefinition(string title, AxisMode mode, ScaleType scaleType)
+        public AxisDefinition(string? title, AxisMode mode, ScaleType scaleType)
         {
             Title = title;
             Mode = mode;

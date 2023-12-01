@@ -26,12 +26,12 @@ namespace StatsDirect.UI
             InitializeComponent();
         }
 
-        private void cmdOK_Click(object sender, EventArgs e)
+        private void cmdOK_Click(object? sender, EventArgs e)
         {
             Close();
         }
 
-        private void lblVisit_Click(object sender, EventArgs e)
+        private void lblVisit_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void frmAbout_Shown(object sender, EventArgs e)
+        private void frmAbout_Shown(object? sender, EventArgs e)
         {
             RefreshVersion();
             RefreshSysInfo();

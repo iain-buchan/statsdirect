@@ -7,7 +7,7 @@ using System.Globalization;
 
 namespace StatsDirect.UI
 {
-    public partial class frmExportGraphic : Form
+    internal partial class frmExportGraphic : Form
     {
         private const int IMAGE_TO_EXPORT_SCALE = 2;
         private readonly double scaleFactor;
@@ -15,8 +15,11 @@ namespace StatsDirect.UI
         private readonly byte[] originalBytes;
         private bool updating;
 
-        public frmExportGraphic(Image img, byte[] bytes)
+        private ISdApplication SdApplication { get; }
+
+        public frmExportGraphic(Image img, byte[] bytes, ISdApplication sdApplication)
         {
+            SdApplication = sdApplication;
             InitializeComponent();
             originalImage = img;
             originalBytes = bytes;
@@ -29,7 +32,7 @@ namespace StatsDirect.UI
             SetUi();
         }
 
-        private void txtWidth_TextChanged(object sender, EventArgs e)
+        private void txtWidth_TextChanged(object? sender, EventArgs e)
         {
             if (chkKeepAspectRatio.Checked && int.TryParse(txtWidth.Text, out int width) && !updating)
             {
@@ -42,7 +45,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void txtHeight_TextChanged(object sender, EventArgs e)
+        private void txtHeight_TextChanged(object? sender, EventArgs e)
         {
             if (chkKeepAspectRatio.Checked && int.TryParse(txtHeight.Text, out int height) && !updating)
             {
@@ -55,12 +58,12 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void cmdCancel_Click(object? sender, EventArgs e)
         {
             Close();
         }
 
-        private void cmdExport_Click(object sender, EventArgs e)
+        private void cmdExport_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -79,7 +82,7 @@ namespace StatsDirect.UI
                         || width < 1
                         || height < 1)
                     {
-                        SdApplication.SoleInstance.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
+                        SdApplication.MsgboxX("Please enter a width and height in pixels for the exported image.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Graphical image export", false);
                         return;
                     }
                 }
@@ -116,11 +119,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't export this graphic", ex, false);
+                SdApplication.FriendlyError("Couldn't export this graphic", ex, false);
             }
         }
 
-        private void FormatChanged(object sender, EventArgs e)
+        private void FormatChanged(object? sender, EventArgs e)
         {
             SetUi();
         }
@@ -131,15 +134,15 @@ namespace StatsDirect.UI
             grpSize.Enabled = !rdoMetafile.Checked;
         }
 
-        private void HelpRequest(object sender, EventArgs e)
+        private void HelpRequest(object? sender, EventArgs e)
         {
             try
             {
-                SdApplication.SoleInstance.ShowHelp(this, "220554");
+                SdApplication.ShowHelp(this, "220554");
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't show help", ex, false);
+                SdApplication.FriendlyError("Couldn't show help", ex, false);
             }
         }
 
@@ -156,7 +159,7 @@ namespace StatsDirect.UI
             {
                 int quality = trkCompression.Value;
                 using EncoderParameter qualityParam = new(Encoder.Quality, quality);
-                ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
+                ImageCodecInfo? jpegCodec = GetEncoderInfo("image/jpeg");
                 using EncoderParameters encoderParams = new(1);
                 encoderParams.Param[0] = qualityParam;
                 WithWhiteBackground(originalImage, width, height).Save(path, jpegCodec, encoderParams);
@@ -175,7 +178,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                SdApplication.SoleInstance.MsgboxX("Unknown image format '" + extension + "'.  Please save as a recognised format.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", false);
+                SdApplication.MsgboxX("Unknown image format '" + extension + "'.  Please save as a recognised format.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", false);
                 return false;
             }
             return true;
@@ -184,7 +187,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Returns the image codec with the given mime type
         /// </summary>
-        private static ImageCodecInfo GetEncoderInfo(string mimeType)
+        private static ImageCodecInfo? GetEncoderInfo(string mimeType)
         {
             // Get image codecs for all image formats
             ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();

@@ -7,6 +7,9 @@ using StatsDirect.Charting;
 
 namespace StatsDirect.Templates
 {
+    /// <summary>
+    /// Immutable
+    /// </summary>
     [XmlRoot("filled-parameter")]
     [Serializable]
     public abstract class FilledParameter
@@ -33,7 +36,7 @@ namespace StatsDirect.Templates
         public virtual bool AsBoolean { get => throw new ArgumentException("FilledParameter is not a Boolean"); }
 
         [XmlIgnore]
-        public virtual ChartOptions AsChartOptions { get => throw new ArgumentException("FilledParameter is not a ChartOptions"); }
+        public virtual AbstractChartOptions AsChartOptions { get => throw new ArgumentException("FilledParameter is not a ChartOptions"); }
 
         [XmlIgnore]
         public virtual DataFrame AsDataFrame { get => throw new ArgumentException("FilledParameter is not a DataFrame"); }
@@ -51,7 +54,7 @@ namespace StatsDirect.Templates
         public virtual int AsInt32 { get => throw new ArgumentException("FilledParameter is not an Int32"); }
 
         [XmlIgnore]
-        public abstract object AsObject { get; }
+        public abstract object? AsObject { get; }
 
         [XmlIgnore]
         public virtual Pane AsPane { get => throw new ArgumentException("FilledParameter is not a Pane"); }
@@ -94,13 +97,6 @@ namespace StatsDirect.Templates
 
         [XmlIgnore]
         public virtual bool IsString { get => false; }
-
-        internal abstract FilledParameter CopyAndStripForRedo(bool shouldKeepData);
-
-        internal virtual void RefillForRedo(IRefillSource refillSource)
-        {
-            // Nothing required at base level yet
-        }
 
         public abstract void Accept(IFilledParameterVisitor visitor);
     }

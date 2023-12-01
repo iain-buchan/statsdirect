@@ -1,4 +1,5 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -9,22 +10,21 @@ namespace StatsDirect.Charting.Renderer
 {
     class CorrelationChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public CorrelationChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public CorrelationChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             CorrelationOptions options = (CorrelationOptions)Definition.ChartOptions;
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = Transformation.Log == options.Xform ? ScaleType.Log10 : ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = Transformation.Log == options.Xform ? ScaleType.Log10 : ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -201,24 +201,22 @@ namespace StatsDirect.Charting.Renderer
             DivY = kok;
             OffY = YAxisCanvas;
 
-            MarkerType studyMarkerType = new()
-            {
-                MarkerColor = ColorDescriptor.Gray,
-                LineColor = ColorDescriptor.Black,
-                IsMarkerFilled = true,
-                MarkerShape = MarkerShape.Square,
-                LineDashStyle = DashStyleDescriptor.Solid,
-                Width = 1
-            };
-            MarkerType pooledMarkerType = new()
-            {
-                MarkerColor = ColorDescriptor.Gray,
-                LineColor = ColorDescriptor.Black,
-                IsMarkerFilled = true,
-                MarkerShape = MarkerShape.Diamond,
-                LineDashStyle = DashStyleDescriptor.Solid,
-                Width = 1
-            };
+            MarkerType studyMarkerType = new(
+                markerColor: ColorDescriptor.Gray,
+                lineColor: ColorDescriptor.Black,
+                isMarkerFilled: true,
+                markerShape: MarkerShape.Square,
+                lineDashStyle: DashStyleDescriptor.Solid,
+                width: 1
+            );
+            MarkerType pooledMarkerType = new(
+                markerColor: ColorDescriptor.Gray,
+                lineColor: ColorDescriptor.Black,
+                isMarkerFilled: true,
+                markerShape: MarkerShape.Diamond,
+                lineDashStyle: DashStyleDescriptor.Solid,
+                width: 1
+            );
 
             PenDescriptor linePen = GetLinePen(ChartPreferences.MarkerTypes[10], true);
             PenDescriptor pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);

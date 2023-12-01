@@ -7,8 +7,17 @@ using System.Collections.Generic;
 
 namespace StatsDirect.Builtins
 {
-    public static class Nonparametric
+    public class Nonparametric : RendererBase
     {
+        private IProgressBarHost ProgressBarHost { get; }
+        private IUserInterface UserInterface { get; }
+
+        public Nonparametric(IProgressBarHost progressBarHost, ISdPreferences sdPreferences, IUserInterface userInterface)
+            : base(sdPreferences)
+        {
+            ProgressBarHost = progressBarHost;
+            UserInterface = userInterface;
+        }
 
         ///  <summary>
         ///  Returns a list containing a single blank results dictionary.  A handy helper where a template needs to show an error message in a block, but the message has no parameters.
@@ -206,13 +215,13 @@ namespace StatsDirect.Builtins
                     llCut = (1.0 - gamma) / 2.0;
                     for (int q = 0; q <= rx; q++)
                     {
-                        if (Math.Abs(plox[q] - ulCut) < ulMin & plox[q] >= ulCut)
+                        if (Math.Abs(plox[q] - ulCut) < ulMin && plox[q] >= ulCut)
                         {
                             ulMin = Math.Abs(plox[q] - ulCut);
                             ulPlox = plox[q];
                             ulId = q;
                         }
-                        if (Math.Abs(plox[q] - llCut) < llMin & plox[q] <= llCut)
+                        if (Math.Abs(plox[q] - llCut) < llMin && plox[q] <= llCut)
                         {
                             llMin = Math.Abs(plox[q] - llCut);
                             llPlox = plox[q];
@@ -279,7 +288,7 @@ namespace StatsDirect.Builtins
             double f2N = 0.0;
             dp = 0.0;
             dn = 0.0;
-            while (j1 <= n1 & j2 <= n2)
+            while (j1 <= n1 && j2 <= n2)
             {
                 double dt;
                 if (d1[j1] < d2[j2])
@@ -349,7 +358,7 @@ namespace StatsDirect.Builtins
             d = Math.Max(dp, dn);
         }
 
-        private static void XDokend(IProgressBarHost host, double cit, int nx, double[] x, double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
+        private void XDokend(double cit, int nx, double[] x, double[] y, ref int nxx, out double p, out double q, ref double s, ref double hn, out double siga, out double sigb, ref double varf, ref double tau, ref double ll, ref double ul, out bool fault)
         {
             double sigbt3 = 0; double sigbt2 = 0; double sigbt1 = 0;
             int ytvn = 0; double sigat3 = 0; double sigat2 = 0; double sigat1 = 0;
@@ -369,7 +378,7 @@ namespace StatsDirect.Builtins
                 double gd = cit > 0.0
                     ? (nxx - 1) * 2.0
                     : nxx - 1.0;
-                using IProgressBar progress = host.StartProgress("Calculating Kendall", true);
+                using IProgressBar progress = ProgressBarHost.StartProgress("Calculating Kendall", true);
                 int n;
                 int pn;
                 for (pn = 1; pn < nxx; pn++)
@@ -459,9 +468,9 @@ namespace StatsDirect.Builtins
                         {
                             if (pn != n)
                             {
-                                if ((x[pn] > x[n] & y[pn] > y[n]) | (x[pn] < x[n] & y[pn] < y[n]))
+                                if ((x[pn] > x[n] && y[pn] > y[n]) | (x[pn] < x[n] && y[pn] < y[n]))
                                     c[pn] = c[pn] + 1;
-                                if ((x[pn] > x[n] & y[pn] < y[n]) | (x[pn] < x[n] & y[pn] > y[n]))
+                                if ((x[pn] > x[n] && y[pn] < y[n]) | (x[pn] < x[n] && y[pn] > y[n]))
                                     c[pn] = c[pn] - 1;
                             }
                         }
@@ -491,7 +500,7 @@ namespace StatsDirect.Builtins
             int q;
 
             double alphat = (1 - gamma) / 2;
-            if ((n1 > 30 & n2 > 30) | n1 > 100 | n2 > 100)
+            if ((n1 > 30 && n2 > 30) | n1 > 100 | n2 > 100)
             {
                 double n1S = Convert.ToDouble(n1);
                 double n2S = Convert.ToDouble(n2);
@@ -710,7 +719,7 @@ namespace StatsDirect.Builtins
             return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, iRanks, iv);
         }
 
-        private static ParameterBag MannWhitneyExactConfidence(ITemplateHost host, double[] x, int k, int n1, int n2)
+        private ParameterBag MannWhitneyExactConfidence(double[] x, int k, int n1, int n2)
         {
             double median = 0; double kl = 0;
             int midl; int midu;
@@ -718,7 +727,7 @@ namespace StatsDirect.Builtins
 
             if (k == -99)
             {
-                host.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney");
+                UserInterface.Error("Sample is too large for exact confidence interval calculation.", "Mann-Whitney");
                 outputParameters.AddOutput("median", Constant.MISSING);
                 outputParameters.AddOutput("from", Constant.MISSING);
                 outputParameters.AddOutput("to", Constant.MISSING);
@@ -735,7 +744,7 @@ namespace StatsDirect.Builtins
                 midu = (int)Math.Floor((double)(limit + 1) / 2);
                 midl = midu;
             }
-            using (IProgressBar progress = host.StartProgress("Calculating Confidence Interval", true))
+            using (IProgressBar progress = ProgressBarHost.StartProgress("Calculating Confidence Interval", true))
             {
                 int[] xx = new int[n1 + 1];
                 int[] yy = new int[n2 + 1];
@@ -958,7 +967,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptDiversity(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptDiversity(ParameterBag parameters)
         {
             double bias = 0; double biasx = 0;
             double thetase = 0; double thetasex = 0;
@@ -980,7 +989,7 @@ namespace StatsDirect.Builtins
             for (int k = 0; k < frame.VariableCount; k++)
             {
                 DoubleVariable v = (DoubleVariable)frame.Variables[k];
-                using IProgressBar progress = host.StartProgress("Bootstrapping diversity indices for " + v.Title, true);
+                using IProgressBar progress = ProgressBarHost.StartProgress("Bootstrapping diversity indices for " + v.Title, true);
                 int rx = 0;
                 double sumn = 0.0;
                 double sumnx = 0.0;
@@ -992,7 +1001,7 @@ namespace StatsDirect.Builtins
                 int doubletons = 0;
                 foreach (double val in v.Data)
                 {
-                    if (val != Constant.MISSING & val > 0.0 && val == Math.Floor(val))
+                    if (val != Constant.MISSING && val > 0.0 && val == Math.Floor(val))
                     {
                         rx += 1;
                         r[rx] = val;
@@ -1434,7 +1443,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptMannWhitney(ITemplateHost host, ParameterBag parameters)
+        public StepOutput RptMannWhitney(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
@@ -1493,7 +1502,7 @@ namespace StatsDirect.Builtins
                 double pl;
                 if (n1 > 100 && n2 > 100 || xf != 0 && dimlim > 1000000 || xf == 0 && n1 * ((int)Math.Floor((double)n2 / 2) + 1) > 1000000)
                 {
-                    outputParameters.AddOutput("stats", "Normalised statistic = " + host.RoundU(z) + adj);
+                    outputParameters.AddOutput("stats", "Normalised statistic = " + RoundU(z) + adj);
                     pl = PDF.alnorm(z);
                     if (pl > 1.0 - pl)
                         p = 1.0 - pl;
@@ -1531,7 +1540,7 @@ namespace StatsDirect.Builtins
                     double lev = 0;
                     int k = 0;
                     XInvu(n2, n1, gamma, ref lev, ref k, out bool approx);
-                    ParameterBag confParameters = MannWhitneyExactConfidence(host, x, k, n1, n2);
+                    ParameterBag confParameters = MannWhitneyExactConfidence(x, k, n1, n2);
                     confParameters.AddOutput("pc", (1 - lev * 2) * 100);
                     if (approx)
                         confParameters.AddOutput("k", k + " (approx) ");
@@ -1786,7 +1795,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptNpRegression(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptNpRegression(ParameterBag parameters)
         {
             double intercept = 0;
             double uci; double lci; double mdn = 0;
@@ -1830,7 +1839,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    if (v1.Data[i - 1] != Constant.MISSING & v0.Data[i - 1] != Constant.MISSING)
+                    if (v1.Data[i - 1] != Constant.MISSING && v0.Data[i - 1] != Constant.MISSING)
                     {
                         ctr += 1;
                         x[ctr] = v1.Data[i - 1];
@@ -1869,7 +1878,7 @@ namespace StatsDirect.Builtins
                 ymdn = ayo[fiximdn] + (ayo[fiximdn + 1] - ayo[fiximdn]) * (imdn - Math.Floor(imdn));
 
             // rank correlation
-            XDokend(host, cit, rows, x, y, ref nxx, out double _, out double _, ref s, ref hn, out double siga, out double sigb, ref varf, ref tau, ref tauLl, ref tauUl, out bool fault);
+            XDokend(cit, rows, x, y, ref nxx, out double _, out double _, ref s, ref hn, out double siga, out double sigb, ref varf, ref tau, ref tauLl, ref tauUl, out bool fault);
             if (fault)
             {
                 tau = Constant.MISSING;
@@ -1909,7 +1918,7 @@ namespace StatsDirect.Builtins
                             if (x[i] != x[j])
                             {
                                 cnt++;
-                                if (x[i] != Constant.MISSING & y[j] != Constant.MISSING)
+                                if (x[i] != Constant.MISSING && y[j] != Constant.MISSING)
                                     pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
                             }
                         }
@@ -1980,7 +1989,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptWilcoxon(ITemplateHost host, ParameterBag parameters)
+        public StepOutput RptWilcoxon(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0)
@@ -2045,14 +2054,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("non_0", n1);
 
             if (ned == 0)
-                outputParameters.AddOutput("sum", "Sum of ranks for positive differences = " + host.RoundU(w));
+                outputParameters.AddOutput("sum", "Sum of ranks for positive differences = " + RoundU(w));
             else
-                outputParameters.AddOutput("sum", "Sum of signed ranks for all differences = " + host.RoundU(w));
+                outputParameters.AddOutput("sum", "Sum of signed ranks for all differences = " + RoundU(w));
 
             string adj = xf != 0 ? " (adjusted for ties)" : string.Empty;
 
             if (ned != 0)
-                outputParameters.AddOutput("stats", "Normalised statistic " + adj + "= " + host.RoundU(ned));
+                outputParameters.AddOutput("stats", "Normalised statistic " + adj + "= " + RoundU(ned));
             else
                 outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
 
@@ -2071,7 +2080,7 @@ namespace StatsDirect.Builtins
             {
                 IList<ParameterBag> confList = new List<ParameterBag>();
                 Xsrk(n, gamma, out int k, out double lev);
-                ParameterBag confParameters = XSrcon(host, n, k, x, y);
+                ParameterBag confParameters = XSrcon(n, k, x, y);
 
                 if (lev != -99)
                 {
@@ -2428,19 +2437,19 @@ namespace StatsDirect.Builtins
             return w[k];
         }
 
-        private static ParameterBag XSrcon(ITemplateHost host, int size, int k, double[] x, double[] y)
+        private ParameterBag XSrcon(int size, int k, double[] x, double[] y)
         {
             ParameterBag outputParameters = new();
             long limit = size * (size + 1) / 2;
             if (limit > int.MaxValue)
             {
-                host.Error("Sample is too large for exact confidence interval calculation.", "Signed Ranks");
+                UserInterface.Error("Sample is too large for exact confidence interval calculation.", "Signed Ranks");
                 outputParameters.AddOutput("from", Constant.MISSING);
                 outputParameters.AddOutput("to", Constant.MISSING);
                 outputParameters.AddOutput("med_diff", Constant.MISSING);
                 return outputParameters;
             }
-            using (IProgressBar progress = host.StartProgress("Calculating Confidence Interval", true))
+            using (IProgressBar progress = ProgressBarHost.StartProgress("Calculating Confidence Interval", true))
             {
                 double bigx = x[1];
                 for (int j = 1; j <= size; j++)
@@ -2648,7 +2657,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptKendall(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptKendall(ParameterBag parameters)
         {
             int nxx = 0; int n;
             double ps;
@@ -2668,14 +2677,14 @@ namespace StatsDirect.Builtins
             int nx = 0;
             for (n = 0; n < rx; n++)
             {
-                if (v0.Data[n] != Constant.MISSING & v1.Data[n] != Constant.MISSING)
+                if (v0.Data[n] != Constant.MISSING && v1.Data[n] != Constant.MISSING)
                 {
                     nx += 1;
                     x[nx] = v0.Data[n];
                     y[nx] = v1.Data[n];
                 }
             }
-            XDokend(host, cit, nx, x, y, ref nxx, out double p, out double q, ref s, ref hn, out double siga, out double sigb, ref varf, ref tau, ref tauLl, ref tauUl, out bool fault);
+            XDokend(cit, nx, x, y, ref nxx, out double p, out double q, ref s, ref hn, out double siga, out double sigb, ref varf, ref tau, ref tauLl, ref tauUl, out bool fault);
             if (fault)
                 throw new TemplateOperationCancelledException();
 
@@ -2765,7 +2774,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptFriedmanSimulateExactP(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptFriedmanSimulateExactP(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -2773,7 +2782,7 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             int bootsDivisor = Math.Max(1, iterations / 1000);
 
-            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Simulating exact P", true);
             PreprocessFriedman(frame, out double[,] x, out int n, out int treatments, out bool allAreBinary, out bool numbersAreSmall);
 
             double a2 = 0;
@@ -3129,9 +3138,7 @@ namespace StatsDirect.Builtins
 
             int prelx = 0;
             foreach (IVariable v in frame.Variables)
-            {
                 prelx += v.Length;
-            }
             double[] x = new double[prelx + 1];
             int[] l = new int[frame.VariableCount + 1];
 
@@ -3162,9 +3169,7 @@ namespace StatsDirect.Builtins
             for (int d = 0; d < frame.VariableCount; d++)
             {
                 if (d > 0)
-                {
                     tlist += ", ";
-                }
                 tlist += frame.Variables[d].Title;
             }
 
@@ -3211,7 +3216,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptKruskalSimulateExactP(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptKruskalSimulateExactP(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
             int iterations = parameters["iterations"].AsInt32;
@@ -3219,7 +3224,7 @@ namespace StatsDirect.Builtins
             int seed = parameters["seed"].AsInt32;
             int bootsDivisor = Math.Max(1, iterations / 1000);
 
-            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Simulating exact P", true);
 
             int prelx = 0;
             foreach (IVariable v in frame.Variables)
@@ -3624,7 +3629,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptGini(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptGini(ParameterBag parameters)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
             DataFrame weightsFrame = parameters.ContainsKey("weights") ? parameters["weights"].AsDataFrame : null;
@@ -3656,7 +3661,7 @@ namespace StatsDirect.Builtins
                 {
                     weightsData = ((DoubleVariable)weightsFrame.Variables[k]).Data;
                 }
-                using IProgressBar progress = host.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
+                using IProgressBar progress = ProgressBarHost.StartProgress("Bootstrapping Gini coefficient for " + v.Title, true);
 
                 DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { v.Data, weightsData, }, 0, v.Length, 0);
                 double[] rawR = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];

@@ -98,12 +98,12 @@ namespace StatsDirect.UI
 
         #endregion
 
-        private void chkUseHeaders_CheckedChanged(object sender, EventArgs e)
+        private void chkUseHeaders_CheckedChanged(object? sender, EventArgs e)
         {
             SetControlFromParameter();
         }
 
-        private void gridKeys_DefaultValuesNeeded(object sender, DataGridViewRowEventArgs e)
+        private void gridKeys_DefaultValuesNeeded(object? sender, DataGridViewRowEventArgs e)
         {
             // Fill in the row
             e.Row.Cells[0].Value = e.Row.Index + 1;
@@ -111,7 +111,7 @@ namespace StatsDirect.UI
             e.Row.Cells[2].Value = "Low to high";
         }
 
-        private void gridKeys_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void gridKeys_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             gridKeys.BeginEdit(false);
             if (null != gridKeys.EditingControl && gridKeys.EditingControl is DataGridViewComboBoxEditingControl)
@@ -123,7 +123,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void gridKeys_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        private void gridKeys_EditingControlShowing(object? sender, DataGridViewEditingControlShowingEventArgs e)
         {
             Control c = e.Control;
             if (c is DataGridViewComboBoxEditingControl)
@@ -137,7 +137,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void OnDropDownClosed(object sender, EventArgs e)
+        private void OnDropDownClosed(object? sender, EventArgs e)
         {
             DataGridViewComboBoxEditingControl ec = (DataGridViewComboBoxEditingControl)sender;
             ec.EditingControlDataGridView.EndEdit(DataGridViewDataErrorContexts.Commit);
@@ -180,7 +180,7 @@ namespace StatsDirect.UI
             get
             {
                 BindingMemberInfo bmi = new(base.DisplayMember);
-                if (DataGridView != null)
+                if (DataGridView is not null)
                 {
                     return (CurrencyManager)
                       DataGridView.BindingContext[DataSource, bmi.BindingPath];
@@ -193,7 +193,7 @@ namespace StatsDirect.UI
 
         protected override object GetFormattedValue(object value, int rowIndex, ref DataGridViewCellStyle cellStyle, TypeConverter valueTypeConverter, TypeConverter formattedValueTypeConverter, DataGridViewDataErrorContexts context)
         {
-            if (value == null || value == cellStyle.DataSourceNullValue)
+            if (value is null || value == cellStyle.DataSourceNullValue)
                 return "";
 
             return base.GetFormattedValue(DisplayProp.GetValue(value),

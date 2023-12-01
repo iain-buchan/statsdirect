@@ -1,16 +1,17 @@
 using System;
 using System.Windows.Forms;
 using StatsDirect.Charting;
+using StatsDirect.Charting.Options;
 
 namespace StatsDirect.UI
 {
     /// <summary>
     /// A user interface for modifying bar options.
     /// </summary>
-    public partial class ctlBarOptions : UserControl, IOkable
+    public partial class ctlBarOptions : UserControl, IBarOptions
     {
         private ChartDefinition definition;
-        private BarOptions options;
+        private IBarOptions options;
 
         public event EventHandler BarTypeChanged;
 
@@ -29,21 +30,15 @@ namespace StatsDirect.UI
             }
         }
 
-        void IOkable.OkClicked()
-        {
-            FillOptionsFromForm();
-        }
+        double IBarOptions.MaxBarWidth => throw new NotImplementedException();
 
-        public void FillOptionsFromForm()
-        {
-            FillOptionsFromType();
-        }
+        bool IBarOptions.RotateWhenStacked => throw new NotImplementedException();
 
-        private void FillOptionsFromType()
-        {
-            options.Stacked = rdoTypeStacked100.Checked || rdoTypeStacked.Checked;
-            options.Stacked100Percent = rdoTypeStacked100.Checked;
-        }
+        bool IBarOptions.Stacked => rdoTypeStacked100.Checked || rdoTypeStacked.Checked;
+
+        bool IBarOptions.Stacked100Percent => rdoTypeStacked100.Checked;
+
+        public IBarOptions OptionsFromForm() => this;
 
         public void FillFormFromOptions()
         {
@@ -69,20 +64,13 @@ namespace StatsDirect.UI
             }
         }
 
-        private void rdoType_CheckedChanged(object sender, EventArgs e)
+        private void rdoType_CheckedChanged(object? sender, EventArgs e)
         {
             RadioButton rb = (RadioButton)sender;
             if (rb.Checked)
-            {
-                FillOptionsFromType();
                 NoteTypeChanged();
-            }
         }
 
-        private void NoteTypeChanged()
-        {
-            if (null != BarTypeChanged)
-                BarTypeChanged(this, EventArgs.Empty);
-        }
+        private void NoteTypeChanged() => BarTypeChanged?.Invoke(this, EventArgs.Empty);
     }
 }

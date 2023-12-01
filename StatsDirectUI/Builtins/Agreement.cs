@@ -7,14 +7,20 @@ using System;
 
 namespace StatsDirect.Builtins
 {
-    public static class Agreement
+    public class Agreement
     {
+        private IProgressBarHost ProgressBarHost { get; }
+
+        public Agreement(IProgressBarHost progressBarHost)
+        {
+            ProgressBarHost = progressBarHost;
+        }
 
         public static StepOutput RptUniversalAgreement(ParameterBag parameters)
         {
             int nobs = 0;
-            string title = null;
-            string refIdent = null;
+            string? title = null;
+            string? refIdent = null;
             GatherUniversalAgreementData(parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref nobs, ref title, ref refIdent);
 
             double delta;
@@ -29,34 +35,33 @@ namespace StatsDirect.Builtins
             else
                 Agree(n, b, c, data, out delta, out edel, out var, out gam, out r, out p);
 
-            ParameterBag outputParameters = new();
-
-            outputParameters.AddOutput("name", title);
-            outputParameters.AddOutput("nobs", nobs);
-            outputParameters.AddOutput("n", n);
-            outputParameters.AddOutput("b", b);
-            outputParameters.AddOutput("c", c);
-            outputParameters.AddOutput("ref", refIdent);
-            outputParameters.AddOutput("delta", delta);
-            outputParameters.AddOutput("edel", edel);
-            outputParameters.AddOutput("vardel", var);
-            outputParameters.AddOutput("skewdel", gam);
-            outputParameters.AddOutput("R", r);
-            outputParameters.AddOutput("p", p);
-            return new StepOutput(outputParameters);
+            return new StepOutput(new ParameterBag()
+                .AddOutput("name", title)
+                .AddOutput("nobs", nobs)
+                .AddOutput("n", n)
+                .AddOutput("b", b)
+                .AddOutput("c", c)
+                .AddOutput("ref", refIdent)
+                .AddOutput("delta", delta)
+                .AddOutput("edel", edel)
+                .AddOutput("vardel", var)
+                .AddOutput("skewdel", gam)
+                .AddOutput("R", r)
+                .AddOutput("p", p)
+            );
         }
 
 
-        private static void GatherUniversalAgreementData(ParameterBag parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
+        private static void GatherUniversalAgreementData(ParameterBag parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref int nobs, ref string? title, ref string? refIdent)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
-            DoubleVariable dataVariable = (DoubleVariable)dataFrame.Variables[0];
+            DoubleVariable dataVariable = dataFrame.Variables[0] as DoubleVariable;
             DataFrame ratersFrame = parameters["raters"].AsDataFrame;
             ClassifierVariable ratersVariable = (ClassifierVariable)ratersFrame.Variables[0];
             DataFrame objectsFrame = parameters["objects"].AsDataFrame;
             ClassifierVariable objectsVariable = (ClassifierVariable)objectsFrame.Variables[0];
-            bool hasCategories = parameters.ContainsKey("categories") && parameters["categories"] != null;
-            ClassifierVariable categoriesVariable = null;
+            bool hasCategories = parameters.ContainsKey("categories") && parameters["categories"] is not null;
+            ClassifierVariable? categoriesVariable = null;
             if (hasCategories)
             {
                 DataFrame categoriesFrame = parameters["categories"].AsDataFrame;
@@ -91,7 +96,7 @@ namespace StatsDirect.Builtins
                         break;
                     }
                 }
-                if (referenceName == null)
+                if (referenceName is null)
                     throw new Exception("Could not match reference standard string");
 
                 //  set the ref string to "Observer <name of reference category>" if there is a reference category
@@ -218,24 +223,23 @@ namespace StatsDirect.Builtins
             double p2 = Pgamt((mu2 - e2) / sig2, gam2);
             double pd = Pgamt(t, gamd);
 
-            ParameterBag outputParameters = new();
-
-            outputParameters.AddOutput("r1", r1);
-            outputParameters.AddOutput("r2", r2);
-            outputParameters.AddOutput("mu1", mu1);
-            outputParameters.AddOutput("mu2", mu2);
-            outputParameters.AddOutput("var1", var1);
-            outputParameters.AddOutput("var2", var2);
-            outputParameters.AddOutput("gam1", gam1);
-            outputParameters.AddOutput("gam2", gam2);
-            outputParameters.AddOutput("dr", dr);
-            outputParameters.AddOutput("dm", dm);
-            outputParameters.AddOutput("vard", vard);
-            outputParameters.AddOutput("gamd", gamd);
-            outputParameters.AddOutput("p1", p1);
-            outputParameters.AddOutput("p2", p2);
-            outputParameters.AddOutput("pd", pd * 2.0);
-            return new StepOutput(outputParameters);
+            return new StepOutput(new ParameterBag()
+                .AddOutput("r1", r1)
+                .AddOutput("r2", r2)
+                .AddOutput("mu1", mu1)
+                .AddOutput("mu2", mu2)
+                .AddOutput("var1", var1)
+                .AddOutput("var2", var2)
+                .AddOutput("gam1", gam1)
+                .AddOutput("gam2", gam2)
+                .AddOutput("dr", dr)
+                .AddOutput("dm", dm)
+                .AddOutput("vard", vard)
+                .AddOutput("gamd", gamd)
+                .AddOutput("p1", p1)
+                .AddOutput("p2", p2)
+                .AddOutput("pd", pd * 2.0)
+            );
         }
 
 
@@ -673,15 +677,15 @@ namespace StatsDirect.Builtins
             double t1 = 0.0;
             if (kn > 2)
             {
-                t1 = t1 + 4.0 * Math.Pow(sij1[1, 2], 3.0) - sij1[1, 2] * tij2[1, 2] * 6.0 * kn + uij[1, 2] * 6.0 * kn * kn + tij3[1, 2] * 2.0 * kn * kn + sij1[1, 2] * sij2[1, 2] * 3.0 * kn * kn - vi[1, 2] * 3.0 * kn * kn * kn + sij3[1, 2] * Math.Pow(kn, 4.0);
-                t1 /= Convert.ToDouble(kn - 2);
+                t1 += 4.0 * Math.Pow(sij1[1, 2], 3.0) - sij1[1, 2] * tij2[1, 2] * 6.0 * kn + uij[1, 2] * 6.0 * kn * kn + tij3[1, 2] * 2.0 * kn * kn + sij1[1, 2] * sij2[1, 2] * 3.0 * kn * kn - vi[1, 2] * 3.0 * kn * kn * kn + sij3[1, 2] * Math.Pow(kn, 4.0);
+                t1 /= kn - 2;
             }
             double c1 = 1.0 / Convert.ToDouble(kn * kn);
             double c2 = c1 * c1;
             double c3 = c2 * c1;
             cum1 = c1 * sij1[1, 2];
-            cum2 = (sij1[1, 2] * sij1[1, 2] - tij2[1, 2] * kn + sij2[1, 2] * kn * kn) * c2 / Convert.ToDouble(kn - 1);
-            cum3 = c3 * (t1 - t2) / Convert.ToDouble(kn - 1);
+            cum2 = (sij1[1, 2] * sij1[1, 2] - tij2[1, 2] * kn + sij2[1, 2] * kn * kn) * c2 / (kn - 1);
+            cum3 = c3 * (t1 - t2) / (kn - 1);
             delta = 0.0;
             for (i = 1; i <= kn; i++)
             {
@@ -689,14 +693,14 @@ namespace StatsDirect.Builtins
                 int iss = (i - 1) * 2 + 2;
                 delta += d[irr, iss];
             }
-            delta /= Convert.ToDouble(kn);
+            delta /= kn;
         }
 
-        public static StepOutput RptUniversalAgreementSimulateExactP(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptUniversalAgreementSimulateExactP(ParameterBag parameters)
         {
             int nobs = 0;
-            string title = null;
-            string refIdent = null;
+            string? title = null;
+            string? refIdent = null;
             GatherUniversalAgreementData(parameters, out int n, out int b, out int c, out double[,,] data, out bool _, ref nobs, ref title, ref refIdent);
 
             // Agree(n, b, c, data, out double delta, out double edel, out double var, out double gam, out double r, out double t);
@@ -706,23 +710,22 @@ namespace StatsDirect.Builtins
             double ci = parameters["ci"].AsDouble;
             int seed = parameters["seed"].AsInt32;
 
-            Rmrbp(host, 1.0, n, b, c, 0, 0, 0, data, 0, seed, iterations, out int ir, out int mpd);
-            ParameterBag outputParameters = new();
-            double p = Convert.ToDouble(ir) / Convert.ToDouble(mpd);
-            outputParameters.AddOutput("p", p);
+            Rmrbp(1.0, n, b, c, 0, 0, 0, data, 0, seed, iterations, out int ir, out int mpd);
+            double p = ir / (double)mpd;
             //  CI
-            MathDbl.binci(Convert.ToDouble(ir), Convert.ToDouble(mpd), out double ll, out double ul, ci, out string warn);
-            outputParameters.AddOutput("pc", 100.0 * ci);
-            outputParameters.AddOutput("ll", ll);
-            outputParameters.AddOutput("ul", ul);
-            outputParameters.AddOutput("warn", warn);
-            outputParameters.AddOutput("k", mpd);
-            return new StepOutput(outputParameters);
+            MathDbl.binci(ir, mpd, out double ll, out double ul, ci, out string warn);
+            return new StepOutput(new ParameterBag()
+                .AddOutput("p", p)
+                .AddOutput("pc", 100.0 * ci)
+                .AddOutput("ll", ll)
+                .AddOutput("ul", ul)
+                .AddOutput("warn", warn)
+                .AddOutput("k", mpd)
+            );
         }
 
-        private static void Rmrbp(IProgressBarHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
+        private void Rmrbp(double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
         {
-
             //          THIS FORTRAN PROGRAM COMPUTES THE TEST STATISTIC AND ASSOCIATED
             //          P-VALUE FOR AN ANALYSIS OF A RANDOMIZED BLOCK EXPERIMENT (MRBP3).
             //          THE CORRESPONDENCE BETWEEN A CORRELATION ANALYSIS AND A
@@ -796,7 +799,7 @@ namespace StatsDirect.Builtins
                                     a1 = sum;
                                     a2 = a1 * 1.0000000001;
                                 }
-                                if (sum < a2 & dm1 != x[i1, j, k])
+                                if (sum < a2 && dm1 != x[i1, j, k])
                                 {
                                     dm2 = x[i1, j, k];
                                     sum1 = sum;
@@ -812,7 +815,7 @@ namespace StatsDirect.Builtins
                             for (int k = 1; k <= kr; k++)
                                 data[i, j, k] = data[i, j, k] - xm[j, k];
                 }
-                if (ic != 0 & kr != 1)
+                if (ic != 0 && kr != 1)
                 {
                     for (int k = 1; k <= kr; k++)
                     {
@@ -831,7 +834,7 @@ namespace StatsDirect.Builtins
                 }
 
             }
-            Calc(host, v, kg, kb, kr, iseed, ms, data, out mp, out mpd);
+            Calc(v, kg, kb, kr, iseed, ms, data, out mp, out mpd);
         }
 
         private static void Rank(int kg, int kb, int kr, int h, ref double[,,] data)
@@ -859,7 +862,7 @@ namespace StatsDirect.Builtins
                     while (a2 <= a3)
                     {
                         for (int i = 1; i <= kg; i++)
-                            if (data[i, j, k] > b1 & data[i, j, k] < b2)
+                            if (data[i, j, k] > b1 && data[i, j, k] < b2)
                                 b2 = data[i, j, k] * phi;
                         for (int i = 1; i <= kg; i++)
                         {
@@ -891,8 +894,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-
-        private static void Calc(IProgressBarHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[,,] data, out int mp, out int mpd)
+        private void Calc(double v, int kg, int kb, int kr, int iseed, int ms, double[,,] data, out int mp, out int mpd)
         {
 
             double[,] d = new double[kb * (kg - 1) + kb + 1, kb * (kg - 1) + kb + 1];
@@ -953,7 +955,7 @@ namespace StatsDirect.Builtins
             double dx = delta * 1.000000000001;
             mp = 0;
 
-            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Simulating exact P", true);
             int ctr = 0;
 
             mpd = ms;
@@ -1015,10 +1017,10 @@ namespace StatsDirect.Builtins
                 if (dz < dx)
                     mp += 1;
 
-                ctr += 1;
+                ctr++;
                 if (ctr > trigger)
                 {
-                    bool bailout = progress.Update(Convert.ToDouble(iw) / Convert.ToDouble(ms));
+                    bool bailout = progress.Update(iw / (double)ms);
                     ctr = 0;
                     if (bailout)
                     {
@@ -1026,7 +1028,6 @@ namespace StatsDirect.Builtins
                         break;
                     }
                 }
-
             }
         }
     }

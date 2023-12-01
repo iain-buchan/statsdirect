@@ -7,14 +7,14 @@ namespace StatsDirect.Charting
     /// </summary>
     public class MultiDoubleSeries : ISeries
     {
-        private MultiDoublePoint min;
-        private MultiDoublePoint minGreaterThanZero;
-        private MultiDoublePoint max;
+        private MultiDoublePoint? min;
+        private MultiDoublePoint? minGreaterThanZero;
+        private MultiDoublePoint? max;
         public MultiDoublePoint[] Data { get; set; }
 
         public MarkerType MarkerType { get; set; }
 
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         public int Points => Data.Length;
 

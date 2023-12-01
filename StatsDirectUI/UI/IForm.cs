@@ -15,7 +15,7 @@ namespace StatsDirect.UI
         /// A unique identifier for this window that will not change or be duplicated for the lifetime of the application.
         /// The window may be deleted, but the ID must not be re-used by another window.
         /// </summary>
-        string Id();
+        string Id { get; }
 
         /// <summary>
         /// Ensure that the pane identified by pane is selected.  By convention, a null pane indicates creation of a new pane where possible.

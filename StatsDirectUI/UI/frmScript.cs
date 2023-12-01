@@ -8,28 +8,10 @@ using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.UI
 {
-    public partial class frmScript : StatsDirectForm, IScriptWindow
+    internal partial class frmScript : StatsDirectForm, IScriptWindow
     {
-        /// <summary>
-        /// A small print class that allows scripts to throw output at the window.
-        /// </summary>
-        public class DebugPrinter
-        {
-            private readonly frmScript frmScript;
-
-            internal DebugPrinter(frmScript f)
-            {
-                frmScript = f;
-            }
-
-            public void Print(string Message)
-            {
-                frmScript.rtbOutput.AppendText(Message + "\n");
-                Application.DoEvents(); // Force a display update
-            }
-        }
-
-        public frmScript()
+        public frmScript(ISdApplication sdApplication)
+            : base(sdApplication)
         {
             InitializeComponent();
             SaveToolStripMenuItem.Click += SaveToolStripMenuItem_Click;
@@ -51,7 +33,7 @@ namespace StatsDirect.UI
 
         private string currentFile;
 
-        private void frmScript_FormClosing(object sender, FormClosingEventArgs e)
+        private void frmScript_FormClosing(object? sender, FormClosingEventArgs e)
         {
             DoOrWarn(() =>
             {
@@ -60,14 +42,14 @@ namespace StatsDirect.UI
                     e.Cancel = true;
                     return;
                 }
-                SdApplication.SoleInstance.NoteFormClosing(this, e);
+                SdApplication.NoteFormClosing(this, e);
                 Visible = false;
                 MdiParent = null;
             }, "Couldn't close form");
 
         }
 
-        private void frmScript_TextChanged(object sender, EventArgs e)
+        private void frmScript_TextChanged(object? sender, EventArgs e)
         {
             Dirty = true;
         }
@@ -75,7 +57,7 @@ namespace StatsDirect.UI
         #region Menu Methods
 
         /*
-        private void NewToolStripMenuItem_Click(object sender, EventArgs e)
+        private void NewToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (rtbDoc.Modified)
             {
@@ -93,7 +75,7 @@ namespace StatsDirect.UI
          */
 
         /*
-        private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
+        private void OpenToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (rtbDoc.Modified)
             {
@@ -138,7 +120,7 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             if (null == currentFile)
             {
@@ -164,13 +146,13 @@ namespace StatsDirect.UI
             Path = currentFile;
         }
 
-        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveAsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             SaveFileDialog1.Title = "Save File";
             SaveFileDialog1.DefaultExt = "rtf";
             SaveFileDialog1.Filter = "Script Files|*.cs;*.vb|All Files|*.*";
             SaveFileDialog1.FilterIndex = 1;
-            SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            SaveFileDialog1.ShowDialog(SdApplication.DialogOwner);
             if (SaveFileDialog1.FileName.Length == 0)
                 return;
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName);
@@ -192,10 +174,10 @@ namespace StatsDirect.UI
             currentFile = SaveFileDialog1.FileName;
             rtbDoc.Modified = false;
             Path = currentFile;
-            SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
+            SdApplication.NoteRecentFile(currentFile, true);
         }
 
-        private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SelectAllToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -203,11 +185,11 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SdApplication.SoleInstance.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.MsgboxX("Unable to select all document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void CopyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CopyToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -215,11 +197,11 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SdApplication.SoleInstance.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.MsgboxX("Unable to copy document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void CutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -227,11 +209,11 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SdApplication.SoleInstance.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.MsgboxX("Unable to cut document content.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void PasteToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PasteToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -239,49 +221,49 @@ namespace StatsDirect.UI
             }
             catch (Exception)
             {
-                SdApplication.SoleInstance.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                SdApplication.MsgboxX("Unable to copy clipboard content to document.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void PageColorToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PageColorToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             ColorDialog1.Color = rtbDoc.BackColor;
-            if (ColorDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) == DialogResult.OK)
+            if (ColorDialog1.ShowDialog(SdApplication.DialogOwner) == DialogResult.OK)
             {
                 rtbDoc.BackColor = ColorDialog1.Color;
             }
         }
 
-        private void mnuUndo_Click(object sender, EventArgs e)
+        private void mnuUndo_Click(object? sender, EventArgs e)
         {
             if (rtbDoc.CanUndo)
                 rtbDoc.Undo();
         }
 
-        private void mnuRedo_Click(object sender, EventArgs e)
+        private void mnuRedo_Click(object? sender, EventArgs e)
         {
             if (rtbDoc.CanRedo)
                 rtbDoc.Redo();
         }
 
-        private void FindToolStripMenuItem_Click(object sender, EventArgs e)
+        private void FindToolStripMenuItem_Click(object? sender, EventArgs e)
         {
-            frmScriptFind f = new(this);
+            frmScriptFind f = new(this, SdApplication);
             f.Show();
         }
 
-        private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e)
+        private void FindAndReplaceToolStripMenuItem_Click(object? sender, EventArgs e)
         {
-            frmScriptReplace f = new(this);
+            frmScriptReplace f = new(this, SdApplication);
             f.Show();
         }
 
-        private void PreviewToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PreviewToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             try
             {
                 PrintPreviewDialog1.Document = PrintDocument1;
-                PrintPreviewDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                PrintPreviewDialog1.ShowDialog(SdApplication.DialogOwner);
             }
             catch
             {
@@ -289,30 +271,30 @@ namespace StatsDirect.UI
             }
         }
 
-        private void PrintToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PrintToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) == DialogResult.OK)
+            if (PrintDialog1.ShowDialog(SdApplication.DialogOwner) == DialogResult.OK)
                 PrintDocument1.Print();
         }
 
-        private void mnuPageSetup_Click(object sender, EventArgs e)
+        private void mnuPageSetup_Click(object? sender, EventArgs e)
         {
             PageSetupDialog1.Document = PrintDocument1;
-            PageSetupDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            PageSetupDialog1.ShowDialog(SdApplication.DialogOwner);
         }
 
         #endregion
 
         #region Toolbar Methods
-        private void tbrSave_Click(object sender, EventArgs e)
+        private void tbrSave_Click(object? sender, EventArgs e)
         {
             SaveToolStripMenuItem_Click(this, e);
         }
 
-        private void tbrFind_Click(object sender, EventArgs e)
+        private void tbrFind_Click(object? sender, EventArgs e)
         {
-            frmScriptFind f = new(this);
+            frmScriptFind f = new(this, SdApplication);
             f.Show();
         }
 
@@ -345,10 +327,10 @@ namespace StatsDirect.UI
 
         #endregion
 
-        private void frmScript_Activated(object sender, EventArgs e)
+        private void frmScript_Activated(object? sender, EventArgs e)
         {
             if (null != Tag)
-                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                SdApplication.NoteFormActivated((WindowInformation)Tag);
         }
 
         private string ScriptLanguageForScript()
@@ -366,7 +348,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cmdRun_Click(object sender, EventArgs e)
+        private void cmdRun_Click(object? sender, EventArgs e)
         {
             DoOrWarn(() =>
             {
@@ -376,7 +358,7 @@ namespace StatsDirect.UI
                     string script = rtbDoc.Text;
                     IScriptEngine engine = new ScriptEngine();
                     string Language = ScriptLanguageForScript();
-                    object output = engine.Run(Language, script, ScriptType.Method, SdApplication.SoleInstance, null, null, null);
+                    object output = engine.Run(Language, script, ScriptType.Method, SdApplication, null, null, null);
                     if (null != output)
                     {
                         if (output is ParameterBag)
@@ -428,12 +410,12 @@ namespace StatsDirect.UI
             }
         }
 
-        private void frmScript_Load(object sender, EventArgs e)
+        private void frmScript_Load(object? sender, EventArgs e)
         {
             cboLanguage.SelectedIndex = 0;
         }
 
-        private void frmScript_Shown(object sender, EventArgs e)
+        private void frmScript_Shown(object? sender, EventArgs e)
         {
             rtbDoc.Focus();
         }
@@ -473,11 +455,11 @@ namespace StatsDirect.UI
         internal override void Print()
         {
             PrintDialog1.Document = PrintDocument1;
-            if (PrintDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner) == DialogResult.OK)
+            if (PrintDialog1.ShowDialog(SdApplication.DialogOwner) == DialogResult.OK)
                 PrintDocument1.Print();
         }
 
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void closeToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             Close();
         }
@@ -494,7 +476,7 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private static void DoOrWarn(Action func, string explanation)
+        private void DoOrWarn(Action func, string explanation)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -505,9 +487,28 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
+                SdApplication.FriendlyError(explanation, ex, false);
             }
 #endif
+        }
+
+        /// <summary>
+        /// A small print class that allows scripts to throw output at the window.
+        /// </summary>
+        public class DebugPrinter
+        {
+            private readonly frmScript frmScript;
+
+            internal DebugPrinter(frmScript f)
+            {
+                frmScript = f;
+            }
+
+            public void Print(string Message)
+            {
+                frmScript.rtbOutput.AppendText(Message + "\n");
+                Application.DoEvents(); // Force a display update
+            }
         }
     }
 }

@@ -17,12 +17,12 @@ namespace StatsDirect.Data
         {
         }
 
-        public VariantVariable(object[] data, string title)
+        public VariantVariable(object[] data, string? title)
             : base(data, title)
         {
         }
 
-        public VariantVariable(int length, string title)
+        public VariantVariable(int length, string? title)
             : base(length, title)
         {
         }

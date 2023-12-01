@@ -1,40 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using Layout;
+using StatsDirect.Charting.Options;
 using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
     internal class SpreadChartRenderer: AbstractChartRenderer, IChartRenderer
     {
-        public SpreadChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public SpreadChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IReadOnlyList<ISeries> seriesToUse = Definition.YSeries.Count > 0
+                ? Definition.YSeries
+                : Definition.XSeries;
             Layout.Range xRange = GetMinMaxSort(seriesToUse);
 
-            return new ScaleParameters
-            {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = xRange.Min, MinGreaterThanZero = xRange.Min, Max = xRange.Max },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
-            };
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear }) { Min = xRange.Min, MinGreaterThanZero = xRange.Min, Max = xRange.Max },
+                new(new[] { ScaleType.Category })
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
             if (sOptions.Orientation == ChartOrientation.Horizontal)
-            {
                 return PlotSpreadHorizontal();
-            }
+
             if (Definition.XSeries.Count == 0 && Definition.YSeries.Count > 0)
             {
                 Definition = Definition.Clone();
@@ -47,7 +47,9 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotSpreadHorizontal()
         {
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
-            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IReadOnlyList<ISeries> seriesToUse = Definition.YSeries.Count > 0
+                ? Definition.YSeries
+                : Definition.XSeries;
 
             ScaleHeight(seriesToUse.Count);
 
@@ -68,7 +70,7 @@ namespace StatsDirect.Charting.Renderer
             //  Work out what markers to use
             MarkerType mt = ChartPreferences.MarkerTypes[10]; // Default
             double diam = mt.MarkerSize;
-            if (sOptions.MarkerTypes != null && sOptions.MarkerTypes.Count > 0)
+            if (sOptions.MarkerTypes is not null && sOptions.MarkerTypes.Count > 0)
             {
                 diam = sOptions.MarkerTypes[0].MarkerSize;
                 mt = sOptions.MarkerTypes[0];
@@ -138,7 +140,9 @@ namespace StatsDirect.Charting.Renderer
         private ParameterBag PlotSpreadVertical()
         {
             SpreadOptions sOptions = (SpreadOptions)Definition.ChartOptions;
-            IList<ISeries> seriesToUse = Definition.YSeries.Count > 0 ? Definition.YSeries : Definition.XSeries;
+            IReadOnlyList<ISeries> seriesToUse = Definition.YSeries.Count > 0
+                ? Definition.YSeries
+                : Definition.XSeries;
 
             ScaleWidth(seriesToUse.Count);
 
@@ -159,7 +163,7 @@ namespace StatsDirect.Charting.Renderer
             //  Work out what markers to use
             MarkerType mt = ChartPreferences.MarkerTypes[10]; //  Default
             double diam = mt.MarkerSize;
-            if (sOptions.MarkerTypes != null && sOptions.MarkerTypes.Count > 0)
+            if (sOptions.MarkerTypes is not null && sOptions.MarkerTypes.Count > 0)
             {
                 diam = sOptions.MarkerTypes[0].MarkerSize;
                 mt = sOptions.MarkerTypes[0];

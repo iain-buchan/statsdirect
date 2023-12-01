@@ -6,17 +6,19 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlPickAWindow : UserControl, IFillParameterBag
+    internal partial class ctlPickAWindow : UserControl, IFillParameterBag
     {
         private OutputType outputType;
         private readonly string parameterName;
         private RelativePosition writePosition;
 
+        private ISdApplication SdApplication { get; }
         /// <summary>
         /// For use when this control is embedded in a designer-generated form.
         /// </summary>
-        public ctlPickAWindow()
+        public ctlPickAWindow(ISdApplication sdApplication)
         {
+            SdApplication = sdApplication;
             InitializeComponent();
             WritePosition = RelativePosition.AfterSelection;
         }
@@ -74,16 +76,16 @@ namespace StatsDirect.UI
             switch (outputType)
             {
                 case OutputType.Frame:
-                    panesAndPositions = SdApplication.SoleInstance.AvailableFramePanesAndPositions();
+                    panesAndPositions = SdApplication.AvailableFramePanesAndPositions();
                     newName = "New workbook";
-                    if (null != SdApplication.SoleInstance.ActiveGrid && SdApplication.SoleInstance.ActiveGrid.HasWindow)
-                        defaultSelection = SdApplication.SoleInstance.ActiveGrid.Window.SelectedPane;
+                    if (null != SdApplication.ActiveGrid && SdApplication.ActiveGrid.HasWindow)
+                        defaultSelection = SdApplication.ActiveGrid.Window.SelectedPane;
                     break;
                 case OutputType.Report:
-                    panesAndPositions = SdApplication.SoleInstance.AvailableReportPanesAndPositions();
+                    panesAndPositions = SdApplication.AvailableReportPanesAndPositions();
                     newName = "New report";
-                    if (null != SdApplication.SoleInstance.MostRecentlySelectedReport)
-                        defaultSelection = SdApplication.SoleInstance.MostRecentlySelectedReport.Pane;
+                    if (null != SdApplication.MostRecentlySelectedReport)
+                        defaultSelection = SdApplication.MostRecentlySelectedReport.Pane;
                     rdoFirstColumn.Visible = false;
                     rdoBeforeSelection.Visible = false;
                     rdoReplaceSelection.Visible = false;
@@ -157,7 +159,7 @@ namespace StatsDirect.UI
                     // SDApplication.SoleInstance.MostRecentlySelectedGrid = selectedPane;
                     break;
                 case OutputType.Report:
-                    SdApplication.SoleInstance.MostRecentlySelectedReport = selectedPaneAndPosition;
+                    SdApplication.MostRecentlySelectedReport = selectedPaneAndPosition;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("outputType", outputType, "Only Frame and Report known");
@@ -165,36 +167,36 @@ namespace StatsDirect.UI
             return null;
         }
 
-        private void ctlPickAWindow_Load(object sender, EventArgs e)
+        private void ctlPickAWindow_Load(object? sender, EventArgs e)
         {
             SetPanesAndLocations();
         }
 
-        private void rdoFirstColumn_CheckedChanged(object sender, EventArgs e)
+        private void rdoFirstColumn_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoFirstColumn.Checked)
                 writePosition = RelativePosition.FirstColumn;
         }
 
-        private void rdoBeforeSelection_CheckedChanged(object sender, EventArgs e)
+        private void rdoBeforeSelection_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoBeforeSelection.Checked)
                 writePosition = RelativePosition.BeforeSelection;
         }
 
-        private void rdoReplaceSelection_CheckedChanged(object sender, EventArgs e)
+        private void rdoReplaceSelection_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoReplaceSelection.Checked)
                 writePosition = RelativePosition.ReplaceSelection;
         }
 
-        private void rdoAfterSelection_CheckedChanged(object sender, EventArgs e)
+        private void rdoAfterSelection_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoAfterSelection.Checked)
                 writePosition = RelativePosition.AfterSelection;
         }
 
-        private void rdoLastColumn_CheckedChanged(object sender, EventArgs e)
+        private void rdoLastColumn_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoLastColumn.Checked)
                 writePosition = RelativePosition.LastColumn;

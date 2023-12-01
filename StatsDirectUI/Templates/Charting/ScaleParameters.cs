@@ -2,21 +2,19 @@
 
 namespace StatsDirect.Templates
 {
+    /// <summary>
+    /// Immutable.
+    /// </summary>
     [Serializable]
     public class ScaleParameters
     {
-        public AxisScaleParameters X { get; set; }
-        public AxisScaleParameters Y { get; set; }
+        public AxisScaleParameters X { get; }
+        public AxisScaleParameters Y { get; }
 
-        public ScaleParameters()
+        public ScaleParameters(AxisScaleParameters x, AxisScaleParameters y)
         {
-            X = new AxisScaleParameters();
-            Y = new AxisScaleParameters();
-        }
-
-        public ScaleParameters Clone()
-        {
-            return new ScaleParameters { X = X.Clone(), Y = Y.Clone() };
+            X = x;
+            Y = y;
         }
     }
 }

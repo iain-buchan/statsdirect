@@ -131,7 +131,6 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-
         public static StepOutput RptRateDirect(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;

@@ -6,21 +6,24 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.TemplateProcessing
 {
-    public static class RtfImageRenderer
+    public class RtfImageRenderer
     {
-        public static ICanvasFactory CANVAS_FACTORY = new EmfCanvasFactory();
+        private static ICanvasFactory CANVAS_FACTORY = new EmfCanvasFactory();
 
-        public static ParameterBag PlotAndReturnRtf(/* TODO: IPreferences*/ ITemplateHost host, ChartDefinition cd, out string rtf)
+        private IChartRendererFactory ChartRendererFactory { get; }
+
+        public RtfImageRenderer(IChartRendererFactory chartRendererFactory)
+        {
+            ChartRendererFactory = chartRendererFactory;
+        }
+
+        public ParameterBag PlotAndReturnRtf(ChartDefinition cd, out string rtf)
         {
             using IChartRenderer ch = ChartRendererFactory.ChartRendererFor(cd, CANVAS_FACTORY);
-            ParameterBag results = ch.Plot(host, false);
-            if (cd.IsAscii)
-                rtf = ch.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF);
-            else
-            {
-                EmfCanvas emfCanvas = (EmfCanvas)ch.Canvas;
-                rtf = ImageStreamToRtf(emfCanvas.DetachAndReturnImageStream(), (int)emfCanvas.Width, (int)emfCanvas.Height);
-            }
+            ParameterBag results = ch.Plot(false);
+            rtf = cd.IsAscii
+                ? ch.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF)
+                : ImageStreamToRtf(ch.DetachAndReturnImageStream(), (int)ch.Width, (int)ch.Height);
             return results;
         }
 

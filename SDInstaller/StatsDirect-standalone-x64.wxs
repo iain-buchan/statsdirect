@@ -1,35 +1,120 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- ON EACH BUILD, INCREMENT THE VERSION NUMBER IN STATSDIRECTUI - and remember this system ignores the fourth number! -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
-  <Product
-    Id="*"
-    Name="StatsDirect"
-    Language="1033"
-    Version="!(bind.FileVersion.statsdirectexe)"
-    Manufacturer="StatsDirect Limited"
-    UpgradeCode="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+﻿<!-- ON EACH BUILD, INCREMENT THE VERSION NUMBER IN STATSDIRECTUI - and remember this system ignores the fourth number! -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="StatsDirect" Language="1033" Version="!(bind.FileVersion.statsdirectexe)" Manufacturer="StatsDirect Limited" UpgradeCode="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+    <!-- Upgrading: we're willing to upgrade any StatsDirect 3+ version up to this one. -->
+    <!-- We're never blowing away 2.x installs. -->
+    <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
+    <Property Id="NEWERVERSIONINSTALLED" Secure="yes" />
+    <!-- SD3, upgrade code CA3C.... -->
+    <Upgrade Id="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
+      <UpgradeVersion OnlyDetect="no" Minimum="3.0.0.0" Maximum="!(bind.FileVersion.statsdirectexe)" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="no" />
+      <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
+    </Upgrade>
+    <InstallExecuteSequence>
+      <RemoveExistingProducts Before="InstallInitialize"></RemoveExistingProducts>
+    </InstallExecuteSequence>
 
-    <?include Package-standalone.wxi ?>
-    <?include Ui.wxi ?>
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <?include StartMenu.wxi ?>
+    <!-- User interface and license -->
+    <!-- Licence file location -->
+    <WixVariable Id="WixUILicenseRtf" Value="Licence.rtf" />
+    <!-- Tell the UI what property holds the install directory -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
+    <!-- Reference the property from netfx that tells us whether framework 4.6.2 is installed or not -->
+    <PropertyRef Id="WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" />
+    <!-- Custom bitmaps -->
+    <WixVariable Id="WixUIBannerBmp" Value="bannrbmp-sd.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dlgbmp-sd.bmp" />
+    <UI>
+      <!-- Add/Remove Programs values -->
+      <Property Id="ARPCONTACT" Value="support@statsdirect.com" />
+      <Property Id="ARPHELPLINK" Value="http://www.statsdirect.com/Support.aspx" />
+      <Property Id="ARPURLINFOABOUT" Value="http://www.statsdirect.com/Specifications.aspx" />
+      <Property Id="ARPURLUPDATEINFO" Value="http://www.statsdirect.com/Update.aspx" />
+      <ProgressText Action="RollbackCleanup" Message="Removing backup files and starting StatsDirect optimisation" />
+    </UI>
+    <!-- Link in the common dialog - usually we'd use a UIRef to WixUI_InstallDir, but we're using Common and referencing the bits we need due to the extra UI referencing above. -->
+    <ui:WixUI Id="WixUI_InstallDir" />
 
-      <Directory Id="DesktopFolder" Name="Desktop" />
-      <Directory Id="ProgramFiles64Folder">
+    <!-- Icon in add/remove programs -->
+    <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico" />
+    <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
+
+    <Launch Condition="Installed OR WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED" Message="[ProductName] requires .NET Framework 4.6.2 or higher." />
+    <!-- Installation conditions: At least Windows 7, no service pack required, no upper limit on OS version-->
+    <Launch Condition="Installed OR (VersionNT &gt;= 601)" Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 7, 2012, 8, 8.1, 2012R2, 10, and 2016." />
+    <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
+    <Launch Condition="NOT NEWERVERSIONDETECTED OR Installed" Message="A later version of [ProductName] is already installed. If you wish to install this version, uninstall the later version then run this installer again. Setup will now exit." />
+
+    <Feature Id="ProductFeature" Title="SDInstaller" Level="1">
+      <!-- Shortcuts -->
+      <ComponentRef Id="ApplicationShortcut" />
+      <!-- Main files -->
+      <ComponentRef Id="ProductComponent" />
+      <!-- Other StatsDirect -->
+      <ComponentRef Id="menu.xml" />
+      <ComponentRef Id="STATSDIRECT.chm" />
+      <ComponentRef Id="StatsDirect.exe.config" />
+      <ComponentGroupRef Id="Dlls" />
+      <!-- Sample files -->
+      <ComponentRef Id="test.xlsx" />
+      <!-- Excel add-in -->
+      <ComponentRef Id="StatsDirect3ExcelLink.xlam" />
+      <!-- Operations -->
+      <ComponentGroupRef Id="Operations" />
+      <!-- Output templates -->
+      <ComponentGroupRef Id="Template" />
+    </Feature>
+
+    <!-- Start menu shortcuts -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="ApplicationShortcut" Guid="4A69827f-392D-49aa-81DF-B660EA920F25">
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="StatsDirect" Description="StatsDirect Statistical Package" Icon="statsdirect.ico" Target="[INSTALLLOCATION]StatsDirect.exe" WorkingDirectory="INSTALLLOCATION" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="startMenuInstalled" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+      <StandardDirectory Id="ProgramFiles64Folder">
         <Directory Id="INSTALLLOCATION" Name="StatsDirect3" FileSource="$(var.StatsDirectUI.TargetDir)">
           <Component Id="ProductComponent" Guid="CE038078-F78B-42b0-A547-8509996AA427">
             <File Id="statsdirectexe" KeyPath="yes" Name="StatsDirect.exe" Checksum="yes">
-              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="64bit" Priority="0" AppBaseDirectory="INSTALLLOCATION"/>
-              <?include Desktop.wxi ?>
+              <netfx:NativeImage Id="ngen_statsdirect.exe" Platform="64bit" Priority="0" AppBaseDirectory="INSTALLLOCATION" />
+              <!-- Desktop shortcut -->
+              <Shortcut Id="StatsDirectExeDesktopShortcut" Directory="DesktopFolder" Name="StatsDirect 3" Description="StatsDirect Statistical Package" Icon="statsdirect.ico" WorkingDirectory="INSTALLLOCATION" Advertise="yes" />
             </File>
           </Component>
-          <?include Component.wxi ?>
+          <Component Id="menu.xml">
+            <File Id="menu.xml" KeyPath="yes" Name="menu.xml" Checksum="yes" />
+          </Component>
+          <Component Id="STATSDIRECT.chm">
+            <File Id="STATSDIRECT.chm" KeyPath="yes" Name="STATSDIRECT.chm" Checksum="yes" />
+          </Component>
+          <Component Id="StatsDirect.exe.config">
+            <File Id="StatsDirect.exe.config" KeyPath="yes" Name="StatsDirect.exe.config" Checksum="yes" />
+          </Component>
+
+          <!-- Sample data files -->
+          <Directory Id="data" Name="data">
+            <Component Id="test.xlsx">
+              <File Id="test.xlsx" KeyPath="yes" Name="test.xlsx" Checksum="yes" ReadOnly="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Excel add-in -->
+          <Directory Id="Excel" Name="Excel">
+            <Component Id="StatsDirect3ExcelLink.xlam">
+              <File Id="StatsDirect3ExcelLink.xlam" KeyPath="yes" Name="StatsDirect3ExcelLink.xlam" Checksum="yes" />
+            </Component>
+          </Directory>
+
+          <!-- Operations -->
+          <Directory Id="Operations" Name="Operations" />
+
+          <!-- Output templates -->
+          <Directory Id="Template" Name="Template" />
 
         </Directory>
-      </Directory>
-    </Directory>
-
-    <?include Feature.wxi ?>
-  </Product>
+      </StandardDirectory>
+    </Package>
 </Wix>

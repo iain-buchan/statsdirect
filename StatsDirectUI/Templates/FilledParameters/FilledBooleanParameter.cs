@@ -5,10 +5,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledBooleanParameter : FilledParameter
     {
-        internal FilledBooleanParameter()
-        {
-        }
-
         public FilledBooleanParameter(FilledParameterDirection direction, bool data)
             : base(direction)
         {
@@ -18,15 +14,13 @@ namespace StatsDirect.Templates
 
         public override bool HasData => true;
 
-        public bool Data { get; set; }
+        public bool Data { get; }
 
         public override bool AsBoolean => Data;
 
         public override object AsObject => Data;
 
         public override bool IsBoolean => true;
-
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
 
         public override string ToString() => $"FP({Direction}, {Data})";
 

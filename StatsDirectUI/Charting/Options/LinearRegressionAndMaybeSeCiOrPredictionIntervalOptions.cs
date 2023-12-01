@@ -1,6 +1,6 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
     public class LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions : LinearRegressionOptions

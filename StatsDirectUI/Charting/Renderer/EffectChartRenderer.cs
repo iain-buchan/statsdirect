@@ -1,4 +1,5 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -9,38 +10,37 @@ namespace StatsDirect.Charting.Renderer
 {
     class EffectChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public EffectChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public EffectChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             EffectOptions options = (EffectOptions)Definition.ChartOptions;
-            ScaleHeight(options.k);
+            ScaleHeight(options.K);
 
             StartVectorPlot();
 
-            double[] gn = new double[options.k + 1];
+            double[] gn = new double[options.K + 1];
             int kok = 0;
             double ormax = double.NegativeInfinity;
             double ormin = double.PositiveInfinity;
             double orumax = double.NegativeInfinity;
             double orlmin = double.PositiveInfinity;
             double maxGn = double.NegativeInfinity;
-            for (int i = 1; i <= options.k; i++)
+            for (int i = 1; i <= options.K; i++)
             {
                 gn[i] = options.ControlGroupSizes[i] + options.ExperimentGroupSizes[i];
                 if (gn[i] > maxGn)
@@ -63,14 +63,14 @@ namespace StatsDirect.Charting.Renderer
             DataMinX = ormin;
             if (DataMaxX < options.rmh)
                 DataMaxX = options.rmh;
-            if (DataMaxX < options.ul && options.ul != Constant.MISSING)
-                DataMaxX = options.ul;
+            if (DataMaxX < options.UpperLimit && options.UpperLimit != Constant.MISSING)
+                DataMaxX = options.UpperLimit;
             if (DataMaxX < orumax && orumax != Constant.MISSING)
                 DataMaxX = orumax;
             if (DataMinX > options.rmh)
                 DataMinX = options.rmh;
-            if (DataMinX > options.ll && options.ll != Constant.MISSING)
-                DataMinX = options.ll;
+            if (DataMinX > options.LowerLimit && options.LowerLimit != Constant.MISSING)
+                DataMinX = options.LowerLimit;
             if (DataMinX > orlmin && orlmin != Constant.MISSING)
                 DataMinX = orlmin;
 
@@ -79,7 +79,7 @@ namespace StatsDirect.Charting.Renderer
             DataMaxX = xAxisScale.MaximumScaleValue;
 
             double xtra = 0;
-            for (int i = 1; i <= options.k; i++)
+            for (int i = 1; i <= options.K; i++)
             {
                 if (options.OddsRatios[i] != Constant.MISSING)
                 {
@@ -88,7 +88,7 @@ namespace StatsDirect.Charting.Renderer
                         xtra = w - XAxisCanvas - 5;
                 }
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(options.cap,
+            AxisScales axisScales = LayoutChartAndDrawAxes(options.Caption,
                 new AxisDefinition(null, AxisMode.Scale, ScaleType.Linear) { ExtraSpaceBeforeAxisStarts = xtra },
                 new AxisDefinition(null, AxisMode.None, ScaleType.NotSet),
                 false, false);
@@ -101,7 +101,7 @@ namespace StatsDirect.Charting.Renderer
             int r = 0;
             double yc = 0;
             double yt = 0;
-            for (int i = options.k; i >= 1; i--)
+            for (int i = options.K; i >= 1; i--)
             {
                 if (options.OddsRatios[i] != Constant.MISSING)
                 {
@@ -137,12 +137,12 @@ namespace StatsDirect.Charting.Renderer
                 yc = ToCanvasY(0.5);
                 yt = OffY + yctr + diamondHalfSize;
                 DrawDiamondInCanvasCoordinates(linePen, ToCanvasX(options.rmh), yc, diamondHalfSize * 2, false);
-                DrawLineInCanvasCoordinates(linePen, ToCanvasX(options.ul), yc, ToCanvasX(options.ll), yc);
+                DrawLineInCanvasCoordinates(linePen, ToCanvasX(options.UpperLimit), yc, ToCanvasX(options.LowerLimit), yc);
                 // pooled effect marker
                 PenDescriptor pooledEffectPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);
                 DrawLineInCanvasCoordinates(pooledEffectPen, ToCanvasX(options.rmh), saveYc, ToCanvasX(options.rmh), yt);
-                string lab = "pooled " + options.qid + " = " + host.RoundU(options.rmh) + "  (" + Formatting.XRound(options.cco * 100, 1) + "% CI = " + host.RoundU(options.ll) + " to " + host.RoundU(options.ul) + ")";
-                string xlab = options.cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";
+                string lab = $"pooled {options.qid} = {RoundU(options.rmh)}  ({Formatting.XRound(options.Cco * 100, 1)}% CI = {RoundU(options.LowerLimit)} to {RoundU(options.UpperLimit)})";
+                string xlab = options.Caption.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";
                 lab = xlab + lab;
                 DrawStringLabel(lab, XAxisCanvas + XExtCanvas / 2.0, 50, StringAlignment.Center);
             }

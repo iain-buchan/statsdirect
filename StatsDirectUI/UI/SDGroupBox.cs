@@ -10,9 +10,7 @@ namespace StatsDirect.UI
         {
             Size s = base.GetPreferredSize(proposedSize);
             if (AutoSize)
-            {
                 s.Height = Math.Max(s.Height, Bounds.Height - DisplayRectangle.Height + (Controls.Count > 0 ? Controls[0].PreferredSize.Height : 0));
-            }
             return s;
         }
     }

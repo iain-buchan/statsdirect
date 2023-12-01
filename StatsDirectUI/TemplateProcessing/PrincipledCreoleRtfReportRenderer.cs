@@ -4,7 +4,6 @@ using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 
 namespace StatsDirect.TemplateProcessing
@@ -15,10 +14,17 @@ namespace StatsDirect.TemplateProcessing
         const string RTF_REPORT_END = @"\par }";
         const string FirstCellOfTableMarker = "!!FIRSTCELLOFTABLE!!";
 
-        public override string Render(/* TODO: IPreferences */ ITemplateHost host, string template, ParameterBag substitutions)
+        private ISdPreferences SdPreferences{ get; }
+
+        public PrincipledCreoleRtfReportRenderer(ISdPreferences sdPreferences)
+        {
+            SdPreferences = sdPreferences;
+        }
+
+        public override string Render(string template, ParameterBag substitutions)
         {
             ICreole<IList<IStringOrDirective>> creole = CreoleReader.Parse<IList<IStringOrDirective>>(template, out string _);
-            IList<IStringOrDirective> raw = creole.Accept(new InnerRtfReportRenderer(host, substitutions));
+            IList<IStringOrDirective> raw = creole.Accept(new InnerRtfReportRenderer(SdPreferences, substitutions));
             return RTF_REPORT_START + Cook(raw) + RTF_REPORT_END;
         }
 
@@ -43,7 +49,7 @@ namespace StatsDirect.TemplateProcessing
                 // We're at an earlier-than-last element and we're not skipping it.
                 IStringOrDirective candidate = raw[candidateIndex];
                 IStringOrDirective next = raw[candidateIndex + 1];
-                IStringOrDirective maybeMerged = candidate.MaybeMergeWithNext(next);
+                IStringOrDirective? maybeMerged = candidate.MaybeMergeWithNext(next);
 
                 // If the merge came back empty, this one doesn't merge.  Emit it and try the next element for merging.
                 if (null == maybeMerged)
@@ -77,7 +83,7 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        private class InnerRtfReportRenderer : ICreoleVisitor<IList<IStringOrDirective>>
+        private class InnerRtfReportRenderer : RendererBase, ICreoleVisitor<IList<IStringOrDirective>>
         {
             private static readonly Dictionary<string, RtfFormatHolder> rtfFormatting = new()
             {
@@ -100,16 +106,15 @@ namespace StatsDirect.TemplateProcessing
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new();
-            private readonly /* TODO: IPreferences */ ITemplateHost host;
 
             /// <summary>
             /// State so that we can inject a little extra marker at the end of the first table cell in each table - used so that the RTF insertion can format the table later.
             /// </summary>
             private bool isFirstCellOfTable;
 
-            public InnerRtfReportRenderer(/* TODO: IPreferences */ ITemplateHost host, ParameterBag substitutions)
+            public InnerRtfReportRenderer(ISdPreferences sdPreferences, ParameterBag substitutions)
+                : base(sdPreferences)
             {
-                this.host = host;
                 substitutionStack.Push(substitutions);
             }
 
@@ -130,7 +135,7 @@ namespace StatsDirect.TemplateProcessing
                 if (null == victim.Contents)
                     return Array.Empty<IStringOrDirective>();
                 List<IStringOrDirective> list = new();
-                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
+                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter? innerList) && null != innerList && innerList.HasData)
                 {
                     bool first = true;
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
@@ -186,7 +191,7 @@ namespace StatsDirect.TemplateProcessing
 
             private string Substitute(CreoleSubstitution<IList<IStringOrDirective>> victim)
             {
-                object value = FindValue(victim.Path);
+                object? value = FindValue(victim.Path);
                 if (null == value)
                     return string.Empty;
                 if (value is string stringValue)
@@ -194,44 +199,31 @@ namespace StatsDirect.TemplateProcessing
                 if (value is int intValue)
                     return intValue.ToString(CultureInfo.CurrentUICulture);
                 if (value is IRenderable renderable)
-                    return new RtfRenderer(host).Render(renderable);
+                    return new RtfRenderer(ChartRendererFactory, SdPreferences).Render(renderable);
                 if (value is double doubleValue)
-                    switch (victim.Format)
+                    return victim.Format switch
                     {
-                        case "pval":
-                            return host.pval(doubleValue);
-                        case "pval_half":
-                            return host.pval_half(doubleValue);
-                        case "roundu":
-                            return host.RoundU(doubleValue);
-                        case "roundx":
-                            return host.RoundU(doubleValue);
-                        case "round0":
-                            return Formatting.XRound(doubleValue, 0);
-                        case "round1":
-                            return Formatting.XRound(doubleValue, 1);
-                        case "round2":
-                            return Formatting.XRound(doubleValue, 2);
-                        case "round3":
-                            return Formatting.XRound(doubleValue, 3);
-                        case "zvalp1":
-                            return host.pval(Zvalp1(doubleValue));
-                        case "zvalp2":
-                            return host.pval(Zvalp2(doubleValue));
-                        case "default":
-                            return doubleValue.ToString();
-                        default:
-                            // TODO: Warn.
-                            return value.ToString();
-                    }
+                        "pval" => Pval(doubleValue),
+                        "pval_half" => PvalHalf(doubleValue),
+                        "roundu" => RoundU(doubleValue),
+                        "roundx" => RoundU(doubleValue),
+                        "round0" => Formatting.XRound(doubleValue, 0),
+                        "round1" => Formatting.XRound(doubleValue, 1),
+                        "round2" => Formatting.XRound(doubleValue, 2),
+                        "round3" => Formatting.XRound(doubleValue, 3),
+                        "zvalp1" => Pval(Zvalp1(doubleValue)),
+                        "zvalp2" => Pval(Zvalp2(doubleValue)),
+                        "default" => doubleValue.ToString(),
+                        _ => value.ToString() ?? string.Empty, // TODO: Warn.
+                    };
                 // Nothing we know how to render specially, so just call ToString() on it and hope.
-                return value.ToString();
+                return value.ToString() ?? string.Empty;
             }
 
-            private object FindValue(string path)
+            private object? FindValue(string path)
             {
                 foreach (ParameterBag candidate in substitutionStack)
-                    if (candidate.TryGetValue(path, out FilledParameter value))
+                    if (candidate.TryGetValue(path, out FilledParameter? value))
                         return value.AsObject;
                 // If we get here, no such value exists.
                 return null;
@@ -333,7 +325,7 @@ namespace StatsDirect.TemplateProcessing
 
         private interface IStringOrDirective
         {
-            IStringOrDirective MaybeMergeWithNext(IStringOrDirective next);
+            IStringOrDirective? MaybeMergeWithNext(IStringOrDirective next);
 
             string Rtf { get; }
             bool IsBlankOrWhiteSpace { get; }
@@ -345,7 +337,7 @@ namespace StatsDirect.TemplateProcessing
 
             bool IStringOrDirective.IsBlankOrWhiteSpace => true;
 
-            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next) => (next is NewParagraph) ? this : null;
+            IStringOrDirective? IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next) => (next is NewParagraph) ? this : null;
         }
 
         private class RtfThatIsNotANewParagraph : IStringOrDirective
@@ -359,7 +351,7 @@ namespace StatsDirect.TemplateProcessing
                 Rtf = rtf;
             }
 
-            IStringOrDirective IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next) => null;
+            IStringOrDirective? IStringOrDirective.MaybeMergeWithNext(IStringOrDirective next) => null;
 
             public override string ToString() => Rtf;
         }
@@ -388,7 +380,7 @@ namespace StatsDirect.TemplateProcessing
                 if (null == victim.Contents)
                     return Array.Empty<IStringOrDirective>();
                 List<IStringOrDirective> list = new();
-                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
+                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter? innerList) && null != innerList && innerList.HasData)
                 {
                     bool first = true;
                     foreach (ParameterBag inner in innerList.AsParameterBagList)

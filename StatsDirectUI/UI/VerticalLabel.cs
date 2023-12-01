@@ -91,7 +91,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void VerticalTextBox_Resize(object sender, System.EventArgs e)
+        private void VerticalTextBox_Resize(object? sender, System.EventArgs e)
         {
             Invalidate();
         }

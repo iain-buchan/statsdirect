@@ -8,12 +8,19 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public static class Anova
+    public class Anova
     {
+        private IProgressBarHost ProgressBarHost { get; }
+
+        public Anova(IProgressBarHost progressBarHost)
+        {
+            ProgressBarHost = progressBarHost;
+        }
+
         ///  <summary>
         ///  TWO-WAY HIERARCHICAL ANOVA - OK FOR UNEQUAL SUBGROUPS
         ///  </summary>
-        private static void XTwoHier(DataFrame2D frame, double[] y, int N, int[] nobs, int L, ref int[] ngp, ref double[] gbar, ref double[] sgbar, ref double gm, ref double[] ss, ref int[] idf, ref double[] f, ref double[] fp, out bool fault)
+        private static void XTwoHier(DataFrame2D frame, double[] y, int N, int[] nobs, int L, ref int[]? ngp, ref double[]? gbar, ref double[] sgbar, ref double gm, ref double[] ss, ref int[] idf, ref double[] f, ref double[] fp, out bool fault)
         {
             fault = true;
             if (frame.VariableCount < 2)
@@ -230,7 +237,7 @@ namespace StatsDirect.Builtins
         ///  <param name="tau"></param>
         ///  <param name="p2"></param>
         ///  <remarks></remarks>
-        public static void XAgreeKendall(IProgressBarHost host, double[] ssd, double[] av, int lowerBound, ref int rx, out double tau, out double p2, out bool isLowPower, out bool isTauB)
+        public void XAgreeKendall(double[] ssd, double[] av, int lowerBound, ref int rx, out double tau, out double p2, out bool isLowPower, out bool isTauB)
         {
             int nxx = 0; int ls = 0;
             double sigat1 = 0; double sigat2 = 0; double sigat3 = 0;
@@ -265,7 +272,7 @@ namespace StatsDirect.Builtins
                 {
                     nxx = nx;
                     double gd = nxx - 1;
-                    using (IProgressBar progress = host.StartProgress("Calculating Kendall", true))
+                    using (IProgressBar progress = ProgressBarHost.StartProgress("Calculating Kendall", true))
                     {
                         int pn;
                         for (pn = 1; pn < nxx; pn++)
@@ -370,7 +377,7 @@ namespace StatsDirect.Builtins
             isLowPower = nxx < 11;
         }
 
-        public static StepOutput RptAgreement(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptAgreement(ParameterBag parameters)
         {
             long ntot = 0;
             double sum;
@@ -527,7 +534,7 @@ namespace StatsDirect.Builtins
             bool isTauB = false;
             if (rx > 2)
             {
-                XAgreeKendall(host, ssd, av, 0, ref rx, out tau, out p2, out isLowPower, out isTauB);
+                XAgreeKendall(ssd, av, 0, ref rx, out tau, out p2, out isLowPower, out isTauB);
             }
             else
             {
@@ -701,7 +708,8 @@ namespace StatsDirect.Builtins
                     oneWayFrame.Variables.Add(oneWayVariable);
                 }
 
-                ParameterBag oneWayParameters = new() { {"data", FilledParameterFactory.Input(oneWayFrame)}};
+                ParameterBag oneWayParameters = new ParameterBag()
+                    .AddInput("data", oneWayFrame);
                 StepOutput oneWayResult = RptOneWay(oneWayParameters);
                 oneWayResult.ParameterBag.AddOutput("variableName", v.Title);
                 aList.Add(oneWayResult.ParameterBag);
@@ -749,7 +757,8 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ParameterBag twoWayParameters = new() { {"data", FilledParameterFactory.Input(twoWayFrame)}};
+                ParameterBag twoWayParameters = new ParameterBag()
+                    .AddInput("data", twoWayFrame);
                 StepOutput twoWayResult = RptTwoWay(twoWayParameters);
                 twoWayResult.ParameterBag.AddOutput("variableName", v.Title);
                 aList.Add(twoWayResult.ParameterBag);
@@ -805,7 +814,7 @@ namespace StatsDirect.Builtins
             string tlist = string.Empty;
             for (int d = 0; d < frame.VariableCount; d++)
             {
-                //  Col(0).AddItem(frame.Variables(D).Title & " (" & Formatting.XRound(mean(D), 4) & ")")
+                //  Col(0).AddItem(frame.Variables(D).Title + " (" + Formatting.XRound(mean(D), 4) + ")")
                 if (d == 0)
                     tlist = frame.Variables[d].Title;
                 else
@@ -818,33 +827,31 @@ namespace StatsDirect.Builtins
 
             if (wrn.Length > 0)
                 tlist = tlist + "\r\n" + wrn;
-            ParameterBag outputParameters = new();
-            outputParameters.AddOutput("tlist", tlist);
-            outputParameters.AddOutput("sub_sum", ssrow);
-            outputParameters.AddOutput("sub_df", dfrow);
-            outputParameters.AddOutput("sub_mean", msrow);
-            outputParameters.AddOutput("grp_sum", sscol);
-            outputParameters.AddOutput("grp_df", dfcol);
-            outputParameters.AddOutput("grp_mean", mscol);
-            outputParameters.AddOutput("res_sum", ssres);
-            outputParameters.AddOutput("res_df", dfres);
-            outputParameters.AddOutput("res_mean", msres);
-            outputParameters.AddOutput("tot_sum", sstot);
-            outputParameters.AddOutput("tot_df", dftot);
-            outputParameters.AddOutput("sub_vr", msrow / msres);
-            outputParameters.AddOutput("sub_p", PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres)));
-            outputParameters.AddOutput("grp_vr", mscol / msres);
-            double P = PDF.fvalp(mscol / msres, Convert.ToDouble(dfcol), Convert.ToDouble(dfres));
-            outputParameters.AddOutput("grp_p", P);
-
-            //  Add our calculated values for potential later consumption by other functions
-            outputParameters.AddInput("dfres", dfres);
-            outputParameters.AddInput("mean", mean);
-            outputParameters.AddInput("msres", msres);
-            outputParameters.AddInput("ssgp", sscol);
-            outputParameters.AddInput("sstot", sstot);
-            outputParameters.AddInput("tnx", tnx);
-            return new StepOutput(outputParameters);
+            return new StepOutput(new ParameterBag()
+                .AddOutput("tlist", tlist)
+                .AddOutput("sub_sum", ssrow)
+                .AddOutput("sub_df", dfrow)
+                .AddOutput("sub_mean", msrow)
+                .AddOutput("grp_sum", sscol)
+                .AddOutput("grp_df", dfcol)
+                .AddOutput("grp_mean", mscol)
+                .AddOutput("res_sum", ssres)
+                .AddOutput("res_df", dfres)
+                .AddOutput("res_mean", msres)
+                .AddOutput("tot_sum", sstot)
+                .AddOutput("tot_df", dftot)
+                .AddOutput("sub_vr", msrow / msres)
+                .AddOutput("sub_p", PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres)))
+                .AddOutput("grp_vr", mscol / msres)
+                .AddOutput("grp_p", PDF.fvalp(mscol / msres, Convert.ToDouble(dfcol), Convert.ToDouble(dfres)))
+                //  Add our calculated values for potential later consumption by other functions
+                .AddInput("dfres", dfres)
+                .AddInput("mean", mean)
+                .AddInput("msres", msres)
+                .AddInput("ssgp", sscol)
+                .AddInput("sstot", sstot)
+                .AddInput("tnx", tnx)
+            );
         }
 
         public static StepOutput RptTwoMulti(ParameterBag parameters)
@@ -858,9 +865,7 @@ namespace StatsDirect.Builtins
             double[,,] y = new double[nm + 1, nr + 1, nc + 1];
             int absconders = 0;
 
-            DataFrame outputFrame = new();
-            outputFrame.EnsureVariables(frame.VariableCount);
-
+            List<IVariable> outputVariables = new();
             for (int d = 0; d < nc; d++)
             {
                 for (int n = 1; n <= nr; n++)
@@ -868,7 +873,7 @@ namespace StatsDirect.Builtins
                     int adit = 0;
                     double adsum = 0;
                     IVariable candidate = frame.Variables[n - 1][d]; // There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
-                    if (candidate != null)
+                    if (candidate is not null)
                     {
                         DoubleVariable v = candidate as DoubleVariable;
                         for (int q = 0; q < nm; q++)
@@ -894,16 +899,18 @@ namespace StatsDirect.Builtins
                     }
                 }
                 tnx[d] = nr;
-                string title = "Treatment " + (1 + d).ToString();
-                outputFrame.Variables[d] = new DoubleVariable(null, title);
+                string title = $"Treatment {1 + d}";
+                outputVariables[d] = new DoubleVariable(null, title);
             }
+            DataFrame outputFrame = new(outputVariables);
+
 
             XTwoWay(y, out double[] mean, nr, nc, nm, out double ssrow, out double sscol, out double ssint, out double sstot, out double ssres, out int dfrow, out int dfcol, out int dfint, out int dftot, out int dfres, out int fault);
 
             string tlist = string.Empty;
             for (int d = 0; d < nc; d++)
             {
-                //  Col(0).AddItem(CDAT1(D).title & " (" & Formatting.XRound(mean(D), 4) & ")")
+                //  Col(0).AddItem(CDAT1(D).title + " (" + Formatting.XRound(mean(D), 4) + ")")
                 if (d == 0)
                     tlist = outputFrame.Variables[d].Title;
                 else
@@ -913,67 +920,52 @@ namespace StatsDirect.Builtins
             if (fault != 0)
                 throw new Exception("Invalid calculation");
 
-            double msrow = ssrow / Convert.ToDouble(dfrow);
-            double mscol = sscol / Convert.ToDouble(dfcol);
-            double msint = ssint / Convert.ToDouble(dfint);
-            double msres = ssres / Convert.ToDouble(dfres);
-            // double mstot = sstot / Convert.ToDouble( dftot ); mstot is unused.  PJC 2012/04/09
+            double msrow = ssrow / dfrow;
+            double mscol = sscol / dfcol;
+            double msint = ssint / dfint;
+            double msres = ssres / dfres;
+            // double mstot = sstot / dftot; mstot is unused.  PJC 2012/04/09
 
-            ParameterBag outputParameters = new();
-            outputParameters.AddOutput("tlist", frame.Name);
-
-            outputParameters.AddOutput("sub_sum", ssrow);
-            outputParameters.AddOutput("sub_df", dfrow);
-            outputParameters.AddOutput("sub_mean", msrow);
-
-            outputParameters.AddOutput("grp_sum", sscol);
-            outputParameters.AddOutput("grp_df", dfcol);
-            outputParameters.AddOutput("grp_mean", mscol);
-
-            outputParameters.AddOutput("int_sum", ssint);
-            outputParameters.AddOutput("int_df", dfint);
-            outputParameters.AddOutput("int_mean", msint);
-
-            outputParameters.AddOutput("res_sum", ssres);
-            outputParameters.AddOutput("res_df", dfres);
-            outputParameters.AddOutput("res_mean", msres);
-
-            outputParameters.AddOutput("tot_sum", sstot);
-            outputParameters.AddOutput("tot_df", dftot);
-
-            outputParameters.AddOutput("sub_vr", msrow / msres);
-            outputParameters.AddOutput("sub_p", PDF.fvalp(msrow / msres, Convert.ToDouble(dfrow), Convert.ToDouble(dfres)));
-
-            outputParameters.AddOutput("grp_vr", mscol / msres);
-            double P = PDF.fvalp(mscol / msres, Convert.ToDouble(dfcol), Convert.ToDouble(dfres));
-            outputParameters.AddOutput("grp_p", P);
-
-            outputParameters.AddOutput("int_vr", msint / msres);
-            outputParameters.AddOutput("int_p", PDF.fvalp(msint / msres, Convert.ToDouble(dfint), Convert.ToDouble(dfres)));
-
-            if (absconders != 0)
-            {
-                IList<ParameterBag> warnList = new List<ParameterBag>();
-                ParameterBag warnParameters = new();
-                warnParameters.AddOutput("warn", "WARNING - " + absconders.ToString() + " missing data - substitution made");
-                warnList.Add(warnParameters);
-                outputParameters.AddOutput("*warn", warnList);
-            }
-            else
-            {
-                outputParameters.AddOutput("*warn", null);
-            }
-
-            //  Add our calculated values for potential later consumption by other functions
-            outputParameters.AddInput("dfres", dfres);
-            outputParameters.AddInput("mean", mean);
-            outputParameters.AddInput("msres", msres);
-            outputParameters.AddInput("ssgp", sscol);
-            outputParameters.AddInput("sstot", sstot);
-            outputParameters.AddInput("tnx", tnx);
-            outputParameters.AddInput("data", outputFrame);
-
-            return new StepOutput(outputParameters);
+            return new StepOutput(new ParameterBag()
+                .AddOutput("tlist", frame.Name)
+                .AddOutput("sub_sum", ssrow)
+                .AddOutput("sub_df", dfrow)
+                .AddOutput("sub_mean", msrow)
+                .AddOutput("grp_sum", sscol)
+                .AddOutput("grp_df", dfcol)
+                .AddOutput("grp_mean", mscol)
+                .AddOutput("int_sum", ssint)
+                .AddOutput("int_df", dfint)
+                .AddOutput("int_mean", msint)
+                .AddOutput("res_sum", ssres)
+                .AddOutput("res_df", dfres)
+                .AddOutput("res_mean", msres)
+                .AddOutput("tot_sum", sstot)
+                .AddOutput("tot_df", dftot)
+                .AddOutput("sub_vr", msrow / msres)
+                .AddOutput("sub_p", PDF.fvalp(msrow / msres, dfrow, dfres))
+                .AddOutput("grp_vr", mscol / msres)
+                .AddOutput("grp_p", PDF.fvalp(mscol / msres, dfcol, dfres))
+                .AddOutput("int_vr", msint / msres)
+                .AddOutput("int_p", PDF.fvalp(msint / msres, dfint, dfres))
+                //  Add our calculated values for potential later consumption by other functions
+                .AddInput("dfres", dfres)
+                .AddInput("mean", mean)
+                .AddInput("msres", msres)
+                .AddInput("ssgp", sscol)
+                .AddInput("sstot", sstot)
+                .AddInput("tnx", tnx)
+                .AddInput("data", outputFrame)
+                .AddOutput("*warn", 
+                    absconders == 0
+                    ? null
+                    : new List<ParameterBag>()
+                        {
+                            new ParameterBag()
+                                .AddOutput("warn", $"WARNING - {absconders} missing data - substitution made")
+                        }
+                )
+            );
         }
 
         public static StepOutput RptTwoNest(ParameterBag parameters)
@@ -996,7 +988,7 @@ namespace StatsDirect.Builtins
                 {
                     //  Input variables may be jagged; ensure that null variables don't cause issues
                     IVariable v = frame.Variables[j][i];
-                    if (v != null)
+                    if (v is not null)
                     {
                         if (i == 0)
                             tlist += v.Title;
@@ -1028,48 +1020,43 @@ namespace StatsDirect.Builtins
             int[] idf = new int[5 + 1];
             double[] f = new double[3 + 1];
             double[] fp = new double[3 + 1];
-            int[] ngp = null;
-            double[] gbar = null;
+            int[]? ngp = null;
+            double[]? gbar = null;
             double gm = 0;
             XTwoHier(frame, y, ctr, nobs, ivar, ref ngp, ref gbar, ref sgbar, ref gm, ref ss, ref idf, ref f, ref fp, out bool fault);
 
             ParameterBag outputParameters = new();
             if (!fault)
             {
-                outputParameters.AddOutput("tlist", tlist);
-
-                outputParameters.AddOutput("grp_sum", ss[1]);
-                outputParameters.AddOutput("grp_df", idf[1]);
-                outputParameters.AddOutput("grp_mean", ss[1] / Convert.ToDouble(idf[1]));
-
-                outputParameters.AddOutput("sub_sum", ss[2]);
-                outputParameters.AddOutput("sub_df", idf[2]);
-                outputParameters.AddOutput("sub_mean", ss[2] / Convert.ToDouble(idf[2]));
-
-                outputParameters.AddOutput("res_sum", ss[3]);
-                outputParameters.AddOutput("res_df", idf[3]);
-                outputParameters.AddOutput("res_mean", ss[3] / Convert.ToDouble(idf[3]));
-
-                outputParameters.AddOutput("tot_sum", ss[4]);
-                outputParameters.AddOutput("tot_df", idf[4]);
-
-                outputParameters.AddOutput("f_1", f[1]);
-                outputParameters.AddOutput("p_1", fp[1]);
-
-                double xx = ss[1] / Convert.ToDouble(idf[1]) / (ss[2] / Convert.ToDouble(idf[2]));
-                outputParameters.AddOutput("f_2", xx);
-                outputParameters.AddOutput("p_2", PDF.fvalp(xx, Convert.ToDouble(idf[1]), Convert.ToDouble(idf[2])));
-
-                outputParameters.AddOutput("f_3", f[2]);
-                outputParameters.AddOutput("p_3", fp[2]);
+                double xx = ss[1] / idf[1] / (ss[2] / idf[2]);
+                outputParameters
+                    .AddOutput("tlist", tlist)
+                    .AddOutput("grp_sum", ss[1])
+                    .AddOutput("grp_df", idf[1])
+                    .AddOutput("grp_mean", ss[1] / idf[1])
+                    .AddOutput("sub_sum", ss[2])
+                    .AddOutput("sub_df", idf[2])
+                    .AddOutput("sub_mean", ss[2] / idf[2])
+                    .AddOutput("res_sum", ss[3])
+                    .AddOutput("res_df", idf[3])
+                    .AddOutput("res_mean", ss[3] / idf[3])
+                    .AddOutput("tot_sum", ss[4])
+                    .AddOutput("tot_df", idf[4])
+                    .AddOutput("f_1", f[1])
+                    .AddOutput("p_1", fp[1])
+                    .AddOutput("f_2", xx)
+                    .AddOutput("p_2", PDF.fvalp(xx, idf[1], idf[2]))
+                    .AddOutput("f_3", f[2])
+                    .AddOutput("p_3", fp[2]);
             }
 
             //  Add our calculated values for potential later consumption by other functions
-            outputParameters.AddInput("ctr", ctr);
-            outputParameters.AddInput("ngp", ngp);
-            outputParameters.AddInput("gbar", gbar);
-            outputParameters.AddInput("sgbar", sgbar);
-            outputParameters.AddInput("gm", gm);
+            outputParameters
+                .AddInput("ctr", ctr)
+                .AddInput("ngp", ngp)
+                .AddInput("gbar", gbar)
+                .AddInput("sgbar", sgbar)
+                .AddInput("gm", gm);
 
             return new StepOutput(outputParameters);
         }
@@ -1093,25 +1080,25 @@ namespace StatsDirect.Builtins
             double tav = means / se;
             MathDbl.civ(carrier.Dferr, out double cit, GAMMA, out double P0);
 
-            ParameterBag outputParameters = new();
-            outputParameters.AddOutput("var_a", frame.Variables[z_va].Title);
-            outputParameters.AddOutput("var_b", frame.Variables[z_vb].Title);
-            outputParameters.AddOutput("a-b", means);
-            outputParameters.AddOutput("std_err", se);
-            outputParameters.AddOutput("groups", frame.VariableCount);
-            outputParameters.AddOutput("pc", 100 * (1 - P0));
-            outputParameters.AddOutput("from", means - cit * se);
-            outputParameters.AddOutput("to", means + cit * se);
-            outputParameters.AddOutput("t", tav);
-            outputParameters.AddOutput("df", carrier.Dferr);
             double P = PDF.tvalp(Math.Abs(tav), carrier.Dferr);
             if (P > 1.0 - P)
                 P = 1.0 - P;
-            outputParameters.AddOutput("p", P * 2.0);
-            string qx = comparisons + " comparison" + (comparisons == 1 ? string.Empty : "s");
-            outputParameters.AddOutput("comp", qx);
-            outputParameters.AddOutput("bonf", 0.05 / comparisons);
-            return new StepOutput(outputParameters);
+
+            return new StepOutput(new ParameterBag()
+                .AddOutput("var_a", frame.Variables[z_va].Title)
+                .AddOutput("var_b", frame.Variables[z_vb].Title)
+                .AddOutput("a-b", means)
+                .AddOutput("std_err", se)
+                .AddOutput("groups", frame.VariableCount)
+                .AddOutput("pc", 100 * (1 - P0))
+                .AddOutput("from", means - cit * se)
+                .AddOutput("to", means + cit * se)
+                .AddOutput("t", tav)
+                .AddOutput("df", carrier.Dferr)
+                .AddOutput("p", P * 2.0)
+                .AddOutput("comp", comparisons + " comparison" + (comparisons == 1 ? string.Empty : "s"))
+                .AddOutput("bonf", 0.05 / comparisons)
+            );
         }
 
         public static StepOutput RptTukey(ParameterBag parameters)
@@ -1154,15 +1141,13 @@ namespace StatsDirect.Builtins
             if (q == Constant.MISSING)
                 throw new TemplateOperationCancelledException("Fault in calculation", "Tukey Contrasts");
 
-            ParameterBag outputParameters = new();
-
-            string lab = nSame ? "Tukey" : "Tukey-Kramer";
-            outputParameters.AddOutput("method", lab);
-            outputParameters.AddOutput("q", q);
-            outputParameters.AddOutput("d", d);
-            outputParameters.AddOutput("psd", pse);
-            outputParameters.AddOutput("cn", tnx[0]);
-            outputParameters.AddOutput("pc", 100 * cc);
+            ParameterBag outputParameters = new ParameterBag()
+                .AddOutput("method", nSame ? "Tukey" : "Tukey-Kramer")
+                .AddOutput("q", q)
+                .AddOutput("d", d)
+                .AddOutput("psd", pse)
+                .AddOutput("cn", tnx[0])
+                .AddOutput("pc", 100 * cc);
 
             int ctr = 0;
             for (int i = 0; i < k; i++)
@@ -1171,12 +1156,17 @@ namespace StatsDirect.Builtins
                 {
                     ctr++;
                     double delta = mean[i] - mean[j];
-                    hold[ctr] = new Contraster { Delta = delta, Lab1 = frame.Variables[i].Title, Lab2 = frame.Variables[j].Title, Mean1 = mean[i], Mean2 = mean[j] };
-                    double t;
-                    if (nSame)
-                        t = 1.0 / Math.Sqrt(tnx[0]) * pse;
-                    else
-                        t = Math.Sqrt(mserr / 2.0 * (1.0 / tnx[j] + 1.0 / tnx[i]));
+                    hold[ctr] = new Contraster
+                    {
+                        Delta = delta,
+                        Lab1 = frame.Variables[i].Title,
+                        Lab2 = frame.Variables[j].Title,
+                        Mean1 = mean[i],
+                        Mean2 = mean[j]
+                    };
+                    double t = nSame
+                        ? 1.0 / Math.Sqrt(tnx[0]) * pse
+                        : Math.Sqrt(mserr / 2.0 * (1.0 / tnx[j] + 1.0 / tnx[i]));
                     // The Shaffer-Holm statistic p 18 Hsu
                     hold[ctr].Absdelta = Math.Abs(delta / t);
                     // Lci = delta - d * pse * Sqr(1# / tnx(j) + 1# / tnx(i))
@@ -1187,14 +1177,14 @@ namespace StatsDirect.Builtins
                     hold[ctr].Ul = uci;
                     // Call PPQ2(CLng(k), lam(1), NU, py, delta / (pse * Sqr(1# / tnx(j) + 1# / tnx(i))), ifault)
                     // py = 1# - Abs(py)
-                    double px = PDF.probsr(Math.Abs(delta / t), Convert.ToDouble(k + 1), Convert.ToDouble(nu));
+                    double px = PDF.probsr(Math.Abs(delta / t), k + 1, nu);
                     if (px != Constant.MISSING)
                     {
                         px = 1.0 - px;
                     }
                     else
                     {
-                        ExFortran.ppq2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[j]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
+                        ExFortran.ppq2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / tnx[j] + 1.0 / tnx[i])), out ifault);
                         if (ifault == 0)
                             px = 1.0 - Math.Abs(px);
                         else
@@ -1211,20 +1201,20 @@ namespace StatsDirect.Builtins
             bool halted = false;
             for (int i = 1; i <= ctr; i++)
             {
-                ParameterBag differencesParameters = new();
-                differencesList.Add(differencesParameters);
-                differencesParameters.AddOutput("cf1", hold[i].Lab1);
-                differencesParameters.AddOutput("cf2", hold[i].Lab2);
-                differencesParameters.AddOutput("delta", hold[i].Delta);
-                differencesParameters.AddOutput("lci", hold[i].Ll);
-                differencesParameters.AddOutput("uci", hold[i].Ul);
-                differencesParameters.AddOutput("t", hold[i].Absdelta);
+                ParameterBag differencesParameters = new ParameterBag()
+                    .AddOutput("cf1", hold[i].Lab1)
+                    .AddOutput("cf2", hold[i].Lab2)
+                    .AddOutput("delta", hold[i].Delta)
+                    .AddOutput("lci", hold[i].Ll)
+                    .AddOutput("uci", hold[i].Ul)
+                    .AddOutput("t", hold[i].Absdelta)
+                    .AddOutput("p", hold[i].P);
                 if (!halted && hold[i].P >= dalpha)
                 {
                     halted = true;
                     differencesParameters.AddOutput("stop_marker", " {stop}");
                 }
-                differencesParameters.AddOutput("p", hold[i].P);
+                differencesList.Add(differencesParameters);
             }
             outputParameters.AddOutput("*differences", differencesList);
             outputParameters.AddOutput("*summary", ContrasterSummary(hold, 1, ctr, dalpha));
@@ -1449,7 +1439,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("delta", hold[i].Delta);
                 differencesParameters.AddOutput("gps", hold[i].Gps);
                 differencesParameters.AddOutput("t", hold[i].Q);
-                if (!halted & hold[i].P >= palpha)
+                if (!halted && hold[i].P >= palpha)
                 {
                     halted = true;
                     differencesParameters.AddOutput("stop_marker", " {stop}");
@@ -1965,7 +1955,7 @@ namespace StatsDirect.Builtins
             DataFrame group1PlaceboFrame = parameters["group1placebo"].AsDataFrame;
             double[] group1PlaceboData = (group1PlaceboFrame.Variables[0] as DoubleVariable).Data;
 
-            bool g1bl = parameters.ContainsKey("group1baseline") && parameters["group1baseline"] != null;
+            bool g1bl = parameters.ContainsKey("group1baseline") && parameters["group1baseline"] is not null;
             double[] group1BaselineData;
             if (g1bl)
             {
@@ -1998,7 +1988,7 @@ namespace StatsDirect.Builtins
             DataFrame group2PlaceboFrame = parameters["group2placebo"].AsDataFrame;
             double[] group2PlaceboData = (group2PlaceboFrame.Variables[0] as DoubleVariable).Data;
 
-            bool g2bl = parameters.ContainsKey("group2baseline") && parameters["group2baseline"] != null;
+            bool g2bl = parameters.ContainsKey("group2baseline") && parameters["group2baseline"] is not null;
             double[] group2BaselineData;
             if (g2bl)
             {
@@ -2014,7 +2004,7 @@ namespace StatsDirect.Builtins
             int ng2 = 0;
             for (int j = 0; j < rows; j++)
             {
-                if (group2DrugData[j] != Constant.MISSING & group2PlaceboData[j] != Constant.MISSING)
+                if (group2DrugData[j] != Constant.MISSING && group2PlaceboData[j] != Constant.MISSING)
                 {
                     ng2 += 1;
                     corrector = g2bl ? group2BaselineData[j] : 0;
@@ -2054,7 +2044,7 @@ namespace StatsDirect.Builtins
                 psum += x2p[j];
             }
             double totdifbar = tdsum / (ng1 + ng2);
-            double totdifvar = (tdsum2 - tdsum * tdsum / (ng1 + ng2)) / Convert.ToDouble(ng1 + ng2 - 1);
+            double totdifvar = (tdsum2 - tdsum * tdsum / (ng1 + ng2)) / (ng1 + ng2 - 1.0);
             double difbar2 = difsum2 / ng2;
             double sumbar2 = sumsum2 / ng2;
             double dbar2 = dsum / ng2;
@@ -2199,16 +2189,16 @@ namespace StatsDirect.Builtins
             public double P;
             public double Q;
             public long Gps;
-            public string Lab1;
-            public string Lab2;
+            public string? Lab1;
+            public string? Lab2;
 
-            private int CompareTo(Contraster other)
+            private int CompareTo(Contraster? other)
             {
                 //  Deliberately sorts by *descending* order of ABSDELTA
                 return Math.Sign(other.Absdelta - Absdelta);
             }
             // interface methods implemented by CompareTo
-            int IComparable<Contraster>.CompareTo(Contraster other)
+            int IComparable<Contraster>.CompareTo(Contraster? other)
             {
                 return CompareTo(other);
             }

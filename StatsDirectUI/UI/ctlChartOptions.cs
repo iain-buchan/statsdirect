@@ -6,118 +6,186 @@ using StatsDirect.Numerics;
 using StatsDirect.Charting;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
+using StatsDirect.Charting.Options;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlChartOptions : UserControl, IOkable
+    internal partial class ctlChartOptions : UserControl, IOkable
     {
-        private readonly ChartDefinition definition;
-        private readonly GenericOptions options;
+        private const float DEFAULT_AXIS_LINE_THICKNESS = 1.0f; // TODO: This should come from a global defaults somewhere!
 
-        public ctlChartOptions(ChartDefinition definition)
+        private readonly ChartDefinition definition;
+        private AbstractGenericOptions options;
+
+        private IChartPreferences ChartPreferences { get; }
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private ISdApplication SdApplication { get; }
+        private ISdPreferences SdPreferences { get; }
+
+        public ctlChartOptions(ChartDefinition definition, IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, ISdApplication sdApplication, ISdPreferences sdPreferences)
         {
+            ChartPreferences = chartPreferences;
+            ChartRendererFactory = chartRendererFactory;
+            SdApplication = sdApplication;
+            SdPreferences = sdPreferences;
             this.definition = definition;
-            options = (GenericOptions)definition.ChartOptions;
+            options = (AbstractGenericOptions)definition.ChartOptions;
             InitializeComponent();
             FillFormFromOptions();
         }
 
         private void FillOptionsFromForm()
         {
-            options.UseColour = rdoColour.Checked;
-            if (options.UsesShowLegend && options.ShowLegendIsRelevant)
-                options.ShowLegend = chkShowLegend.Checked;
-            if (options.UsesBoxAxes)
-                options.ShouldBoxAxes = chkBoxAxes.Checked;
-            if (options.UsesChartTitle)
-                options.Title = txtChartTitle.Text;
-            if (options.UsesSeriesLabels)
-                for (int i = 0; i < options.SeriesTitles.Length; i++)
-                    options.SeriesTitles[i] = (string)gridSeriesLabels.Rows[i].Cells[0].Value;
-            if (options.UsesXAxisTitle)
-                options.XAxisTitle = ctlAxisOptions.X.Title;
-            if (options.UsesYAxisTitle)
-                options.YAxisTitle = ctlAxisOptions.Y.Title;
-            ScaleParameters scaleParameters = definition.ScaleParameters;
-            FillAxisScaleParametersFromForm(scaleParameters.X, ctlAxisOptions.X, false);
-            FillAxisScaleParametersFromForm(scaleParameters.Y, ctlAxisOptions.Y, true);
-            if (options.UsesAxisLabelFontDescriptor)
-                options.AxisLabelFontDescriptor = FontCache.DescriptorFromFont(ctlAxisLabelFont.UserFont);
-            if (options.UsesAxisTitleFontDescriptor)
-                options.AxisTitleFontDescriptor = FontCache.DescriptorFromFont(ctlAxisTitleFont.UserFont);
-            if (options.UsesTitleFontDescriptor)
-                options.TitleFontDescriptor = FontCache.DescriptorFromFont(ctlTitleFont.UserFont);
-            if (options.UsesLegendFontDescriptor)
-                options.LegendFontDescriptor = FontCache.DescriptorFromFont(ctlLegendFont.UserFont);
-            if (options.ShowBarOptions)
-                FillBarOptionsFromForm();
-            if (options.ShowBoxWhiskerOptions)
-                FillBoxWhiskerOptionsFromForm();
-            if (options.ShowControlOptions)
-                FillControlOptionsFromForm();
-            if (options.ShowErrorBarOptions)
+            definition.ScaleParameters = new(
+                AxisScaleParametersFromForm(definition.ScaleParameters.X, ctlAxisOptions.X, false),
+                AxisScaleParametersFromForm(definition.ScaleParameters.Y, ctlAxisOptions.Y, true)
+            );
+            if (options is BarOptions)
+                options = BarOptionsFromForm();
+            if (options is BoxWhiskerOptions)
+                options = BoxWhiskerOptionsFromForm();
+            if (options is ControlOptions)
+                options = ControlOptionsFromForm();
+            if (options is ErrorBarOptions)
                 FillErrorBarOptionsFromForm();
-            if (options.ShowForestOptions)
+            if (options is ForestOptions)
                 FillForestOptionsFromForm();
-            if (options.ShowHistogramOptions)
+            if (options is HistogramOptions)
                 FillHistogramOptionsFromForm();
-            if (options.ShowNormalOptions)
+            if (options is NormalOptions)
                 FillNormalOptionsFromForm();
-            if (options.ShowPyramidOptions)
+            if (options is PyramidOptions)
                 FillPyramidOptionsFromForm();
-            if (options.ShowRocOptions)
+            if (options is ROCOptions)
                 FillRocOptionsFromForm();
-            if (options.ShowScatterXYOptions)
+            if (options is ScatterXYOptions)
                 FillScatterXYOptionsFromForm();
-            if (options.ShowSurvivalOptions)
+            if (options is SurvivalOptions)
                 FillSurvivalOptionsFromForm();
-            if (options.UsesAxisLineThickness)
-                options.AxisLineThickness = ctlAxisLineThickness.LineThickness;
-            if (null != options.SeriesOptions)
+            if (options.SeriesOptions is not null)
             {
                 seriesOptions.Save();
                 options.MarkerTypes = seriesOptions.MarkerTypes;
             }
-            FillOrientationFromForm();
         }
 
-        private static void FillAxisScaleParametersFromForm(AxisScaleParameters asp, ctlOneAxisOptions ao, bool isYAxis)
+        private AbstractGenericOptions GenericOptionsFromForm()
         {
-            asp.ScaleType = ao.ScaleType;
-            asp.LabelDirection = ao.LabelDirection;
-            IAxisScaler scaler = AxisScalerFactory.AxisScalerFor(asp.ScaleType);
-            if (null != scaler)
-                asp.AxisScale = scaler.QAxis(ao.MinimumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, isYAxis, true);
-
-            asp.HasGridLines = ao.HasGridLines;
-            asp.GridLineDashStyle = ao.GridLineDashStyle;
-            asp.MarkerLineValue = ao.HasMarkerLine ? ao.MarkerLineValue : default(double?);
+            string[]? seriesTitles = default;
+            if (options is ISeriesTitlesOptions)
+            {
+                seriesTitles = new string[options.SeriesTitles.Count];
+                for (int i = 0; i < options.SeriesTitles.Count; i++)
+                    seriesTitles[i] = (string)gridSeriesLabels.Rows[i].Cells[0].Value;
+            }
+            return new GenericOptions(options.ChartPreferences,
+                options is IAxisLabelFontOptions ? FontCache.DescriptorFromFont(ctlAxisLabelFont.UserFont) : default,
+                options.UsesAxisLineThickness ? ctlAxisLineThickness.LineThickness : default,
+                options is IAxisTitleFontOptions ? FontCache.DescriptorFromFont(ctlAxisTitleFont.UserFont) : default,
+                options is ILegendFontOptions ? FontCache.DescriptorFromFont(ctlLegendFont.UserFont) : default,
+                options.UsesOrientation ? ChartOrientationFromForm() : default,
+                seriesTitles,
+                options.ShouldAutoscale,
+                options is IBoxAxesOptions ? chkBoxAxes.Checked : default,
+                (options.UsesShowLegend && options.ShowLegendIsRelevant) ? chkShowLegend.Checked : default,
+                options is IChartTitleOptions ? txtChartTitle.Text : default,
+                options.UsesTitleFontDescriptor ? FontCache.DescriptorFromFont(ctlTitleFont.UserFont) : default,
+                rdoColour.Checked,
+                options is IXAxisTitleOptions ? ctlAxisOptions.X.Title : default,
+                options is IYAxisTitleOptions ? ctlAxisOptions.Y.Title : default
+            );
         }
 
-        private void FillOrientationFromForm()
+        private static AxisScaleParameters AxisScaleParametersFromForm(AxisScaleParameters template, ctlOneAxisOptions ao, bool isYAxis)
+        {
+            IAxisScaler? scaler = AxisScalerFactory.AxisScalerFor(template.ScaleType);
+            return new(template)
+            {
+                AxisScale = scaler is not null
+                    ? scaler.QAxis(ao.MinimumScaleValue, ao.MinimumScaleValue, ao.MaximumScaleValue, isYAxis, true)
+                    : template.AxisScale,
+                GridLineDashStyle = ao.GridLineDashStyle,
+                HasGridLines = ao.HasGridLines,
+                LabelDirection = ao.LabelDirection,
+                MarkerLineValue = ao.HasMarkerLine ? ao.MarkerLineValue : default(double?),
+                ScaleType = ao.ScaleType,
+
+            };
+        }
+
+        private ChartOrientation? ChartOrientationFromForm()
         {
             if (options.UsesOrientation)
             {
                 if (rdoOrientationHorizontal.Checked)
-                    options.Orientation = ChartOrientation.Horizontal;
-                else if (rdoOrientationVertical.Checked)
-                    options.Orientation = ChartOrientation.Vertical;
+                    return ChartOrientation.Horizontal;
+                if (rdoOrientationVertical.Checked)
+                    return ChartOrientation.Vertical;
             }
+            return default;
         }
 
-        private void FillBarOptionsFromForm()
+        private BarOptions BarOptionsFromForm()
         {
-            BarOptions barOptions = (BarOptions)options;
-            ctlBarOptions.FillOptionsFromForm();
-            if (double.TryParse(txtBarBarWidthPercent.Text, out double maxBarWidth))
-            {
-                barOptions.MaxBarWidth = maxBarWidth / 100.0;
-            }
+            BarOptions oldOptions = (BarOptions)options;
+            IBarOptions barOptions = ctlBarOptions;
+            double maxBarWidth = oldOptions.MaxBarWidth;
+            if (double.TryParse(txtBarBarWidthPercent.Text, out double parsedMaxBarWidth))
+                maxBarWidth = parsedMaxBarWidth / 100.0;
+            return new(GenericOptionsFromForm(),
+                (IReadOnlyList<MarkerType>?)seriesOptions.MarkerTypes,
+                oldOptions.SeriesOptions,
+                maxBarWidth,
+                oldOptions.RotateWhenStacked,
+                barOptions.Stacked,
+                barOptions.Stacked100Percent
+            );
         }
 
-        private void FillBoxWhiskerOptionsFromForm()
+        private BoxWhiskerOptions BoxWhiskerOptionsFromForm()
         {
-            ctlBoxWhiskerOptions1.FillOptionsFromForm();
+            IBoxWhiskerOptions boxWhiskerOptions = ctlBoxWhiskerOptions1;
+            return new(GenericOptionsFromForm(),
+                cco: boxWhiskerOptions.Cco,
+                isAscii: something,
+                markMeanAndMedian: boxWhiskerOptions.MarkMeanAndMedian,
+                method: boxWhiskerOptions.Method,
+                useInnerFence: boxWhiskerOptions.UseInnerFence,
+                useOuterFence: boxWhiskerOptions.UseOuterFence
+            );
+        }
+
+        private ControlOptions ControlOptionsFromForm()
+        {
+            ControlAndWarningLimits? controlAndWarningLimits = default;
+            MeanAndStandardDeviation? meanAndStandardDeviation = default;
+            int? observationsToUse = default;
+            if (chkHasUserSpecifiedLimits.Checked)
+                controlAndWarningLimits = new ControlAndWarningLimits(
+                    lowerWarningLimit: double.TryParse(txtLowerWarning.Text, out double lowerWarningLimit) ? lowerWarningLimit : default,
+                    upperWarningLimit: double.TryParse(txtUpperWarning.Text, out double upperWarningLimit) ? upperWarningLimit : default,
+                    lowerControlLimit: double.TryParse(txtLowerControl.Text, out double lowerControlLimit) ? lowerControlLimit : default,
+                    upperControlLimit: double.TryParse(txtUpperControl.Text, out double upperControlLimit) ? upperControlLimit : default
+                );
+            else if (chkHasUserSpecifiedMeanAndSD.Checked)
+                meanAndStandardDeviation = new(
+                    Parsing.Cdbl_Txt(txtMean.Text),
+                    Parsing.Cdbl_Txt(txtStandardDeviation.Text)
+                );
+            else
+                observationsToUse = int.TryParse((string)cboKObs.SelectedItem, out int i) && i > 2 ? i : default;
+            return new(GenericOptionsFromForm(),
+                controlAndWarningLimits,
+                observationsToUse,
+                int.TryParse(cboControlDecimalPlaces.Text, out int rightHandDecimalPlaces) ? rightHandDecimalPlaces : default,
+                chk1SD.Checked,
+                chk2SD.Checked,
+                chk3SD.Checked,
+                chkMean.Checked,
+                meanAndStandardDeviation
+            );
         }
 
         private void FillHistogramOptionsFromForm()
@@ -145,16 +213,23 @@ namespace StatsDirect.UI
             rocOptions.ShowCutOffCalculator = chkRocShowCutOffCalculator.Checked;
             rocOptions.ShowOptimumCutOff = chkRocShowCutoff.Checked;
             double.TryParse(cboRocWeight.Text, out rocOptions.Weight);
-            if (double.TryParse(cboRocCi.Text, out rocOptions.GAMMA))
-                rocOptions.GAMMA /= 100.0;
+            if (double.TryParse(cboRocCi.Text, out rocOptions.Gamma))
+                rocOptions.Gamma /= 100.0;
+            rocOptions.Comparison = RocOptionComparisonFromForm();
+        }
+
+        private Comparison RocOptionComparisonFromForm()
+        {
             if (rdoRocCutOffGe.Checked)
-                rocOptions.Comparison = Comparison.GreaterEqual;
-            else if (rdoRocCutOffGt.Checked)
-                rocOptions.Comparison = Comparison.GreaterThan;
-            else if (rdoRocCutOffLe.Checked)
-                rocOptions.Comparison = Comparison.LessEqual;
-            else if (rdoRocCutOffLt.Checked)
-                rocOptions.Comparison = Comparison.LessThan;
+                return Comparison.GreaterEqual;
+            if (rdoRocCutOffGt.Checked)
+                return Comparison.GreaterThan;
+            if (rdoRocCutOffLe.Checked)
+                return Comparison.LessEqual;
+            if (rdoRocCutOffLt.Checked)
+                return Comparison.LessThan;
+            // None checked; choose a default
+            return Comparison.GreaterEqual;
         }
 
         private void FillScatterXYOptionsFromForm()
@@ -183,57 +258,20 @@ namespace StatsDirect.UI
         private void FillNormalOptionsFromForm()
         {
             NormalOptions normalOptions = (NormalOptions)options;
-            if (rdoNormalBlom.Checked)
-                normalOptions.Method = NormalOptions.ScoreMethod.Blom;
-            else if (rdoNormalExpectedNormalOrder.Checked)
-                normalOptions.Method = NormalOptions.ScoreMethod.ExpectedNormalOrder;
-            else if (rdoNormalVanDerWaerden.Checked)
-                normalOptions.Method = NormalOptions.ScoreMethod.VanDerWaerden;
-            // Else do nothing.  Should never happen!
+            normalOptions.Method = ScoreMethodFromForm();
             normalOptions.ShouldScaleZ = rdoNormalScaled.Checked;
         }
 
-        private void FillControlOptionsFromForm()
+        private NormalOptions.ScoreMethod ScoreMethodFromForm()
         {
-            ControlOptions controlOptions = (ControlOptions) options;
-            controlOptions.UseMean = chkMean.Checked;
-            controlOptions.Use1SD = chk1SD.Checked;
-            controlOptions.Use2SD = chk2SD.Checked;
-            controlOptions.Use3SD = chk3SD.Checked;
-            if (chkHasUserSpecifiedLimits.Checked)
-            {
-                controlOptions.HasUserSpecifiedLimits = true;
-                controlOptions.HasUserSpecifiedMeanAndSD = false;
-                controlOptions.LowerWarningLimit = Utilities.Parsing.Cdbl_Txt(txtLowerWarning.Text);
-                controlOptions.UpperWarningLimit = Utilities.Parsing.Cdbl_Txt(txtUpperWarning.Text);
-                controlOptions.LowerControlLimit = Utilities.Parsing.Cdbl_Txt(txtLowerControl.Text);
-                controlOptions.UpperControlLimit = Utilities.Parsing.Cdbl_Txt(txtUpperControl.Text);
-            }
-            else
-            {
-                if (chkHasUserSpecifiedMeanAndSD.Checked)
-                {
-                    controlOptions.HasUserSpecifiedMeanAndSD = true;
-                    controlOptions.HasUserSpecifiedLimits = false;
-                    controlOptions.UserSpecifiedMean = Utilities.Parsing.Cdbl_Txt(txtMean.Text);
-                    controlOptions.UserSpecifiedSD = Utilities.Parsing.Cdbl_Txt(txtStandardDeviation.Text);
-                }
-                else
-                {
-                    controlOptions.HasUserSpecifiedMeanAndSD = false;
-                    controlOptions.HasUserSpecifiedLimits = false;
-                    int i = Utilities.Parsing.Cint_Txt((string)cboKObs.SelectedItem);
-                    if (i > 2 && i != controlOptions.ObservationsToUse)
-                        controlOptions.ObservationsToUse = i;
-                }
-                controlOptions.LowerWarningLimit = Constant.MISSING;
-                controlOptions.UpperWarningLimit = Constant.MISSING;
-                controlOptions.LowerControlLimit = Constant.MISSING;
-                controlOptions.UpperControlLimit = Constant.MISSING;
-            }
-            int rightHandDecimalPlaces;
-            if (int.TryParse(cboControlDecimalPlaces.Text, out rightHandDecimalPlaces))
-                controlOptions.RightHandDecimalPlaces = rightHandDecimalPlaces;
+            if (rdoNormalBlom.Checked)
+                return NormalOptions.ScoreMethod.Blom;
+            if (rdoNormalExpectedNormalOrder.Checked)
+                return NormalOptions.ScoreMethod.ExpectedNormalOrder;
+            if (rdoNormalVanDerWaerden.Checked)
+                return NormalOptions.ScoreMethod.VanDerWaerden;
+            // One of those should have been checked!  Return a default
+            return NormalOptions.ScoreMethod.Blom;
         }
 
         private void FillFormFromOptions()
@@ -241,32 +279,32 @@ namespace StatsDirect.UI
             rdoColour.Checked = options.UseColour;
             rdoMonochrome.Checked = !rdoColour.Checked;
             SetColour(options.UseColour);
-            pnlBoxAxes.Visible = options.UsesBoxAxes;
-            pnlChartTitle.Visible = options.UsesChartTitle;
-            pnlSeriesLabels.Visible = options.UsesSeriesLabels;
+            pnlBoxAxes.Visible = options is IBoxAxesOptions;
+            pnlChartTitle.Visible = options is IChartTitleOptions;
+            pnlSeriesLabels.Visible = options is ISeriesTitlesOptions;
 
             FillFormFromScaleParameters();
 
-            pnlBarOptions.Visible = options.ShowBarOptions;
-            ctlBoxWhiskerOptions1.Visible = options.ShowBoxWhiskerOptions;
-            pnlControlOptions.Visible = options.ShowControlOptions;
-            pnlForestOptions.Visible = options.ShowForestOptions;
-            ctlHistogramOptions1.Visible = options.ShowHistogramOptions;
-            pnlNormalOptions.Visible = options.ShowNormalOptions;
-            pnlPyramidOptions.Visible = options.ShowPyramidOptions;
-            pnlRocOptions.Visible = options.ShowRocOptions;
+            pnlBarOptions.Visible = options is IBarOptions;
+            ctlBoxWhiskerOptions1.Visible = options is BoxWhiskerOptions;
+            pnlControlOptions.Visible = options is ControlOptions;
+            pnlForestOptions.Visible = options is ForestOptions;
+            ctlHistogramOptions1.Visible = options is HistogramOptions;
+            pnlNormalOptions.Visible = options is NormalOptions;
+            pnlPyramidOptions.Visible = options is PyramidOptions;
+            pnlRocOptions.Visible = options is ROCOptions;
             // Pure scatter charts always show their markers, which is the only option; line charts may or may not, and error bars may or may not.
-            tlpScatterXYOptions.Visible = options.ShowScatterXYOptions || options.ShowErrorBarOptions;
+            tlpScatterXYOptions.Visible = options is ScatterXYOptions || options is ErrorBarOptions;
             chkScatterXYPlotMarkers.Visible = definition.ChartType != ChartType.ScatterXY;
             chkScatterXYPlotLines.Visible = definition.ChartType != ChartType.LineXY;
-            pnlSurvivalOptions.Visible = options.ShowSurvivalOptions;
-            pnlLegendFont.Visible = options.ShowControlOptions;
+            pnlSurvivalOptions.Visible = options is SurvivalOptions;
+            pnlLegendFont.Visible = options is ControlOptions;
             pnlTitleFont.Visible = options.UsesTitleFontDescriptor;
-            pnlAxisLabelFont.Visible = options.UsesAxisLabelFontDescriptor;
-            pnlAxisTitleFont.Visible = options.UsesAxisTitleFontDescriptor;
-            pnlSeriesOptions.Visible = null != options.SeriesOptions && options.SeriesOptions.Count > 0;
+            pnlAxisLabelFont.Visible = options is IAxisLabelFontOptions;
+            pnlAxisTitleFont.Visible = options is IAxisTitleFontOptions;
+            pnlSeriesOptions.Visible = options is IMarkerTypes mt && mt.SeriesOptions is not null && mt.SeriesOptions.Count > 0;
             pnlAxisLineThickness.Visible = options.UsesAxisLineThickness;
-            pnlLegendFont.Visible = options.UsesLegendFontDescriptor;
+            pnlLegendFont.Visible = options is ILegendFontOptions;
             pnlOrientation.Visible = options.UsesOrientation;
             pnlShowLegend.Visible = options.UsesShowLegend && options.ShowLegendIsRelevant;
             pnlColour.Visible = options.UsesColour;
@@ -276,70 +314,68 @@ namespace StatsDirect.UI
                 grpOrientation.Text = options.OrientationLabel;
             if (options.UsesShowLegend && options.ShowLegendIsRelevant)
                 chkShowLegend.Checked = options.ShowLegend;
-            if (options.UsesBoxAxes)
+            if (options is IBoxAxesOptions)
                 chkBoxAxes.Checked = options.ShouldBoxAxes;
-            if (options.UsesChartTitle)
+            if (options is IChartTitleOptions)
                 txtChartTitle.Text = options.Title;
-            if (options.UsesSeriesLabels)
-                foreach (string seriesTitle in options.SeriesTitles)
+            if (options is ISeriesTitlesOptions)
+                foreach (string? seriesTitle in options.SeriesTitles)
                     gridSeriesLabels.Rows.Add(seriesTitle);
-            if (options.UsesXAxisTitle)
+            if (options is IXAxisTitleOptions)
                 ctlAxisOptions.X.Title = options.XAxisTitle;
-            if (options.UsesYAxisTitle)
+            if (options is IYAxisTitleOptions)
                 ctlAxisOptions.Y.Title = options.YAxisTitle;
-            if (options.ShowBarOptions)
+            if (options is BarOptions)
                 FillFormFromBarOptions();
-            if (options.ShowBoxWhiskerOptions)
+            if (options is BoxWhiskerOptions)
                 FillFormFromBoxWhiskerOptions();
-            if (options.ShowControlOptions)
+            if (options is ControlOptions)
                 FillFormFromControlOptions();
-            if (options.ShowErrorBarOptions)
+            if (options is ErrorBarOptions)
                 FillFormFromErrorBarOptions();
-            if (options.ShowForestOptions)
+            if (options is ForestOptions)
                 FillFormFromForestOptions();
-            if (options.ShowHistogramOptions)
+            if (options is HistogramOptions)
                 FillFormFromHistogramOptions();
-            if (options.ShowNormalOptions)
+            if (options is NormalOptions)
                 FillFormFromNormalOptions();
-            if (options.ShowPyramidOptions)
+            if (options is PyramidOptions)
                 FillFormFromPyramidOptions();
-            if (options.ShowRocOptions)
+            if (options is ROCOptions)
                 FillFormFromRocOptions();
-            if (options.ShowScatterXYOptions)
+            if (options is ScatterXYOptions)
                 FillFormFromScatterXYOptions();
-            if (options.ShowSurvivalOptions)
+            if (options is SurvivalOptions)
                 FillFormFromSurvivalOptions();
-            if (options.UsesAxisLabelFontDescriptor)
+            if (options is IAxisLabelFontOptions)
             {
-                ctlAxisLabelFont.Purpose = options.AxisLabelFontLabel + " Font";
-                if (null != options.AxisLabelFontDescriptor)
+                ctlAxisLabelFont.Purpose = "Axis Label Font";
+                if (options.AxisLabelFontDescriptor is not null)
                     ctlAxisLabelFont.UserFont = FontCache.FontFromDescriptor(options.AxisLabelFontDescriptor);
             }
-            if (options.UsesAxisTitleFontDescriptor)
+            if (options is IAxisTitleFontOptions)
             {
-                if (null != options.AxisTitleFontDescriptor)
+                if (options.AxisTitleFontDescriptor is not null)
                     ctlAxisTitleFont.UserFont = FontCache.FontFromDescriptor(options.AxisTitleFontDescriptor);
             }
-            if (options.UsesLegendFontDescriptor)
+            if (options is ILegendFontOptions)
             {
                 ctlLegendFont.Purpose = options.LegendFontLabel + " Font";
-                if (null != options.LegendFontDescriptor)
+                if (options.LegendFontDescriptor is not null)
                     ctlLegendFont.UserFont = FontCache.FontFromDescriptor(options.LegendFontDescriptor);
             }
             if (options.UsesTitleFontDescriptor)
             {
-                if (null != options.TitleFontDescriptor)
+                if (options.TitleFontDescriptor is not null)
                     ctlTitleFont.UserFont = FontCache.FontFromDescriptor(options.TitleFontDescriptor);
             }
             if (options.UsesAxisLineThickness)
             {
-                ctlAxisLineThickness.LineThickness = (int)options.AxisLineThickness;
+                ctlAxisLineThickness.LineThickness = (int)(options.AxisLineThickness ?? DEFAULT_AXIS_LINE_THICKNESS);
             }
             if (pnlSeriesOptions.Visible)
             {
-                seriesOptions.ShouldForceIsFilled = options.ShouldForceIsFilled;
                 seriesOptions.ForcedIsFilled = options.ForcedIsFilled;
-                seriesOptions.ShouldForceFillStyle = options.ShouldForceFillStyle;
                 seriesOptions.ForcedFillStyle = options.ForcedFillStyle;
                 seriesOptions.MarkerTypes = options.MarkerTypes;
 
@@ -359,8 +395,8 @@ namespace StatsDirect.UI
         private void FillFormFromScaleParameters()
         {
             ScaleParameters scaleParameters = definition.ScaleParameters;
-            ctlAxisOptions.X.HasTitle = options.UsesXAxisTitle;
-            ctlAxisOptions.Y.HasTitle = options.UsesYAxisTitle;
+            ctlAxisOptions.X.HasTitle = options is IXAxisTitleOptions;
+            ctlAxisOptions.Y.HasTitle = options is IYAxisTitleOptions;
             FillFormFromAxisScaleParameters(scaleParameters.X, ctlAxisOptions.X);
             FillFormFromAxisScaleParameters(scaleParameters.Y, ctlAxisOptions.Y);
         }
@@ -419,7 +455,7 @@ namespace StatsDirect.UI
             ROCOptions rocOptions = (ROCOptions)options;
             chkRocShowCutoff.Checked = rocOptions.ShowOptimumCutOff;
             chkRocShowCutOffCalculator.Checked = rocOptions.ShowCutOffCalculator;
-            cboRocCi.Text = (rocOptions.GAMMA * 100.0).ToString();
+            cboRocCi.Text = (rocOptions.Gamma * 100.0).ToString();
             cboRocWeight.Text = rocOptions.Weight.ToString("N1");
             switch (rocOptions.Comparison)
             {
@@ -504,11 +540,11 @@ namespace StatsDirect.UI
             chk2SD.Checked = controlOptions.Use2SD;
             chk3SD.Checked = controlOptions.Use3SD;
             chkHasUserSpecifiedLimits.Checked = controlOptions.HasUserSpecifiedLimits;
-            chkHasUserSpecifiedMeanAndSD.Checked = controlOptions.HasUserSpecifiedMeanAndSD;
+            chkHasUserSpecifiedMeanAndSD.Checked = controlOptions.UserSpecifiedMeanAndStandardDeviation is not null;
             cboControlDecimalPlaces.Text = controlOptions.RightHandDecimalPlaces.ToString();
         }
 
-        private void chkHasUserSpecifiedLimits_CheckedChanged(object sender, EventArgs e)
+        private void chkHasUserSpecifiedLimits_CheckedChanged(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -531,15 +567,15 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.InOperation)
-                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
+                if (SdApplication.InOperation)
+                    SdApplication.PuntThroughEventLoop(ex);
                 else
                     throw;
             }
 #endif
         }
 
-        private void chkHasUserSpecifiedMeanAndSD_CheckedChanged(object sender, EventArgs e)
+        private void chkHasUserSpecifiedMeanAndSD_CheckedChanged(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -562,8 +598,8 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.InOperation)
-                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
+                if (SdApplication.InOperation)
+                    SdApplication.PuntThroughEventLoop(ex);
                 else
                     throw;
             }
@@ -575,7 +611,7 @@ namespace StatsDirect.UI
             FillOptionsFromForm();
         }
 
-        private void cmdPreview_Click(object sender, EventArgs e)
+        private void cmdPreview_Click(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -587,8 +623,8 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.InOperation)
-                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
+                if (SdApplication.InOperation)
+                    SdApplication.PuntThroughEventLoop(ex);
                 else
                     throw;
             }
@@ -611,14 +647,14 @@ namespace StatsDirect.UI
 
         private void PreviewChart()
         {
-            ChartOptionProcessor.PostProcessFilledChartOptions(definition);
+            new ChartDefinitionProcessor(ChartPreferences, SdPreferences).PostProcessFilledChartOptions(definition);
             definition.IsAscii = PreviewAsAscii;
             // We're in Windows Forms land, so we know we can use EMF.
             using IChartRenderer renderer = ChartRendererFactory.ChartRendererFor(definition, new EmfCanvasFactory());
             if (PreviewAsAscii)
             {
-                ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance, false);
-                if (null == outputParameters)
+                ParameterBag outputParameters = renderer.Plot(false);
+                if (outputParameters is null)
                 {
                     // Plot failed
                     return;
@@ -626,30 +662,30 @@ namespace StatsDirect.UI
                 using frmTextPreview textPreview = new();
                 string rtf = "{\\rtf1\\ansi " + renderer.GetAscii().Replace(Environment.NewLine, Formatting.RTFCRLF) + "}";
                 textPreview.Rtf = rtf;
-                textPreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                textPreview.ShowDialog(SdApplication.DialogOwner);
             }
             else
             {
-                ParameterBag outputParameters = renderer.Plot(SdApplication.SoleInstance, false);
-                if (null == outputParameters)
+                ParameterBag outputParameters = renderer.Plot(false);
+                if (outputParameters is null)
                 {
                     // Plot failed
                     return;
                 }
-                Stream imageStream = ((EmfCanvas)renderer.Canvas).DetachAndReturnImageStream();
+                Stream imageStream = renderer.DetachAndReturnImageStream();
                 Image metaImage = Image.FromStream(imageStream);
                 using frmImagePreview imagePreview = new();
                 imagePreview.Image = metaImage;
-                imagePreview.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                imagePreview.ShowDialog(SdApplication.DialogOwner);
             }
         }
 
-        private void rdoMonochrome_CheckedChanged(object sender, EventArgs e)
+        private void rdoMonochrome_CheckedChanged(object? sender, EventArgs e)
         {
             SetColour(false);
         }
 
-        private void rdoColour_CheckedChanged(object sender, EventArgs e)
+        private void rdoColour_CheckedChanged(object? sender, EventArgs e)
         {
             SetColour(true);
         }
@@ -659,12 +695,12 @@ namespace StatsDirect.UI
             seriesOptions.SetColour(useColour);
         }
 
-        private void ctlHistogramOptions1_ScaleChanged(object sender, EventArgs e)
+        private void ctlHistogramOptions1_ScaleChanged(object? sender, EventArgs e)
         {
             Rescale();
         }
 
-        private void rdoNormalExpectedNormalOrder_CheckedChanged(object sender, EventArgs e)
+        private void rdoNormalExpectedNormalOrder_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoNormalExpectedNormalOrder.Checked)
                 Rescale();
@@ -676,36 +712,36 @@ namespace StatsDirect.UI
             FillFormFromScaleParameters();
         }
 
-        private void rdoNormalBlom_CheckedChanged(object sender, EventArgs e)
+        private void rdoNormalBlom_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoNormalBlom.Checked)
                 Rescale();
         }
 
-        private void rdoNormalVanDerWaerden_CheckedChanged(object sender, EventArgs e)
+        private void rdoNormalVanDerWaerden_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoNormalVanDerWaerden.Checked)
                 Rescale();
         }
 
-        private void rdoNormalScaled_CheckedChanged(object sender, EventArgs e)
+        private void rdoNormalScaled_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoNormalScaled.Checked)
                 Rescale();
         }
 
-        private void rdoNormalRaw_CheckedChanged(object sender, EventArgs e)
+        private void rdoNormalRaw_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoNormalRaw.Checked)
                 Rescale();
         }
 
-        private void ctlBoxWhiskerOptions1_XAxisTitleChanged(object sender, EventArgs e)
+        private void ctlBoxWhiskerOptions1_XAxisTitleChanged(object? sender, EventArgs e)
         {
             ctlAxisOptions.X.Title = definition.ChartOptions.XAxisTitle;
         }
 
-        private void ctlBarOptions_BarTypeChanged(object sender, EventArgs e)
+        private void ctlBarOptions_BarTypeChanged(object? sender, EventArgs e)
         {
             CheckBarScales();
         }
@@ -730,7 +766,7 @@ namespace StatsDirect.UI
                     if (bOptions.RotateWhenStacked)
                     {
                         // Rotated - add up the values down the series
-                            foreach (DoubleSeries s in definition.YSeries)
+                            foreach (DoubleSeries s in definition.YSeries.Cast<DoubleSeries>())
                             {
                                 double sum = s.Sum;
                                 if (sum < minValue)
@@ -770,7 +806,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void rdoOrientationHorizontal_CheckedChanged(object sender, EventArgs e)
+        private void rdoOrientationHorizontal_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoOrientationHorizontal.Checked)
                 OrientationChanged();
@@ -782,13 +818,13 @@ namespace StatsDirect.UI
             ctlAxisOptions.AxisLabelsAreSwapped = !options.IsNaturalOrientation;
         }
 
-        private void rdoOrientationVertical_CheckedChanged(object sender, EventArgs e)
+        private void rdoOrientationVertical_CheckedChanged(object? sender, EventArgs e)
         {
             if (rdoOrientationVertical.Checked)
                 OrientationChanged();
         }
 
-        private void chkScatterXYPlotLines_CheckedChanged(object sender, EventArgs e)
+        private void chkScatterXYPlotLines_CheckedChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -796,7 +832,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Error while changing line options", ex, false);
+                SdApplication.FriendlyError("Error while changing line options", ex, false);
             }
         }
 
@@ -805,7 +841,7 @@ namespace StatsDirect.UI
             seriesOptions.SetShowLineOptions(showLineOptions);
         }
 
-        private void chkScatterXYPlotMarkers_CheckedChanged(object sender, EventArgs e)
+        private void chkScatterXYPlotMarkers_CheckedChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -813,7 +849,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Error while changing line options", ex, false);
+                SdApplication.FriendlyError("Error while changing line options", ex, false);
             }
         }
 

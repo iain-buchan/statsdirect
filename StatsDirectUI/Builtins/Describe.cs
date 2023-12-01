@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StatsDirect.Charting;
+using StatsDirect.Charting.Options;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.TemplateProcessing;
@@ -11,82 +12,19 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public static class Describe
+    public class Describe
     {
-        private class SortGroupByTitleAscending : IComparer<Group>
+        private IChartPreferences ChartPreferences { get; }
+        private IProgressBarHost ProgressBarHost { get; }
+        private ISdPreferences SdPreferences { get; }
+        private IUserInterface UserInterface { get; }
+
+        public Describe(IChartPreferences chartPreferences, IProgressBarHost progressBarHost, ISdPreferences sdPreferences, IUserInterface userInterface)
         {
-            private static int Compare(Group x, Group y)
-            {
-                if (x.Label.Equals(y.Label))
-                    return 0;
-
-                //  If both titles are numeric, compare numerically; else, compare as text
-                bool lower;
-                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
-                    lower = numericX <= numericY;
-                else
-                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
-
-                return lower ? -1 : 1;
-            }
-
-            // interface methods implemented by Compare
-            int IComparer<Group>.Compare(Group x, Group y)
-            {
-                return Compare(x, y);
-            }
-        }
-
-        private class SortGroupByTitleDescending : IComparer<Group>
-        {
-            private static int Compare(Group x, Group y)
-            {
-                if (x.Label.Equals(y.Label))
-                    return 0;
-
-                //  If both titles are numeric, compare numerically; else, compare as text
-                bool lower;
-                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
-                    lower = numericX <= numericY;
-                else
-                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
-
-                return lower ? 1 : -1;
-            }
-
-            // interface methods implemented by Compare
-            int IComparer<Group>.Compare(Group x, Group y)
-            {
-                return Compare(x, y);
-            }
-        }
-
-        private class SortGroupByNbinAscending : IComparer<Group>
-        {
-            private static int Compare(Group x, Group y)
-            {
-                return x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? -1 : 1;
-            }
-
-            // interface methods implemented by Compare
-            int IComparer<Group>.Compare(Group x, Group y)
-            {
-                return Compare(x, y);
-            }
-        }
-
-        private class SortGroupByNbinDescending : IComparer<Group>
-        {
-            private static int Compare(Group x, Group y)
-            {
-                return x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? 1 : -1;
-            }
-
-            // interface methods implemented by Compare
-            int IComparer<Group>.Compare(Group x, Group y)
-            {
-                return Compare(x, y);
-            }
+            ChartPreferences = chartPreferences;
+            ProgressBarHost = progressBarHost;
+            SdPreferences = sdPreferences;
+            UserInterface = userInterface;
         }
 
         public static StepOutput RptPreferences(ParameterBag parameters)
@@ -231,9 +169,7 @@ namespace StatsDirect.Builtins
                     for (int k = lowerBound; k <= upperBound; k++)
                     {
                         int nrp = Convert.ToInt32((upperBound - lowerBound - 1) * mt.NextDouble()) + lowerBound;
-                        int tp = ary[k];
-                        ary[k] = ary[nrp];
-                        ary[nrp] = tp;
+                        (ary[nrp], ary[k]) = (ary[k], ary[nrp]);
                     }
                 }
             }
@@ -244,7 +180,7 @@ namespace StatsDirect.Builtins
             DataFrame data = parameters["data"].AsDataFrame;
             for (int v = 0; v < data.VariableCount; v++)
             {
-                if (!(data.Variables[v] is ClassifierVariable))
+                if (data.Variables[v] is not ClassifierVariable)
                     data.Variables[v] = TemplateProcessor.gidx_bins(data.Variables[v] as DoubleVariable);
             }
 
@@ -317,7 +253,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput QuickSummary(IUserInterface host, ParameterBag parameters)
+        public StepOutput QuickSummary(ParameterBag parameters)
         {
             double GAMMA = parameters["gamma"].AsDouble;
             DataFrame data = parameters["data"].AsDataFrame;
@@ -352,7 +288,7 @@ namespace StatsDirect.Builtins
             sb.AppendLine(Formatting.PadTo("Minimum", k) + Formatting.RoundOut(sx.Minimum, flt));
             sb.AppendLine(Formatting.PadTo("Range", k) + Formatting.RoundOut(sx.Range, flt));
             SummaryStatisticsOptions sso = new() { Text = sb.ToString() };
-            host.Amend(sso, parameters);
+            UserInterface.Amend(sso, parameters);
             return StepOutput.Empty();
         }
 
@@ -395,9 +331,10 @@ namespace StatsDirect.Builtins
         private static StepOutput RptDescriptive(ParameterBag parameters, bool isWeighted)
         {
             double nsumwt = 0;
-            string wti = null;
+            string? wti = null;
             ColumnData[] cdx;
-            double[,] x; double[,] w = null;
+            double[,] x;
+            double[,]? w = null;
 
             // get data
             DataFrame data = parameters["data"].AsDataFrame;
@@ -470,7 +407,7 @@ namespace StatsDirect.Builtins
             double gamma = parameters["gamma"].AsDouble;
             string qxcl = " " + Formatting.XRound(gamma * 100, 1) + "% CL of mean";
             string sumTitle = isWeighted ? "Sum of weights" : "Sum";
-            string[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Interquartile range", "Minimum", "Range", "User defined centiles", null };
+            string?[] titles = { "Valid data", "Missing data", sumTitle, "Mean", "Variance", "Standard deviation", "Variance coefficient", "Standard error of mean", "Upper" + qxcl, "Lower" + qxcl, "Geometric mean", "Skewness", "Kurtosis", "Maximum", "Upper quartile", "Median", "Lower quartile", "Interquartile range", "Minimum", "Range", "User defined centiles", null };
 
             Dictionary<SummaryType, bool> shouldOutput = new()
             {
@@ -629,73 +566,43 @@ namespace StatsDirect.Builtins
             return Constant.MISSING;
         }
 
-        private static string Caption(SummaryType summaryType, Summary sx, string[] titles)
-        {
-            switch (summaryType)
+        private static string? Caption(SummaryType summaryType, Summary sx, string?[] titles) =>
+            summaryType switch
             {
-                case SummaryType.Udc1:
-                    return sx.UserCentileUCaption;
-                case SummaryType.Udc2:
-                    return sx.UserCentileLCaption;
-                default:
-                    return titles[(int)summaryType];
-            }
-        }
+                SummaryType.Udc1 => sx.UserCentileUCaption,
+                SummaryType.Udc2 => sx.UserCentileLCaption,
+                _ => titles[(int)summaryType],
+            };
 
-        private static double Value(SummaryType summaryType, Summary sx)
-        {
-            switch (summaryType)
+        private static double Value(SummaryType summaryType, Summary sx) =>
+            summaryType switch
             {
-                case SummaryType.ValidData:
-                    return sx.ValidData;
-                case SummaryType.MissingData:
-                    return sx.MissingData;
-                case SummaryType.Sum:
-                    return sx.Sum;
-                case SummaryType.Mean:
-                    return sx.Mean;
-                case SummaryType.Variance:
-                    return sx.Variance;
-                case SummaryType.Sd:
-                    return sx.SD;
-                case SummaryType.VarianceCoefficient:
-                    return sx.VarianceCoefficient;
-                case SummaryType.Sem:
-                    return sx.SEM;
-                case SummaryType.MeanUcl:
-                    return sx.MeanUCL;
-                case SummaryType.MeanLcl:
-                    return sx.MeanLCL;
-                case SummaryType.GeometricMean:
-                    return sx.GeometricMean;
-                case SummaryType.Skewness:
-                    return sx.Skewness;
-                case SummaryType.Kurtosis:
-                    return sx.Kurtosis;
-                case SummaryType.Maximum:
-                    return sx.Maximum;
-                case SummaryType.UpperQuartile:
-                    return sx.UpperQuartile;
-                case SummaryType.Median:
-                    return sx.Median;
-                case SummaryType.LowerQuartile:
-                    return sx.LowerQuartile;
-                case SummaryType.InterquartileRange:
-                    return sx.InterquartileRange;
-                case SummaryType.Minimum:
-                    return sx.Minimum;
-                case SummaryType.Range:
-                    return sx.Range;
-                case SummaryType.Udc1:
-                    return sx.UserCentileU;
-                case SummaryType.Udc2:
-                    return sx.UserCentileL;
-                default:
-                    throw new ArgumentException("Unknown option", nameof(summaryType));
-            }
-        }
+                SummaryType.ValidData => sx.ValidData,
+                SummaryType.MissingData => sx.MissingData,
+                SummaryType.Sum => sx.Sum,
+                SummaryType.Mean => sx.Mean,
+                SummaryType.Variance => sx.Variance,
+                SummaryType.Sd => sx.SD,
+                SummaryType.VarianceCoefficient => sx.VarianceCoefficient,
+                SummaryType.Sem => sx.SEM,
+                SummaryType.MeanUcl => sx.MeanUCL,
+                SummaryType.MeanLcl => sx.MeanLCL,
+                SummaryType.GeometricMean => sx.GeometricMean,
+                SummaryType.Skewness => sx.Skewness,
+                SummaryType.Kurtosis => sx.Kurtosis,
+                SummaryType.Maximum => sx.Maximum,
+                SummaryType.UpperQuartile => sx.UpperQuartile,
+                SummaryType.Median => sx.Median,
+                SummaryType.LowerQuartile => sx.LowerQuartile,
+                SummaryType.InterquartileRange => sx.InterquartileRange,
+                SummaryType.Minimum => sx.Minimum,
+                SummaryType.Range => sx.Range,
+                SummaryType.Udc1 => sx.UserCentileU,
+                SummaryType.Udc2 => sx.UserCentileL,
+                _ => throw new ArgumentException("Unknown option", nameof(summaryType)),
+            };
 
-        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string[] titles)
+        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string?[] titles)
         {
             DoubleVariable v = new();
             v.EnsureLength(cols);
@@ -705,7 +612,7 @@ namespace StatsDirect.Builtins
             return v;
         }
 
-        private static ParameterBag FillField(SummaryType opt, Summary[] sx, int cols, bool optChecked, string optTitle, bool isWeighted)
+        private static ParameterBag FillField(SummaryType opt, Summary[] sx, int cols, bool optChecked, string? optTitle, bool isWeighted)
         {
             ParameterBag fieldParameters = new();
             List<ParameterBag> resultsList = new();
@@ -728,105 +635,58 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag resultsParameters = new();
                     resultsList.Add(resultsParameters);
-                    object res;
-                    switch (opt)
+                    resultsParameters.AddOutput("result", opt switch
                     {
-                        case SummaryType.ValidData:
-                            res = sx[i].ValidData;
-                            break;
-                        case SummaryType.MissingData:
-                            res = sx[i].MissingData;
-                            break;
-                        case SummaryType.Sum:
-                            res = isWeighted ? sx[i].SumOfWeights : sx[i].Sum;
-                            break;
-                        case SummaryType.Mean:
-                            res = sx[i].Mean;
-                            break;
-                        case SummaryType.Variance:
-                            res = sx[i].Variance;
-                            break;
-                        case SummaryType.Sd:
-                            res = sx[i].SD;
-                            break;
-                        case SummaryType.VarianceCoefficient:
-                            res = sx[i].VarianceCoefficient;
-                            break;
-                        case SummaryType.Sem:
-                            res = sx[i].SEM;
-                            break;
-                        case SummaryType.MeanUcl:
-                            res = sx[i].MeanUCL;
-                            break;
-                        case SummaryType.MeanLcl:
-                            res = sx[i].MeanLCL;
-                            break;
-                        case SummaryType.GeometricMean:
-                            res = sx[i].GeometricMean;
-                            break;
-                        case SummaryType.Skewness:
-                            res = sx[i].Skewness;
-                            break;
-                        case SummaryType.Kurtosis:
-                            res = sx[i].Kurtosis;
-                            break;
-                        case SummaryType.Maximum:
-                            res = sx[i].Maximum;
-                            break;
-                        case SummaryType.UpperQuartile:
-                            res = sx[i].UpperQuartile;
-                            break;
-                        case SummaryType.Median:
-                            res = sx[i].Median;
-                            break;
-                        case SummaryType.LowerQuartile:
-                            res = sx[i].LowerQuartile;
-                            break;
-                        case SummaryType.InterquartileRange:
-                            res = sx[i].InterquartileRange;
-                            break;
-                        case SummaryType.Minimum:
-                            res = sx[i].Minimum;
-                            break;
-                        case SummaryType.Range:
-                            res = sx[i].Range;
-                            break;
-                        case SummaryType.Udc1:
-                            res = sx[i].UserCentileU;
-                            break;
-                        case SummaryType.Udc2:
-                            res = sx[i].UserCentileL;
-                            break;
-                        default:
-                            throw new ArgumentException("Unknown opt", nameof(opt));
-                    }
-                    resultsParameters.AddOutput("result", res);
+                        SummaryType.ValidData => sx[i].ValidData,
+                        SummaryType.MissingData => sx[i].MissingData,
+                        SummaryType.Sum => isWeighted ? sx[i].SumOfWeights : sx[i].Sum,
+                        SummaryType.Mean => sx[i].Mean,
+                        SummaryType.Variance => sx[i].Variance,
+                        SummaryType.Sd => sx[i].SD,
+                        SummaryType.VarianceCoefficient => sx[i].VarianceCoefficient,
+                        SummaryType.Sem => sx[i].SEM,
+                        SummaryType.MeanUcl => sx[i].MeanUCL,
+                        SummaryType.MeanLcl => sx[i].MeanLCL,
+                        SummaryType.GeometricMean => sx[i].GeometricMean,
+                        SummaryType.Skewness => sx[i].Skewness,
+                        SummaryType.Kurtosis => sx[i].Kurtosis,
+                        SummaryType.Maximum => sx[i].Maximum,
+                        SummaryType.UpperQuartile => sx[i].UpperQuartile,
+                        SummaryType.Median => sx[i].Median,
+                        SummaryType.LowerQuartile => sx[i].LowerQuartile,
+                        SummaryType.InterquartileRange => sx[i].InterquartileRange,
+                        SummaryType.Minimum => sx[i].Minimum,
+                        SummaryType.Range => sx[i].Range,
+                        SummaryType.Udc1 => sx[i].UserCentileU,
+                        SummaryType.Udc2 => (object)sx[i].UserCentileL,
+                        _ => throw new ArgumentException("Unknown opt", nameof(opt)),
+                    });
                 }
             }
             return fieldParameters;
         }
 
-        public static StepOutput RptTimeSeriesSummary(/* TODO: IPreferencesAndProgressBar */ ITemplateHost host, ParameterBag parameters)
+        public StepOutput RptTimeSeriesSummary(ParameterBag parameters)
         {
             // Extract our variables from the input
             DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0] as DoubleVariable;
             DoubleVariable observationsVariable = parameters["observations"].AsDataFrame.Variables[0] as DoubleVariable;
             ClassifierVariable subjectIdsVariable = parameters["subjectIds"].AsDataFrame.Variables[0] as ClassifierVariable;
-            bool hasGroups = parameters.ContainsKey("groups") && parameters["groups"] != null && parameters["groups"].IsDataFrame;
-            ClassifierVariable groupsVariable = null;
+            bool hasGroups = parameters.ContainsKey("groups") && parameters["groups"] is not null && parameters["groups"].IsDataFrame;
+            ClassifierVariable? groupsVariable = null;
             if (hasGroups)
                 groupsVariable = (ClassifierVariable)parameters["groups"].AsDataFrame.Variables[0];
             double ci = parameters["ci"].AsDouble;
-            bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
+            bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] is not null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
             // Bootstrap variables
-            bool doBootstrap = parameters.ContainsKey("doExactP") && parameters["doExactP"] != null && parameters["doExactP"].IsBoolean && parameters["doExactP"].AsBoolean;
+            bool doBootstrap = parameters.ContainsKey("doExactP") && parameters["doExactP"] is not null && parameters["doExactP"].IsBoolean && parameters["doExactP"].AsBoolean;
             MersenneTwister mt;
-            if (doBootstrap && parameters.ContainsKey("seed") && parameters["seed"] != null && parameters["seed"].IsInt32)
+            if (doBootstrap && parameters.ContainsKey("seed") && parameters["seed"] is not null && parameters["seed"].IsInt32)
                 mt = new MersenneTwister(parameters["seed"].AsInt32);
             else
                 mt = new MersenneTwister();
             int iterations = 100000;
-            if (doBootstrap && parameters.ContainsKey("iterations") && parameters["iterations"] != null && parameters["iterations"].IsInt32)
+            if (doBootstrap && parameters.ContainsKey("iterations") && parameters["iterations"] is not null && parameters["iterations"].IsInt32)
                 iterations = parameters["iterations"].AsInt32;
 
             // Data preparation: Construct our values
@@ -867,8 +727,8 @@ namespace StatsDirect.Builtins
                 store.Calculate(ci, false);
                 if (doBootstrap)
                 {
-                    BootstrappingTimeSeriesSummaryStore bst = new(store);
-                    bst.Bootstrap(host, iterations, mt, ci, groups.Count == 2);
+                    BootstrappingTimeSeriesSummaryStore bst = new(store, ProgressBarHost);
+                    bst.Bootstrap(iterations, mt, ci, groups.Count == 2);
                     store.TLclAucBarBootstrap = store.AucMean + bst.TLcl * store.Se;
                     store.TUclAucBarBootstrap = store.AucMean + bst.TUcl * store.Se;
                     store.CompletedIterations = bst.CompletedIterations;
@@ -952,25 +812,37 @@ namespace StatsDirect.Builtins
                 }
 
                 // Line plot, one line per subject with x-axis = time, y-axis = observation
-                ChartDefinition cd = new() { ChartType = ChartType.ScatterXY, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
                 double[] times = group.IndexToTimeMap;
+                List<ISeries> xSeries = new();
+                List<ISeries> ySeries = new();
                 for (int subjectIndex = 0; subjectIndex < group.IndexToSubjectMap.Length; subjectIndex++)
                 {
                     double[] subjectObservations = new double[times.Length];
                     for (int timeIndex = 0; timeIndex < group.IndexToTimeMap.Length; timeIndex++)
                         subjectObservations[timeIndex] = group.Observations[timeIndex, subjectIndex];
-                    cd.AddXSeries(times, null);
-                    cd.AddYSeries(subjectObservations, null);
+                    xSeries.Add(new DoubleSeries(times));
+                    ySeries.Add(new DoubleSeries(subjectObservations));
                 }
-                ScatterXYOptions options = new(cd.XSeries, true)
-                {
-                    Title = group.Group.Label,
-                    XAxisTitle = timesVariable.Title,
-                    YAxisTitle = observationsVariable.Title
-                };
-                for (int marker = 0; marker < options.MarkerTypes.Count; marker++)
-                    options.MarkerTypes[marker] = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(groupIndex)].Clone();
-                cd.ChartOptions = options;
+                // Use the marker for this group for all of the series
+                MarkerType[] markerTypes = new MarkerType[xSeries.Count];
+                Array.Fill(markerTypes, ChartPreferences.MarkerTypes[AbstractChartOptions.SeriesNumberToMarkerNumber(groupIndex)]);
+                ChartDefinition cd = new(
+                    ChartType.ScatterXY,
+                    new ScatterXYOptions(ChartPreferences,
+                        xSeries,
+                        joinMarkersWithLines: true,
+                        markerTypes: markerTypes,
+                        title: group.Group.Label,
+                        xAxisTitle: timesVariable.Title,
+                        yAxisTitle: observationsVariable.Title
+                    ),
+                    xSeries,
+                    ySeries,
+                    new ScaleParameters(
+                        new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                        new AxisScaleParameters { ScaleType = ScaleType.Linear }
+                    )
+                );
                 groupParameters.AddOutput("chart", cd);
             }
 
@@ -981,38 +853,45 @@ namespace StatsDirect.Builtins
                     values.Add(subject.Auc);
             double[] points = values.ToArray();
             {
-                ChartDefinition cd = new() { ChartType = ChartType.Normal };
-                cd.AddXSeries(points, "Area Under Curve");
+                ChartDefinition cd = new(
+                    ChartType.Normal,
+                    new NormalOptions(ChartPreferences,
+                        method: NormalOptions.ScoreMethod.VanDerWaerden,
+                        shouldScaleZ: true,
+                        title: "Normal Plot for AUC",
+                        xAxisTitle: "Area Under Curve",
+                        yAxisTitle: "Normal scores"
+                    ),
+                    new[] { new DoubleSeries(points, "Area Under Curve") },
+                    Array.Empty<ISeries>()
+                    );
 
-                NormalOptions options = new()
-                {
-                    Title = "Normal Plot for AUC",
-                    XAxisTitle = "Area Under Curve",
-                    YAxisTitle = "Normal scores",
-                    ShouldScaleZ = true,
-                    Method = NormalOptions.ScoreMethod.VanDerWaerden
-                };
-                cd.ChartOptions = options;
-                ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
+                ParameterBag results = new ChartRendererFactory(SdPreferences, UserInterface).PlotForResultsOnly(cd);
                 outputParameters.AddOutput("aucNormalChart", cd);
                 outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].AsObject).R);
 
             }
             {
-                ChartDefinition cd = new() { ChartType = ChartType.Normal };
+                double[] log10Points = new double[points.Length];
                 for (int i = 0; i < points.Length; i++)
-                    points[i] = Math.Log10(points[i]);
-                cd.AddXSeries(points, "Log Area Under Curve");
-                NormalOptions options = new()
+                    log10Points[i] = Math.Log10(points[i]);
+                DoubleSeries[] xSeries = new DoubleSeries[]
                 {
-                    Title = "Normal Plot for Log(AUC)",
-                    XAxisTitle = "Log Area Under Curve",
-                    YAxisTitle = "Normal scores",
-                    ShouldScaleZ = true,
-                    Method = NormalOptions.ScoreMethod.VanDerWaerden
+                    new DoubleSeries(log10Points, "Log Area Under Curve")
                 };
-                cd.ChartOptions = options;
-                ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
+                ChartDefinition cd = new(
+                    ChartType.Normal,
+                    new NormalOptions(ChartPreferences,
+                        method: NormalOptions.ScoreMethod.VanDerWaerden,
+                        shouldScaleZ: true,
+                        title: "Normal Plot for Log(AUC)",
+                        xAxisTitle: "Log Area Under Curve",
+                        yAxisTitle: "Normal scores"
+                    ),
+                    xSeries,
+                    Array.Empty<ISeries>()
+                );
+                ParameterBag results = new ChartRendererFactory(SdPreferences, UserInterface).PlotForResultsOnly(cd);
                 outputParameters.AddOutput("aucLogNormalChart", cd);
                 outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].AsObject).R);
             }
@@ -1043,19 +922,22 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                ChartDefinition cd = new() { ChartType = ChartType.ErrorBar, ScaleParameters = new ScaleParameters { X = new AxisScaleParameters { ScaleType = ScaleType.Linear }, Y = new AxisScaleParameters { ScaleType = ScaleType.Linear } } };
-                ErrorBarOptions options = new()
-                {
-                    Series = errorSeries,
-                    Title = "Group comparison",
-                    XAxisTitle = timesVariable.Title,
-                    YAxisTitle = observationsVariable.Title,
-                    JoinMarkersWithLines = true,
-                    ShowLegend = true,
-                    SeriesTitles = seriesTitles
-                };
-                options.SetMarkers();
-                cd.ChartOptions = options;
+                ChartDefinition cd = new(
+                    ChartType.ErrorBar,
+                    new ErrorBarOptions(ChartPreferences,
+                        joinMarkersWithLines: true,
+                        series: errorSeries,
+                        seriesTitles: seriesTitles,
+                        showLegend: true,
+                        title: "Group comparison",
+                        xAxisTitle: timesVariable.Title,
+                        yAxisTitle: observationsVariable.Title
+                    ),
+                    errorSeries,
+                    Array.Empty<ISeries>(),
+                    new ScaleParameters(
+                        new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                        new AxisScaleParameters { ScaleType = ScaleType.Linear }));
                 outputParameters.AddOutput("meanAucChart", cd);
             }
 
@@ -1132,16 +1014,16 @@ namespace StatsDirect.Builtins
 
         private class TimeSeriesSummaryStore
         {
-            public Group Group { get; set; }
-            public SortedSet<double> SortedTimes { get; set; }
-            public SortedSet<double> SortedSubjectIds { get; set; }
-            public double[,] Observations { get; private set; }
+            public Group? Group { get; set; }
+            public SortedSet<double>? SortedTimes { get; set; }
+            public SortedSet<double>? SortedSubjectIds { get; set; }
+            public double[,]? Observations { get; private set; }
             public int NObservations { get; private set; }
-            private double[,] AreasUnderCurve { get; set; }
-            public SortedDictionary<double, TimeSummary> TimeToSummaryMap { get; private set; }
-            public double[] IndexToTimeMap { get; private set; }
-            public SortedDictionary<double, SubjectSummary> SubjectToSummaryMap { get; private set; }
-            public double[] IndexToSubjectMap { get; private set; }
+            private double[,]? AreasUnderCurve { get; set; }
+            public SortedDictionary<double, TimeSummary>? TimeToSummaryMap { get; private set; }
+            public double[]? IndexToTimeMap { get; private set; }
+            public SortedDictionary<double, SubjectSummary>? SubjectToSummaryMap { get; private set; }
+            public double[]? IndexToSubjectMap { get; private set; }
             public int AucN { get; private set; }
             public double AucSum { get; private set; }
             public double AucMean { get; private set; }
@@ -1171,8 +1053,8 @@ namespace StatsDirect.Builtins
             public double TLclAucBarBootstrap { get; set; }
             public double TUclAucBarBootstrap { get; set; }
             public double CompletedIterations { get; set; }
-            public double[] AucMeans { get; set; }
-            public double[] VarAucMeans { get; set; }
+            public double[]? AucMeans { get; set; }
+            public double[]? VarAucMeans { get; set; }
 
             public TimeSeriesSummaryStore()
             {
@@ -1415,12 +1297,15 @@ namespace StatsDirect.Builtins
             public double[] AucMeans { get; private set; }
             public double[] VarAucMeans { get; private set; }
 
-            public BootstrappingTimeSeriesSummaryStore(TimeSeriesSummaryStore original)
+            private IProgressBarHost ProgressBarHost { get; }
+
+            public BootstrappingTimeSeriesSummaryStore(TimeSeriesSummaryStore original, IProgressBarHost progressBarHost)
             {
+                ProgressBarHost = progressBarHost;
                 this.original = original;
             }
 
-            public void Bootstrap(IProgressBarHost host, int iterations, MersenneTwister mt, double ci, bool keepAucs)
+            public void Bootstrap(int iterations, MersenneTwister mt, double ci, bool keepAucs)
             {
                 if (keepAucs)
                 {
@@ -1432,7 +1317,7 @@ namespace StatsDirect.Builtins
                 resampled = new TimeSeriesSummaryStore { Group = original.Group, SortedTimes = original.SortedTimes, SortedSubjectIds = original.SortedSubjectIds };
                 resampled.NoteEndOfPass1(false);
                 double[] tValues = new double[iterations];
-                using IProgressBar progress = host.StartProgress("Bootstrapping " + original.Group.Label, true);
+                using IProgressBar progress = ProgressBarHost.StartProgress("Bootstrapping " + original.Group.Label, true);
                 for (int iteration = 0; iteration < iterations; iteration++)
                 {
                     Shuffle(mt, original.Observations, resampled.Observations);
@@ -1473,6 +1358,88 @@ namespace StatsDirect.Builtins
                 for (int timeIndex = 0; timeIndex <= tub; timeIndex++)
                     for (int subjectIndex = 0; subjectIndex <= sub; subjectIndex++)
                         output[timeIndex, subjectIndex] = input[timeIndex, mt.NextInteger(sub)];
+            }
+        }
+
+        private class SortGroupByTitleAscending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y)
+            {
+                if (x.Label.Equals(y.Label))
+                    return 0;
+
+                //  If both titles are numeric, compare numerically; else, compare as text
+                bool lower;
+                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
+                    lower = numericX <= numericY;
+                else
+                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
+
+                return lower ? -1 : 1;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Group>.Compare(Group? x, Group? y)
+            {
+                if (null == x)
+                    return null == y ? 0 : -1;
+                if (null == y)
+                    return 1;
+                return Compare(x, y);
+            }
+        }
+
+        private class SortGroupByTitleDescending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y)
+            {
+                if (x.Label.Equals(y.Label))
+                    return 0;
+
+                //  If both titles are numeric, compare numerically; else, compare as text
+                bool lower;
+                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
+                    lower = numericX <= numericY;
+                else
+                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
+
+                return lower ? 1 : -1;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Group>.Compare(Group? x, Group? y)
+            {
+                if (null == x)
+                    return null == y ? 0 : -1;
+                if (null == y)
+                    return 1;
+                return Compare(x, y);
+            }
+        }
+
+        private class SortGroupByNbinAscending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y) => x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? -1 : 1;
+            int IComparer<Group>.Compare(Group? x, Group? y)
+            {
+                if (null == x)
+                    return null == y ? 0 : -1;
+                if (null == y)
+                    return 1;
+                return Compare(x, y);
+            }
+        }
+
+        private class SortGroupByNbinDescending : IComparer<Group>
+        {
+            private static int Compare(Group x, Group y) => x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? 1 : -1;
+            int IComparer<Group>.Compare(Group? x, Group? y)
+            {
+                if (null == x)
+                    return null == y ? 0 : -1;
+                if (null == y)
+                    return 1;
+                return Compare(x, y);
             }
         }
     }

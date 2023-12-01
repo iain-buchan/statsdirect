@@ -1,9 +1,9 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class CorrelationOptions : GenericOptions
+    public class CorrelationOptions : AbstractGenericOptions
     {
         public int K { get; }
         public string[] Titles { get; }
@@ -23,7 +23,8 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public CorrelationOptions(int k, string[] titles, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference)
+        public CorrelationOptions(int k, string[] titles, double[] odr, double[] odrl, double[] odru, double[] gn, CorrelationRowType[] pg, string cap, string qid, Transformation xform, bool isDifference, IChartPreferences chartPreferences)
+            : base(chartPreferences)
         {
             K = k;
             Titles = titles;

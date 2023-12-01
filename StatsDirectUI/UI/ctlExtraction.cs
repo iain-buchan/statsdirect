@@ -49,7 +49,7 @@ namespace StatsDirect.UI
             }
             if (!ok || "X1=".Equals(expression))
             {
-                SdApplication.SoleInstance.Error("Invalid expression, you must enter an expression such as X1>0 or X1=1 etc.", "Extract variable");
+                SdApplication.Error("Invalid expression, you must enter an expression such as X1>0 or X1=1 etc.", "Extract variable");
                 return txtExpression;
             }
 
@@ -143,7 +143,7 @@ namespace StatsDirect.UI
             return Extract(false, outputParameters);
         }
 
-        private void cmdCount_Click(object sender, EventArgs e)
+        private void cmdCount_Click(object? sender, EventArgs e)
         {
             Control errorControl = Extract(true, null);
             if (null != errorControl)

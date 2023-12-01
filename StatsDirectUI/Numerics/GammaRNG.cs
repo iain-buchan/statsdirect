@@ -270,7 +270,7 @@ namespace StatsDirect.Numerics
             RNG = null;
             RNGEXP = null;
             RNGNORM = null;
-            if (rug == null)
+            if (rug is null)
             {
                 RNG = new MersenneTwister();
                 RNG.Seed(sd);
@@ -279,7 +279,7 @@ namespace StatsDirect.Numerics
             {
                 RNG = rug;
             }
-            if (ruge == null)
+            if (ruge is null)
             {
                 RNGEXP = new ExponentialRNG();
                 RNGEXP.Seed(sd, ref RNG);
@@ -288,7 +288,7 @@ namespace StatsDirect.Numerics
             {
                 RNGEXP = ruge;
             }
-            if (rugn == null)
+            if (rugn is null)
             {
                 RNGNORM = new NormalRNG();
                 RNGNORM.Seed(sd, ref RNG);

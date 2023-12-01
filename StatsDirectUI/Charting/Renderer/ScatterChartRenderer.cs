@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using StatsDirect.Charting.Options;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -10,33 +12,28 @@ namespace StatsDirect.Charting.Renderer
     {
         const int ASCII_LINES_PER_TIC = 5;
 
-        public ScatterChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base (cd, canvasFactory)
+        public ScatterChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base (cd, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural, ScaleType.Date },
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural, ScaleType.Date }) {
                     Max = DataMaxX,
                     MinGreaterThanZero = DataMinGreaterThanZeroX,
                     Min = DataMinX
                 },
-                Y =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural },
+                new(new[] { ScaleType.Linear, ScaleType.Log10, ScaleType.LogNatural }) {
                     Max = DataMaxY,
                     MinGreaterThanZero = DataMinGreaterThanZeroY,
                     Min = DataMinY
                 }
-            };
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -46,12 +43,13 @@ namespace StatsDirect.Charting.Renderer
             bool joinMarkersWithLines = sOptions.JoinMarkersWithLines;
 
             bool showLegend = sOptions.ShowLegend && Definition.XSeries.Count > 1;
-            Legend legend = null;
+            Legend? legend = null;
             if (showLegend)
             {
-                legend = new Legend() { Position = LegendPosition.Left };
+                List<LegendEntry> legendEntries = new();
                 foreach (ISeries s in Definition.XSeries)
-                    legend.LegendEntries.Add(new LegendEntry() { MarkerType = ((DoubleSeries)s).MarkerType, Label = s.Title });
+                    legendEntries.Add(new(((DoubleSeries)s).MarkerType, s.Title));
+                legend = new(LegendPosition.Left, legendEntries);
             }
 
             if (!IsAscii)
@@ -62,10 +60,10 @@ namespace StatsDirect.Charting.Renderer
                 AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                    ChartPreferences.DefaultBoxAxes, false,
+                    ChartPreferences.BoxAxes, false,
                     legend);
 
-                if (showLegend)
+                if (null != legend)
                     DrawLegend(legend);
 
                 // plot points

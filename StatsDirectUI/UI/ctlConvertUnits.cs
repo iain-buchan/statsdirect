@@ -93,17 +93,17 @@ namespace StatsDirect.UI
             cboConversion.Items.AddRange(conversions);
         }
 
-        private void Calc_Click(object sender, EventArgs e)
+        private void Calc_Click(object? sender, EventArgs e)
         {
             Calculate();
         }
 
-        private void DoubleClickTextbox(object sender, EventArgs e)
+        private void DoubleClickTextbox(object? sender, EventArgs e)
         {
             Calculate();
         }
 
-        private void edpdf_KeyPress(object sender, KeyPressEventArgs e)
+        private void edpdf_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == 13)
             {

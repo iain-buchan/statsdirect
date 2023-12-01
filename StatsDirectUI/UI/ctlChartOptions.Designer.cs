@@ -13,7 +13,7 @@ namespace StatsDirect.UI
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }
@@ -137,7 +137,7 @@ namespace StatsDirect.UI
             this.chkSurvivalUseSeriesColourForConfidenceIntervals = new System.Windows.Forms.CheckBox();
             this.chkSurvivalShowEventMarkers = new System.Windows.Forms.CheckBox();
             this.chkSurvivalShowCensorshipTics = new System.Windows.Forms.CheckBox();
-            this.ctlBoxWhiskerOptions1 = new StatsDirect.UI.ctlBoxWhiskerOptions();
+            this.ctlBoxWhiskerOptions1 = new StatsDirect.UI.ctlBoxWhiskerOptions(SdPreferences);
             this.ctlHistogramOptions1 = new StatsDirect.UI.ctlHistogramOptions();
             this.tlpScatterXYOptions = new System.Windows.Forms.TableLayoutPanel();
             this.chkScatterXYPlotMarkers = new System.Windows.Forms.CheckBox();
@@ -268,14 +268,12 @@ namespace StatsDirect.UI
             this.seriesOptions.AutoSize = true;
             this.seriesOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.seriesOptions.ForcedFillStyle = StatsDirect.Charting.FillStyle.None;
-            this.seriesOptions.ForcedIsFilled = false;
+            this.seriesOptions.ForcedIsFilled = default;
             this.seriesOptions.Location = new System.Drawing.Point(0, 0);
             this.seriesOptions.Margin = new System.Windows.Forms.Padding(0);
             this.seriesOptions.MarkerTypes = null;
             this.seriesOptions.Name = "seriesOptions";
             this.seriesOptions.SeriesOptionsDescriptors = null;
-            this.seriesOptions.ShouldForceFillStyle = false;
-            this.seriesOptions.ShouldForceIsFilled = false;
             this.seriesOptions.Size = new System.Drawing.Size(203, 278);
             this.seriesOptions.TabIndex = 0;
             // 

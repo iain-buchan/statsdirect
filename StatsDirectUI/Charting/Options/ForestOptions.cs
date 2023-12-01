@@ -1,31 +1,42 @@
 using System;
+using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
     public class ForestOptions : ForestishOptions
+        , IAxisLabelFontOptions
+        , IAxisTitleFontOptions
+        , IChartTitleOptions
+        , IXAxisTitleOptions
     {
-        public double[] pg; // Should really be integer or bool but assigning a double variable is as efficient
-        public int EffectSizeAndIntervalDecimalPlaces { get; set; }
+        private const double DEFAULT_CCO = 0.95;
 
-        public ForestOptions()
+        public IReadOnlyList<double>? Pg { get; } // Should really be integer or bool but assigning a double variable is as efficient
+        public int EffectSizeAndIntervalDecimalPlaces { get; }
+
+        public ForestOptions(IChartPreferences chartPreferences,
+            int effectSizeAndIntervalDecimalPlaces,
+            IReadOnlyList<double> groupSizes,
+            int k,
+            IReadOnlyList<double> oddsRatioLcis,
+            IReadOnlyList<double> oddsRatios,
+            IReadOnlyList<double> oddsRatioUcis,
+            IReadOnlyList<double>? pg,
+            bool shouldAutoscale,
+            string? title,
+            IReadOnlyList<string> titles,
+            string? xAxisTitle,
+            double cco = DEFAULT_CCO,
+            bool? markCentres = default,
+            IReadOnlyList<MarkerType>? markerTypes = default,
+            IReadOnlyList<SeriesOptionsDescriptor>? seriesOptions = default)
+            : base(chartPreferences, cco, groupSizes, k, markCentres, markerTypes, oddsRatioLcis, oddsRatios, oddsRatioUcis, seriesOptions, shouldAutoscale, title, titles, xAxisTitle)
         {
-            cco = 0.95;
+            EffectSizeAndIntervalDecimalPlaces = effectSizeAndIntervalDecimalPlaces;
+            Pg = pg;
         }
 
-        public override bool UsesChartTitle => true;
-
-        public override bool UsesXAxisTitle => true;
-
-        public override bool ShowForestOptions => true;
-
-        public override bool UsesAxisLabelFontDescriptor => true;
-
-        public override bool UsesAxisTitleFontDescriptor => true;
-
-        public override void Accept(IChartOptionVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IChartOptionVisitor visitor) => visitor.Visit(this);
     }
 }

@@ -21,13 +21,13 @@ namespace StatsDirect.PJLControls
             set => picker.Color = value;
         }
 
-        private void cmdOK_Click(object sender, EventArgs e)
+        private void cmdOK_Click(object? sender, EventArgs e)
         {
             userCancelled = false;
             Close();
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void cmdCancel_Click(object? sender, EventArgs e)
         {
             userCancelled = true;
             Close();

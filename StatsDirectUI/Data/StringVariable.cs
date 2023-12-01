@@ -3,23 +3,23 @@ using System;
 namespace StatsDirect.Data
 {
     [Serializable]
-    public sealed class StringVariable : GenericVariable<string>
+    public sealed class StringVariable : GenericVariable<string?>
     {
         public StringVariable()
         {
         }
 
-        public StringVariable(string[] data)
+        public StringVariable(string?[] data)
             : base(data)
         {
         }
 
-        public StringVariable(string[] data, string title)
+        public StringVariable(string?[] data, string? title)
             : base(data, title)
         {
         }
 
-        public StringVariable(int length, string title)
+        public StringVariable(int length, string? title)
             : base(length, title)
         {
         }

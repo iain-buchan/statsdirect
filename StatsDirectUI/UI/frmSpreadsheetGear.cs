@@ -2,21 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using SpreadsheetGear.Commands;
+
 using StatsDirect.Data;
 using StatsDirect.Numerics;
+using StatsDirect.R;
+using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using SpreadsheetGear.Advanced.Cells;
+
 using SpreadsheetGear;
+using SpreadsheetGear.Advanced.Cells;
+using SpreadsheetGear.Commands;
 using SpreadsheetGear.Windows.Forms;
 using Color = System.Drawing.Color;
 using SystemColors = System.Drawing.SystemColors;
-using StatsDirect.R;
-using StatsDirect.Templates;
-using System.Globalization;
+using StatsDirect.Charting;
 
 namespace StatsDirect.UI
 {
@@ -25,26 +28,36 @@ namespace StatsDirect.UI
         /// <summary>
         /// While batching, a storage point for the data area we've most recently selected.
         /// </summary>
-        private CellSelection mostRecentCellSelectionDuringBatch;
+        private CellSelection? mostRecentCellSelectionDuringBatch;
 
-        public frmSpreadsheetGear()
+        private ISdPreferences SdPreferences { get; }
+        private ITemplateProcessorFactory TemplateProcessorFactory { get; }
+        private IUiPreferences UiPreferences { get; }
+        private IUserInterface UserInterface { get; }
+
+        public frmSpreadsheetGear(ISdApplication sdApplication, ISdPreferences sdPreferences, ITemplateProcessorFactory templateProcessorFactory, IUiPreferences uiPreferences, IUserInterface userInterface)
+            : base(sdApplication)
         {
+            SdPreferences = sdPreferences;
+            TemplateProcessorFactory = templateProcessorFactory;
+            UiPreferences = uiPreferences;
+            UserInterface = userInterface;
             InitializeComponent();
             // See http://stackoverflow.com/questions/23637869/spreadsheetgear-for-winforms-paste-from-excel-removes-validation-on-target-cell - Tim Andersen's solution to adding a command manager to a workbook set.
             new ClipboardManglingCommandManager(workbookView.ActiveWorkbookSet);
-            SdApplication.SoleInstance.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
+            SdApplication.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
             workbookView.WithLock(() =>
             {
                 workbookView.ActiveWorkbook?.Close();
-                string fontString = Properties.Settings.Default.DefaultWorkbookFont;
-                if (null != fontString)
+                Charting.FontDescriptor? defaultWorkbookFontDescriptor = uiPreferences.DefaultWorkbookFont;
+                if (null != defaultWorkbookFontDescriptor)
                 {
-                    using Font f = Utilities.Utilities.FontFromSaveString(fontString);
-                    workbookView.ActiveWorkbookSet.DefaultFontName = f.Name;
-                    workbookView.ActiveWorkbookSet.DefaultFontSize = f.SizeInPoints;
+                    workbookView.ActiveWorkbookSet.DefaultFontName = defaultWorkbookFontDescriptor.FontFamily;
+                    workbookView.ActiveWorkbookSet.DefaultFontSize = defaultWorkbookFontDescriptor.SizeInPoints;
                 }
                 else
                 {
+                    // TODO: Parameterise default-default workbook font.
                     workbookView.ActiveWorkbookSet.DefaultFontName = "Calibri";
                     workbookView.ActiveWorkbookSet.DefaultFontSize = 11;
                 }
@@ -52,7 +65,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void frmSpreadsheetGear_FormClosing(object sender, FormClosingEventArgs e)
+        private void frmSpreadsheetGear_FormClosing(object? sender, FormClosingEventArgs e)
         {
             DoOrWarn(() =>
             {
@@ -61,25 +74,25 @@ namespace StatsDirect.UI
                     e.Cancel = true;
                     return;
                 }
-                SdApplication.SoleInstance.NoteFormClosing(this, e);
+                SdApplication.NoteFormClosing(this, e);
                 Visible = false;
                 MdiParent = null;
             }, "Couldn't close form");
         }
 
-        private void frmSpreadsheetGear_Activated(object sender, EventArgs e)
+        private void frmSpreadsheetGear_Activated(object? sender, EventArgs e)
         {
             if (null != Tag)
-                SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                SdApplication.NoteFormActivated((WindowInformation)Tag);
             tableLayoutPanel1.Visible = true;
         }
 
-        private void workbookView_CellEndEdit(object sender, CellEndEditEventArgs e)
+        private void workbookView_CellEndEdit(object? sender, CellEndEditEventArgs e)
         {
             Dirty = true;
         }
 
-        private void workbookView_RangeChanged(object sender, RangeChangedEventArgs e)
+        private void workbookView_RangeChanged(object? sender, RangeChangedEventArgs e)
         {
             Dirty = true;
         }
@@ -128,7 +141,7 @@ namespace StatsDirect.UI
                 saveFileDialog.InitialDirectory = System.IO.Path.GetDirectoryName(path);
                 saveFileDialog.FileName = System.IO.Path.GetFileName(path);
             }
-            DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            DialogResult result = saveFileDialog.ShowDialog(SdApplication.DialogOwner);
             if (DialogResult.Cancel == result)
             {
                 // User cancelled, failed save
@@ -136,7 +149,7 @@ namespace StatsDirect.UI
             }
             // User wants to save the file
             Path = saveFileDialog.FileName;
-            string extension = System.IO.Path.GetExtension(Path);
+            string? extension = System.IO.Path.GetExtension(Path);
             if (!string.IsNullOrEmpty(extension))
                 extension = extension.ToLower(CultureInfo.InvariantCulture);
             FileFormat format = ".xlsx".Equals(extension) ? FileFormat.OpenXMLWorkbook : FileFormat.Excel8;
@@ -144,7 +157,7 @@ namespace StatsDirect.UI
             {
                 workbookView.ActiveWorkbook.SaveAs(path, format);
                 Dirty = false;
-                SdApplication.SoleInstance.NoteRecentFile(path, true);
+                SdApplication.NoteRecentFile(path, true);
                 return true;
             });
         }
@@ -168,13 +181,13 @@ namespace StatsDirect.UI
 
         bool IGrid.Dirty => Dirty;
 
-        object[,] IGrid.GetValues(int top, int left, int bottom, int right)
+        object?[,] IGrid.GetValues(int top, int left, int bottom, int right)
         {
             return workbookView.WithLock(() =>
             {
                 object val = workbookView.ActiveWorksheet.Cells[top, left, bottom, right].Value;
                 if (null != val && val.GetType().IsArray)
-                    return (object[,])val;
+                    return (object?[,])val;
                 return new[,] { { val } };
             });
         }
@@ -209,7 +222,7 @@ namespace StatsDirect.UI
 
             foreach (IVariable variable in variables)
             {
-                WorksheetOrigin worksheetOrigin = (WorksheetOrigin)variable.Origin;
+                WorksheetOrigin? worksheetOrigin = (WorksheetOrigin?)variable.Origin;
 
                 // Set the active worksheet
                 workbookView.ActiveWorkbookSet.WithLock(() =>
@@ -228,7 +241,7 @@ namespace StatsDirect.UI
                 revisedCellSelection.LongestRowCount = cellColumnSelection.RowCount;
             }
             WorksheetOrigin firstWorksheetOrigin = (WorksheetOrigin)variables[0].Origin;
-            DataFrame refilledFrame = CellArrayProcessor.ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup, ((WindowInformation)Tag).FriendlyName);
+            DataFrame? refilledFrame = new CellArrayProcessor(SdApplication).ProcessCellArray(revisedCellSelection, firstWorksheetOrigin.Mode, 0, true, firstWorksheetOrigin.HasTitle, firstWorksheetOrigin.OriginGroup, ((WindowInformation)Tag).FriendlyName);
             if (null == refilledFrame)
                 throw new Exception("Cannot refill frame; have you deleted some variables?");
             if (refilledFrame.VariableCount != variables.Count)
@@ -252,10 +265,10 @@ namespace StatsDirect.UI
             int probeBottom = Math.Min(probeTop + PROBE_ROWS - 1, lastUsedRow);
             while (probeTop <= probeBottom)
             {
-                (object[,] probe, int nonHiddenRowCount) = GetCellObjects(cellColumnSelection.ColumnIndex, probeTop, probeBottom);
+                (object?[,] probe, int nonHiddenRowCount) = GetCellObjects(cellColumnSelection.ColumnIndex, probeTop, probeBottom);
                 for (int offset = 0; offset < nonHiddenRowCount; offset++)
                 {
-                    object value = probe[offset, 0];
+                    object? value = probe[offset, 0];
                     if (null == value)
                     {
                         int lastRowWithContents = probeTop + offset - 1;
@@ -348,10 +361,6 @@ namespace StatsDirect.UI
                 // Create a holder that can be captured by the lambda but then can be cleared out so that it doesn't retain large amounts of data
                 WriteDataFrameParametersHolder holder = new() { Frame = frame, IsFormulae = isFormulae, MissingIndicator = missingIndicator, Range = range, ShouldMove = shouldMove, OffsetForTitles = offsetForTitles };
                 workbookView.ActiveCommandManager.Execute(new UndoWrapper(range.EntireColumn, "Insert data", () => { if (null != holder.Frame) WriteDataFrameInternal(holder.Frame, holder.IsFormulae, holder.MissingIndicator, holder.Range, holder.ShouldMove, holder.OffsetForTitles); return true; }));
-                // Clear down reference variables
-                holder.Range = null;
-                holder.Frame = null;
-                holder.MissingIndicator = null;
                 workbookView.Focus();
             });
         }
@@ -360,13 +369,13 @@ namespace StatsDirect.UI
         {
             public int Column { get; set; }
             public bool IsFormulae { get; set; }
-            public string MissingIndicator { get; set; }
+            public string? MissingIndicator { get; set; }
             public int OffsetForTitles { get; set; }
-            public IValues Values { get; set; }
+            public IValues? Values { get; set; }
 
             public void Visit(GenericVariable<bool> variable)
             {
-                bool[] data = variable.Data;
+                bool[]? data = variable.Data;
                 if (null != data)
                 {
                     for (int i = 0; i < data.Length; i++)
@@ -376,7 +385,7 @@ namespace StatsDirect.UI
 
             public void Visit(DoubleVariable variable)
             {
-                double[] data = variable.Data;
+                double[]? data = variable.Data;
                 if (null != data)
                 {
                     for (int i = 0; i < data.Length; i++)
@@ -389,7 +398,7 @@ namespace StatsDirect.UI
 
             public void Visit(GenericVariable<object> variable)
             {
-                object[] data = variable.Data;
+                object[]? data = variable.Data;
                 if (null != data)
                 {
                     for (int i = 0; i < data.Length; i++)
@@ -411,7 +420,7 @@ namespace StatsDirect.UI
 
             public void Visit(StringVariable variable)
             {
-                string[] data = variable.Data;
+                string?[]? data = variable.Data;
                 for (int i = 0; i < data.Length; i++)
                 {
                     string value = data[i] ?? string.Empty;
@@ -436,7 +445,7 @@ namespace StatsDirect.UI
 
             public void Visit(GenericVariable<DateTime> variable)
             {
-                DateTime[] data = variable.Data;
+                DateTime[]? data = variable.Data;
                 if (null != data)
                 {
                     for (int i = 0; i < data.Length; i++)
@@ -450,7 +459,7 @@ namespace StatsDirect.UI
 
             public void Visit(ClassifierVariable variable)
             {
-                double[] data = variable.Data;
+                double[]? data = variable.Data;
                 if (null != data)
                 {
                     for (int i = 0; i < data.Length; i++)
@@ -485,7 +494,7 @@ namespace StatsDirect.UI
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
                     IVariable variable = frame.Variables[v];
-                    string title = variable.Title;
+                    string? title = variable.Title;
                     if (null != title)
                         values.SetText(0, firstColumnOfData + v, title);
                     variable.Accept(new VariableInsertionVisitor { Column = firstColumnOfData + v, IsFormulae = isFormulae, OffsetForTitles = offsetForTitles, MissingIndicator = missingIndicator, Values = values });
@@ -552,7 +561,7 @@ namespace StatsDirect.UI
             return new Area(grid, range.Row, range.Column, range.Row + range.RowCount - 1, range.Column + range.ColumnCount - 1);
         }
 
-        private static void DoOrWarn(Action func, string explanation)
+        private void DoOrWarn(Action func, string explanation)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -563,7 +572,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
+                SdApplication.FriendlyError(explanation, ex, false);
             }
 #endif
         }
@@ -579,29 +588,29 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.WriteToBlackbox("Unexpected exception in spreadsheet form", ex);
+                LastChanceCatcher.WriteToBlackbox("Unexpected exception in spreadsheet form", ex);
             }
 #endif
         }
 
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void closeToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(Close, "Couldn't close workbook");
         }
 
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(() => SaveContents(), "Couldn't save workbook");
         }
 
-        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void saveAsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(() => SaveAsContents(), "Couldn't save workbook");
         }
 
         private class CellSelectionResult
         {
-            public CellSelection CellSelection { get; set; }
+            public CellSelection? CellSelection { get; set; }
             /// <summary>If true, the user cancelled the selection</summary>
             public bool UserCancelled { get; set; }
             /// <summary>If true, the user changed from selecting groups by column to by identifier, or vice versa</summary>
@@ -618,7 +627,7 @@ namespace StatsDirect.UI
         /// <param name="allowUserToPivot">If true, the user is prompted for groups by column / groups by identifier.  If false, the user is not prompted.</param>
         /// <param name="selectionWasDefaulted">If true, there's already a selection on the sheet but the user *must* interact to confirm it.  If false, if there's a selection we'll take it.</param>
         /// <returns>the user's cell selections within the active worksheet, or null if the user declined to select anything</returns>
-        private CellSelectionResult GetSelection(int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool selectionWasDefaulted)
+        private CellSelectionResult GetSelection(int minimumColumns, int maximumColumns, string? selectionMessage, string? cancelButtonLabel, bool allowUserToPivot, bool selectionWasDefaulted)
         {
             // Handle default selections: we may need to come in with a pre-selected area and force the user to confirm it.  However, if the user gives an illegal selection, we need to give errors.  So we keep a state of whether the selection presently on the grid is the default or is user-selected.
             bool selectionIsDefault = selectionWasDefaulted;
@@ -665,8 +674,8 @@ namespace StatsDirect.UI
 
                 // Create an intelligent message to the user and show it
                 if (hasSelection && sel.TotalColumns > 0 && !selectionIsDefault)
-                    GridSelectionProcessor.SelNumWarn(minimumColumns, maximumColumns, sel.TotalColumns, msgTi);
-                string fullSelectionMessage = selectionMessage;
+                    new GridSelectionProcessor(this, SdApplication, TemplateProcessorFactory, UiPreferences, UserInterface).SelNumWarn(minimumColumns, maximumColumns, sel.TotalColumns, msgTi);
+                string fullSelectionMessage = selectionMessage ?? string.Empty;
                 if (minimumColumns == maximumColumns)
                     fullSelectionMessage += " (" + minimumColumns.ToString() + " column" + (minimumColumns > 1 ? "s" : string.Empty) + ")";
                 else
@@ -675,7 +684,7 @@ namespace StatsDirect.UI
                 BackColor = SystemColors.Info;
                 try
                 {
-                    if (!SdApplication.SoleInstance.SelectCells(fullSelectionMessage, cancelButtonLabel, maximumColumns > 1, allowUserToPivot, out bool wasPivoted))
+                    if (!SdApplication.SelectCells(fullSelectionMessage, cancelButtonLabel, maximumColumns > 1, allowUserToPivot, out bool wasPivoted))
                     {
                         // The user either cancelled or pivoted
                         return new CellSelectionResult { UserCancelled = !wasPivoted, WasPivoted = wasPivoted };
@@ -707,7 +716,7 @@ namespace StatsDirect.UI
         /// <param name="wasPivoted">If true, the user changed from selecting groups by column to by identifier, or vice versa</param>
         /// <param name="originGroup"></param>
         /// <returns></returns>
-        public DataFrame GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string selectionMessage, string cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup)
+        public DataFrame? GetCellArray(int rowLengthHint, DataAcquisitionMode mode, int minimumColumns, int maximumColumns, string? selectionMessage, string? cancelButtonLabel, bool allowUserToPivot, bool mightBeBatching, out bool userCancelled, out bool wasPivoted, int originGroup)
         {
             bool shouldDefaultSelection = null != mostRecentCellSelectionDuringBatch && mightBeBatching;
             if (shouldDefaultSelection)
@@ -721,7 +730,7 @@ namespace StatsDirect.UI
             CellSelectionResult cellSelectionResult = GetSelection(minimumColumns, maximumColumns, selectionMessage, cancelButtonLabel, allowUserToPivot, shouldDefaultSelection);
             userCancelled = cellSelectionResult.UserCancelled;
             wasPivoted = cellSelectionResult.WasPivoted;
-            CellSelection cellSelection = cellSelectionResult.CellSelection;
+            CellSelection? cellSelection = cellSelectionResult.CellSelection;
 
             if (mightBeBatching)
                 mostRecentCellSelectionDuringBatch = cellSelection;
@@ -732,7 +741,7 @@ namespace StatsDirect.UI
                 return null;
             }
 
-            return CellArrayProcessor.ProcessCellArray(cellSelection, mode, rowLengthHint, false, false, originGroup, ((WindowInformation)Tag).FriendlyName);
+            return new CellArrayProcessor(SdApplication).ProcessCellArray(cellSelection, mode, rowLengthHint, false, false, originGroup, ((WindowInformation)Tag).FriendlyName);
         }
 
         /// <summary>
@@ -741,27 +750,31 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="val">The value to be converted</param>
         /// <returns>MISSING if the value could not be converted, MISSING * 10 if the value was previously MISSING, or the converted value</returns>
-        public static double ToCellValue(object val)
+        public static double ToCellValue(object? val)
         {
-            if (null == val)
-                return Constant.MISSING;
-            if (val is double)
-                return (double)val;
-            if (val is int)
-                return (int)val;
-            if (val is string buf)
+            switch (val)
             {
-                if (double.TryParse(buf, out double dval))
-                    return dval;
-                string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);
-                if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
-                    return Constant.MISSING * 10D;
-                // if (ubuf == "#NULL!" || ubuf == "#NUM!")
-                //    return Constant.MISSING;
-                return Constant.MISSING; // If we can't parse it as a number, and we want numbers, it's MISSING.
+                case null:
+                    return Constant.MISSING;
+                case double v:
+                    return v;
+                case int i:
+                    return i;
+                case string buf:
+                    {
+                        if (double.TryParse(buf, out double dval))
+                            return dval;
+                        string ubuf = buf.ToUpper(CultureInfo.InvariantCulture);
+                        if (ubuf == "*" || ubuf == "MISSING" || ubuf == ".")
+                            return Constant.MISSING * 10D;
+                        // if (ubuf == "#NULL!" || ubuf == "#NUM!")
+                        //    return Constant.MISSING;
+                        return Constant.MISSING; // If we can't parse it as a number, and we want numbers, it's MISSING.
+                    }
+                default:
+                    // throw new NotImplementedException("Don't know how to handle type " + val.GetType().FullName);
+                    return Constant.MISSING;
             }
-            // throw new NotImplementedException("Don't know how to handle type " + val.GetType().FullName);
-            return Constant.MISSING;
         }
 
         /// <summary>
@@ -770,21 +783,19 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="val">The value to be converted</param>
         /// <returns>DateTime.MinValue if the value could not be converted, or the converted value</returns>
-        public static DateTime ToCellDateValue(object val)
+        public static DateTime ToCellDateValue(object? val)
         {
-            if (null == val)
-                return DateTime.MinValue;
-            if (val is DateTime)
-                return (DateTime)val;
-            if (val is double)
-                return DateTime.FromOADate((double)val);
-            if (val is int)
-                return DateTime.FromOADate((int)val);
-            if (val is string)
+            return val switch
             {
-                return DateTime.TryParse((string)val, out DateTime dt) ? dt : DateTime.MinValue;
-            }
-            return DateTime.MinValue;
+                null => DateTime.MinValue,
+                DateTime dt => dt,
+                double d => DateTime.FromOADate(d),
+                int i => DateTime.FromOADate(i),
+                string s => DateTime.TryParse(s, out DateTime parsed)
+                    ? parsed
+                    : DateTime.MinValue,
+                _ => DateTime.MinValue
+            };
         }
 
         /// <summary>
@@ -798,7 +809,7 @@ namespace StatsDirect.UI
             return workbookView.WithLock(() => ToCellValue(workbookView.ActiveWorksheet.Cells[row, column].Value));
         }
 
-        string IGetCells.GetCellText(int row, int column)
+        string? IGetCells.GetCellText(int row, int column)
         {
             return workbookView.WithLock(() =>
             {
@@ -814,7 +825,7 @@ namespace StatsDirect.UI
         /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
         /// <returns></returns>
-        public (object[,], int) GetCellObjects(int column, int firstRow, int lastRow)
+        public (object?[,], int) GetCellObjects(int column, int firstRow, int lastRow)
         {
             if (lastRow < firstRow)
                 return (new object[0, 0], 0);
@@ -874,12 +885,12 @@ namespace StatsDirect.UI
             });
         }
 
-        (double[], int) IGetCells.GetCellValues(int column, int firstRow, int lastRow)
+        (double[]?, int) IGetCells.GetCellValues(int column, int firstRow, int lastRow)
         {
             if (IsHiddenColumn(column))
                 return (null, 0);
 
-            (object[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
+            (object?[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
 
             double[] returnValues = new double[nonHiddenRowCount];
             for (int r = 0; r < nonHiddenRowCount; r++)
@@ -894,7 +905,7 @@ namespace StatsDirect.UI
 
         (DateTime[], int) IGetCells.GetCellDateValues(int column, int firstRow, int lastRow)
         {
-            (object[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
+            (object?[,] values, int nonHiddenRowCount) = GetCellObjects(column, firstRow, lastRow);
 
             DateTime[] returnValues = new DateTime[nonHiddenRowCount];
             for (int r = 0; r < nonHiddenRowCount; r++)
@@ -940,12 +951,12 @@ namespace StatsDirect.UI
             return new string(new[] { (char)(prefixValue + A), (char)(suffixValue + A) });
         }
 
-        private void workbookView_KeyDown(object sender, KeyEventArgs e)
+        private void workbookView_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (SdApplication.SoleInstance.IsSelecting && e.KeyCode == Keys.Enter)
+            if (SdApplication.IsSelecting && e.KeyCode == Keys.Enter)
             {
                 // This changes the state both for selecting and for data input, but is OK because we only get here if we're selecting.
-                SdApplication.SoleInstance.NoteEndOfSelection(true);
+                SdApplication.NoteEndOfSelection(true);
                 e.Handled = true;
             }
         }
@@ -982,10 +993,10 @@ namespace StatsDirect.UI
                 IRange cell = worksheet.Range[rowIndex, columnIndex];
                 if (cell.Font.Bold || cell.Font.Underline != UnderlineStyle.None)
                     return true;
-                object oV = cell.Value;
+                object? oV = cell.Value;
                 if (null == oV)
                     return false;
-                string v = oV.ToString();
+                string? v = oV.ToString();
                 return v.StartsWith("\"") || v.StartsWith("'");
             });
         }
@@ -1027,22 +1038,22 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void cutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(workbookView.Cut, "Cut failed");
         }
 
-        private void copyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void copyToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(workbookView.Copy, "Copy failed");
         }
 
-        private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
+        private void pasteToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(workbookView.Paste, "Paste failed");
         }
 
-        private void pasteSpecialToolStripMenuItem_Click(object sender, EventArgs e)
+        private void pasteSpecialToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(PasteSpecial, "Paste Special failed");
         }
@@ -1055,17 +1066,17 @@ namespace StatsDirect.UI
                 workbookView.PasteSpecial(frm.PasteType, PasteOperation.None, false, false);
         }
 
-        private void printToolStripMenuItem_Click(object sender, EventArgs e)
+        private void printToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(Print, "Print failed");
         }
 
-        private void printPreviewToolStripMenuItem_Click(object sender, EventArgs e)
+        private void printPreviewToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(workbookView.PrintPreview, "Print preview failed");
         }
 
-        private void pageSetupToolStripMenuItem_Click(object sender, EventArgs e)
+        private void pageSetupToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(PageSetup, "Page setup failed");
         }
@@ -1088,7 +1099,7 @@ namespace StatsDirect.UI
                 pageSetupDialog.AllowOrientation = true;
                 pageSetupDialog.AllowMargins = true;
                 // pageSetupDialog.AllowPaper = true;
-                DialogResult res = pageSetupDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                DialogResult res = pageSetupDialog.ShowDialog(SdApplication.DialogOwner);
                 if (res == DialogResult.OK)
                 {
                     // Save settings into SSG's sheet settings
@@ -1116,7 +1127,7 @@ namespace StatsDirect.UI
             return (int)(points / 72.0 * 100.0);
         }
 
-        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        private void undoToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(Undo, "Undo failed");
         }
@@ -1127,12 +1138,12 @@ namespace StatsDirect.UI
                 workbookView.ActiveCommandManager.Undo();
         }
 
-        private void cellsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void cellsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowRangeExplorer, "Format cells failed");
         }
 
-        private void sheetToolStripMenuItem_Click(object sender, EventArgs e)
+        private void sheetToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(InsertSheet, "Insert sheet failed");
         }
@@ -1142,7 +1153,7 @@ namespace StatsDirect.UI
             workbookView.WithLock(() => workbookView.ActiveWorksheet = workbookView.ActiveWorkbook.Worksheets.AddBefore(workbookView.ActiveWorksheet));
         }
 
-        private void rowToolStripMenuItem_Click(object sender, EventArgs e)
+        private void rowToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(InsertRow, "Insert row failed");
         }
@@ -1154,7 +1165,7 @@ namespace StatsDirect.UI
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireColumns)
                 {
-                    SdApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
+                    SdApplication.MsgboxX("You cannot insert an entire worksheet's height of blank rows.  Please select fewer rows.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert rows", false);
                     return;
                 }
 
@@ -1163,7 +1174,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void columnToolStripMenuItem_Click(object sender, EventArgs e)
+        private void columnToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(InsertColumn, "Insert column failed");
         }
@@ -1175,7 +1186,7 @@ namespace StatsDirect.UI
                 IRange currentRange = workbookView.RangeSelection;
                 if (currentRange.IsEntireRows)
                 {
-                    SdApplication.SoleInstance.MsgboxX("You cannot insert an entire worksheet's width of blank columns.  Please select fewer columns.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert columns", false);
+                    SdApplication.MsgboxX("You cannot insert an entire worksheet's width of blank columns.  Please select fewer columns.", MessageBoxButtons.OK, MessageBoxIcon.Error, "Insert columns", false);
                     return;
                 }
 
@@ -1184,7 +1195,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void cellsToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void cellsToolStripMenuItem1_Click(object? sender, EventArgs e)
         {
             DoOrWarn(InsertCells, "Insert cells failed");
         }
@@ -1229,7 +1240,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void sheetSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void sheetSettingsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(SheetSettings, "Sheet settings failed");
         }
@@ -1244,7 +1255,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void findToolStripMenuItem_Click(object sender, EventArgs e)
+        private void findToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditFind, "Find failed");
         }
@@ -1257,7 +1268,7 @@ namespace StatsDirect.UI
             Application.DoEvents(); // Force processing of events, in this case showing the find dialog
         }
 
-        private void replaceToolStripMenuItem_Click(object sender, EventArgs e)
+        private void replaceToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditReplace, "Replace failed");
         }
@@ -1270,14 +1281,14 @@ namespace StatsDirect.UI
             Application.DoEvents(); // Force processing of events, in this case showing the replace dialog
         }
 
-        private void goToCellToolStripMenuItem_Click(object sender, EventArgs e)
+        private void goToCellToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(GoToCell, "Go to cell failed");
         }
 
         private void GoToCell()
         {
-            string cell = SdApplication.SoleInstance.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
+            string cell = SdApplication.GetString("Enter the cell address, for example G54", "Go to cell", string.Empty);
             workbookView.WithLock(() =>
             {
                 if (null != cell)
@@ -1285,7 +1296,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void clearSelectionToolStripMenuItem_Click(object sender, EventArgs e)
+        private void clearSelectionToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ClearSelectedCells, "Clear selection failed");
         }
@@ -1297,7 +1308,7 @@ namespace StatsDirect.UI
             Application.DoEvents(); // Force processing of events, in this case clearing the selection
         }
 
-        private void deleteSpecialToolStripMenuItem_Click(object sender, EventArgs e)
+        private void deleteSpecialToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DeleteSpecial, "Delete Special failed");
         }
@@ -1343,7 +1354,7 @@ namespace StatsDirect.UI
 
         }
 
-        private void deleteColumnToolStripMenuItem_Click(object sender, EventArgs e)
+        private void deleteColumnToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DeleteColumn, "Delete column failed");
         }
@@ -1357,7 +1368,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void deleteRowToolStripMenuItem_Click(object sender, EventArgs e)
+        private void deleteRowToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DeleteRow, "Delete row failed");
         }
@@ -1371,19 +1382,19 @@ namespace StatsDirect.UI
             });
         }
 
-        private void deleteSheetToolStripMenuItem_Click(object sender, EventArgs e)
+        private void deleteSheetToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DeleteSheet, "Delete sheet failed");
         }
 
         private void DeleteSheet()
         {
-            bool shouldDelete = SdApplication.SoleInstance.Query("This will delete the current sheet. You cannot undo this operation. Are you sure you want to delete this sheet?", "Delete sheet");
+            bool shouldDelete = SdApplication.Query("This will delete the current sheet. You cannot undo this operation. Are you sure you want to delete this sheet?", "Delete sheet");
             if (shouldDelete)
                 workbookView.WithLock(() => workbookView.ActiveWorksheet.Delete());
         }
 
-        private void describeColumnDataToolStripMenuItem_Click(object sender, EventArgs e)
+        private void describeColumnDataToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DescribeColumn, "Description failed");
         }
@@ -1409,7 +1420,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void fillDownToolStripMenuItem_Click(object sender, EventArgs e)
+        private void fillDownToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditFillDown, "Fill down failed");
         }
@@ -1419,7 +1430,7 @@ namespace StatsDirect.UI
             workbookView.WithLock(() => workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill down", () => { workbookView.RangeSelection.FillDown(); return true; })));
         }
 
-        private void fillRightToolStripMenuItem_Click(object sender, EventArgs e)
+        private void fillRightToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditFillRight, "Fill right failed");
         }
@@ -1429,7 +1440,7 @@ namespace StatsDirect.UI
             workbookView.WithLock(() => workbookView.ActiveCommandManager.Execute(new UndoWrapper(workbookView.RangeSelection, "Fill right", () => { workbookView.RangeSelection.FillRight(); return true; })));
         }
 
-        private void rowHideToolStripMenuItem_Click(object sender, EventArgs e)
+        private void rowHideToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(HideRow, "Hide row failed");
         }
@@ -1443,7 +1454,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void rowUnhideToolStripMenuItem_Click(object sender, EventArgs e)
+        private void rowUnhideToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(UnhideRow, "Unhide row failed");
         }
@@ -1457,7 +1468,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void columnHideToolStripMenuItem_Click(object sender, EventArgs e)
+        private void columnHideToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(HideColumn, "Hide column failed");
         }
@@ -1471,7 +1482,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void columnUnhideToolStripMenuItem_Click(object sender, EventArgs e)
+        private void columnUnhideToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(UnhideColumn, "Unhide column failed");
         }
@@ -1485,7 +1496,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void freezePanesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void freezePanesToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(FreezePanes, "Freeze panes failed");
         }
@@ -1511,7 +1522,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void autoFitWidthToolStripMenuItem_Click(object sender, EventArgs e)
+        private void autoFitWidthToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AutoFitWidth, "Auto-fit failed");
         }
@@ -1521,7 +1532,7 @@ namespace StatsDirect.UI
             workbookView.WithLock(() => workbookView.RangeSelection.Columns.AutoFit());
         }
 
-        private void defaultFontToolStripMenuItem_Click(object sender, EventArgs e)
+        private void defaultFontToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(SetDefaultFont, "Set default font failed");
         }
@@ -1543,12 +1554,12 @@ namespace StatsDirect.UI
                     workbookView.ActiveWorkbookSet.DefaultFontName = dlg.Font.FontFamily.Name;
                     workbookView.ActiveWorkbookSet.DefaultFontSize = dlg.Font.SizeInPoints;
                 });
-                Properties.Settings.Default.DefaultWorkbookFont = Utilities.Utilities.SaveStringFromFont(dlg.Font);
-                Properties.Settings.Default.Save();
+                UiPreferences.DefaultWorkbookFont = FontCache.DescriptorFromFont(dlg.Font);
+                UiPreferences.Save();
             }
         }
 
-        private void lockSheetToolStripMenuItem_Click(object sender, EventArgs e)
+        private void lockSheetToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(LockSheet, "Lock sheet failed");
         }
@@ -1562,7 +1573,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void workbookView_ActiveTabChanged(object sender, ActiveTabChangedEventArgs e)
+        private void workbookView_ActiveTabChanged(object? sender, ActiveTabChangedEventArgs e)
         {
             DoOrSwallow(NoteActiveTabChanged);
         }
@@ -1573,7 +1584,7 @@ namespace StatsDirect.UI
                 lockSheetToolStripMenuItem.Checked = workbookView.ActiveWorksheet.ProtectContents;
         }
 
-        private void frmSpreadsheetGear_Shown(object sender, EventArgs e)
+        private void frmSpreadsheetGear_Shown(object? sender, EventArgs e)
         {
             DoOrSwallow(NoteShown);
         }
@@ -1587,27 +1598,27 @@ namespace StatsDirect.UI
             workbookView.Focus();
         }
 
-        private void importDataToolStripMenuItem_Click(object sender, EventArgs e)
+        private void importDataToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ImportData, "Import data failed");
         }
 
-        private static void ImportData()
+        private void ImportData()
         {
             DoOperation("ImportWorksheet");
         }
 
-        private static void DoOperation(string operationName)
+        private void DoOperation(string operationName)
         {
-            SdApplication.SoleInstance.DoOperation(operationName);
+            SdApplication.DoOperation(operationName);
         }
 
-        private void exportDataToolStripMenuItem_Click(object sender, EventArgs e)
+        private void exportDataToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ExportData, "Export data failed");
         }
 
-        private static void ExportData()
+        private void ExportData()
         {
             DoOperation("ExportWorksheet");
         }
@@ -1632,42 +1643,42 @@ namespace StatsDirect.UI
             workbookView.Print(true);
         }
 
-        private void cutContextMenuItem1_Click(object sender, EventArgs e)
+        private void cutContextMenuItem1_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(EditCut);
         }
 
-        private void copyContextMenuItem_Click(object sender, EventArgs e)
+        private void copyContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(EditCopy);
         }
 
-        private void pasteContextMenuItem_Click(object sender, EventArgs e)
+        private void pasteContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(EditPaste);
         }
 
-        private void pasteSpecialContextMenuItem_Click(object sender, EventArgs e)
+        private void pasteSpecialContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(PasteSpecial);
         }
 
-        private void insertContextMenuItem_Click(object sender, EventArgs e)
+        private void insertContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(InsertCells);
         }
 
-        private void deleteContextMenuItem_Click(object sender, EventArgs e)
+        private void deleteContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(DeleteSpecial);
         }
 
-        private void clearContentsContextMenuItem_Click(object sender, EventArgs e)
+        private void clearContentsContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(ClearSelectedCells);
         }
 
-        private void insertCommentContextMenuItem_Click(object sender, EventArgs e)
+        private void insertCommentContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(InsertComment);
         }
@@ -1685,23 +1696,23 @@ namespace StatsDirect.UI
             });
         }
 
-        private void goToContextMenuItem_Click(object sender, EventArgs e)
+        private void goToContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(GoToCell, "Go to cell failed");
         }
 
-        private void findAndReplaceContextMenuItem_Click(object sender, EventArgs e)
+        private void findAndReplaceContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(EditReplace);
         }
 
-        private void contextMenuStrip_Opening(object sender, CancelEventArgs e)
+        private void contextMenuStrip_Opening(object? sender, CancelEventArgs e)
         {
             // If we're selecting, this cancels the selection instead of showing the menu.
-            if (SdApplication.SoleInstance.SelectingData)
+            if (SdApplication.SelectingData)
             {
                 // NoteEndOfSelection clears both selectingData and inputtingData.  However, that's safe here, as we only get here if we're SelectingData.
-                SdApplication.SoleInstance.NoteEndOfSelection(true);
+                SdApplication.NoteEndOfSelection(true);
                 e.Cancel = true;
                 return;
             }
@@ -1718,7 +1729,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void deleteCommentContextMenuItem_Click(object sender, EventArgs e)
+        private void deleteCommentContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(DeleteComment);
         }
@@ -1732,7 +1743,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void showCommentContextMenuItem_Click(object sender, EventArgs e)
+        private void showCommentContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(ShowComment);
         }
@@ -1746,7 +1757,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void editCommentContextMenuItem_Click(object sender, EventArgs e)
+        private void editCommentContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(EditComment);
         }
@@ -1762,7 +1773,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void hideCommentContextMenuItem_Click(object sender, EventArgs e)
+        private void hideCommentContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(HideComment);
         }
@@ -1778,7 +1789,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        private void redoToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditRedo, "Couldn't redo");
         }
@@ -1824,7 +1835,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void formatCellsContextMenuItem_Click(object sender, EventArgs e)
+        private void formatCellsContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowRangeExplorer, "Couldn't format cells");
         }
@@ -1840,7 +1851,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void summaryContextMenuItem_Click(object sender, EventArgs e)
+        private void summaryContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DescribeColumn, "Couldn't describe column");
         }
@@ -1852,14 +1863,14 @@ namespace StatsDirect.UI
                 workbookView.ActiveWorkbook.FullName = childName);
         }
 
-        private void exportToRToolStripMenuItem_Click(object sender, EventArgs e)
+        private void exportToRToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ExportSelectionToR, "Couldn't export selection to clipboard in R format");
         }
 
         private void ExportSelectionToR()
         {
-            DataFrame frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out bool userCancelled, out bool wasPivoted, 0);
+            DataFrame? frame = GetCellArray(0, DataAcquisitionMode.Variant, 1, 10000, "Select the data to be placed on the clipboard", null, false, false, out bool userCancelled, out bool wasPivoted, 0);
             if (userCancelled)
                 return;
             StringBuilder sb = new();
@@ -1873,19 +1884,19 @@ namespace StatsDirect.UI
             workbookView.WithLock(() => workbookView.RangeSelection.AutoFilter());
         }
 
-        private void renameWorksheetContextMenuItem_Click(object sender, EventArgs e)
+        private void renameWorksheetContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(RenameWorksheet, "Couldn't rename worksheet");
         }
 
         private void RenameWorksheet()
         {
-            string currentWorksheetName = null;
+            string? currentWorksheetName = null;
             workbookView.WithLock(() =>
                 currentWorksheetName = workbookView.ActiveSheet.Name);
             if (null != currentWorksheetName)
             {
-                string newWorksheetName = SdApplication.SoleInstance.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
+                string newWorksheetName = SdApplication.GetString("Enter new name for worksheet", "Rename Worksheet", currentWorksheetName);
                 if (!string.IsNullOrWhiteSpace(newWorksheetName))
                     workbookView.WithLock(() => workbookView.ActiveSheet.Name = newWorksheetName);
             }
@@ -1893,12 +1904,12 @@ namespace StatsDirect.UI
 
         private class WriteDataFrameParametersHolder
         {
-            public DataFrame Frame { get; set; }
-            public bool IsFormulae { get; set; }
-            public string MissingIndicator { get; set; }
-            public int OffsetForTitles { get; set; }
-            public IRange Range { get; set; }
-            public bool ShouldMove { get; set; }
+            public DataFrame Frame { get; init; }
+            public bool IsFormulae { get; init; }
+            public string MissingIndicator { get; init; }
+            public int OffsetForTitles { get; init; }
+            public IRange Range { get; init; }
+            public bool ShouldMove { get; init; }
         }
     }
 

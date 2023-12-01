@@ -1,4 +1,5 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
@@ -8,36 +9,35 @@ namespace StatsDirect.Charting.Renderer
 {
     class MHRDChartRenderer : AbstractForestishChartRenderer, IChartRenderer
     {
-        public MHRDChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public MHRDChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             MHOptions options = (MHOptions)Definition.ChartOptions;
-            ScaleHeight(options.k);
+            ScaleHeight(options.K);
 
-            double[] gw = new double[options.k + 1];
+            double[] gw = new double[options.K + 1];
             double orMax = double.NegativeInfinity;
             double orMin = double.PositiveInfinity;
             double oruMax = double.NegativeInfinity;
             double orlMin = double.PositiveInfinity;
             double maxGw = double.NegativeInfinity;
             double absMin = double.PositiveInfinity;
-            for (int i = options.LowerBound; i < options.LowerBound + options.k; i++)
+            for (int i = options.LowerBound; i < options.LowerBound + options.K; i++)
             {
                 if (options.GroupSizes[i] != Constant.MISSING)
                 {
@@ -64,8 +64,8 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            DataMaxX = MaxIgnoringMissingAndInfinities(orMax, options.rmh, options.ul, oruMax);
-            DataMinX = MinIgnoringMissingAndInfinities(orMin, options.rmh, options.ll, orlMin);
+            DataMaxX = MaxIgnoringMissingAndInfinities(orMax, options.Rmh, options.UpperLimit, oruMax);
+            DataMinX = MinIgnoringMissingAndInfinities(orMin, options.Rmh, options.LowerLimit, orlMin);
 
             StartVectorPlot();
 
@@ -76,10 +76,10 @@ namespace StatsDirect.Charting.Renderer
             double rgap = 0;
             double xtra = 0;
             // allow room for right hand labels of effect and CI
-            double w = LegendWidthInCanvasCoordinates(ComboTi(options.cap)) + 30;
+            double w = LegendWidthInCanvasCoordinates(ComboTi(options.Caption)) + 30;
             if (w > xtra + XAxisCanvas)
                 xtra = w - XAxisCanvas - AxisBigTick;
-            for (int i = options.LowerBound; i < options.LowerBound + options.k; i++)
+            for (int i = options.LowerBound; i < options.LowerBound + options.K; i++)
             {
                 if (options.OddsRatios[i] != Constant.MISSING && !double.IsInfinity(options.OddsRatios[i]))
                 {
@@ -91,20 +91,20 @@ namespace StatsDirect.Charting.Renderer
                         rgap = w;
                 }
             }
-            AxisScales axisScales = LayoutChartAndDrawAxes(options.cap,
-                new AxisDefinition(options.qid + " (" + Formatting.XRound(options.cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
+            AxisScales axisScales = LayoutChartAndDrawAxes(options.Caption,
+                new AxisDefinition(options.Qid + " (" + Formatting.XRound(options.Cco * 100, 1) + "% confidence interval" + ")", AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra, ExtraSpaceAfterAxisEnds = rgap },
                 new AxisDefinition(null, AxisMode.None, ScaleType.Linear),
                 false, false);
-            axisScales.Y = new CategoryAxisScale(options.k + options.pbias);
-            DivY = options.k + options.pbias;
+            axisScales.Y = new CategoryAxisScale(options.K + options.Pbias);
+            DivY = options.K + options.Pbias;
             OffY = YAxisCanvas;
 
             int r = 0;
             double yc = 0;
-            for (int i = options.LowerBound + options.k - 1; i >= options.LowerBound; i--)
+            for (int i = options.LowerBound + options.K - 1; i >= options.LowerBound; i--)
             {
                 r++;
-                yc = r + options.pbias - 0.5;
+                yc = r + options.Pbias - 0.5;
                 if (options.OddsRatios[i] != Constant.MISSING)
                 {
                     double xm = options.OddsRatios[i] < axisScales.X.MinimumScaleValue
@@ -119,7 +119,7 @@ namespace StatsDirect.Charting.Renderer
                             ? axisScales.X.MinimumScaleValue
                             : options.OddsRatioUcis[i];
 
-                    DrawRowInChartCoordinates(options.Titles[i], options.OddsRatios[i], options.OddsRatioLcis[i], options.OddsRatioUcis[i], gw[i] / maxGw, absMin, yc, xm, xl, xr, options.lerr[i], options.uerr[i], options.MarkCentres);
+                    DrawRowInChartCoordinates(options.Titles[i], options.OddsRatios[i], options.OddsRatioLcis[i], options.OddsRatioUcis[i], gw[i] / maxGw, absMin, yc, xm, xl, xr, options.Lerr[i], options.Uerr[i], options.MarkCentres);
                 }
                 else
                 {
@@ -129,8 +129,8 @@ namespace StatsDirect.Charting.Renderer
 
             PlotNoEffectMarker(axisScales);
 
-            if (options.pbias == 1)
-                PlotPooledMarker(options.rmh, options.ll, options.ul, absMin, yc, options.cap);
+            if (options.Pbias == 1)
+                PlotPooledMarker(options.Rmh, options.LowerLimit, options.UpperLimit, absMin, yc, options.Caption);
 
             EndVectorPlot();
             return new ParameterBag();

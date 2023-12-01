@@ -5,7 +5,7 @@ using System;
 namespace StatsDirect.UI
 {
     [Serializable]
-    public class PaneAndPosition : IStripForRedo
+    public class PaneAndPosition
     {
         public Pane Pane { get; set; }
         public RelativePosition WritePosition { get; set; }
@@ -44,7 +44,7 @@ namespace StatsDirect.UI
             return Pane + " (" + renderedPosition + ")";
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (null == obj)
                 return false;
@@ -53,31 +53,17 @@ namespace StatsDirect.UI
             PaneAndPosition rhs = (PaneAndPosition)obj;
 
             // Pane
-            bool bothNull = null == Pane && null == rhs.Pane;
-            if (!bothNull && null == Pane || null == rhs.Pane)
+            if (null == Pane && null == rhs.Pane)
+                return true;
+            if (null == Pane || null == rhs.Pane)
                 return false;
-            if (!bothNull && !Pane.Equals(rhs.Pane))
+            if (!Pane.Equals(rhs.Pane))
                 return false;
 
             // WritePosition
             return WritePosition == rhs.WritePosition;
         }
 
-        public override int GetHashCode()
-        {
-            return Pane.GetHashCode() ^ (int)WritePosition;
-        }
-
-        public object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            // Indicate that this should not be kept
-            return null;
-        }
-
-        public void RefillForRedo(IRefillSource source)
-        {
-            // Should never refill, as should never have been present in the first place!
-            throw new NotImplementedException();
-        }
+        public override int GetHashCode() => HashCode.Combine(Pane, WritePosition);
     }
 }

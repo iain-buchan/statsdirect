@@ -1,4 +1,5 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System.Drawing;
@@ -7,8 +8,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class SurvivalChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public SurvivalChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public SurvivalChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -52,24 +53,19 @@ namespace StatsDirect.Charting.Renderer
             if (candidateMaxY > 1.0)
                 candidateMaxY = 1.0;
             DataMaxY = candidateMaxY;
-            return new ScaleParameters
-            {
-                X =
-                    {
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Min = DataMinX,
-                        Max = DataMaxX
-                    },
-                Y =
-                    {
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = DataMaxY,
-                        Min = 0
-                    }
-            };
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear }) {
+                    Min = DataMinX,
+                    Max = DataMaxX
+                },
+                new(new[] { ScaleType.Linear }) {
+                    Max = DataMaxY,
+                    Min = 0
+                }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -85,7 +81,7 @@ namespace StatsDirect.Charting.Renderer
             foreach (SurvivalOptions.SurvivalSeries ss in sOptions.Series)
             {
                 //  If any series doesn't have both confidence intervals, we don't plot them at all.
-                if (ss.YDatL == null || ss.YDatU == null)
+                if (ss.YDatL is null || ss.YDatU is null)
                 {
                     doCi = false;
                 }

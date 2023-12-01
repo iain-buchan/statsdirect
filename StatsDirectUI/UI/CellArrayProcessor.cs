@@ -4,13 +4,21 @@ using StatsDirect.Numerics;
 using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    static class CellArrayProcessor
+    internal class CellArrayProcessor
     {
+        private ISdApplication SdApplication { get; }
+
+        public CellArrayProcessor(ISdApplication sdApplication)
+        {
+            SdApplication = sdApplication;
+        }
+
         /// <summary>
         /// Turn the raw cell selection into a data frame with variables of the requested type selected in the requested way.
         /// </summary>
@@ -22,12 +30,12 @@ namespace StatsDirect.UI
         /// <param name="originGroup"></param>
         /// <param name="frameName"></param>
         /// <returns></returns>
-        public static DataFrame ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName)
+        public DataFrame? ProcessCellArray(CellSelection cellSelection, DataAcquisitionMode mode, int rowLengthHint, bool isRefill, bool titleWasInData, int originGroup, string frameName)
         {
             // If we get here, the user selected some data.
             try
             {
-                DataFrame frame;
+                DataFrame? frame;
                 switch (mode)
                 {
                     case DataAcquisitionMode.NumericSkipMissing:
@@ -41,7 +49,7 @@ namespace StatsDirect.UI
                     case DataAcquisitionMode.CategoryCombineAllColumns:
                     case DataAcquisitionMode.Text:
                         {
-                            if (!PreprocessCellArrayGroupsOrText(cellSelection, rowLengthHint, isRefill, titleWasInData, out int topRow, out string[,] hold))
+                            if (!PreprocessCellArrayGroupsOrText(cellSelection, rowLengthHint, isRefill, titleWasInData, out int topRow, out string[,]? hold))
                                 return null;
 
                             if (DataAcquisitionMode.CategoryReplaceMissing == mode)
@@ -92,12 +100,12 @@ namespace StatsDirect.UI
             }
             catch (ArithmeticException ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Internal error reading data from worksheet", ex, false);
+                SdApplication.FriendlyError("Internal error reading data from worksheet", ex, false);
                 throw; // TODO: What is the correct behaviour here?  Merely returning null causes a infinite loop
             }
         }
 
-        private static DataFrame ProcessCellArrayNumericCodingTextToSomething(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
+        private DataFrame ProcessCellArrayNumericCodingTextToSomething(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
             DataFrame frame = new();
             for (int c = 0; c < cellSelection.TotalColumns; c++)
@@ -148,7 +156,7 @@ namespace StatsDirect.UI
                             continue;
 
                         // Enumerate categories and put results in variable
-                        if (!groupsByLabel.TryGetValue(pattern, out Group probe))
+                        if (!groupsByLabel.TryGetValue(pattern, out Group? probe))
                         {
                             // New group
                             probe = new Group(pattern, nextGroupNumber++);
@@ -174,7 +182,7 @@ namespace StatsDirect.UI
                     else
                     {
                         // Dummies
-                        DataFrame dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, variable, true);
+                        DataFrame? dummyFrame = Sheet.ToDummyVariables(variable, true);
                         if (null != dummyFrame)
                         {
                             foreach (IVariable v in dummyFrame.Variables)
@@ -216,7 +224,7 @@ namespace StatsDirect.UI
                                 break;
                             }
                             int pattern = (int)v;
-                            if (!groupsByLabel.TryGetValue(pattern, out Group probe))
+                            if (!groupsByLabel.TryGetValue(pattern, out Group? probe))
                             {
                                 // New group
                                 probe = new Group(pattern.ToString(), nextGroupNumber++);
@@ -243,15 +251,15 @@ namespace StatsDirect.UI
                             cv.EnsureGroups(groupsByLabel.Count);
                             foreach (Group group in groupsByLabel.Values)
                                 cv.Groups[(int)group.Id] = group;
-                            DataFrame dummyFrame;
+                            DataFrame? dummyFrame;
                             try
                             {
-                                dummyFrame = Sheet.ToDummyVariables(SdApplication.SoleInstance, cv, true);
+                                dummyFrame = Sheet.ToDummyVariables(cv, true);
                             }
                             catch (TemplateOperationCancelledException ex)
                             {
                                 if (ex.ShouldShowError)
-                                    SdApplication.SoleInstance.Error(ex.Message, ex.Caption);
+                                    SdApplication.Error(ex.Message, ex.Caption);
                                 dummyFrame = null;
                             }
                             if (null != dummyFrame)
@@ -280,7 +288,7 @@ namespace StatsDirect.UI
         /// <param name="topRow"></param>
         /// <param name="hold"></param>
         /// <returns>False if the user cancelled in response to a question (implying selection should not proceed), true otherwise.</returns>
-        private static bool PreprocessCellArrayGroupsOrText(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, out int topRow, out string[,] hold)
+        private bool PreprocessCellArrayGroupsOrText(CellSelection cellSelection, int rowLengthHint, bool isRefill, bool titleWasInData, out int topRow, [NotNullWhen(true)] out string[,]? hold)
         {
             // code text categories as numbers
 
@@ -340,7 +348,7 @@ namespace StatsDirect.UI
                     using (new DefaultCursor())
                     {
                         switch (
-                            SdApplication.SoleInstance.MsgboxX(
+                            SdApplication.MsgboxX(
                                 "Does the top row of your selection contain titles?",
                                 MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question,
                                 "Worksheet Categorical Data Selection", true))
@@ -424,7 +432,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private static DataFrame ProcessCellArrayNumericSkipMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
+        private DataFrame? ProcessCellArrayNumericSkipMissing(CellSelection cellSelection, DataAcquisitionMode mode, int originGroup)
         {
             DataFrame frame = new();
 
@@ -450,7 +458,7 @@ namespace StatsDirect.UI
                 {
                     using (new DefaultCursor())
                     {
-                        SdApplication.SoleInstance.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
+                        SdApplication.MsgboxX("You must select numerical data for this function", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Worksheet Data Selection", true);
                     }
                     return null;
                 }
@@ -629,8 +637,10 @@ namespace StatsDirect.UI
                 variable.EnsureGroups(found);
                 for (int i = 0; i < found; i++)
                 {
-                    Group group = new(foundwhat[i], i);
-                    group.NBin = nbin[i];
+                    Group group = new(foundwhat[i], i)
+                    {
+                        NBin = nbin[i]
+                    };
                     variable.Groups[i] = group;
                 }
 

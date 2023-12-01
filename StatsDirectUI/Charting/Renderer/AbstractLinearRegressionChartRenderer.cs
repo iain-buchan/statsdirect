@@ -2,13 +2,14 @@
 using System.Drawing;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
     abstract class AbstractLinearRegressionChartRenderer : AbstractChartRenderer
     {
-        public AbstractLinearRegressionChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base(cd, canvasFactory)
+        public AbstractLinearRegressionChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(cd, canvasFactory, sdPreferences)
         {
         }
 
@@ -20,7 +21,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(yAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                ChartPreferences.DefaultBoxAxes, false);
+                ChartPreferences.BoxAxes, false);
 
             // plot points
             DoubleSeries xs = (DoubleSeries)Definition.XSeries[0];

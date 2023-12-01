@@ -7,8 +7,6 @@ using StatsDirect.UI;
 using StatsDirect.Utilities;
 using System.Globalization;
 using StatsDirect.Templates;
-using System.Diagnostics;
-using System.Linq;
 
 namespace StatsDirect.TemplateProcessing
 {
@@ -17,17 +15,23 @@ namespace StatsDirect.TemplateProcessing
     /// </summary>
     public sealed class TemplateProcessor : ITemplateProcessor
     {
-        private readonly ITemplateHost host;
-        private readonly TakeANumber takeAnOriginGroup;
         private const string STATSDIRECT_CHART_OPTIONS = "statsdirect-chart-options";
         private const string STATSDIRECT_CHART_SCALE_PARAMETERS = "statsdirect-chart-scale-parameters";
         private const string STATSDIRECT_FRAME_PANE = "statsdirect-frame-pane";
         private const string STATSDIRECT_REPORT_PANE = "statsdirect-report-pane";
+        private static readonly TakeANumber takeAnOriginGroup = new();
 
-        public TemplateProcessor(ITemplateHost host)
+        private IChartPreferences ChartPreferences { get; }
+        private ISdPreferences SdPreferences { get; }
+        private ISession Session { get; }
+        private ITemplateHost TemplateHost { get; }
+
+        public TemplateProcessor(IChartPreferences chartPreferences, ISdPreferences sdPreferences, ISession session, ITemplateHost templateHost)
         {
-            this.host = host;
-            takeAnOriginGroup = new TakeANumber();
+            ChartPreferences = chartPreferences;
+            SdPreferences = sdPreferences;
+            Session = session;
+            TemplateHost = templateHost;
         }
 
         /// <summary>
@@ -36,9 +40,9 @@ namespace StatsDirect.TemplateProcessing
         /// <param name="operation"></param>
         /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
         /// <param name="isRedo"> </param>
-        StepOutput ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters, bool isRedo)
+        StepOutput? ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters, bool isRedo)
         {
-            host.Operation = operation;
+            TemplateHost.Operation = operation;
             ParameterBag filledParameters = startingParameters ?? new ParameterBag();
 
             // Check preconditions; fail if any fail.
@@ -46,7 +50,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (!precondition.Check(this, filledParameters))
                 {
-                    host.Error(precondition.FailureMessage, "Cannot run operation");
+                    TemplateHost.Error(precondition.FailureMessage, "Cannot run operation");
                     return null;
                 }
             }
@@ -68,12 +72,12 @@ namespace StatsDirect.TemplateProcessing
                 catch (TemplateOperationCancelledException ex)
                 {
                     if (ex.ShouldShowError)
-                        host.Error(ex.Message, ex.Caption);
+                        TemplateHost.Error(ex.Message, ex.Caption);
                     // The user cancelled the operation
                     return null;
                 }
             }
-            host.Operation = null;
+            TemplateHost.Operation = null;
 #if RENDER_TESTS
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             using (System.IO.TextWriter sw = new System.IO.StringWriter(sb))
@@ -96,9 +100,7 @@ namespace StatsDirect.TemplateProcessing
         public void PrepareInternal(ParametersStep step, ParameterBag parameters)
         {
             foreach (Parameter parameter in step.Parameters)
-            {
-                host.PrepareParameter(this, parameter, parameters);
-            }
+                TemplateHost.PrepareParameter(parameter, parameters);
         }
 
         /// <summary>
@@ -120,13 +122,13 @@ namespace StatsDirect.TemplateProcessing
             {
                 if (step.ShouldCopyInputParameters)
                 {
-                    foreach (KeyValuePair<string, FilledParameter> inputParameter in parameters.Pairs)
+                    foreach (KeyValuePair<string, FilledParameter?> inputParameter in parameters.Pairs)
                         if (!result.ParameterBag.ContainsKey(inputParameter.Key))
                             result.ParameterBag.Add(inputParameter.Key, inputParameter.Value);
                 }
                 // Remove explicit blanks now that they have prevented copying.
                 List<string> keysToRemove = new();
-                foreach (KeyValuePair<string, FilledParameter> pair in result.ParameterBag.Pairs)
+                foreach (KeyValuePair<string, FilledParameter?> pair in result.ParameterBag.Pairs)
                     if (null == pair.Value)
                         keysToRemove.Add(pair.Key);
                 foreach (string keyToRemove in keysToRemove)
@@ -137,62 +139,59 @@ namespace StatsDirect.TemplateProcessing
 
         public StepOutput ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo)
         {
-            if (null == parameters)
-                throw new ArgumentOutOfRangeException(nameof(parameters), "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
             IBuiltin builtin = BuiltinRegistry.SoleInstance.Builtin(step.FunctionName);
-            if (null == builtin)
-                throw new Exception("No function '" + step.FunctionName + "' is supplied by the host.");
-            return builtin.Invoke(host, parameters);
+            if (builtin is null)
+                throw new Exception($"No function '{step.FunctionName}' is supplied by the host.");
+            return builtin.Invoke(TemplateHost, parameters);
         }
 
-        void FillChartDefinition(ChartStep step, ParameterBag parameters, bool isRedo, ChartDefinition definition, string dataName)
+        ChartDefinition CreateChartDefinition(ChartStep step, ParameterBag parameters, bool isRedo, string? dataName, IReadOnlyList<ISeries>? xSeries, IReadOnlyList<ISeries>? ySeries, string? xAxisTitle, string? yAxisTitle)
         {
+            ChartDefinition definition = FindOrPreprocessChartDefinition(step, parameters, isRedo, xSeries, ySeries, dataName, xAxisTitle, yAxisTitle);
             definition.ScaleParameters = MaybeFindScaleParameters(step, parameters, isRedo);
-            definition.ChartOptions = FindOrPreprocessChartOptions(step, parameters, isRedo, definition, dataName);
-            definition.IsAscii = step.IsAscii;
 
             // TODO: Gross hack (see #993): Forest lin/log depends on the chart options for the data.
             if (step.ChartType == ChartType.Forest)
             {
                 // #987: If the summary statistic variable ("odds") contains the word "ratio" then select log plot by default, else linear plot
-                if (definition.ChartOptions.XAxisTitle.Contains("ratio") || definition.ChartOptions.XAxisTitle.Contains("Ratio"))
-                    definition.ScaleParameters.X.ScaleType = ScaleType.Log10;
-                else
-                    definition.ScaleParameters.X.ScaleType = ScaleType.Linear;
+                definition.ScaleParameters.X.ScaleType = definition.ChartOptions.XAxisTitle.Contains("ratio") || definition.ChartOptions.XAxisTitle.Contains("Ratio")
+                    ? ScaleType.Log10
+                    : ScaleType.Linear;
             }
 
             if (step.RequestUserInput)
             {
-                if (null == host.Amend(definition, parameters))
+                if (null == TemplateHost.Amend(definition, parameters))
                     throw new TemplateOperationCancelledException();
             }
-            ChartOptionProcessor.PostProcessFilledChartOptions(definition);
+            new ChartDefinitionProcessor(ChartPreferences, SdPreferences).PostProcessFilledChartOptions(definition);
+            return definition;
         }
 
-        private ChartOptions FindOrPreprocessChartOptions(ChartStep step, ParameterBag parameters, bool isRedo, ChartDefinition definition, string dataName)
+        private ChartDefinition FindOrPreprocessChartDefinition(ChartStep step, ParameterBag parameters, bool isRedo, IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName, string? xAxisTitle, string? yAxisTitle)
         {
             // If we're redoing a previous operation, we should in theory have the previous ChartOptions.  Go look!
             if (isRedo)
             {
                 string possibleParameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty);
-                if (parameters.TryGetValue(possibleParameterName, out FilledParameter fp))
+                if (parameters.TryGetValue(possibleParameterName, out FilledParameter? fp))
                 {
                     if (null != fp && fp.HasData)
-                        return fp.AsChartOptions;
+                        return new ChartDefinition(step.ChartType, fp.AsChartOptions, xSeries, ySeries);
                 }
             }
 
             // If we're not redoing, or we can't find the options, then we need to fill them in now.
-            return ChartOptionProcessor.PreprocessChartOptions(step, parameters, definition, dataName, host);
+            return new ChartDefinitionProcessor(ChartPreferences, SdPreferences).Preprocess(step, parameters, xSeries, ySeries, dataName);
         }
 
-        private static ScaleParameters MaybeFindScaleParameters(ChartStep step, ParameterBag parameters, bool isRedo)
+        private static ScaleParameters? MaybeFindScaleParameters(ChartStep step, ParameterBag parameters, bool isRedo)
         {
             // If we're redoing a previous operation, we should in theory have the previous ScaleParameters.  Go look!
             if (isRedo)
             {
                 string possibleParameterName = STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty);
-                if (parameters.TryGetValue(possibleParameterName, out FilledParameter fp))
+                if (parameters.TryGetValue(possibleParameterName, out FilledParameter? fp))
                 {
                     if (null != fp && fp.HasData)
                         return fp.AsScaleParameters;
@@ -205,45 +204,48 @@ namespace StatsDirect.TemplateProcessing
 
         public StepOutput ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo)
         {
-            ChartDefinition definition = new() { ChartType = step.ChartType };
             // Series: First X...
-            string dataName = null;
+            string? dataName = null;
+            ISeries[]? xSeries = null;
             if (null != step.XSeriesDataName)
             {
                 if (!parameters.ContainsKey(step.XSeriesDataName))
                     throw new Exception("Chart expected parameter \"" + step.XSeriesDataName + "\", which was not supplied");
                 DataFrame frame = parameters[step.XSeriesDataName].AsDataFrame;
+                xSeries = new ISeries[frame.VariableCount];
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
-                    DoubleVariable variable = frame.Variables[v]as DoubleVariable;
-                    definition.AddXSeriesAt(ChartOptionProcessor.VariableToSeries(variable), v);
+                    DoubleVariable variable = frame.Variables[v] as DoubleVariable;
+                    xSeries[v] = ChartDefinitionProcessor.VariableToSeries(variable);
                 }
                 dataName = frame.Name;
             }
             // ... then Y
+            ISeries[]? ySeries = null;
             if (null != step.YSeriesDataName)
             {
                 if (!parameters.ContainsKey(step.YSeriesDataName))
                     throw new Exception("Chart expected parameter \"" + step.YSeriesDataName + "\", which was not supplied");
                 DataFrame frame = parameters[step.YSeriesDataName].AsDataFrame;
+                ySeries = new ISeries[frame.VariableCount];
                 for (int v = 0; v < frame.VariableCount; v++)
                 {
-                    DoubleVariable variable = frame.Variables[v]as DoubleVariable;
-                    definition.AddYSeriesAt(ChartOptionProcessor.VariableToSeries(variable), v);
+                    DoubleVariable variable = frame.Variables[v] as DoubleVariable;
+                    ySeries[v] = ChartDefinitionProcessor.VariableToSeries(variable);
                 }
                 dataName = frame.Name;
             }
 
-            FillChartDefinition(step, parameters, isRedo, definition, dataName);
-            string xAxisTitle = step.XAxisTitle(this, parameters);
-            string yAxisTitle = step.YAxisTitle(this, parameters);
-            if (!string.IsNullOrEmpty(xAxisTitle))
-                definition.ChartOptions.XAxisTitle = xAxisTitle;
-            if (!string.IsNullOrEmpty(yAxisTitle))
-                definition.ChartOptions.YAxisTitle = yAxisTitle;
+            string? xAxisTitle = step.XAxisTitle(this, parameters);
+            string? yAxisTitle = step.YAxisTitle(this, parameters);
+            if (string.IsNullOrWhiteSpace(xAxisTitle))
+                xAxisTitle = null;
+            if (string.IsNullOrWhiteSpace(yAxisTitle))
+                yAxisTitle = null;
+            ChartDefinition definition = CreateChartDefinition(step, parameters, isRedo, dataName, xSeries, ySeries, xAxisTitle, yAxisTitle);
 
             // Run a plot in case it needs to return some results - TODO: This requires plotting twice, which feels like a potential mess.
-            ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, definition);
+            ParameterBag results = new ChartRendererFactory(SdPreferences, TemplateHost).PlotForResultsOnly(definition);
             results.AddOutput(step.ChartName, definition);
             SaveChartDefinition(step, results, definition);
             return new StepOutput(results);
@@ -293,11 +295,11 @@ namespace StatsDirect.TemplateProcessing
             DataFrame frame = parameters[step.ParameterName].AsDataFrame;
             if (null != frame)
             {
-                PaneAndPosition preferredPaneAndPosition = null;
+                PaneAndPosition? preferredPaneAndPosition = null;
                 if (parameters.ContainsKey(STATSDIRECT_FRAME_PANE)
                     && null != parameters[STATSDIRECT_FRAME_PANE])
                     preferredPaneAndPosition = parameters[STATSDIRECT_FRAME_PANE].AsPaneAndPosition;
-                host.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition, step.DefaultPlacement);
+                TemplateHost.OutputFrame(frame, step.KeepSelection, step.IsFormulae, step.MissingIndicator, preferredPaneAndPosition, step.DefaultPlacement);
             }
             return StepOutput.Empty();
         }
@@ -349,7 +351,7 @@ namespace StatsDirect.TemplateProcessing
                         TryToRecallParameterForAllOperations(filledParameters, parameter);
 
                     // Try to combine requests for parameters where possible.  The host can always refuse a request.
-                    bool shouldCombine = host.CanCombine(parameter);
+                    bool shouldCombine = TemplateHost.CanCombine(parameter);
                     if (!shouldCombine)
                     {
                         // We've hit a parameter we should not or cannot combine.  Ensure any grouped parameters are handled at this point.
@@ -357,9 +359,7 @@ namespace StatsDirect.TemplateProcessing
                         if (outstandingParameters.Count > 0)
                         {
                             // Fill in and validate previous parameters
-                            ParameterBag outstandingFilledParameters = host.FillAndValidateCombinedParameters(this, parmsAndFilledParameters);
-                            if (null == outstandingFilledParameters)
-                                throw new TemplateOperationCancelledException();
+                            ParameterBag outstandingFilledParameters = TemplateHost.FillAndValidateCombinedParameters(parmsAndFilledParameters);
                             foreach (Parameter outstandingParameter in outstandingParameters)
                                 MaybeRemember(outstandingParameter, outstandingFilledParameters);
                             foreach (KeyValuePair<string, FilledParameter> pair in outstandingFilledParameters.Pairs)
@@ -379,7 +379,7 @@ namespace StatsDirect.TemplateProcessing
                         // Ensure recently-acquired parameters are added to the context for the next parameter acquisition
                         parmsAndFilledParameters = CombinePreferringLater(parms, filledParameters);
                     }
-                    ParameterBag newFilledParameters = host.FillParameter(this, parameter, parmsAndFilledParameters, shouldCombine);
+                    ParameterBag newFilledParameters = TemplateHost.FillParameter(parameter, parmsAndFilledParameters, shouldCombine);
                     if (shouldCombine)
                     {
                         outstandingParameters.Add(parameter);
@@ -389,7 +389,7 @@ namespace StatsDirect.TemplateProcessing
                         // Bug #1244
                         ParameterBag oldAndNewFilledParameters = CombinePreferringLater(parmsAndFilledParameters, newFilledParameters);
                         ParameterBag defaults = parameter.AllDefaults(this, oldAndNewFilledParameters);
-                        foreach (KeyValuePair<string, FilledParameter> fp in defaults.Pairs)
+                        foreach (KeyValuePair<string, FilledParameter?> fp in defaults.Pairs)
                         {
                             if (null != fp.Value && fp.Value.HasData)
                             {
@@ -404,7 +404,7 @@ namespace StatsDirect.TemplateProcessing
                     {
                         MaybeRemember(parameter, newFilledParameters);
                         if (null != newFilledParameters)
-                            foreach (KeyValuePair<string, FilledParameter> pair in newFilledParameters.Pairs)
+                            foreach (KeyValuePair<string, FilledParameter?> pair in newFilledParameters.Pairs)
                                 filledParameters.Add(pair.Key, pair.Value);
                     }
                 }
@@ -421,11 +421,11 @@ namespace StatsDirect.TemplateProcessing
                         RelativePosition rp = null == frameStep ? RelativePosition.AfterSelection : ((OutputFrameStep)frameStep).DefaultPlacement;
                         string missingIndicator = null == frameStep ? Formatting.ASTERISK : ((OutputFrameStep)frameStep).MissingIndicator;
                         SpecialParameter frameParameter = new() { Name = STATSDIRECT_FRAME_PANE, SpecialType = "frame", ExtraData = new object[] { rp, missingIndicator } };
-                        host.FillParameter(this, frameParameter, parmsAndFilledParameters, true);
+                        TemplateHost.FillParameter(frameParameter, parmsAndFilledParameters, true);
                     }
 
                     // Handle previous parameter fill-in, validation and combination
-                    ParameterBag outstandingFilledParameters = host.FillAndValidateCombinedParameters(this, parmsAndFilledParameters);
+                    ParameterBag outstandingFilledParameters = TemplateHost.FillAndValidateCombinedParameters(parmsAndFilledParameters);
                     if (null == outstandingFilledParameters)
                         throw new TemplateOperationCancelledException();
                     foreach (Parameter outstandingParameter in outstandingParameters)
@@ -445,7 +445,7 @@ namespace StatsDirect.TemplateProcessing
             catch (Exception ex)
             {
                 // Fail the operation
-                host.Error("Internal error: " + ex.Message, "Operation terminated");
+                TemplateHost.Error("Internal error: " + ex.Message, "Operation terminated");
                 throw new Utilities.TemplateOperationCancelledException();
             }
 #endif
@@ -454,10 +454,7 @@ namespace StatsDirect.TemplateProcessing
         /// <summary>
         /// Combine bag1 and bag2 into a new bag (returned).  Where bag1 and bag2 contain the same parameter, prefer the one from bag2 unless it is a default parameter (in which case prefer bag1).
         /// </summary>
-        /// <param name="bag1"></param>
-        /// <param name="bag2"></param>
-        /// <returns></returns>
-        private static ParameterBag CombinePreferringLater(ParameterBag bag1, ParameterBag bag2)
+        private static ParameterBag CombinePreferringLater(ParameterBag? bag1, ParameterBag? bag2)
         {
             ParameterBag combinedParameters = new();
             if (null != bag2)
@@ -481,7 +478,7 @@ namespace StatsDirect.TemplateProcessing
             if (filledParameters.ContainsKey(parameter.Name) && filledParameters[parameter.Name].IsInputParameter)
                 return;
 
-            TryToRecallSavedParameterFromBag(host.SessionParametersAcrossOperations, filledParameters, parameter.Name);
+            TryToRecallSavedParameterFromBag(Session.SessionParametersAcrossOperations, filledParameters, parameter.Name);
         }
 
         private void TryToRecallParameterForThisOperation(ParameterBag filledParameters, Parameter parameter)
@@ -490,7 +487,7 @@ namespace StatsDirect.TemplateProcessing
             if (filledParameters.ContainsKey(parameter.Name) && filledParameters[parameter.Name].IsInputParameter)
                 return;
 
-            IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
+            IDictionary<string, ParameterBag> savedParametersPerOperation = Session.SessionParametersPerOperation;
             if (parameter is OptionsParameter)
             {
                 if (savedParametersPerOperation.ContainsKey(parameter.Operation.Name))
@@ -512,7 +509,7 @@ namespace StatsDirect.TemplateProcessing
 
         private static void TryToRecallSavedParameterFromBag(ParameterBag savedParameters, ParameterBag filledParameters, string name)
         {
-            if (savedParameters.TryGetValue(name, out FilledParameter savedParameter))
+            if (savedParameters.TryGetValue(name, out FilledParameter? savedParameter))
             {
                 // #1289: In rare cases, operations overwrite input parameters with outputs and the outputs get saved to session.ser. To allow us to use old (arguably corrupt) session files rather than insist everyone deletes them, filter out problematic values.
                 if (savedParameter.IsInputParameter)
@@ -525,7 +522,7 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         /// <param name="parameter"></param>
         /// <param name="parameterBag"></param>
-        private void MaybeRemember(Parameter parameter, ParameterBag parameterBag)
+        private void MaybeRemember(Parameter parameter, ParameterBag? parameterBag)
         {
             // Null parameter bags come from cancelling optional parameters.
             if (null == parameterBag)
@@ -540,14 +537,14 @@ namespace StatsDirect.TemplateProcessing
             {
                 case ParameterLifetime.SessionForThisOperation:
                     {
-                        IDictionary<string, ParameterBag> savedParametersPerOperation = host.SessionParametersPerOperation;
-                        ParameterBag savedParameterBag;
+                        IDictionary<string, ParameterBag> savedParametersPerOperation = Session.SessionParametersPerOperation;
+                        ParameterBag? savedParameterBag;
                         if (parameter is OptionsParameter)
                         {
                             foreach (OptionsOption opt in ((OptionsParameter)parameter).Options)
                             {
                                 // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                                if (!parameterBag.TryGetValue(opt.Name, out FilledParameter filledParameterToSave))
+                                if (!parameterBag.TryGetValue(opt.Name, out FilledParameter? filledParameterToSave))
                                     continue;
 
                                 if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
@@ -561,7 +558,7 @@ namespace StatsDirect.TemplateProcessing
                         else
                         {
                             // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                            if (!parameterBag.TryGetValue(parameter.Name, out FilledParameter filledParameterToSave))
+                            if (!parameterBag.TryGetValue(parameter.Name, out FilledParameter? filledParameterToSave))
                                 return;
 
                             if (!savedParametersPerOperation.TryGetValue(parameter.Operation.Name, out savedParameterBag))
@@ -576,10 +573,10 @@ namespace StatsDirect.TemplateProcessing
                 case ParameterLifetime.SessionForAllOperations:
                     {
                         // Find the parameter to remember.  If it's not present in the bag, do nothing.
-                        if (!parameterBag.TryGetValue(parameter.Name, out FilledParameter filledParameterToSave))
+                        if (!parameterBag.TryGetValue(parameter.Name, out FilledParameter? filledParameterToSave))
                             return;
 
-                        ParameterBag savedParameterBag = host.SessionParametersAcrossOperations;
+                        ParameterBag savedParameterBag = Session.SessionParametersAcrossOperations;
                         savedParameterBag[parameter.Name] = filledParameterToSave;
                     }
                     break;
@@ -590,25 +587,14 @@ namespace StatsDirect.TemplateProcessing
         {
             ReportTemplateAndParameters filledTemplate = new(new ReportTemplate(reportStep.GetContent(), reportStep.MimeType), parameters);
 
-            object /* Pane */ preferredPane = null;
+            object? /* Pane */ preferredPane = null;
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
-                && null != parameters[STATSDIRECT_REPORT_PANE])
+                && parameters[STATSDIRECT_REPORT_PANE] is not null)
                 preferredPane = parameters[STATSDIRECT_REPORT_PANE].AsPane;
-            string xml = null;
-            try
-            {
-                bool shouldKeepData = host.Preferences.ShouldKeepData;
-                xml = parameters.SerializeForRedo(shouldKeepData);
-            }
-            catch (Exception)
-            {
-                // TODO: Log what failed to be serialized so that it's possible to fix the problem.
-            }
-            preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, xml, preferredPane);
+            preferredPane = TemplateHost.OutputReport(filledTemplate, reportStep.Operation, preferredPane);
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new();
-            // outputParameters.Add(REPORT_ID_NAME, FilledParameterFactory.Input(reportId));
             if (!parameters.ContainsKey(STATSDIRECT_REPORT_PANE))
                 outputParameters.AddInput(STATSDIRECT_REPORT_PANE, preferredPane);
             return new StepOutput(outputParameters);
@@ -616,10 +602,13 @@ namespace StatsDirect.TemplateProcessing
 
         public StepOutput ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo)
         {
-            IScriptEngine scriptEngine = host.GetScriptEngine(step.Language);
+            if (!TemplateHost.TryGetScriptEngine(step.Language, out IScriptEngine? scriptEngine))
+                ;
             string entryPoint = step.EntryPoint;
-            ScriptType scriptType = null == entryPoint ? ScriptType.Function : ScriptType.MultipleMethods;
-            return new StepOutput((ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, host, parameters, null, entryPoint));
+            ScriptType scriptType = entryPoint is null
+                ? ScriptType.Function
+                : ScriptType.MultipleMethods;
+            return new StepOutput((ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, TemplateHost, parameters, null, entryPoint));
         }
 
         public StepOutput ExecuteInternal(TestStep step, ParameterBag parms, bool isRedo)
@@ -630,7 +619,7 @@ namespace StatsDirect.TemplateProcessing
             foreach (Step s in steps)
             {
                 StepOutput stepResult = Execute(s, parms, isRedo);
-                if (null == stepResult.ParameterBag)
+                if (stepResult.ParameterBag is null)
                     return stepResult;
                 parms = stepResult.ParameterBag;
             }
@@ -641,8 +630,9 @@ namespace StatsDirect.TemplateProcessing
         {
             if (expression.Body.StartsWith("="))
             {
-                IScriptEngine scriptEngine = host.GetScriptEngine(expression.Language);
-                return scriptEngine.Run(expression.Language, expression.Body.Substring(1), ScriptType.Expression, host, parameters, null, null);
+                if (!TemplateHost.TryGetScriptEngine(expression.Language, out IScriptEngine? scriptEngine))
+                    ;
+                return scriptEngine.Run(expression.Language, expression.Body.Substring(1), ScriptType.Expression, TemplateHost, parameters, null, null);
             }
             if (int.TryParse(expression.Body, out int candidateInt))
                 return candidateInt;
@@ -714,9 +704,6 @@ namespace StatsDirect.TemplateProcessing
             return cv;
         }
 
-        public int NextOriginGroup()
-        {
-            return takeAnOriginGroup.Next();
-        }
+        public int NextOriginGroup() => takeAnOriginGroup.Next();
     }
 }

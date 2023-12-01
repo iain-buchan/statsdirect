@@ -92,7 +92,7 @@ namespace StatsDirect.Data
                 int maxLength = 0;
                 foreach (IList<IVariable> vl in Variables)
                     foreach (IVariable v in vl)
-                        if (v != null)
+                        if (v is not null)
                             maxLength = Math.Max(maxLength, v.Length);
                 return maxLength;
             }
@@ -108,7 +108,7 @@ namespace StatsDirect.Data
                 int minLength = int.MaxValue;
                 foreach (IList<IVariable> vl in Variables)
                     foreach (IVariable v in vl)
-                        if (v != null)
+                        if (v is not null)
                             minLength = Math.Min(minLength, v.Length);
                 return minLength;
             }

@@ -1,21 +1,21 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class BiasMAOptions : GenericOptions
+    public class BiasMAOptions : AbstractGenericOptions
     {
-        public double[] x;
-        public double[] yy;
-        public double[] yw;
-        public int rows;
-        public double[] cl;
-        public double[] cu;
-        public double cco;
-        public double cit;
-        public double rmh;
-        public Transformation xform;
-        public bool diagonal;
+        public double[] X { get; }
+        public double[] YY { get; }
+        public double[] YW { get; }
+        public int Rows { get; }
+        public double[] Cl { get; }
+        public double[] Cu { get; }
+        public double Cco { get; }
+        public double Cit { get; }
+        public double Rmh { get; }
+        public Transformation Xform { get; }
+        public bool Diagonal { get; }
 
         public override bool ShowLegendIsRelevant => false;
 
@@ -24,20 +24,21 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public BiasMAOptions(double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal)
+        public BiasMAOptions(double[] x, double[] yy, double[] yw, int rows, string xtxt, double[] cl, double[] cu, double cco, double cit, double rmh, Transformation xform, bool diagonal, IChartPreferences chartPreferences)
+            : base(chartPreferences)
         {
-            this.x = x;
-            this.yy = yy;
-            this.yw = yw;
-            this.rows = rows;
+            X = x;
+            YY = yy;
+            YW = yw;
+            Rows = rows;
             XAxisTitle = xtxt;
-            this.cl = cl;
-            this.cu = cu;
-            this.cco = cco;
-            this.cit = cit;
-            this.rmh = rmh;
-            this.xform = xform;
-            this.diagonal = diagonal;
+            Cl = cl;
+            Cu = cu;
+            Cco = cco;
+            Cit = cit;
+            Rmh = rmh;
+            Xform = xform;
+            Diagonal = diagonal;
         }
     }
 }

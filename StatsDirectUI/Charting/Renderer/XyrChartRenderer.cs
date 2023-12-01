@@ -1,4 +1,5 @@
-﻿using StatsDirect.Numerics;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System.Drawing;
 
@@ -6,21 +7,20 @@ namespace StatsDirect.Charting.Renderer
 {
     class XyrChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public XyrChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public XyrChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters (
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -37,7 +37,7 @@ namespace StatsDirect.Charting.Renderer
                 legend = new Legend();
                 for (int g = 1; g <= options.ng; g++)
                 {
-                    MarkerType mt = ChartPreferences.MarkerTypes[ChartOptions.SeriesNumberToMarkerNumber(g - 1)];
+                    MarkerType mt = ChartPreferences.MarkerTypes[AbstractChartOptions.SeriesNumberToMarkerNumber(g - 1)];
                     legend.LegendEntries.Add(new LegendEntry { Label = options.bnam[g], MarkerType = mt });
                 }
             }
@@ -52,7 +52,7 @@ namespace StatsDirect.Charting.Renderer
             // Plot the points
             for (int g = 1; g <= options.ng; g++)
             {
-                int mkr = ChartOptions.SeriesNumberToMarkerNumber(g - 1);
+                int mkr = AbstractChartOptions.SeriesNumberToMarkerNumber(g - 1);
                 MarkerType t = ChartPreferences.MarkerTypes[mkr];
                 PenDescriptor p = GetMarkerPen(t);
                 double minx = double.MaxValue;

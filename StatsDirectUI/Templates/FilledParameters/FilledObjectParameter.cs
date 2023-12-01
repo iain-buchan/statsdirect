@@ -9,10 +9,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledObjectParameter : FilledParameter
     {
-        internal FilledObjectParameter()
-        {
-        }
-
         public FilledObjectParameter(FilledParameterDirection direction, object data)
             : base(direction)
         {
@@ -20,13 +16,13 @@ namespace StatsDirect.Templates
             Data = data;
         }
 
-        public override bool HasData => null != Data;
+        public override bool HasData => Data is not null;
 
-        public object Data { get; set; }
+        public object Data { get; }
 
         public override bool AsBoolean => (bool)Data;
 
-        public override ChartOptions AsChartOptions => (ChartOptions)Data;
+        public override AbstractChartOptions AsChartOptions => (AbstractChartOptions)Data;
 
         public override DataFrame AsDataFrame => (DataFrame)Data;
 
@@ -68,38 +64,11 @@ namespace StatsDirect.Templates
 
         public override bool IsString => Data is string;
 
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData)
-        {
-            object copiedData;
-            if (Data is IStripForRedo)
-            {
-                copiedData = ((IStripForRedo)Data).CopyAndStripForRedo(shouldKeepData);
-                if (null == copiedData)
-                    return null;
-            }
-            else
-            {
-                copiedData = Data;
-            }
-
-            return FilledParameterFactory.Make(Direction, copiedData);
-        }
-
-        internal override void RefillForRedo(IRefillSource refillSource)
-        {
-            base.RefillForRedo(refillSource);
-            if (Data is IStripForRedo)
-                ((IStripForRedo)Data).RefillForRedo(refillSource);
-        }
-
         public override string ToString()
         {
-            return "FP(" + Direction.ToString() + ", " + (null == Data ? "(null)" : Data.ToString()) + ")";
+            return $"FP({Direction}, {Data})";
         }
 
-        public override void Accept(IFilledParameterVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IFilledParameterVisitor visitor) => visitor.Visit(this);
     }
 }

@@ -112,7 +112,7 @@ namespace StatsDirect.PJLControls
     /// <summary>
     /// The ColorChangedEvent delegate.
     /// </summary>
-    public delegate void ColorChangedEventHandler(object sender, ColorChangedEventArgs e);
+    public delegate void ColorChangedEventHandler(object? sender, ColorChangedEventArgs e);
 
     /// <summary>
     /// A control that allows the selection of a color
@@ -135,19 +135,19 @@ namespace StatsDirect.PJLControls
         internal static readonly Size defaultColorWellSize = new(16, 16);
         internal static readonly Color defaultColor = Color.Black;
 
-        private ToolTip toolTip;
-        private IContainer components;
+        private ToolTip? toolTip;
+        private IContainer? components;
 
         private BorderStyle borderStyle = defaultBorderStyle;
         private Size borderSize = new(1, 1);
         private Size colorWellSize = defaultColorWellSize;
         private ColorWellInfo[] colorWells;
-        private ColorWellInfo pickColor;
-        private ColorWellInfo currentColor;
+        private ColorWellInfo? pickColor;
+        private ColorWellInfo? currentColor;
         private ColorSet colorSet = defaultColorSet;
         private ColorSortOrder colorSortOrder = defaultColorSortOrder;
         private int preferredColumns = defaultPreferredColumns;
-        private Color[] customColors;
+        private Color[]? customColors;
         private bool lastWellIsCustom;
         private Color customColor;
 
@@ -182,7 +182,7 @@ namespace StatsDirect.PJLControls
         {
             if (disposing)
             {
-                if (components != null)
+                if (components is not null)
                 {
                     components.Dispose();
                 }
@@ -197,12 +197,14 @@ namespace StatsDirect.PJLControls
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            // 
-            // toolTip
-            // 
-            this.toolTip.AutomaticDelay = 0;
+            this.components = new Container();
+            this.toolTip = new ToolTip(components)
+            {
+                // 
+                // toolTip
+                // 
+                AutomaticDelay = 0
+            };
             // 
             // ColorPanel
             // 
@@ -242,7 +244,7 @@ namespace StatsDirect.PJLControls
 
             private class DistanceComparer : IComparer
             {
-                public int Compare(object a, object b)
+                public int Compare(object? a, object? b)
                 {
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
@@ -253,7 +255,7 @@ namespace StatsDirect.PJLControls
 
             private class NameComparer : IComparer
             {
-                public int Compare(object a, object b)
+                public int Compare(object? a, object? b)
                 {
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
@@ -264,7 +266,7 @@ namespace StatsDirect.PJLControls
 
             private class SaturationComparer : IComparer
             {
-                public int Compare(object a, object b)
+                public int Compare(object? a, object? b)
                 {
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
@@ -275,7 +277,7 @@ namespace StatsDirect.PJLControls
 
             private class HueComparer : IComparer
             {
-                public int Compare(object a, object b)
+                public int Compare(object? a, object? b)
                 {
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
@@ -286,7 +288,7 @@ namespace StatsDirect.PJLControls
 
             private class BrightnessComparer : IComparer
             {
-                public int Compare(object a, object b)
+                public int Compare(object? a, object? b)
                 {
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
@@ -297,7 +299,7 @@ namespace StatsDirect.PJLControls
 
             private class UnsortedComparer : IComparer
             {
-                public int Compare(object a, object b)
+                public int Compare(object? a, object? b)
                 {
                     ColorWellInfo _a = (ColorWellInfo)a;
                     ColorWellInfo _b = (ColorWellInfo)b;
@@ -593,29 +595,21 @@ namespace StatsDirect.PJLControls
         /// The ColorChangedEvent event handler.
         /// </summary>
         [Browsable(true), Category("ColorPanel")]
-        public event ColorChangedEventHandler ColorChanged;
+        public event ColorChangedEventHandler? ColorChanged;
         /// <summary>
         /// 
         /// </summary>
         private void FireColorChanged()
         {
             if (null != pickColor)
-            {
                 OnColorChanged(new ColorChangedEventArgs(pickColor.Color));
-            }
         }
 
         /// <summary>
         /// Raises the ColorChanged event.
         /// </summary>
         /// <param name="e">A ColorChangedEventArgs contains the event data.</param>
-        protected virtual void OnColorChanged(ColorChangedEventArgs e)
-        {
-            if (null != ColorChanged)
-            {
-                ColorChanged(this, e);
-            }
-        }
+        protected virtual void OnColorChanged(ColorChangedEventArgs e) => ColorChanged?.Invoke(this, e);
 
         /// <summary>
         /// Get the color well at the specified point.
@@ -623,16 +617,12 @@ namespace StatsDirect.PJLControls
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        private ColorWellInfo ColorWellFromPoint(int x, int y)
+        private ColorWellInfo? ColorWellFromPoint(int x, int y)
         {
             // could be optimized
             foreach (ColorWellInfo c in colorWells)
-            {
                 if (c.ColorPosition.Contains(x, y))
-                {
                     return c;
-                }
-            }
 
             return null;
         }
@@ -644,16 +634,12 @@ namespace StatsDirect.PJLControls
         /// </summary>
         /// <param name="col"></param>
         /// <returns></returns>
-        private ColorWellInfo ColorWellFromColor(Color col)
+        private ColorWellInfo? ColorWellFromColor(Color col)
         {
             int colArgb = col.ToArgb();
             foreach (ColorWellInfo c in colorWells)
-            {
                 if (c.Color.ToArgb() == colArgb)
-                {
                     return c;
-                }
-            }
 
             return null;
         }
@@ -670,12 +656,8 @@ namespace StatsDirect.PJLControls
             int index = -1;
 
             for (int i = 0; i < num_colorWells; i++)
-            {
                 if (colorWells[i] == col)
-                {
                     index = i;
-                }
-            }
 
             return index;
         }
@@ -693,22 +675,15 @@ namespace StatsDirect.PJLControls
                 if (currentColor.IsCustomWell)
                 {
                     ColorWellInfo customWell = currentColor;
-                    PopupCustomColorPicker pop = new();
-                    try
+                    using PopupCustomColorPicker pop = new();
+                    pop.CustomColor = currentColor.Color;
+                    pop.ShowDialog(FindForm());
+                    // Mouse leave will have triggered currentColor being set to null
+                    currentColor = customWell;
+                    if (!pop.UserCancelled)
                     {
-                        pop.CustomColor = currentColor.Color;
-                        pop.ShowDialog(FindForm());
-                        // Mouse leave will have triggered currentColor being set to null
-                        currentColor = customWell;
-                        if (!pop.UserCancelled)
-                        {
-                            customColor = pop.CustomColor;
-                            customWell.ForceColor(pop.CustomColor);
-                        }
-                    }
-                    finally
-                    {
-                        pop.Dispose();
+                        customColor = pop.CustomColor;
+                        customWell.ForceColor(pop.CustomColor);
                     }
                 }
 
@@ -735,14 +710,12 @@ namespace StatsDirect.PJLControls
         /// a ColorChanged event.
         /// </summary>
         /// <param name="newColor"></param>
-        private void ChangeColor(ColorWellInfo newColor)
+        private void ChangeColor(ColorWellInfo? newColor)
         {
             if (newColor != currentColor)
             {
                 if (null != currentColor)
-                {
                     Invalidate(currentColor.ColorPosition);
-                }
 
                 currentColor = newColor;
 
@@ -780,7 +753,7 @@ namespace StatsDirect.PJLControls
             {
                 lastMousePosition = mousePosition;
 
-                ColorWellInfo newColor = ColorWellFromPoint(e.X, e.Y);
+                ColorWellInfo? newColor = ColorWellFromPoint(e.X, e.Y);
 
                 ChangeColor(newColor);
             }
@@ -798,7 +771,7 @@ namespace StatsDirect.PJLControls
             if (!Enabled)
                 return;
 
-            ColorWellInfo invalidColor = currentColor;
+            ColorWellInfo? invalidColor = currentColor;
             currentColor = null;
 
             if (null != invalidColor)
@@ -838,27 +811,12 @@ namespace StatsDirect.PJLControls
         /// <param name="keyData">One of the <c>System.Windows.Forms.Keys</c> values</param>
         /// <returns><B>true</B> if keyData is one of 
         /// Keys.Left, Keys.Right, Keys.Up and Keys.Down.  Otherwise <B>false</B>.</returns>
-        protected override bool IsInputKey(Keys keyData)
-        {
-            bool bIsInputKey = true;
-
-            switch (keyData)
+        protected override bool IsInputKey(Keys keyData) =>
+            keyData switch
             {
-                case Keys.Left:
-                    break;
-                case Keys.Right:
-                    break;
-                case Keys.Down:
-                    break;
-                case Keys.Up:
-                    break;
-                default:
-                    bIsInputKey = base.IsInputKey(keyData);
-                    break;
-            }
-
-            return bIsInputKey;
-        }
+                Keys.Left or Keys.Right or Keys.Down or Keys.Up => true,
+                _ => base.IsInputKey(keyData),
+            };
 
         private void MoveColumn(int index, bool bNext)
         {
@@ -1231,11 +1189,11 @@ namespace StatsDirect.PJLControls
         {
             get
             {
-                return pickColor != null ? pickColor.Color : defaultColor;
+                return pickColor is not null ? pickColor.Color : defaultColor;
             }
             set
             {
-                if (pickColor != null && pickColor.Color != value || pickColor == null)
+                if (pickColor is not null && pickColor.Color != value || pickColor is null)
                 {
                     UpdatePickColor(value);
 
@@ -1281,12 +1239,12 @@ namespace StatsDirect.PJLControls
         /// <returns></returns>
         public bool ShouldSerializeColor()
         {
-            return pickColor != null && pickColor.Color != defaultColor;
+            return pickColor is not null && pickColor.Color != defaultColor;
         }
 
         private void UpdatePickColor()
         {
-            UpdatePickColor(pickColor != null ? pickColor.Color : defaultColor);
+            UpdatePickColor(pickColor is not null ? pickColor.Color : defaultColor);
         }
 
         private void UpdatePickColor(Color c)
@@ -1338,7 +1296,9 @@ namespace StatsDirect.PJLControls
                 {
                     Trace.WriteLine(string.Format("Set ColorSet {0}", value));
 
-                    colorWells = value == ColorSet.Custom ? ColorWellInfo.GetCustomColorWells(customColors, colorSortOrder, LastWellIsCustom) : ColorWellInfo.GetColorWells(value, colorSortOrder);
+                    colorWells = value == ColorSet.Custom
+                        ? ColorWellInfo.GetCustomColorWells(        customColors, colorSortOrder, LastWellIsCustom)
+                        : ColorWellInfo.GetColorWells(value, colorSortOrder);
 
                     colorSet = value;
 
@@ -1419,7 +1379,7 @@ namespace StatsDirect.PJLControls
         }
 
         /// <summary>
-        /// Design time support to reset the ColorWellSize property to it's default value.
+        /// Design time support to reset the ColorWellSize property to its default value.
         /// </summary>
         public void ResetColorWellSize()
         {
@@ -1495,12 +1455,12 @@ namespace StatsDirect.PJLControls
         [Browsable(true)]
         [Category("ColorPanel")]
         [Description("Set/get the custom color palette.")]
-        public Color[] CustomColors
+        public Color[]? CustomColors
         {
             get => customColors;
             set
             {
-                if (value == null || value.Length < 1)
+                if (value is null || value.Length < 1)
                 {
                     value = new[] { Color.White };
                 }
@@ -1521,7 +1481,7 @@ namespace StatsDirect.PJLControls
         }
 
         /// <summary>
-        /// Design time support to reset the CustomColors property to it's default value.
+        /// Design time support to reset the CustomColors property to its default value.
         /// </summary>
         public void ResetCustomColors()
         {
@@ -1555,23 +1515,13 @@ namespace StatsDirect.PJLControls
         /// Helper for ColorPicker/ColorPanel
         /// </summary>
         /// <returns></returns>
-        internal static bool ShouldSerializeCustomColors(Color[] customColors)
+        internal static bool ShouldSerializeCustomColors(Color[]? customColors)
         {
-            bool bShouldSerialize = customColors.Length != 32;
-
-            if (!bShouldSerialize)
-            {
+            if (null != customColors && customColors.Length == 32)
                 foreach (Color c in customColors)
-                {
                     if (c != Color.White)
-                    {
-                        bShouldSerialize = true;
-                        break;
-                    }
-                }
-            }
-
-            return bShouldSerialize;
+                        return true;
+            return false;
         }
     }
 }

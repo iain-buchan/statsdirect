@@ -388,9 +388,9 @@ namespace StatsDirect.Numerics
             return fullSummaryFromXSortReturn;
         }
 
-        public bool FullSummaryFromX(double[] x, int rows, string ti, double UserCL, double UserCentL, double UserCentU, int CentileDef)
+        public bool FullSummaryFromX(double[] x, int rows, string? title, double UserCL, double UserCentL, double UserCentU, int CentileDef)
         {
-            Title = ti;
+            Title = title;
             double[] v = new double[rows];
             for (int i = 0; i < rows; i++)
                 v[i] = 1.0;

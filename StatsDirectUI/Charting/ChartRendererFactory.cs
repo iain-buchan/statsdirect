@@ -1,118 +1,89 @@
 ﻿using StatsDirect.Charting.Renderer;
 using StatsDirect.Templates;
+using System;
 
 namespace StatsDirect.Charting
 {
     /// <summary>
     /// Knows where to get the correct implementation of IChartRenderer for any given definition.
     /// </summary>
-    public static class ChartRendererFactory
+    public class ChartRendererFactory : IChartRendererFactory
     {
-        public static ICanvasFactory NULL_FACTORY = new NullCanvasFactory();
+        private static ICanvasFactory NULL_FACTORY { get; } = new NullCanvasFactory();
 
-        public static ChartDefinition PrepForLater(ChartType chartType, ChartOptions options)
+        private ISdPreferences SdPreferences { get; }
+        private IUserInterface UserInterface { get; }
+
+        public ChartRendererFactory(ISdPreferences sdPreferences, IUserInterface userInterface)
         {
-            return PrepForLater(chartType, options, null, null);
+            SdPreferences = sdPreferences;
+            UserInterface = userInterface;
         }
 
-        public static ChartDefinition PrepForLater(ChartType chartType, ChartOptions options, DoubleSeries xSeries, DoubleSeries ySeries)
+        ChartDefinition IChartRendererFactory.PrepForLater(ChartType chartType, AbstractChartOptions options, DoubleSeries? xSeries, DoubleSeries? ySeries)
         {
-            ChartDefinition cd = new() { ChartType = chartType, ChartOptions = options };
-            if (null != xSeries)
-                cd.AddXSeries(xSeries);
-            if (null != ySeries)
-                cd.AddYSeries(ySeries);
+            ChartDefinition cd = new(
+                chartType,
+                options,
+                xSeries is null
+                    ? Array.Empty<DoubleSeries>()
+                    : new DoubleSeries[] { xSeries },
+                ySeries is null
+                    ? Array.Empty<DoubleSeries>()
+                    : new DoubleSeries[] { ySeries }
+            );
             // Called from code, and there's no other path for getting hold of the scale parameters, so force that here.
             _ = cd.ScaleParameters;
             return cd;
         }
 
-        internal static ParameterBag PlotForResultsOnly(/* TODO: IPreferences*/ ITemplateHost host, ChartDefinition definition)
+        internal ParameterBag PlotForResultsOnly(ChartDefinition definition)
         {
-            using IChartRenderer ch = ChartRendererFor(definition, NULL_FACTORY);
-            return ch.Plot(host, true);
+            using IChartRenderer ch = ((IChartRendererFactory)this).ChartRendererFor(definition, NULL_FACTORY);
+            return ch.Plot(true);
         }
 
-        public static IChartRenderer ChartRendererFor(ChartDefinition chartDefinition, ICanvasFactory canvasFactory)
-        {
-            switch (chartDefinition.ChartType)
+        IChartRenderer IChartRendererFactory.ChartRendererFor(ChartDefinition chartDefinition, ICanvasFactory canvasFactory) =>
+            chartDefinition.ChartType switch
             {
-                case ChartType.AgreementPair:
-                    return new AgreementPairChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Bar:
-                    return new BarChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.BiasMA:
-                    return new BiasMAChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.BoxWhisker:
-                    return new BoxWhiskerChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Control:
-                    return new ControlChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Correlation:
-                    return new CorrelationChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.CoxSurvivalOrHazard:
-                    return new CoxSurvivalOrHazardChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Cox2:
-                    return new Cox2ChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Effect:
-                    return new EffectChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.ErrorBar:
-                    return new ErrorBarChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Forest:
-                    return new ForestChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Gini:
-                    return new GiniChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Histogram:
-                    return new HistogramChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.KaplanMeier:
-                    return new KaplanMeierChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.LAbbe:
-                    return new LAbbeChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Ladder:
-                    return new LadderChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.LinearizedEstimation:
-                    return new LinearizedEstimationChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.LinearRegression:
-                    return new LinearRegressionChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.LinearRegressionAndMaybeSeCiOrPredictionInterval:
-                    return new LinearRegressionAndMaybeSeCiOrPredictionIntervalChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.LineXY:
-                    return new ScatterChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Logit:
-                    return new LogitChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.MH:
-                    return new MHChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.MHRD:
-                    return new MHRDChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Normal:
-                    return new NormalChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.PolynomialRegression:
-                    return new PolynomialRegressionChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Pyramid:
-                    return new PyramidChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.ROC:
-                    return new RocChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.ScatterXY:
-                    return new ScatterChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Spread:
-                    return new SpreadChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.StackedBar:
-                case ChartType.StackedBar100Percent:
-                    return new BarChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Survival:
-                    return new SurvivalChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Ties:
-                    return new TiesChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Xy:
-                    return new XyChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Xy0To1:
-                    return new Xy0To1ChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Xyr:
-                    return new XyrChartRenderer(chartDefinition, canvasFactory);
-                case ChartType.Xyz:
-                    return new XyzChartRenderer(chartDefinition, canvasFactory);
-                default:
-                    return new NotSetChartRenderer(chartDefinition, canvasFactory);
-            }
-        }
+                ChartType.AgreementPair => new AgreementPairChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Bar => new BarChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.BiasMA => new BiasMAChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.BoxWhisker => new BoxWhiskerChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Control => new ControlChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Correlation => new CorrelationChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.CoxSurvivalOrHazard => new CoxSurvivalOrHazardChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Cox2 => new Cox2ChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Effect => new EffectChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.ErrorBar => new ErrorBarChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Forest => new ForestChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Gini => new GiniChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Histogram => new HistogramChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.KaplanMeier => new KaplanMeierChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.LAbbe => new LAbbeChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Ladder => new LadderChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.LinearizedEstimation => new LinearizedEstimationChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.LinearRegression => new LinearRegressionChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.LinearRegressionAndMaybeSeCiOrPredictionInterval => new LinearRegressionAndMaybeSeCiOrPredictionIntervalChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.LineXY => new ScatterChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Logit => new LogitChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.MH => new MHChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.MHRD => new MHRDChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Normal => new NormalChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.PolynomialRegression => new PolynomialRegressionChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Pyramid => new PyramidChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.ROC => new RocChartRenderer(chartDefinition, canvasFactory, SdPreferences, UserInterface),
+                ChartType.ScatterXY => new ScatterChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Spread => new SpreadChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.StackedBar or
+                ChartType.StackedBar100Percent => new BarChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Survival => new SurvivalChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Ties => new TiesChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Xy => new XyChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Xy0To1 => new Xy0To1ChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Xyr => new XyrChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                ChartType.Xyz => new XyzChartRenderer(chartDefinition, canvasFactory, SdPreferences),
+                _ => new NotSetChartRenderer(),
+            };
     }
 }

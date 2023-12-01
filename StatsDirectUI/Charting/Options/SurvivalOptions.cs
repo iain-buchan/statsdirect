@@ -1,10 +1,15 @@
 using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class SurvivalOptions : GenericOptions
+    public class SurvivalOptions : AbstractGenericOptions
+        , IAxisLabelFontOptions
+        , IAxisTitleFontOptions
+        , IChartTitleOptions
+        , ISeriesTitlesOptions
+        , IYAxisTitleOptions
     {
         [Serializable]
         public class SurvivalSeries
@@ -23,7 +28,8 @@ namespace StatsDirect.Charting
         public bool ShowEventMarkers;
         public bool UseSeriesColourForConfidenceIntervals;
 
-        public SurvivalOptions()
+        public SurvivalOptions(IChartPreferences chartPreferences)
+            : base(chartPreferences)
         {
             Series = new List<SurvivalSeries>();
         }
@@ -37,10 +43,10 @@ namespace StatsDirect.Charting
             MarkerTypes = new List<MarkerType>();
 
             //  One marker type per series
-            for (int seriesIndex = 0; seriesIndex < SeriesTitles.Length; seriesIndex++)
+            for (int seriesIndex = 0; seriesIndex < SeriesTitles.Count; seriesIndex++)
             {
                 int mkr = SeriesNumberToMarkerNumber(seriesIndex);
-                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
+                MarkerType markerType = ChartPreferences.MarkerTypes[mkr];
                 MarkerTypes.Add(markerType);
 
                 SeriesOptionsDescriptor sod = new()
@@ -52,36 +58,21 @@ namespace StatsDirect.Charting
             }
 
             //  Now add one more for the CIs
-            MarkerType ciMarkerType = ChartPreferences.MarkerTypes[10].Clone();
+            MarkerType ciMarkerType = ChartPreferences.MarkerTypes[10];
             MarkerTypes.Add(ciMarkerType);
 
             SeriesOptionsDescriptor cisod = new()
             {
                 AllowChangeToMarkerSize = false,
                 AllowChangeToMarkerType = false,
-                MarkerIndex = SeriesTitles.Length,
+                MarkerIndex = SeriesTitles.Count,
                 SeriesName = "Confidence intervals"
             };
             SeriesOptions.Add(cisod);
         }
 
-        public override bool UsesChartTitle => true;
-
-        public override bool UsesSeriesLabels => true;
-
-        public override bool UsesAxisLabelFontDescriptor => true;
-
-        public override bool UsesAxisTitleFontDescriptor => true;
-
-        public override bool UsesYAxisTitle => true;
-
-        public override bool ShowSurvivalOptions => true;
-
         public override bool ShowLegendIsRelevant => Series.Count > 1;
 
-        public override void Accept(IChartOptionVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IChartOptionVisitor visitor) => visitor.Visit(this);
     }
 }

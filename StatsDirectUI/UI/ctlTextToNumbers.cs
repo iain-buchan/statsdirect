@@ -9,10 +9,10 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlTextToNumbers : UserControl, IFillParameterBag
+    internal partial class ctlTextToNumbers : UserControl, IFillParameterBag
     {
         private readonly Dictionary<string, int> textsToNumbers = new();
-        private DataFrame data;
+        private DataFrame? data;
         private readonly ParameterBag context;
 
         public ctlTextToNumbers(ParameterBag context)
@@ -66,7 +66,7 @@ namespace StatsDirect.UI
                 outputFrame.Variables.Add(outputVariable);
                 for (int r = 0; r < v.Length; r++)
                 {
-                    string tmp = v.Data[r];
+                    string? tmp = v.Data[r];
                     if (textsToNumbers.TryGetValue(tmp, out int value))
                         outputVariable.Data[r] = value;
                     else
@@ -84,28 +84,28 @@ namespace StatsDirect.UI
             {
                 StringVariable v = (StringVariable)data.Variables[c];
                 // get text codes and assign number codes
-                foreach (string tmp in v.Data)
+                foreach (string? tmp in v.Data)
                     MaybeAssignCode(tmp, ref nextValue);
                 if (useTitle && !string.IsNullOrEmpty(v.Title))
                     MaybeAssignCode(v.Title, ref nextValue);
             }
         }
 
-        private void MaybeAssignCode(string tmp, ref int nextValue)
+        private void MaybeAssignCode(string? tmp, ref int nextValue)
         {
             if (!Formatting.ASTERISK.Equals(tmp) && !string.IsNullOrEmpty(tmp))
                 if (!textsToNumbers.ContainsKey(tmp))
                     textsToNumbers.Add(tmp, nextValue++);
         }
 
-        public Control Fill(ParameterBag outputParameters, bool doValidation)
+        public Control? Fill(ParameterBag outputParameters, bool doValidation)
         {
             FillOptionsFromForm();
             ProduceOutput(outputParameters);
             return null;
         }
 
-        private void chkIgnoreTitle_CheckedChanged(object sender, EventArgs e)
+        private void chkIgnoreTitle_CheckedChanged(object? sender, EventArgs e)
         {
             FillFormFromOptions();
         }

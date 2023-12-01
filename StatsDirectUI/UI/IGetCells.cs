@@ -21,8 +21,8 @@ namespace StatsDirect.UI
         /// <param name="firstRow">The first grid row (indexed from 0) to include in the results</param>
         /// <param name="lastRow">The last grid row (indexed from 0) to include in the results</param>
         /// <returns>(Array of values, hidden row count)</returns>
-        (object[,], int) GetCellObjects(int column, int firstRow, int lastRow);
-        string GetCellText(int gridRow, int gridColumn);
+        (object?[,], int) GetCellObjects(int column, int firstRow, int lastRow);
+        string? GetCellText(int gridRow, int gridColumn);
         /// <summary>
         /// Obtain a raw array of display strings, ensuring that even a single cell is wrapped in a 2-D array for subsequent processing.
         /// </summary>
@@ -33,7 +33,7 @@ namespace StatsDirect.UI
         (string[], int) GetCellTexts(int column, int firstRow, int lastRow);
         double GetCellValue(int gridRow, int gridColumn);
         /// <returns>(Array of values, hidden row count)</returns>
-        (double[], int) GetCellValues(int column, int firstRow, int lastRow);
+        (double[]?, int) GetCellValues(int column, int firstRow, int lastRow);
         string GetColumnTitle(int column);
         bool IsFormattedLikeATitle(int column, int row);
     }

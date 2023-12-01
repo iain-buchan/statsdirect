@@ -1,13 +1,13 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class LAbbeOptions : GenericOptions
+    public class LAbbeOptions : AbstractGenericOptions
     {
-        public int k;
-        public double[,] o;
-        public double rmh;
+        public int K { get; }
+        public double[,] O { get; }
+        public double Rmh { get; }
         public override bool ShowLegendIsRelevant => false;
 
         public override void Accept(IChartOptionVisitor visitor)
@@ -15,11 +15,12 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public LAbbeOptions(int k, double[,] o, double rmh)
+        public LAbbeOptions(int k, double[,] o, double rmh, IChartPreferences chartPreferences)
+            : base(chartPreferences)
         {
-            this.k = k;
-            this.o = o;
-            this.rmh = rmh;
+            K = k;
+            O = o;
+            Rmh = rmh;
         }
     }
 }

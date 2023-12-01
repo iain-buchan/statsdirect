@@ -1,4 +1,5 @@
 ﻿using System;
+using StatsDirect.Charting.Options;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Templates;
 
@@ -6,31 +7,26 @@ namespace StatsDirect.Charting.Renderer
 {
     class LinearRegressionAndMaybeSeCiOrPredictionIntervalChartRenderer : AbstractLinearRegressionChartRenderer, IChartRenderer
     {
-        public LinearRegressionAndMaybeSeCiOrPredictionIntervalChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base(cd, canvasFactory)
+        public LinearRegressionAndMaybeSeCiOrPredictionIntervalChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(cd, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X =
-                    {
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = DataMaxX,
-                        Min = DataMinX
-                    },
-                Y =
-                    {
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = DataMaxY,
-                        Min = DataMinY
-                    }
-            };
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear }) {
+                    Max = DataMaxX,
+                    Min = DataMinX
+                },
+                new(new[] { ScaleType.Linear }) {
+                    Max = DataMaxY,
+                    Min = DataMinY
+                }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

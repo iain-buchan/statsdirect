@@ -51,17 +51,12 @@ namespace StatsDirect.Charting
         {
         }
 
-        public void DrawRectangle(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h)
+        public void DrawRectangle(PenDescriptor? p, BrushDescriptor? b, double x, double y, double w, double h)
         {
         }
 
         public void DrawLine(PenDescriptor p, double x1, double y1, double x2, double y2)
         {
-        }
-
-        public double GetFontHeight(FontDescriptor f)
-        {
-            return 0;
         }
 
         #region IDisposable Support

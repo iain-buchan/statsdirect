@@ -23,7 +23,7 @@ namespace StatsDirect.Templates
         /// The default value for this parameter, or null for no default.
         /// </summary>
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression { get; set; }
+        public Expression? DefaultValueExpression { get; set; }
 
         public override void Accept(IParameterVisitor visitor)
         {
@@ -32,7 +32,7 @@ namespace StatsDirect.Templates
 
         public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
         {
-            return new ParameterBag(Name, FilledParameterFactory.Default(DefaultValue(processor, context)));
+            return new ParameterBag().AddDefault(Name, DefaultValue(processor, context));
         }
     }
 }

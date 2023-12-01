@@ -9,60 +9,19 @@ using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
-    public static class Survival
+    public class Survival : RendererBase
     {
-        private class Trisvar
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private IProgressBarHost ProgressBarHost { get; }
+
+        public Survival(IChartRendererFactory chartRendererFactory, IProgressBarHost progressBarHost, ISdPreferences sdPreferences)
+            : base(sdPreferences)
         {
-            public double Tm { get; set; }
-            public int Gp { get; set; }
-            public int Cs { get; set; }
+            ChartRendererFactory = chartRendererFactory;
+            ProgressBarHost = progressBarHost;
         }
 
-        private class TrisvarByTmThenGp : IComparer<Trisvar>
-        {
-            private static int Compare(Trisvar x, Trisvar y)
-            {
-                //  First check TM
-                if (x.Tm > y.Tm)
-                    return 1;
-                if (x.Tm < y.Tm)
-                    return -1;
-
-                //  Next check gp
-                if (x.Gp > y.Gp)
-                    return -1;
-                if (x.Gp < y.Gp)
-                    return 1;
-
-                //  If we get here, there are no meaningful differences
-                return 0;
-            }
-
-            // interface methods implemented by Compare
-            int IComparer<Trisvar>.Compare(Trisvar x, Trisvar y) => Compare(x, y);
-        }
-
-
-        private class TrisvarByTm : IComparer<Trisvar>
-        {
-            private static int Compare(Trisvar x, Trisvar y)
-            {
-                //  First check TM
-                if (x.Tm > y.Tm)
-                    return 1;
-                if (x.Tm < y.Tm)
-                    return -1;
-
-                //  If we get here, there are no meaningful differences
-                return 0;
-            }
-
-            // interface methods implemented by Compare
-            int IComparer<Trisvar>.Compare(Trisvar x, Trisvar y) => Compare(x, y);
-
-        }
-
-        public static StepOutput RptKaplan(IPreferences host, ParameterBag parameters)
+        public StepOutput RptKaplan(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0.0)
@@ -98,7 +57,7 @@ namespace StatsDirect.Builtins
             string gid;
             string[] groupLabels;
             double[] gpid;
-            if (parameters.ContainsKey("groups") && parameters["groups"] != null)
+            if (parameters.ContainsKey("groups") && parameters["groups"] is not null)
             {
                 DataFrame groupsFrame = parameters["groups"].AsDataFrame;
                 ClassifierVariable groupsVariable = groupsFrame.Variables[0] as ClassifierVariable;
@@ -304,7 +263,7 @@ namespace StatsDirect.Builtins
                         ul = Constant.MISSING;
                     }
                 }
-                groupParameters.AddOutput("med", imed != 0 ? host.RoundU(stime[imed, lap]) : "can not estimate");
+                groupParameters.AddOutput("med", imed != 0 ? RoundU(stime[imed, lap]) : "can not estimate");
                 groupParameters.AddOutput("pc", gamma * 100);
                 groupParameters.AddOutput("all", ll);
                 groupParameters.AddOutput("aul", ul);
@@ -393,7 +352,7 @@ namespace StatsDirect.Builtins
                     totdead += dead[i, lap];
                 }
                 if (tl != tk)
-                    groupParameters.AddOutput("lim", "[limit: " + host.RoundU(tl) + " on " + host.RoundU(tk) + "] ");
+                    groupParameters.AddOutput("lim", "[limit: " + RoundU(tl) + " on " + RoundU(tk) + "] ");
                 else
                     groupParameters.AddOutput("lim", string.Empty);
                 groupParameters.AddOutput("mu", mu);
@@ -429,7 +388,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptKaplanMeierPlots(ParameterBag parameters)
+        public StepOutput RptKaplanMeierPlots(ParameterBag parameters)
         {
             int[] cnx = (int[])parameters["cnx"].AsObject;
             int[,] dead = (int[,])parameters["dead"].AsObject;
@@ -453,7 +412,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
+        public IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
         {
             IList<IRenderable> outputImages = new List<IRenderable>();
             int gx = stime.GetUpperBound(0);
@@ -1102,10 +1061,10 @@ namespace StatsDirect.Builtins
             for (int r = 1; r <= nr; r++)
             {
                 IList<ParameterBag> matList = new List<ParameterBag>();
-                covarList.Add(new ParameterBag("*mat", new FilledParameterBagListParameter(FilledParameterDirection.Output, matList)));
+                covarList.Add(new ParameterBag().AddOutput("*mat", matList));
                 zImax = r + zImax;
                 for (int i = zImin; i <= zImax; i++)
-                    matList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, sigma[i])));
+                    matList.Add(new ParameterBag().AddOutput("cell", sigma[i]));
                 zImin = zImax + 1;
             }
             zImax = 0;
@@ -1115,10 +1074,10 @@ namespace StatsDirect.Builtins
             for (int r = 1; r <= nr; r++)
             {
                 IList<ParameterBag> matList = new List<ParameterBag>();
-                invCovarList.Add(new ParameterBag("*mat", new FilledParameterBagListParameter(FilledParameterDirection.Output, matList)));
+                invCovarList.Add(new ParameterBag().AddOutput("*mat", matList));
                 zImax = r + zImax;
                 for (int i = zImin; i <= zImax; i++)
-                    matList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, siginv[i])));
+                    matList.Add(new ParameterBag().AddOutput("cell", siginv[i]));
                 zImin = zImax + 1;
             }
 
@@ -1213,7 +1172,7 @@ namespace StatsDirect.Builtins
             int r = 0;
             double sumn = 0.0;
             double sumd = 0.0;
-            string g = Formatting.XRound(gamma * 100, 1);
+            string g = Utilities.Formatting.XRound(gamma * 100, 1);
             string grp = dead.GetUpperBound(1) > 1 ? " (group " + lap.ToString() + ")" : string.Empty;
             DoubleVariable timeVariable = new(nx, "Time" + grp);
             StringVariable deathVariable = new(nx, "Death/Event" + grp);
@@ -1498,7 +1457,7 @@ namespace StatsDirect.Builtins
                 c[r] = deathsVariable.Data[r - 1];
 
             double[] s = new double[rows + 1];
-            if (parameters.ContainsKey("strata") && parameters["strata"] != null)
+            if (parameters.ContainsKey("strata") && parameters["strata"] is not null)
             {
                 DataFrame strataFrame = parameters["strata"].AsDataFrame;
                 ClassifierVariable strataVariable = strataFrame.Variables[0] as ClassifierVariable;
@@ -1608,7 +1567,7 @@ namespace StatsDirect.Builtins
             ifault = false;
         }
 
-        public static StepOutput RptAbridgedLifetable(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptAbridgedLifetable(ParameterBag parameters)
         {
             string uti = null;
 
@@ -1661,7 +1620,7 @@ namespace StatsDirect.Builtins
                     novariance = true;
             }
 
-            if (parameters.ContainsKey("fractions") && parameters["fractions"] != null)
+            if (parameters.ContainsKey("fractions") && parameters["fractions"] is not null)
             {
                 DataFrame fractionsFrame = parameters["fractions"].AsDataFrame;
                 DoubleVariable fractionsVariable = fractionsFrame.Variables[0]as DoubleVariable;
@@ -1678,7 +1637,7 @@ namespace StatsDirect.Builtins
                     a[2] = 0.4;
             }
 
-            if (parameters.ContainsKey("weights") && parameters["weights"] != null)
+            if (parameters.ContainsKey("weights") && parameters["weights"] is not null)
             {
                 DataFrame weightsFrame = parameters["weights"].AsDataFrame;
                 DoubleVariable weightsVariable = weightsFrame.Variables[0]as DoubleVariable;
@@ -1705,9 +1664,8 @@ namespace StatsDirect.Builtins
             double[] esim = new double[simits + 1 ];
             double[] emdsim = new double[simits + 1 ];
             double emd;
-            PoissonRNG rng = new();
-            //  RNG.Seed(DefaultSeed()) not required as the default seed is used if the RNG isn't seeded on first call
-            using (IProgressBar progress = host.StartProgress("Simulating...", true))
+            PoissonRNG rng = new(DefaultSeed());
+            using (IProgressBar progress = ProgressBarHost.StartProgress("Simulating...", true))
             {
                 for (int j = 1; j <= simits; j++)
                 {
@@ -1901,7 +1859,7 @@ namespace StatsDirect.Builtins
             if (saveDetails)
             {
                 DataFrame resultsFrame = new();
-                string g = Formatting.XRound(gamma * 100, 1);
+                string g = Utilities.Formatting.XRound(gamma * 100, 1);
                 StringVariable intervalVariable = new(rows, "Interval");
                 DoubleVariable qHatVariable = new(rows, "Prob of dying [q hat]");
                 DoubleVariable varQVariable = new(rows, "Var [q]");
@@ -2175,7 +2133,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptLogRank(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptLogRank(ParameterBag parameters)
         {
             Petoprep(parameters, out int nt, out double gamma, out double cit, out int groups, out int strata, out double[] score, out string gid, out double[] gpid, out string[] glab, out string[] slab, out bool ifault, out double[,] arr2, out _);
             if (ifault)
@@ -2395,7 +2353,7 @@ namespace StatsDirect.Builtins
                     {
                         // exact test
                         bool useLogScale = false;
-                        new ExactBB().Exact22K(host, 1, ne, Exact22KDataType.Type4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
+                        new ExactBB(ProgressBarHost).Exact22K(1, ne, Exact22KDataType.Type4, tbl, gamma, out hr, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out int ierr);
                         if (ierr != 0)
                         {
                             hr = Constant.MISSING;
@@ -2468,16 +2426,16 @@ namespace StatsDirect.Builtins
                     IList<ParameterBag> rankList = new List<ParameterBag>();
                     outerParameters.AddOutput("*rank", rankList);
                     for (int j = 1; j <= groups; j++)
-                        rankList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, u0[j])));
+                        rankList.Add(new ParameterBag().AddOutput("cell", u0[j]));
 
                     IList<ParameterBag> covarList = new List<ParameterBag>();
                     outerParameters.AddOutput("*covar", covarList);
                     for (int j = 1; j <= groups; j++)
                     {
                         IList<ParameterBag> matList = new List<ParameterBag>();
-                        covarList.Add(new ParameterBag("*mat", new FilledParameterBagListParameter(FilledParameterDirection.Output, matList)));
+                        covarList.Add(new ParameterBag().AddOutput("*mat", matList));
                         for (int j2 = 1; j2 <= groups; j2++)
-                            matList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, vinv[j2, j])));
+                            matList.Add(new ParameterBag().AddOutput("cell", vinv[j2, j]));
                     }
                     //  test this stratum or whole
                     outerParameters.AddOutput("chi", x2);
@@ -2686,6 +2644,55 @@ namespace StatsDirect.Builtins
             }
             while (stratum != strata);
             return new StepOutput(outputParameters);
+        }
+
+        private class Trisvar
+        {
+            public double Tm { get; set; }
+            public int Gp { get; set; }
+            public int Cs { get; set; }
+        }
+
+        private class TrisvarByTmThenGp : IComparer<Trisvar>
+        {
+            private static int Compare(Trisvar? x, Trisvar? y)
+            {
+                //  First check TM
+                if (x.Tm > y.Tm)
+                    return 1;
+                if (x.Tm < y.Tm)
+                    return -1;
+
+                //  Next check gp
+                if (x.Gp > y.Gp)
+                    return -1;
+                if (x.Gp < y.Gp)
+                    return 1;
+
+                //  If we get here, there are no meaningful differences
+                return 0;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Trisvar>.Compare(Trisvar? x, Trisvar? y) => Compare(x, y);
+        }
+
+        private class TrisvarByTm : IComparer<Trisvar>
+        {
+            private static int Compare(Trisvar? x, Trisvar? y)
+            {
+                //  First check TM
+                if (x.Tm > y.Tm)
+                    return 1;
+                if (x.Tm < y.Tm)
+                    return -1;
+
+                //  If we get here, there are no meaningful differences
+                return 0;
+            }
+
+            // interface methods implemented by Compare
+            int IComparer<Trisvar>.Compare(Trisvar? x, Trisvar? y) => Compare(x, y);
         }
     }
 }

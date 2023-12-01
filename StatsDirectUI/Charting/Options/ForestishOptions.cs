@@ -1,63 +1,87 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
-    public abstract class ForestishOptions : GenericOptions
+    public abstract class ForestishOptions : AbstractGenericOptions, IMarkerTypes
     {
-        public double cco { get; set; }
-        public IList<double> GroupSizes { get; set; }
-        public int k { get; set; }
-        public IList<double> OddsRatios { get; set; }
-        public IList<double> OddsRatioLcis { get; set; }
-        public IList<double> OddsRatioUcis { get; set; }
-        public IList<string> Titles { get; set; }
-        public bool MarkCentres { get; set; } = true;
+        public double Cco { get; }
+        public FillStyle? ForcedFillStyle { get; }
+        public bool? ForcedIsFilled { get; }
+        public IReadOnlyList<double> GroupSizes { get; }
+        public int K { get; }
+        public bool MarkCentres { get; } = true;
+        public IReadOnlyList<MarkerType> MarkerTypes { get; }
+        public IReadOnlyList<double> OddsRatioLcis { get; }
+        public IReadOnlyList<double> OddsRatios { get; }
+        public IReadOnlyList<double> OddsRatioUcis { get; }
+        public IReadOnlyList<SeriesOptionsDescriptor> SeriesOptions { get; }
+        public IReadOnlyList<string> Titles { get; }
 
-        protected ForestishOptions()
+        protected ForestishOptions(IChartPreferences chartPreferences,
+            double cco,
+            IReadOnlyList<double> groupSizes,
+            int k,
+            bool markCentres,
+            IReadOnlyList<MarkerType> markerTypes,
+            IReadOnlyList<double> oddsRatioLcis,
+            IReadOnlyList<double> oddsRatios,
+            IReadOnlyList<double> oddsRatioUcis,
+            IReadOnlyList<SeriesOptionsDescriptor> seriesOptions,
+            IReadOnlyList<string> titles
+            )
+            : base(chartPreferences)
         {
+            Cco = cco;
+            GroupSizes = groupSizes;
+            K = k;
+            MarkCentres = markCentres;
+            MarkerTypes = markerTypes;
+            OddsRatioLcis = oddsRatioLcis;
+            OddsRatios = oddsRatios;
+            OddsRatioUcis = oddsRatioUcis;
+            SeriesOptions = seriesOptions;
+            Titles = titles;
+
             //  A forest plot has one marker for the study and a second for the pooled effect
-            MarkerTypes = new List<MarkerType>();
-            MarkerType studyMarkerType = new()
+            MarkerTypes = new[]
             {
-                MarkerColor = ColorDescriptor.Gray,
-                LineColor = ColorDescriptor.Black,
-                IsMarkerFilled = true,
-                MarkerShape = MarkerShape.Square,
-                LineDashStyle = DashStyleDescriptor.Solid,
-                Width = 1
+                new MarkerType(
+                    MarkerType.Default,
+                    true,
+                    ColorDescriptor.Black,
+                    DashStyleDescriptor.Solid,
+                    ColorDescriptor.Gray,
+                    markerShape: MarkerShape.Square
+                ),
             };
-            MarkerTypes.Add(studyMarkerType);
-            MarkerType pooledMarkerType = new()
-            {
-                MarkerColor = ColorDescriptor.Gray,
-                LineColor = ColorDescriptor.Black,
-                IsMarkerFilled = true,
-                MarkerShape = MarkerShape.Diamond,
-                LineDashStyle = DashStyleDescriptor.Solid,
-                Width = 1
-            };
-            MarkerTypes.Add(pooledMarkerType);
+            MarkerType pooledMarkerType = new(
+                MarkerType.Default,
+                true,
+                ColorDescriptor.Black,
+                DashStyleDescriptor.Solid,
+                ColorDescriptor.Gray,
+                markerShape: MarkerShape.Diamond
+            );
 
-            SeriesOptionsDescriptor studyOptions = new()
+            SeriesOptions = new[]
             {
-                SeriesName = "Study",
-                AllowChangeToDashStyle = false,
-                AllowChangeToMarkerSize = false,
-                AllowChangeToLineThickness = false,
-                MarkerIndex = 0
+                new SeriesOptionsDescriptor()
+                {
+                    SeriesName = "Study",
+                    AllowChangeToDashStyle = false,
+                    AllowChangeToMarkerSize = false,
+                    AllowChangeToLineThickness = false,
+                    MarkerIndex = 0
+                },
+                new SeriesOptionsDescriptor()
+                {
+                    SeriesName = "Pooled effect",
+                    AllowChangeToDashStyle = false,
+                    AllowChangeToMarkerSize = false,
+                    AllowChangeToLineThickness = false,
+                    MarkerIndex = 1
+                }
             };
-            SeriesOptions.Add(studyOptions);
-
-            SeriesOptionsDescriptor pooledOptions = new()
-            {
-                SeriesName = "Pooled effect",
-                AllowChangeToDashStyle = false,
-                AllowChangeToMarkerSize = false,
-                AllowChangeToLineThickness = false,
-                MarkerIndex = 1
-            };
-            SeriesOptions.Add(pooledOptions);
         }
 
         public override bool UsesShowLegend => false;

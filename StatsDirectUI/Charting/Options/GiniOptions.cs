@@ -1,21 +1,46 @@
 using System;
+using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class GiniOptions : GenericOptions
+    public class GiniOptions : AbstractGenericOptions, IChartTitleOptions, IXAxisTitleOptions, IYAxisTitleOptions
     {
-        public override bool UsesChartTitle => true;
-
-        public override bool UsesXAxisTitle => true;
-
-        public override bool UsesYAxisTitle => true;
+        public GiniOptions(IChartPreferences chartPreferences,
+            FontDescriptor? axisLabelFontDescriptor = default,
+            float? axisLineThickness = default,
+            FontDescriptor? axisTitleFontDescriptor = default,
+            FontDescriptor? legendFontDescriptor = default,
+            ChartOrientation? orientation = default,
+            IReadOnlyList<string?>? seriesTitles = default,
+            bool? shouldAutoscale = default,
+            bool? shouldBoxAxes = default,
+            bool? showLegend = default,
+            string? title = default,
+            FontDescriptor? titleFontDescriptor = default,
+            bool? useColour = default,
+            string? xAxisTitle = default,
+            string? yAxisTitle = default)
+            : base(chartPreferences,
+                  axisLabelFontDescriptor,
+                  axisLineThickness,
+                  axisTitleFontDescriptor,
+                  legendFontDescriptor,
+                  orientation,
+                  seriesTitles,
+                  shouldAutoscale,
+                  shouldBoxAxes,
+                  showLegend,
+                  title,
+                  titleFontDescriptor,
+                  useColour,
+                  xAxisTitle,
+                  yAxisTitle)
+        {
+        }
 
         public override bool ShowLegendIsRelevant => false;
 
-        public override void Accept(IChartOptionVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IChartOptionVisitor visitor) => visitor.Visit(this);
     }
 }

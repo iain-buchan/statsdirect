@@ -1,45 +1,46 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Templates;
 using System;
+using System.Collections.Generic;
 
 namespace StatsDirect.Charting.Renderer
 {
     class KaplanMeierChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public KaplanMeierChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public KaplanMeierChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             KaplanMeierOptions options = (KaplanMeierOptions)Definition.ChartOptions;
-            Legend legend = null;
+            Legend? legend = null;
             if (options.Groups > 1)
             {
-                legend = new Legend { Position = LegendPosition.Left };
+                List<LegendEntry> legendEntries = new();
                 for (int k = 1; k <= options.Groups; k++)
                 {
-                    MarkerType mt = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
-                    if (!options.UseMarkers)
-                    {
-                        mt.MarkerShape = MarkerShape.SurvivalTic;
-                        mt.IsMarkerFilled = false;
-                    }
-                    legend.LegendEntries.Add(new LegendEntry { Label = options.GroupLabels[k], MarkerType = mt });
+                    MarkerType template = ChartPreferences.MarkerTypes[(k - 1) % 9];
+                    MarkerType mt = new(template,
+                        isMarkerFilled: options.UseMarkers ? template.IsMarkerFilled : false,
+                        markerShape: options.UseMarkers ? template.MarkerShape : MarkerShape.SurvivalTic
+                        );
+                    legendEntries.Add(new(mt, options.GroupLabels[k]));
                 }
+                legend = new Legend(LegendPosition.Left, legendEntries);
             }
 
             StartVectorPlot(null, legend);

@@ -11,7 +11,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    public partial class frmCategorise : Form
+    internal partial class frmCategorise : Form
     {
         private static int CAT_TYPE;
         private static double CAT_MIN;
@@ -25,28 +25,31 @@ namespace StatsDirect.UI
 
         public bool UserCancelled => userCancelled;
 
-        public frmCategorise(CategoriseOptions options)
+        private ISdApplication SdApplication { get; }
+
+        public frmCategorise(CategoriseOptions options, ISdApplication sdApplication)
         {
             this.options = options;
+            SdApplication = sdApplication;
             InitializeComponent();
             LoadDefaults();
         }
 
-        private void CmdOkClick(object sender, EventArgs e)
+        private void CmdOkClick(object? sender, EventArgs e)
         {
             SaveDefaults();
             FillOptionsFromForm();
             Close();
         }
 
-        private void CmdCancelClick(object sender, EventArgs e)
+        private void CmdCancelClick(object? sender, EventArgs e)
         {
             userCancelled = true;
             SaveDefaults();
             Close();
         }
 
-        private void FrmCategoriseShown(object sender, EventArgs e)
+        private void FrmCategoriseShown(object? sender, EventArgs e)
         {
             FillFormFromOptions();
         }
@@ -496,37 +499,37 @@ namespace StatsDirect.UI
             gridCutoffs.CurrentCell = gridCutoffs.Rows[0].Cells[0];
         }
 
-        private void TxtIntervalTextChanged(object sender, EventArgs e)
+        private void TxtIntervalTextChanged(object? sender, EventArgs e)
         {
             if (!filling)
                 rdoUserDefined.Checked = true;
         }
 
-        private void TxtMinimumTextChanged(object sender, EventArgs e)
+        private void TxtMinimumTextChanged(object? sender, EventArgs e)
         {
             if (!filling)
                 rdoUserDefined.Checked = true;
         }
 
-        private void TxtIntervalsTextChanged(object sender, EventArgs e)
+        private void TxtIntervalsTextChanged(object? sender, EventArgs e)
         {
             if (!filling)
                 rdoUserDefined.Checked = true;
         }
 
-        private void CmdReGroupClick(object sender, EventArgs e)
+        private void CmdReGroupClick(object? sender, EventArgs e)
         {
             CalculateGroups();
         }
 
-        private void CmdRecalculateClick(object sender, EventArgs e)
+        private void CmdRecalculateClick(object? sender, EventArgs e)
         {
             CalculateCounts();
         }
 
-        private void CmdHelpClick(object sender, EventArgs e)
+        private void CmdHelpClick(object? sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ShowHelp(this, "1059");
+            SdApplication.ShowHelp(this, "1059");
         }
     }
 

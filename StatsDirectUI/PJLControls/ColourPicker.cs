@@ -648,7 +648,7 @@ namespace StatsDirect.PJLControls
             }
             set
             {
-                if (value == null || value.Length < 1)
+                if (value is null || value.Length < 1)
                 {
                     panel_customColors = new[] { Color.White };
                 }

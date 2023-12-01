@@ -1,12 +1,12 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     /// <summary>
     /// Immutable
     /// </summary>
     [Serializable]
-    public class KaplanMeierOptions : GenericOptions
+    public class KaplanMeierOptions : AbstractGenericOptions
     {
         public int[,] Dead { get; }
         public int Groups { get; }

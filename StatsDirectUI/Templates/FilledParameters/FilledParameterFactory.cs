@@ -7,10 +7,10 @@ namespace StatsDirect.Templates
 {
     public static class FilledParameterFactory
     {
-        public static FilledParameter Input(object data) => Make(FilledParameterDirection.Input, data);
-        public static FilledParameter Output(object data) => Make(FilledParameterDirection.Output, data);
-        public static FilledParameter Default(object data) => Make(FilledParameterDirection.Default, data);
-        public static FilledParameter Make(FilledParameterDirection direction, dynamic data)
+        public static FilledParameter Input(object? data) => Make(FilledParameterDirection.Input, data);
+        public static FilledParameter Output(object? data) => Make(FilledParameterDirection.Output, data);
+        public static FilledParameter Default(object? data) => Make(FilledParameterDirection.Default, data);
+        public static FilledParameter Make(FilledParameterDirection direction, dynamic? data)
         {
             return null == data
                 ? new FilledObjectParameter(direction, data)

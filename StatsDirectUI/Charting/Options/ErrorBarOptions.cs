@@ -1,59 +1,94 @@
 using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class ErrorBarOptions : GenericOptions
+    public class ErrorBarOptions : AbstractGenericOptions
+        , IAxisLabelFontOptions
+        , IAxisTitleFontOptions
+        , IBoxAxesOptions
+        , IChartTitleOptions
+        , ILegendFontOptions
+        , IMarkerTypes
+        , ISeriesTitlesOptions
+        , IXAxisTitleOptions
+        , IYAxisTitleOptions
     {
-        public bool PlotMarkers { get; set; } = true;
-        public bool JoinMarkersWithLines { get; set; }
-        public List<MultiDoubleSeries> Series { get; set; }
-        public bool ShouldCheckForOffsets { get; set; } = true;
+        public FillStyle? ForcedFillStyle { get; }
+        public bool? ForcedIsFilled { get; }
+        public bool JoinMarkersWithLines { get; }
+        public IReadOnlyList<MarkerType> MarkerTypes { get; }
+        public bool PlotMarkers { get; }
+        public IReadOnlyList<MultiDoubleSeries> Series { get; }
+        public IReadOnlyList<SeriesOptionsDescriptor> SeriesOptions { get; }
+        public bool ShouldCheckForOffsets { get; }
 
-        public void SetMarkers()
+        public ErrorBarOptions(IChartPreferences chartPreferences,
+            IReadOnlyList<MultiDoubleSeries> series,
+            FontDescriptor? axisLabelFontDescriptor = default,
+            float? axisLineThickness = default,
+            FontDescriptor? axisTitleFontDescriptor = default,
+            bool? joinMarkersWithLines = default,
+            FontDescriptor? legendFontDescriptor = default,
+            ChartOrientation? orientation = default,
+            bool? plotMarkers = default,
+            IReadOnlyList<string?>? seriesTitles = default,
+            bool? shouldAutoscale = default,
+            bool? shouldBoxAxes = default,
+            bool? shouldCheckForOffsets = default,
+            bool? showLegend = default,
+            string? title = default,
+            FontDescriptor? titleFontDescriptor = default,
+            bool? useColour = default,
+            string? xAxisTitle = default,
+            string? yAxisTitle = default)
+            : base(chartPreferences,
+                  axisLabelFontDescriptor,
+                  axisLineThickness,
+                  axisTitleFontDescriptor,
+                  legendFontDescriptor,
+                  orientation,
+                  seriesTitles,
+                  shouldAutoscale,
+                  shouldBoxAxes,
+                  showLegend,
+                  title,
+                  titleFontDescriptor,
+                  useColour,
+                  xAxisTitle,
+                  yAxisTitle)
         {
-            MarkerTypes = new List<MarkerType>();
+            JoinMarkersWithLines = joinMarkersWithLines ?? false;
+            PlotMarkers = plotMarkers ?? true;
+            Series = series;
+            ShouldCheckForOffsets = shouldCheckForOffsets ?? true;
+
+            // Set markers
+            MarkerType[] markerTypes = new MarkerType[Series.Count];
+            SeriesOptionsDescriptor[] seriesOptions = new SeriesOptionsDescriptor[Series.Count];
             for (int i = 0; i < Series.Count; i++)
             {
-                int mkr = SeriesNumberToMarkerNumber(i);
-                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
-                markerType.MarkerSize = 6;
-                MarkerTypes.Add(markerType);
+                markerTypes[i] = new(
+                    ChartPreferences.MarkerTypes[SeriesNumberToMarkerNumber(i)],
+                    markerSize: 6
+                );
 
                 //  An error plot has series with possible lines.
-                SeriesOptionsDescriptor soleOptions = new()
+                seriesOptions[i] = new()
                 {
                     SeriesName = Series[i].Title,
                     AllowChangeToDashStyle = true,
                     AllowChangeToLineThickness = true,
                     MarkerIndex = i
                 };
-                SeriesOptions.Add(soleOptions);
             }
+            MarkerTypes = markerTypes;
+            SeriesOptions = seriesOptions;
         }
 
-        public override bool UsesChartTitle => true;
-
-        public override bool UsesXAxisTitle => true;
-
-        public override bool UsesYAxisTitle => true;
-
-        public override bool UsesAutoscale => true;
-
-        public override bool UsesAxisLabelFontDescriptor => true;
-
-        public override bool UsesAxisTitleFontDescriptor => true;
-
-        public override bool UsesBoxAxes => true;
-
-        public override bool UsesSeriesLabels => true;
-
-        public override bool ShowErrorBarOptions => true;
-
         public override bool ShowLegendIsRelevant => Series.Count > 1;
-
-        public override bool UsesLegendFontDescriptor => true;
+        public override bool UsesAutoscale => true;
 
         public override void Accept(IChartOptionVisitor visitor)
         {

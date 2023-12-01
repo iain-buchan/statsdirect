@@ -1,5 +1,4 @@
-﻿using Layout;
-using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
@@ -8,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     internal abstract class AbstractXYZChartRenderer : AbstractChartRenderer
     {
-        protected AbstractXYZChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        protected AbstractXYZChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -18,7 +17,7 @@ namespace StatsDirect.Charting.Renderer
             StartVectorPlot();
             double rmh = 0;
             bool isLAabbe = labbePool.HasValue;
-            if (isLAabbe)
+            if (labbePool.HasValue)
             {
                 rmh = labbePool.Value;
                 DataMaxX = 100;
@@ -112,6 +111,5 @@ namespace StatsDirect.Charting.Renderer
             }
             EndVectorPlot();
         }
-
     }
 }

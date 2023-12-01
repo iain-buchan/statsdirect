@@ -2,62 +2,26 @@ using System.Diagnostics;
 using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
-
-using StatsDirect.Data;
-using StatsDirect.Numerics;
-using StatsDirect.Templates;
-using StatsDirect.Utilities;
-using StatsDirect.Expressions;
 using System.Globalization;
 using System.Linq;
 
+using StatsDirect.Data;
+using StatsDirect.Expressions;
+using StatsDirect.Numerics;
+using StatsDirect.Templates;
+using StatsDirect.Utilities;
+using System.Diagnostics.CodeAnalysis;
+
 namespace StatsDirect.Builtins
 {
-    public static class Sheet
+    public class Sheet : RendererBase
     {
-        private struct Catvar : IComparable<Catvar>
+        private IUserInterface UserInterface { get; }
+
+        public Sheet(ISdPreferences sdPreferences, IUserInterface userInterface)
+            : base(sdPreferences)
         {
-            public string Title;
-            public int Id;
-
-            private int CompareTo(Catvar other)
-            {
-                if (double.TryParse(Title, out double mti) && double.TryParse(other.Title, out double oti))
-                {
-                    if (mti < oti)
-                        return -1;
-                    return mti == oti ? 0 : 1;
-                }
-                return string.CompareOrdinal(Title, other.Title);
-            }
-            // interface methods implemented by CompareTo
-            int IComparable<Catvar>.CompareTo(Catvar other)
-            {
-                return CompareTo(other);
-            }
-
-        }
-
-        private class SortPair : IComparable<SortPair>
-        {
-            public double Value { get; }
-            public int Row { get; }
-
-            private int CompareTo(SortPair other)
-            {
-                return Value.CompareTo(other.Value);
-            }
-
-            int IComparable<SortPair>.CompareTo(SortPair other)
-            {
-                return CompareTo(other);
-            }
-
-            public SortPair(double value, int row)
-            {
-                Value = value;
-                Row = row;
-            }
+            UserInterface = userInterface;
         }
 
         public static StepOutput ShtFillSeries(ParameterBag parameters)
@@ -161,7 +125,8 @@ namespace StatsDirect.Builtins
                 for (r = 0; r < totrows; r++)
                 {
                     rx++;
-                    hold[rx, c] = v.Length <= r || IsMissing(v.Data[r], userNumber, userText) ? string.Empty : v.Data[r];
+                    string? value = v.Length <= r ? null : v.Data[r];
+                    hold[rx, c] = IsMissing(value, userNumber, userText) ? string.Empty : value;
                 }
                 hold[0, c] = v.Title;
             }
@@ -227,7 +192,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static bool IsMissing(string value, double userNumber, string userText)
+        public static bool IsMissing([NotNullWhen(false)] string? value, double userNumber, string userText)
         {
             if (double.TryParse(value, out double x))
             {
@@ -237,24 +202,24 @@ namespace StatsDirect.Builtins
                 // If there is a user number and x is that user number, it's missing.
                 return userNumber != Constant.MISSING && x == userNumber;
             }
-            if (value == null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper(CultureInfo.InvariantCulture)) || ".".Equals(value) || value.Trim().Length == 0)
+            if (value is null || Formatting.ASTERISK.Equals(value) || "MISSING".Equals(value.ToUpper(CultureInfo.InvariantCulture)) || ".".Equals(value) || value.Trim().Length == 0)
                 return true;
 
             return !string.IsNullOrEmpty(userText) && userText.Equals(value);
         }
 
-        public static StepOutput ShtDummyVariables(ITemplateHost host, ParameterBag parameters)
+        public StepOutput ShtDummyVariables(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             ClassifierVariable categoryVariable = data.Variables[0] as ClassifierVariable;
-            DataFrame outputFrame = ToDummyVariables(host, categoryVariable, false);
+            DataFrame? outputFrame = ToDummyVariables(categoryVariable, false);
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("output", outputFrame);
             return new StepOutput(outputParameters);
         }
 
         /// <returns>null if the user wishes to treat the data as continuous (in which case the caller should probably use the variable that has been passed in), otherwise a frame of dummies.</returns>
-        public static DataFrame ToDummyVariables(ITemplateHost host, ClassifierVariable categoryVariable, bool allowContinuous)
+        public DataFrame? ToDummyVariables(ClassifierVariable categoryVariable, bool allowContinuous)
         {
             int rows = categoryVariable.Length;
             int cats = categoryVariable.GroupCount;
@@ -320,7 +285,7 @@ namespace StatsDirect.Builtins
             int dummies = ng - 1;
             if (dummies < 1)
             {
-                host.Error("You must have more than one category in your data", "Dummy Variables");
+                UserInterface.Error("You must have more than one category in your data", "Dummy Variables");
                 return null;
             }
 
@@ -330,7 +295,7 @@ namespace StatsDirect.Builtins
             DummyOptions dm = new() { LargestCategoryTitle = maxcatti, CategoryNames = new List<string>(), VariableName = categoryVariable.Title, AllowUserToTreatAsContinuous = allowContinuous };
             for (int j = 0; j < ng; j++)
                 dm.CategoryNames.Add(gcat[j].Title);
-            bool wasOk = null != host.Amend(dm, new ParameterBag());
+            bool wasOk = null != UserInterface.Amend(dm, new ParameterBag());
             if (!wasOk)
                 throw new TemplateOperationCancelledException();
 
@@ -470,7 +435,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        internal static StepOutput RptChildGrowth(ITemplateHost host, ParameterBag parameters)
+        internal StepOutput RptChildGrowth(ParameterBag parameters)
         {
             const double DEFAULT_GESTATIONAL_AGE_WEEKS = 40.0;
 
@@ -482,24 +447,14 @@ namespace StatsDirect.Builtins
             string ageUnit = parameters.ContainsKey("age-unit") ? parameters["age-unit"].AsString : null;
             string sexCoding = parameters["sex-coding"].AsString;
             string zCorrectionString = parameters["z-correction"].AsString;
-            ChildGrowthZCorrectionMode zCorrectionMode;
-            switch (zCorrectionString)
+            var zCorrectionMode = zCorrectionString switch
             {
-                case "all":
-                    zCorrectionMode = ChildGrowthZCorrectionMode.All;
-                    break;
-                case "censor-5sd":
-                    zCorrectionMode = ChildGrowthZCorrectionMode.Censor5Sd;
-                    break;
-                case "censor-3sd":
-                    zCorrectionMode = ChildGrowthZCorrectionMode.Censor3Sd;
-                    break;
-                case "who":
-                    zCorrectionMode = ChildGrowthZCorrectionMode.Who;
-                    break;
-                default:
-                    throw new Exception("Unknown z correction '" + zCorrectionString + "'");
-            }
+                "all" => ChildGrowthZCorrectionMode.All,
+                "censor-5sd" => ChildGrowthZCorrectionMode.Censor5Sd,
+                "censor-3sd" => ChildGrowthZCorrectionMode.Censor3Sd,
+                "who" => ChildGrowthZCorrectionMode.Who,
+                _ => throw new Exception("Unknown z correction '" + zCorrectionString + "'"),
+            };
             bool includeCentiles = parameters["include-centiles"].AsBoolean;
             DataFrame measureFrame = parameters["measure"].AsDataFrame;
             DoubleVariable measureVariable = (DoubleVariable)measureFrame.Variables[0];
@@ -669,7 +624,7 @@ namespace StatsDirect.Builtins
                     ageInYears[i] += (gestationalAgeInWeeks - DEFAULT_GESTATIONAL_AGE_WEEKS) * 7.0 / 365.0;
                 }
                 if (maxGestationalAge > 42)
-                    host.Warning("Maximum value in your gestational age variable is " + maxGestationalAge + " weeks", "Anthropometric standardisation");
+                    UserInterface.Warning("Maximum value in your gestational age variable is " + maxGestationalAge + " weeks", "Anthropometric standardisation");
             }
 
             // Work out which tables to use
@@ -698,14 +653,14 @@ namespace StatsDirect.Builtins
             foreach (string name in femaleTableNames)
                 femaleTables.Add(ToLmsTable(parameters[name].AsDataFrame));
 
-            BmiCategoryTable maleBmiCategories = includeBmi ? ToBmiCategoryTable(parameters["bmicat-male"].AsDataFrame) : null;
-            BmiCategoryTable femaleBmiCategories = includeBmi ? ToBmiCategoryTable(parameters["bmicat-female"].AsDataFrame) : null;
+            BmiCategoryTable? maleBmiCategories = includeBmi ? ToBmiCategoryTable(parameters["bmicat-male"].AsDataFrame) : null;
+            BmiCategoryTable? femaleBmiCategories = includeBmi ? ToBmiCategoryTable(parameters["bmicat-female"].AsDataFrame) : null;
 
             // Output arrays
             double[] uncorrectedZ = new double[measure.Length];
             double[] correctedZ = new double[measure.Length];
-            double[] centile = includeCentiles ? new double[measure.Length] : null;
-            string[] bmiCategory = includeBmi ? new string[measure.Length] : null;
+            double[]? centile = includeCentiles ? new double[measure.Length] : null;
+            string[]? bmiCategory = includeBmi ? new string[measure.Length] : null;
 
             // Run the calculation for each row
             for (int i = 0; i < measure.Length; i++)
@@ -1107,34 +1062,17 @@ namespace StatsDirect.Builtins
 
             // Use the expression parser and evaluator to make this simple
             string wrappedUserSearchExpression = isNumeric ? userSearchExpression : "\"" + userSearchExpression.Replace("\"", "\"\"") + "\"";
-            string searchExpression;
-            switch (searchRule)
+            string searchExpression = searchRule switch
             {
-                case "blank":
-                case "equal":
-                    searchExpression = "X = " + wrappedUserSearchExpression;
-                    break;
-                case "gt":
-                    searchExpression = "X > " + wrappedUserSearchExpression;
-                    break;
-                case "lt":
-                    searchExpression = "X < " + wrappedUserSearchExpression;
-                    break;
-                case "ge":
-                    searchExpression = "X >= " + wrappedUserSearchExpression;
-                    break;
-                case "le":
-                    searchExpression = "X <= " + wrappedUserSearchExpression;
-                    break;
-                case "ne":
-                    searchExpression = "X <> " + wrappedUserSearchExpression;
-                    break;
-                case "match":
-                    searchExpression = userSearchExpression;
-                    break;
-                default:
-                    throw new Exception("Unknown operation");
-            }
+                "blank" or "equal" => "X = " + wrappedUserSearchExpression,
+                "gt" => "X > " + wrappedUserSearchExpression,
+                "lt" => "X < " + wrappedUserSearchExpression,
+                "ge" => "X >= " + wrappedUserSearchExpression,
+                "le" => "X <= " + wrappedUserSearchExpression,
+                "ne" => "X <> " + wrappedUserSearchExpression,
+                "match" => userSearchExpression,
+                _ => throw new Exception("Unknown operation"),
+            };
             Calcit searcher = new(searchExpression, new[] { inputType }, true);
             if (searcher.OutputType != DataType.Boolean)
                 throw new Exception("Please specify a valid search expression");
@@ -1146,7 +1084,7 @@ namespace StatsDirect.Builtins
             bool replacingWithValue = "replace-value".Equals(action);
             bool replacingWithExpression = "replace-expression".Equals(action);
 
-            Calcit replacer = null;
+            Calcit? replacer = null;
             if (replacingWithExpression)
                 replacer = new Calcit(replaceExpression, new[] { inputType }, true);
 
@@ -1396,34 +1334,17 @@ namespace StatsDirect.Builtins
 
             string interval = parameters["interval"].AsString;
             DateTime indate = parameters["indate"].AsDate;
-            string q;
-            switch (interval)
+            string q = interval switch
             {
-                case "yyyy":
-                    q = "Years";
-                    break;
-                case "m":
-                    q = "Months";
-                    break;
-                case "w":
-                    q = "Weeks";
-                    break;
-                case "d":
-                    q = "Days";
-                    break;
-                case "h":
-                    q = "Hours";
-                    break;
-                case "n":
-                    q = "Minutes";
-                    break;
-                case "s":
-                    q = "Seconds";
-                    break;
-                default:
-                    throw new ArgumentException("parameters[interval]: Unexpected interval", nameof(parameters));
-            }
-
+                "yyyy" => "Years",
+                "m" => "Months",
+                "w" => "Weeks",
+                "d" => "Days",
+                "h" => "Hours",
+                "n" => "Minutes",
+                "s" => "Seconds",
+                _ => throw new ArgumentException("parameters[interval]: Unexpected interval", nameof(parameters)),
+            };
             string outputTitle = inputVariable.Title + "~" + q + " from " + indate;
             DataFrame outputFrame = new();
             DoubleVariable outputVariable = new(inputVariable.Length, outputTitle);
@@ -1577,133 +1498,51 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput ShtPairDifferences(IPreferences host, ParameterBag parameters)
+        public StepOutput ShtPairDifferences(ParameterBag parameters)
         {
-            return ShtPair(host, parameters, 1);
-        }
-
-        public static StepOutput ShtPairMeans(IPreferences host, ParameterBag parameters)
-        {
-            return ShtPair(host, parameters, 2);
-        }
-
-        public static StepOutput ShtPairSlopes(IPreferences host, ParameterBag parameters)
-        {
-            return ShtPair(host, parameters, 3);
-        }
-
-        ///  <param name="parameters"></param>
-        /// <param name="index">1 = differences, 2 = means, 3 = slopes</param>
-        /// <param name="host"></param>
-        private static StepOutput ShtPair(IPreferences host, ParameterBag parameters, int index)
-        {
-            int ctr; int rows2 = 0; int limit = 0;
-            string qx = null; string xt = null;
-            double[] xx = null; double[] x; double[] y = null;
-            double mdn = 0;
-
             DataFrame yFrame = parameters["y"].AsDataFrame;
             DoubleVariable yVariable = (DoubleVariable)yFrame.Variables[0];
             int rows = yVariable.Length;
-            string yt = yVariable.Title;
+            string? yt = yVariable.Title;
             double[] yy = new double[rows + 1];
             for (int i = 1; i <= rows; i++)
                 yy[i] = yVariable.Data[i - 1];
-            if (index != 2)
-            {
-                DataFrame xFrame = parameters["x"].AsDataFrame;
-                DoubleVariable xVariable = (DoubleVariable)xFrame.Variables[0];
-                rows2 = xVariable.Length;
-                if (rows2 != rows & index == 3)
-                {
-                    //  Should never happen due to the data acquisition, but just in case...
-                    throw new TemplateOperationCancelledException("Unequal number of observations in X and Y.", "Pairwise");
-                }
-                xt = xVariable.Title;
-                xx = new double[rows2 + 1];
-                for (int i = 1; i <= rows2; i++)
-                    xx[i] = xVariable.Data[i - 1];
-            }
+            DataFrame xFrame = parameters["x"].AsDataFrame;
+            DoubleVariable xVariable = (DoubleVariable)xFrame.Variables[0];
+            int rows2 = xVariable.Length;
+            string? xt = xVariable.Title;
+            double[] xx = new double[rows2 + 1];
+            for (int i = 1; i <= rows2; i++)
+                xx[i] = xVariable.Data[i - 1];
 
-            if (index == 2)
+            double[] x = new double[rows + 1];
+            double[] y = new double[rows2 + 1];
+            int ctr = 0;
+            for (int i = 1; i <= rows2; i++)
             {
-                // means
-                x = new double[rows + 1];
-                ctr = 0;
-                for (int i = 1; i <= rows; i++)
+                Debug.Assert(xx is not null, "xx is not null");
+                if (xx[i] != Constant.MISSING)
                 {
-                    if (yy[i] != Constant.MISSING)
-                    {
-                        ctr += 1;
-                        x[ctr] = yy[i];
-                    }
+                    ctr++;
+                    x[ctr] = xx[i];
                 }
-                rows = ctr;
             }
-            else if (index == 3)
+            rows2 = ctr;
+            ctr = 0;
+            for (int i = 1; i <= rows; i++)
             {
-                // slopes
-                x = new double[rows + 1];
-                y = new double[rows + 1];
-                ctr = 0;
-                for (int i = 1; i <= rows; i++)
+                if (yy[i] != Constant.MISSING)
                 {
-                    Debug.Assert(xx != null, "xx != null");
-                    if (xx[i] != Constant.MISSING & yy[i] != Constant.MISSING)
-                    {
-                        ctr += 1;
-                        x[ctr] = xx[i];
-                        y[ctr] = yy[i];
-                    }
+                    ctr++;
+                    y[ctr] = yy[i];
                 }
-                rows = ctr;
             }
-            else
-            {
-                // differences
-                x = new double[rows + 1];
-                y = new double[rows2 + 1];
-                ctr = 0;
-                for (int i = 1; i <= rows2; i++)
-                {
-                    Debug.Assert(xx != null, "xx != null");
-                    if (xx[i] != Constant.MISSING)
-                    {
-                        ctr++;
-                        x[ctr] = xx[i];
-                    }
-                }
-                rows2 = ctr;
-                ctr = 0;
-                for (int i = 1; i <= rows; i++)
-                {
-                    if (yy[i] != Constant.MISSING)
-                    {
-                        ctr++;
-                        y[ctr] = yy[i];
-                    }
-                }
-                rows = ctr;
-            }
+            rows = ctr;
 
-            // lc = 1; 
-            switch (index)
-            {
-                case 1:
-                    limit = rows * rows;
-                    qx = "Differences (" + xt + " - " + yt + ")";
-                    break;
-                case 2:
-                    limit = Convert.ToInt32(rows * (rows + 1) / 2);
-                    qx = "Means within " + yt;
-                    break;
-                case 3:
-                    limit = Convert.ToInt32((rows - 2) * (rows - 1) / 2);
-                    qx = "Slopes(" + xt + ", " + yt + ")";
-                    break;
-            }
+            int limit = rows * rows;
+            string qx = "Differences (" + xt + " - " + yt + ")";
 
-            if (limit > host.Preferences.MaxRows)
+            if (limit > SdPreferences.MaxRows)
                 throw new TemplateOperationCancelledException("Too many data.", "Pairwise");
 
             string t = qx;
@@ -1712,98 +1551,188 @@ namespace StatsDirect.Builtins
             DoubleVariable outputVariable = new(limit, t);
             outputFrame.Variables.Add(outputVariable);
             int cnt = 0;
-            switch (index)
+            for (int i = 1; i <= rows; i++)
             {
-                case 1:
-                    for (int i = 1; i <= rows; i++)
+                for (int j = 1; j <= rows2; j++)
+                {
+                    Debug.Assert(y is not null, "y is not null");
+                    if (x[i] == Constant.MISSING || y[j] == Constant.MISSING)
+                        outputVariable.SetData(cnt, Constant.MISSING);
+                    else
+                        outputVariable.SetData(cnt, x[i] - y[j]);
+                    cnt++;
+                }
+            }
+
+            ParameterBag outputParameters = new();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepOutput(outputParameters);
+        }
+
+        public StepOutput ShtPairMeans(ParameterBag parameters)
+        {
+            DataFrame yFrame = parameters["y"].AsDataFrame;
+            DoubleVariable yVariable = (DoubleVariable)yFrame.Variables[0];
+            int rows = yVariable.Length;
+            string? yt = yVariable.Title;
+            double[] yy = new double[rows + 1];
+            for (int i = 1; i <= rows; i++)
+                yy[i] = yVariable.Data[i - 1];
+            // means
+            double[] x = new double[rows + 1];
+            int ctr = 0;
+            for (int i = 1; i <= rows; i++)
+            {
+                if (yy[i] != Constant.MISSING)
+                {
+                    ctr += 1;
+                    x[ctr] = yy[i];
+                }
+            }
+            rows = ctr;
+
+            int limit = Convert.ToInt32(rows * (rows + 1) / 2);
+            string qx = "Means within " + yt;
+
+            if (limit > SdPreferences.MaxRows)
+                throw new TemplateOperationCancelledException("Too many data.", "Pairwise");
+
+            string t = qx;
+
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(limit, t);
+            outputFrame.Variables.Add(outputVariable);
+            int cnt = 0;
+            for (int i = 1; i <= rows; i++)
+            {
+                for (int j = i; j <= rows; j++)
+                {
+                    if (x[i] == Constant.MISSING)
+                        outputVariable.SetData(cnt, Constant.MISSING);
+                    else
+                        outputVariable.SetData(cnt, (x[i] + x[j]) / 2.0);
+                    cnt++;
+                }
+            }
+
+            ParameterBag outputParameters = new();
+            outputParameters.AddOutput("output", outputFrame);
+            return new StepOutput(outputParameters);
+        }
+
+        public StepOutput ShtPairSlopes(ParameterBag parameters)
+        {
+            DataFrame yFrame = parameters["y"].AsDataFrame;
+            DoubleVariable yVariable = (DoubleVariable)yFrame.Variables[0];
+            int rows = yVariable.Length;
+            string? yt = yVariable.Title;
+            double[] yy = new double[rows + 1];
+            for (int i = 1; i <= rows; i++)
+                yy[i] = yVariable.Data[i - 1];
+            DataFrame xFrame = parameters["x"].AsDataFrame;
+            DoubleVariable xVariable = (DoubleVariable)xFrame.Variables[0];
+            int rows2 = xVariable.Length;
+            if (rows2 != rows)
+            {
+                //  Should never happen due to the data acquisition, but just in case...
+                throw new TemplateOperationCancelledException("Unequal number of observations in X and Y.", "Pairwise");
+            }
+            string? xt = xVariable.Title;
+            double[] xx = new double[rows2 + 1];
+            for (int i = 1; i <= rows2; i++)
+                xx[i] = xVariable.Data[i - 1];
+
+            // slopes
+            double[] x = new double[rows + 1];
+            double[] y = new double[rows + 1];
+            int ctr = 0;
+            for (int i = 1; i <= rows; i++)
+            {
+                Debug.Assert(xx is not null, "xx is not null");
+                if (xx[i] != Constant.MISSING & yy[i] != Constant.MISSING)
+                {
+                    ctr += 1;
+                    x[ctr] = xx[i];
+                    y[ctr] = yy[i];
+                }
+            }
+            rows = ctr;
+
+            int limit = Convert.ToInt32((rows - 2) * (rows - 1) / 2);
+            string qx = "Slopes(" + xt + ", " + yt + ")";
+
+            if (limit > SdPreferences.MaxRows)
+                throw new TemplateOperationCancelledException("Too many data.", "Pairwise");
+
+            string t = qx;
+
+            DataFrame outputFrame = new();
+            DoubleVariable outputVariable = new(limit, t);
+            outputFrame.Variables.Add(outputVariable);
+            int cnt = 0;
+            Debug.Assert(y is not null, "y is not null");
+            for (int i = 1; i < rows; i++)
+            {
+                for (int j = i + 1; j <= rows; j++)
+                {
+                    if (x[i] != x[j])
                     {
-                        for (int j = 1; j <= rows2; j++)
-                        {
-                            Debug.Assert(y != null, "y != null");
-                            if (x[i] == Constant.MISSING || y[j] == Constant.MISSING)
-                                outputVariable.SetData(cnt, Constant.MISSING);
-                            else
-                                outputVariable.SetData(cnt, x[i] - y[j]);
-                            cnt++;
-                        }
+                        if (x[i] == Constant.MISSING || y[j] == Constant.MISSING || x[i] - x[j] == 0.0)
+                            outputVariable.SetData(cnt, Constant.MISSING);
+                        else
+                            outputVariable.SetData(cnt, (y[i] - y[j]) / (x[i] - x[j]));
+                        cnt++;
                     }
-                    break;
-                case 2:
-                    for (int i = 1; i <= rows; i++)
-                    {
-                        for (int j = i; j <= rows; j++)
-                        {
-                            if (x[i] == Constant.MISSING)
-                                outputVariable.SetData(cnt, Constant.MISSING);
-                            else
-                                outputVariable.SetData(cnt, (x[i] + x[j]) / 2.0);
-                            cnt++;
-                        }
-                    }
-                    break;
-                case 3:
-                    Debug.Assert(y != null, "y != null");
+                }
+            }
+            if (parameters["calculate-slope"].AsBoolean)
+            {
+                double gamma = parameters["gamma"].AsDouble;
+                double p = (1.0 - gamma) / 2.0;
+                if (p < 0 || p > 1)
+                    p = 0.025;
+                int nx = rows;
+                MathDbl.taufromp(p, out double _, out int ix, ref nx, out int fault);
+                double[] pws = new double[cnt + 1];
+                if (fault == 0)
+                {
+                    cnt = 0;
                     for (int i = 1; i < rows; i++)
                     {
                         for (int j = i + 1; j <= rows; j++)
                         {
                             if (x[i] != x[j])
                             {
-                                if (x[i] == Constant.MISSING || y[j] == Constant.MISSING || x[i] - x[j] == 0.0)
-                                    outputVariable.SetData(cnt, Constant.MISSING);
-                                else
-                                    outputVariable.SetData(cnt, (y[i] - y[j]) / (x[i] - x[j]));
-                                cnt++;
+                                cnt += 1;
+                                if (x[i] != Constant.MISSING && y[j] != Constant.MISSING)
+                                    pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
                             }
                         }
                     }
-                    if (parameters["calculate-slope"].AsBoolean)
-                    {
-                        double gamma = parameters["gamma"].AsDouble;
-                        double p = (1.0 - gamma) / 2.0;
-                        if (p < 0 || p > 1)
-                            p = 0.025;
-                        int nx = rows;
-                        MathDbl.taufromp(p, out double _, out int ix, ref nx, out int fault);
-                        double[] pws = new double[cnt + 1];
-                        if (fault == 0)
-                        {
-                            cnt = 0;
-                            for (int i = 1; i < rows; i++)
-                            {
-                                for (int j = i + 1; j <= rows; j++)
-                                {
-                                    if (x[i] != x[j])
-                                    {
-                                        cnt += 1;
-                                        if (x[i] != Constant.MISSING && y[j] != Constant.MISSING)
-                                            pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
-                                    }
-                                }
-                            }
-                            Array.Sort(pws, 1, cnt);
-                            int ri = (int)Math.Floor(0.5 * Convert.ToDouble(cnt - ix));
-                            int si = Convert.ToInt32(0.5 * Convert.ToDouble(cnt + ix));
-                            double imdn = 0.5 * Convert.ToDouble(cnt + 1);
-                            if (imdn < 1.0)
-                                imdn = 1.0;
-                            if (imdn > cnt)
-                                imdn = cnt;
-                            if (imdn - Math.Floor(imdn) == 0.0)
-                                mdn = pws[Convert.ToInt32(imdn)];
-                            if (imdn - Math.Floor(imdn) != 0.0)
-                                mdn = pws[(int)Math.Floor(imdn)] + (pws[Convert.ToInt32(Math.Floor(imdn) + 1.0)] - pws[(int)Math.Floor(imdn)]) * (imdn - Math.Floor(imdn));
-                            double lci = pws[ri];
-                            double uci = pws[si];
-                            t = t + " [Median slope (" + Formatting.XRound(gamma * 100, 2) + "% CI)= " + host.RoundU(mdn) + " (" + host.RoundU(lci) + " to " + host.RoundU(uci) + ")]";
-                            outputVariable.Title = t;
-                        }
-                        else
-                        {
-                            throw new TemplateOperationCancelledException("TODO: Error description", "Pairwise");
-                        }
-                    }
-                    break;
+                    Array.Sort(pws, 1, cnt);
+                    int ri = (int)Math.Floor(0.5 * Convert.ToDouble(cnt - ix));
+                    int si = Convert.ToInt32(0.5 * Convert.ToDouble(cnt + ix));
+                    double imdn = 0.5 * Convert.ToDouble(cnt + 1);
+                    if (imdn < 1.0)
+                        imdn = 1.0;
+                    if (imdn > cnt)
+                        imdn = cnt;
+
+                    double mdn = 0;
+                    if (imdn - Math.Floor(imdn) == 0.0)
+                        mdn = pws[Convert.ToInt32(imdn)];
+                    if (imdn - Math.Floor(imdn) != 0.0)
+                        mdn = pws[(int)Math.Floor(imdn)] + (pws[Convert.ToInt32(Math.Floor(imdn) + 1.0)] - pws[(int)Math.Floor(imdn)]) * (imdn - Math.Floor(imdn));
+
+                    double lci = pws[ri];
+                    double uci = pws[si];
+                    t = t + " [Median slope (" + Formatting.XRound(gamma * 100, 2) + "% CI)= " + RoundU(mdn) + " (" + RoundU(lci) + " to " + RoundU(uci) + ")]";
+                    outputVariable.Title = t;
+                }
+                else
+                {
+                    throw new TemplateOperationCancelledException("TODO: Error description", "Pairwise");
+                }
             }
 
             ParameterBag outputParameters = new();
@@ -2087,7 +2016,7 @@ namespace StatsDirect.Builtins
                 comp = new DoubleAscending();
             }
             else { comp = new DoubleDescending(); }
-            bool hasLink = parameters.ContainsKey("linkdata") && parameters["linkdata"] != null;
+            bool hasLink = parameters.ContainsKey("linkdata") && parameters["linkdata"] is not null;
 
             int rows = dataVariable.Length;
 
@@ -2171,10 +2100,10 @@ namespace StatsDirect.Builtins
             return WrapFrame("output", outputFrame);
         }
 
-        public static StepOutput ShtSortInPlace(ITemplateHost host, ParameterBag parameters)
+        public StepOutput ShtSortInPlace(ParameterBag parameters)
         {
             //  A gross hack - this just hands off to the UI.
-            host.Amend(new SortInPlaceOptions(), parameters);
+            UserInterface.Amend(new SortInPlaceOptions(), parameters);
             return StepOutput.Empty();
         }
 
@@ -2460,7 +2389,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput ShtGroupCategorise(ITemplateHost host, ParameterBag parameters)
+        public StepOutput ShtGroupCategorise(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable inputVariable = (DoubleVariable)data.Variables[0];
@@ -2471,16 +2400,16 @@ namespace StatsDirect.Builtins
                 PassX = new double[rows],
                 Data = inputVariable
             };
-            if (null == host.Amend(options, parameters))
+            if (null == UserInterface.Amend(options, parameters))
                 throw new TemplateOperationCancelledException();
 
             DataFrame outputFrame = new();
-            if (options.PassX != null && options.PassX.Length > 0)
+            if (options.PassX is not null && options.PassX.Length > 0)
             {
                 DoubleVariable boundariesVariable = new(options.PassX, options.Title);
                 outputFrame.Variables.Add(boundariesVariable);
             }
-            if (options.Categories != null)
+            if (options.Categories is not null)
             {
                 StringVariable categoryVariable = new(options.Categories, "category");
                 outputFrame.Variables.Add(categoryVariable);
@@ -2493,7 +2422,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput ShtGroupExtract(ITemplateHost host, ParameterBag parameters)
+        public StepOutput ShtGroupExtract(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;
             bool isFindAndReplace = data.VariableCount > 1;
@@ -2501,7 +2430,7 @@ namespace StatsDirect.Builtins
             if (isFindAndReplace)
             {
                 ExtractionOptions options = new() { DataFrame = data };
-                ParameterBag outputParameters = host.Amend(options, parameters);
+                ParameterBag outputParameters = UserInterface.Amend(options, parameters);
                 return new StepOutput(outputParameters);
             }
             else
@@ -2523,28 +2452,28 @@ namespace StatsDirect.Builtins
                     DataFrame = data,
                     IdentifiersFrame = identifiersFrame
                 };
-                ParameterBag outputParameters = host.Amend(options, parameters);
+                ParameterBag outputParameters = UserInterface.Amend(options, parameters);
                 return new StepOutput(outputParameters);
             }
         }
 
-        public static StepOutput ConvertUnits(ITemplateHost host, ParameterBag parameters)
+        public StepOutput ConvertUnits(ParameterBag parameters)
         {
             ConvertUnitsOptions convertUnitsOptions = new();
-            ParameterBag outputParameters = host.Amend(convertUnitsOptions, parameters);
+            ParameterBag outputParameters = UserInterface.Amend(convertUnitsOptions, parameters);
             return new StepOutput(outputParameters);
         }
 
-        internal static StepOutput ShtToggleFilters(ITemplateHost host, ParameterBag parameters)
+        internal StepOutput ShtToggleFilters(ParameterBag parameters)
         {
             //  A gross hack - this just hands off to the UI.
-            host.Amend(new ToggleFiltersOptions(), parameters);
+            UserInterface.Amend(new ToggleFiltersOptions(), parameters);
             return StepOutput.Empty();
         }
 
         internal static StepOutput ShtContract(ParameterBag parameters)
         {
-            DataFrame covariatesOrNull;
+            DataFrame? covariatesOrNull;
             bool hasResponses;
 
             string type = parameters["type"].AsString;
@@ -2903,7 +2832,7 @@ namespace StatsDirect.Builtins
             return nextDifferentValue;
         }
 
-        private class IntAndSomething<T>
+        private class IntAndSomething<T> where T: notnull
         {
             public int I { get; }
             public T Something { get; }
@@ -2913,11 +2842,10 @@ namespace StatsDirect.Builtins
                 return I ^ Something.GetHashCode();
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
-                if (!(obj is IntAndSomething<T>))
+                if (obj is not IntAndSomething<T> other)
                     return false;
-                IntAndSomething<T> other = (IntAndSomething<T>)obj;
                 return I == other.I && Something.Equals(other.Something);
             }
 
@@ -2935,7 +2863,7 @@ namespace StatsDirect.Builtins
         /// <param name="variable"></param>
         /// <param name="nextDifferentValue"></param>
         /// <returns></returns>
-        private static int ClassifyObjectsInOneVariable<T>(int[] differenceArray, GenericVariable<T> variable, int nextDifferentValue)
+        private static int ClassifyObjectsInOneVariable<T>(int[] differenceArray, GenericVariable<T> variable, int nextDifferentValue) where T: notnull
         {
             T[] testArray = variable.Data;
             HashSet<int> seenDifferences = new();
@@ -3041,7 +2969,7 @@ namespace StatsDirect.Builtins
 
         private class SortAlphaNumeric : IComparer<string>
         {
-            private static int Compare(string x, string y)
+            private static int Compare(string? x, string? y)
             {
                 if (x.Equals(y))
                     return 0;
@@ -3057,9 +2985,40 @@ namespace StatsDirect.Builtins
             }
 
             // interface methods implemented by Compare
-            int IComparer<string>.Compare(string x, string y)
+            int IComparer<string>.Compare(string? x, string? y)
             {
                 return Compare(x, y);
+            }
+        }
+
+        private struct Catvar : IComparable<Catvar>
+        {
+            public string Title;
+            public int Id;
+
+            private int CompareTo(Catvar other)
+            {
+                if (double.TryParse(Title, out double mti) && double.TryParse(other.Title, out double oti))
+                    return mti.CompareTo(oti);
+                return string.CompareOrdinal(Title, other.Title);
+            }
+
+            int IComparable<Catvar>.CompareTo(Catvar other) => CompareTo(other);
+
+        }
+
+        private class SortPair : IComparable<SortPair>
+        {
+            public double Value { get; }
+            public int Row { get; }
+
+            private int CompareTo(SortPair? other) => Value.CompareTo(other.Value);
+            int IComparable<SortPair>.CompareTo(SortPair? other) => CompareTo(other);
+
+            public SortPair(double value, int row)
+            {
+                Value = value;
+                Row = row;
             }
         }
     }

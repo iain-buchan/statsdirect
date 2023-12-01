@@ -1,4 +1,5 @@
-﻿using StatsDirect.Numerics;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
@@ -9,50 +10,48 @@ namespace StatsDirect.Charting.Renderer
 {
     class RocChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public RocChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base(cd, canvasFactory)
+        private IUserInterface UserInterface { get; }
+        public RocChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory, ISdPreferences sdPreferences, IUserInterface userInterface)
+            : base(cd, canvasFactory, sdPreferences)
         {
+            UserInterface = userInterface;
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear }) {
                     Max = 1,
                     Min = 0
                 },
-                Y =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
+                new(new[] { ScaleType.Linear }) {
                     Max = 1,
                     Min = 0
                 }
-            };
+            );
         }
 
         ///  <summary>
         ///  Plot a ROC chart.
         ///  </summary>
         /// <param name="host"></param>
-        ParameterBag IChartRenderer.Plot(ITemplateHost host, bool _)
+        ParameterBag IChartRenderer.Plot(bool _)
         {
             ROCOptions rOptions = (ROCOptions)Definition.ChartOptions;
-            double gamma = rOptions.GAMMA;
+            double gamma = rOptions.Gamma;
             if (gamma <= 0)
                 return null;
             MathDbl.civ(0, out double cit, gamma, out double p0);
 
             //  Assume data passed as series - X is positive, Y is negative.
 
-            IList<ROCSeriesRecord> seriesRecords = MakeAndMaybeAmendSeriesRecords(host, Definition);
+            IList<ROCSeriesRecord> seriesRecords = MakeAndMaybeAmendSeriesRecords(Definition);
 
             AssignMarkersToSeries(rOptions);
-            Legend legend = new();
+            List<LegendEntry> legendEntries = new();
             for (int cs = 0; cs < Definition.XSeries.Count; cs++)
-                legend.LegendEntries.Add(new LegendEntry { Label = rOptions.SeriesTitles[cs], MarkerType = ((DoubleSeries)Definition.YSeries[cs]).MarkerType });
+                legendEntries.Add(new LegendEntry(((DoubleSeries)Definition.YSeries[cs]).MarkerType, rOptions.SeriesTitles[cs]));
+            Legend legend = new(something, legendEntries);
 
             StartVectorPlot(rOptions, legend);
 
@@ -314,10 +313,10 @@ namespace StatsDirect.Charting.Renderer
             return results;
         }
 
-        private static IList<ROCSeriesRecord> MakeAndMaybeAmendSeriesRecords(ITemplateHost host, ChartDefinition definition)
+        private IList<ROCSeriesRecord> MakeAndMaybeAmendSeriesRecords(ChartDefinition definition)
         {
             ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
-            double gamma = rOptions.GAMMA;
+            double gamma = rOptions.Gamma;
             if (gamma <= 0)
                 return null;
 
@@ -332,8 +331,8 @@ namespace StatsDirect.Charting.Renderer
                     ROCSeriesRecord seriesRecord = seriesRecords[cs];
                     if (rOptions.ShowCutOffCalculator)
                     {
-                        string title = "ROC plot for " + rOptions.SeriesTitles[cs];
-                        seriesRecord = ShowCutoff(host, seriesRecord, title);
+                        string title = $"ROC plot for {rOptions.SeriesTitles[cs]}";
+                        seriesRecord = ShowCutoff(seriesRecord, title);
                     }
                     seriesRecords[cs] = seriesRecord;
                 }
@@ -344,7 +343,7 @@ namespace StatsDirect.Charting.Renderer
         private static IList<ROCSeriesRecord> MakeSeriesRecords(ChartDefinition definition)
         {
             ROCOptions rOptions = (ROCOptions)definition.ChartOptions;
-            double gamma = rOptions.GAMMA;
+            double gamma = rOptions.Gamma;
             if (gamma <= 0)
                 return null;
 
@@ -492,10 +491,10 @@ namespace StatsDirect.Charting.Renderer
         ///  <summary>
         ///  Cause the host to amend the thisData record in-place with any revisions to the cutoff data.
         ///  </summary>
-        private static ROCSeriesRecord ShowCutoff(ITemplateHost host, ROCSeriesRecord seriesRecord, string title)
+        private ROCSeriesRecord ShowCutoff(ROCSeriesRecord seriesRecord, string title)
         {
             ROCCutoff payload = new() { SeriesRecord = seriesRecord, Title = title };
-            host.Amend(payload, null);
+            UserInterface.Amend(payload, null);
             return payload.SeriesRecord;
         }
     }

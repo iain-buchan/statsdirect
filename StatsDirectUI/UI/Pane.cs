@@ -8,14 +8,14 @@ namespace StatsDirect.UI
     /// This may be a report (there's only one object in it), a script (ditto) or a grid (which may have sheets within it)
     /// </summary>
     [Serializable]
-    public class Pane : IStripForRedo
+    public class Pane
     {
         public string Name { get; }
         [NonSerialized]
         private readonly WindowInformation windowInformation; // Can't be converted to an auto-property, as NonSerialized can only apply to fields.
-        public object Tag { get; }
+        public object? Tag { get; }
 
-        internal Pane(string name, WindowInformation info, object tag)
+        internal Pane(string name, WindowInformation info, object? tag)
         {
             Name = name;
             windowInformation = info;
@@ -29,7 +29,7 @@ namespace StatsDirect.UI
             return Name;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (null == obj)
                 return false;
@@ -61,19 +61,7 @@ namespace StatsDirect.UI
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode() ^ WindowInformation.GetHashCode() ^ Tag.GetHashCode();
-        }
-
-        public object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            // Indicate that this should not be kept
-            return null;
-        }
-
-        public void RefillForRedo(IRefillSource source)
-        {
-            // Should never refill, as should never have been present in the first place!
-            throw new NotImplementedException();
+            return HashCode.Combine(Name, WindowInformation, Tag);
         }
     }
 }

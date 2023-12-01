@@ -1,4 +1,5 @@
-﻿using StatsDirect.Numerics;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System.Drawing;
 
@@ -6,31 +7,26 @@ namespace StatsDirect.Charting.Renderer
 {
     class LadderChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public LadderChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public LadderChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Category },
+            return new ScaleParameters(
+                new(new[] { ScaleType.Category }) {
                     Max = 0,
                     Min = 0
                 },
-                Y =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
+                new(new[] { ScaleType.Linear }) {
                     Max = DataMaxY,
                     Min = DataMinY
                 }
-            };
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -65,7 +61,7 @@ namespace StatsDirect.Charting.Renderer
             }
             //  Lines
             MarkerType rungMarkerType = ChartPreferences.MarkerTypes[10];
-            if (lOptions.MarkerTypes != null && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
+            if (lOptions.MarkerTypes is not null && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] is not null)
                 rungMarkerType = lOptions.MarkerTypes[0];
 
             PenDescriptor rungPen = new(ColorDescriptor.Black, rungMarkerType.Width);

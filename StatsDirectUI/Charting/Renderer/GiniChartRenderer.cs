@@ -1,34 +1,30 @@
-﻿using StatsDirect.Templates;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
     internal class GiniChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public GiniChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public GiniChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X =
-                    {
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = 1,
-                        Min = 0
-                    },
-                Y =
-                    {
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = 1,
-                        Min = 0
-                    }
-            };
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear }) {
+                    Max = 1,
+                    Min = 0
+                },
+                new(new[] { ScaleType.Linear }) {
+                    Max = 1,
+                    Min = 0
+                }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();

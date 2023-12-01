@@ -35,7 +35,7 @@ namespace StatsDirect.Numerics
         public void Seed(int sd, ref MersenneTwister rug)
         {
             RNG = null;
-            if (rug == null)
+            if (rug is null)
             {
                 RNG = new MersenneTwister();
                 RNG.Seed(sd);

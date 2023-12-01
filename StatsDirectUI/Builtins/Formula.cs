@@ -24,7 +24,7 @@ namespace StatsDirect.Builtins
 
         private static int AutoSeed(ParameterBag parameters)
         {
-            if (parameters.ContainsKey("seed") && parameters["seed"] != null && parameters["seed"].IsInt32)
+            if (parameters.ContainsKey("seed") && parameters["seed"] is not null && parameters["seed"].IsInt32)
                 return parameters["seed"].AsInt32;
 
             return Base.DefaultSeed();
@@ -65,7 +65,7 @@ namespace StatsDirect.Builtins
                 if (n / (double)blockSize != Math.Floor(n / (double)blockSize))
                 {
                     string warning = $"The final block size will be {n % blockSize} not {blockSize} because the number of subjects is not divisible by the block size.";
-                    outputParameters.AddOutput("*blockSizeWarn", new List<ParameterBag>() { new ParameterBag("warning", new FilledStringParameter(FilledParameterDirection.Output, warning)) });
+                    outputParameters.AddOutput("*blockSizeWarn", new List<ParameterBag>() { new ParameterBag().AddOutput("warning", warning) });
                 }
 
                 int bks = (int)Math.Floor((double)n / blockSize);
@@ -500,7 +500,7 @@ namespace StatsDirect.Builtins
             int high = parameters["high"].AsInt32;
             if (low > high)
                 (high, low) = (low, high);
-            if (low >= 0 & high >= 1)
+            if (low >= 0 && high >= 1)
             {
                 int[] rand = new int[high + 2 ];
                 for (int N = low; N <= high; N++)
@@ -1068,7 +1068,7 @@ namespace StatsDirect.Builtins
             double tb = PDF.tfromp(b / 2.0, df);
             List<ParameterBag> assumptionsList = new();
             outputParameters.AddOutput("*assumptions", assumptionsList);
-            if (ierr == 0 & 2.0 * ta + tb <= 3.1)
+            if (ierr == 0 && 2.0 * ta + tb <= 3.1)
                 assumptionsList.Add(x_disclaim(1.0 - b, 1.0 - b + alpha / 2.0, n));
         }
     }

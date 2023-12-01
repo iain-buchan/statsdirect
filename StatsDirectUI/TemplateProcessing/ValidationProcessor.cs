@@ -20,11 +20,13 @@ namespace StatsDirect.TemplateProcessing
                     if (candidate.Name.Equals(validatorName))
                     {
                         string language = candidate.Language ?? "CSharp";
-                        IScriptEngine scriptEngine = host.GetScriptEngine(language);
-                        object result = scriptEngine.Run(language, candidate.Script, ScriptType.Validator, host, filledParameters, parameter, null);
-                        if (null == result)
-                            return ValidationResult.Valid;
-                        return ValidationResult.Invalid(result.ToString());
+                        if (host.TryGetScriptEngine(language, out IScriptEngine? scriptEngine))
+                        {
+                            object result = scriptEngine.Run(language, candidate.Script, ScriptType.Validator, host, filledParameters, parameter, null);
+                            if (result is null)
+                                return ValidationResult.Valid;
+                            return ValidationResult.Invalid(result.ToString());
+                        }
                     }
                 }
             }
@@ -35,64 +37,46 @@ namespace StatsDirect.TemplateProcessing
         private static ValidationResult ValidateGeneric(string validatorName, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
         {
             // If we're allowing blank parameters, accept a blank.
-            if (null != parameter.CancelSkipsParameter && (null == filledParameters || 0 == filledParameters.Count))
+            if (parameter.CancelSkipsParameter is not null && (filledParameters is null || 0 == filledParameters.Count))
                 return ValidationResult.Valid;
 
             // There's no custom validator with that name (or we would never be called), so use a generic if we have one.
             // Note that some of these validators assume a particular frame name - deal with that here.
-            string parameterName;
-            switch (validatorName)
+            string parameterName = validatorName switch
             {
-                case "PersonTimeSize":
-                    parameterName = "data";
-                    break;
-                default:
-                    parameterName = parameter.Name;
-                    break;
-            }
+                "PersonTimeSize" => "data",
+                _ => parameter.Name,
+            };
 
             // If the parameter is missing and it has an AcquireIfTrue, assume it was never acquired and that was OK.
             if (parameter.HasAcquireIfTrue && !filledParameters.ContainsKey(parameterName))
                 return ValidationResult.Valid;
 
-            FilledParameter p = filledParameters[parameterName];
-            switch (validatorName)
+            FilledParameter? p = filledParameters[parameterName];
+            if (p is null)
+                return something;
+
+            // The parameter exists, though it may be 
+            return validatorName switch
             {
-                case "Boolean":
-                    return ValidateBoolean(failedValidationMessage, p.AsDataFrame);
-                case "CheckForNonDummiedCategories":
-                    return CheckForNonDummiedCategories(p.AsDataFrame);
-                case "Expression":
-                    return ValidateExpression(failedValidationMessage, p.AsString);
-                case "Integer":
-                    return ValidateInteger(failedValidationMessage, p.AsDataFrame);
-                case "NoMissingData":
-                    return ValidateNoMissingData(failedValidationMessage, p.AsDataFrame);
-                case "NonNegative":
-                    return ValidateNonNegative(failedValidationMessage, p.AsDataFrame);
-                case "PersonTimeSize":
-                    return ValidatePersonTimeSize(p.AsDataFrame);
-                case "Pooling":
-                    return ValidatePooling(failedValidationMessage, p.AsDataFrame);
-                case "Positive":
-                    return ValidatePositive(failedValidationMessage, p.AsDataFrame);
-                case "PositiveRows":
-                    return ValidatePositiveRows(failedValidationMessage, p.AsDataFrame);
-                case "PositiveRowsExceptLastColumn":
-                    return ValidatePositiveRowsExceptLastColumn(failedValidationMessage, p.AsDataFrame);
-                case "Square":
-                    return ValidateSquare(failedValidationMessage, p.AsDataFrame);
-                case "SquareBins":
-                    return ValidateSquareBins(failedValidationMessage, p.AsDataFrame);
-                case "TwoBinsAndNoMissingData":
-                    return ValidateTwoBins(failedValidationMessage, p.AsDataFrame);
-                case "ZeroToOneExclusive":
-                    return ValidateZeroToOneExclusive(failedValidationMessage, p.AsDataFrame);
-                case "ZeroToOneInclusive":
-                    return ValidateZeroToOneInclusive(failedValidationMessage, p.AsDataFrame);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(validatorName), validatorName, "No validator with the specified name");
-            }
+                "Boolean" => ValidateBoolean(failedValidationMessage, p.AsDataFrame),
+                "CheckForNonDummiedCategories" => CheckForNonDummiedCategories(p.AsDataFrame),
+                "Expression" => ValidateExpression(failedValidationMessage, p.AsString),
+                "Integer" => ValidateInteger(failedValidationMessage, p.AsDataFrame),
+                "NoMissingData" => ValidateNoMissingData(failedValidationMessage, p.AsDataFrame),
+                "NonNegative" => ValidateNonNegative(failedValidationMessage, p.AsDataFrame),
+                "PersonTimeSize" => ValidatePersonTimeSize(p.AsDataFrame),
+                "Pooling" => ValidatePooling(failedValidationMessage, p.AsDataFrame),
+                "Positive" => ValidatePositive(failedValidationMessage, p.AsDataFrame),
+                "PositiveRows" => ValidatePositiveRows(failedValidationMessage, p.AsDataFrame),
+                "PositiveRowsExceptLastColumn" => ValidatePositiveRowsExceptLastColumn(failedValidationMessage, p.AsDataFrame),
+                "Square" => ValidateSquare(failedValidationMessage, p.AsDataFrame),
+                "SquareBins" => ValidateSquareBins(failedValidationMessage, p.AsDataFrame),
+                "TwoBinsAndNoMissingData" => ValidateTwoBins(failedValidationMessage, p.AsDataFrame),
+                "ZeroToOneExclusive" => ValidateZeroToOneExclusive(failedValidationMessage, p.AsDataFrame),
+                "ZeroToOneInclusive" => ValidateZeroToOneInclusive(failedValidationMessage, p.AsDataFrame),
+                _ => throw new ArgumentOutOfRangeException(nameof(validatorName), validatorName, "No validator with the specified name"),
+            };
         }
 
         private static ValidationResult ValidatePersonTimeSize(DataFrame dataFrame)
@@ -352,9 +336,9 @@ namespace StatsDirect.TemplateProcessing
     public class ValidationResult
     {
         public Validity Validity { get; set; }
-        public string FailedValidationMessage { get; set; }
-        public string PromptForMoreInformation { get; set; }
-        public string TitleForMoreInformation { get; set; }
+        public string? FailedValidationMessage { get; set; }
+        public string? PromptForMoreInformation { get; set; }
+        public string? TitleForMoreInformation { get; set; }
         public int HelpContextId { get; set; }
         public ValidationAction ActionOnMoreInformationYes { get; set; }
         public ValidationAction ActionOnMoreInformationNo { get; set; }

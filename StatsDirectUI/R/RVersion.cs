@@ -61,7 +61,7 @@ namespace StatsDirect.R
         /// <summary>
         /// Rules: Prefer highest version, then highest bitness.
         /// </summary>
-        public int CompareTo(RVersion other)
+        public int CompareTo(RVersion? other)
         {
             if (null == other)
                 return 1;

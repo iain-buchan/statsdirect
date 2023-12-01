@@ -1,4 +1,3 @@
-using StatsDirect.Data;
 using System;
 using System.Collections.Generic;
 
@@ -7,10 +6,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledParameterBagListParameter : FilledParameter
     {
-        internal FilledParameterBagListParameter()
-        {
-        }
-
         public FilledParameterBagListParameter(FilledParameterDirection direction, IList<ParameterBag> data)
             : base(direction)
         {
@@ -20,15 +15,13 @@ namespace StatsDirect.Templates
 
         public override bool HasData => true;
 
-        public IList<ParameterBag> Data { get; set; }
+        public IList<ParameterBag> Data { get; }
 
         public override IList<ParameterBag> AsParameterBagList => Data;
 
         public override object AsObject => Data;
 
         public override bool IsParameterBagList => true;
-
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
 
         public override string ToString() => $"FP({Direction}, {Data})";
 

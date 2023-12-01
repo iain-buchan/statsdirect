@@ -223,7 +223,7 @@ namespace Layout.AxisLabelers
                 }
             }
 
-            if (best == null)
+            if (best is null)
                 Console.WriteLine("WARNING: Extended algorithm found 0 solutions");
             else
                 best.VisibleRange = new Range(Math.Min(options.VisibleRange.Min, (double)best.Labels.Min(t => t.Item1)), Math.Max(options.VisibleRange.Max, (double)best.Labels.Max(t => t.Item1)));

@@ -16,18 +16,18 @@ namespace StatsDirect.UI
 
         public void StopCheck()
         {
-            if (null != checker)
-                checker.StopCheck();
+            checker?.StopCheck();
         }
 
         public void StartCheck()
         {
             UseWaitCursor = true;
             checker = new RUpdateChecker();
+            // Fire and forget!
             checker.StartCheck(UpdateStatus);
         }
 
-        private void UpdateStatus(object sender, UpdateCheckerEventArgs e)
+        private void UpdateStatus(object? sender, UpdateCheckerEventArgs e)
         {
             if (lblStatus.InvokeRequired)
                 lblStatus.Invoke(new MethodInvoker(delegate { FixupUi(e); }));
@@ -45,7 +45,7 @@ namespace StatsDirect.UI
                 UseWaitCursor = false;
         }
 
-        private void cmdDownloadR_Click(object sender, EventArgs e)
+        private void cmdDownloadR_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to fetch R update", ex, false);
+                SdApplication.FriendlyError("Couldn't launch Web browser to fetch R update", ex, false);
             }
             ((Form)TopLevelControl).Close(); // See #1031; no point leaving the form here.
         }

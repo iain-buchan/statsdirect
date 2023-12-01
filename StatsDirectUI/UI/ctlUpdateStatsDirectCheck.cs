@@ -4,43 +4,46 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlUpdateStatsDirectCheck : UserControl
+    internal partial class ctlUpdateStatsDirectCheck : UserControl
     {
-        private StatsDirectUpdateChecker statsDirectChecker;
-        public event EventHandler NewerVersionAvailable;
+        private StatsDirectUpdateChecker? statsDirectChecker;
+        public event EventHandler? NewerVersionAvailable;
 
-        public ctlUpdateStatsDirectCheck()
+        private ISdApplication SdApplication { get; }
+
+        public ctlUpdateStatsDirectCheck(ISdApplication sdApplication)
         {
+            SdApplication = sdApplication;
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object? sender, EventArgs e)
         {
             StopCheck();
             try
             {
-                SdApplication.SoleInstance.CloseAndUpdate();
+                SdApplication.CloseAndUpdate();
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to fetch StatsDirect update", ex, false);
+                SdApplication.FriendlyError("Couldn't launch Web browser to fetch StatsDirect update", ex, false);
             }
         }
 
         public void StopCheck()
         {
-            if (null != statsDirectChecker)
-                statsDirectChecker.StopCheck();
+            statsDirectChecker?.StopCheck();
         }
 
         public void StartCheck()
         {
             UseWaitCursor = true;
             statsDirectChecker = new StatsDirectUpdateChecker();
+            // Fire and forget!
             statsDirectChecker.StartCheck(UpdateStatsDirectStatus);
         }
 
-        private void UpdateStatsDirectStatus(object sender, UpdateCheckerEventArgs e)
+        private void UpdateStatsDirectStatus(object? sender, UpdateCheckerEventArgs e)
         {
             if (lblStatsDirectStatus.InvokeRequired)
                 lblStatsDirectStatus.Invoke(new MethodInvoker(delegate { FixupUi(e); }));
@@ -61,7 +64,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void lblWhatsNew_Click(object sender, EventArgs e)
+        private void lblWhatsNew_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -69,7 +72,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to view revisions", ex, false);
+                SdApplication.FriendlyError("Couldn't launch Web browser to view revisions", ex, false);
             }
         }
     }

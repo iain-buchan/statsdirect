@@ -5,10 +5,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledStringParameter : FilledParameter
     {
-        internal FilledStringParameter()
-        {
-        }
-
         public FilledStringParameter(FilledParameterDirection direction, string data)
             : base(direction)
         {
@@ -18,15 +14,13 @@ namespace StatsDirect.Templates
 
         public override bool HasData => null != Data;
 
-        public string Data { get; set; }
+        public string Data { get; }
 
         public override string AsString => Data;
 
         public override object AsObject => Data;
 
         public override bool IsString => true;
-
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
 
         public override string ToString() => $"FP({Direction}, {(null != Data ? Data : "(null)")})";
 

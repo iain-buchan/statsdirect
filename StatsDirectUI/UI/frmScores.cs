@@ -16,13 +16,13 @@ namespace StatsDirect.UI
             SetFormFromOptions();
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void cmdCancel_Click(object? sender, EventArgs e)
         {
             userCancelled = true;
             Close();
         }
 
-        private void cmdOk_Click(object sender, EventArgs e)
+        private void cmdOk_Click(object? sender, EventArgs e)
         {
             userCancelled = false;
             SetOptionsFromForm();

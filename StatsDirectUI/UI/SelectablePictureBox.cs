@@ -7,7 +7,7 @@ namespace StatsDirect.UI
 {
     class SelectablePictureBox : PictureBox
     {
-        public delegate void SelectedChangedEventHandler(object sender, EventArgs e);
+        public delegate void SelectedChangedEventHandler(object? sender, EventArgs e);
 
         private bool selected;
 

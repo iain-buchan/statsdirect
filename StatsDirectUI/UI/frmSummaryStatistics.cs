@@ -19,7 +19,7 @@ namespace StatsDirect.UI
             txtSummary.Text = summaryStatisticsOptions.Text;
         }
 
-        private void cmdOk_Click(object sender, EventArgs e)
+        private void cmdOk_Click(object? sender, EventArgs e)
         {
             Close();
         }

@@ -6,10 +6,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledStringListParameter : FilledParameter
     {
-        internal FilledStringListParameter()
-        {
-        }
-
         public FilledStringListParameter(FilledParameterDirection direction, IList<string> data)
             : base(direction)
         {
@@ -19,13 +15,11 @@ namespace StatsDirect.Templates
 
         public override bool HasData => null != Data;
 
-        public IList<string> Data { get; set; }
+        public IList<string> Data { get; }
 
         public override IList<string> AsStringList => Data;
 
         public override object AsObject => Data;
-
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
 
         public override string ToString() => $"FP({Direction}, {Data})";
 

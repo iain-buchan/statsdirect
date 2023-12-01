@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
     public class MHOptions : ForestishOptions
     {
-        public double rmh { get; }
-        public double ll { get; }
-        public double ul { get; }
-        public IList<bool> lerr { get; }
-        public IList<bool> uerr { get; }
-        public string cap { get; }
-        public int pbias { get; }
-        public string qid { get; }
+        public double Rmh { get; }
+        public double LowerLimit { get; }
+        public double UpperLimit { get; }
+        public IReadOnlyList<bool> Lerr { get; }
+        public IReadOnlyList<bool> Uerr { get; }
+        public string Caption { get; }
+        public int Pbias { get; }
+        public string Qid { get; }
         /// <summary>
         /// For test of IncludeTable, the result.  Where not required, set null to assume all true.
         /// </summary>
-        public IList<bool> Included { get; }
+        public IReadOnlyList<bool>? Included { get; }
         public int LowerBound { get; }
 
         public override bool ShowLegendIsRelevant => false;
@@ -27,25 +27,36 @@ namespace StatsDirect.Charting
             visitor.Visit(this);
         }
 
-        public MHOptions(int lowerBound, int k, IList<double> odw, IList<string> titles, double rmh, double ll, double ul, double cco, IList<double> odr, IList<double> odrl, IList<double> odru, IList<bool> lerr, IList<bool> uerr, bool[] included, string cap, int pbias, string qid)
+        public MHOptions(IChartPreferences chartPreferences,
+            int lowerBound,
+            int k,
+            IReadOnlyList<double> odw,
+            IReadOnlyList<string> titles,
+            double rmh,
+            double lowerLimit,
+            double upperLimit,
+            double cco,
+            IReadOnlyList<double> oddsRatios,
+            IReadOnlyList<double> oddsRatioLcis,
+            IReadOnlyList<double> oddsRatioUcis,
+            IReadOnlyList<bool> lerr,
+            IReadOnlyList<bool> uerr,
+            IReadOnlyList<bool>? included,
+            string cap,
+            int pbias,
+            string qid)
+            : base(chartPreferences, cco, odw, k, markCentres, markerTypes, oddsRatioLcis, oddsRatios, oddsRatioUcis, seriesOptions, titles)
         {
-            LowerBound = lowerBound;
-            this.k = k;
-            GroupSizes = odw;
-            Titles = titles;
-            this.rmh = rmh;
-            this.ll = ll;
-            this.ul = ul;
-            this.cco = cco;
-            OddsRatios = odr;
-            OddsRatioLcis = odrl;
-            OddsRatioUcis = odru;
-            this.lerr = lerr;
-            this.uerr = uerr;
+            Caption = cap;
             Included = included;
-            this.cap = cap;
-            this.pbias = pbias;
-            this.qid = qid;
+            Lerr = lerr;
+            LowerBound = lowerBound;
+            LowerLimit = lowerLimit;
+            Pbias = pbias;
+            Qid = qid;
+            Rmh = rmh;
+            Uerr = uerr;
+            UpperLimit = upperLimit;
         }
     }
 }

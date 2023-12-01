@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using StatsDirect.Charting.Options;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -8,421 +9,333 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Charting
 {
-    public static class ChartOptionProcessor
+    public class ChartDefinitionProcessor
     {
-        public static ChartOptions PreprocessChartOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName, ITemplateHost host)
+        private IChartPreferences ChartPreferences { get; }
+        private ISdPreferences SdPreferences { get; }
+
+        public ChartDefinitionProcessor(IChartPreferences chartPreferences, ISdPreferences sdPreferences)
+        {
+            ChartPreferences = chartPreferences;
+            SdPreferences = sdPreferences;
+        }
+
+        public ChartDefinition Preprocess(ChartStep step, ParameterBag parameters, IReadOnlyList<ISeries>? xSeries, IReadOnlyList<ISeries>? ySeries, string? dataName)
         {
             // Chart options
             // TODO: This is very poor placement of this logic.  It's an unpleasant mash of setting options (some of which should be defaults), data preparation and mapping from values in particular operations.  How much of this should be moved out to the XML?
-            switch (step.ChartType)
+            return step.ChartType switch
             {
-                case ChartType.AgreementPair:
-                    return PreprocessAgreementOptions(step, parameters);
-                case ChartType.Bar:
-                case ChartType.StackedBar:
-                case ChartType.StackedBar100Percent:
-                    return PreprocessBarOptions(step, parameters, definition, dataName);
-                case ChartType.BiasMA:
-                    return PreprocessBiasMAOptions();
-                case ChartType.BoxWhisker:
-                    return PreprocessBoxWhiskerOptions(step, definition, dataName);
-                case ChartType.Control:
-                    return PreprocessControlOptions(definition, dataName);
-                case ChartType.ErrorBar:
-                    return PreprocessErrorBarOptions(parameters, dataName);
-                case ChartType.Forest:
-                    return PreprocessForestOptions(parameters, dataName);
-                case ChartType.Gini:
-                    return PreprocessGiniOptions(definition, dataName);
-                case ChartType.Histogram:
-                    return PreprocessHistogramOptions(step, definition);
-                case ChartType.Ladder:
-                    return PreprocessLadderOptions(definition, dataName);
-                case ChartType.LineXY:
-                    return PreprocessLineXYOptions(definition, dataName);
-                case ChartType.LinearRegression:
-                    return PreprocessLinearRegressionOptions(step, parameters);
-                case ChartType.Normal:
-                    return PreprocessNormalOptions(parameters, dataName);
-                case ChartType.Pyramid:
-                    return PreprocessPyramidOptions(parameters, dataName);
-                case ChartType.ScatterXY:
-                    return PreprocessScatterXYOptions(step, definition, dataName);
-                case ChartType.ROC:
-                    return PreprocessRocOptions(host, parameters, definition);
-                case ChartType.Spread:
-                    return PreprocessSpreadOptions(definition, dataName);
-                case ChartType.Survival:
-                    return PreprocessSurvivalOptions(parameters, dataName);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(step), step, "step.ChartType: Not all types can be plotted yet");
-            }
+                ChartType.AgreementPair => PreprocessAgreement(step, parameters),
+                ChartType.Bar or ChartType.StackedBar or ChartType.StackedBar100Percent => PreprocessBar(step, parameters, ySeries, dataName),
+                ChartType.BiasMA => PreprocessBiasMA(),
+                ChartType.BoxWhisker => PreprocessBoxWhiskerOptions(step, xSeries, ySeries, dataName),
+                ChartType.Control => PreprocessControlOptions(xSeries, ySeries, dataName),
+                ChartType.ErrorBar => PreprocessErrorBarOptions(parameters, dataName),
+                ChartType.Forest => PreprocessForest(parameters, dataName),
+                ChartType.Gini => PreprocessGini(xSeries, ySeries, dataName),
+                ChartType.Histogram => PreprocessHistogram(step, xSeries, ySeries),
+                ChartType.Ladder => PreprocessLadder(xSeries, ySeries, dataName),
+                ChartType.LineXY => PreprocessLineXY(xSeries, ySeries, dataName),
+                ChartType.LinearRegression => PreprocessLinearRegression(step, parameters, xSeries, ySeries),
+                ChartType.Normal => PreprocessNormal(parameters, dataName, xSeries, ySeries),
+                ChartType.Pyramid => PreprocessPyramid(parameters, dataName),
+                ChartType.ScatterXY => PreprocessScatterXY(step, xSeries, ySeries, dataName),
+                ChartType.ROC => PreprocessRoc(parameters),
+                ChartType.Spread => PreprocessSpread(xSeries, ySeries, dataName),
+                ChartType.Survival => PreprocessSurvival(parameters, dataName),
+                _ => throw new ArgumentOutOfRangeException(nameof(step), step, "step.ChartType: Not all types can be plotted yet"),
+            };
         }
 
-        private static ChartOptions PreprocessBiasMAOptions()
+        private ChartDefinition PreprocessBiasMA()
         {
             // Nothing required
             return null;
         }
 
-        private static SurvivalOptions PreprocessSurvivalOptions(ParameterBag parameters, string dataName)
-        {
-            SurvivalOptions survivalOptions = new()
-            {
-                ShouldAutoscale =
-                    !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
-                        ? "Survival plot"
-                        : "Survival plot from " + dataName
-            };
-
-            if (!parameters.ContainsKey("group-count"))
-                throw new ArgumentException("Chart expected parameter \"group-count\", which was not supplied");
-            int groupCount = parameters["group-count"].AsInt32;
-
-            if (!parameters.ContainsKey("xdat"))
-                throw new ArgumentException("Chart expected parameter \"xdat\", which was not supplied");
-            DataFrame xdatFrame = parameters["xdat"].AsDataFrame;
-
-            if (!parameters.ContainsKey("cdat"))
-                throw new ArgumentException("Chart expected parameter \"cdat\", which was not supplied");
-            DataFrame cdatFrame = parameters["cdat"].AsDataFrame;
-
-            if (!parameters.ContainsKey("ydat"))
-                throw new ArgumentException("Chart expected parameter \"ydat\", which was not supplied");
-            DataFrame ydatFrame = parameters["ydat"].AsDataFrame;
-
-            DataFrame ydatlFrame = null;
-            if (parameters.ContainsKey("ydatl") && null != parameters["ydatl"])
-                ydatlFrame = parameters["ydatl"].AsDataFrame;
-
-            DataFrame ydatuFrame = null;
-            if (parameters.ContainsKey("ydatu") && null != parameters["ydatu"])
-                ydatuFrame = parameters["ydatu"].AsDataFrame;
-
-            for (int i = 0; i < groupCount; i++)
-            {
-                SurvivalOptions.SurvivalSeries ser = new();
-                // Series: xdat...
-                DoubleVariable xdatVariable = (DoubleVariable)xdatFrame.Variables[i];
-                ser.XDat = xdatVariable.Data;
-                // ... cdat...
-                DoubleVariable cdatVariable = (DoubleVariable)cdatFrame.Variables[i];
-                int[] cdat = new int[cdatVariable.Length];
-                for (int r = 0; r < cdat.Length; r++)
-                {
-                    if (cdatVariable.Data[r] == Constant.MISSING)
-                        cdat[r] = -1;
-                    else
-                        cdat[r] = (int)cdatVariable.Data[r];
-                }
-                ser.CDat = cdat;
-                // ... ydat...
-                DoubleVariable ydatVariable = (DoubleVariable)ydatFrame.Variables[i];
-                ser.YDat = ydatVariable.Data;
-                // ... ydatl...
-                if (null != ydatlFrame)
-                {
-                    DoubleVariable ydatlVariable = (DoubleVariable)ydatlFrame.Variables[i];
-                    ser.YDatL = ydatlVariable.Data;
-                }
-                // ... and ydatu
-                if (null != ydatuFrame)
-                {
-                    DoubleVariable ydatuVariable = (DoubleVariable)ydatuFrame.Variables[i];
-                    ser.YDatU = ydatuVariable.Data;
-                }
-                survivalOptions.Series.Add(ser);
-            }
-            survivalOptions.SeriesTitles = new string[groupCount];
-            survivalOptions.ShowEventMarkers = true;
-            survivalOptions.YAxisTitle = "Survival proportion";
-            for (int i = 0; i < groupCount; i++)
-                survivalOptions.SeriesTitles[i] = (i + 1).ToString();
-            survivalOptions.SetMarkers();
-            survivalOptions.ShowLegend = groupCount > 1;
-            return survivalOptions;
-        }
-
-        private static SpreadOptions PreprocessSpreadOptions(ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessSpread(IReadOnlyList<ISeries>? xSeries, IReadOnlyList<ISeries>? ySeries, string? dataName)
         {
             // If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
-            if (0 == definition.XSeries.Count && 0 == definition.YSeries.Count)
+            if (xSeries is null || ySeries is null || 0 == xSeries.Count && 0 == ySeries.Count)
                 throw new ArgumentException("Must have at least one series to plot a spread plot");
-            if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
+            if (xSeries.Count > 0 && ySeries.Count > 0)
                 throw new ArgumentException("Cannot plot a spread plot with both X and Y series");
-            IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+            IReadOnlyList<ISeries> seriesToUse = ySeries.Count > 0
+                ? ySeries
+                : xSeries;
 
-            SpreadOptions spreadOptions = new()
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
-                        ? "Spread plot"
-                        : "Spread plot from " + dataName,
-                SeriesTitles = new string[seriesToUse.Count]
-            };
+            string?[] seriesTitles = new string[seriesToUse.Count];
             for (int i = 0; i < seriesToUse.Count; i++)
-                spreadOptions.SeriesTitles[i] = seriesToUse[i].Title;
-            return spreadOptions;
+                seriesTitles[i] = seriesToUse[i].Title;
+            return new ChartDefinition(
+                ChartType.Spread,
+                new SpreadOptions(ChartPreferences,
+                    seriesTitles: seriesTitles,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
+                        ? "Spread plot"
+                        : $"Spread plot from {dataName}"
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static ROCOptions PreprocessRocOptions(ITemplateHost host, ParameterBag parameters, ChartDefinition definition)
+        private ChartDefinition PreprocessRoc(ParameterBag parameters)
         {
-            if (!parameters.ContainsKey("series-count"))
-                throw new ArgumentException("Chart expected parameter \"series-count\", which was not supplied");
-            int seriesCount = parameters["series-count"].AsInt32;
+            int seriesCount = parameters.GetNotNullValueOrThrow<int>("series-count");
             // Series: First present...
-            if (!parameters.ContainsKey("P"))
-                throw new ArgumentException("Chart expected parameter \"P\", which was not supplied");
-            DataFrame frame = parameters["P"].AsDataFrame;
+            DataFrame frame = parameters.GetNotNullValueOrThrow<DataFrame>("P");
+            DoubleSeries[] xSeries = new DoubleSeries[seriesCount];
             for (int v = 0; v < frame.VariableCount; v++)
-            {
-                DoubleVariable variable = frame.Variables[v] as DoubleVariable;
-                definition.AddXSeriesAt(VariableToSeries(variable), v);
-            }
+                xSeries[v] = VariableToSeries(frame.VariableOrThrow<DoubleVariable>(v));
             // ... then absent
-            if (!parameters.ContainsKey("A"))
-                throw new ArgumentException("Chart expected parameter \"A\", which was not supplied");
-            frame = parameters["A"].AsDataFrame;
+            frame = parameters.GetNotNullValueOrThrow<DataFrame>("A");
+            DoubleSeries[] ySeries = new DoubleSeries[seriesCount];
             for (int v = 0; v < frame.VariableCount; v++)
-            {
-                DoubleVariable variable = frame.Variables[v] as DoubleVariable;
-                definition.AddYSeriesAt(VariableToSeries(variable), v);
-            }
-            string dataName = frame.Name;
+                ySeries[v] = VariableToSeries(frame.VariableOrThrow<DoubleVariable>(v));
+            string? dataName = frame.Name;
             double pmn = 1;
             double amn = 1;
-            for (int c = 0; c < definition.XSeries.Count; c++)
+            for (int c = 0; c < xSeries.Length; c++)
             {
-                DoubleSeries xs = (DoubleSeries)definition.XSeries[c];
-                DoubleSeries ys = (DoubleSeries)definition.YSeries[c];
+                DoubleSeries xs = xSeries[c];
+                DoubleSeries ys = ySeries[c];
                 pmn = xs.Sum / xs.Points;
                 amn = ys.Sum / ys.Points;
             }
 
-            ROCOptions rocOptions = new(definition.XSeries)
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title = null == dataName
-                    ? "ROC plot"
-                    : "ROC plot from " + dataName,
-                ShowCutOffCalculator = true,
-                ShowOptimumCutOff = true,
-                Weight = 1.0,
-                GAMMA = host.Preferences.DefaultConfidenceInterval,
-                Comparison = pmn > amn ? Comparison.GreaterEqual : Comparison.LessEqual
-            };
-
-            if (parameters.ContainsKey("GAMMA"))
-                rocOptions.GAMMA = parameters["GAMMA"].AsDouble;
-
-            rocOptions.SeriesTitles = new string[seriesCount];
+            string[] seriesTitles = new string[seriesCount];
             for (int i = 0; i < seriesCount; i++)
-                rocOptions.SeriesTitles[i] = definition.XSeries[i].Title + " (+ve), " + definition.YSeries[i].Title + " (-ve)";
-            return rocOptions;
+                seriesTitles[i] = $"{xSeries[i].Title} (+ve), {ySeries[i].Title} (-ve)";
+            return new ChartDefinition(
+                ChartType.ROC,
+                new ROCOptions(ChartPreferences,
+                    xSeries, 
+                    comparison: pmn > amn
+                        ? Comparison.GreaterEqual
+                        : Comparison.LessEqual,
+                    gamma: parameters.TryGetValue("GAMMA", out double? gamma)
+                        ? gamma.Value
+                        : SdPreferences.DefaultConfidenceInterval,
+                    seriesTitles: seriesTitles,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    showCutOffCalculator: true,
+                    showOptimumCutOff: true,
+                    title: dataName is null
+                        ? "ROC plot"
+                        : $"ROC plot from {dataName}",
+                    weight: 1.0
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static ScatterXYOptions PreprocessScatterXYOptions(ChartStep step, ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessScatterXY(ChartStep step, IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
-            ScatterXYOptions sOptions = new(definition.XSeries, false)
+            string?[] seriesTitles = new string?[xSeries.Count];
+            for (int i = 0; i < xSeries.Count; i++)
+                seriesTitles[i] = xSeries[i].Title;
+            return new(
+                ChartType.ScatterXY,
+                new ScatterXYOptions(ChartPreferences, xSeries,
+                    isAscii: step.IsAscii,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: string.IsNullOrWhiteSpace(step.ChartTitle)
+                        ? dataName is null
+                            ? "Scatter plot"
+                            : $"Scatter plot from {dataName}"
+                        : step.ChartTitle,
+                    yAxisTitle: ySeries[0].Title,
+                    xAxisTitle: xSeries[0].Title,
+                    seriesTitles: seriesTitles
+                ),
+                xSeries,
+                ySeries
+            );
+        }
+
+        private ChartDefinition PreprocessPyramid(ParameterBag parameters, string? dataName)
+        {
+            if (!(parameters.TryGetValue("male", out DataFrame? maleFrame) && maleFrame is not null && maleFrame.VariableCount == 1 && maleFrame.Variables[0] is DoubleVariable maleVariable))
+                throw new Exception("'male' pyramid chart parameter does not contain a single DoubleVariable");
+            DoubleSeries maleOrOnlySeries = VariableToSeries(maleVariable);
+            DoubleSeries? femaleSeries = null;
+            if (parameters.TryGetValue("female", out DataFrame? femaleFrame))
             {
-                IsAscii = step.IsAscii,
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title = string.IsNullOrWhiteSpace(step.ChartTitle) ? (
-                    null == dataName
-                        ? "Scatter plot"
-                        : "Scatter plot from " + dataName)
-                    : step.ChartTitle,
-                YAxisTitle = definition.YSeries[0].Title,
-                XAxisTitle = definition.XSeries[0].Title,
-                SeriesTitles = new string[definition.XSeries.Count]
-            };
-            for (int i = 0; i < definition.XSeries.Count; i++)
-                sOptions.SeriesTitles[i] = definition.XSeries[i].Title;
-            return sOptions;
-        }
-
-        private static PyramidOptions PreprocessPyramidOptions(ParameterBag parameters, string dataName)
-        {
-            PyramidOptions pOptions = new() { ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits };
-            if (parameters.ContainsKey("male"))
-                pOptions.MaleFrame = parameters["male"].AsDataFrame;
-            if (parameters.ContainsKey("female"))
-                pOptions.FemaleFrame = parameters["female"].AsDataFrame;
-            if (parameters.ContainsKey("labels"))
-                pOptions.LabelFrame = parameters["labels"].AsDataFrame;
-            pOptions.Title = null == dataName ? "Population pyramid" : "Population pyramid from " + dataName;
-            pOptions.SetOptions();
-            return pOptions;
-        }
-
-        private static NormalOptions PreprocessNormalOptions(ParameterBag parameters, string dataName)
-        {
-            NormalOptions nOptions = new()
+                if (!(femaleFrame is not null && femaleFrame.VariableCount == 1 && femaleFrame.Variables[0] is DoubleVariable femaleVariable))
+                    throw new Exception("'female' pyramid chart parameter is present but does not contain a single DoubleVariable");
+                femaleSeries = VariableToSeries(femaleVariable);
+            }
+            StringSeries? labelsSeries = null;
+            if (parameters.TryGetValue("labels", out DataFrame? labelsFrame))
             {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Method = parameters.ContainsKey("ScoreMethod")
-                             ? (NormalOptions.ScoreMethod)Parsing.Cint_Txt(parameters["ScoreMethod"].AsString)
-                             : NormalOptions.ScoreMethod.VanDerWaerden,
-                Title =
-                    null == dataName
+                if (!(labelsFrame is not null && labelsFrame.VariableCount == 1 && labelsFrame.Variables[0] is StringVariable labelsVariable))
+                    throw new Exception("'labels' pyramid chart parameter is present but does not contain a single StringVariable");
+                labelsSeries = VariableToSeries(labelsVariable);
+            }
+
+            return new ChartDefinition(
+                ChartType.Pyramid,
+                new PyramidOptions(
+                    ChartPreferences,
+                    femaleSeries: femaleSeries,
+                    labelSeries: labelsSeries,
+                    maleOrOnlySeries: maleOrOnlySeries,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
+                        ? "Population pyramid"
+                        : $"Population pyramid from {dataName}"
+                ),
+                Array.Empty<ISeries>(),
+                Array.Empty<ISeries>()
+            );
+        }
+
+        private ChartDefinition PreprocessNormal(ParameterBag parameters, string? dataName, IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries)
+        {
+            return new(
+                ChartType.Normal,
+                new NormalOptions(ChartPreferences,
+                    method: parameters.TryGetValue("ScoreMethod", out string? scoreMethodString)
+                        ? (NormalOptions.ScoreMethod)Parsing.Cint_Txt(scoreMethodString)
+                        : NormalOptions.ScoreMethod.VanDerWaerden,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
                         ? "Normal plot"
-                        : "Normal plot from " + dataName
-            };
-            return nOptions;
+                        : $"Normal plot from {dataName}"
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static LinearRegressionOptions PreprocessLinearRegressionOptions(ChartStep step, ParameterBag parameters)
+        private ChartDefinition PreprocessLinearRegression(ChartStep step, ParameterBag parameters, IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries)
         {
-            LinearRegressionOptions lrOptions = new()
-            {
-                Slope = parameters["mdnValue"].AsDouble,
-                Intercept = parameters["interceptValue"].AsDouble,
-                FullWidth =
-                    parameters.ContainsKey("chartIsFullWidth") &&
-                    parameters["chartIsFullWidth"].AsBoolean,
-                Title = step.ChartTitle,
-                XAxisTitle = parameters["xtitle"].AsString,
-                YAxisTitle = parameters["ytitle"].AsString
-            };
-            return lrOptions;
+            if (!(parameters.TryGetValue("chartIsFullWidth", out bool? chartIsFullWidth) && chartIsFullWidth.HasValue
+                && parameters.TryGetValue("interceptValue", out double? interceptValue) && interceptValue.HasValue
+                && parameters.TryGetValue("mdnValue", out double? mdnValue) && mdnValue.HasValue
+                && parameters.TryGetValue("xtitle", out string? xtitle)
+                && parameters.TryGetValue("ytitle", out string? ytitle)
+                ))
+                throw new Exception("Linear Regression chart needs all of parameters 'chartIsFullWidth', 'interceptValue', 'mdnValue', 'xtitle' and 'ytitle'; at least one is missing");
+            return new(
+                ChartType.LinearRegression,
+                new LinearRegressionOptions(ChartPreferences,
+                    fullWidth: chartIsFullWidth.Value,
+                    intercept: interceptValue.Value,
+                    slope: mdnValue.Value,
+                    title: step.ChartTitle,
+                    xAxisTitle: xtitle,
+                    yAxisTitle: ytitle
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static ScatterXYOptions PreprocessLineXYOptions(ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessLineXY(IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
-            ScatterXYOptions sOptions = new(definition.XSeries, true)
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
+            string?[] seriesTitles = new string?[xSeries.Count];
+            for (int i = 0; i < xSeries.Count; i++)
+                seriesTitles[i] = xSeries[i].Title;
+            return new(
+                ChartType.ScatterXY,
+                new ScatterXYOptions(ChartPreferences,
+                    joinMarkersWithLines: true,
+                    plotMarkers: true,
+                    seriesTitles: seriesTitles,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
                         ? "Line plot"
                         : "Line plot from " + dataName,
-                YAxisTitle = definition.YSeries[0].Title,
-                XAxisTitle = definition.XSeries[0].Title,
-                PlotMarkers = true,
-                SeriesTitles = new string[definition.XSeries.Count]
-            };
-            for (int i = 0; i < definition.XSeries.Count; i++)
-                sOptions.SeriesTitles[i] = definition.XSeries[i].Title;
-            return sOptions;
+                    xSeries: xSeries,
+                    xAxisTitle: xSeries[0].Title,
+                    yAxisTitle: ySeries[0].Title
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static LadderOptions PreprocessLadderOptions(ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessLadder(IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
             // We need exactly 2 Y series
-            if (2 != definition.YSeries.Count || 0 != definition.XSeries.Count)
+            if (2 != ySeries.Count || 0 != xSeries.Count)
                 throw new ArgumentException("Must have exactly two Y series for a ladder plot");
 
-            LadderOptions ladderOptions = new()
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
+            string?[] seriesTitles = new string?[ySeries.Count];
+            for (int i = 0; i < ySeries.Count; i++)
+                seriesTitles[i] = ySeries[i].Title;
+
+            return new(
+                ChartType.Ladder,
+                new LadderOptions(ChartPreferences,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
                         ? "Ladder plot"
                         : "Ladder plot from " + dataName,
-                SeriesTitles = new string[definition.YSeries.Count]
-            };
-
-            for (int i = 0; i < definition.YSeries.Count; i++)
-                ladderOptions.SeriesTitles[i] = definition.YSeries[i].Title;
-            return ladderOptions;
+                    seriesTitles: seriesTitles
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static HistogramOptions PreprocessHistogramOptions(ChartStep step, ChartDefinition definition)
+        private ChartDefinition PreprocessForest(ParameterBag parameters, string? dataName)
         {
-            IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
-            HistogramOptions hOptions = new()
-            {
-                IsAscii = step.IsAscii,
-                BinChoiceMethod = step.IsAscii ? BinChoiceMethod.OldStatsDirect : BinChoiceMethod.Doane,
-                LineWidth = 2,
-                HistoSeriesOptions = new List<HistogramSeriesOptions>(series.Count)
-            };
+            const int DEFAULT_GROUP_SIZE = 10;
 
-            // Series
-            foreach (ISeries t in series)
+            double[] oddsRatioLcis = parameters.GetVariableOrThrow<DoubleVariable>("lci", 0).Data;
+            DoubleVariable oddsRatiosVariable = parameters.GetVariableOrThrow<DoubleVariable>("odds", 0);
+            double[] oddsRatioUcis = parameters.GetVariableOrThrow<DoubleVariable>("uci", 0).Data;
+
+            double[] oddsRatios = oddsRatiosVariable.Data;
+            int k = oddsRatios.Length;
+
+            double[] groupSizes;
+            if (parameters.TryGetVariable("gn", 0, out DoubleVariable? gnVariable))
             {
-                HistogramSeriesOptions hso = new()
+                groupSizes = gnVariable.Data;
+            }
+            else
+            {
+                groupSizes = new double[k];
+                Array.Fill(groupSizes, DEFAULT_GROUP_SIZE);
+            }
+            double[]? pg = default;
+            if (parameters.TryGetVariable("pg", 0, out DoubleVariable? pgVariable))
+                pg = pgVariable.Data;
+            string[] titles = new string[k];
+            if (parameters.TryGetVariable("title", 0, out StringVariable? titleVariable))
+            {
+                string?[] titleData = titleVariable.Data;
+                for (int i = 0; i < k; i++)
                 {
-                    ChartTitle = "Distribution of " + t.Title,
-                    YAxisTitle = "Counts",
-                    XAxisTitle = "Mid-points for " + t.Title
-                };
-                hOptions.HistoSeriesOptions.Add(hso);
-            }
-            return hOptions;
-        }
-
-        private static GiniOptions PreprocessGiniOptions(ChartDefinition definition, string dataName)
-        {
-            GiniOptions giniOptions = new()
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
-                        ? "Lorenz plot"
-                        : "Lorenz plot for " + dataName
-            };
-
-            // We need exactly one of each series
-            if (1 != definition.YSeries.Count || 1 != definition.XSeries.Count)
-                throw new ArgumentException("Must have exactly one X series and one Y series for a Gini chart");
-            return giniOptions;
-        }
-
-        private static ForestOptions PreprocessForestOptions(ParameterBag parameters, string dataName)
-        {
-            ForestOptions fOptions = new()
-            {
-                cco = 0.95,
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
-                        ? "Forest plot"
-                        : "Forest plot from " + dataName,
-                k = parameters["odds"].AsDataFrame.Variables[0].Length,
-                OddsRatios = ((DoubleVariable)parameters["odds"].AsDataFrame.Variables[0]).Data,
-                OddsRatioLcis = ((DoubleVariable)parameters["lci"].AsDataFrame.Variables[0]).Data,
-                OddsRatioUcis = ((DoubleVariable)parameters["uci"].AsDataFrame.Variables[0]).Data
-            };
-            if (parameters.ContainsKey("gn") && null != parameters["gn"])
-            {
-                fOptions.GroupSizes = ((DoubleVariable)parameters["gn"].AsDataFrame.Variables[0]).Data;
+                    string? candidate = titleData[i];
+                    titles[i] = string.IsNullOrWhiteSpace(candidate)
+                        ? $"stratum {i + 1}"
+                        : candidate;
+                }
             }
             else
             {
-                double[] gn = new double[fOptions.k];
-                for (int i = 0; i < fOptions.k; i++)
-                    gn[i] = 10;
-                fOptions.GroupSizes = gn;
-            }
-            if (parameters.ContainsKey("pg") && null != parameters["pg"])
-                fOptions.pg = ((DoubleVariable)parameters["pg"].AsDataFrame.Variables[0]).Data;
-            fOptions.XAxisTitle = parameters["odds"].AsDataFrame.Variables[0].Title + " (95% confidence interval)";
-            if (parameters.ContainsKey("title") && null != parameters["title"])
-            {
-                fOptions.Titles = ((StringVariable)parameters["title"].AsDataFrame.Variables[0]).Data;
-            }
-            else
-            {
-                string[] titles = new string[fOptions.k];
-                for (int i = 0; i < fOptions.k; i++)
-                    titles[i] = "stratum " + (i + 1);
-                fOptions.Titles = titles;
+                for (int i = 0; i < k; i++)
+                    titles[i] = $"stratum {i + 1}";
             }
 
             // Sort out candidate decimal places
             double absmin = double.MaxValue;
-            for (int i = 0; i < fOptions.k; i++)
+            for (int i = 0; i < k; i++)
             {
-                if (Math.Abs(fOptions.OddsRatios[i]) < absmin && fOptions.OddsRatios[i] != 0.0)
-                    absmin = Math.Abs(fOptions.OddsRatios[i]);
-                if (Math.Abs(fOptions.OddsRatioLcis[i]) < absmin && fOptions.OddsRatioLcis[i] != 0.0)
-                    absmin = Math.Abs(fOptions.OddsRatioLcis[i]);
-                if (Math.Abs(fOptions.OddsRatioUcis[i]) < absmin && fOptions.OddsRatioUcis[i] != 0.0)
-                    absmin = Math.Abs(fOptions.OddsRatioUcis[i]);
+                if (Math.Abs(oddsRatios[i]) < absmin && oddsRatios[i] != 0.0)
+                    absmin = Math.Abs(oddsRatios[i]);
+                if (Math.Abs(oddsRatioLcis[i]) < absmin && oddsRatioLcis[i] != 0.0)
+                    absmin = Math.Abs(oddsRatioLcis[i]);
+                if (Math.Abs(oddsRatioUcis[i]) < absmin && oddsRatioUcis[i] != 0.0)
+                    absmin = Math.Abs(oddsRatioUcis[i]);
             }
             int decpm = 2;
             try
@@ -438,25 +351,85 @@ namespace StatsDirect.Charting
             {
                 // Do nothing; keep decpm=2
             }
-            fOptions.EffectSizeAndIntervalDecimalPlaces = decpm;
-            return fOptions;
+
+            ForestOptions fOptions = new(ChartPreferences,
+                cco: 0.95,
+                effectSizeAndIntervalDecimalPlaces: decpm,
+                groupSizes: groupSizes,
+                k: k,
+                oddsRatioLcis: oddsRatioLcis,
+                oddsRatios: oddsRatios,
+                oddsRatioUcis: oddsRatioUcis,
+                pg: pg,
+                shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                title: dataName is null
+                    ? "Forest plot"
+                    : $"Forest plot from {dataName}",
+                titles: titles,
+                xAxisTitle: $"{oddsRatiosVariable.Title} (95% confidence interval)"
+            );
+            return new(
+                ChartType.Forest,
+                fOptions,
+                Array.Empty<ISeries>(),
+                Array.Empty<ISeries>()
+            );
         }
 
-        private static ErrorBarOptions PreprocessErrorBarOptions(ParameterBag parameters, string dataName)
+        private ChartDefinition PreprocessGini(IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
-            if (!parameters.ContainsKey("xdat"))
-                throw new ArgumentException("Chart expected parameter \"xdat\", which was not supplied");
-            if (!parameters.ContainsKey("ydat"))
-                throw new ArgumentException("Chart expected parameter \"ydat\", which was not supplied");
-            if (!parameters.ContainsKey("ydatl"))
-                throw new ArgumentException("Chart expected parameter \"ydatl\", which was not supplied");
-            if (!parameters.ContainsKey("ydatu"))
-                throw new ArgumentException("Chart expected parameter \"ydatu\", which was not supplied");
+            // We need exactly one of each series
+            if (1 != ySeries.Count || 1 != xSeries.Count)
+                throw new ArgumentException("Must have exactly one X series and one Y series for a Gini chart");
 
-            DataFrame xdatFrame = parameters["xdat"].AsDataFrame;
-            DataFrame ydatFrame = parameters["ydat"].AsDataFrame;
-            DataFrame ydatlFrame = parameters["ydatl"].AsDataFrame;
-            DataFrame ydatuFrame = parameters["ydatu"].AsDataFrame;
+            return new(
+                ChartType.Gini,
+                new GiniOptions(ChartPreferences,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
+                        ? "Lorenz plot"
+                        : $"Lorenz plot from {dataName}"
+                ),
+                xSeries,
+                ySeries
+            );
+        }
+
+        private ChartDefinition PreprocessHistogram(ChartStep step, IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries)
+        {
+            IReadOnlyList<ISeries> series = xSeries.Count > 0
+                ? xSeries
+                : ySeries;
+            List<HistogramSeriesOptions> histoSeriesOptions = new(series.Count);
+            // Series
+            foreach (ISeries t in series)
+                histoSeriesOptions.Add(new()
+                {
+                    ChartTitle = $"Distribution of {t.Title}",
+                    YAxisTitle = "Counts",
+                    XAxisTitle = $"Mid-points for {t.Title}"
+                });
+            return new(
+                ChartType.Histogram,
+                new HistogramOptions(ChartPreferences,
+                    binChoiceMethod: step.IsAscii
+                        ? BinChoiceMethod.OldStatsDirect
+                        : BinChoiceMethod.Doane,
+                    histogramSeriesOptions: histoSeriesOptions,
+                    isAscii: step.IsAscii,
+                    lineWidth: 2
+                ),
+                xSeries,
+                ySeries
+            );
+        }
+
+        private ChartDefinition PreprocessErrorBarOptions(ParameterBag parameters, string? dataName)
+        {
+            DataFrame xdatFrame = parameters.GetNotNullValueOrThrow<DataFrame>("xdat");
+            DataFrame ydatFrame = parameters.GetNotNullValueOrThrow<DataFrame>("ydat");
+            DataFrame ydatlFrame = parameters.GetNotNullValueOrThrow<DataFrame>("ydatl");
+            DataFrame ydatuFrame = parameters.GetNotNullValueOrThrow<DataFrame>("ydatu");
 
             List<MultiDoubleSeries> allSeries = new(xdatFrame.VariableCount);
 
@@ -485,50 +458,38 @@ namespace StatsDirect.Charting
                 allSeries.Add(new MultiDoubleSeries { Title = seriesTitle, Data = data });
             }
 
-            ErrorBarOptions errorBarOptions = new()
-            {
-                ShouldAutoscale =
-                    !ChartPreferences.DefaultRequestScaleLimits,
-                Title = null == dataName
-                    ? "Error bar plot"
-                    : "Error bar plot plot from " + dataName,
-                Series = allSeries,
-                SeriesTitles = new string[ydatFrame.VariableCount],
-                YAxisTitle = ydatFrame.Variables[0].Title,
-                XAxisTitle = xdatFrame.Variables[0].Title
-            };
+            string?[] seriesTitles = new string?[ydatFrame.VariableCount];
             for (int i = 0; i < ydatFrame.VariableCount; i++)
-            {
-                errorBarOptions.SeriesTitles[i] =
-                    string.IsNullOrEmpty(ydatFrame.Variables[i].Title)
-                        ? "Series " + (i + 1)
+                seriesTitles[i] = string.IsNullOrEmpty(ydatFrame.Variables[i].Title)
+                        ? $"Series {(i + 1)}"
                         : ydatFrame.Variables[i].Title;
-            }
-            errorBarOptions.SetMarkers();
-            return errorBarOptions;
+            return new(
+                ChartType.ErrorBar,
+                new ErrorBarOptions(ChartPreferences,
+                    allSeries, 
+                    seriesTitles: seriesTitles,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
+                        ? "Error bar plot"
+                        : $"Error bar plot plot from {dataName}",
+                    xAxisTitle: xdatFrame.Variables[0].Title,
+                    yAxisTitle: ydatFrame.Variables[0].Title
+                ),
+                Array.Empty<ISeries>(),
+                Array.Empty<ISeries>()
+            );
         }
 
-        private static ControlOptions PreprocessControlOptions(ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessControlOptions(IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
-            ControlOptions controlOptions = new()
-            {
-                ShouldBoxAxes = ChartPreferences.DefaultBoxAxes,
-                ShouldAutoscale =
-                    !ChartPreferences.DefaultRequestScaleLimits,
-                RightHandDecimalPlaces = 3,
-                Title =
-                    null == dataName
-                        ? "Control chart"
-                        : "Control chart from " + dataName
-            };
             // We need exactly one of each series
-            if (1 != definition.YSeries.Count || 1 != definition.XSeries.Count)
+            if (1 != ySeries.Count || 1 != xSeries.Count)
                 throw new ArgumentException("Must have exactly one X series and one Y series for a control chart");
 
             // This is a duplicate of the top analysis in PlotControl.
-            DoubleSeries xs0 = definition.XSeries[0] as DoubleSeries;
-            DoubleSeries ys0 = definition.YSeries[0] as DoubleSeries;
-            Debug.Assert(null != xs0 && null != ys0);
+            DoubleSeries? xs0 = xSeries[0] as DoubleSeries;
+            DoubleSeries? ys0 = ySeries[0] as DoubleSeries;
+            Debug.Assert(xs0 is not null && ys0 is not null);
             int rows = xs0.Points;
             double[] xdat = new double[rows];
             double[] ydat = new double[rows];
@@ -547,95 +508,183 @@ namespace StatsDirect.Charting
             }
             rows = ctr;
 
-            controlOptions.ObservationsToUse = rows;
-
-            controlOptions.YAxisTitle = definition.YSeries[0].Title;
-            controlOptions.XAxisTitle = definition.XSeries[0].Title;
-            controlOptions.UseMean = true;
-            controlOptions.Use1SD = true;
-            controlOptions.Use2SD = true;
-            controlOptions.Use3SD = true;
-            return controlOptions;
+            return new(
+                ChartType.Control,
+                new ControlOptions(ChartPreferences,
+                    observationsToUse: rows,
+                    rightHandDecimalPlaces: 3,
+                    shouldBoxAxes: ChartPreferences.BoxAxes,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: dataName is null
+                        ? "Control chart"
+                        : $"Control chart from {dataName}",
+                    use1Sd: true,
+                    use2Sd: true,
+                    use3Sd: true,
+                    useMean: true,
+                    xAxisTitle: xSeries[0].Title,
+                    yAxisTitle: ySeries[0].Title
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static BoxWhiskerOptions PreprocessBoxWhiskerOptions(ChartStep step, ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessBoxWhiskerOptions(ChartStep step, IReadOnlyList<ISeries> xSeries, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
-            BoxWhiskerOptions bwOptions = new()
-            {
-                Title = null == dataName
-                            ? "Box & whisker plot"
-                            : "Box & whisker plot from " + dataName
-            };
-
             // If only X series have been passed in, we're vertical.  If only Y, we're horizontal.  If both or neither, we can't plot.
-            if (0 == definition.XSeries.Count && 0 == definition.YSeries.Count)
+            if (0 == xSeries.Count && 0 == ySeries.Count)
                 throw new ArgumentException("Must have at least one series to plot a box+whisker plot");
-            if (definition.XSeries.Count > 0 && definition.YSeries.Count > 0)
+            if (xSeries.Count > 0 && ySeries.Count > 0)
                 throw new ArgumentException("Cannot plot a box+whisker plot with both X and Y series");
-            IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
-            bwOptions.Orientation = definition.YSeries.Count > 0 ? ChartOrientation.Horizontal : ChartOrientation.Vertical;
+            IReadOnlyList<ISeries> seriesToUse = ySeries.Count > 0
+                ? ySeries
+                : xSeries;
 
-            bwOptions.SeriesTitles = new string[seriesToUse.Count];
+            string?[] seriesTitles = new string[seriesToUse.Count];
             for (int i = 0; i < seriesToUse.Count; i++)
-                bwOptions.SeriesTitles[i] = seriesToUse[i].Title;
-            bwOptions.IsAscii = step.IsAscii;
-            bwOptions.MarkMeanAndMedian = false;
-            bwOptions.UseInnerFence = true;
-            bwOptions.UseOuterFence = true;
-            return bwOptions;
+                seriesTitles[i] = seriesToUse[i].Title;
+            return new(
+                ChartType.BoxWhisker,
+                new BoxWhiskerOptions(ChartPreferences,
+                    isAscii: step.IsAscii,
+                    markMeanAndMedian: false,
+                    orientation: ySeries.Count > 0
+                        ? ChartOrientation.Horizontal
+                        : ChartOrientation.Vertical,
+                    seriesTitles: seriesTitles,
+                    title: dataName is null
+                        ? "Box & whisker plot"
+                        : $"Box & whisker plot from {dataName}",
+                    useInnerFence: true,
+                    useOuterFence: true
+                ),
+                xSeries,
+                ySeries
+            );
         }
 
-        private static BarOptions PreprocessBarOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName)
+        private ChartDefinition PreprocessBar(ChartStep step, ParameterBag parameters, IReadOnlyList<ISeries> ySeries, string? dataName)
         {
-            BarOptions barOptions = new()
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title =
-                    null == dataName
-                        ? "Bar chart"
-                        : "Bar chart from " + dataName
-            };
-
-            if (ChartType.StackedBar == step.ChartType || ChartType.StackedBar100Percent == step.ChartType)
-            {
-                barOptions.Stacked = true;
-                barOptions.Stacked100Percent = ChartType.StackedBar100Percent == step.ChartType;
-                barOptions.MaxBarWidth = 0.6; // Default 60% bar width
-            }
-            else
-            {
-                barOptions.MaxBarWidth = 0.6 / definition.YSeries.Count;
-            }
-            DataFrame labelsFrame = parameters["labels"].AsDataFrame;
-            StringVariable labelsVariable = (StringVariable)labelsFrame.Variables[0];
-            barOptions.SeriesTitles = new string[labelsVariable.Length];
+            bool isStacked = ChartType.StackedBar == step.ChartType || ChartType.StackedBar100Percent == step.ChartType;
+            StringVariable labelsVariable = parameters.GetVariableOrThrow<StringVariable>("labels", 0);
+            string?[] seriesTitles = new string[labelsVariable.Length];
             for (int i = 0; i < labelsVariable.Length; i++)
-                barOptions.SeriesTitles[i] = labelsVariable.Data[i];
-            barOptions.SetMarkers(definition.YSeries);
-            barOptions.Orientation = ChartOrientation.Vertical;
-            barOptions.ShowLegend = 1 < definition.YSeries.Count;
-            if (!barOptions.ShowLegend)
-                barOptions.YAxisTitle = definition.YSeries[0].Title;
-            return barOptions;
+                seriesTitles[i] = labelsVariable.Data[i];
+            bool showLegend = 1 < ySeries.Count;
+
+            return new ChartDefinition(step.ChartType,
+                new BarOptions(ChartPreferences,
+                    something,
+                    ySeries,
+                    maxBarWidth: isStacked
+                        ? 0.6 // Default 60% bar width
+                        : 0.6 / ySeries.Count,
+                    orientation: ChartOrientation.Vertical,
+                    seriesTitles: seriesTitles,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    showLegend: showLegend,
+                    stacked: isStacked,
+                    stacked100Percent: ChartType.StackedBar100Percent == step.ChartType,
+                    title: dataName is null
+                        ? "Bar chart"
+                        : "Bar chart from " + dataName,
+                    yAxisTitle: showLegend
+                        ? null
+                        : ySeries[0].Title
+                ),
+                Array.Empty<ISeries>(),
+                ySeries);
         }
 
-        private static AgreementOptions PreprocessAgreementOptions(ChartStep step, ParameterBag parameters)
+        private ChartDefinition PreprocessAgreement(ChartStep step, ParameterBag parameters)
         {
-            AgreementOptions aOptions = new()
-            {
-                ShouldAutoscale = !ChartPreferences.DefaultRequestScaleLimits,
-                Title = step.ChartTitle,
-                lla = parameters["lla"].AsDouble,
-                mean = parameters["mean"].AsDouble,
-                ula = parameters["ula"].AsDouble,
-                P0 = parameters["P0"].AsDouble,
-                av = ((DoubleVariable)parameters["av"].AsDataFrame.Variables[0]).Data,
-                mxd = ((DoubleVariable)parameters["mxd"].AsDataFrame.Variables[0]).Data
-            };
-            return aOptions;
+            double[] av = parameters.GetVariableOrThrow<DoubleVariable>("av", 0).Data;
+            double[] mxd = parameters.GetVariableOrThrow<DoubleVariable>("mxd", 0).Data;
+            double lla = parameters.GetValueOrThrow<double>("lla");
+            double mean = parameters.GetValueOrThrow<double>("mean");
+            double p0 = parameters.GetValueOrThrow<double>("P0");
+            double ula = parameters.GetValueOrThrow<double>("ula");
+            return new(
+                step.ChartType,
+                new AgreementOptions(ChartPreferences,
+                    av: av,
+                    lla: lla,
+                    mean: mean,
+                    mxd: mxd,
+                    p0: p0,
+                    shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                    title: step.ChartTitle,
+                    ula: ula
+                ),
+                null,
+                null);
         }
 
-        public static void PostProcessFilledChartOptions(ChartDefinition definition)
+        private ChartDefinition PreprocessSurvival(ParameterBag parameters, string? dataName)
+        {
+            if (!(parameters.TryGetValue("group-count", out int? groupCount) && groupCount.HasValue))
+                throw new ArgumentException("Chart expected parameter \"group-count\", which was not supplied");
+            if (!(parameters.TryGetValue("xdat", out DataFrame? xdatFrame) && xdatFrame is not null))
+                throw new ArgumentException("Chart expected parameter \"xdat\", which was not supplied");
+            if (!(parameters.TryGetValue("cdat", out DataFrame? cdatFrame) && cdatFrame is not null))
+                throw new ArgumentException("Chart expected parameter \"cdat\", which was not supplied");
+            if (!(parameters.TryGetValue("ydat", out DataFrame? ydatFrame) && ydatFrame is not null))
+                throw new ArgumentException("Chart expected parameter \"ydat\", which was not supplied");
+            parameters.TryGetValue("ydatl", out DataFrame? ydatlFrame);
+            parameters.TryGetValue("ydatu", out DataFrame? ydatuFrame);
+
+            List<SurvivalOptions.SurvivalSeries> series = new();
+            for (int i = 0; i < groupCount.Value; i++)
+            {
+                SurvivalOptions.SurvivalSeries survivalSeries = new();
+                // Series: xdat...
+                DoubleVariable xdatVariable = (DoubleVariable)xdatFrame.Variables[i];
+                survivalSeries.XDat = xdatVariable.Data;
+                // ... cdat...
+                DoubleVariable cdatVariable = (DoubleVariable)cdatFrame.Variables[i];
+                int[] cdat = new int[cdatVariable.Length];
+                for (int r = 0; r < cdat.Length; r++)
+                    cdat[r] = cdatVariable.Data[r] == Constant.MISSING
+                        ? -1
+                        : (int)cdatVariable.Data[r];
+                survivalSeries.CDat = cdat;
+                // ... ydat...
+                DoubleVariable ydatVariable = (DoubleVariable)ydatFrame.Variables[i];
+                survivalSeries.YDat = ydatVariable.Data;
+                // ... ydatl...
+                if (ydatlFrame is not null)
+                {
+                    DoubleVariable ydatlVariable = (DoubleVariable)ydatlFrame.Variables[i];
+                    survivalSeries.YDatL = ydatlVariable.Data;
+                }
+                // ... and ydatu
+                if (ydatuFrame is not null)
+                {
+                    DoubleVariable ydatuVariable = (DoubleVariable)ydatuFrame.Variables[i];
+                    survivalSeries.YDatU = ydatuVariable.Data;
+                }
+                series.Add(survivalSeries);
+            }
+            string[] seriesTitles = new string[groupCount.Value];
+            for (int i = 0; i < groupCount.Value; i++)
+                seriesTitles[i] = $"{i + 1}";
+            SurvivalOptions survivalOptions = new(ChartPreferences,
+                series: series,
+                seriesTitles: seriesTitles,
+                shouldAutoscale: !ChartPreferences.RequestScaleLimits,
+                showEventMarkers: true,
+                showLegend: groupCount.Value > 1,
+                title: dataName is null
+                    ? "Survival plot"
+                    : $"Survival plot from {dataName}",
+                yAxisTitle: "Survival proportion"
+            );
+            survivalOptions.SetMarkers();
+            return survivalOptions;
+        }
+
+        public void PostProcessFilledChartOptions(ChartDefinition definition)
         {
             switch (definition.ChartType)
             {
@@ -644,8 +693,8 @@ namespace StatsDirect.Charting
                 case ChartType.StackedBar100Percent:
                     {
                         BarOptions barOptions = (BarOptions)definition.ChartOptions;
-                        StringSeries labelsSeries = new(barOptions.SeriesTitles.Length);
-                        for (int i = 0; i < barOptions.SeriesTitles.Length; i++)
+                        StringSeries labelsSeries = new(barOptions.SeriesTitles.Count);
+                        for (int i = 0; i < barOptions.SeriesTitles.Count; i++)
                             labelsSeries.Data[i] = barOptions.SeriesTitles[i];
                         definition.XSeries.Clear();
                         definition.XSeries.Add(labelsSeries);
@@ -654,11 +703,14 @@ namespace StatsDirect.Charting
                 case ChartType.BoxWhisker:
                     {
                         BoxWhiskerOptions bwOptions = (BoxWhiskerOptions)definition.ChartOptions;
-                        IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+                        IReadOnlyList<ISeries> seriesToUse = definition.YSeries.Count > 0
+                            ? definition.YSeries
+                            : definition.XSeries;
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = bwOptions.SeriesTitles[i];
                         // Reverse series before plotting if required
-                        if (bwOptions.Orientation == ChartOrientation.Horizontal && definition.XSeries.Count > 0 || bwOptions.Orientation == ChartOrientation.Vertical && definition.YSeries.Count > 0)
+                        if (bwOptions.Orientation == ChartOrientation.Horizontal && definition.XSeries.Count > 0
+                            || bwOptions.Orientation == ChartOrientation.Vertical && definition.YSeries.Count > 0)
                             definition.SwapXAndYSeries();
                         break;
                     }
@@ -672,7 +724,9 @@ namespace StatsDirect.Charting
                 case ChartType.Spread:
                     {
                         SpreadOptions spreadOptions = (SpreadOptions)definition.ChartOptions;
-                        IList<ISeries> seriesToUse = definition.YSeries.Count > 0 ? definition.YSeries : definition.XSeries;
+                        IReadOnlyList<ISeries> seriesToUse = definition.YSeries.Count > 0
+                            ? definition.YSeries
+                            : definition.XSeries;
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = spreadOptions.SeriesTitles[i];
                         break;
@@ -681,7 +735,7 @@ namespace StatsDirect.Charting
                 case ChartType.ScatterXY:
                     {
                         ScatterXYOptions options = (ScatterXYOptions)definition.ChartOptions;
-                        IList<ISeries> seriesToUse = definition.XSeries;
+                        IReadOnlyList<ISeries> seriesToUse = definition.XSeries;
                         for (int i = 0; i < seriesToUse.Count; i++)
                             seriesToUse[i].Title = options.SeriesTitles[i];
                         break;
@@ -707,9 +761,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        public static DoubleSeries VariableToSeries(DoubleVariable variable)
-        {
-            return new DoubleSeries { Title = variable.Title, Data = variable.Data };
-        }
+        public static DoubleSeries VariableToSeries(DoubleVariable variable) => new(variable.Data, variable.Title);
+        public static StringSeries VariableToSeries(StringVariable variable) => new(variable.Data, variable.Title);
     }
 }

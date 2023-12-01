@@ -49,7 +49,7 @@ namespace StatsDirect.UI
             DashStyleChanged?.Invoke(this, e);
         }
 
-        private void cboDashStyle_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboDashStyle_SelectedIndexChanged(object? sender, EventArgs e)
         {
             DashStyle = (DashStyleDescriptor)cboDashStyle.SelectedIndex;
         }

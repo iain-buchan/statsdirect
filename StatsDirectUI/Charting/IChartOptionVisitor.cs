@@ -1,4 +1,6 @@
-﻿namespace StatsDirect.Charting
+﻿using StatsDirect.Charting.Options;
+
+namespace StatsDirect.Charting
 {
     public interface IChartOptionVisitor
     {
@@ -13,6 +15,7 @@
         void Visit(ErrorBarOptions options);
         void Visit(EffectOptions options);
         void Visit(ForestOptions options);
+        void Visit(GenericOptions options);
         void Visit(GiniOptions options);
         void Visit(HistogramOptions options);
         void Visit(KaplanMeierOptions options);

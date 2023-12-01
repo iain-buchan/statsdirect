@@ -2,10 +2,10 @@ using StatsDirect.Data;
 using StatsDirect.Utilities;
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class CoxSurvivalOrHazardOptions : GenericOptions
+    public class CoxSurvivalOrHazardOptions : AbstractGenericOptions
     {
         public CoxP[] z;
         public int iobs;

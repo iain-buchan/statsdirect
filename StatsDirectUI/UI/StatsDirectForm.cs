@@ -9,12 +9,16 @@ namespace StatsDirect.UI
     /// A theoretically abstract superclass of the concrete forms that may be displayed in StatsDirect.
     /// In reality, as the form designer can't cope with abstract superclasses, this is concrete with a whole load of "subclass should have implemented" exceptions.
     /// </summary>
-    public /* abstract */ class StatsDirectForm: Form, IForm
+    internal /* abstract */ class StatsDirectForm: Form, IForm
     {
+        private static int NEXT_ID = 1;
+
+        protected ISdApplication SdApplication { get; }
+
         /// <summary>
         /// The path from which the form was loaded, or null if unknown.
         /// </summary>
-        protected string path;
+        protected string? path;
         /// <summary>
         /// True if there have been changes made, but the user has said that they're safe to discard
         /// </summary>
@@ -23,20 +27,19 @@ namespace StatsDirect.UI
         /// <summary>
         /// An internal identity for this form that is unique and persistent for the lifetime of the application.
         /// </summary>
-        private readonly string id;
+        public string Id { get; }
 
-        private static int NEXT_ID = 1;
-
-        protected StatsDirectForm()
+        protected StatsDirectForm(ISdApplication sdApplication)
         {
-            id = "StatsDirectForm:" + NEXT_ID++.ToString(CultureInfo.InvariantCulture);
+            SdApplication = sdApplication;
+            Id = "StatsDirectForm:" + NEXT_ID++.ToString(CultureInfo.InvariantCulture);
             // Add this in the StatsDirectForm constructor so that it's earlier in the call chain than the subclass' close, and can therefore set variables before the subclass does anything.
             Closing += StatsDirectForm_Closing;
         }
 
-        void StatsDirectForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        void StatsDirectForm_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
         {
-            DoOrSwallow(() => SdApplication.SoleInstance.NoteASubformCloseIsStarting());
+            DoOrSwallow(() => SdApplication.NoteASubformCloseIsStarting());
         }
 
         private static void DoOrSwallow(Action func)
@@ -50,7 +53,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.WriteToBlackbox("Unexpected exception in spreadsheet form", ex);
+                LastChanceCatcher.WriteToBlackbox("Unexpected exception in spreadsheet form", ex);
             }
 #endif
         }
@@ -83,10 +86,10 @@ namespace StatsDirect.UI
             if (!Dirty)
                 return true;
 
-            DialogResult result = SdApplication.SoleInstance.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
+            DialogResult result = SdApplication.MsgboxX(Text + " has changes that have not been saved. Do you want to save these changes?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Exclamation, "StatsDirect", false, MessageBoxDefaultButton.Button3);
             if (DialogResult.Cancel == result)
             {
-                SdApplication.SoleInstance.NoteASubformCloseIsCancelled();
+                SdApplication.NoteASubformCloseIsCancelled();
                 return false;
             }
             if (DialogResult.No == result)
@@ -109,7 +112,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// The full path to the file shown in this form, if any
         /// </summary>
-        internal string Path
+        internal string? Path
         {
             get => path;
             set
@@ -129,7 +132,7 @@ namespace StatsDirect.UI
         internal virtual void ShowHelp()
         {
             // By default, show the ambient help.  Subclasses may override this.
-            SdApplication.SoleInstance.ShowCurrentHelp();
+            SdApplication.ShowCurrentHelp();
         }
 
         public /* abstract */ virtual IList<Pane> AvailablePanes => throw new NotSupportedException();
@@ -141,13 +144,8 @@ namespace StatsDirect.UI
         /// </summary>
         public void EnsureActive()
         {
-            if (this != SdApplication.SoleInstance.ActiveMdiChild)
+            if (this != SdApplication.ActiveMdiChild)
                 Activate();
-        }
-
-        public string Id()
-        {
-            return id;
         }
 
         public virtual bool SelectPane(Pane pane)

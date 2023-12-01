@@ -7,8 +7,10 @@ namespace StatsDirect.Charting.Renderer
 {
     internal class ControlChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public ControlChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        const int RHS_LABEL_GAP = 7;
+
+        public ControlChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -40,44 +42,19 @@ namespace StatsDirect.Charting.Renderer
             MathDbl.MeanSD(ydat, ref rows, out double ymean, out double ysd);
 
             ControlOptions cOptions = (ControlOptions)Definition.ChartOptions;
-            int kobs = cOptions.ObservationsToUse;
-            if (cOptions.HasUserSpecifiedMeanAndSD)
+            int kobs = cOptions.ObservationsToUse ?? rows;
+            if (cOptions.UserSpecifiedMeanAndStandardDeviation is not null)
             {
-                ymean = cOptions.UserSpecifiedMean;
-                ysd = cOptions.UserSpecifiedSD;
+                ymean = cOptions.UserSpecifiedMeanAndStandardDeviation.Mean ?? ymean;
+                ysd = cOptions.UserSpecifiedMeanAndStandardDeviation.StandardDeviation ?? ysd;
             }
 
-            cOptions.HasUserSpecifiedLimits = cOptions.LowerWarningLimit != Constant.MISSING && cOptions.UpperWarningLimit != Constant.MISSING && cOptions.LowerControlLimit != Constant.MISSING && cOptions.UpperControlLimit != Constant.MISSING;
             if (cOptions.HasUserSpecifiedLimits)
             {
-                if (cOptions.LowerControlLimit > cOptions.UpperControlLimit)
-                {
-                    double temp = cOptions.LowerControlLimit;
-                    cOptions.LowerControlLimit = cOptions.UpperControlLimit;
-                    cOptions.UpperControlLimit = temp;
-                }
-                if (cOptions.LowerWarningLimit > cOptions.UpperWarningLimit)
-                {
-                    double temp = cOptions.LowerWarningLimit;
-                    cOptions.LowerWarningLimit = cOptions.UpperWarningLimit;
-                    cOptions.UpperWarningLimit = temp;
-                }
-                if (cOptions.LowerControlLimit > cOptions.LowerWarningLimit)
-                {
-                    double temp = cOptions.LowerControlLimit;
-                    cOptions.LowerControlLimit = cOptions.LowerWarningLimit;
-                    cOptions.LowerWarningLimit = temp;
-                }
-                if (cOptions.UpperWarningLimit > cOptions.UpperControlLimit)
-                {
-                    double temp = cOptions.UpperControlLimit;
-                    cOptions.UpperControlLimit = cOptions.UpperWarningLimit;
-                    cOptions.UpperWarningLimit = temp;
-                }
-                if (DataMinY > cOptions.LowerControlLimit)
-                    DataMinY = cOptions.LowerControlLimit;
-                if (DataMaxY < cOptions.UpperControlLimit)
-                    DataMaxY = cOptions.UpperControlLimit;
+                if (cOptions.ControlAndWarningLimits.LowerControlLimit.HasValue && DataMinY > cOptions.ControlAndWarningLimits.LowerControlLimit.Value)
+                    DataMinY = cOptions.ControlAndWarningLimits.LowerControlLimit.Value;
+                if (cOptions.ControlAndWarningLimits.UpperControlLimit.HasValue && DataMaxY < cOptions.ControlAndWarningLimits.UpperControlLimit.Value)
+                    DataMaxY = cOptions.ControlAndWarningLimits.UpperControlLimit.Value;
             }
             else
             {
@@ -94,28 +71,27 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            return new ScaleParameters
-            {
-                X =
+            return new ScaleParameters(
+                new()
                 {
                     ScaleType = looksLikeDates ? ScaleType.Date : ScaleType.Linear,
                     AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Date },
                     Max = DataMaxX,
                     Min = DataMinX
                 },
-                Y =
+                new()
                 {
                     AllowedScaleTypes = new[] { ScaleType.Linear },
                     Max = DataMaxY,
                     Min = DataMinY
                 }
-            };
+            );
         }
 
         ///  <summary>
         ///  Plot a control chart.  Expects one X series and one Y series.
         ///  </summary>
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -146,46 +122,21 @@ namespace StatsDirect.Charting.Renderer
             bool useDates = Definition.HasScaleParameters && Definition.ScaleParameters.X.ScaleType == ScaleType.Date;
             double oldymean = ymean;
             double oldysd = ysd;
-            int kobs = cOptions.ObservationsToUse;
-            if (cOptions.HasUserSpecifiedMeanAndSD)
+            int kobs = cOptions.ObservationsToUse ?? rows;
+            if (cOptions.UserSpecifiedMeanAndStandardDeviation is not null)
             {
-                ymean = cOptions.UserSpecifiedMean;
-                ysd = cOptions.UserSpecifiedSD;
+                ymean = cOptions.UserSpecifiedMeanAndStandardDeviation.Mean ?? ymean;
+                ysd = cOptions.UserSpecifiedMeanAndStandardDeviation.StandardDeviation ?? ysd;
             }
 
             bool restricted = false; bool external = false;
-            cOptions.HasUserSpecifiedLimits = cOptions.LowerWarningLimit != Constant.MISSING & cOptions.UpperWarningLimit != Constant.MISSING & cOptions.LowerControlLimit != Constant.MISSING & cOptions.UpperControlLimit != Constant.MISSING;
             if (cOptions.HasUserSpecifiedLimits)
             {
                 external = true;
-                if (cOptions.LowerControlLimit > cOptions.UpperControlLimit)
-                {
-                    double temp = cOptions.LowerControlLimit;
-                    cOptions.LowerControlLimit = cOptions.UpperControlLimit;
-                    cOptions.UpperControlLimit = temp;
-                }
-                if (cOptions.LowerWarningLimit > cOptions.UpperWarningLimit)
-                {
-                    double temp = cOptions.LowerWarningLimit;
-                    cOptions.LowerWarningLimit = cOptions.UpperWarningLimit;
-                    cOptions.UpperWarningLimit = temp;
-                }
-                if (cOptions.LowerControlLimit > cOptions.LowerWarningLimit)
-                {
-                    double temp = cOptions.LowerControlLimit;
-                    cOptions.LowerControlLimit = cOptions.LowerWarningLimit;
-                    cOptions.LowerWarningLimit = temp;
-                }
-                if (cOptions.UpperWarningLimit > cOptions.UpperControlLimit)
-                {
-                    double temp = cOptions.UpperControlLimit;
-                    cOptions.UpperControlLimit = cOptions.UpperWarningLimit;
-                    cOptions.UpperWarningLimit = temp;
-                }
-                if (DataMinY > cOptions.LowerControlLimit)
-                    DataMinY = cOptions.LowerControlLimit;
-                if (DataMaxY < cOptions.UpperControlLimit)
-                    DataMaxY = cOptions.UpperControlLimit;
+                if (cOptions.ControlAndWarningLimits.LowerControlLimit.HasValue && DataMinY > cOptions.ControlAndWarningLimits.LowerControlLimit.Value)
+                    DataMinY = cOptions.ControlAndWarningLimits.LowerControlLimit.Value;
+                if (cOptions.ControlAndWarningLimits.UpperControlLimit.HasValue && DataMaxY < cOptions.ControlAndWarningLimits.UpperControlLimit.Value)
+                    DataMaxY = cOptions.ControlAndWarningLimits.UpperControlLimit.Value;
             }
             else
             {
@@ -207,8 +158,6 @@ namespace StatsDirect.Charting.Renderer
                         DataMaxY = ymean + ysd * 3.0;
                 }
             }
-
-            const int RHS_LABEL_GAP = 7;
 
             StartVectorPlot(cOptions);
             //  NB we use the Legend font as the Control Label font
@@ -245,7 +194,7 @@ namespace StatsDirect.Charting.Renderer
             PointF[] xys = new PointF[rows];
             for (int r = 0; r < rows; r++)
             {
-                if (xdat[r] != Constant.MISSING & ydat[r] != Constant.MISSING)
+                if (xdat[r] != Constant.MISSING && ydat[r] != Constant.MISSING)
                 {
                     xys[r].X = Convert.ToSingle(ToCanvasX(xdat[r]));
                     xys[r].Y = Convert.ToSingle(ToCanvasY(ydat[r]));
@@ -261,43 +210,32 @@ namespace StatsDirect.Charting.Renderer
             PenDescriptor linePen = GetLinePen(xs0.MarkerType, true);
             DrawMarkerSeriesInCanvasCoordinates(xys, 6, xs0.MarkerType.MarkerShape, xs0.MarkerType.IsMarkerFilled, markerPen, linePen, true, false);
 
-            int rhDp = cOptions.RightHandDecimalPlaces;
-
             PenDescriptor blackPen = new(GrBlack);
             if (cOptions.HasUserSpecifiedLimits)
             {
+                ControlAndWarningLimits controlAndWarningLimits = cOptions.ControlAndWarningLimits;
                 // user specified control and warning lines
-                double x1 = XAxisCanvas + XExtCanvas;
-                double y1 = ToCanvasY(cOptions.UpperWarningLimit);
-                DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                DrawStringLegendLC(Math.Round(cOptions.UpperWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
-                y1 = ToCanvasY(cOptions.LowerWarningLimit);
-                DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                DrawStringLegendLC(Math.Round(cOptions.LowerWarningLimit, rhDp) + " (warn)", x1 + RHS_LABEL_GAP, y1);
+                MaybeDrawControlLine(blackPen, controlAndWarningLimits.UpperWarningLimit, "warn");
+                MaybeDrawControlLine(blackPen, controlAndWarningLimits.LowerWarningLimit, "warn");
                 PenDescriptor redPen = new(GrRed);
-                {
-                    y1 = ToCanvasY(cOptions.UpperControlLimit);
-                    DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                    DrawStringLegendLC(Math.Round(cOptions.UpperControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
-                    y1 = ToCanvasY(ymean - ysd * 3.0);
-                    DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                    DrawStringLegendLC(Math.Round(cOptions.LowerControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
-                    DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
-                }
+                MaybeDrawControlLine(redPen, controlAndWarningLimits.UpperControlLimit, "ctrl");
+                MaybeDrawControlLine(redPen, controlAndWarningLimits.LowerControlLimit, "ctrl");
+                double noteX = XAxisCanvas + XExtCanvas + RHS_LABEL_GAP;
+                double noteY = YAxisCanvas + YExtCanvas;
+                DrawStringLegendL("External:", noteX, noteY);
             }
             else
             {
                 // draw control lines
                 if (cOptions.UseMean)
                 {
-                    double x1 = XAxisCanvas + XExtCanvas;
-                    double y1 = ToCanvasY(ymean);
-                    DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                    DrawStringLegendLC(Math.Round(ymean, rhDp) + " (mean)", x1 + RHS_LABEL_GAP, y1);
+                    double noteX = XAxisCanvas + XExtCanvas + RHS_LABEL_GAP;
+                    double noteY = YAxisCanvas + YExtCanvas;
+                    DrawControlLine(blackPen, ymean, "mean");
                     if (restricted)
-                        DrawStringLegendL("On first " + kobs + " points:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
+                        DrawStringLegendL($"On first {kobs} points:", noteX, noteY);
                     else if (external)
-                        DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);
+                        DrawStringLegendL("External:", noteX, noteY);
                 }
 
                 if (ysd != Constant.MISSING)
@@ -305,42 +243,43 @@ namespace StatsDirect.Charting.Renderer
                     if (cOptions.Use1SD)
                     {
                         PenDescriptor greenPen = new(GrGreen);
-                        double x1 = XAxisCanvas + XExtCanvas;
-                        double y1 = ToCanvasY(ymean + ysd);
-                        DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean + ysd, rhDp) + " (+1 SD)", x1 + RHS_LABEL_GAP, y1);
-                        y1 = ToCanvasY(ymean - ysd);
-                        DrawLineInCanvasCoordinates(greenPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean - ysd, rhDp) + " (-1 SD)", x1 + RHS_LABEL_GAP, y1);
+                        DrawControlLine(greenPen, ymean + ysd, "+1 SD");
+                        DrawControlLine(greenPen, ymean - ysd, "-1 SD");
                     }
 
                     if (cOptions.Use2SD)
                     {
-                        double x1 = XAxisCanvas + XExtCanvas;
-                        double y1 = ToCanvasY(ymean + ysd * 2.0);
-                        DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean + ysd * 2.0, rhDp) + " (+2 SD)", x1 + RHS_LABEL_GAP, y1);
-                        y1 = ToCanvasY(ymean - ysd * 2.0);
-                        DrawLineInCanvasCoordinates(blackPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean - ysd * 2.0, rhDp) + " (-2 SD)", x1 + RHS_LABEL_GAP, y1);
+                        DrawControlLine(blackPen, ymean + ysd * 2.0, "+2 SD");
+                        DrawControlLine(blackPen, ymean - ysd * 2.0, "-2 SD");
                     }
 
                     if (cOptions.Use3SD)
                     {
                         PenDescriptor redPen = new(GrRed);
-                        double x1 = XAxisCanvas + XExtCanvas;
-                        double y1 = ToCanvasY(ymean + ysd * 3.0);
-                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean + ysd * 3.0, rhDp) + " (+3 SD)", x1 + RHS_LABEL_GAP, y1);
-                        y1 = ToCanvasY(ymean - ysd * 3.0);
-                        DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
-                        DrawStringLegendLC(Math.Round(ymean - ysd * 3.0, rhDp) + " (-3 SD)", x1 + RHS_LABEL_GAP, y1);
+                        DrawControlLine(redPen, ymean + ysd * 3.0, "+3 SD");
+                        DrawControlLine(redPen, ymean - ysd * 3.0, "-3 SD");
                     }
                 }
             }
 
             EndVectorPlot();
             return new ParameterBag();
+        }
+
+        private void MaybeDrawControlLine(PenDescriptor pen, double? value, string suffix)
+        {
+            if (!value.HasValue)
+                return;
+            DrawControlLine(pen, value.Value, suffix);
+        }
+
+        private void DrawControlLine(PenDescriptor pen, double value, string suffix)
+        {
+            ControlOptions cOptions = (ControlOptions)Definition.ChartOptions;
+            double x1 = XAxisCanvas + XExtCanvas;
+            double y1 = ToCanvasY(value);
+            DrawLineInCanvasCoordinates(pen, XAxisCanvas, y1, x1, y1);
+            DrawStringLegendLC($"{Math.Round(value, cOptions.RightHandDecimalPlaces)} ({suffix})", x1 + RHS_LABEL_GAP, y1);
         }
     }
 }

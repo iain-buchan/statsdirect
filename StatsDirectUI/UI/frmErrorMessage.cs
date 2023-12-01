@@ -14,7 +14,7 @@ namespace StatsDirect.UI
             txtError.Text = errorMessage;
         }
 
-        private void cmdClose_Click(object sender, EventArgs e)
+        private void cmdClose_Click(object? sender, EventArgs e)
         {
             Close();
         }

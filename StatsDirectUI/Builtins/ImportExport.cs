@@ -11,9 +11,21 @@ using StatsDirect.CsvParser;
 
 namespace StatsDirect.Builtins
 {
-    public static class ImportExport
+    /// <summary>
+    /// TODO: This absolutely should not pop up WinForm interaction itself. This is truly horrible. Nothing in the Builtins should refer to ISdApplication.
+    /// </summary>
+    /* TODO: public */ internal class ImportExport
     {
-        public static StepOutput FileImportWorksheet(ITemplateHost host, ParameterBag parameters)
+        private IProgressBarHost ProgressBarHost { get; }
+        private ISdApplication SdApplication { get; }
+
+        public ImportExport(IProgressBarHost progressBarHost, ISdApplication sdApplication)
+        {
+            ProgressBarHost = progressBarHost;
+            SdApplication = sdApplication;
+        }
+
+        public StepOutput? FileImportWorksheet(ParameterBag parameters)
         {
             // import data to the active worksheet
             using OpenFileDialog openFileDialog = new();
@@ -22,7 +34,7 @@ namespace StatsDirect.Builtins
             openFileDialog.Filter = "Comma delimited (*.csv)|*.csv|Tab delimited (*.tab)|*.tab|Text file (*.txt)|*.txt|All files (*.*)|*.*";
             openFileDialog.CheckFileExists = true;
 
-            DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            DialogResult result = openFileDialog.ShowDialog(SdApplication.DialogOwner);
             if (DialogResult.OK != result)
                 return null;
 
@@ -31,12 +43,12 @@ namespace StatsDirect.Builtins
             if (".xls".Equals(suffix) || ".xlsx".Equals(suffix))
                 throw new Exception("Please Open an excel file rather than Importing it.");
 
-            using IProgressBar progress = host.StartProgress("Importing data", false);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Importing data", false);
             return FileImportAscii(openFileDialog.FileName);
         }
 
 
-        public static StepOutput FileImportReport()
+        public StepOutput? FileImportReport()
         {
             // import text to the active report
             using OpenFileDialog openFileDialog = new();
@@ -44,11 +56,10 @@ namespace StatsDirect.Builtins
             openFileDialog.Filter = "ASCII Text (*.txt)|*.txt|All files (*.*)|*.*";
             openFileDialog.CheckFileExists = true;
 
-            DialogResult result = openFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            DialogResult result = openFileDialog.ShowDialog(SdApplication.DialogOwner);
             if (DialogResult.OK != result)
-            {
                 return null;
-            }
+
             using StreamReader sr = File.OpenText(openFileDialog.FileName);
             string fileContents = sr.ReadToEnd();
             ParameterBag outputParameters = new();
@@ -71,14 +82,14 @@ namespace StatsDirect.Builtins
         private static bool SniffForTabs(string path)
         {
             using StreamReader sr = File.OpenText(path);
-            string firstLine = sr.ReadLine();
+            string? firstLine = sr.ReadLine();
             if (null == firstLine)
                 return false;
 
             return firstLine.Contains('\t');
         }
 
-        private static DataFrame ImportTabSeparated(StreamReader sr)
+        private static DataFrame? ImportTabSeparated(StreamReader sr)
         {
             string currentLine = sr.ReadLine();
             if (null == currentLine)
@@ -142,7 +153,7 @@ namespace StatsDirect.Builtins
             return outputFrame;
         }
 
-        public static StepOutput FileExportWorksheet(ITemplateHost host, ParameterBag parameters)
+        public StepOutput FileExportWorksheet(ParameterBag parameters)
         {
             using (SaveFileDialog saveFileDialog = new())
             {
@@ -152,12 +163,12 @@ namespace StatsDirect.Builtins
                 string source = data.Name;
                 saveFileDialog.FileName = source.Contains('.') ? source[..^4] + ".csv" : source + ".csv";
                 saveFileDialog.OverwritePrompt = true;
-                DialogResult result = saveFileDialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                DialogResult result = saveFileDialog.ShowDialog(SdApplication.DialogOwner);
                 if (DialogResult.OK == result)
                 {
                     bool useTabDelimiter = saveFileDialog.FileName[^3..].ToLower(CultureInfo.InvariantCulture) == "tab";
                     using StreamWriter sw = File.CreateText(saveFileDialog.FileName);
-                    using IProgressBar progress = host.StartProgress("Exporting Worksheet", true);
+                    using IProgressBar progress = ProgressBarHost.StartProgress("Exporting Worksheet", true);
 
                     //  Titles
                     string delimiter = useTabDelimiter ? "\t" : ",";

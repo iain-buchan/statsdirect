@@ -1,9 +1,9 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class LinearizedEstimationOptions : GenericOptions
+    public class LinearizedEstimationOptions : AbstractGenericOptions
     {
         public LinearizedEstimationOptions(string title, int model, double a, double b, string xAxisTitle, string yAxisTitle)
         {

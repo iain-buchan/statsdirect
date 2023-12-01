@@ -11,13 +11,18 @@ namespace StatsDirect.TemplateProcessing
         const string RTF_REPORT_START = @"/split/{\rtf1\ansi\ansicpg1252\deff0\deflang2057{\fonttbl{\f0\fswiss Calibri;}{\f1\fswiss\fcharset0 Calibri;}{\f2\fswiss Courier New;}}{\colortbl ;\red0\green0\blue0;\red254\green254\blue254;\red0\green127\blue127;\red0\green0\blue255;\red0\green127\blue0;\red255\green0\blue0;\red127\green0\blue0;\red0\green0\blue127;\red127\green127\blue0;}\viewkind4\uc1\pard\li135\cf1\f0\fs20 ";
         const string RTF_REPORT_END = @"\par }";
 
-        public override string Render(/* TODO: IPreferences */ ITemplateHost host, string template, ParameterBag substitutions)
+        public CreoleRtfReportRenderer(ISdPreferences sdPreferences)
+            : base(sdPreferences)
+        {
+        }
+
+        public override string Render(string template, ParameterBag substitutions)
         {
             // Before doing anything else, replace any {...} in the creole with \{...\}.  Do it now because we're about to put a whole load of {...} into the substituted RTF and won't be able to tell the difference later.
             string protectedTemplate = template.Replace(@"{", @"\{").Replace(@"}", @"\}");
 
             string templateWithInclusions = ResolveTemplates(protectedTemplate, new List<string>());
-            string templateWithPossibleDeadBlocks = SubstituteInternal(host, templateWithInclusions, substitutions);
+            string templateWithPossibleDeadBlocks = SubstituteInternal(templateWithInclusions, substitutions);
             string substitutedTemplate = RemoveBlocks(templateWithPossibleDeadBlocks);
             return Prettify(substitutedTemplate);
         }
@@ -228,7 +233,7 @@ namespace StatsDirect.TemplateProcessing
         /// <summary>
         /// Recursively fill in any values in this block, examining the template for nested blocks.
         /// </summary>
-        private string SubstituteInternal(/* TODO: IPreferences */ ITemplateHost host, string template, ParameterBag substitutions)
+        private string SubstituteInternal(string template, ParameterBag substitutions)
         {
             if (null != substitutions)
             {
@@ -244,10 +249,10 @@ namespace StatsDirect.TemplateProcessing
                         string nestedTemplate = FindNestedTemplate(template, nestedTemplateName);
                         while (null != nestedTemplate)
                         {
-                            IList<ParameterBag> value = null;
+                            IList<ParameterBag>? value = null;
                             if (null != pair.Value)
                                 value = pair.Value.AsParameterBagList;
-                            string nestedResult = SubstituteInternal(host, nestedTemplate, value);
+                            string nestedResult = SubstituteInternal(nestedTemplate, value);
                             template = template.Replace(nestedTemplate, nestedResult);
                             nestedTemplate = FindNestedTemplate(template, nestedTemplateName);
                         }
@@ -262,15 +267,15 @@ namespace StatsDirect.TemplateProcessing
                             if (pair.Value.AsObject is IRenderable renderable)
                             {
                                 // We know we have to render to RTF, so this is legit
-                                value = new RtfRenderer(host).Render(renderable);
+                                value = new RtfRenderer(ChartRendererFactory, SdPreferences).Render(renderable);
                             }
                             else
                             {
                                 value = pair.Value.AsObject.ToString();
                                 if (pair.Value.IsDouble)
                                 {
-                                    valueU = host.RoundU(pair.Value.AsDouble);
-                                    valueP = host.pval(pair.Value.AsDouble);
+                                    valueU = RoundU(pair.Value.AsDouble);
+                                    valueP = Pval(pair.Value.AsDouble);
                                 }
                                 else
                                     valueU = valueP = value;
@@ -300,7 +305,7 @@ namespace StatsDirect.TemplateProcessing
         /// Recursively fill in a template.  We've found a nested template; clone it as many times as we have values, and fill it in.
         /// If there are no values, remove the template entirely.
         /// </summary>
-        private string SubstituteInternal(/* TODO: IPreferences */ ITemplateHost host, string template, IEnumerable<ParameterBag> substitutions)
+        private string SubstituteInternal(string template, IEnumerable<ParameterBag> substitutions)
         {
             // If the template still has a /bs templatename/.../bf/ pair, strip them.
             if (template.StartsWith("<block"))
@@ -318,7 +323,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 foreach (ParameterBag substitutionDictionary in substitutions)
                 {
-                    filledValue += SubstituteInternal(host, template, substitutionDictionary);
+                    filledValue += SubstituteInternal(template, substitutionDictionary);
                 }
             }
             return filledValue;
@@ -329,7 +334,7 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         /// <param name="template"> </param>
         /// <param name="templateName">The name of the template to find.  This may be blank, in which case &lt;block> is searched for; or null, in which case any template name will do.</param>
-        private static string FindNestedTemplate(string template, string templateName)
+        private static string FindNestedTemplate(string template, string? templateName)
         {
             string searchSuffix = string.Empty;
             if (null != templateName)

@@ -10,12 +10,12 @@ namespace StatsDirect.Data
         ///  <summary>
         ///  The title (name) of the variable
         ///  </summary>
-        string Title { get; set; }
+        string? Title { get; set; }
 
         ///  <summary>
         ///  Where the variable came from
         ///  </summary>
-        IOrigin Origin { get; set; }
+        IOrigin? Origin { get; set; }
 
         [XmlIgnore]
         int Length { get; }
@@ -42,12 +42,12 @@ namespace StatsDirect.Data
         /// <summary>
         /// Polymorphism: return the ith element of this variable's data encapsulated as an object.
         /// </summary>
-        object DataAsObject(int i);
+        object? DataAsObject(int i);
 
         /// <summary>
         /// Polymorphism: set the ith element of this variable's data to value, or fail if can't convert.
         /// </summary>
-        void DataAsObject(int i, object value);
+        void DataAsObject(int i, object? value);
 
         void Accept(IVariableVisitor visitor);
 

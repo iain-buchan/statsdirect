@@ -1,23 +1,25 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
     class ForestChartRenderer : AbstractForestishChartRenderer, IChartRenderer
     {
-        public ForestChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public ForestChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
             ForestOptions fOptions = (ForestOptions)Definition.ChartOptions;
-            int k = fOptions.k;
+            int k = fOptions.K;
 
             DataMaxX = double.MinValue;
             DataMinX = double.MaxValue;
@@ -74,13 +76,13 @@ namespace StatsDirect.Charting.Renderer
             }
 
             return new ScaleParameters
-            {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear, ScaleType.Log10 }, Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Category } }
-            };
+            (
+                new(new[] { ScaleType.Linear, ScaleType.Log10 }) { Min = DataMinX, MinGreaterThanZero = DataMinGreaterThanZeroX, Max = DataMaxX },
+                new(new[] { ScaleType.Category })
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -91,8 +93,8 @@ namespace StatsDirect.Charting.Renderer
             studyMarkerType = fOptions.MarkerTypes[0];
             pooledMarkerType = fOptions.MarkerTypes[1];
 
-            double[] pg = fOptions.pg;
-            int k = fOptions.k;
+            IReadOnlyList<double> pg = fOptions.Pg;
+            int k = fOptions.K;
 
 
             ScaleHeight(k);
@@ -105,7 +107,7 @@ namespace StatsDirect.Charting.Renderer
 
             for (int i = 0; i < k; i++)
             {
-                if (pg == null || pg[i] == 0)
+                if (pg is null || pg[i] == 0)
                 {
                     if (fOptions.GroupSizes[i] != Constant.MISSING && !double.IsInfinity(fOptions.GroupSizes[i]) && fOptions.GroupSizes[i] > max_gn)
                         max_gn = fOptions.GroupSizes[i];
@@ -151,15 +153,17 @@ namespace StatsDirect.Charting.Renderer
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
             // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
-            bool shouldDrawLine = DataMinX <= 0 || null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue;
-            double lineX = null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue ? Definition.ScaleParameters.X.MarkerLineValue.Value : 0;
+            bool shouldDrawLine = DataMinX <= 0 || Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue;
+            double lineX = Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue
+                ? Definition.ScaleParameters.X.MarkerLineValue.Value
+                : 0;
             if (shouldDrawLine)
             {
                 if (DataMaxX < lineX)
                     DataMaxX = lineX;
                 if (DataMinX > lineX)
                     DataMinX = lineX;
-                if (null != Definition && Definition.HasScaleParameters)
+                if (Definition.HasScaleParameters)
                 {
                     if (Definition.ScaleParameters.X.Max < lineX)
                         Definition.ScaleParameters.X.Max = lineX;
@@ -216,7 +220,7 @@ namespace StatsDirect.Charting.Renderer
                     double yc = OffY + yctr;
                     yt = OffY + yctr + y2;
                     double yb = OffY + yctr - y2;
-                    if (pg == null || pg[i] == 0)
+                    if (pg is null || pg[i] == 0)
                     {
                         // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
                         // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance

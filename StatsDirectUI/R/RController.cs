@@ -134,7 +134,7 @@ namespace StatsDirect.R
         public static bool UserMightHaveInstalledR()
         {
             using frmInstallR f = new();
-            f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            f.ShowDialog(SdApplication.DialogOwner);
             return f.UserThinksRIsInstalled;
         }
 

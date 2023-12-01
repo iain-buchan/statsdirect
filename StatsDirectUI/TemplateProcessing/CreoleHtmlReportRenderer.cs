@@ -1,4 +1,5 @@
-﻿using StatsDirect.Creole;
+﻿using StatsDirect.Charting;
+using StatsDirect.Creole;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 using System.Collections.Generic;
@@ -10,13 +11,21 @@ namespace StatsDirect.TemplateProcessing
 {
     public class CreoleHtmlReportRenderer : ReportRenderer
     {
-        public override string Render(/* TODO: IPreferences */ ITemplateHost host, string template, ParameterBag substitutions)
+        private IChartRendererFactory ChartRendererFactory { get; }
+
+        public CreoleHtmlReportRenderer(IChartRendererFactory chartRendererFactory, ISdPreferences sdPreferences)
+            : base(sdPreferences)
         {
-            ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
-            return creole.Accept(new InnerHtmlReportRenderer(host, substitutions));
+            ChartRendererFactory = chartRendererFactory;
         }
 
-        private class InnerHtmlReportRenderer : ICreoleVisitor<string>
+        public override string Render(string template, ParameterBag substitutions)
+        {
+            ICreole<string> creole = CreoleReader.Parse<string>(template, out string _);
+            return creole.Accept(new InnerHtmlReportRenderer(substitutions, ChartRendererFactory, SdPreferences));
+        }
+
+        private class InnerHtmlReportRenderer : RendererBase, ICreoleVisitor<string>
         {
             private static readonly Dictionary<string, IWrapper> rtfFormatting = new()
             {
@@ -38,11 +47,13 @@ namespace StatsDirect.TemplateProcessing
             };
 
             private readonly Stack<ParameterBag> substitutionStack = new();
-            private readonly /* TODO: IPreferences */ ITemplateHost host;
 
-            public InnerHtmlReportRenderer(/* TODO: IPreferences */ ITemplateHost host, ParameterBag substitutions)
+            private IChartRendererFactory ChartRendererFactory { get; }
+
+            public InnerHtmlReportRenderer(ParameterBag substitutions, IChartRendererFactory chartRendererFactory, ISdPreferences sdPreferences)
+                : base(sdPreferences)
             {
-                this.host = host;
+                ChartRendererFactory = chartRendererFactory;
                 substitutionStack.Push(substitutions);
             }
 
@@ -63,7 +74,7 @@ namespace StatsDirect.TemplateProcessing
                 if (null == victim.Contents)
                     return string.Empty;
                 StringBuilder sb = new();
-                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter innerList) && null != innerList && innerList.HasData)
+                if (substitutionStack.Peek().TryGetValue("*" + victim.Name, out FilledParameter? innerList) && null != innerList && innerList.HasData)
                 {
                     bool first = true;
                     foreach (ParameterBag inner in innerList.AsParameterBagList)
@@ -106,7 +117,7 @@ namespace StatsDirect.TemplateProcessing
 
             string ICreoleVisitor<string>.Visit(CreoleSubstitution<string> victim)
             {
-                object value = FindValue(victim.Path);
+                object? value = FindValue(victim.Path);
                 if (null == value)
                     return string.Empty;
                 if (value is string stringValue)
@@ -114,44 +125,31 @@ namespace StatsDirect.TemplateProcessing
                 if (value is int intValue)
                     return intValue.ToString(CultureInfo.CurrentUICulture);
                 if (value is IRenderable renderable)
-                    return new HtmlRenderer(host).Render(renderable);
+                    return new HtmlRenderer(ChartRendererFactory, SdPreferences).Render(renderable);
                 if (value is double doubleValue)
-                    switch (victim.Format)
+                    return victim.Format switch
                     {
-                        case "pval":
-                            return host.pval(doubleValue);
-                        case "pval_half":
-                            return host.pval_half(doubleValue);
-                        case "roundu":
-                            return host.RoundU(doubleValue);
-                        case "roundx":
-                            return host.RoundU(doubleValue);
-                        case "round0":
-                            return Formatting.XRound(doubleValue, 0);
-                        case "round1":
-                            return Formatting.XRound(doubleValue, 1);
-                        case "round2":
-                            return Formatting.XRound(doubleValue, 2);
-                        case "round3":
-                            return Formatting.XRound(doubleValue, 3);
-                        case "zvalp1":
-                            return host.pval(zvalp1(doubleValue));
-                        case "zvalp2":
-                            return host.pval(zvalp2(doubleValue));
-                        case "default":
-                            return doubleValue.ToString();
-                        default:
-                            // TODO: Warn.
-                            return value.ToString();
-                    }
+                        "pval" => Pval(doubleValue),
+                        "pval_half" => PvalHalf(doubleValue),
+                        "roundu" => RoundU(doubleValue),
+                        "roundx" => RoundU(doubleValue),
+                        "round0" => Formatting.XRound(doubleValue, 0),
+                        "round1" => Formatting.XRound(doubleValue, 1),
+                        "round2" => Formatting.XRound(doubleValue, 2),
+                        "round3" => Formatting.XRound(doubleValue, 3),
+                        "zvalp1" => Pval(ZvalP1(doubleValue)),
+                        "zvalp2" => Pval(ZvalP2(doubleValue)),
+                        "default" => doubleValue.ToString(),
+                        _ => value.ToString() ?? string.Empty,// TODO: Warn.
+                    };
                 // Nothing we know how to render specially, so just call ToString() on it and hope.
-                return value.ToString();
+                return value.ToString() ?? string.Empty;
             }
 
-            private object FindValue(string path)
+            private object? FindValue(string path)
             {
                 foreach (ParameterBag candidate in substitutionStack)
-                    if (candidate.TryGetValue(path, out FilledParameter value))
+                    if (candidate.TryGetValue(path, out FilledParameter? value))
                         return value.AsObject;
                 // If we get here, no such value exists.
                 return null;
@@ -216,7 +214,7 @@ namespace StatsDirect.TemplateProcessing
                 return WebUtility.HtmlEncode(string.Empty + victim.Value);
             }
 
-            double zvalp1(double xz)
+            private static double ZvalP1(double xz)
             {
                 double p = 1 - Numerics.PDF.alnorm(xz);
                 if (p > 1 - p)
@@ -224,7 +222,7 @@ namespace StatsDirect.TemplateProcessing
                 return p;
             }
 
-            double zvalp2(double xz)
+            private static double ZvalP2(double xz)
             {
                 double p = 1 - Numerics.PDF.alnorm(xz);
                 if (p > 1 - p)

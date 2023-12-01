@@ -1,35 +1,37 @@
 using System.Xml.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
 namespace StatsDirect.Data
 {
     [Serializable]
-    public class DataFrame : IStripForRedo
+    public class DataFrame
     {
-        public DataFrame()
-        {
-            Variables = new List<IVariable>();
-        }
-
-        public DataFrame(IVariable v)
-        {
-            Variables = new List<IVariable> { v };
-        }
-
-        public DataFrame(IVariable v, string name)
-            : this(v)
+        public DataFrame(IList<IVariable> variables, string? name = null)
         {
             Name = name;
+            Variables = variables;
+        }
+
+        public DataFrame(IVariable v, string? name = null)
+            : this(new List<IVariable> { v }, name)
+        {
+        }
+
+        public DataFrame()
+            : this(new List<IVariable>())
+        {
         }
 
         ///  <summary>
         ///  A name that can be used to identify the frame by the user
         ///  </summary>
         [XmlElement("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [XmlIgnore]
-        public IList<IVariable> Variables { get; set; }
+        public IList<IVariable> Variables { get; }
 
         [XmlArray("variables")]
         [XmlArrayItem("boolean-variable", typeof(BooleanVariable))]
@@ -57,12 +59,6 @@ namespace StatsDirect.Data
         }
 
         public int VariableCount => Variables.Count;
-
-        public void EnsureVariables(int MinimumSize)
-        {
-            while (Variables.Count < MinimumSize)
-                Variables.Add(null);
-        }
 
         public int MaxRows
         {
@@ -104,25 +100,33 @@ namespace StatsDirect.Data
             }
         }
 
-        public IVariable FindVariable(string title)
+        public IVariable? FindVariable(string title)
         {
             foreach (IVariable v in Variables)
-                if (v.Title != null && v.Title.Equals(title))
+                if (v.Title is not null && v.Title.Equals(title))
                     return v;
             return null;
         }
 
-        public object CopyAndStripForRedo(bool shouldKeepData)
+        internal T VariableOrThrow<T>(int index) where T: IVariable
         {
-            DataFrame copy = new() { Name = Name };
-            foreach (IVariable v in Variables)
-                copy.Variables.Add((IVariable)v.CopyAndStripForRedo(shouldKeepData));
-            return copy;
+            if (index < 0 || Variables.Count <= index)
+                throw new Exception($"Frame '{Name ?? "(unnamed)"}': Cannot return variable {index} of {Variables.Count}");
+            if (Variables[index] is T goodValue)
+                return goodValue;
+            throw new Exception($"Frame '{Name ?? "(unnamed)"}': Variable {index} is {Variables[index].GetType().FullName}, should be {typeof(T).FullName}");
         }
 
-        public void RefillForRedo(IRefillSource refillSource)
+        internal bool TryGetVariable<T>(int index, [NotNullWhen(true)]out T? variable) where T : IVariable
         {
-            refillSource.Refill(Variables);
+            if (index >= 0 && index < Variables.Count
+                && Variables[index] is T goodValue)
+            {
+                variable = goodValue;
+                return true;
+            }
+            variable = default;
+            return false;
         }
     }
 }

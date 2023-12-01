@@ -96,7 +96,7 @@ namespace StatsDirect.PJLControls
             {
                 if (null != imgColors)
                     imgColors.Dispose();
-                if (components != null)
+                if (components is not null)
                     components.Dispose();
             }
             base.Dispose(disposing);
@@ -373,27 +373,27 @@ namespace StatsDirect.PJLControls
         }
 
         // Leave not received for UpDown controls - beta2 bug?
-        private void numericUpDownRed_Leave(object sender, System.EventArgs e)
+        private void numericUpDownRed_Leave(object? sender, System.EventArgs e)
         {
             trackBarRedReleased();
         }
 
-        private void trackBarRed_Leave(object sender, System.EventArgs e)
+        private void trackBarRed_Leave(object? sender, System.EventArgs e)
         {
             trackBarRedReleased();
         }
 
-        private void trackBarRed_KeyUp(object sender, KeyEventArgs e)
+        private void trackBarRed_KeyUp(object? sender, KeyEventArgs e)
         {
             trackBarRedReleased();
         }
 
-        private void trackBarRed_MouseUp(object sender, MouseEventArgs e)
+        private void trackBarRed_MouseUp(object? sender, MouseEventArgs e)
         {
             trackBarRedReleased();
         }
 
-        private void trackBarRed_ValueChanged(object sender, System.EventArgs e)
+        private void trackBarRed_ValueChanged(object? sender, System.EventArgs e)
         {
             numericUpDownRed.Value = trackBarRed.Value;
 
@@ -411,7 +411,7 @@ namespace StatsDirect.PJLControls
             FireColorChangedEvent();
         }
 
-        private void numericUpDownRed_ValueChanged(object sender, System.EventArgs e)
+        private void numericUpDownRed_ValueChanged(object? sender, System.EventArgs e)
         {
             trackBarRed.Value = (int)numericUpDownRed.Value;
         }
@@ -425,22 +425,22 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void trackBarBlue_Leave(object sender, System.EventArgs e)
+        private void trackBarBlue_Leave(object? sender, System.EventArgs e)
         {
             trackBarBlueReleased();
         }
 
-        private void trackBarBlue_KeyUp(object sender, KeyEventArgs e)
+        private void trackBarBlue_KeyUp(object? sender, KeyEventArgs e)
         {
             trackBarBlueReleased();
         }
 
-        private void trackBarBlue_MouseUp(object sender, MouseEventArgs e)
+        private void trackBarBlue_MouseUp(object? sender, MouseEventArgs e)
         {
             trackBarBlueReleased();
         }
 
-        private void trackBarBlue_ValueChanged(object sender, System.EventArgs e)
+        private void trackBarBlue_ValueChanged(object? sender, System.EventArgs e)
         {
             numericUpDownBlue.Value = trackBarBlue.Value;
             Application.DoEvents(); // Force redisplay
@@ -456,7 +456,7 @@ namespace StatsDirect.PJLControls
             FireColorChangedEvent();
         }
 
-        private void numericUpDownBlue_ValueChanged(object sender, System.EventArgs e)
+        private void numericUpDownBlue_ValueChanged(object? sender, System.EventArgs e)
         {
             trackBarBlue.Value = (int)numericUpDownBlue.Value;
         }
@@ -470,22 +470,22 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void trackBarGreen_Leave(object sender, System.EventArgs e)
+        private void trackBarGreen_Leave(object? sender, System.EventArgs e)
         {
             trackBarGreenReleased();
         }
 
-        private void trackBarGreen_KeyUp(object sender, KeyEventArgs e)
+        private void trackBarGreen_KeyUp(object? sender, KeyEventArgs e)
         {
             trackBarGreenReleased();
         }
 
-        private void trackBarGreen_MouseUp(object sender, MouseEventArgs e)
+        private void trackBarGreen_MouseUp(object? sender, MouseEventArgs e)
         {
             trackBarGreenReleased();
         }
 
-        private void trackBarGreen_ValueChanged(object sender, System.EventArgs e)
+        private void trackBarGreen_ValueChanged(object? sender, System.EventArgs e)
         {
             numericUpDownGreen.Value = trackBarGreen.Value;
             Application.DoEvents(); // Force redisplay
@@ -550,12 +550,12 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void numericUpDownGreen_ValueChanged(object sender, System.EventArgs e)
+        private void numericUpDownGreen_ValueChanged(object? sender, System.EventArgs e)
         {
             trackBarGreen.Value = (int)numericUpDownGreen.Value;
         }
 
-        private void radioButtonRed_CheckedChanged(object sender, System.EventArgs e)
+        private void radioButtonRed_CheckedChanged(object? sender, System.EventArgs e)
         {
             if (radioButtonRed.Checked)
             {
@@ -566,7 +566,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void radioButtonGreen_CheckedChanged(object sender, System.EventArgs e)
+        private void radioButtonGreen_CheckedChanged(object? sender, System.EventArgs e)
         {
             if (radioButtonGreen.Checked)
             {
@@ -577,7 +577,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void radioButtonBlue_CheckedChanged(object sender, System.EventArgs e)
+        private void radioButtonBlue_CheckedChanged(object? sender, System.EventArgs e)
         {
             if (radioButtonBlue.Checked)
             {
@@ -588,7 +588,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void pictureBox_Paint(object sender, PaintEventArgs e)
+        private void pictureBox_Paint(object? sender, PaintEventArgs e)
         {
             if (Enabled)
             {
@@ -606,7 +606,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void pictureBox_MouseMove(object sender, MouseEventArgs e)
+        private void pictureBox_MouseMove(object? sender, MouseEventArgs e)
         {
             if (bMouseDown)
             {
@@ -614,13 +614,13 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void pictureBox_MouseDown(object sender, MouseEventArgs e)
+        private void pictureBox_MouseDown(object? sender, MouseEventArgs e)
         {
             bMouseDown = true;
             SetCoords(e.X, e.Y);
         }
 
-        private void pictureBox_MouseUp(object sender, MouseEventArgs e)
+        private void pictureBox_MouseUp(object? sender, MouseEventArgs e)
         {
             bMouseDown = false;
         }

@@ -6,7 +6,7 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class BooleanParameter: Parameter, IDefaultParameter<bool>
     {
-        private Expression defaultValue;
+        private Expression? defaultValue;
 
         public bool? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
@@ -24,7 +24,7 @@ namespace StatsDirect.Templates
         public bool HasDefaultValue => null != defaultValue;
 
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression
+        public Expression? DefaultValueExpression
         {
             get => defaultValue;
             set => defaultValue = value;
@@ -44,7 +44,7 @@ namespace StatsDirect.Templates
         {
             bool? value = DefaultValue(processor, context);
             if (value.HasValue)
-                return new ParameterBag(Name, FilledParameterFactory.Default(value.Value));
+                return new ParameterBag().AddDefault(Name, value.Value);
             return new ParameterBag();
         }
     }

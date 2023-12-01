@@ -3,7 +3,7 @@ using StatsDirect.Builtins;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlDummyOptions : UserControl, IOkable
+    internal partial class ctlDummyOptions : UserControl, IOkable
     {
         private readonly DummyOptions options;
 

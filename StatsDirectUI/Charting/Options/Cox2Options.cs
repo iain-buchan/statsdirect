@@ -1,10 +1,10 @@
 using StatsDirect.Data;
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class Cox2Options : GenericOptions
+    public class Cox2Options : AbstractGenericOptions
     {
         public int[] gn { get; }
         public int igroups { get; }

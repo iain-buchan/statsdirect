@@ -1,4 +1,5 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
@@ -8,21 +9,20 @@ namespace StatsDirect.Charting.Renderer
 {
     class LinearizedEstimationChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public LinearizedEstimationChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public LinearizedEstimationChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             const int MARKER_SIZE = 6;
 
@@ -48,7 +48,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(options.Title,
                 new AxisDefinition(options.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType) { ExtraSpaceBeforeAxisStarts = xtra },
                 new AxisDefinition(options.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                ChartPreferences.DefaultBoxAxes, false);
+                ChartPreferences.BoxAxes, false);
 
             // plot points
             DoubleSeries xs = (DoubleSeries)Definition.XSeries[0];

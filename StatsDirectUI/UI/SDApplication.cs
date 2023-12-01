@@ -1,48 +1,48 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Diagnostics;
 using System.Windows.Forms;
 
-using StatsDirect.Templates;
 using StatsDirect.Configuration;
 using StatsDirect.Data;
+using StatsDirect.Templates;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Utilities;
-using System.Text;
-using System.Collections;
+using StatsDirect.Charting;
 
 namespace StatsDirect.UI
 {
     /// <summary>
     /// The central class for managing the state of StatsDirect.
     /// </summary>
-    /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
-    public sealed class SdApplication : ITemplateHost, IRefillSource
+    public sealed class SdApplication : ITemplateHost, ISdApplication, ISession
     {
         private const int MAX_RECENT_FILES = 7;
 
+        public WindowInformation? ActiveGrid { get; private set; }
         private int sActiveHelpTopic;
-        private string activeHelpUrl;
-        private static SdApplication soleInstance;
+        private string? activeHelpUrl;
+        public WindowInformation? ActiveWindow { get; private set; }
+        public bool ClosingForUpgrade { get; private set; }
 
-        // public PaneAndBoolean MostRecentlySelectedGrid { get; set; }
-        public PaneAndPosition MostRecentlySelectedReport { get; set; }
+        /// <summary>
+        /// The MDI window in which newly-created children are placed
+        /// </summary>
+        private frmMain MainWindow { get; }
+        PaneAndPosition? ISdApplication.MostRecentlySelectedReport { get; set; }
+        private List<Parameter>? outstandingParameters;
+        private ParameterBag? sessionParametersAcrossOperations;
+        private Dictionary<string, ParameterBag>? sessionParametersPerOperation;
+        private ISet<WindowInformation> Windows { get; } = new HashSet<WindowInformation>();
 
-        private SDPreferences preferences;
-
-        private List<Parameter> outstandingParameters;
-
-        private Dictionary<string, ParameterBag> sessionParametersPerOperation;
-
-        private ParameterBag sessionParametersAcrossOperations;
-
-        internal void NoteASubformCloseIsStarting()
-        {
-            MainWindow.NoteASubformCloseIsStarting();
-        }
+        private IChartPreferences ChartPreferences { get; }
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private ISdPreferences SdPreferences { get; }
+        private ITemplateProcessorFactory TemplateProcessorFactory { get; }
+        private IUiPreferences UiPreferences { get; }
 
         private readonly Queue<DialogAndAction> queuedDialogs;
         /// <summary>
@@ -50,43 +50,32 @@ namespace StatsDirect.UI
         /// </summary>
         private bool showingDialogThatCouldBeQueued;
 
-        /// <summary>
-        /// Returns the single instance of the application, creating it if necessary.
-        /// </summary>
-        internal static SdApplication SoleInstance
+        private ITemplateHost TemplateHost => this;
+
+        public SdApplication(IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, ISdPreferences sdPreferences, ITemplateProcessorFactory templateProcessorFactory, IUiPreferences uiPreferences)
         {
-            get
-            {
-                Contract.Ensures(null != Contract.Result<SdApplication>());
-                return soleInstance ??= new SdApplication();
-            }
-        }
+            ChartPreferences = chartPreferences;
+            ChartRendererFactory = chartRendererFactory;
+            SdPreferences = sdPreferences;
+            TemplateProcessorFactory = templateProcessorFactory;
+            UiPreferences = uiPreferences;
 
-        internal static ITemplateHost TemplateHost => SoleInstance;
-
-        internal static bool HasInstance => null != soleInstance;
-
-        /// <summary>
-        /// Sole constructor.  Because this follows the singleton pattern, the constructor is private.
-        /// </summary>
-        private SdApplication()
-        {
             queuedDialogs = new Queue<DialogAndAction>();
             InitialiseFunctionRegistry();
             LoadPersistentValues();
+            MainWindow = new frmMain(chartPreferences, chartRendererFactory, this, SdPreferences, this, templateProcessorFactory, uiPreferences);
         }
 
-        internal void NoteASubformCloseIsCancelled()
-        {
-            MainWindow.NoteASubformCloseIsCancelled();
-        }
+        void ISdApplication.NoteASubformCloseIsCancelled() => MainWindow.NoteASubformCloseIsCancelled();
+
+        void ISdApplication.NoteASubformCloseIsStarting() => MainWindow.NoteASubformCloseIsStarting();
 
         /// <summary>
         /// On occasion, we have the potential for dialogs created in a background thread to be displayable while another dialog is on-screen.  Show this dialog if possible, but force a queue so that no more than one dialog is on-screen at one time.
         /// </summary>
         /// <param name="f">The dialog to display once any current dialog has closed.</param>
         /// <param name="postDisplayAction">Code to be run on the UI thread when the form closes; takes the form as its first parameter.</param>
-        internal void ShowOrQueueDialog(Form f, Action<Form, DialogResult> postDisplayAction)
+        void ISdApplication.ShowOrQueueDialog(Form f, Action<Form, DialogResult>? postDisplayAction)
         {
             // Check whether we're safe to show the dialog now.  If not, queue it and return; if so, set the flag that we're showing to prevent anything else showing once we're out of the locked region.
             lock(queuedDialogs)
@@ -104,67 +93,39 @@ namespace StatsDirect.UI
             ShowDialogOnUiThread(f, postDisplayAction);
         }
 
-        internal bool OpenFile()
-        {
-            return MainWindow.OpenFile();
-        }
+        bool ISdApplication.OpenFile() => MainWindow.OpenFile();
 
-        internal bool OpenFile(string path, bool removeFromRecentFilesIfNotFound)
-        {
-            return MainWindow.OpenFile(path, removeFromRecentFilesIfNotFound);
-        }
+        bool ISdApplication.OpenFile(string path, bool removeFromRecentFilesIfNotFound) => MainWindow.OpenFile(path, removeFromRecentFilesIfNotFound);
 
-        internal void CreateMainWindow()
-        {
-            MainWindow = new frmMain();
-        }
+        StatsDirectForm ISdApplication.CreateReport() => MainWindow.CreateReport();
 
-        internal StatsDirectForm CreateReport()
-        {
-            return MainWindow.CreateReport();
-        }
+        StatsDirectForm ISdApplication.CreateGrid() => MainWindow.CreateGrid();
 
-        internal StatsDirectForm CreateGrid()
-        {
-            return MainWindow.CreateGrid();
-        }
-
-        internal void Run()
-        {
-            Application.Run(MainWindow);
-        }
+        void ISdApplication.Run() => Application.Run(MainWindow);
 
         /// <summary>
         /// We know we're safe to show a dialog now (whether immediate or whether we just got it off the queue).  Show it on the UI thread, wait for a user response, and if necessary run its post display action (also on the UI thread).
         /// If another dialog has been queued while we're showing this one, show that.
         /// </summary>
-        /// <param name="f"></param>
-        /// <param name="postDisplayAction"></param>
-        private void ShowDialogOnUiThread(Form f, Action<Form, DialogResult> postDisplayAction)
+        private void ShowDialogOnUiThread(Form f, Action<Form, DialogResult>? postDisplayAction)
         {
-            if (null != MainWindow)
-                if (MainWindow.InvokeRequired)
-                {
-                    MainWindow.Invoke(new Action(() => { DialogResult result = f.ShowDialog(MainWindow);
-                        postDisplayAction?.Invoke(f, result);
-                        f.Dispose(); }));
-                }
-                else
-                {
+            if (MainWindow.InvokeRequired)
+            {
+                MainWindow.Invoke(new Action(() => {
                     DialogResult result = f.ShowDialog(MainWindow);
                     postDisplayAction?.Invoke(f, result);
                     f.Dispose();
-                }
+                }));
+            }
             else
             {
-                // If there's no main window at present, we'd expect to be on the UI thread.  TODO: Prove this assumption.
-                DialogResult result = f.ShowDialog();
+                DialogResult result = f.ShowDialog(MainWindow);
                 postDisplayAction?.Invoke(f, result);
                 f.Dispose();
             }
 
             // If there's another dialog ready to go, dequeue and show it.  Yes, this uses tail-recursion; the compiler can choose to optimise it away, or we can rely on the fact that this is a rare operation and hence the stack won't get deep.
-            DialogAndAction newDialog = null;
+            DialogAndAction? newDialog = null;
             lock(queuedDialogs)
             {
                 showingDialogThatCouldBeQueued = false;
@@ -180,7 +141,7 @@ namespace StatsDirect.UI
 
         private void LoadPersistentValues()
         {
-            string loadPath = Path.Combine(SDConfiguration.MyStatsDirectFolder, SDConfiguration.PERSISTENT_VALUE_FILE_NAME);
+            string loadPath = SDConfiguration.PersistentValueFilePath;
             if (File.Exists(loadPath))
             {
                 try
@@ -200,7 +161,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// The application is closing down.  Save anything we need!
         /// </summary>
-        internal void Shutdown()
+        void ISdApplication.Shutdown()
         {
             SavePersistentValues();
             if (ClosingForUpgrade)
@@ -217,13 +178,13 @@ namespace StatsDirect.UI
         {
             try
             {
-                string savePath = Path.Combine(SDConfiguration.MyStatsDirectFolder, SDConfiguration.PERSISTENT_VALUE_FILE_NAME);
+                string savePath = SDConfiguration.PersistentValueFilePath;
                 BinaryFormatter fmt = new();
                 using Stream ws = new FileStream(savePath, FileMode.Create, FileAccess.Write);
-                if (null == sessionParametersAcrossOperations)
+                if (sessionParametersAcrossOperations is null)
                     sessionParametersAcrossOperations = new ParameterBag();
                 fmt.Serialize(ws, sessionParametersAcrossOperations);
-                if (null == sessionParametersPerOperation)
+                if (sessionParametersPerOperation is null)
                     sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
                 fmt.Serialize(ws, sessionParametersPerOperation);
                 // #760
@@ -239,7 +200,7 @@ namespace StatsDirect.UI
         /// Return the next unused number that can be used for a blank grid
         /// </summary>
         /// <returns></returns>
-        internal int GetGridNumber()
+        int ISdApplication.GetGridNumber()
         {
             // Horribly inefficient O(n^2) algorithm, but we're relying on there rarely being more than a few windows open.
             int candidateNumber = 1;
@@ -250,8 +211,8 @@ namespace StatsDirect.UI
                 {
                     if (wi.HasWindow && wi.Window is IGrid)
                     {
-                        string windowName = wi.FriendlyName;
-                        if (windowName.StartsWith("Data "))
+                        string? windowName = wi.FriendlyName;
+                        if (null != windowName && windowName.StartsWith("Data "))
                         {
                             string windowNumberAsString = windowName[5..].Trim();
                             if (int.TryParse(windowNumberAsString, out int windowNumber))
@@ -276,7 +237,7 @@ namespace StatsDirect.UI
         /// Return the next unused number that can be used for a blank report
         /// </summary>
         /// <returns></returns>
-        internal int GetReportNumber()
+        int ISdApplication.GetReportNumber()
         {
             // Horribly inefficient O(n^2) algorithm, but we're relying on there rarely being more than a few windows open.
             int candidateNumber = 1;
@@ -288,8 +249,8 @@ namespace StatsDirect.UI
                     if (wi.Window is not IReport)
                         continue;
 
-                    string windowName = wi.FriendlyName;
-                    if (!windowName.StartsWith("Report "))
+                    string? windowName = wi.FriendlyName;
+                    if (windowName is null || !windowName.StartsWith("Report "))
                         continue;
 
                     // We don't want to load Report 1.rtf and create Report 1 again (#673).  Strip any suffix before comparison.
@@ -316,7 +277,7 @@ namespace StatsDirect.UI
         /// Return the next unused number that can be used for a blank script window
         /// </summary>
         /// <returns></returns>
-        internal int GetScriptWindowNumber()
+        int ISdApplication.GetScriptWindowNumber()
         {
             // Horribly inefficient O(n^2) algorithm, but we're relying on there rarely being more than a few windows open.
             int candidateNumber = 1;
@@ -327,7 +288,7 @@ namespace StatsDirect.UI
                 {
                     if (wi.Window is IScriptWindow)
                     {
-                        string windowName = wi.FriendlyName;
+                        string? windowName = wi.FriendlyName;
                         if (windowName.StartsWith("Script "))
                         {
                             string windowNumberAsString = windowName[7..].Trim();
@@ -349,12 +310,7 @@ namespace StatsDirect.UI
             return candidateNumber;
         }
 
-        /// <summary>
-        /// The MDI window in which newly-created children are placed
-        /// </summary>
-        private frmMain MainWindow { get; set; }
-
-        internal void AddWindow(WindowInformation info)
+        public void AddWindow(WindowInformation info)
         {
             Windows.Add(info);
         }
@@ -365,19 +321,13 @@ namespace StatsDirect.UI
                 Windows.Remove(info);
         }
 
-        internal WindowInformation ActiveWindow { get; private set; }
-
-        internal WindowInformation ActiveGrid { get; private set; }
-
-        public ICollection<WindowInformation> Windows { get; } = new HashSet<WindowInformation>();
-
         /// <summary>
         /// A form has found itself closing by some means and has informed us.
         /// Make sure other features of the interface related to that form are tidied up, and remove our memory of the form.
         /// </summary>
         /// <param name="window"></param>
         /// <param name="e"></param>
-        internal void NoteFormClosing(StatsDirectForm window, FormClosingEventArgs e)
+        void ISdApplication.NoteFormClosing(StatsDirectForm window, FormClosingEventArgs e)
         {
             WindowInformation info = (WindowInformation)window.Tag;
             if (null != info)
@@ -395,8 +345,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// A window has found itself activated.  Ensure the tabs are synchronised.
         /// </summary>
-        /// <param name="info"></param>
-        internal void NoteFormActivated(WindowInformation info)
+        void ISdApplication.NoteFormActivated(WindowInformation info)
         {
             ActiveWindow = info;
             if (null != info.Window)
@@ -408,47 +357,45 @@ namespace StatsDirect.UI
             }
         }
 
-        internal void ShowHelp(Form Parent, string Topic)
+        void ISdApplication.ShowHelp(Form parent, string topic)
         {
-            Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, Topic);
+            Help.ShowHelp(parent, SDConfiguration.HelpFilePath, HelpNavigator.TopicId, topic);
         }
 
-        internal void ShowHelp(Form Parent)
+        void ISdApplication.ShowHelp(Form parent)
         {
             if (null != ActiveHelpUrl)
             {
                 // Show the URL
-                Help.ShowHelp(Parent, ActiveHelpUrl);
+                Help.ShowHelp(parent, ActiveHelpUrl);
             }
             else if (0 != ActiveHelpTopic)
             {
                 // Specific help - show it.
-                Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, ActiveHelpTopic.ToString());
+                Help.ShowHelp(parent, SDConfiguration.HelpFilePath, HelpNavigator.TopicId, ActiveHelpTopic.ToString());
             }
             else
             {
                 // Nothing in particular, guess something useful or show the ToC if we can't.
-                if (SoleInstance?.ActiveWindow != null && SoleInstance.ActiveWindow.HasWindow && SoleInstance.ActiveWindow.Window is IGrid)
+                if (ActiveWindow is not null && ActiveWindow.HasWindow && ActiveWindow.Window is IGrid)
                 {
                     // Grid - show the worksheet help, which is 1040.
-                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, "1040");
+                    Help.ShowHelp(parent, SDConfiguration.HelpFilePath, HelpNavigator.TopicId, "1040");
                 }
                 else
                 {
-                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TableOfContents);
+                    Help.ShowHelp(parent, SDConfiguration.HelpFilePath, HelpNavigator.TableOfContents);
                 }
             }
         }
 
-        internal string HelpFilePath => SDConfiguration.HelpFilePath;
-
-        internal int ActiveHelpTopic
+        public int ActiveHelpTopic
         {
             get => sActiveHelpTopic;
             set { sActiveHelpTopic = value; activeHelpUrl = null; }
         }
 
-        internal string ActiveHelpUrl
+        public string? ActiveHelpUrl
         {
             get => activeHelpUrl;
             set { sActiveHelpTopic = 0; activeHelpUrl = value; }
@@ -458,21 +405,16 @@ namespace StatsDirect.UI
         {
             IList<Pane> availableWindows = new List<Pane>();
             foreach (WindowInformation info in Windows)
-            {
                 if (info.Window is IReport)
-                {
                     foreach (Pane pane in info.Window.AvailablePanes)
-                    {
                         availableWindows.Add(pane);
-                    }
-                }
-            }
             return availableWindows;
         }
 
-        internal void DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag parameterBag) => MainWindow.DoOperationOnceOrUntilCancelled(operation, parameterBag);
+        void ISdApplication.DoOperationOnceOrUntilCancelled(Operation operation, ParameterBag? parameterBag) =>
+            MainWindow.DoOperationOnceOrUntilCancelled(operation, parameterBag);
 
-        internal IList<PaneAndPosition> AvailableReportPanesAndPositions()
+        IList<PaneAndPosition> ISdApplication.AvailableReportPanesAndPositions()
         {
             IList<PaneAndPosition> availableWindows = new List<PaneAndPosition>();
             foreach (Pane pane in AvailableReportPanes())
@@ -480,12 +422,12 @@ namespace StatsDirect.UI
             return availableWindows;
         }
 
-        internal IList<PaneAndPosition> AvailableFramePanesAndPositions()
+        IList<PaneAndPosition> ISdApplication.AvailableFramePanesAndPositions()
         {
             // PaneAndBoolean mostRecent = MostRecentlySelectedGrid;
-            Pane mostRecentPane = null;
+            Pane? mostRecentPane = null;
             if (null != ActiveGrid && ActiveGrid.HasWindow)
-                mostRecentPane = ActiveGrid.Window.SelectedPane;
+                mostRecentPane = ActiveGrid.Window?.SelectedPane;
             IList<PaneAndPosition> availableWindows = new List<PaneAndPosition>();
             foreach (Pane pane in AvailableFramePanes())
             {
@@ -500,15 +442,9 @@ namespace StatsDirect.UI
         {
             IList<Pane> availableWindows = new List<Pane>();
             foreach (WindowInformation info in Windows)
-            {
                 if (info.Window is IGrid)
-                {
                     foreach (Pane pane in info.Window.AvailablePanes)
-                    {
                         availableWindows.Add(pane);
-                    }
-                }
-            }
             return availableWindows;
         }
 
@@ -516,13 +452,12 @@ namespace StatsDirect.UI
         /// Allows the user to select from existing report windows, plus potentially a new one.
         /// </summary>
         /// <param name="AllowNew">If true, the user may select a new report as well as any existing ones.  If false, only existing reports may be picked.</param>
-        /// <returns></returns>
-        public IReport PickReportWindow(bool AllowNew)
+        public IReport? PickReportWindow(bool allowNew)
         {
             return MainWindow.SelectedReportWindow;
         }
 
-        internal IReport SelectReportWindow(Pane selectedPane)
+        internal IReport? SelectReportWindow(Pane selectedPane)
         {
             // As we now don't remember reports for output, this is equivalent to a PickReportWindow.
             return PickReportWindow(false);
@@ -533,13 +468,12 @@ namespace StatsDirect.UI
         /// </summary>
         /// <param name="allowNew">If true, the user may select a new grid as well as any existing ones.  If false, only existing grids may be picked.</param>
         /// <param name="relativePosition"></param>
-        /// <returns></returns>
-        public IGrid PickGridWindow(bool allowNew, ref RelativePosition relativePosition)
+        public IGrid? PickGridWindow(bool allowNew, ref RelativePosition relativePosition)
         {
             IList<Pane> availableWindows = AvailableFramePanes();
             try
             {
-                Pane selectedPane = null;
+                Pane? selectedPane = null;
                 if (availableWindows.Count > 0)
                 {
                     const string KEY = "solo";
@@ -551,7 +485,7 @@ namespace StatsDirect.UI
                         PromptExpression = new Expression("Pick the sheet in which you want the output to appear")
                     };
                     ParameterBag results = FillSingleParameter(parameter); // Will never return a null value as the parameter cannot be skipped
-                    bool cancelled = null == results || !results.ContainsKey(KEY);
+                    bool cancelled = results is null || !results.ContainsKey(KEY);
                     if (cancelled)
                         throw new TemplateOperationCancelledException();
                     PaneAndPosition selectedPaneAndCurrent = results[KEY].AsPaneAndPosition;
@@ -572,9 +506,9 @@ namespace StatsDirect.UI
             }
         }
 
-        private IGrid SelectGridWindow(Pane selectedPane, ref RelativePosition writePosition)
+        private IGrid? SelectGridWindow(Pane? selectedPane, ref RelativePosition writePosition)
         {
-            if (selectedPane?.WindowInformation == null)
+            if (selectedPane?.WindowInformation is null)
             {
                 // Create a new grid, write at the end of it
                 IGrid grid = (IGrid)MainWindow.CreateGrid();
@@ -601,11 +535,11 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
+        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object? preferredOutputLocation)
         {
             // Locate the existing report window if it still exists
-            IReport report;
-            if (null != preferredOutputLocation)
+            IReport? report;
+            if (preferredOutputLocation is not null)
             {
                 Pane pane = (Pane)preferredOutputLocation;
                 report = SelectReportWindow(pane);
@@ -614,9 +548,9 @@ namespace StatsDirect.UI
             {
                 report = PickReportWindow(true);
             }
-            if (null == report)
+            if (report is null)
                 throw new TemplateOperationCancelledException();
-            report.AppendRenderable(renderable, ActiveHelpTopic, operation, redoInformation);
+            report.AppendRenderable(renderable, ActiveHelpTopic, operation);
             report.EnsureActive();
             return report.SelectedPane;
         }
@@ -624,12 +558,12 @@ namespace StatsDirect.UI
         /// <summary>
         /// Append the data in the frame to a new or existing user-selected grid window.
         /// </summary>
-        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
+        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition? preferredOutputLocation, RelativePosition defaultPosition)
         {
-            IGrid grid;
+            IGrid? grid;
             RelativePosition writePosition = defaultPosition;
 
-            if (keepSelection && null != ActiveGrid)
+            if (keepSelection && ActiveGrid is not null)
             {
                 grid = (IGrid)ActiveGrid.Window;
                 // If we're writing multiple outputs that won't be written over the top of each other, each one is selected after it is written.  Therefore we can use that to ensure subsequent output is written directly after the initial output.
@@ -637,7 +571,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                if (null != preferredOutputLocation)
+                if (preferredOutputLocation is not null)
                 {
                     PaneAndPosition paneAndPosition = preferredOutputLocation;
                     Pane pane = paneAndPosition.Pane;
@@ -649,87 +583,80 @@ namespace StatsDirect.UI
                     grid = PickGridWindow(true, ref writePosition);
                 }
             }
-            if (null == grid)
+            if (grid is null)
                 throw new TemplateOperationCancelledException();
             grid.WriteDataFrame(frame, isFormulae, missingIndicator, writePosition);
             grid.EnsureActive();
         }
 
-        public static void InitialiseFunctionRegistry()
+        public void InitialiseFunctionRegistry()
         {
-            BuiltinRegistry.SoleInstance.AddAll(Builtins.Registry.GetFunctionRegistry());
+            BuiltinRegistry.SoleInstance.AddAll(new Builtins.Registry(ChartPreferences, ChartRendererFactory, this, SdPreferences, this).GetFunctionRegistry());
         }
 
-        IScriptEngine IScriptEngineHost.GetScriptEngine(string language)
+        bool IScriptEngineHost.TryGetScriptEngine(string language, [NotNullWhen(true)] out IScriptEngine? scriptEngine)
         {
             if (ScriptEngine.CanHandle(language))
-                return new ScriptEngine();
-            return null;
+            {
+                scriptEngine = new ScriptEngine();
+                return true;
+            }
+            scriptEngine = null;
+            return false;
         }
 
-        void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
+        void IUserInterface.PrepareParameter(Parameter parameter, ParameterBag context)
         {
             if (parameter is PickFromListParameter pickFromListParameter)
-                PrepareParameter(processor, pickFromListParameter, context);
+                PrepareParameter(pickFromListParameter, context);
         }
 
-        bool IUserInterface.CanCombine(Parameter parameter)
-        {
-            if (parameter is Frame2DParameter)
-                return false;
-            if (parameter is GroupedCovarianceParameter)
-                return false;
-            if (parameter is FrameParameter frameParameter)
+        bool IUserInterface.CanCombine(Parameter parameter) =>
+            parameter switch
             {
-                // Grids that must be entered rather than selected can be combined, as an entry grid will appear at the top.
-                return !frameParameter.CanSelect;
-            }
-            return true;
-        }
+                Frame2DParameter => false,
+                GroupedCovarianceParameter => false,
+                FrameParameter frameParameter => !frameParameter.CanSelect,// Grids that must be entered rather than selected can be combined, as an entry grid will appear at the top.
+                _ => true,
+            };
 
-        internal void PuntThroughEventLoop(Exception ex)
-        {
-            MainWindow.PuntThroughEventLoop(ex);
-        }
-
-        internal void EraseAnyOutstandingParameters()
+        void ISdApplication.EraseAnyOutstandingParameters()
         {
             outstandingParameters = null;
         }
 
-        ParameterBag IUserInterface.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
+        ParameterBag? IUserInterface.FillAndValidateCombinedParameters(ParameterBag context)
         {
-            if (null == MainWindow)
+            if (MainWindow is null)
                 throw new Exception("Attempt to fill combined parameters with no main window open");
-            if (null == outstandingParameters || outstandingParameters.Count == 0)
+            if (outstandingParameters is null || outstandingParameters.Count == 0)
                 return new ParameterBag();
-            return MainWindow.FillAndValidateCombinedParameters(this, processor, context, outstandingParameters);
+            return MainWindow.FillAndValidateCombinedParameters(context, outstandingParameters);
         }
 
-        ParameterBag IUserInterface.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
+        ParameterBag? IUserInterface.FillParameter(Parameter parameter, ParameterBag context, bool shouldCombine)
         {
             if (shouldCombine)
             {
-                if (null == outstandingParameters)
-                    outstandingParameters = new List<Parameter>();
+                outstandingParameters ??= new List<Parameter>();
                 outstandingParameters.Add(parameter);
                 return null;
             }
 
             // We can't combine the parameter.  Check whether we need to acquire it at all.
-            if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(processor, context))
+            if (parameter.HasAcquireIfTrue && !parameter.AcquireIfTrue(TemplateProcessorFactory.CreateTemplateProcessor(), context))
                     return null;
 
             // We can't combine the parameter and need to acquire it.
             bool lastHadValidationError = false;
             while (true)
             {
-                ImmediateParameterFiller filler = new() { Context = context, Processor = processor, IsRepeatAfterValidationError = lastHadValidationError };
+                ImmediateParameterFiller filler = new(context, lastHadValidationError, this, SdPreferences, TemplateProcessorFactory, UiPreferences, this);
                 parameter.Accept(filler);
 
                 // Validate; if no errors, stop.  If there are errors, show them and go round again.
-                string validationResult = null;
-                if (null != parameter.Validators)
+                string? validationResult = null;
+                if (parameter.Validators is not null)
                 {
                     foreach (Validator validator in parameter.Validators)
                     {
@@ -738,7 +665,7 @@ namespace StatsDirect.UI
                             break;
                     }
                 }
-                if (null == validationResult)
+                if (validationResult is null)
                     return filler.OutputParameters;
 
                 MsgboxX(validationResult, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -746,7 +673,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public string Validate(Validator validator, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
+        public string? Validate(Validator validator, Parameter parameter, ParameterBag filledParameters, string failedValidationMessage)
         {
             ValidationResult validationResult = ValidationProcessor.Validate(this, validator.ValidatorName, parameter, filledParameters, failedValidationMessage);
             switch (validationResult.Validity)
@@ -756,63 +683,47 @@ namespace StatsDirect.UI
                 case Validity.Invalid:
                     return validationResult.FailedValidationMessage;
                 case Validity.NeedMoreInformation:
-                    bool result = GetBoolean(validationResult.PromptForMoreInformation, validationResult.TitleForMoreInformation, false, validationResult.HelpContextId, out bool wasCancelled);
+                    bool result = ((ISdApplication)this).GetBoolean(validationResult.PromptForMoreInformation, validationResult.TitleForMoreInformation, false, validationResult.HelpContextId, out bool wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                     ValidationAction validationAction = result ? validationResult.ActionOnMoreInformationYes : validationResult.ActionOnMoreInformationNo;
-                    switch (validationAction)
+                    return validationAction switch
                     {
-                        case ValidationAction.CancelOperation:
-                            throw new TemplateOperationCancelledException();
-                        case ValidationAction.RequestAgain:
-                            return validationResult.FailedValidationMessage;
-                        case ValidationAction.UseAsIs:
-                            return null;
-                        default:
-                            throw new Exception("Unknown validation action requested");
-                    }
+                        ValidationAction.CancelOperation => throw new TemplateOperationCancelledException(),
+                        ValidationAction.RequestAgain => validationResult.FailedValidationMessage,
+                        ValidationAction.UseAsIs => null,
+                        _ => throw new Exception("Unknown validation action requested"),
+                    };
                 default:
                     throw new Exception("Unknown validity");
             }
         }
 
-        static void PrepareParameter(ITemplateProcessor processor, PickFromListParameter parameter, ParameterBag context)
+        static void PrepareParameter(PickFromListParameter parameter, ParameterBag context)
         {
             // TODO: Move logic out of SetOperation() into here
         }
 
-        private ParameterBag FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)
+        private ParameterBag? FillChartOptions(Charting.ChartDefinition ChartDefinition, ParameterBag context)
         {
-            ITemplateHost ith = this;
-            ITemplateProcessor processor = new TemplateProcessor(ith);
             ChartOptionsParameter chartOptionsParameter = new("dummy", ChartDefinition);
-            ith.FillParameter(processor, chartOptionsParameter, context, true);
-            return ith.FillAndValidateCombinedParameters(processor, context);
+            TemplateHost.FillParameter(chartOptionsParameter, context, true);
+            return TemplateHost.FillAndValidateCombinedParameters(context);
         }
 
-        internal void NoteEndOfSelection(bool ok)
+        void ISdApplication.NoteEndOfSelection(bool ok)
         {
             MainWindow.NoteEndOfSelection(ok);
         }
 
-        internal bool SelectCells(string fullSelectionMessage, string cancelButtonLabel, bool canSelectMultipleRows, bool allowUserToPivot, out bool wasPivoted)
+        bool ISdApplication.SelectCells(string fullSelectionMessage, string cancelButtonLabel, bool canSelectMultipleRows, bool allowUserToPivot, out bool wasPivoted)
         {
             MainWindow.CanSelectMultipleRows = canSelectMultipleRows;
             MainWindow.CanSelectGroupMethod = allowUserToPivot;
             if (allowUserToPivot)
-                MainWindow.GroupsByIdentifier = Preferences.SelectGroupsByIdentifier;
+                MainWindow.GroupsByIdentifier = UiPreferences.SelectGroupsByIdentifier;
             return MainWindow.SelectCells(fullSelectionMessage, cancelButtonLabel, out wasPivoted);
         }
-
-        /// <summary>
-        /// Returns a display value of Amount, rounded to DisplayDecimalPlaces if sensible.
-        /// </summary>
-        /// <returns></returns>
-        public string RoundU(double amount) => Formatting.XRound(amount, Preferences.DisplayDecimalPlaces);
-
-        string IFormatting.pval(double p) => Formatting.pval(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
-
-        string IFormatting.pval_half(double p) => Formatting.pval_half(p, Preferences.PDecimalPlaces, Preferences.UseScientificNotationForSmallPValues);
 
         /// <summary>
         /// An expected error has occurred.  Tell the user in a suitable manner.
@@ -820,11 +731,11 @@ namespace StatsDirect.UI
         /// <param name="explanation">An explanation of what the application was doing that caused the error, in terms a user could follow</param>
         /// <param name="ex">The exception that was expected</param>
         /// <param name="showHelpButton"></param>
-        internal void FriendlyError(string explanation, Exception ex, bool showHelpButton)
+        void ISdApplication.FriendlyError(string explanation, Exception ex, bool showHelpButton)
         {
-            MsgboxX(explanation + (null == ex ? string.Empty : "\r\n" + ex.Message), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
+            MsgboxX(explanation + (ex is null ? string.Empty : Environment.NewLine + ex.Message), MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "StatsDirect", showHelpButton);
             if (null != ex)
-                WriteToBlackbox(explanation, ex);
+                LastChanceCatcher.WriteToBlackbox(explanation, ex);
         }
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon)
@@ -837,10 +748,10 @@ namespace StatsDirect.UI
             using (new DefaultCursor())
             {
                 if (showHelpButton)
-                    return MsgboxX(text, buttons, icon, caption, SoleInstance.ActiveHelpTopic, defaultButton);
+                    return MsgboxX(text, buttons, icon, caption, ActiveHelpTopic, defaultButton);
 
                 // Use a Windows message box if our own interface isn't visible; use our own if it is.
-                if (null == MainWindow || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
+                if (MainWindow is null || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
                     return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0);
                 return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, null, HelpNavigator.TableOfContents, null);
             }
@@ -861,18 +772,21 @@ namespace StatsDirect.UI
 
         public DialogResult MsgboxX(string text, MessageBoxButtons buttons, MessageBoxIcon icon, string caption, int helpTopic, MessageBoxDefaultButton defaultButton = MessageBoxDefaultButton.Button1)
         {
-            if (null == MainWindow || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
-                return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
-            return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
+            if (MainWindow is null || !MainWindow.Visible || MainWindow.WindowState == FormWindowState.Minimized || ModalDialogShowing())
+                return MessageBox.Show(MainWindow, text, caption, buttons, icon, defaultButton, 0, SDConfiguration.HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
+            return MainWindow.ShowModalMessage(text, caption, buttons, icon, defaultButton, SDConfiguration.HelpFilePath, HelpNavigator.TopicId, helpTopic.ToString());
         }
 
+        /// <summary>
+        /// TODO: This is in ISdApplication and in IUserInterface, and probably shouldn't be.
+        /// </summary>
         public bool GetBoolean(string prompt, string caption, bool defaultValue, out bool cancelled)
         {
             cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, true) == DialogResult.Yes;
         }
 
-        bool GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
+        bool ISdApplication.GetBoolean(string prompt, string caption, bool defaultValue, int helpTopic, out bool Cancelled)
         {
             Cancelled = false;
             return MsgboxX(prompt, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption, helpTopic) == DialogResult.Yes;
@@ -884,16 +798,15 @@ namespace StatsDirect.UI
         /// <param name="parameter"></param>
         /// <returns></returns>
         /// <remarks>The returned bag may contain key->null pairs; it is up to the caller to handle this.</remarks>
-        private ParameterBag FillSingleParameter(Parameter parameter)
+        private ParameterBag? FillSingleParameter(Parameter parameter)
         {
             ITemplateHost host = this;
-            ITemplateProcessor processor = new TemplateProcessor(host);
             ParameterBag context = new();
-            host.FillParameter(processor, parameter, context, true);
-            return host.FillAndValidateCombinedParameters(processor, context);
+            host.FillParameter(parameter, context, true);
+            return host.FillAndValidateCombinedParameters(context);
         }
 
-        public int GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
+        int ISdApplication.GetInteger(string prompt, string caption, int defaultValue, out bool cancelled)
         {
             const string key = "solo";
             IntegerParameter parameter = new()
@@ -903,20 +816,25 @@ namespace StatsDirect.UI
                 DefaultValueExpression = new Expression(defaultValue.ToString()),
                 CancelSkipsParameter = "Skip"
             };
-            ParameterBag results = FillSingleParameter(parameter);
-            cancelled = null == results || !results.ContainsKey(key) || null == results[key];
-            return cancelled ? 0 : results[key].AsInt32;
+            ParameterBag? results = FillSingleParameter(parameter);
+            cancelled = results is null || !results.ContainsKey(key) || null == results[key];
+            return cancelled
+                ? 0
+                : results[key].AsInt32;
         }
 
-        public string GetString(string prompt, string caption, string defaultValue) => Prompt(prompt, caption, defaultValue);
+        string? ISdApplication.GetString(string prompt, string caption, string defaultValue) => Prompt(prompt, caption, defaultValue);
 
+        /// <summary>
+        /// TODO: This is in ISdApplication and in IUserInterface, and probably shouldn't be.
+        /// </summary>
         public void Error(string message, string caption) => MsgboxX(message, MessageBoxButtons.OK, MessageBoxIcon.Error, caption, true);
 
         IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
         {
             if (display)
                 MainWindow?.StartProgress(operationDescription, provideProgress);
-            return new SdProgressBarHolder(display);
+            return new SdProgressBarHolder(display, this);
         }
 
         private bool UpdateProgress(double fractionComplete) => null != MainWindow && MainWindow.UpdateProgress(fractionComplete);
@@ -934,7 +852,7 @@ namespace StatsDirect.UI
             return DialogResult.OK == result;
         }
 
-        ParameterBag IUserInterface.Amend(IFillable fillable, ParameterBag context)
+        ParameterBag? IUserInterface.Amend(IFillable fillable, ParameterBag context)
         {
             return fillable.FillerToUse switch
             {
@@ -954,38 +872,24 @@ namespace StatsDirect.UI
             return new ParameterBag();
         }
 
-        private ParameterBag AmendUsingControl(IFillable fillable)
+        private ParameterBag? AmendUsingControl(IFillable fillable)
         {
-            ITemplateHost ith = this;
-            ITemplateProcessor processor = new TemplateProcessor(ith);
             ParameterBag context = new();
             FillableParameter fillableParameter = new("dummy", fillable);
-            ith.FillParameter(processor, fillableParameter, context, true);
-            ParameterBag filledParameters = ith.FillAndValidateCombinedParameters(processor, context);
+            TemplateHost.FillParameter(fillableParameter, context, true);
+            ParameterBag? filledParameters = TemplateHost.FillAndValidateCombinedParameters(context);
             return filledParameters;
         }
 
-        private ParameterBag Amend(Builtins.CategoriseOptions categoriseOptions)
+        private ParameterBag? Amend(Builtins.CategoriseOptions categoriseOptions)
         {
-            using frmCategorise options = new(categoriseOptions);
+            using frmCategorise options = new(categoriseOptions, this);
             using (new DefaultCursor())
             {
                 options.ShowDialog(MainWindow);
             }
             return options.UserCancelled ? null : new ParameterBag();
         }
-
-        /*
-    private ParameterBag Amend(Builtins.ChartExplorerOptions options)
-    {
-        using (frmChartExplorer f = new frmChartExplorer(options))
-        {
-        f.ShowDialog(mainWindow);
-        bool userCancelled = f.UserCancelled;
-        }
-        return !userCancelled;
-    }
-         */
 
         private ParameterBag Amend(Builtins.SummaryStatisticsOptions summaryStatisticsOptions)
         {
@@ -997,107 +901,13 @@ namespace StatsDirect.UI
             return new ParameterBag();
         }
 
-        public SDPreferences Preferences => preferences ??= LoadPreferences();
+        bool ISdApplication.SelectingData => null != MainWindow && MainWindow.SelectingData;
 
-        private class SDPreferencesImpl : SDPreferences
+        public Operation? Operation { get; set; }
+
+        void ISdApplication.ShowCurrentHelp()
         {
-            public bool UseScientificNotationForSmallPValues
-            {
-                get => Properties.Settings.Default.UseScientificNotationForSmallPValues;
-                set => Properties.Settings.Default.UseScientificNotationForSmallPValues = value;
-            }
-
-            public bool CanDefaultConfidenceInterval
-            {
-                get => Properties.Settings.Default.CanDefaultConfidenceInterval;
-                set => Properties.Settings.Default.CanDefaultConfidenceInterval = value;
-            }
-
-            public double DefaultConfidenceInterval
-            {
-                get => Properties.Settings.Default.DefaultConfidenceInterval;
-                set => Properties.Settings.Default.DefaultConfidenceInterval = value;
-            }
-
-            public bool SelectGroupsByIdentifier
-            {
-                get => Properties.Settings.Default.SelectGroupsByIdentifier;
-                set => Properties.Settings.Default.SelectGroupsByIdentifier = value;
-            }
-
-            public double MetaCC
-            {
-                get => Properties.Settings.Default.MetaCC;
-                set => Properties.Settings.Default.MetaCC = value;
-            }
-
-            public bool MetaExact
-            {
-                get => Properties.Settings.Default.MetaExact;
-                set => Properties.Settings.Default.MetaExact = value;
-            }
-
-            public bool DelayContinuityCorrection
-            {
-                get => Properties.Settings.Default.DelayContinuityCorrection;
-                set => Properties.Settings.Default.DelayContinuityCorrection = value;
-            }
-
-            public int DisplayDecimalPlaces
-            {
-                get => Properties.Settings.Default.DisplayDecimalPlaces;
-                set => Properties.Settings.Default.DisplayDecimalPlaces = value;
-            }
-
-            public int PDecimalPlaces
-            {
-                get => Properties.Settings.Default.PDecimalPlaces;
-                set => Properties.Settings.Default.PDecimalPlaces = value;
-            }
-
-            public int MetaPlotMethod
-            {
-                get => Properties.Settings.Default.MetaPlotMethod;
-                set => Properties.Settings.Default.MetaPlotMethod = value;
-            }
-
-            public bool MetaPlotCI
-            {
-                get => Properties.Settings.Default.MetaPlotCI;
-                set => Properties.Settings.Default.MetaPlotCI = value;
-            }
-
-            public string DECP_CHAR => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-
-            public string Numeric_Thousands_Separator => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
-
-            public int MaxRows => 64000;
-
-            public bool ShouldKeepData
-            {
-                get => Properties.Settings.Default.ShouldKeepData;
-                set => Properties.Settings.Default.ShouldKeepData = value;
-            }
-
-            public bool ShouldUseColour
-            {
-                get => Properties.Settings.Default.ShouldUseColour;
-                set => Properties.Settings.Default.ShouldUseColour = value;
-            }
-        }
-
-        private static SDPreferences LoadPreferences()
-        {
-            return new SDPreferencesImpl();
-        }
-
-        internal bool SelectingData => null != MainWindow && MainWindow.SelectingData;
-
-        public Operation Operation { get; set; }
-
-        internal void ShowCurrentHelp()
-        {
-            ShowHelp(MainWindow);
+            ((ISdApplication)this).ShowHelp(MainWindow);
         }
 
         /// <summary>
@@ -1107,19 +917,19 @@ namespace StatsDirect.UI
         /// <param name="caption"></param>
         /// <param name="defaultValue"></param>
         /// <returns>null if the user cancelled, otherwise the entered value.</returns>
-        private string Prompt(string prompt, string caption, string defaultValue)
+        private string? Prompt(string prompt, string caption, string defaultValue)
         {
-            using frmInputBox ib = new(prompt, caption, defaultValue);
+            using frmInputBox ib = new(prompt, caption, defaultValue, this);
             ib.ShowDialog(MainWindow);
             if (ib.UserCancelled)
                 return null;
             return ib.Value;
         }
 
-        internal void NoteRecentFile(string path, bool openedOk)
+        void ISdApplication.NoteRecentFile(string path, bool openedOk)
         {
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
-            System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList ?? new System.Collections.Specialized.StringCollection();
+            IList<string> recentFiles = UiPreferences.RecentFileList ?? new List<string>();
             if (recentFiles.Contains(path))
                 recentFiles.Remove(path);
             if (openedOk)
@@ -1131,32 +941,26 @@ namespace StatsDirect.UI
                     recentFiles.RemoveAt(recentFiles[0].Equals(SDConfiguration.MyTestFilePath) ? 1 : 0);
                 }
             }
-            Properties.Settings.Default.RecentFileList = recentFiles;
+            UiPreferences.RecentFileList = recentFiles;
             MainWindow?.UpdateFileList();
         }
 
-        internal IList<string> RecentFiles
+        IReadOnlyList<string> ISdApplication.RecentFiles
         {
             get
             {
                 // Stored in reverse order (most recent last), so reverse on the way out
-                System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList;
-                IList<string> output = new List<string>();
-                if (null == recentFiles)
-                {
-                    recentFiles = new System.Collections.Specialized.StringCollection();
-                }
+                IList<string> recentFiles = UiPreferences.RecentFileList ?? new List<string>();
+                List<string> output = new();
 
-                string appPath = Path.GetDirectoryName(Application.ExecutablePath);
+                string? appPath = Path.GetDirectoryName(Application.ExecutablePath);
                 if (null != appPath)
                 {
                     for (int i = recentFiles.Count - 1; i >= 0; --i)
                     {
                         // Remove references to anything in the installation directory
                         if (!recentFiles[i].StartsWith(appPath))
-                        {
                             output.Add(recentFiles[i]);
-                        }
                     }
                 }
 
@@ -1170,87 +974,11 @@ namespace StatsDirect.UI
             }
         }
 
-        public void ReplayWithCurrentData(string operationName, string freezeDriedData)
-        {
-            ParameterBag parameters = ParameterBag.DeserializeAndRefillForRedo(freezeDriedData, this);
-            if (null != parameters)
-            {
-                if (null != MainWindow)
-                {
-                    Operation operation = TemplateFactory.Operations[operationName];
-                    MainWindow.DoOperation(operation, parameters, true);
-                }
-            }
-        }
-
-        void IRefillSource.Refill(IList<IVariable> variables)
-        {
-            // Split up the variables, which might occasionally have come from more than one selection, into their different selections.
-            Dictionary<int, List<IVariable>> variablesByOriginGroup = new();
-            foreach (IVariable variable in variables)
-            {
-                if (null == variable.Origin)
-                    continue;
-                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out List<IVariable> variablesByThisGroup))
-                {
-                    variablesByThisGroup = new List<IVariable>();
-                    variablesByOriginGroup.Add(variable.Origin.OriginGroup, variablesByThisGroup);
-                }
-                variablesByThisGroup.Add(variable);
-            }
-
-            // For each selection, check they all have the same workbook (we can't handle cross-workbook selections as we hand off to an IGrid), load it and delegate the refill to it.
-            foreach (List<IVariable> candidates in variablesByOriginGroup.Values)
-            {
-                string workbookPath = null;
-                bool atLeastOneFailedVariable = false;
-                foreach (IVariable candidate in candidates)
-                {
-                    if (candidate.Origin is not WorksheetOrigin worksheetOrigin)
-                    {
-                        atLeastOneFailedVariable = true;
-                        break;
-                    }
-                    if (null == worksheetOrigin.WorkbookPath)
-                    {
-                        atLeastOneFailedVariable = true;
-                        break;
-                    }
-                    if (null == workbookPath)
-                        workbookPath = worksheetOrigin.WorkbookPath;
-                    else
-                    {
-                        if (!workbookPath.Equals(worksheetOrigin.WorkbookPath))
-                        {
-                            atLeastOneFailedVariable = true;
-                            break;
-                        }
-                    }
-                }
-                if (atLeastOneFailedVariable)
-                {
-                    // Can't refill this
-                    break;
-                }
-
-                StatsDirectForm gridWindow = MainWindow.FindOrOpenGrid(workbookPath);
-                if (null == gridWindow)
-                {
-                    FriendlyError("Cannot replay the operation as it took data from the unsaved workbook \"" + workbookPath + "\", which is no longer open.", null, false);
-                    throw new TemplateOperationCancelledException();
-                }
-                IGrid grid = (IGrid)gridWindow;
-                grid.Refill(candidates);
-            }
-        }
-
         IDictionary<string, ParameterBag> ISession.SessionParametersPerOperation => sessionParametersPerOperation ??= new Dictionary<string, ParameterBag>();
 
         ParameterBag ISession.SessionParametersAcrossOperations => sessionParametersAcrossOperations ??= new ParameterBag();
 
-        public string TemplateFileForNewReports => Path.Combine(SDConfiguration.TemplatePath, "blank.rtf");
-
-        internal void ClearBatchMode()
+        public void ClearBatchMode()
         {
             // Ensure no windows might remember anything to do with batching
             foreach (WindowInformation wi in Windows)
@@ -1260,14 +988,14 @@ namespace StatsDirect.UI
             }
         }
 
-        public void CheckForUpdates()
+        void ISdApplication.CheckForUpdates()
         {
-            ShowOrQueueDialog(new frmUpdateCheck(false), null);
+            ((ISdApplication)this).ShowOrQueueDialog(new frmUpdateCheck(false, this), null);
         }
 
-        internal void CloseAndUpdate()
+        void ISdApplication.CloseAndUpdate()
         {
-            if (null == MainWindow)
+            if (MainWindow is null)
             {
                 FetchTheUpgrade();
                 Application.Exit();
@@ -1279,101 +1007,62 @@ namespace StatsDirect.UI
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        public static void WriteToBlackbox(string message, Exception ex)
-        {
-            try
-            {
-                using Stream boxStream = File.OpenWrite(Path.Combine(SDConfiguration.MyStatsDirectFolder, "Blackbox.txt"));
-                using TextWriter boxWriter = new StreamWriter(boxStream, Encoding.UTF8);
-                boxWriter.WriteLine("StatsDirect exception log generated at {0} local time ({1} UTC)", DateTime.Now, DateTime.UtcNow);
-                boxWriter.WriteLine();
-                boxWriter.WriteLine("This file contains a trace of what StatsDirect was doing when your error occurred. If we've asked you for it, please attach the file or, if you prefer, paste the contents into an email to us.");
-                boxWriter.WriteLine();
-                if (null != message)
-                {
-                    boxWriter.WriteLine("Message generated from StatsDirect: {0}", message);
-                    boxWriter.WriteLine();
-                }
-                WriteExceptionToBlackbox(boxWriter, ex, false);
-            }
-            catch (Exception)
-            {
-                // If our black box can't operate, we're hosed.  Ignore this error!
-            }
-        }
-
-        private static void WriteExceptionToBlackbox(TextWriter boxWriter, Exception ex, bool isInnerException)
-        {
-            if (null == ex)
-                return;
-
-            if (isInnerException)
-                boxWriter.WriteLine("Inner exception:");
-            boxWriter.WriteLine(ex.GetType().FullName);
-            boxWriter.WriteLine(ex.Message);
-            boxWriter.WriteLine(ex.Source);
-            boxWriter.WriteLine(ex.StackTrace);
-            if (null != ex.Data)
-                foreach (DictionaryEntry de in ex.Data)
-                    boxWriter.WriteLine("{0} = {1}", de.Key, de.Value);
-
-            if (null != ex.InnerException)
-                WriteExceptionToBlackbox(boxWriter, ex.InnerException, true);
-            boxWriter.WriteLine();
-        }
-
-        internal void EnsureBuiltInMenuItemsCanShowHelp(MenuStrip menuStrip)
+        void ISdApplication.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip menuStrip)
         {
             MainWindow.EnsureBuiltInMenuItemsCanShowHelp(menuStrip);
         }
 
-        public bool ClosingForUpgrade { get; private set; }
+        Form ISdApplication.DialogOwner => MainWindow;
 
-        public static bool IsRunningOnMono => Type.GetType("Mono.Runtime") != null;
-
-        public Form DialogOwner => MainWindow;
+        bool ISdApplication.IsRunningOnMono => Type.GetType("Mono.Runtime") is not null;
 
         public bool InOperation => MainWindow.InOperation;
 
-        internal void DoOperation(string operationName)
+        void ISdApplication.DoOperation(string operationName)
         {
             MainWindow.DoOperation(operationName);
         }
 
-        internal bool IsSelecting => MainWindow.IsSelecting;
+        bool ISdApplication.IsSelecting => MainWindow.IsSelecting;
 
-        public Form ActiveMdiChild => MainWindow.ActiveMdiChild;
+        Form ISdApplication.ActiveMdiChild => MainWindow.ActiveMdiChild;
 
         internal void OpenFileOnUiThread(string path)
         {
-            if (null != MainWindow)
-                if (MainWindow.InvokeRequired)
-                    MainWindow.Invoke(new Action(() => OpenFile(path, false)));
+            if (MainWindow.InvokeRequired)
+                MainWindow.Invoke(new Action(() => ((ISdApplication)this).OpenFile(path, false)));
+        }
+
+        void ISdApplication.PuntThroughEventLoop(Exception ex) => MainWindow.PuntThroughEventLoop(ex);
+
+        WindowInformation? ISdApplication.FindWindowInformationForPath(string path)
+        {
+            foreach (WindowInformation wi in Windows)
+                if (wi.IsFile(path))
+                    return wi;
+            return null;
         }
 
         private class SdProgressBarHolder : IProgressBar
         {
             private bool Display { get; }
+            private SdApplication SdApplication { get; }
 
-            public SdProgressBarHolder(bool display)
+            public SdProgressBarHolder(bool display, SdApplication sdApplication)
             {
                 Display = display;
+                SdApplication = sdApplication;
             }
 
             public void Finish()
             {
                 if (Display)
-                    SoleInstance.FinishProgress();
+                    SdApplication.FinishProgress();
             }
 
             bool IProgressBar.Update(double fractionComplete)
             {
-                return Display && SoleInstance.UpdateProgress(fractionComplete);
+                return Display && SdApplication.UpdateProgress(fractionComplete);
             }
 
             #region IDisposable Support

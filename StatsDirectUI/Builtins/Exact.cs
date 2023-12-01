@@ -8,8 +8,15 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    public static class Exact
+    public class Exact
     {
+        private IProgressBarHost ProgressBarHost { get; }
+
+        public Exact(IProgressBarHost progressBarHost)
+        {
+            ProgressBarHost = progressBarHost;
+        }
+
         public static StepOutput RptExactSign(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
@@ -385,7 +392,7 @@ namespace StatsDirect.Builtins
             double s = bc;
 
             if (r < s)
-                Utilities.Utilities.Swap(ref r, ref s);
+                (s, r) = (r, s);
             double p = (1 - gamma) / 2.0;
             double dfn = 2.0 * (s + 1.0);
             double dfd = 2.0 * r;
@@ -410,7 +417,7 @@ namespace StatsDirect.Builtins
             if (ll != Constant.MISSING && ul != Constant.MISSING)
             {
                 if (ul < ll)
-                    Utilities.Utilities.Swap(ref ll, ref ul);
+                    (ul, ll) = (ll, ul);
             }
             outputParameters.AddOutput("pc", gamma * 100);
             if (ll == Constant.MISSING)
@@ -436,7 +443,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput RptExactORCML(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptExactORCML(ParameterBag parameters)
         {
             // Gart replaced by CML in May 2001
 
@@ -455,7 +462,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_a2", c);
             outputParameters.AddOutput("tab_b2", d);
 
-            ExactBB.OddsRatioCMLE(host, cco, a, b, c, d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
+            new ExactBB(ProgressBarHost).OddsRatioCMLE(cco, a, b, c, d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
             double odr = ExactBB.OddsRatio(a, b, c, d);
             outputParameters.AddOutput("odds", odr);
 

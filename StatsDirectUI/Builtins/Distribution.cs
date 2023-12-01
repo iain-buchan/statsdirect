@@ -2,32 +2,39 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.Builtins
 {
-    public static class Distribution
+    public class Distribution
     {
-        public static StepOutput DistNormal(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.Z);
+        private IUserInterface UserInterface { get; }
 
-        public static StepOutput DistT(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.T);
+        public Distribution(IUserInterface userInterface)
+        {
+            UserInterface = userInterface;
+        }
 
-        public static StepOutput DistF(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.F);
+        public StepOutput DistNormal(ParameterBag parameters) => DistributionOf(parameters, DistributionType.Z);
 
-        public static StepOutput DistChiSquare(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.ChiSq);
+        public StepOutput DistT(ParameterBag parameters) => DistributionOf(parameters, DistributionType.T);
 
-        public static StepOutput DistQ(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.Q);
+        public StepOutput DistF(ParameterBag parameters) => DistributionOf(parameters, DistributionType.F);
 
-        public static StepOutput DistBinomial(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.Binomial);
+        public StepOutput DistChiSquare(ParameterBag parameters) => DistributionOf(parameters, DistributionType.ChiSq);
 
-        public static StepOutput DistPoisson(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.Poisson);
+        public StepOutput DistQ(ParameterBag parameters) => DistributionOf(parameters, DistributionType.Q);
 
-        public static StepOutput DistKendall(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.Kendall);
+        public StepOutput DistBinomial(ParameterBag parameters) => DistributionOf(parameters, DistributionType.Binomial);
 
-        public static StepOutput DistSpearman(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.Rho);
+        public StepOutput DistPoisson(ParameterBag parameters) => DistributionOf(parameters, DistributionType.Poisson);
 
-        public static StepOutput DistNonCentralT(IUserInterface host, ParameterBag parameters) => DistributionOf(host, parameters, DistributionType.NonCentralT);
+        public StepOutput DistKendall(ParameterBag parameters) => DistributionOf(parameters, DistributionType.Kendall);
 
-        private static StepOutput DistributionOf(IUserInterface host, ParameterBag parameters, DistributionType selectedTest)
+        public StepOutput DistSpearman(ParameterBag parameters) => DistributionOf(parameters, DistributionType.Rho);
+
+        public StepOutput DistNonCentralT(ParameterBag parameters) => DistributionOf(parameters, DistributionType.NonCentralT);
+
+        private StepOutput DistributionOf(ParameterBag parameters, DistributionType selectedTest)
         {
             DistributionOptions distributionOptions = new() { SelectedTest = selectedTest };
-            ParameterBag outputParameters = host.Amend(distributionOptions, parameters);
+            ParameterBag? outputParameters = UserInterface.Amend(distributionOptions, parameters);
             return new StepOutput(outputParameters);
         }
     }

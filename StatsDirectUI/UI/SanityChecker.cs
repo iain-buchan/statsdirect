@@ -10,7 +10,14 @@ namespace StatsDirect.UI
     /// </summary>
     internal class SanityChecker
     {
-        public static void Check()
+        private IScriptEngineHost ScriptEngineHost { get; }
+
+        public SanityChecker(IScriptEngineHost scriptEngineHost)
+        {
+            ScriptEngineHost = scriptEngineHost;
+        }
+
+        public void Check()
         {
             List<Operation> operations = new();
             operations.AddRange(TemplateFactory.Operations.Values);
@@ -22,7 +29,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// Designed to check that anything that could be compiled and run by our internal compiler at least compiles.
         /// </summary>
-        private static void CheckAllDynamicContentCompiles(IList<Operation> operations)
+        private void CheckAllDynamicContentCompiles(IList<Operation> operations)
         {
             foreach (Operation operation in operations)
                 CheckAllDynamicContentCompiles(operation);
@@ -31,13 +38,13 @@ namespace StatsDirect.UI
         /// <summary>
         /// Designed to check that anything that could be compiled and run by our internal compiler at least compiles.
         /// </summary>
-        private static void CheckAllTemplatesParse(IList<Operation> operations)
+        private void CheckAllTemplatesParse(IList<Operation> operations)
         {
             foreach (Operation operation in operations)
                 CheckAllTemplatesParse(operation);
         }
 
-        private static void CheckAllDynamicContentCompiles(Operation operation)
+        private void CheckAllDynamicContentCompiles(Operation operation)
         {
             foreach (CustomValidator customValidator in operation.CustomValidators)
                 CheckAllDynamicContentCompiles(customValidator, operation.Name + ".CustomValidators");
@@ -48,75 +55,76 @@ namespace StatsDirect.UI
             CheckAllDynamicContentCompiles(operation.Steps, operation.Name + ".Steps");
         }
 
-        private static void CheckAllTemplatesParse(Operation operation)
+        private void CheckAllTemplatesParse(Operation operation)
         {
             CheckAllTemplatesParse(operation.Steps, operation.Name + ".Steps");
         }
 
-        private static void CheckAllDynamicContentCompiles(IList<Step> steps, string prefix)
+        private void CheckAllDynamicContentCompiles(IList<Step> steps, string prefix)
         {
             for (int i = 0; i < steps.Count; i++)
-                steps[i].Accept(new DynamicContentStepChecker(prefix + "[" + i + "]"));
+                steps[i].Accept(new DynamicContentStepChecker(this, $"{prefix}[{i}]"));
         }
 
-        private static void CheckAllTemplatesParse(IList<Step> steps, string prefix)
+        private void CheckAllTemplatesParse(IList<Step> steps, string prefix)
         {
             for (int i = 0; i < steps.Count; i++)
-                steps[i].Accept(new TemplateStepChecker(prefix + "[" + i + "]"));
+                steps[i].Accept(new TemplateStepChecker($"{prefix}[{i}]"));
         }
 
-        private static void CheckAllDynamicContentCompiles(IList<Parameter> parameters)
+        private void CheckAllDynamicContentCompiles(IList<Parameter> parameters)
         {
             for (int i = 0; i < parameters.Count; i++)
-                parameters[i].Accept(new DynamicContentParameterChecker());
+                parameters[i].Accept(new DynamicContentParameterChecker(this));
         }
 
-        private static void CheckAllDynamicContentCompiles(SuggestedOperation suggestedOperation, string prefix)
+        private void CheckAllDynamicContentCompiles(SuggestedOperation suggestedOperation, string prefix)
         {
-            if (null == suggestedOperation)
+            if (suggestedOperation is null)
                 return;
             CheckAllDynamicContentCompiles(suggestedOperation.SuggestIf, prefix + "[" + suggestedOperation.Name + "].SuggestIf");
         }
 
-        private static void CheckAllDynamicContentCompiles(Precondition precondition, string prefix)
+        private void CheckAllDynamicContentCompiles(Precondition? precondition, string prefix)
         {
-            if (null == precondition)
+            if (precondition is null)
                 return;
             CheckAllDynamicContentCompiles(precondition.Condition, prefix + ".Condition");
         }
 
-        private static void CheckAllDynamicContentCompiles(Expression condition, string prefix)
+        private void CheckAllDynamicContentCompiles(Expression? condition, string prefix)
         {
-            if (condition?.Body == null)
+            if (condition?.Body is null)
                 return;
             if (!condition.Body.StartsWith("="))
                 return;
             CheckScript(condition.Language, condition.Body.Substring(1), ScriptType.Expression, null, prefix + "." + condition.Body);
         }
 
-        private static void CheckAllDynamicContentCompiles(CustomValidator customValidator, string prefix)
+        private void CheckAllDynamicContentCompiles(CustomValidator customValidator, string prefix)
         {
             CheckScript(customValidator.Language, customValidator.Script, ScriptType.Validator, null, prefix + "." + customValidator.Name);
         }
 
-        private static void CheckAllDynamicContentCompiles(Validator[] validators, string prefix)
+        private void CheckAllDynamicContentCompiles(Validator[] validators, string prefix)
         {
-            if (null == validators)
+            if (validators is null)
                 return;
             foreach (Validator validator in validators)
                 CheckAllDynamicContentCompiles(validator, prefix + "." + validator.ValidatorName);
         }
 
-        private static void CheckAllDynamicContentCompiles(Validator validator, string prefix)
+        private void CheckAllDynamicContentCompiles(Validator validator, string prefix)
         {
             CheckAllDynamicContentCompiles(validator.TestIfTrueExpression, prefix + ".TestIfTrue");
         }
 
-        private static void CheckScript(string language, string script, ScriptType scriptType, string entryPoint, string identifier)
+        private void CheckScript(string language, string script, ScriptType scriptType, string entryPoint, string identifier)
         {
-            IScriptEngine engine = ((ITemplateHost)SdApplication.SoleInstance).GetScriptEngine(language);
-            string result = engine.Check(language, script, scriptType, entryPoint);
-            if (null != result)
+            if (!ScriptEngineHost.TryGetScriptEngine(language, out IScriptEngine? scriptEngine))
+                throw new Exception($"{identifier} failed: could not get script engine for '{language}'");
+            string result = scriptEngine.Check(language, script, scriptType, entryPoint);
+            if (result is not null)
                 throw new Exception(identifier + " failed: " + result);
         }
 
@@ -128,12 +136,19 @@ namespace StatsDirect.UI
 
         private class DynamicContentParameterChecker : IParameterVisitor
         {
-            private static void CheckCommon(Parameter parameter)
+            private SanityChecker parent;
+
+            public DynamicContentParameterChecker(SanityChecker parent)
             {
-                CheckAllDynamicContentCompiles(parameter.AcquireIfTrueExpression, ".AcquireIfTrueExpression");
-                CheckAllDynamicContentCompiles(parameter.PromptExpression, ".PromptExpression");
-                CheckAllDynamicContentCompiles(parameter.RubricExpression, ".RubricExpression");
-                CheckAllDynamicContentCompiles(parameter.Validators, ".Validators");
+                this.parent = parent;
+            }
+
+            private void CheckCommon(Parameter parameter)
+            {
+                parent.CheckAllDynamicContentCompiles(parameter.AcquireIfTrueExpression, ".AcquireIfTrueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.PromptExpression, ".PromptExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.RubricExpression, ".RubricExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.Validators, ".Validators");
             }
 
             private void CheckRange(RangeParameter parameter)
@@ -149,9 +164,9 @@ namespace StatsDirect.UI
             public void Visit(DoubleParameter parameter)
             {
                 CheckRange(parameter);
-                CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
-                CheckAllDynamicContentCompiles(parameter.MaximumValueExpression, ".MaximumValueExpression");
-                CheckAllDynamicContentCompiles(parameter.MinimumValueExpression, ".MinimumValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.MaximumValueExpression, ".MaximumValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.MinimumValueExpression, ".MinimumValueExpression");
             }
 
             public void Visit(FillableParameter parameter)
@@ -162,15 +177,15 @@ namespace StatsDirect.UI
             public void Visit(FrameParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.LengthExpression, ".LengthExpression");
-                CheckAllDynamicContentCompiles(parameter.MaximumColumnsExpression, ".MaximumColumnsExpressio");
-                CheckAllDynamicContentCompiles(parameter.MinimumColumnsExpression, ".MinimumColumnsExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.LengthExpression, ".LengthExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.MaximumColumnsExpression, ".MaximumColumnsExpressio");
+                parent.CheckAllDynamicContentCompiles(parameter.MinimumColumnsExpression, ".MinimumColumnsExpression");
             }
 
             public void Visit(IntegerParameter parameter)
             {
                 CheckRange(parameter);
-                CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
             }
 
             public void Visit(OptionsParameter parameter)
@@ -181,13 +196,13 @@ namespace StatsDirect.UI
             public void Visit(PickVariablesParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.LabelAsExpression, ".LabelAsExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.LabelAsExpression, ".LabelAsExpression");
             }
 
             public void Visit(StringParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
             }
 
             public void Visit(SpecialParameter parameter)
@@ -203,7 +218,7 @@ namespace StatsDirect.UI
             public void Visit(OptionParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
             }
 
             public void Visit(GroupedCovarianceParameter parameter)
@@ -214,10 +229,10 @@ namespace StatsDirect.UI
             public void Visit(Frame2DParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.SubPromptExpression, ".SubPromptExpression");
-                CheckAllDynamicContentCompiles(parameter.LengthExpression, ".LengthExpression");
-                CheckAllDynamicContentCompiles(parameter.MaximumColumnsExpression, ".MaximumColumnsExpressio");
-                CheckAllDynamicContentCompiles(parameter.MinimumColumnsExpression, ".MinimumColumnsExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.SubPromptExpression, ".SubPromptExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.LengthExpression, ".LengthExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.MaximumColumnsExpression, ".MaximumColumnsExpressio");
+                parent.CheckAllDynamicContentCompiles(parameter.MinimumColumnsExpression, ".MinimumColumnsExpression");
             }
 
             public void Visit(EditGridParameter parameter)
@@ -233,7 +248,7 @@ namespace StatsDirect.UI
             public void Visit(DateParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
             }
 
             public void Visit(ConfidenceIntervalParameter parameter)
@@ -249,40 +264,42 @@ namespace StatsDirect.UI
             public void Visit(BooleanParameter parameter)
             {
                 CheckCommon(parameter);
-                CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
+                parent.CheckAllDynamicContentCompiles(parameter.DefaultValueExpression, ".DefaultValueExpression");
             }
         }
 
         private class DynamicContentStepChecker : IStepVisitor
         {
+            private SanityChecker parent;
             private readonly string prefix;
 
-            public DynamicContentStepChecker(string prefix)
+            public DynamicContentStepChecker(SanityChecker parent, string prefix)
             {
+                this.parent = parent;
                 this.prefix = prefix;
             }
 
             public void Visit(IterationStep step)
             {
-                CheckAllDynamicContentCompiles(step.Steps, prefix + ".Steps");
+                parent.CheckAllDynamicContentCompiles(step.Steps, prefix + ".Steps");
             }
 
             public void Visit(ParametersStep step)
             {
-                CheckAllDynamicContentCompiles(step.Parameters);
+                parent.CheckAllDynamicContentCompiles(step.Parameters);
             }
 
             public void Visit(ScriptStep step)
             {
                 ScriptType scriptType = null == step.EntryPoint ? ScriptType.Function : ScriptType.MultipleMethods;
-                CheckScript(step.Language, step.Body, scriptType, step.EntryPoint, prefix);
+                parent.CheckScript(step.Language, step.Body, scriptType, step.EntryPoint, prefix);
             }
 
             public void Visit(TestStep step)
             {
-                CheckAllDynamicContentCompiles(step.Condition, prefix + ".Condition");
-                CheckAllDynamicContentCompiles(step.FalseSteps, prefix + ".FalseSteps");
-                CheckAllDynamicContentCompiles(step.TrueSteps, prefix + ".TrueSteps");
+                parent.CheckAllDynamicContentCompiles(step.Condition, prefix + ".Condition");
+                parent.CheckAllDynamicContentCompiles(step.FalseSteps, prefix + ".FalseSteps");
+                parent.CheckAllDynamicContentCompiles(step.TrueSteps, prefix + ".TrueSteps");
             }
 
             public void Visit(ReportStep step)
@@ -297,8 +314,8 @@ namespace StatsDirect.UI
 
             public void Visit(ChartStep step)
             {
-                CheckAllDynamicContentCompiles(step.XAxisTitleExpression, prefix + ".XAxisTitleExpression");
-                CheckAllDynamicContentCompiles(step.YAxisTitleExpression, prefix + ".YAxisTitleExpression");
+                parent.CheckAllDynamicContentCompiles(step.XAxisTitleExpression, prefix + ".XAxisTitleExpression");
+                parent.CheckAllDynamicContentCompiles(step.YAxisTitleExpression, prefix + ".YAxisTitleExpression");
             }
 
             public void Visit(BuiltinStep step)

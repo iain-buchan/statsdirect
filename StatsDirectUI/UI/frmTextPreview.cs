@@ -10,7 +10,7 @@ namespace StatsDirect.UI
             InitializeComponent();
         }
 
-        private void cmdClose_Click(object sender, EventArgs e)
+        private void cmdClose_Click(object? sender, EventArgs e)
         {
             Close();
         }

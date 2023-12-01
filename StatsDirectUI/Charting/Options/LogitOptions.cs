@@ -1,9 +1,9 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class LogitOptions : GenericOptions
+    public class LogitOptions : AbstractGenericOptions
     {
         public int model;
         public double t;

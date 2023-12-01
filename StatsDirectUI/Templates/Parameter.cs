@@ -35,18 +35,18 @@ namespace StatsDirect.Templates
             return (bool)processor.Evaluate(AcquireIfTrueExpression, parameters);
         }
 
-        public string Prompt(ITemplateProcessor processor, ParameterBag parameters, string defaultPrompt = null)
+        public string? Prompt(ITemplateProcessor processor, ParameterBag parameters, string? defaultPrompt = null)
         {
             if (null == PromptExpression || null == PromptExpression.Body)
                 return defaultPrompt;
             return (string)processor.Evaluate(PromptExpression, parameters);
         }
 
-        public string Rubric(ITemplateProcessor processor, ParameterBag parameters)
+        public string? Rubric(ITemplateProcessor processor, ParameterBag parameters)
         {
             if (null == RubricExpression || null == RubricExpression.Body)
                 return null;
-            return (string)processor.Evaluate(RubricExpression, parameters);
+            return (string?)processor.Evaluate(RubricExpression, parameters);
         }
 
         [XmlIgnore]

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -10,55 +11,51 @@ namespace StatsDirect.UI
     /// </summary>
     public sealed class WindowInformation
     {
-        private WeakReference window;
-        private TabPage tabPage;
-        private string path;
+        private WeakReference? window;
+        private string? path;
 
-        internal StatsDirectForm Window
+        internal StatsDirectForm? Window
         {
             get
             {
-                if (null == window)
+                if (window is null)
                     return null;
                 if (!window.IsAlive)
                     return null;
-                return (StatsDirectForm)window.Target;
+                return (StatsDirectForm?)window.Target;
             }
             set => window = new WeakReference(value);
         }
 
-        internal bool HasWindow => null != window && window.IsAlive;
+        [MemberNotNullWhen(true, nameof(Window))]
+        internal bool HasWindow => window is not null && window.IsAlive;
 
-        internal TabPage TabPage
-        {
-            get => tabPage;
-            set => tabPage = value;
-        }
+        internal TabPage? TabPage { get; set; }
 
-        internal bool IsNew => null == path;
+        internal bool IsNew => path is null;
 
-        internal string FriendlyName
+        internal string? FriendlyName
         {
             get
             {
-                if (null != path)
+                if (path is not null)
                     return System.IO.Path.GetFileNameWithoutExtension(path);
-                if (HasWindow)
+                if (Window is not null)
                     return Window.Text;
-                if (null != tabPage)
-                    return tabPage.Text;
+                if (TabPage is not null)
+                    return TabPage.Text;
                 return null;
             }
             set
             {
                 if (!IsNew)
                     throw new ArgumentException("Can only set the friendly name of a new window");
-                if (HasWindow)
+                if (Window is not null)
                     Window.Text = value;
-                if (null != tabPage)
+                if (TabPage is not null)
                 {
-                    tabPage.Text = value;
-                    tabPage.ToolTipText = value;
+                    TabPage.Text = value;
+                    TabPage.ToolTipText = value;
                 }
             }
         }
@@ -71,40 +68,24 @@ namespace StatsDirect.UI
             set
             {
                 path = value;
-                string fileName = System.IO.Path.GetFileNameWithoutExtension(value);
-                if (HasWindow)
+                string? fileName = System.IO.Path.GetFileNameWithoutExtension(value);
+                if (Window is not null)
                     Window.Text = fileName;
-                if (null != tabPage)
+                if (TabPage is not null)
                 {
-                    tabPage.Text = fileName;
-                    tabPage.ToolTipText = value;
+                    TabPage.Text = fileName;
+                    TabPage.ToolTipText = value;
                 }
             }
         }
 
-        internal void EditCopy()
-        {
-            if (HasWindow)
-                Window.EditCopy();
-        }
+        internal void EditCopy() => Window?.EditCopy();
 
-        internal void EditCut()
-        {
-            if (HasWindow)
-                Window.EditCut();
-        }
+        internal void EditCut() => Window?.EditCut();
 
-        internal void EditPaste()
-        {
-            if (HasWindow)
-                Window.EditPaste();
-        }
+        internal void EditPaste() => Window?.EditPaste();
 
-        internal void Print()
-        {
-            if (HasWindow)
-                Window.Print();
-        }
+        internal void Print() => Window?.Print();
 
         /// <summary>
         /// Returns true iff candidateFilename is the file that this window has open
@@ -113,13 +94,13 @@ namespace StatsDirect.UI
         /// <returns></returns>
         internal bool IsFile(string candidateFilename)
         {
-            if (!window.IsAlive)
+            if (window is null || !window.IsAlive)
                 return false;
 
-            if (null != path)
+            if (path is not null)
                 return path.Equals(candidateFilename);
-            string f = FriendlyName;
-            return null != f && f.Equals(candidateFilename);
+            string? f = FriendlyName;
+            return f is not null && f.Equals(candidateFilename);
         }
     }
 }

@@ -1,27 +1,28 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
+using System.Collections.Generic;
 
 namespace StatsDirect.Charting.Renderer
 {
     class CoxSurvivalOrHazardChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public CoxSurvivalOrHazardChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public CoxSurvivalOrHazardChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -82,35 +83,29 @@ namespace StatsDirect.Charting.Renderer
 
             AssignMarkersToSeries();
 
-            Legend legend = new();
+            List<LegendEntry> legendEntries = new();
             if (options.grouped)
             {
                 for (int k = 1; k <= options.igroups; k++)
                 {
-                    MarkerType legendMarker = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
+                    MarkerType legendMarker = ChartPreferences.MarkerTypes[(k - 1) % 9];
                     if (!options.useMarker)
-                    {
-                        legendMarker = legendMarker.Clone();
-                        legendMarker.MarkerShape = MarkerShape.SurvivalTic;
-                    }
+                        legendMarker = new MarkerType(legendMarker, markerShape: MarkerShape.SurvivalTic);
                     string vq = options.cdat1[options.groupid].Title.Substring(0, Math.Min(20, options.cdat1[options.groupid].Title.Length)) + "=" + options.cdat1[options.groupid].Groups[k - 1].Label;
-                    legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = legendMarker });
+                    legendEntries.Add(new LegendEntry(legendMarker, vq));
                 }
             }
             if (options.stratified)
             {
                 for (int k = 1; k <= options.istrata; k++)
                 {
-                    MarkerType legendMarker = ChartPreferences.MarkerTypes[(k - 1) % 9].Clone();
+                    MarkerType legendMarker = ChartPreferences.MarkerTypes[(k - 1) % 9];
                     if (!options.useMarker)
-                    {
-                        legendMarker = legendMarker.Clone();
-                        legendMarker.MarkerShape = MarkerShape.SurvivalTic;
-                    }
-                    string vq = "Stratum " + k;
-                    legend.LegendEntries.Add(new LegendEntry { Label = vq, MarkerType = legendMarker });
+                        legendMarker = new MarkerType(legendMarker, markerShape: MarkerShape.SurvivalTic);
+                    legendEntries.Add(new LegendEntry(legendMarker, $"Stratum {k}"));
                 }
             }
+            Legend legend = new(something, legendEntries);
 
             StartVectorPlot(null, legend);
 

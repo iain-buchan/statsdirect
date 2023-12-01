@@ -30,7 +30,7 @@ namespace StatsDirect.Numerics
             Q[ 13 ] = 0.999999999999997; 
             Q[ 14 ] = 1.0; 
                 RNG = null; 
-            if ( rug == null ) 
+            if ( rug is null ) 
             { 
                 RNG = new MersenneTwister(); 
                 RNG.Seed( sd ); 

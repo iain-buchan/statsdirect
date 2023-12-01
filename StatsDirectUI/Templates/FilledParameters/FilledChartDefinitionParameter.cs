@@ -6,10 +6,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledChartDefinitionParameter : FilledParameter
     {
-        internal FilledChartDefinitionParameter()
-        {
-        }
-
         public FilledChartDefinitionParameter(FilledParameterDirection direction, ChartDefinition data)
             : base(direction)
         {
@@ -19,11 +15,9 @@ namespace StatsDirect.Templates
 
         public override bool HasData => null != Data;
 
-        public ChartDefinition Data { get; set; }
+        public ChartDefinition Data { get;}
 
         public override object AsObject => Data;
-
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
 
         public override string ToString() => $"FP({Direction}, {Data})";
 

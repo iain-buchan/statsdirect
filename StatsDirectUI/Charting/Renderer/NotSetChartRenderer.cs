@@ -1,13 +1,20 @@
 ﻿using System;
+using System.IO;
 using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
-    class NotSetChartRenderer : AbstractChartRenderer, IChartRenderer
+    public sealed class NotSetChartRenderer : IChartRenderer
     {
-        public NotSetChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public NotSetChartRenderer()
         {
+        }
+
+        Stream? IChartRenderer.DetachAndReturnImageStream() => throw new NotImplementedException();
+
+        string IChartRenderer.GetAscii()
+        {
+            throw new NotImplementedException();
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
@@ -15,9 +22,14 @@ namespace StatsDirect.Charting.Renderer
             throw new NotImplementedException();
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             throw new NotImplementedException();
+        }
+
+        void IDisposable.Dispose()
+        {
+            GC.SuppressFinalize(this);
         }
     }
 }

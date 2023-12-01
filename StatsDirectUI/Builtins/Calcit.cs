@@ -12,9 +12,9 @@ namespace StatsDirect.Builtins
 {
     public class Calcit  
     {
-        private object instance;
-        private MethodInfo methodInfo;
-        public DataType OutputType { get; }
+        private object? instance;
+        private MethodInfo? methodInfo;
+        public DataType? OutputType { get; }
 
         /// <summary>
         /// 
@@ -57,8 +57,8 @@ namespace StatsDirect.Builtins
             functionBuilder.AppendLine("}");
             string cSharpFunction = functionBuilder.ToString();
             CompilerParameters compilerParameters = new();
-            string mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
-            string assemblyPath = Path.GetDirectoryName(mainModulePath);
+            string? mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
+            string? assemblyPath = Path.GetDirectoryName(mainModulePath);
             Debug.Assert(null != assemblyPath);
             compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.exe"));
             compilerParameters.GenerateInMemory = true;
@@ -94,13 +94,13 @@ namespace StatsDirect.Builtins
             return retval;
         }
 
-        public T Evaluate<T>(double[] values)
+        public T? Evaluate<T>(double[] values)
         {
             try
             {
                 object[] parameters = { values};
-                object output = methodInfo.Invoke(instance, parameters);
-                return (T)Convert.ChangeType(output, typeof(T));
+                object? output = methodInfo.Invoke(instance, parameters);
+                return (T?)Convert.ChangeType(output, typeof(T));
             }
             catch (TargetInvocationException tie)
             {
@@ -110,12 +110,12 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public T EvaluateObject<T>(object[] values)
+        public T? EvaluateObject<T>(object[] values)
         {
             try
             {
                 object[] parameters = { values };
-                return (T)methodInfo.Invoke(instance, parameters);
+                return (T?)methodInfo.Invoke(instance, parameters);
             }
             catch (TargetInvocationException tie)
             {

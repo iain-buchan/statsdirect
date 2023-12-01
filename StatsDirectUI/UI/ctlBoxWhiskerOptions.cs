@@ -1,22 +1,26 @@
 using System;
 using System.Windows.Forms;
 using StatsDirect.Charting;
+using StatsDirect.Charting.Options;
+using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
     /// <summary>
     /// A user interface for modifying box+whisker options.
     /// </summary>
-    public partial class ctlBoxWhiskerOptions : UserControl, IOkable
+    public partial class ctlBoxWhiskerOptions : UserControl, IBoxWhiskerOptions
     {
-        private ChartDefinition definition;
-        private BoxWhiskerOptions options;
+        private IBoxWhiskerOptions options;
         private bool settingValues;
 
-        public event EventHandler XAxisTitleChanged;
+        ISdPreferences SdPreferences { get; }
 
-        public ctlBoxWhiskerOptions()
+        public event EventHandler? XAxisTitleChanged;
+
+        public ctlBoxWhiskerOptions(ISdPreferences sdPreferences)
         {
+            SdPreferences = sdPreferences;
             InitializeComponent();
         }
 
@@ -24,69 +28,38 @@ namespace StatsDirect.UI
         {
             set
             {
-                definition = value;
-                options = (BoxWhiskerOptions)definition.ChartOptions;
+                options = (IBoxWhiskerOptions)value.ChartOptions;
                 FillFormFromOptions();
             }
         }
 
-        void IOkable.OkClicked()
-        {
-            FillOptionsFromForm();
-        }
-
-        public void FillOptionsFromForm()
-        {
-            FillOptionsFromMarkMeanAndMedian();
-            FillOptionsFromFences();
-            FillOptionsFromType();
-            FillOptionsFromCco();
-        }
-
-        public void FillOptionsFromMarkMeanAndMedian()
-        {
-            options.MarkMeanAndMedian = chkMarkMeanAndMedian.Checked;
-        }
-
-        public void FillOptionsFromCco()
-        {
-            if (double.TryParse(cboCco.Text, out options.Cco))
-                options.Cco /= 100.0;
-        }
-
-        private void FillOptionsFromFences()
-        {
-            options.UseInnerFence = chkUseInnerFence.Checked;
-            options.UseOuterFence = chkUseOuterFence.Checked;
-        }
-
-        private void FillOptionsFromType()
+        private BoxWhiskerMethod GetMethodFromForm()
         {
             if (rdoMethodMCIR.Checked)
-                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange;
-            else if (rdoMethodMSDR.Checked)
-                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange;
-            else if (rdoMethodMSER.Checked)
-                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange;
-            else if (rdoMethodMQR.Checked)
-                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange;
-            else if (rdoMethodSevenNumberSummary.Checked)
-                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary;
-            else if (rdoMethodBowley.Checked)
-                options.Method = BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary;
+                return BoxWhiskerMethod.MeanConfidenceIntervalRange;
+            if (rdoMethodMSDR.Checked)
+                return BoxWhiskerMethod.MeanStandardDeviationRange;
+            if (rdoMethodMSER.Checked)
+                return BoxWhiskerMethod.MeanStandardErrorRange;
+            if (rdoMethodMQR.Checked)
+                return BoxWhiskerMethod.MedianQuartilesRange;
+            if (rdoMethodSevenNumberSummary.Checked)
+                return BoxWhiskerMethod.SevenNumberSummary;
+            if (rdoMethodBowley.Checked)
+                return BoxWhiskerMethod.BowleySummary;
+            // Should never happen!  Return a default.
+            return BoxWhiskerMethod.MeanConfidenceIntervalRange;
         }
 
         public void FillFormFromOptions()
         {
-            options.SetDefaultXAxisTitle();
             chkMarkMeanAndMedian.Checked = options.MarkMeanAndMedian;
             FillFencesFromOptions();
             settingValues = true;
-            cboCco.Text = (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("N0");
-            FillTypeFromOptions();
+            cboCco.Text = (SdPreferences.DefaultConfidenceInterval * 100.0).ToString("N0");
+            FillMethodFromOptions();
             SetFenceAvailability();
-            if (null != XAxisTitleChanged)
-                XAxisTitleChanged(this, EventArgs.Empty);
+            XAxisTitleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void FillFencesFromOptions()
@@ -97,27 +70,27 @@ namespace StatsDirect.UI
             settingValues = false;
         }
 
-        private void FillTypeFromOptions()
+        private void FillMethodFromOptions()
         {
             settingValues = true;
             switch (options.Method)
             {
-                case BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange:
+                case BoxWhiskerMethod.MeanConfidenceIntervalRange:
                     rdoMethodMCIR.Checked = true;
                     break;
-                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange:
+                case BoxWhiskerMethod.MeanStandardDeviationRange:
                     rdoMethodMSDR.Checked = true;
                     break;
-                case BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange:
+                case BoxWhiskerMethod.MeanStandardErrorRange:
                     rdoMethodMSER.Checked = true;
                     break;
-                case BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange:
+                case BoxWhiskerMethod.MedianQuartilesRange:
                     rdoMethodMQR.Checked = true;
                     break;
-                case BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary:
+                case BoxWhiskerMethod.SevenNumberSummary:
                     rdoMethodSevenNumberSummary.Checked = true;
                     break;
-                case BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary:
+                case BoxWhiskerMethod.BowleySummary:
                     rdoMethodBowley.Checked = true;
                     break;
                 default:
@@ -127,90 +100,56 @@ namespace StatsDirect.UI
             settingValues = false;
         }
 
-        private void rdoMethod_CheckedChanged(object sender, EventArgs e)
+        private void NoteMethodChanged()
         {
-            NoteTypeChanged();
-        }
-
-        private void NoteTypeChanged()
-        {
-            FillOptionsFromType();
-            if (double.TryParse(cboCco.Text, out options.Cco))
-                options.Cco /= 100.0;
-            options.SetDefaultXAxisTitle();
-            FillTypeFromOptions();
+            FillMethodFromOptions();
             SetFenceAvailability();
-            if (null != XAxisTitleChanged)
-                XAxisTitleChanged(this, EventArgs.Empty);
+            XAxisTitleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void SetFenceAvailability()
         {
-            bool fencesAreAvailable = FencesAreAvailable;
-            grpFences.Enabled = fencesAreAvailable;
+            grpFences.Enabled = FencesAreAvailable;
         }
 
-        private bool FencesAreAvailable => BoxWhiskerOptions.BoxWhiskerMethod.MedianQuartilesRange == options.Method
-                                           || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardDeviationRange == options.Method
-                                           || BoxWhiskerOptions.BoxWhiskerMethod.MeanStandardErrorRange == options.Method
-                                           || BoxWhiskerOptions.BoxWhiskerMethod.MeanConfidenceIntervalRange == options.Method;
+        private bool FencesAreAvailable =>
+            BoxWhiskerMethod.MedianQuartilesRange == options.Method
+                || BoxWhiskerMethod.MeanStandardDeviationRange == options.Method
+                || BoxWhiskerMethod.MeanStandardErrorRange == options.Method
+                || BoxWhiskerMethod.MeanConfidenceIntervalRange == options.Method;
 
-        private void chkUseInnerFence_CheckedChanged(object sender, EventArgs e)
-        {
-            NoteFencesChanged();
-        }
+        double IBoxWhiskerOptions.Cco =>
+            double.TryParse(cboCco.Text, out double cco)
+                ? cco / 100.0
+                : options.Cco;
+        bool IBoxWhiskerOptions.MarkMeanAndMedian => chkMarkMeanAndMedian.Checked;
+        BoxWhiskerMethod IBoxWhiskerOptions.Method => GetMethodFromForm();
+        bool IBoxWhiskerOptions.UseInnerFence => chkUseInnerFence.Checked;
+        bool IBoxWhiskerOptions.UseOuterFence => chkUseOuterFence.Checked;
 
         private void NoteFencesChanged()
         {
             if (!settingValues)
-            {
-                FillOptionsFromFences();
-                options.SetDefaultXAxisTitle();
-                if (null != XAxisTitleChanged)
-                    XAxisTitleChanged(this, EventArgs.Empty);
-            }
+                XAxisTitleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void NoteMarkMeanAndMedianChanged()
         {
             if (!settingValues)
-            {
-                FillOptionsFromMarkMeanAndMedian();
-                options.SetDefaultXAxisTitle();
-                if (null != XAxisTitleChanged)
-                    XAxisTitleChanged(this, EventArgs.Empty);
-            }
-        }
-
-        private void chkUseOuterFence_CheckedChanged(object sender, EventArgs e)
-        {
-            NoteFencesChanged();
-        }
-
-        private void cboCco_TextUpdate(object sender, EventArgs e)
-        {
-            NoteCcoChanged();
+                XAxisTitleChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void NoteCcoChanged()
         {
             if (!settingValues)
-            {
-                FillOptionsFromCco();
-                options.SetDefaultXAxisTitle();
-                if (null != XAxisTitleChanged)
-                    XAxisTitleChanged(this, EventArgs.Empty);
-            }
+                XAxisTitleChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void cboCco_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            NoteCcoChanged();
-        }
-
-        private void chkMarkMeanAndMedian_CheckedChanged(object sender, EventArgs e)
-        {
-            NoteMarkMeanAndMedianChanged();
-        }
+        private void cboCco_SelectedIndexChanged(object? sender, EventArgs e) => NoteCcoChanged();
+        private void cboCco_TextUpdate(object? sender, EventArgs e) => NoteCcoChanged();
+        private void chkMarkMeanAndMedian_CheckedChanged(object? sender, EventArgs e) => NoteMarkMeanAndMedianChanged();
+        private void chkUseInnerFence_CheckedChanged(object? sender, EventArgs e) => NoteFencesChanged();
+        private void chkUseOuterFence_CheckedChanged(object? sender, EventArgs e) => NoteFencesChanged();
+        private void rdoMethod_CheckedChanged(object? sender, EventArgs e) => NoteMethodChanged();
     }
 }

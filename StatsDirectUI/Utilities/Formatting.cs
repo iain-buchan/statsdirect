@@ -179,7 +179,7 @@ namespace StatsDirect.Utilities
         }
 
         /// <summary>
-        /// Returns the sum of the non-MISSING elements in array x, starting from lowerBound
+        /// Returns the sum of the non-MISSING elements in array x, starting from lowerBound.
         /// </summary>
         /// <param name="x"></param>
         /// <param name="lowerBound"></param>
@@ -187,7 +187,7 @@ namespace StatsDirect.Utilities
         public static double dsum(double[] x, int lowerBound)
         {
             double sum = 0;
-            for (int i = lowerBound; i <= x.GetUpperBound(0); i++)
+            for (int i = lowerBound; i < x.Length; i++)
             {
                 double v = x[i];
                 if (v != Constant.MISSING)

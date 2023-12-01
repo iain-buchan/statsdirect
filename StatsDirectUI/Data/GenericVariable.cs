@@ -7,10 +7,20 @@ namespace StatsDirect.Data
     public abstract class GenericVariable<T> : IVariable
     {
         private T[] data;
+        ///  <summary>
+        ///  The title (name) of the variable
+        ///  </summary>
+        [XmlElement("title")]
+        public string? Title { get; set; }
+        ///  <summary>
+        ///  Where the variable came from
+        ///  </summary>
+        [XmlIgnore]
+        public IOrigin? Origin { get; set; }
 
         protected GenericVariable()
         {
-            //  Do nothing
+            data = Array.Empty<T>();
         }
 
         protected GenericVariable(T[] data)
@@ -18,35 +28,23 @@ namespace StatsDirect.Data
             this.data = data;
         }
 
-        protected GenericVariable(T[] data, string title)
+        protected GenericVariable(T[] data, string? title)
         {
             this.data = data;
             Title = title;
         }
 
-        protected GenericVariable(int length, string title)
+        protected GenericVariable(int length, string? title)
         {
             EnsureLength(length);
             Title = title;
         }
 
-        ///  <summary>
-        ///  The title (name) of the variable
-        ///  </summary>
-        [XmlElement("title")]
-        public string Title { get; set; }
-
-        ///  <summary>
-        ///  Where the variable came from
-        ///  </summary>
-        [XmlIgnore]
-        public IOrigin Origin { get; set; }
-
         [XmlElement("worksheet-origin", typeof(WorksheetOrigin))]
-        public object OriginForXml
+        public object? OriginForXml
         {
             get => Origin;
-            set => Origin = (IOrigin)value;
+            set => Origin = (IOrigin?)value;
         }
 
         ///  <summary>
@@ -79,47 +77,30 @@ namespace StatsDirect.Data
             Invalidate();
         }
 
-        public int Length => data == null ? 0 : data.Length;
+        public int Length => data is null ? 0 : data.Length;
 
         public void EnsureLength(int minimumLength)
         {
-            if (data == null)
+            if (data.Length < minimumLength)
             {
-                data = new T[minimumLength];
-            }
-            else
-            {
-                if (data.Length < minimumLength)
-                {
-                    T[] longer = new T[minimumLength];
-                    Array.Copy(data, longer, data.Length);
-                    data = longer;
-                    Invalidate();
-                }
+                T[] longer = new T[minimumLength];
+                Array.Copy(data, longer, data.Length);
+                data = longer;
+                Invalidate();
             }
         }
 
         public void EnsureLength(int minimumLength, T fillValue)
         {
-            if (data == null)
+            if (data.Length < minimumLength)
             {
-                data = new T[minimumLength];
-                for (int i = 0; i < minimumLength; i++)
+                int oldLength = data.Length;
+                T[] longer = new T[minimumLength];
+                Array.Copy(data, longer, data.Length);
+                data = longer;
+                for (int i = oldLength; i < minimumLength; i++)
                     data[i] = fillValue;
                 Invalidate();
-            }
-            else
-            {
-                if (data.Length < minimumLength)
-                {
-                    int oldLength = data.Length;
-                    T[] longer = new T[minimumLength];
-                    Array.Copy(data, longer, data.Length);
-                    data = longer;
-                    for (int i = oldLength; i < minimumLength; i++)
-                        data[i] = fillValue;
-                    Invalidate();
-                }
             }
         }
 
@@ -148,24 +129,24 @@ namespace StatsDirect.Data
         {
             copy.Title = Title;
             copy.Origin = Origin;
-            if (Origin == null || shouldKeepData)
+            if (Origin is null || shouldKeepData)
             {
                 //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
                 copy.data = data;
             }
         }
 
-        public object DataAsObject(int i)
+        public object? DataAsObject(int i)
         {
             return Data[i];
         }
 
-        public void DataAsObject(int i, object value)
+        public void DataAsObject(int i, object? value)
         {
             Data[i] = (T)Convert.ChangeType(value, typeof(T));
         }
 
-        protected virtual bool HasData => data != null;
+        protected virtual bool HasData => data is not null;
 
         protected virtual void Invalidate()
         {

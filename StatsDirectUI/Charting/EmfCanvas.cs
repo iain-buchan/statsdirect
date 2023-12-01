@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -12,9 +13,9 @@ namespace StatsDirect.Charting
     /// </summary>
     class EmfCanvas : IStatsDirectCanvas
     {
-        private Metafile metafile;
-        private Graphics metafileGraphics;
-        private Stream outputStream;
+        private readonly Metafile metafile;
+        private readonly Graphics metafileGraphics;
+        private readonly Stream outputStream;
 
         public double Width { get; }
 
@@ -24,11 +25,7 @@ namespace StatsDirect.Charting
         {
             Width = width;
             Height = height;
-            SetupGraphics();
-        }
 
-        private void SetupGraphics()
-        {
             outputStream = new MemoryStream();
             //  Create temporary graphics object for metafile creation and get handle to its device context.
             using Bitmap b = new(1, 1, PixelFormat.Format32bppArgb);
@@ -42,14 +39,10 @@ namespace StatsDirect.Charting
             metafileGraphics.SmoothingMode = SmoothingMode.AntiAlias;
         }
 
-        public void DrawString(string s, FontDescriptor font, BrushDescriptor b, double x, double y, StringFormat txtFormat)
+        public void DrawString(string? s, FontDescriptor font, BrushDescriptor? b, double x, double y, StringFormat txtFormat)
         {
-            if (null != b)
-            {
-                Brush brush = GetBrush(b);
-                if (null != brush)
-                    metafileGraphics.DrawString(s, FontCache.Font(font), brush, Convert.ToSingle(x), Convert.ToSingle(Height - y), txtFormat);
-            }
+            if (TryGetBrush(b, out Brush? brush) && FontCache.TryGetFont(font, out Font? f))
+                metafileGraphics.DrawString(s, f, brush, Convert.ToSingle(x), Convert.ToSingle(Height - y), txtFormat);
         }
 
         ///  <summary>
@@ -66,8 +59,11 @@ namespace StatsDirect.Charting
         ///  <param name="direction"></param>
         ///  <returns>The bounding size of s drawn in direction with txtFormat</returns>
         /// <remarks></remarks>
-        public void DrawStringAtAngle(string s, FontDescriptor font, BrushDescriptor b, double x, double y, StringFormat txtFormat, LabelDirection direction)
+        public void DrawStringAtAngle(string? s, FontDescriptor font, BrushDescriptor? b, double x, double y, StringFormat txtFormat, LabelDirection direction)
         {
+            if (string.IsNullOrWhiteSpace(s))
+                return;
+
             //  Work out how to fiddle the text alignment
             if (txtFormat.LineAlignment == StringAlignment.Center && txtFormat.Alignment == StringAlignment.Far)
             {
@@ -101,15 +97,14 @@ namespace StatsDirect.Charting
                     txtFormat.Alignment = StringAlignment.Far;
                 }
             }
-            if (null != b)
+            if (b is not null)
             {
-                Brush brush = GetBrush(b);
-                if (null != brush)
+                if (TryGetBrush(b, out Brush? brush) && FontCache.TryGetFont(font, out Font? f))
                 {
                     float angle = DirectionToAngle(direction);
                     metafileGraphics.TranslateTransform(Convert.ToSingle(x), Convert.ToSingle(Height - y));
                     metafileGraphics.RotateTransform(angle);
-                    metafileGraphics.DrawString(s, FontCache.Font(font), brush, 0, 0, txtFormat);
+                    metafileGraphics.DrawString(s, f, brush, 0, 0, txtFormat);
                     // Undo the transform
                     metafileGraphics.RotateTransform(0f - angle);
                     metafileGraphics.TranslateTransform(0f - Convert.ToSingle(x), 0f - Convert.ToSingle(Height - y));
@@ -118,30 +113,23 @@ namespace StatsDirect.Charting
         }
 
         public SizeD MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction)
-        { 
-            SizeF uprightSize = metafileGraphics.MeasureString(s, FontCache.Font(font));
-            SizeD boundingSize = ToBoundingSize(uprightSize, direction);
-            return boundingSize;
-        }
-
-        private static float DirectionToAngle(LabelDirection direction)
         {
-            switch (direction)
-            {
-                case LabelDirection.Across:
-                    return 0.0F;
-                case LabelDirection.Up:
-                    return -90.0F;
-                case LabelDirection.Down:
-                    return 90.0F;
-                case LabelDirection.SlopeUp:
-                    return -45.0F;
-                case LabelDirection.SlopeDown:
-                    return 45.0F;
-            }
-
-            return 0;
+            if (!FontCache.TryGetFont(font, out Font? f))
+                return SizeD.Empty;
+            SizeF uprightSize = metafileGraphics.MeasureString(s, f);
+            return ToBoundingSize(uprightSize, direction);
         }
+
+        private static float DirectionToAngle(LabelDirection direction) =>
+            direction switch
+            {
+                LabelDirection.Across => 0.0F,
+                LabelDirection.Up => -90.0F,
+                LabelDirection.Down => 90.0F,
+                LabelDirection.SlopeUp => -45.0F,
+                LabelDirection.SlopeDown => 45.0F,
+                _ => 0,
+            };
 
         public static SizeD ToBoundingSize(SizeF uprightSize, LabelDirection direction)
         {
@@ -163,28 +151,18 @@ namespace StatsDirect.Charting
 
         public SizeD MeasureString(string s, FontDescriptor font)
         {
-            SizeF sizeF = metafileGraphics.MeasureString(s, FontCache.Font(font));
+            if (!FontCache.TryGetFont(font, out Font? f))
+                return SizeD.Empty;
+            SizeF sizeF = metafileGraphics.MeasureString(s, f);
             return new SizeD(sizeF.Width, sizeF.Height);
         }
 
         public Stream DetachAndReturnImageStream()
         {
-            if (null != metafileGraphics)
-            {
-                metafileGraphics.Dispose();
-                metafileGraphics = null;
-            }
-            if (null != metafile)
-            {
-                metafile.Dispose();
-                metafile = null;
-            }
-            if (null == outputStream)
-                return null;
-            Stream temp = outputStream;
-            outputStream = null;
-            temp.Position = 0;
-            return temp;
+            metafileGraphics.Dispose();
+            metafile.Dispose();
+            outputStream.Position = 0;
+            return outputStream;
         }
 
         ///  <summary>
@@ -250,15 +228,10 @@ namespace StatsDirect.Charting
             metafileGraphics.DrawPolygon(GetPen(p), pt);
         }
 
-        private Color ToColor(ColorDescriptor color)
-        {
-            return Color.FromArgb(color.R, color.G, color.B);
-        }
-
         public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, PenDescriptor p)
         {
             double size2 = size * 2;
-            BrushDescriptor b = isFilled ? new BrushDescriptor(p.Color) : null;
+            BrushDescriptor? b = isFilled ? new BrushDescriptor(p.Color) : null;
             PenDescriptor pd = isFilled ? PenDescriptor.White : p;
 
             switch (shape)
@@ -280,8 +253,11 @@ namespace StatsDirect.Charting
                             new PointF(Convert.ToSingle(x), Convert.ToSingle(Height - (y + size))),
                             new PointF(Convert.ToSingle(x + size), Convert.ToSingle(Height - (y - size)))
                         };
-                        if (isFilled)
-                            metafileGraphics.FillPolygon(GetBrush(b), points); // Guaranteed not to be called with a null brush
+                        if (b is not null)
+                        {
+                            if (TryGetBrush(b, out Brush? brush))
+                                metafileGraphics.FillPolygon(brush, points);
+                        }
                         else
                             metafileGraphics.DrawPolygon(GetPen(p), points);
                     }
@@ -326,12 +302,8 @@ namespace StatsDirect.Charting
 
         private void FillEllipse(BrushDescriptor b, double x, double y, double w, double h)
         {
-            if (null != b)
-            {
-                Brush brush = GetBrush(b);
-                if (null != brush)
-                    metafileGraphics.FillEllipse(brush, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(Height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
-            }
+            if (TryGetBrush(b, out Brush? brush))
+                metafileGraphics.FillEllipse(brush, Convert.ToInt32(Convert.ToSingle(x)), Convert.ToInt32(Convert.ToSingle(Height - y)), Convert.ToInt32(Convert.ToSingle(w)), Convert.ToInt32(Convert.ToSingle(h)));
         }
 
         private void DrawEllipse(PenDescriptor p, double x, double y, double w, double h)
@@ -339,57 +311,34 @@ namespace StatsDirect.Charting
             metafileGraphics.DrawEllipse(GetPen(p), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        private Brush GetBrush(BrushDescriptor b)
+        public void DrawRectangle(PenDescriptor? p, BrushDescriptor? b, double x, double y, double w, double h)
         {
-            // TODO: Cache
-            return ToBrush(b);
-        }
-
-        public void DrawRectangle(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h)
-        {
-            if (null != b)
-            {
-                Brush brush = GetBrush(b);
-                if (null != brush)
-                    metafileGraphics.FillRectangle(brush, Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
-            }
-            if (null != p)
+            if (TryGetBrush(b, out Brush? brush))
+                metafileGraphics.FillRectangle(brush, Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
+            if (p is not null)
                 metafileGraphics.DrawRectangle(GetPen(p), Convert.ToSingle(x), Convert.ToSingle(Height - y), Convert.ToSingle(w), Convert.ToSingle(h));
         }
 
-        private Pen GetPen(PenDescriptor p)
+        private static Pen GetPen(PenDescriptor p)
         {
             // TODO: Cache
             return new Pen(ToColor(p.Color), (float)p.LineThickness) { DashStyle = ToDashStyle(p.DashStyle) };
         }
 
-        private DashStyle ToDashStyle(DashStyleDescriptor dashStyle)
-        {
-            switch (dashStyle)
+        private static DashStyle ToDashStyle(DashStyleDescriptor dashStyle) =>
+            dashStyle switch
             {
-                case DashStyleDescriptor.Solid:
-                    return DashStyle.Solid;
-                case DashStyleDescriptor.Dash:
-                    return DashStyle.Dash;
-                case DashStyleDescriptor.Dot:
-                    return DashStyle.Dot;
-                case DashStyleDescriptor.DashDot:
-                    return DashStyle.DashDot;
-                case DashStyleDescriptor.DashDotDot:
-                    return DashStyle.DashDotDot;
-                default:
-                    return DashStyle.Custom;
-            }
-        }
+                DashStyleDescriptor.Solid => DashStyle.Solid,
+                DashStyleDescriptor.Dash => DashStyle.Dash,
+                DashStyleDescriptor.Dot => DashStyle.Dot,
+                DashStyleDescriptor.DashDot => DashStyle.DashDot,
+                DashStyleDescriptor.DashDotDot => DashStyle.DashDotDot,
+                _ => DashStyle.Custom,
+            };
 
         public void DrawLine(PenDescriptor p, double x1, double y1, double x2, double y2)
         {
             metafileGraphics.DrawLine(GetPen(p), Convert.ToSingle(Math.Round(x1, 0)), Convert.ToSingle(Math.Round(Height - y1, 0)), Convert.ToSingle(Math.Round(x2, 0)), Convert.ToSingle(Math.Round(Height - y2, 0)));
-        }
-
-        public double GetFontHeight(FontDescriptor f)
-        {
-            return FontCache.Font(f).GetHeight(metafileGraphics);
         }
 
         #region IDisposable Support
@@ -416,23 +365,33 @@ namespace StatsDirect.Charting
         }
         #endregion
 
-        private Brush ToBrush(BrushDescriptor b)
+        private bool TryGetBrush(BrushDescriptor? b, [NotNullWhen(true)] out Brush? brush)
         {
-            switch (b.FillStyle)
+            if (b is null)
             {
-                case FillStyle.None:
-                    return null;
-                case FillStyle.Crosshatch:
-                    return new HatchBrush(HatchStyle.DiagonalCross, ToColor(b.Color), Color.White);
-                case FillStyle.BackwardDiagonal:
-                    return new HatchBrush(HatchStyle.BackwardDiagonal, ToColor(b.Color), Color.White);
-                case FillStyle.ForwardDiagonal:
-                    return new HatchBrush(HatchStyle.ForwardDiagonal, ToColor(b.Color), Color.White);
-                case FillStyle.Solid:
-                    return new SolidBrush(ToColor(b.Color));
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(b), b.FillStyle, "FillStyle Values between 0 and 4 accepted");
+                brush = null;
+                return false;
             }
+            // TODO: Cache
+            brush = ToBrush(b);
+            return brush is not null;
         }
+
+        /// <summary>
+        /// Return a Brush if there is a fill style, or null if there is no need for one as the fill style is None.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">if the FillStyle is unknown</exception>
+        private static Brush? ToBrush(BrushDescriptor b) =>
+            b.FillStyle switch
+            {
+                FillStyle.None => null,
+                FillStyle.Crosshatch => new HatchBrush(HatchStyle.DiagonalCross, ToColor(b.Color), Color.White),
+                FillStyle.BackwardDiagonal => new HatchBrush(HatchStyle.BackwardDiagonal, ToColor(b.Color), Color.White),
+                FillStyle.ForwardDiagonal => new HatchBrush(HatchStyle.ForwardDiagonal, ToColor(b.Color), Color.White),
+                FillStyle.Solid => new SolidBrush(ToColor(b.Color)),
+                _ => throw new ArgumentOutOfRangeException(nameof(b), b.FillStyle, "FillStyle Values between 0 and 4 accepted"),
+            };
+
+        private static Color ToColor(ColorDescriptor color) => Color.FromArgb(color.R, color.G, color.B);
     }
 }

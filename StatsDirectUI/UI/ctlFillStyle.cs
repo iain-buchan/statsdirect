@@ -50,7 +50,7 @@ namespace StatsDirect.UI
                 FillStyleChanged(this, e);
         }
 
-        private void cboFillStyle_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboFillStyle_SelectedIndexChanged(object? sender, EventArgs e)
         {
             fillStyle = (Charting.FillStyle)cboFillStyle.SelectedIndex;
         }

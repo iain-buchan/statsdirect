@@ -1,4 +1,5 @@
-﻿using StatsDirect.Data;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
@@ -8,8 +9,8 @@ namespace StatsDirect.Charting.Renderer
 {
     internal class PyramidChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public PyramidChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public PyramidChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -17,17 +18,13 @@ namespace StatsDirect.Charting.Renderer
         {
             PyramidOptions pOptions = (PyramidOptions)Definition.ChartOptions;
 
-            DataFrame maleFrame = pOptions.MaleFrame;
-            DoubleVariable males = (DoubleVariable)maleFrame.Variables[0];
-            double maxmale = males.Max;
+            double maxmale = pOptions.MaleOrOnlySeries.Max;
 
             double maxfemale;
-            if (pOptions.FemaleFrame != null)
+            if (pOptions.FemaleSeries is not null)
             {
                 //  Separate male and female values
-                DataFrame femaleFrame = pOptions.FemaleFrame;
-                DoubleVariable females = (DoubleVariable)femaleFrame.Variables[0];
-                maxfemale = females.Max;
+                maxfemale = pOptions.FemaleSeries.Max;
             }
             else
             {
@@ -38,21 +35,18 @@ namespace StatsDirect.Charting.Renderer
 
             double tmax = maxfemale > maxmale ? maxfemale : maxmale;
 
-            return new ScaleParameters
-            {
-                X =
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear })
                 {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
                     Max = tmax,
                     Min = 0
                 },
-                Y =
+                new(new[] { ScaleType.Category })
                 {
-                    AllowedScaleTypes = new[] { ScaleType.Category },
                     Max = 0,
                     Min = 0
                 }
-            };
+            );
         }
 
         private enum PyramidMode
@@ -61,16 +55,15 @@ namespace StatsDirect.Charting.Renderer
             Pairs
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             PyramidOptions pOptions = (PyramidOptions)Definition.ChartOptions;
 
-            DataFrame maleFrame = pOptions.MaleFrame;
-            DoubleVariable males = (DoubleVariable)maleFrame.Variables[0];
-            int nmale = males.Length;
+            DoubleSeries males = pOptions.MaleOrOnlySeries;
+            int nmale = males.Data.Length;
             double maxmale = males.Max;
 
             int nfemale = 0;
@@ -78,11 +71,10 @@ namespace StatsDirect.Charting.Renderer
             double[] male;
             double maxfemale = 0;
             PyramidMode mode;
-            if (pOptions.FemaleFrame != null)
+            if (pOptions.FemaleSeries is not null)
             {
                 //  Separate male and female values
-                DataFrame femaleFrame = pOptions.FemaleFrame;
-                DoubleVariable females = (DoubleVariable)femaleFrame.Variables[0];
+                DoubleSeries females = pOptions.FemaleSeries;
                 female = new double[nmale];
                 male = new double[nmale];
                 maxfemale = females.Max;
@@ -118,20 +110,20 @@ namespace StatsDirect.Charting.Renderer
             }
 
             string[] title = new string[nmale + 1];
-            if (pOptions.LabelFrame != null)
+            if (pOptions.LabelSeries is not null)
             {
-                StringVariable labels = (StringVariable)pOptions.LabelFrame.Variables[0];
+                StringSeries labels = pOptions.LabelSeries;
                 int i;
                 for (i = labels.Length - 1; i >= 0; i--)
                 {
-                    if (labels.Data[i] != null && labels.Data[i].Length > 0)
+                    if (labels.Data[i] is not null && labels.Data[i].Length > 0)
                         break;
                 }
                 int lastrow = i;
                 if (lastrow == nmale - 1)
                 {
                     for (i = 0; i <= lastrow; i++)
-                        title[i] = MakeTitle(labels.Data[i], "group " + (i + 1));
+                        title[i] = MakeTitle(labels.Data[i], $"group {i + 1}");
                 }
             }
 
@@ -142,10 +134,10 @@ namespace StatsDirect.Charting.Renderer
             if (scaleMax < tmax)
                 scaleMax = tmax;
 
-            BrushDescriptor maleBrush = null;
+            BrushDescriptor? maleBrush = null;
             if (pOptions.MarkerTypes.Count >= 1)
                 maleBrush = MarkerTypeToBrush(pOptions.MarkerTypes[0]);
-            BrushDescriptor femaleBrush = null;
+            BrushDescriptor? femaleBrush = null;
             if (pOptions.MarkerTypes.Count >= 2)
                 femaleBrush = MarkerTypeToBrush(pOptions.MarkerTypes[1]);
 

@@ -1,65 +1,104 @@
 using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
+    /// <remarks>
+    /// Immutable
+    /// </remarks>
     [Serializable]
-    public class ScatterXYOptions : GenericOptions
+    public class ScatterXYOptions : AbstractGenericOptions
+        , IAxisLabelFontOptions
+        , IAxisTitleFontOptions
+        , IChartTitleOptions
+        , IMarkerTypes
+        , ISeriesTitlesOptions
+        , IXAxisTitleOptions
+        , IYAxisTitleOptions
     {
+        public FillStyle? ForcedFillStyle { get; }
+        public bool? ForcedIsFilled { get; }
+        public bool IsAscii { get; }
+        public bool JoinMarkersWithLines { get; }
+        public IReadOnlyList<MarkerType> MarkerTypes { get; }
+        public bool PlotMarkers { get; }
+        public IReadOnlyList<SeriesOptionsDescriptor> SeriesOptions { get; }
 
-        public bool PlotMarkers { get; set; }
-        public bool IsAscii { get; set; }
         private readonly bool showLegendIsRelevant;
-        public bool JoinMarkersWithLines { get; set; }
 
-        public ScatterXYOptions(IList<ISeries> xSeries, bool useLines)
+        /// <param name="markerTypes">If null, calculated internally from chart preferences; override by passing in existing marker types if desired</param>
+        public ScatterXYOptions(IChartPreferences chartPreferences,
+            IReadOnlyList<ISeries> xSeries,
+            FontDescriptor? axisLabelFontDescriptor = default,
+            float? axisLineThickness = default,
+            FontDescriptor? axisTitleFontDescriptor = default,
+            bool? isAscii = default,
+            bool? joinMarkersWithLines = default,
+            FontDescriptor? legendFontDescriptor = default,
+            IReadOnlyList<MarkerType>? markerTypes = default,
+            ChartOrientation? orientation = default,
+            bool? plotMarkers = default,
+            IReadOnlyList<string?>? seriesTitles = default,
+            bool? shouldAutoscale = default,
+            bool? shouldBoxAxes = default,
+            bool? showLegend = default,
+            string? title = default,
+            FontDescriptor? titleFontDescriptor = default,
+            bool? useColour = default,
+            string? xAxisTitle = default,
+            string? yAxisTitle = default)
+            : base(chartPreferences,
+                  axisLabelFontDescriptor,
+                  axisLineThickness,
+                  axisTitleFontDescriptor,
+                  legendFontDescriptor,
+                  orientation,
+                  seriesTitles,
+                  shouldAutoscale,
+                  shouldBoxAxes,
+                  showLegend,
+                  title,
+                  titleFontDescriptor,
+                  useColour,
+                  xAxisTitle,
+                  yAxisTitle)
         {
-            JoinMarkersWithLines = useLines;
-            PlotMarkers = true;
+            IsAscii = isAscii ?? false;
+            JoinMarkersWithLines = joinMarkersWithLines ?? false;
+            PlotMarkers = plotMarkers ?? true;
 
-            MarkerTypes = new List<MarkerType>();
+            if (markerTypes is not null)
+                MarkerTypes = markerTypes;
+            else
+            {
+                List<MarkerType> defaultMarkerTypes = new();
+                for (int i = 0; i < xSeries.Count; i++)
+                    defaultMarkerTypes.Add(new(chartPreferences.MarkerTypes[SeriesNumberToMarkerNumber(i)], markerSize: 6));
+                MarkerTypes = defaultMarkerTypes;
+            }
+
+            List<SeriesOptionsDescriptor> seriesOptionsDescriptors = new();
             for (int i = 0; i < xSeries.Count; i++)
             {
-                int mkr = SeriesNumberToMarkerNumber(i);
-                MarkerType markerType = ChartPreferences.MarkerTypes[mkr].Clone();
-                markerType.MarkerSize = 6;
-                MarkerTypes.Add(markerType);
-
                 //  A scatter plot has series with no lines.
                 SeriesOptionsDescriptor soleOptions = new()
                 {
                     SeriesName = xSeries[i].Title,
-                    AllowChangeToDashStyle = useLines,
-                    AllowChangeToLineColour = useLines,
-                    AllowChangeToLineThickness = useLines,
+                    AllowChangeToDashStyle = JoinMarkersWithLines,
+                    AllowChangeToLineColour = JoinMarkersWithLines,
+                    AllowChangeToLineThickness = JoinMarkersWithLines,
                     MarkerIndex = i
                 };
-                SeriesOptions.Add(soleOptions);
+                seriesOptionsDescriptors.Add(soleOptions);
             }
+            SeriesOptions = seriesOptionsDescriptors;
             showLegendIsRelevant = xSeries.Count > 1;
         }
 
-        public override bool UsesChartTitle => true;
-
-        public override bool UsesXAxisTitle => true;
-
-        public override bool UsesYAxisTitle => true;
-
         public override bool UsesAutoscale => true;
-
-        public override bool UsesAxisLabelFontDescriptor => true;
-
-        public override bool UsesAxisTitleFontDescriptor => true;
-
-        public override bool UsesSeriesLabels => true;
-
-        public override bool ShowScatterXYOptions => true;
 
         public override bool ShowLegendIsRelevant => showLegendIsRelevant;
 
-        public override void Accept(IChartOptionVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IChartOptionVisitor visitor) => visitor.Visit(this);
     }
 }

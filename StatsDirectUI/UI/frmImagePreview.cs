@@ -14,7 +14,7 @@ namespace StatsDirect.UI
             aspectRatio = 1.0;
         }
 
-        private void cmdClose_Click(object sender, EventArgs e)
+        private void cmdClose_Click(object? sender, EventArgs e)
         {
             Close();
         }
@@ -30,7 +30,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void frmImagePreview_Resize(object sender, EventArgs e)
+        private void frmImagePreview_Resize(object? sender, EventArgs e)
         {
             SetHeight();
         }

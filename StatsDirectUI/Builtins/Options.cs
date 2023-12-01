@@ -1,26 +1,36 @@
 ﻿using StatsDirect.Templates;
+using StatsDirect.UI;
 using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
-    static class Options
+    internal class Options
     {
-        public static StepOutput SetAnalysisOptions(ITemplateHost host, ParameterBag parameters)
+        private ISdPreferences SdPreferences { get; }
+        private IUiPreferences UiPreferences { get; }
+        private IUserInterface UserInterface { get; }
+
+        public Options(ISdPreferences sdPreferences, IUiPreferences uiPreferences, IUserInterface userInterface)
         {
-            SDPreferences preferences = host.Preferences;
-            preferences.CanDefaultConfidenceInterval = parameters["use-default-ci"].AsBoolean;
-            preferences.DefaultConfidenceInterval = Parsing.Cdbl_Txt(parameters["default-ci"].AsString) / 100.0;
-            preferences.SelectGroupsByIdentifier = parameters["selectGroupsByIdentifier"].AsBoolean;
-            preferences.DisplayDecimalPlaces = Parsing.Cint_Txt(parameters["decp"].AsString);
-            preferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
-            preferences.ShouldKeepData = parameters["should-keep-data"].AsBoolean;
-            preferences.UseScientificNotationForSmallPValues = parameters["use-scientific-notation-for-small-p-values"].AsBoolean;
+            SdPreferences = sdPreferences;
+            UiPreferences = uiPreferences;
+            UserInterface = userInterface;
+        }
+
+        public StepOutput SetAnalysisOptions(ParameterBag parameters)
+        {
+            SdPreferences.CanDefaultConfidenceInterval = parameters["use-default-ci"].AsBoolean;
+            SdPreferences.DefaultConfidenceInterval = Parsing.Cdbl_Txt(parameters["default-ci"].AsString) / 100.0;
+            UiPreferences.SelectGroupsByIdentifier = parameters["selectGroupsByIdentifier"].AsBoolean;
+            SdPreferences.DisplayDecimalPlaces = Parsing.Cint_Txt(parameters["decp"].AsString);
+            SdPreferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
+            SdPreferences.UseScientificNotationForSmallPValues = parameters["use-scientific-notation-for-small-p-values"].AsBoolean;
             return StepOutput.Empty();
         }
 
-        public static StepOutput ShowGraphicsOptions(ITemplateHost host, ParameterBag parameters)
+        public StepOutput ShowGraphicsOptions(ParameterBag parameters)
         {
-            host.Amend(new GraphicsOptions(), parameters);
+            UserInterface.Amend(new GraphicsOptions(), parameters);
             return StepOutput.Empty();
         }
     }

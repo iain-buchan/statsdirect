@@ -3,6 +3,7 @@ using SpreadsheetGear.Advanced.Cells;
 using SpreadsheetGear.Windows.Forms;
 using StatsDirect.Builtins;
 using StatsDirect.Charting;
+using StatsDirect.Charting.Options;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -10,6 +11,7 @@ using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -20,23 +22,31 @@ namespace StatsDirect.UI
     /// </summary>
     internal class InlineParameterPreparer : IParameterVisitor
     {
-        public ParameterBag Context { get; }
-        public frmMain Form { get; }
-        public ITemplateProcessor Processor { get; }
-        public FilledParameter FilledParameter { get; private set; }
+        private ParameterBag Context { get; }
+        private frmMain Form { get; }
+        private IChartPreferences ChartPreferences { get; }
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private ITemplateProcessorFactory TemplateProcessorFactory { get; }
+        private ISdPreferences SdPreferences { get; }
+        private ISdApplication SdApplication { get; }
+        public FilledParameter? FilledParameter { get; private set; }
 
-        public InlineParameterPreparer(ParameterBag context, frmMain form, ITemplateProcessor processor)
+        public InlineParameterPreparer(ParameterBag context, frmMain form, IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, ISdPreferences sdPreferences, ISdApplication sdApplication, ITemplateProcessorFactory templateProcessorFactory)
         {
             Context = context;
             Form = form;
-            Processor = processor;
+            ChartPreferences = chartPreferences;
+            ChartRendererFactory = chartRendererFactory;
+            SdApplication = sdApplication;
+            SdPreferences = sdPreferences;
+            TemplateProcessorFactory = templateProcessorFactory;
         }
 
         public void Visit(ConfidenceIntervalParameter parameter)
         {
-            if (parameter.CanDefault && SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval)
+            if (parameter.CanDefault && SdPreferences.CanDefaultConfidenceInterval)
             {
-                FilledParameter = FilledParameterFactory.Input(SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval);
+                FilledParameter = FilledParameterFactory.Input(SdPreferences.DefaultConfidenceInterval);
                 return;
             }
 
@@ -61,7 +71,7 @@ namespace StatsDirect.UI
                     Tag = parameter,
                     Padding = new Padding(0, 6, 0, 3),
                     AutoSize = true,
-                    Text = parameter.Prompt(Processor, Context, "Confidence (%)")
+                    Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, "Confidence (%)")
                 };
                 tlp.Controls.Add(lbl);
                 MaybeAddHelpTip(lbl, parameter);
@@ -84,7 +94,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                double? defaultValue = parameter.DefaultValue(Processor, Context);
+                double? defaultValue = parameter.DefaultValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
 
                 if (defaultValue.HasValue && 0.0 != defaultValue.Value)
                     cbo.Text = (defaultValue.Value * 100.0).ToString("##0.0");
@@ -92,7 +102,7 @@ namespace StatsDirect.UI
                 {
                     // Don't force a CI if there's already one set on the singleton
                     if (!useSingle || string.IsNullOrEmpty(Form.IntegratedConfidenceIntervalControl.Text))
-                        cbo.Text = SdApplication.SoleInstance.Preferences.CanDefaultConfidenceInterval ? (SdApplication.SoleInstance.Preferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
+                        cbo.Text = SdPreferences.CanDefaultConfidenceInterval ? (SdPreferences.DefaultConfidenceInterval * 100.0).ToString("##0") : "95";
                 }
             }
             cbo.AutoSizeToList();
@@ -195,7 +205,7 @@ namespace StatsDirect.UI
             }
             else
             {
-                double? defaultValue = parameter.DefaultValue(Processor, Context);
+                double? defaultValue = parameter.DefaultValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                 string defaultValueString = string.Empty;
                 if (defaultValue.HasValue && !double.IsNaN(defaultValue.Value) && defaultValue.Value != Constant.MISSING)
                     defaultValueString = defaultValue.Value.ToString();
@@ -206,8 +216,8 @@ namespace StatsDirect.UI
             string suffix = string.Empty;
             if (parameter.ShowLimits)
             {
-                double minimumValue = parameter.MinimumValue(Processor, Context);
-                double maximumValue = parameter.MaximumValue(Processor, Context);
+                double minimumValue = parameter.MinimumValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
+                double maximumValue = parameter.MaximumValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                 if (minimumValue > double.MinValue)
                 {
                     if (maximumValue < double.MaxValue)
@@ -221,7 +231,7 @@ namespace StatsDirect.UI
                 }
             }
 
-            Label lbl = new() { Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true, Text = parameter.Prompt(Processor, Context, string.Empty) + suffix };
+            Label lbl = new() { Tag = parameter, Padding = new Padding(0, 6, 0, 3), AutoSize = true, Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty) + suffix };
 
             MaybeAddHelpTip(lbl, parameter);
             MaybeAddHelpTip(txt, parameter);
@@ -253,25 +263,24 @@ namespace StatsDirect.UI
                     ctl = new ctlConvertUnits();
                     break;
                 case "Distribution":
-                    ctl = new ctlPDF((DistributionOptions)fillable);
+                    ctl = new ctlPDF((DistributionOptions)fillable, SdApplication);
                     break;
                 case "Dummy":
                     ctl = new ctlDummyOptions((DummyOptions)fillable);
                     break;
                 case "Extraction":
                     ExtractionOptions f = (ExtractionOptions)fillable;
-                    if (null == f.IdentifiersFrame)
-                        ctl = new ctlFindAndReplaceData(f);
-                    else
-                        ctl = new ctlExtraction(f);
+                    ctl = null == f.IdentifiersFrame
+                        ? new ctlFindAndReplaceData(f)
+                        : new ctlExtraction(f);
                     break;
                 case "GraphicsOptions":
-                    ctl = new ctlGraphicsOptions();
+                    ctl = new ctlGraphicsOptions(ChartPreferences);
                     break;
                 case "ROCCutoff":
                     {
                         ROCCutoff rc = (ROCCutoff)fillable;
-                        ctl = new ctlROCCutoff(rc.SeriesRecord, rc.Title);
+                        ctl = new ctlROCCutoff(rc.SeriesRecord, rc.Title, SdPreferences);
                         break;
                     }
                 case "SortInPlace":
@@ -303,7 +312,7 @@ namespace StatsDirect.UI
             {
                 Tag = parameter,
                 Name = "grid",
-                Size = new Size((int)(494 * Form.currentScaleFactor.Width), (int)(305 * Form.currentScaleFactor.Height)),
+                Size = new Size((int)(494 * Form.CurrentScaleFactor.Width), (int)(305 * Form.CurrentScaleFactor.Height)),
                 ContextMenuStrip = Form.InlineGridContextMenuStrip
             };
             grid.WithLock(() =>
@@ -321,7 +330,7 @@ namespace StatsDirect.UI
                     }
                 }
                 grid.ActiveWorksheet.WindowInfo.Zoom = 88; // percent
-                int maximumColumns = parameter.MaximumColumns(Processor, Context);
+                int maximumColumns = parameter.MaximumColumns(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                 if (maximumColumns > 0)
                     grid.ActiveWorksheet.Cells[0, maximumColumns, 0, grid.ActiveWorksheet.Cells.ColumnCount - 1].EntireColumn.Hidden = true;
                 grid.ActiveWorkbook.WindowInfo.DisplayWorkbookTabs = false;
@@ -338,7 +347,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.Prompt(Processor, Context, string.Empty)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
         }
@@ -355,7 +364,7 @@ namespace StatsDirect.UI
             {
                 if (parameter.HasDefaultValue)
                 {
-                    int? defaultValue = parameter.DefaultValue(Processor, Context);
+                    int? defaultValue = parameter.DefaultValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                     if (defaultValue.HasValue)
                         txt.Text = defaultValue.Value.ToString();
                 }
@@ -385,7 +394,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.Prompt(Processor, Context, string.Empty) + suffix
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty) + suffix
             };
 
             MaybeAddHelpTip(lbl, parameter);
@@ -407,7 +416,7 @@ namespace StatsDirect.UI
         {
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
-            string prompt = parameter.Prompt(Processor, Context);
+            string? prompt = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
             GroupBox groupBox = new SDGroupBox
             {
                 Tag = parameter,
@@ -469,7 +478,7 @@ namespace StatsDirect.UI
             SetAllCheckedState(panelOptions);
         }
 
-        private void MultipleOptionsOptionCheckedChanged(object sender, EventArgs e)
+        private void MultipleOptionsOptionCheckedChanged(object? sender, EventArgs e)
         {
             CheckBox chkMe = (CheckBox)sender;
             TableLayoutPanel tlp = (TableLayoutPanel)chkMe.Parent;
@@ -516,7 +525,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private static void MultipleOptionsOptionCheckAllChanged(object sender, EventArgs e)
+        private static void MultipleOptionsOptionCheckAllChanged(object? sender, EventArgs e)
         {
             CheckBox chkAll = (CheckBox)sender;
             MultipleOptionsAllTag tag = (MultipleOptionsAllTag)chkAll.Tag;
@@ -541,7 +550,7 @@ namespace StatsDirect.UI
         public void Visit(PickVariablesParameter parameter)
         {
             DataFrame frame = Context[parameter.ParameterName].AsDataFrame;
-            int[] initialState = null;
+            int[]? initialState = null;
             if (parameter.PreSelectVariables)
             {
                 // Set up at least the minimum variables
@@ -565,7 +574,7 @@ namespace StatsDirect.UI
                     Tag = parameter,
                     Padding = new Padding(0, 6, 0, 3),
                     AutoSize = true,
-                    Text = parameter.Prompt(Processor, Context)
+                    Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context)
                 };
                 tlp.Controls.Add(lbl);
                 tlp.SetColumnSpan(lbl, 2);
@@ -583,7 +592,9 @@ namespace StatsDirect.UI
                 ComboBox cbo = new() { FormattingEnabled = true };
                 for (int i = 0; i < frame.VariableCount; i++)
                 {
-                    string rubric = null == frame.Variables[i] ? string.Empty : frame.Variables[i].Title;
+                    string rubric = frame.Variables[i] is null
+                        ? string.Empty
+                        : frame.Variables[i].Title;
                     cbo.Items.Add(rubric);
                 }
                 if (initialState?.Length > v)
@@ -594,7 +605,7 @@ namespace StatsDirect.UI
                 {
                     Padding = new Padding(3, 6, 3, 3),
                     AutoSize = true,
-                    Text = parameter.LabelAs(Processor, Context, v)
+                    Text = parameter.LabelAs(TemplateProcessorFactory.CreateTemplateProcessor(), Context, v)
                 };
                 holder.Controls.Add(l);
             }
@@ -630,7 +641,7 @@ namespace StatsDirect.UI
             {
                 if (parameter.HasDefaultValue)
                 {
-                    txt.Text = parameter.DefaultValue(Processor, Context);
+                    txt.Text = parameter.DefaultValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                 }
             }
             AddAppropriateEventHandlersTo(txt);
@@ -640,7 +651,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.Prompt(Processor, Context, string.Empty)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
             };
 
             MaybeAddHelpTip(lbl, parameter);
@@ -728,7 +739,7 @@ namespace StatsDirect.UI
         /// <param name="columnCount"></param>
         /// <param name="columnTitles"></param>
         /// <param name="verticalTitle">If non-null, a string that should be shown as a vertical label to the left of the grid</param>
-        private void BuildColumnarGrid(SpecialParameter parameter, TableLayoutPanel tlp, int columnCount, string[] columnTitles, string verticalTitle = null)
+        private void BuildColumnarGrid(SpecialParameter parameter, TableLayoutPanel tlp, int columnCount, string[] columnTitles, string? verticalTitle = null)
         {
             TableLayoutPanel ssgContainer = new()
             {
@@ -797,7 +808,7 @@ namespace StatsDirect.UI
                 double pointsToPixels = 2; // TODO: HACK: Fudge factor.  How do we get this to be saner?
                 const int aHair = 3; // Fudge factor: Extra width in pixels for things like scrollbar edges and ensuring that the right-hand end of the last cell is visible
                 int overallWidthInPixels = (int)((rowHeaderWidthInPoints + visibleColumnsWidthInPoints) * pointsToPixels) + SystemInformation.VerticalScrollBarWidth + aHair;
-                grid.Size = new Size((int)(overallWidthInPixels * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height));
+                grid.Size = new Size((int)(overallWidthInPixels * Form.CurrentScaleFactor.Width), (int)(400 * Form.CurrentScaleFactor.Height));
                 int rowHeaderWidthInPixels = (int)(rowHeaderWidthInPoints * pointsToPixels);
                 int oneColumnWidthInPixels = (int)(oneColumnWidthInPoints * pointsToPixels);
                 int fudge = (int)(3 * pointsToPixels); // Offset of labels from nominal column start, in pixels.  Ideally this should closely match SSG's internal offset.
@@ -839,7 +850,7 @@ namespace StatsDirect.UI
             VerticalLabel rowsLabel = new() { Text = "Rater 1", AutoSize = true, TabStop = false };
             ssgContainer.Controls.Add(rowsLabel, 0, 1);
 
-            WorkbookView grid = new() { Size = new Size((int)(450 * Form.currentScaleFactor.Width), (int)(400 * Form.currentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
+            WorkbookView grid = new() { Size = new Size((int)(450 * Form.CurrentScaleFactor.Width), (int)(400 * Form.CurrentScaleFactor.Height)), ContextMenuStrip = Form.InlineGridContextMenuStrip };
             grid.WithLock(() =>
             {
                 if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsDataFrame)
@@ -880,7 +891,7 @@ namespace StatsDirect.UI
             {
                 AutoSize = true,
                 Tag = parameter,
-                Text = parameter.Prompt(Processor, Context)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context)
             };
             tlp.Controls.Add(ctl);
             tlp.SetColumnSpan(ctl, 2);
@@ -970,7 +981,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.Prompt(Processor, Context, string.Empty)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
         }
@@ -983,7 +994,7 @@ namespace StatsDirect.UI
             {
                 case OptionFormatType.Dropdown:
                     {
-                        string defaultValue = null;
+                        string? defaultValue = null;
                         if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter)
                         {
                             defaultValue = Context[parameter.Name].AsString;
@@ -991,11 +1002,11 @@ namespace StatsDirect.UI
                         else
                         {
                             if (null != parameter.DefaultValueExpression)
-                                defaultValue = Processor.Evaluate(parameter.DefaultValueExpression, Context).ToString();
+                                defaultValue = TemplateProcessorFactory.CreateTemplateProcessor().Evaluate(parameter.DefaultValueExpression, Context).ToString();
                         }
 
                         ComboBoxEx cbo = new() { Tag = parameter, MaximumSize = new Size(250, 21) };
-                        ComboBoxExItem defaultItem = null;
+                        ComboBoxExItem? defaultItem = null;
                         foreach (OptionOption optionOption in parameter.Options)
                         {
                             ComboBoxExItem cbi = new() { Tag = optionOption, Text = optionOption.Label };
@@ -1019,7 +1030,7 @@ namespace StatsDirect.UI
                             Padding = new Padding(0, 6, 0, 3),
                             AutoSize = true,
                             MaximumSize = new Size(500, 500),
-                            Text = parameter.Prompt(Processor, Context, string.Empty)
+                            Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
                         };
 
                         if (parameter.PromptPrecedesParameter)
@@ -1040,8 +1051,8 @@ namespace StatsDirect.UI
                     break;
                 case OptionFormatType.Radio:
                     {
-                        GroupBox groupBox = null;
-                        string prompt = parameter.Prompt(Processor, Context);
+                        GroupBox? groupBox = null;
+                        string? prompt = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                         if (!string.IsNullOrEmpty(prompt))
                         {
                             groupBox = new SDGroupBox
@@ -1064,7 +1075,7 @@ namespace StatsDirect.UI
                         for (int column = 0; column < parameter.Columns; column++)
                             panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-                        string defaultValue = null;
+                        string? defaultValue = null;
                         if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter)
                         {
                             defaultValue = Context[parameter.Name].AsString;
@@ -1072,7 +1083,7 @@ namespace StatsDirect.UI
                         else
                         {
                             if (null != parameter.DefaultValueExpression)
-                                defaultValue = Processor.Evaluate(parameter.DefaultValueExpression, Context).ToString();
+                                defaultValue = TemplateProcessorFactory.CreateTemplateProcessor().Evaluate(parameter.DefaultValueExpression, Context).ToString();
                         }
 
                         foreach (OptionOption optionOption in parameter.Options)
@@ -1153,11 +1164,12 @@ namespace StatsDirect.UI
             ((ISupportInitialize)gridEditGrid).EndInit();
             EditGridParameter egp = parameter;
             DataFrame sourceFrame = Context[egp.Source].AsDataFrame;
-            StringVariable keyVariable = (StringVariable)sourceFrame.FindVariable(egp.KeyVariable);
-            StringVariable valueVariable = (StringVariable)sourceFrame.FindVariable(egp.ValueVariable);
+            StringVariable? keyVariable = (StringVariable?)sourceFrame.FindVariable(egp.KeyVariable);
+            StringVariable? valueVariable = (StringVariable?)sourceFrame.FindVariable(egp.ValueVariable);
             gridEditGrid.Rows.Clear();
-            for (int i = 0; i < keyVariable.Length; i++)
-                gridEditGrid.Rows.Add(keyVariable.Data[i], valueVariable.Data[i]);
+            if (keyVariable is not null && valueVariable is not null)
+                for (int i = 0; i < keyVariable.Length; i++)
+                    gridEditGrid.Rows.Add(keyVariable.Data[i], valueVariable.Data[i]);
             gridEditGrid.Visible = true;
 
             Label lbl = new()
@@ -1165,7 +1177,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.Prompt(Processor, Context, string.Empty)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
         }
@@ -1275,7 +1287,7 @@ namespace StatsDirect.UI
             else
             {
                 if (parameter.HasDefaultValue)
-                    txt.Text = parameter.DefaultValue(Processor, Context).ToString("d");
+                    txt.Text = parameter.DefaultValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context).ToString("d");
             }
             AddAppropriateEventHandlersTo(txt);
             MaybeAddHelpTip(txt, parameter);
@@ -1286,7 +1298,7 @@ namespace StatsDirect.UI
                 Tag = parameter,
                 Padding = new Padding(0, 6, 0, 3),
                 AutoSize = true,
-                Text = parameter.Prompt(Processor, Context, string.Empty)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
             };
             tlp.Controls.Add(lbl);
             MaybeAddHelpTip(lbl, parameter);
@@ -1295,11 +1307,11 @@ namespace StatsDirect.UI
         public void Visit(ChartOptionsParameter parameter)
         {
             ChartDefinition chartDefinition = parameter.ChartDefinition;
-            ChartOptions chartOptions = chartDefinition.ChartOptions;
+            AbstractChartOptions chartOptions = chartDefinition.ChartOptions;
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
-            ChartOptionToControlVisitor visitor = new(chartDefinition);
+            ChartOptionToControlVisitor visitor = new(chartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
             chartOptions.Accept(visitor);
-            Control ctl = visitor.Control;
+            Control? ctl = visitor.Control;
             if (null == ctl)
             {
                 // Do nothing - there are no options to fill
@@ -1320,16 +1332,16 @@ namespace StatsDirect.UI
                 Padding = new Padding(3, 3, 3, 3),
                 AutoSize = true,
                 Tag = parameter,
-                Text = parameter.Prompt(Processor, Context, string.Empty)
+                Text = parameter.Prompt(TemplateProcessorFactory.CreateTemplateProcessor(), Context, string.Empty)
             };
             AddAppropriateEventHandlersTo(cb);
-            if (Context.ContainsKey(parameter.Name) && null != Context[parameter.Name] && Context[parameter.Name].IsInputParameter && Context[parameter.Name].IsBoolean)
+            if (Context.TryGetValue(parameter.Name, out FilledParameter? fp) && fp is not null && fp.IsInputParameter && fp.IsBoolean)
             {
                 cb.Checked = Context[parameter.Name].AsBoolean;
             }
             else
             {
-                bool? defaultValue = parameter.DefaultValue(Processor, Context);
+                bool? defaultValue = parameter.DefaultValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                 if (defaultValue.HasValue)
                 {
                     cb.Checked = defaultValue.Value;
@@ -1370,7 +1382,7 @@ namespace StatsDirect.UI
             control.LostFocus += RunChecksAfterLostFocus;
         }
 
-        void EnterMovesDown(object sender, KeyPressEventArgs e)
+        void EnterMovesDown(object? sender, KeyPressEventArgs e)
         {
             try
             {
@@ -1378,9 +1390,9 @@ namespace StatsDirect.UI
                 if ('\r' != e.KeyChar)
                     return;
 
-                Control c = (Control)sender;
+                Control? c = (Control?)sender;
 
-                Control next = c;
+                Control? next = c;
                 do
                 {
                     if (null == next)
@@ -1418,7 +1430,7 @@ namespace StatsDirect.UI
             }
         }
 
-        static void cmdPrevious_KeyPress(object sender, EventArgs e)
+        void cmdPrevious_KeyPress(object? sender, EventArgs e)
         {
             try
             {
@@ -1488,11 +1500,11 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't move to previous stratum due to an internal error", ex, false);
+                SdApplication.FriendlyError("Couldn't move to previous stratum due to an internal error", ex, false);
             }
         }
 
-        static void cmdNext_KeyPress(object sender, EventArgs e)
+        void cmdNext_KeyPress(object? sender, EventArgs e)
         {
             try
             {
@@ -1560,29 +1572,29 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't move to next stratum due to an internal error", ex, false);
+                SdApplication.FriendlyError("Couldn't move to next stratum due to an internal error", ex, false);
             }
         }
 
-        void RunChecksAfterLostFocus(object sender, EventArgs e)
+        void RunChecksAfterLostFocus(object? sender, EventArgs e)
         {
             // If we're no longer attached to a window, don't run any checks; they're not relevant and we'll be missing our data anyway.
-            Control probe = (Control)sender;
-            while (null != probe)
+            Control? probe = (Control?)sender;
+            while (probe is not null)
             {
                 if (probe is Form)
                     break; // It's still attached
                 probe = probe.Parent;
             }
-            if (null != probe)
-                Form.CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+            if (probe is not null)
+                Form.CheckCombinedParameterVisibilityAndMaybeResize((Control?)sender);
         }
 
-        void OptionParameter_CheckedChanged(object sender, EventArgs e)
+        void OptionParameter_CheckedChanged(object? sender, EventArgs e)
         {
             try
             {
-                Form.CheckCombinedParameterVisibilityAndMaybeResize((Control)sender);
+                Form.CheckCombinedParameterVisibilityAndMaybeResize((Control?)sender);
             }
             catch (Exception ex)
             {
@@ -1605,42 +1617,51 @@ namespace StatsDirect.UI
 
         private class ChartOptionToControlVisitor : IChartOptionVisitor
         {
-            private readonly ChartDefinition chartDefinition;
-            public Control Control { get; private set; }
+            private ChartDefinition ChartDefinition { get; }
+            private IChartPreferences ChartPreferences { get; }
+            private IChartRendererFactory ChartRendererFactory { get; }
+            private ISdApplication SdApplication { get; }
+            private ISdPreferences SdPreferences { get; }
+            public Control? Control { get; private set; }
 
-            public ChartOptionToControlVisitor(ChartDefinition definition)
+            public ChartOptionToControlVisitor(ChartDefinition chartDefinition, IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, ISdApplication sdApplication, ISdPreferences sdPreferences)
             {
-                chartDefinition = definition;
+                ChartDefinition = chartDefinition;
+                ChartPreferences = chartPreferences;
+                ChartRendererFactory = chartRendererFactory;
+                SdApplication = sdApplication;
+                SdPreferences = sdPreferences;
             }
 
             void IChartOptionVisitor.Visit(AgreementOptions options) => Control = null;
             void IChartOptionVisitor.Visit(BiasMAOptions options) => Control = null;
-            void IChartOptionVisitor.Visit(BarOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(BoxWhiskerOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(ControlOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(BarOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(BoxWhiskerOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(ControlOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
             void IChartOptionVisitor.Visit(CorrelationOptions options) => Control = null;
             void IChartOptionVisitor.Visit(Cox2Options options) => Control = null;
             void IChartOptionVisitor.Visit(CoxSurvivalOrHazardOptions options) => Control = null;
             void IChartOptionVisitor.Visit(EffectOptions options) => Control = null;
-            void IChartOptionVisitor.Visit(ErrorBarOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(ForestOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(ErrorBarOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(ForestOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(GenericOptions options) => Control = null;
             void IChartOptionVisitor.Visit(GiniOptions options) => Control = null;
-            void IChartOptionVisitor.Visit(HistogramOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(HistogramOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
             void IChartOptionVisitor.Visit(KaplanMeierOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LAbbeOptions options) => Control = null;
-            void IChartOptionVisitor.Visit(LadderOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(LadderOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
             void IChartOptionVisitor.Visit(LinearizedEstimationOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LinearRegressionOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LinearRegressionAndMaybeSeCiOrPredictionIntervalOptions options) => Control = null;
             void IChartOptionVisitor.Visit(LogitOptions options) => Control = null;
             void IChartOptionVisitor.Visit(MHOptions options) => Control = null;
-            void IChartOptionVisitor.Visit(NormalOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(NormalOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
             void IChartOptionVisitor.Visit(PolynomialRegressionOptions options) => Control = null;
-            void IChartOptionVisitor.Visit(PyramidOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(ROCOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(ScatterXYOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(SpreadOptions options) => Control = new ctlChartOptions(chartDefinition);
-            void IChartOptionVisitor.Visit(SurvivalOptions options) => Control = new ctlChartOptions(chartDefinition);
+            void IChartOptionVisitor.Visit(PyramidOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(ROCOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(ScatterXYOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(SpreadOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
+            void IChartOptionVisitor.Visit(SurvivalOptions options) => Control = new ctlChartOptions(ChartDefinition, ChartPreferences, ChartRendererFactory, SdApplication, SdPreferences);
             void IChartOptionVisitor.Visit(TiesOptions options) => Control = null;
             void IChartOptionVisitor.Visit(XyOptions options) => Control = null;
             void IChartOptionVisitor.Visit(XyrOptions options) => Control = null;

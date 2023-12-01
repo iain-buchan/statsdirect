@@ -5,12 +5,21 @@ using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
-    public static class Analysis
+    public class Analysis : RendererBase
     {
+        private IProgressBarHost ProgressBarHost { get; }
+        private IUserInterface UserInterface { get; }
+
+        public Analysis(IProgressBarHost progressBarHost, ISdPreferences sdPreferences, IUserInterface userInterface)
+            : base(sdPreferences)
+        {
+            ProgressBarHost = progressBarHost;
+            UserInterface = userInterface;
+        }
+
         public static StepOutput RptRateDirectStd(ParameterBag parameters)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
@@ -152,11 +161,11 @@ namespace StatsDirect.Builtins
 
             // Dobson improved approx Poisson CI - Stats in Medicine 1991 (10) 457-
             Rates.poisson_ci(alpha, revents, 1.0, out xl, out xu);
-            if (xl != Constant.MISSING & poisVar >= 0.0 & revents > 0.0)
+            if (xl != Constant.MISSING && poisVar >= 0.0 && revents > 0.0)
                 xl = stdr + Math.Sqrt(poisVar / revents) * (xl - revents);
             else
                 xl = Constant.MISSING;
-            if (xu != Constant.MISSING & poisVar >= 0.0 & revents > 0.0)
+            if (xu != Constant.MISSING && poisVar >= 0.0 && revents > 0.0)
                 xu = stdr + Math.Sqrt(poisVar / revents) * (xu - revents);
             else
                 xu = Constant.MISSING;
@@ -165,7 +174,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptRateCompareTwo(ITemplateHost host, ParameterBag parameters)
+        public StepOutput? RptRateCompareTwo(ParameterBag parameters)
         {
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
@@ -256,7 +265,7 @@ namespace StatsDirect.Builtins
 
             if (doCml)
             {
-                Rec2X2[] tabl = new Rec2X2[1];
+                ExactBB.Rec2X2[] tabl = new ExactBB.Rec2X2[1];
                 tabl[0].Freq = 1;
                 tabl[0].A = a;
                 tabl[0].M1 = b + a;
@@ -264,9 +273,9 @@ namespace StatsDirect.Builtins
                 tabl[0].N0 = pt2;
                 tabl[0].IsInformative = a * pt1 != 0 || b * pt2 != 0;
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, 0, 1, Exact22KDataType.Type3, tabl, gamma, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out int ierr);
+                new ExactBB(ProgressBarHost).Exact22K(0, 1, ExactBB.Exact22KDataType.Type3, tabl, gamma, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out int ierr);
                 if (ierr != 0)
-                    host.Error(Formatting.ERRCOLON + "Error in calculation", "StatsDirect");
+                    UserInterface.Error(Formatting.ERRCOLON + "Error in calculation", "StatsDirect");
 
                 List<ParameterBag> exactList = new();
                 outputParameters.AddOutput("*exact", exactList);
@@ -291,17 +300,9 @@ namespace StatsDirect.Builtins
             int fault = 0;
 
             if (a > d)
-            {
-                int t = a;
-                a = d;
-                d = t;
-            }
+                (d, a) = (a, d);
             if (b > c)
-            {
-                int t = b;
-                b = c;
-                c = t;
-            }
+                (c, b) = (b, c);
 
             int p = a + b;
             int q = c + d;
@@ -418,10 +419,8 @@ namespace StatsDirect.Builtins
             return Constant.MISSING;
         }
 
-        public static StepOutput RptMiscRetroRisk(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput? RptMiscRetroRisk(ParameterBag parameters)
         {
-            double pe = Constant.MISSING;
-
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
             double c = parameters["c"].AsDouble;
@@ -436,7 +435,7 @@ namespace StatsDirect.Builtins
             if (gamma <= 0.0 | gamma >= 1.0)
                 gamma = 0.95;
 
-            double odr = OddsRatio(a, b, c, d);
+            double odr = ExactBB.OddsRatio(a, b, c, d);
 
             double p = 1.0 - (1.0 - gamma) / 2.0;
             double zp = PDF.gauinv(p, out int fault);
@@ -447,9 +446,10 @@ namespace StatsDirect.Builtins
             double parUl;
             double parLl;
             double par;
+            double pe = Constant.MISSING;
             if (odr > 1.0 && !double.IsInfinity(odr))
             {
-                if (parameters.ContainsKey("pe") && null != parameters["pe"] && parameters["pe"].HasData)
+                if (parameters.TryGetValue("pe", out FilledParameter? fp) && fp is not null && fp.HasData)
                     pe = parameters["pe"].AsDouble;
                 if (pe == Constant.MISSING || pe < 0.0 || pe > 1.0)
                     pe = (a + c) / n;
@@ -465,11 +465,11 @@ namespace StatsDirect.Builtins
                 parUl = Constant.MISSING;
             }
 
-            ParameterBag outputParameters = new();
-            outputParameters.AddOutput("aa", a);
-            outputParameters.AddOutput("bb", b);
-            outputParameters.AddOutput("cc", c);
-            outputParameters.AddOutput("dd", d);
+            ParameterBag outputParameters = new ParameterBag()
+                .AddOutput("aa", a)
+                .AddOutput("bb", b)
+                .AddOutput("cc", c)
+                .AddOutput("dd", d);
 
             //odr = b * c > 0 ? (a * d) / (b * c) : Constant.MISSING;
             outputParameters.AddOutput("odds", odr);
@@ -481,14 +481,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*power", powerList);
             if (b * c > 0 && a * d > 0)
             {
-                ParameterBag powerParameters = new();
-                powerList.Add(powerParameters);
                 double seodr = Math.Sqrt(1 / a + 1 / b + 1 / c + 1 / d);
                 double yodr = Math.Log(odr) - zp * seodr;
                 double xodr = Math.Log(odr) + zp * seodr;
-                powerParameters.AddOutput("ci", gamma * 100);
-                powerParameters.AddOutput("ci_1", Math.Exp(yodr));
-                powerParameters.AddOutput("ci_2", Math.Exp(xodr));
+                powerList.Add(new ParameterBag()
+                    .AddOutput("ci", gamma * 100)
+                    .AddOutput("ci_1", Math.Exp(yodr))
+                    .AddOutput("ci_2", Math.Exp(xodr)));
             }
 
             //if ((a * d != 0) || (b * c != 0))
@@ -514,7 +513,7 @@ namespace StatsDirect.Builtins
             //    p1M = Constant.MISSING;
             //    p2M = Constant.MISSING;
             //}
-            OddsRatioCMLE(host, gamma, a, b, c, d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out _);
+            new ExactBB(ProgressBarHost).OddsRatioCMLE(gamma, a, b, c, d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out _);
             outputParameters.AddOutput("eor", eor);
             outputParameters.AddOutput("pc", gamma * 100.0);
             outputParameters.AddOutput("llf", llf);
@@ -540,9 +539,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        private static string XBenHarm(IFormatting host, double x, bool roundup)
+        private string XBenHarm(double x, bool roundup)
         {
-            return (roundup ? Formatting.RoundUp(Math.Abs(x)) : host.RoundU(Math.Abs(x))) + (x < 0 ? "_harm" : "_benefit");
+            return (roundup ? Formatting.RoundUp(Math.Abs(x)) : RoundU(Math.Abs(x))) + (x < 0 ? "_harm" : "_benefit");
         }
 
         private static void XNnSwap(ref double nnl, ref double nnu)
@@ -551,23 +550,19 @@ namespace StatsDirect.Builtins
             {
                 if (nnl < nnu)
                 {
-                    double tmp = nnl;
-                    nnl = nnu;
-                    nnu = tmp;
+                    (nnu, nnl) = (nnl, nnu);
                 }
             }
             else
             {
                 if (nnl > nnu)
                 {
-                    double tmp = nnl;
-                    nnl = nnu;
-                    nnu = tmp;
+                    (nnu, nnl) = (nnl, nnu);
                 }
             }
         }
 
-        public static StepOutput RptMiscDiagnostic(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptMiscDiagnostic(ParameterBag parameters)
         {
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
@@ -782,7 +777,7 @@ namespace StatsDirect.Builtins
             double odr = b * c > 0.0 && a * d > 0.0 ? a * d / (b * c) : Constant.MISSING;
             outputParameters.AddOutput("odr", odr);
 
-            OddsRatioCMLE(host, cco, a, b, c, d, out double eor, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
+            new ExactBB(ProgressBarHost).OddsRatioCMLE(cco, a, b, c, d, out double eor, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
             outputParameters.AddOutput("cmle", eor);
             outputParameters.AddOutput("cmle_from", llf);
             outputParameters.AddOutput("cmle_to", ulf);
@@ -817,7 +812,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptKappaScreen(IPreferences host, ParameterBag parameters)
+        public StepOutput? RptKappaScreen(ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)
@@ -918,7 +913,7 @@ namespace StatsDirect.Builtins
                 {
                     ParameterBag totParameters = new();
                     totList.Add(totParameters);
-                    totParameters.AddOutput("tot", Formatting.XRound(w[i - 1, j - 1], host.Preferences.PDecimalPlaces));
+                    totParameters.AddOutput("tot", Formatting.XRound(w[i - 1, j - 1], SdPreferences.PDecimalPlaces));
                 }
             }
             outputParameters.AddOutput("pow", pow * 100);
@@ -1051,7 +1046,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptMiscNumberNeededToTreat(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptMiscNumberNeededToTreat(ParameterBag parameters)
         {
             double tmp;
             double nt = parameters["nt"].AsDouble;
@@ -1108,14 +1103,14 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", 100.0 * zl);
 
-            outputParameters.AddOutput("ce", xc.ToString() + "/" + nc.ToString() + " = " + host.RoundU(pc));
+            outputParameters.AddOutput("ce", xc.ToString() + "/" + nc.ToString() + " = " + RoundU(pc));
             MathDbl.binci(xc, nc, out double cl, out double cu, zl, out string warn);
             outputParameters.AddOutput("ce_from", cl);
-            outputParameters.AddOutput("ce_to", host.RoundU(cu) + warn);
-            outputParameters.AddOutput("te", xt.ToString() + "/" + nt.ToString() + " = " + host.RoundU(pt));
+            outputParameters.AddOutput("ce_to", RoundU(cu) + warn);
+            outputParameters.AddOutput("te", xt.ToString() + "/" + nt.ToString() + " = " + RoundU(pt));
             MathDbl.binci(xt, nt, out cl, out cu, zl, out warn);
             outputParameters.AddOutput("te_from", cl);
-            outputParameters.AddOutput("te_to", host.RoundU(cu) + warn);
+            outputParameters.AddOutput("te_to", RoundU(cu) + warn);
             MathDbl.lr_ci(xc, xt, nc, nt, zc, out double rrel, out double rreu);
             if (rrel > rreu)
             {
@@ -1128,14 +1123,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("rre_from", rrel);
             outputParameters.AddOutput("rre_to", rreu);
 
-            outputParameters.AddOutput("cne", (nc - xc).ToString() + "/" + nc.ToString() + " = " + host.RoundU(1.0 - pc));
+            outputParameters.AddOutput("cne", (nc - xc).ToString() + "/" + nc.ToString() + " = " + RoundU(1.0 - pc));
             MathDbl.binci(nc - xc, nc, out cl, out cu, zl, out warn);
             outputParameters.AddOutput("cne_from", cl);
-            outputParameters.AddOutput("cne_to", host.RoundU(cu) + warn);
-            outputParameters.AddOutput("tne", (nt - xt).ToString() + "/" + nt.ToString() + " = " + host.RoundU(1.0 - pt));
+            outputParameters.AddOutput("cne_to", RoundU(cu) + warn);
+            outputParameters.AddOutput("tne", (nt - xt).ToString() + "/" + nt.ToString() + " = " + RoundU(1.0 - pt));
             MathDbl.binci(nt - xt, nt, out cl, out cu, zl, out warn);
             outputParameters.AddOutput("tne_from", cl);
-            outputParameters.AddOutput("tne_to", host.RoundU(cu) + warn);
+            outputParameters.AddOutput("tne_to", RoundU(cu) + warn);
             MathDbl.lr_ci(nc - xc, nt - xt, nc, nt, zc, out double rrnel, out double rrneu);
             if (rrnel > rrneu)
             {
@@ -1157,8 +1152,8 @@ namespace StatsDirect.Builtins
             //tabl[1].Informative = (t1 * t4 != 0) || (t2 * t3 != 0);
             //bool useLogScale = false;
             //new ExactBB().Exact22K(host,1, 1, tabl, zl, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-            double oor = OddsRatio(t1, t2, t3, t4);
-            OddsRatioCMLE(host, zl, t1, t2, t3, t4, out double _, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
+            double oor = ExactBB.OddsRatio(t1, t2, t3, t4);
+            new ExactBB(ProgressBarHost).OddsRatioCMLE(zl, t1, t2, t3, t4, out double _, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
             //if (ierr != 0)
             //    eor = Constant.MISSING;
             //double oor = t2 * t3 == 0.0 ? Constant.MISSING : (t1 * t4) / (t2 * t3);
@@ -1201,17 +1196,17 @@ namespace StatsDirect.Builtins
             // Jan 02 change to benefit/harm notation
             // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
             XNnSwap(ref nnl, ref nnu);
-            outputParameters.AddOutput("treat", XBenHarm(host, nnt, false));
-            outputParameters.AddOutput("treat_from", XBenHarm(host, nnl, false));
-            outputParameters.AddOutput("treat_to", XBenHarm(host, nnu, false));
-            outputParameters.AddOutput("treat_round", XBenHarm(host, nnt, true));
-            outputParameters.AddOutput("treat_round_from", XBenHarm(host, nnl, true));
-            outputParameters.AddOutput("treat_round_to", XBenHarm(host, nnu, true));
+            outputParameters.AddOutput("treat", XBenHarm(nnt, false));
+            outputParameters.AddOutput("treat_from", XBenHarm(nnl, false));
+            outputParameters.AddOutput("treat_to", XBenHarm(nnu, false));
+            outputParameters.AddOutput("treat_round", XBenHarm(nnt, true));
+            outputParameters.AddOutput("treat_round_from", XBenHarm(nnl, true));
+            outputParameters.AddOutput("treat_round_to", XBenHarm(nnu, true));
             // <--
 
             // **************************************************************************************
             // substitute external baseline event rate (brr) for control event rate (pc) if brr given
-            bool hasBrr = parameters.ContainsKey("brr") && parameters["brr"] != null;
+            bool hasBrr = parameters.ContainsKey("brr") && parameters["brr"] is not null;
             List<ParameterBag> adjustedList = new();
             outputParameters.AddOutput("*adjusted", adjustedList);
             if (hasBrr)
@@ -1222,7 +1217,7 @@ namespace StatsDirect.Builtins
                 string brt;
                 if (brr < 0.0 | brr > 1.0)
                 {
-                    if (brr > 1.0 & brr < 100.0)
+                    if (brr > 1.0 && brr < 100.0)
                     {
                         brr /= 100.0;
                         brt = "(from percentage) ";
@@ -1249,12 +1244,12 @@ namespace StatsDirect.Builtins
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
-                adjustedParameters.AddOutput("rd_treat", XBenHarm(host, nnt, false));
-                adjustedParameters.AddOutput("rd_treat_from", XBenHarm(host, nnl, false));
-                adjustedParameters.AddOutput("rd_treat_to", XBenHarm(host, nnu, false));
-                adjustedParameters.AddOutput("rd_treat_round", XBenHarm(host, nnt, true));
-                adjustedParameters.AddOutput("rd_treat_round_from", XBenHarm(host, nnl, true));
-                adjustedParameters.AddOutput("rd_treat_round_to", XBenHarm(host, nnu, true));
+                adjustedParameters.AddOutput("rd_treat", XBenHarm(nnt, false));
+                adjustedParameters.AddOutput("rd_treat_from", XBenHarm(nnl, false));
+                adjustedParameters.AddOutput("rd_treat_to", XBenHarm(nnu, false));
+                adjustedParameters.AddOutput("rd_treat_round", XBenHarm(nnt, true));
+                adjustedParameters.AddOutput("rd_treat_round_from", XBenHarm(nnl, true));
+                adjustedParameters.AddOutput("rd_treat_round_to", XBenHarm(nnu, true));
                 // <--
 
                 // NNT_risk ratio of event
@@ -1267,12 +1262,12 @@ namespace StatsDirect.Builtins
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
-                adjustedParameters.AddOutput("rr_treat", XBenHarm(host, nnt, false));
-                adjustedParameters.AddOutput("rr_treat_from", XBenHarm(host, nnl, false));
-                adjustedParameters.AddOutput("rr_treat_to", XBenHarm(host, nnu, false));
-                adjustedParameters.AddOutput("rr_treat_round", XBenHarm(host, nnt, true));
-                adjustedParameters.AddOutput("rr_treat_round_from", XBenHarm(host, nnl, true));
-                adjustedParameters.AddOutput("rr_treat_round_to", XBenHarm(host, nnu, true));
+                adjustedParameters.AddOutput("rr_treat", XBenHarm(nnt, false));
+                adjustedParameters.AddOutput("rr_treat_from", XBenHarm(nnl, false));
+                adjustedParameters.AddOutput("rr_treat_to", XBenHarm(nnu, false));
+                adjustedParameters.AddOutput("rr_treat_round", XBenHarm(nnt, true));
+                adjustedParameters.AddOutput("rr_treat_round_from", XBenHarm(nnl, true));
+                adjustedParameters.AddOutput("rr_treat_round_to", XBenHarm(nnu, true));
                 // <--
 
                 // NNT_risk ratio of no event
@@ -1292,12 +1287,12 @@ namespace StatsDirect.Builtins
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
-                adjustedParameters.AddOutput("rrn_treat", XBenHarm(host, nnt, false));
-                adjustedParameters.AddOutput("rrn_treat_from", XBenHarm(host, nnl, false));
-                adjustedParameters.AddOutput("rrn_treat_to", XBenHarm(host, nnu, false));
-                adjustedParameters.AddOutput("rrn_treat_round", XBenHarm(host, nnt, true));
-                adjustedParameters.AddOutput("rrn_treat_round_from", XBenHarm(host, nnl, true));
-                adjustedParameters.AddOutput("rrn_treat_round_to", XBenHarm(host, nnu, true));
+                adjustedParameters.AddOutput("rrn_treat", XBenHarm(nnt, false));
+                adjustedParameters.AddOutput("rrn_treat_from", XBenHarm(nnl, false));
+                adjustedParameters.AddOutput("rrn_treat_to", XBenHarm(nnu, false));
+                adjustedParameters.AddOutput("rrn_treat_round", XBenHarm(nnt, true));
+                adjustedParameters.AddOutput("rrn_treat_round_from", XBenHarm(nnl, true));
+                adjustedParameters.AddOutput("rrn_treat_round_to", XBenHarm(nnu, true));
                 // <--
 
                 // NNT_odds ratio
@@ -1316,19 +1311,19 @@ namespace StatsDirect.Builtins
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
-                adjustedParameters.AddOutput("or_treat", XBenHarm(host, nnt, false));
-                adjustedParameters.AddOutput("or_treat_from", XBenHarm(host, nnl, false));
-                adjustedParameters.AddOutput("or_treat_to", XBenHarm(host, nnu, false));
-                adjustedParameters.AddOutput("or_treat_round", XBenHarm(host, nnt, true));
-                adjustedParameters.AddOutput("or_treat_round_from", XBenHarm(host, nnl, true));
-                adjustedParameters.AddOutput("or_treat_round_to", XBenHarm(host, nnu, true));
+                adjustedParameters.AddOutput("or_treat", XBenHarm(nnt, false));
+                adjustedParameters.AddOutput("or_treat_from", XBenHarm(nnl, false));
+                adjustedParameters.AddOutput("or_treat_to", XBenHarm(nnu, false));
+                adjustedParameters.AddOutput("or_treat_round", XBenHarm(nnt, true));
+                adjustedParameters.AddOutput("or_treat_round_from", XBenHarm(nnl, true));
+                adjustedParameters.AddOutput("or_treat_round_to", XBenHarm(nnu, true));
                 // <--
             }
 
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptMiscRelRisk(ParameterBag parameters)
+        public static StepOutput? RptMiscRelRisk(ParameterBag parameters)
         {
             double pe = Constant.MISSING;
 
@@ -1419,7 +1414,7 @@ namespace StatsDirect.Builtins
             return null;
         }
 
-        public static StepOutput RptPropPairs(ParameterBag parameters)
+        public static StepOutput? RptPropPairs(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
 
@@ -1550,15 +1545,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptPropSingle(ParameterBag parameters)
+        public static StepOutput? RptPropSingle(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
             if (r > n)
             {
-                double tmp = r;
-                r = n;
-                n = tmp;
+                (n, r) = (r, n);
             }
 
             if (n <= 0)
@@ -1653,16 +1646,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptPropUnPaired(ParameterBag parameters)
+        public static StepOutput? RptPropUnPaired(ParameterBag parameters)
         {
             double n1 = parameters["n1"].AsDouble;
             double r1 = parameters["r1"].AsDouble;
 
             if (r1 > n1)
             {
-                double rTmp = r1;
-                r1 = n1;
-                n1 = rTmp;
+                (n1, r1) = (r1, n1);
             }
             if (n1 <= 0)
                 throw new InvalidDataException();
@@ -1671,9 +1662,7 @@ namespace StatsDirect.Builtins
             double r2 = parameters["r2"].AsDouble;
             if (r2 > n2)
             {
-                double rTmp = r2;
-                r2 = n2;
-                n2 = rTmp;
+                (n2, r2) = (r2, n2);
             }
 
             if (n2 <= 0)

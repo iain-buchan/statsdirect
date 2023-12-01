@@ -7,7 +7,7 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlPDF : IFillParameterBag
+    internal partial class ctlPDF : IFillParameterBag
     {
         private enum TouchedValue
         {
@@ -23,7 +23,7 @@ namespace StatsDirect.UI
         private const string MINIMAL = "< 1E-15";
         private readonly DistributionType selectedTest;
         private bool inverseAvailable;
-        private string lastCalculationAsString;
+        private string? lastCalculationAsString;
         /// <summary>
         /// If true, the user has changed a text box but not hit Calculate or Invert, or anything else that would perform the calculation.
         /// </summary>
@@ -34,8 +34,11 @@ namespace StatsDirect.UI
         private TouchedValue priorTouchedValue = TouchedValue.NotSet;
         private TouchedValue lastTouchedValue = TouchedValue.NotSet;
 
-        public ctlPDF(DistributionOptions options)
+        private ISdApplication SdApplication { get; }
+
+        public ctlPDF(DistributionOptions options, ISdApplication sdApplication)
         {
+            SdApplication = sdApplication;
             selectedTest = options.SelectedTest;
             InitializeComponent();
             SetVisibility();
@@ -47,19 +50,19 @@ namespace StatsDirect.UI
             txt2p.Tag = TouchedValue.P2;
         }
 
-        private void Calc_Click(object sender, EventArgs e)
+        private void Calc_Click(object? sender, EventArgs e)
         {
             Calculate();
         }
 
-        private void DoubleClickTextbox(object sender, EventArgs e)
+        private void DoubleClickTextbox(object? sender, EventArgs e)
         {
             Control ctl = (Control)sender;
             NoteHistory((TouchedValue)ctl.Tag);
             CalculateOrInvert();
         }
 
-        private void EnterTextbox(object sender, EventArgs e)
+        private void EnterTextbox(object? sender, EventArgs e)
         {
             Control ctl = (Control)sender;
             NoteHistory((TouchedValue)ctl.Tag);
@@ -75,7 +78,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void LeaveTextbox(object sender, EventArgs e)
+        private void LeaveTextbox(object? sender, EventArgs e)
         {
             // TODO: Put back textbox leaves as command triggers.  This causes a problem as a leave fires before a button click - is there a better way to handle this using a different event?
             /*
@@ -86,7 +89,7 @@ namespace StatsDirect.UI
              */
         }
 
-        private void edpdf_KeyPress(object sender, KeyPressEventArgs e)
+        private void edpdf_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == 13)
             {
@@ -100,7 +103,7 @@ namespace StatsDirect.UI
                 dirty = true;
         }
 
-        private void eddf_KeyPress(object sender, KeyPressEventArgs e)
+        private void eddf_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == 13)
             {
@@ -114,7 +117,7 @@ namespace StatsDirect.UI
                 dirty = true;
         }
 
-        private void eddf2_KeyPress(object sender, KeyPressEventArgs e)
+        private void eddf2_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == 13)
             {
@@ -129,12 +132,12 @@ namespace StatsDirect.UI
             }
         }
 
-        private void NoteDirty(object sender, KeyPressEventArgs e)
+        private void NoteDirty(object? sender, KeyPressEventArgs e)
         {
             dirty = true;
         }
 
-        private void BtnLclClick(object sender, EventArgs e)
+        private void BtnLclClick(object? sender, EventArgs e)
         {
             try
             {
@@ -154,7 +157,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void BtnUclClick(object sender, EventArgs e)
+        private void BtnUclClick(object? sender, EventArgs e)
         {
             try
             {
@@ -478,7 +481,7 @@ namespace StatsDirect.UI
             if (txtPdf.Text.Length > 0)
             {
                 rh = CdblTxt(txtPdf.Text);
-                if (nx >= 4 & rh <= 1)
+                if (nx >= 4 && rh <= 1)
                 {
                     ix = Convert.ToInt32((1.0 - rh) * (nx * (nx * nx - 1)) / 6);
                     txtDf2.Text = ix.ToString();
@@ -498,7 +501,7 @@ namespace StatsDirect.UI
             else
                 pu = 1.0 - ExFortran.prho(nx, ix, out fault);
             Pval15Into(txtUp, pu, false, fault != 0);
-            lastCalculationAsString = "P(Hotelling T " + ix.ToString() + ", n " + nx.ToString() + ") = " + txtUp.Text.Trim() + " upper tail";
+            lastCalculationAsString = $"P(Hotelling T {ix}, n {nx}) = {txtUp.Text.Trim()} upper tail";
         }
 
         private void PFromKendall()
@@ -512,7 +515,7 @@ namespace StatsDirect.UI
             if (txtPdf.Text.Length > 0)
             {
                 tau = CdblTxt(txtPdf.Text);
-                if (nx > 0 & rh <= 1)
+                if (nx > 0 && rh <= 1)
                 {
                     ix = Convert.ToInt32(tau * (nx * (nx - 1) / 2.0));
                     txtDf2.Text = ix.ToString();
@@ -878,7 +881,7 @@ namespace StatsDirect.UI
 
             if (nl > 100000)
             {
-                if (SdApplication.SoleInstance.Query("This calculation can take a long time with large numbers.\r\n\r\nDo you wish to continue?", "StatsDirect Poisson Inverse"))
+                if (SdApplication.Query("This calculation can take a long time with large numbers.\r\n\r\nDo you wish to continue?", "StatsDirect Poisson Inverse"))
                     ExFortran.poissoni(idx, P, out xmid, out trm, out phi, out plo, nl, out ifault);
                 else
                     ifault = 4;
@@ -976,18 +979,18 @@ namespace StatsDirect.UI
             return Formatting.XRound(p, 15);
         }
 
-        private static double CdblTxt(string value)
-        {
-            return MINIMAL.Equals(value) ? Constant.EPSILON : Parsing.Cdbl_Txt(value);
-        }
+        private static double CdblTxt(string value) =>
+            MINIMAL.Equals(value)
+                ? Constant.EPSILON
+                : Parsing.Cdbl_Txt(value);
 
         private void FriendlyError(Exception ex)
         {
             lblError.Text = "StatsDirect couldn't calculate that function: " + ex.Message;
-            SdApplication.WriteToBlackbox("Somewhere in ctlPdf", ex);
+            LastChanceCatcher.WriteToBlackbox("Somewhere in ctlPdf", ex);
         }
 
-        public Control Fill(ParameterBag outputParameters, bool doValidation)
+        public Control? Fill(ParameterBag outputParameters, bool doValidation)
         {
             if (dirty)
                 CalculateOrInvert();
@@ -995,7 +998,7 @@ namespace StatsDirect.UI
             return null;
         }
 
-        private void cmdInvert_Click(object sender, EventArgs e)
+        private void cmdInvert_Click(object? sender, EventArgs e)
         {
             Invert(true);
         }

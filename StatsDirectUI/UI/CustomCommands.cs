@@ -41,11 +41,11 @@ namespace StatsDirect.UI
             Clipboard.SetDataObject(data, false);
         }
 
-        void OnBeforeExport(object sender, BeforeExportEventArgs e)
+        void OnBeforeExport(object? sender, BeforeExportEventArgs e)
         {
             HtmlDocumentExporterOptions exporterOptions = e.Options as HtmlDocumentExporterOptions;
 
-            if (exporterOptions != null)
+            if (exporterOptions is not null)
             {
                 exporterOptions.CssPropertiesExportType = CssPropertiesExportType.Inline;
                 exporterOptions.ExportRootTag = ExportRootTag.Body;

@@ -4,9 +4,11 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlOneSeriesOptions : UserControl
+    internal partial class ctlOneSeriesOptions : UserControl
     {
-        Charting.MarkerType markerType;
+        private const int DEFAULT_MARKER_SIZE = 6; // TODO: Fetch from some configuration source
+
+        MarkerType markerType;
         private bool useColour;
         private bool showMarkerStyle;
         private bool showMarkerSize;
@@ -92,7 +94,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public Charting.MarkerType MarkerType
+        public MarkerType MarkerType
         {
             get => markerType;
             set
@@ -130,18 +132,18 @@ namespace StatsDirect.UI
 
         private void SetMarkerTypeFromForm()
         {
-            if (null != markerType)
-            {
-                markerType.MarkerColor = ToColorDescriptor(markerColorPanel.Color);
-                markerType.LineColor = ToColorDescriptor(lineColorPanel.Color);
-                markerType.IsMarkerFilled = chkFillMarker.Checked;
-                double.TryParse(cboMarkerSize.Text, out double markerSize);
-                markerType.MarkerSize = markerSize;
-                markerType.MarkerShape = markerShaper.MarkerShape;
-                markerType.LineDashStyle = dashStyler.DashStyle;
-                markerType.Width = lineThickness.LineThickness;
-                markerType.MarkerFillStyle = fillStyler.FillStyle;
-            }
+            if (!double.TryParse(cboMarkerSize.Text, out double markerSize))
+                markerSize = (null != markerType) ? markerType.MarkerSize : DEFAULT_MARKER_SIZE;
+            markerType = new(
+                chkFillMarker.Checked,
+                ToColorDescriptor(lineColorPanel.Color),
+                dashStyler.DashStyle,
+                ToColorDescriptor(markerColorPanel.Color),
+                fillStyler.FillStyle,
+                markerShaper.MarkerShape,
+                markerSize,
+                lineThickness.LineThickness
+                );
         }
 
 
@@ -169,14 +171,8 @@ namespace StatsDirect.UI
             ShowMarkerStyle = showMarkerOptions;
         }
 
-        private Color ToColor(ColorDescriptor color)
-        {
-            return Color.FromArgb(color.R, color.G, color.B);
-        }
+        private static Color ToColor(ColorDescriptor color) => Color.FromArgb(color.R, color.G, color.B);
 
-        private ColorDescriptor ToColorDescriptor(Color color)
-        {
-            return ColorDescriptor.FromArgb(color.R, color.G, color.B);
-        }
+        private static ColorDescriptor ToColorDescriptor(Color color) => new ColorDescriptor(color.R, color.G, color.B);
     }
 }

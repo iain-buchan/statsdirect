@@ -7,7 +7,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
-        public string DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        public string? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
             if (null == DefaultValueExpression)
                 return null;
@@ -23,7 +23,7 @@ namespace StatsDirect.Templates
         /// The default value for this parameter, or null for no default.
         /// </summary>
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression { get; set; }
+        public Expression? DefaultValueExpression { get; set; }
 
         /// <summary>
         /// The maximum length for this parameter, or 0 for no maximum.
@@ -38,7 +38,7 @@ namespace StatsDirect.Templates
 
         public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
         {
-            return new ParameterBag(Name, FilledParameterFactory.Default(DefaultValue(processor, context)));
+            return new ParameterBag().AddDefault(Name, DefaultValue(processor, context));
         }
     }
 }

@@ -7,25 +7,26 @@ namespace StatsDirect.UI
 {
     public partial class ctlSeriesOptions : UserControl
     {
-        private IList<SeriesOptionsDescriptor> seriesOptionsDescriptors;
-        private IList<MarkerType> markerTypes;
-        private SeriesOptionsDescriptor selectedDescriptor;
+        private IReadOnlyList<SeriesOptionsDescriptor>? seriesOptionsDescriptors;
+        public IList<MarkerType>? MarkerTypes { get; set; }
+        public bool? ForcedIsFilled { get; set; }
+        public FillStyle? ForcedFillStyle { get; set; }
+
+        private SeriesOptionsDescriptor? selectedDescriptor;
 
         public ctlSeriesOptions()
         {
             InitializeComponent();
         }
 
-        void rdoSeries_CheckedChanged(object sender, EventArgs e)
+        void rdoSeries_CheckedChanged(object? sender, EventArgs e)
         {
+            if (sender is null)
+                return;
             if (((RadioButton)sender).Checked)
-            {
                 LoadSeriesOptions();
-            }
             else
-            {
                 SaveSeriesOptions();
-            }
         }
 
         public void Save()
@@ -44,15 +45,15 @@ namespace StatsDirect.UI
         private void LoadOptions()
         {
             // If we don't yet have any marker types passed in by an outside party, fake it from the saved details.
-            if (null == markerTypes && null != seriesOptionsDescriptors)
-                markerTypes = Charting.Renderer.AbstractChartRenderer.MarkersFromDescriptors(seriesOptionsDescriptors, ShouldForceIsFilled, ForcedIsFilled, ShouldForceFillStyle, ForcedFillStyle);
+            if (MarkerTypes is null && seriesOptionsDescriptors is not null)
+                MarkerTypes = Charting.Renderer.AbstractChartRenderer.MarkersFromDescriptors(seriesOptionsDescriptors, ForcedIsFilled, ForcedFillStyle);
 
             cboSeries.Items.Clear();
-            if (null != seriesOptionsDescriptors)
+            if (seriesOptionsDescriptors is not null)
             {
                 for (int i = 0; i < seriesOptionsDescriptors.Count; i++)
                 {
-                    string seriesName = seriesOptionsDescriptors[i].SeriesName ?? "Series " + (i + 1).ToString();
+                    string seriesName = seriesOptionsDescriptors[i].SeriesName ?? $"Series {i + 1}";
                     cboSeries.Items.Add(seriesName);
                 }
                 if (cboSeries.Items.Count > 0)
@@ -67,7 +68,7 @@ namespace StatsDirect.UI
             {
                 SeriesOptionsDescriptor sod = selectedDescriptor;
                 int markerIndex = sod.MarkerIndex;
-                MarkerType mt = markerTypes[markerIndex];
+                MarkerType mt = MarkerTypes[markerIndex];
                 ctlOneSeriesOptions1.ShowDashStyle = sod.AllowChangeToDashStyle;
                 ctlOneSeriesOptions1.ShowLineThickness = sod.AllowChangeToLineThickness;
                 ctlOneSeriesOptions1.ShowMarkerColour = sod.AllowChangeToMarkerColour;
@@ -79,13 +80,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public IList<MarkerType> MarkerTypes
-        {
-            get => markerTypes;
-            set => markerTypes = value;
-        }
-
-        public IList<SeriesOptionsDescriptor> SeriesOptionsDescriptors
+        public IReadOnlyList<SeriesOptionsDescriptor> SeriesOptionsDescriptors
         {
             get => seriesOptionsDescriptors;
             set
@@ -95,12 +90,7 @@ namespace StatsDirect.UI
             }
         }
 
-        public bool ShouldForceIsFilled { get; set; }
-        public bool ForcedIsFilled { get; set; }
-        public bool ShouldForceFillStyle { get; set; }
-        public FillStyle ForcedFillStyle { get; set; }
-
-        private void cboSeries_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboSeries_SelectedIndexChanged(object? sender, EventArgs e)
         {
             if (null != selectedDescriptor)
                 SaveSeriesOptions();
@@ -113,19 +103,8 @@ namespace StatsDirect.UI
             }
         }
 
-        public void SetColour(bool useColour)
-        {
-            ctlOneSeriesOptions1.SetColour(useColour);
-        }
-
-        public void SetShowLineOptions(bool showLineOptions)
-        {
-            ctlOneSeriesOptions1.SetShowLineOptions(showLineOptions);
-        }
-
-        internal void SetShowMarkerOptions(bool showMarkerOptions)
-        {
-            ctlOneSeriesOptions1.SetShowMarkerOptions(showMarkerOptions);
-        }
+        public void SetColour(bool useColour) => ctlOneSeriesOptions1.SetColour(useColour);
+        public void SetShowLineOptions(bool showLineOptions) => ctlOneSeriesOptions1.SetShowLineOptions(showLineOptions);
+        internal void SetShowMarkerOptions(bool showMarkerOptions) => ctlOneSeriesOptions1.SetShowMarkerOptions(showMarkerOptions);
     }
 }

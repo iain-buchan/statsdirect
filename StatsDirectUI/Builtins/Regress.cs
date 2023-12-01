@@ -10,8 +10,18 @@ using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
-    public static class Regress
+    public class Regress : RendererBase
     {
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private IProgressBarHost ProgressBarHost { get; }
+
+        public Regress(IChartRendererFactory chartRendererFactory, IProgressBarHost progressBarHost, ISdPreferences sdPreferences)
+            : base(sdPreferences)
+        {
+            ChartRendererFactory = chartRendererFactory;
+            ProgressBarHost = progressBarHost;
+        }
+
         ///  <summary>
         ///  The equivalent of the PASS_* variables in SD2, so PASS_X is X in this class
         ///  </summary>
@@ -263,7 +273,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput PlotResidualsSimple(ParameterBag parameters)
+        public StepOutput PlotResidualsSimple(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             context.CalculateLeastSquaresMethod();
@@ -301,7 +311,7 @@ namespace StatsDirect.Builtins
         /// <param name="host"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        public static StepOutput PlotSeCi(ParameterBag parameters)
+        public StepOutput PlotSeCi(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             context.CalculateLeastSquaresMethod();
@@ -313,7 +323,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput PlotPredictionInterval(ParameterBag parameters)
+        public StepOutput PlotPredictionInterval(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
             context.CalculateLeastSquaresMethod();
@@ -615,7 +625,7 @@ namespace StatsDirect.Builtins
         {
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
             DoubleVariable outcomeVariable = (DoubleVariable)outcomeFrame.Variables[0];
-            bool weighted = parameters.ContainsKey("weights") && parameters["weights"] != null;
+            bool weighted = parameters.ContainsKey("weights") && parameters["weights"] is not null;
             DoubleVariable weightsVariable;
             if (weighted)
             {
@@ -874,16 +884,16 @@ namespace StatsDirect.Builtins
             return (P, ifault);
         }
 
-        private static ParameterBag MakeMultipleRegressionOutput(MultipleLinearRegressionContext context, double[] seb, double[] bd, bool DoC, int nx, int p, bool pol, int errcode, string dropWarning)
+        private static ParameterBag MakeMultipleRegressionOutput(MultipleLinearRegressionContext context, double[] seb, double[] bd, bool DoC, int nx, int p, bool pol, int errcode, string? dropWarning)
         {
             double rdf = nx - p;
             ParameterBag outputParameters = new();
             IList<ParameterBag> warnList = new List<ParameterBag>();
             outputParameters.AddOutput("*warn", warnList);
             if (context.warn.Length > 0 || errcode != 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, context.warn)));
-            if (null != dropWarning)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropWarning)));
+                warnList.Add(new ParameterBag().AddOutput("warn", context.warn));
+            if (dropWarning is not null)
+                warnList.Add(new ParameterBag().AddOutput("warn", dropWarning));
             outputParameters.AddOutput("isPoly", pol);
             if (errcode == 0)
             {
@@ -933,7 +943,7 @@ namespace StatsDirect.Builtins
                         rp = Constant.MISSING;
                     }
                     if (DoC == false || i > 1)
-                        colParameters.AddOutput("*r", new List<ParameterBag> { new ParameterBag("rp", new FilledDoubleParameter(FilledParameterDirection.Output, rp)) });
+                        colParameters.AddOutput("*r", new List<ParameterBag> { new ParameterBag().AddOutput("rp", rp) });
 
                     colParameters.AddOutput("t", t);
                     colParameters.AddOutput("p", prob);
@@ -1012,7 +1022,7 @@ namespace StatsDirect.Builtins
             return (bss, ctss, yfit, ifault);
         }
 
-        public static StepOutput RptMultipleLinearRegressionAnova(IFormatting host, ParameterBag parameters)
+        public StepOutput RptMultipleLinearRegressionAnova(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double ci = parameters["ci"].AsDouble;
@@ -1059,7 +1069,7 @@ namespace StatsDirect.Builtins
                 double fz2 = fz + rcit / Math.Sqrt(Convert.ToDouble(context.N - 3));
                 double con1 = (Math.Exp(2.0 * fz1) - 1.0) / (Math.Exp(2.0 * fz1) + 1.0);
                 double con2 = (Math.Exp(2.0 * fz2) - 1.0) / (Math.Exp(2.0 * fz2) + 1.0);
-                outputParameters.AddOutput("r_extra", "  [" + Formatting.XRound(100 * (1.0 - p0), 1) + "%CI = " + host.RoundU(con1) + " to " + host.RoundU(con2) + "]");
+                outputParameters.AddOutput("r_extra", "  [" + Formatting.XRound(100 * (1.0 - p0), 1) + "%CI = " + RoundU(con1) + " to " + RoundU(con2) + "]");
             }
             outputParameters.AddOutput("r", r);
             outputParameters.AddOutput("r2", r2 * 100);
@@ -1131,7 +1141,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput PlotMultipleLinearRegressionResiduals(ParameterBag parameters)
+        public StepOutput PlotMultipleLinearRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double[] r;
@@ -1141,7 +1151,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*chart", chartList);
 
             context.R[0] = Constant.MISSING;
-            chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.FV, context.R, "Fitted Y (y fit)", "Residual (Y - y fit)", "Residuals vs. Fitted Y [linear regression]", true, DataMinMax.XCalc_YCalc))));
 
             for (int i = 1; i <= context.P; i++)
             {
@@ -1152,7 +1162,7 @@ namespace StatsDirect.Builtins
                     r[0] = Constant.MISSING;
                     for (int j = 1; j <= context.N; j++)
                         r[j] = context.X[j, i];
-                    chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc)))));
+                    chartList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(r, context.R, "Predictor: " + context.Titles[i], "Residual (Y - y fit)", "Residuals vs. Predictor " + k.ToString() + " [linear regression]", true, DataMinMax.XCalc_YCalc))));
                 }
             }
             r = new double[context.N + 1];
@@ -1164,7 +1174,7 @@ namespace StatsDirect.Builtins
                 if (ifault != 0)
                     r[j] = Constant.MISSING;
             }
-            chartList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc)))));
+            chartList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(context.R, r, "Residual (Y - y fit)", "van der Waerden normal score", "Normal Plot for Residuals (linear regression)", true, DataMinMax.XCalc_YCalc))));
             return new StepOutput(outputParameters);
         }
 
@@ -2059,7 +2069,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptLinearizedEstimatePlot(ParameterBag parameters)
+        public StepOutput RptLinearizedEstimatePlot(ParameterBag parameters)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
@@ -2175,7 +2185,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptPolynomialRegressionPlot(ParameterBag parameters)
+        public StepOutput RptPolynomialRegressionPlot(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             ParameterBag outputParameters = new();
@@ -2190,7 +2200,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        private static IRenderable PlotPoly(ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
+        private IRenderable PlotPoly(ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
@@ -2216,7 +2226,7 @@ namespace StatsDirect.Builtins
             return ChartRendererFactory.PrepForLater(ChartType.PolynomialRegression, new PolynomialRegressionOptions(title, mode, xtxi, bd, rss, nx, P, gamma, vX.Title, vY.Title), new DoubleSeries(vX.Data, vX.Title), new DoubleSeries(vY.Data, vY.Title));
         }
 
-        public static StepOutput RptAreaUnderCurve(IFormatting host, ParameterBag parameters)
+        public StepOutput RptAreaUnderCurve(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
@@ -2231,7 +2241,7 @@ namespace StatsDirect.Builtins
             double auc = 0;
             outputParameters.AddOutput("poly_auc",
                 x_qromb(vX.Data[0], vX.Data[vX.Length - 1], ref auc, bd, p)
-                    ? host.RoundU(auc)
+                    ? RoundU(auc)
                     : Formatting.ERRR);
             double aucg = x_giabaldi(nx, vY.Data, vX.Data);
             outputParameters.AddOutput("trap_auc", aucg);
@@ -2323,7 +2333,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptPolynomialRegressionBackInterpolation(IFormatting host, ParameterBag parameters)
+        public StepOutput RptPolynomialRegressionBackInterpolation(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] bd = context.B;
@@ -2352,7 +2362,7 @@ namespace StatsDirect.Builtins
                     xMax = x;
             }
             if (y > yMax || y < yMin)
-                throw new TemplateOperationCancelledException("Y must lie within the fitted curve (" + host.RoundU(yMin) + " to " + host.RoundU(yMax) + ")", "Polynomial Interpolation");
+                throw new TemplateOperationCancelledException("Y must lie within the fitted curve (" + RoundU(yMin) + " to " + RoundU(yMax) + ")", "Polynomial Interpolation");
 
             double inc = (xMax - xMin) / 10.0;
             double yinc = (yMax - yMin) / 10.0;
@@ -2394,7 +2404,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptLogisticRegression(IFormatting host, ParameterBag parameters)
+        public StepOutput RptLogisticRegression(ParameterBag parameters)
         {
             int rows;
             int totObs;
@@ -2645,13 +2655,13 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException(errMsg, "Logistic Regression");
 
             if (fault == 3 && errMsg.Length > 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + errMsg)));
+                warnList.Add(new ParameterBag().AddOutput("warn", Formatting.WRNCOLON + errMsg));
             if (rank != p)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model. Look for correlated predictor variables that you might drop: the mutliple linear regression function does this automatically.")));
+                warnList.Add(new ParameterBag().AddOutput("warn", Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model. Look for correlated predictor variables that you might drop: the mutliple linear regression function does this automatically."));
             if (df <= 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)")));
+                warnList.Add(new ParameterBag().AddOutput("warn", Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)"));
             if (dropped.Length > 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropped)));
+                warnList.Add(new ParameterBag().AddOutput("warn", dropped));
             outputParameters.AddOutput("dev", deviance);
             outputParameters.AddOutput("df", df);
             double prob = PDF.chivalp(deviance, df);
@@ -2766,7 +2776,7 @@ namespace StatsDirect.Builtins
             {
                 if (j > 1 && beta[j] >= 0.0)
                     tx += "+";
-                tx += host.RoundU(beta[j]);
+                tx += RoundU(beta[j]);
                 string Q = mean
                     ? (j > 1 ? labels[j - 1] : " ")
                     : labels[j];
@@ -2834,7 +2844,7 @@ namespace StatsDirect.Builtins
 
         private static void AddDropWarning(IList<ParameterBag> warnList, int q)
         {
-            warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, q.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup.")));
+            warnList.Add(new ParameterBag().AddOutput("warn", q.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup."));
         }
 
         public static StepOutput RptLogisticRegressionFit(ParameterBag parameters)
@@ -3151,7 +3161,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput PlotLogisticRegressionDiagnostics(ParameterBag parameters)
+        public StepOutput PlotLogisticRegressionDiagnostics(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] t = context.T;
@@ -3216,21 +3226,21 @@ namespace StatsDirect.Builtins
             hi[0] = Constant.MISSING;
 
             //  delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy1, ep, db, db + " vs. " + ep, false, DataMinMax.XCalc_YCalc))));
             //  std delta beta vs. proportion
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy2, ep, dbs, dbs + " vs. " + ep, false, DataMinMax.XCalc_YCalc))));
             //  delta deviance vs. proportion
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(xx, yy3, ep, dd, dd + " vs. " + ep, false, DataMinMax.XCalc_YCalc))));
             //  delta x2 vs. proportion
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xyz, new XyzOptions(xx, yy4, yy1, ep, dx, dx + " (delta beta as marker size) vs. " + ep, false, DataMinMax.XCalc_YCalc))));
             //  delta beta vs. hi
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy1, lv, db, db + " vs. " + lv, false, DataMinMax.XCalc_YCalc))));
             //  delta beta std vs. hi
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy2, lv, dbs, dbs + " vs. " + lv, false, DataMinMax.XCalc_YCalc))));
             //  delta deviance vs. hi
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy3, lv, dd, dd + " vs. " + lv, false, DataMinMax.XCalc_YCalc))));
             //  delta x2 vs. hi
-            chartsList.Add(new ParameterBag("chart", FilledParameterFactory.Output(ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc)))));
+            chartsList.Add(new ParameterBag().AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Xy, new XyOptions(hi, yy4, lv, dx, dx + " vs. " + lv, false, DataMinMax.XCalc_YCalc))));
             return new StepOutput(outputParameters);
         }
 
@@ -3741,7 +3751,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptLogisticRegressionModelSelection(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptLogisticRegressionModelSelection(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             bool mean = context.DoC;
@@ -3779,14 +3789,14 @@ namespace StatsDirect.Builtins
             bool iweight = true;
             var dropped = string.Empty;
             var errMsg = string.Empty;
-            using (IProgressBar progress = host.StartProgress("Checking significance with all predictors", false))
+            using (IProgressBar progress = ProgressBarHost.StartProgress("Checking significance with all predictors", false))
             {
                 Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, p, y, t, wt, out double dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out int fault, ref dropped, ref errMsg);
-                LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
+                LR_ModelSelectionOutput(parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
             }
 
             // Now add predictors one at time: select the predictor that gives max Akaike information to the model on each addition, building up to the full model again
-            using (IProgressBar progress = host.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true))
+            using (IProgressBar progress = ProgressBarHost.StartProgress("Selecting most informative predictors. Small models are tested first. Cancel will give interim results.", true))
             {
                 bool[] previousSelection = new bool[p + 1]; // All blank initially; no previous selections.
                 int parms = mean ? 2 : 1;
@@ -3832,7 +3842,7 @@ namespace StatsDirect.Builtins
                     // Re-do the regression with that predictor selected along with any others we may have from previous iterations
                     selectX[bestPredictorIndexSoFar] = true;
                     Regress1.X_Logistic_Regression(mean, false, ref iweight, n, x, m, selectX, parms, y, t, wt, out dev, ref df, b, ref rank, se, cov, tol, 50, fv, dr, h, offst, out fault, ref dropped, ref errMsg);
-                    LR_ModelSelectionOutput(host, parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
+                    LR_ModelSelectionOutput(parametersList, fault, labels, b, se, mean, dev, devx, p, m, df, dfx, errMsg, selectX);
                     if (progress.Update(++regressionsRun / estimatedRegressionsToRun))
                         break;
 
@@ -3845,7 +3855,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        private static void LR_ModelSelectionOutput(IFormatting host, List<ParameterBag> parametersList, int fault, string[] label, double[] b, double[] se, bool mean, double dev, double devx, int p, int m, int df, int dfx, string err_msg, bool[] selectX)
+        private void LR_ModelSelectionOutput(List<ParameterBag> parametersList, int fault, string[] label, double[] b, double[] se, bool mean, double dev, double devx, int p, int m, int df, int dfx, string err_msg, bool[] selectX)
         {
             ParameterBag parametersParameters = new();
             parametersList.Add(parametersParameters);
@@ -3873,7 +3883,7 @@ namespace StatsDirect.Builtins
 
                 if (!isIntercept && b[j] >= 0.0)
                     tx += "+";
-                tx += host.RoundU(b[j]);
+                tx += RoundU(b[j]);
                 tx += SignificanceString(b, se, out bool isSignificant, j);
                 if (isSignificant)
                     significantCoefficients++;
@@ -3925,7 +3935,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput RptLogisticRegressionClassification(ParameterBag parameters)
+        public StepOutput RptLogisticRegressionClassification(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int n = context.N;
@@ -4037,7 +4047,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptLogisticRegressionBootstrap(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptLogisticRegressionBootstrap(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             double[] se;
@@ -4082,7 +4092,7 @@ namespace StatsDirect.Builtins
                 gtot += Convert.ToInt32(t[j]);
             }
             int boots = parameters["boots"].AsInt32;
-            using IProgressBar progress = host.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Bootstrapping " + boots.ToString() + " iterations", true);
             double[,] qo = new double[p + 1, boots + 1];
             double[] theta = new double[p + 1];
             double[] ql = new double[p + 1];
@@ -4515,7 +4525,7 @@ namespace StatsDirect.Builtins
             return frame;
         }
 
-        public static StepOutput RptPoissonRegression(IFormatting host, ParameterBag parameters)
+        public StepOutput RptPoissonRegression(ParameterBag parameters)
         {
             //  Dim PASSX(4, 1) As Double ' (1, 1) = calc intercept (1 = yes); (2, 1) = accuracy; (3, 1) = weights (1 = yes); (4, 1) = ptime (1 = yes)
             double tol = Parsing.Cdbl_Txt(parameters["accuracy"].AsString);
@@ -4681,13 +4691,13 @@ namespace StatsDirect.Builtins
                 throw new TemplateOperationCancelledException(err_msg, "Poisson regression");
 
             if (fault == 3 && err_msg.Length > 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + err_msg)));
+                warnList.Add(new ParameterBag().AddOutput("warn", Formatting.WRNCOLON + err_msg));
             if (rank != p)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model. Look for correlated predictor variables that you might drop: the mutliple linear regression function does this automatically.")));
+                warnList.Add(new ParameterBag().AddOutput("warn", Formatting.WRNCOLON + "result not of full rank, there is more than one solution for the model. Look for correlated predictor variables that you might drop: the mutliple linear regression function does this automatically."));
             if (df <= 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)")));
+                warnList.Add(new ParameterBag().AddOutput("warn", Formatting.WRNCOLON + "saturated model (all degrees of freedom used, can't assess goodness of fit)"));
             if (dropped.Length > 0)
-                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, dropped)));
+                warnList.Add(new ParameterBag().AddOutput("warn", dropped));
 
             double GAMMA = parameters["gamma"].AsDouble;
             MathDbl.civ(0, out double cit, GAMMA, out double P0);
@@ -4777,7 +4787,7 @@ namespace StatsDirect.Builtins
             {
                 if (j > 1 && beta[j] >= 0.0)
                     tx += "+";
-                tx += host.RoundU(beta[j]);
+                tx += RoundU(beta[j]);
                 string Q = mean
                     ? (j > 1 ? labels[j - 1] : " ")
                     : labels[j];
@@ -5051,7 +5061,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput RptPoissonRegressionResiduals(ParameterBag parameters)
+        public StepOutput RptPoissonRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int nx = context.N;
@@ -5899,7 +5909,7 @@ namespace StatsDirect.Builtins
         }
 
 
-        public static StepOutput PlotProbit(ParameterBag parameters)
+        public StepOutput PlotProbit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
             int model = context.M;

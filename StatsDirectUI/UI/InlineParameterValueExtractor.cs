@@ -15,12 +15,22 @@ namespace StatsDirect.UI
     /// </summary>
     internal class InlineParameterValueExtractor : IParameterVisitor
     {
-        public ParameterBag Context { get; set; }
-        public Control Control { get; set; }
-        public bool DoValidation { get; set; }
-        public Control FailedValidationControl { get; private set; }
-        public ParameterBag OutputParameters { get; set; }
-        public ITemplateProcessor Processor { get; set; }
+        public Control? FailedValidationControl { get; private set; }
+        public ParameterBag OutputParameters { get; }
+
+        private ParameterBag Context { get; }
+        private Control Control { get; }
+        private bool DoValidation { get; }
+        private ITemplateProcessorFactory TemplateProcessorFactory { get; }
+
+        public InlineParameterValueExtractor(ParameterBag context, Control control, bool doValidation, ParameterBag outputParameters, ITemplateProcessorFactory templateProcessorFactory)
+        {
+            Context = context;
+            Control = control;
+            DoValidation = doValidation;
+            OutputParameters = outputParameters;
+            TemplateProcessorFactory = templateProcessorFactory;
+        }
 
         public void Visit(ConfidenceIntervalParameter parameter)
         {
@@ -145,8 +155,8 @@ namespace StatsDirect.UI
             {
                 // In range?
                 DoubleParameter dp = parameter;
-                double minimumValue = dp.MinimumValue(Processor, Context);
-                double maximumValue = dp.MaximumValue(Processor, Context);
+                double minimumValue = dp.MinimumValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
+                double maximumValue = dp.MaximumValue(TemplateProcessorFactory.CreateTemplateProcessor(), Context);
                 if (value < minimumValue || value > maximumValue)
                 {
                     FailedValidationControl = txt;
@@ -159,17 +169,11 @@ namespace StatsDirect.UI
 
         public void Visit(FillableParameter parameter)
         {
-            if (Control is IOkable)
-            {
-                IOkable okable = (IOkable)Control;
+            if (Control is IOkable okable)
                 okable.OkClicked();
-            }
-            else if (Control is IFillParameterBag)
-            {
-                FailedValidationControl = ((IFillParameterBag)Control).Fill(OutputParameters, true);
-            }
-            else
-                throw new ArgumentOutOfRangeException("control", "Couldn't request a custom parameter to fill itself in");
+            else FailedValidationControl = Control is IFillParameterBag ifpb
+                ? ifpb.Fill(OutputParameters, true)
+                : throw new ArgumentOutOfRangeException("control", "Couldn't request a custom parameter to fill itself in");
         }
 
         public void Visit(FrameParameter parameter)
@@ -290,15 +294,15 @@ namespace StatsDirect.UI
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                 IWorksheet worksheet = grid.ActiveWorksheet;
-                object value = grid.WithLock(() =>
+                object? value = grid.WithLock(() =>
                 {
                     object v = worksheet.UsedRange.Value;
-                    if (null != v && !v.GetType().IsArray)
+                    if (v is not null && !v.GetType().IsArray)
                         v = new[,] { { v } };
                     return v;
                 });
 
-                if (null != value)
+                if (value is not null)
                 {
                     object[,] ary = (object[,])value;
 
@@ -319,7 +323,7 @@ namespace StatsDirect.UI
                 TableLayoutPanel ssgContainer = (TableLayoutPanel)Control;
                 WorkbookView grid = (WorkbookView)ssgContainer.GetControlFromPosition(1, 1);
                 IWorksheet worksheet = grid.ActiveWorksheet;
-                object value = grid.WithLock(() =>
+                object? value = grid.WithLock(() =>
                 {
                     object v = worksheet.UsedRange.Value;
                     if (null != v && !v.GetType().IsArray)
@@ -599,15 +603,10 @@ namespace StatsDirect.UI
 
         public void Visit(ChartOptionsParameter parameter)
         {
-            if (Control is IOkable)
-            {
-                IOkable okable = (IOkable)Control;
+            if (Control is IOkable okable)
                 okable.OkClicked();
-            }
-            else if (Control is IFillParameterBag)
-            {
-                FailedValidationControl = ((IFillParameterBag)Control).Fill(OutputParameters, true);
-            }
+            else if (Control is IFillParameterBag ifpb)
+                FailedValidationControl = ifpb.Fill(OutputParameters, true);
             else
                 throw new ArgumentOutOfRangeException("control", "Couldn't request a custom parameter to fill itself in");
         }

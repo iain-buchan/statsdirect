@@ -8,7 +8,7 @@ namespace StatsDirect.UI
 {
     public partial class ctlFont : UserControl
     {
-        private Font userFont;
+        private Font? userFont;
 
         public ctlFont()
         {
@@ -16,7 +16,7 @@ namespace StatsDirect.UI
             userFont = Font;
         }
 
-        public Font UserFont
+        public Font? UserFont
         {
             get => userFont;
             set
@@ -34,7 +34,7 @@ namespace StatsDirect.UI
             set => lblPurpose.Text = value;
         }
 
-        private void cmdChange_Click(object sender, EventArgs e)
+        private void cmdChange_Click(object? sender, EventArgs e)
         {
             UserFont = GetChangedOrOriginalFont(UserFont);
         }

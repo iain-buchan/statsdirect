@@ -1,9 +1,10 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using System;
+using System.Drawing;
+using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
-using System;
-using System.Drawing;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -14,32 +15,34 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// Default study marker type; may be overwritten if a subclass prefers different details.
         /// </summary>
-        protected MarkerType studyMarkerType = new()
-        {
-            MarkerColor = ColorDescriptor.Gray,
-            LineColor = ColorDescriptor.Black,
-            IsMarkerFilled = true,
-            MarkerShape = MarkerShape.Square,
-            LineDashStyle = DashStyleDescriptor.Solid,
-            Width = 1
-        };
+        protected MarkerType studyMarkerType = new(
+            true,
+            ColorDescriptor.Black,
+            DashStyleDescriptor.Solid,
+            ColorDescriptor.Gray,
+            FillStyle.None,
+            MarkerShape.Square,
+            6, // TODO: Default this
+            1
+        );
         /// <summary>
         /// Default pooled marker type; may be overwritten if a subclass prefers different details.
         /// </summary>
-        protected MarkerType pooledMarkerType = new()
-        {
-            MarkerColor = ColorDescriptor.Gray,
-            LineColor = ColorDescriptor.Black,
-            IsMarkerFilled = true,
-            MarkerShape = MarkerShape.Diamond,
-            LineDashStyle = DashStyleDescriptor.Solid,
-            Width = 1
-        };
+        protected MarkerType pooledMarkerType = new(
+            true,
+            ColorDescriptor.Black,
+            DashStyleDescriptor.Solid,
+            ColorDescriptor.Gray,
+            FillStyle.Solid,
+            MarkerShape.Diamond,
+            6, // TODO: Default this
+            1
+        );
 
-        protected AbstractForestishChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        protected AbstractForestishChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
-            if (null != definition.ChartOptions.MarkerTypes)
+            if (definition.ChartOptions.MarkerTypes is not null)
             {
                 if (definition.ChartOptions.MarkerTypes.Count >= 1)
                     studyMarkerType = definition.ChartOptions.MarkerTypes[0];

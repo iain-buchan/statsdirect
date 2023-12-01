@@ -1,6 +1,7 @@
 ﻿using System;
 using Layout;
 using StatsDirect.Builtins;
+using StatsDirect.Charting.Options;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -9,8 +10,8 @@ namespace StatsDirect.Charting.Renderer
 {
     internal class NormalChartRenderer : AbstractXYChartRenderer, IChartRenderer
     {
-        public NormalChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base(cd, canvasFactory)
+        public NormalChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(cd, canvasFactory, sdPreferences)
         {
         }
 
@@ -58,17 +59,16 @@ namespace StatsDirect.Charting.Renderer
 
             Layout.Range xRange = GetMinMaxArray(x, ScaleType.Linear);
             Layout.Range yRange = GetMinMaxArray(xs0.Data, ScaleType.Linear);
-            return new ScaleParameters
-            {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, ScaleType = ScaleType.Linear, Min = xRange.Min, Max = xRange.Max },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, ScaleType = ScaleType.Linear, Min = yRange.Min, Max = yRange.Max }
-            };
+            return new ScaleParameters(
+                new(new[] { ScaleType.Linear }) { ScaleType = ScaleType.Linear, Min = xRange.Min, Max = xRange.Max },
+                new(new[] { ScaleType.Linear }) { ScaleType = ScaleType.Linear, Min = yRange.Min, Max = yRange.Max }
+            );
         }
 
         ///  <summary>
         ///  Plot normal scores for a single variable in XSeries.
         ///  </summary>
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             return PlotNormal(((DoubleSeries)Definition.XSeries[0]).Data, isForReturnedParametersOnly);
         }
@@ -164,7 +164,7 @@ namespace StatsDirect.Charting.Renderer
             // Regression results
             SimpleLinearRegressionContext context = new(x, y, string.Empty, string.Empty);
             context.CalculateLeastSquaresMethod();
-            return new ParameterBag("context", FilledParameterFactory.Output(context));
+            return new ParameterBag().AddOutput("context", context);
         }
     }
 }

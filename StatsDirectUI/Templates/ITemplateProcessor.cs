@@ -31,6 +31,6 @@ namespace StatsDirect.Templates
         /// <param name="operation"></param>
         /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
         /// <param name="isRedo"> </param>
-        StepOutput Execute(Operation operation, ParameterBag startingParameters, bool isRedo);
+        StepOutput? Execute(Operation operation, ParameterBag startingParameters, bool isRedo);
     }
 }

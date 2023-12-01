@@ -59,7 +59,7 @@ namespace StatsDirect.UI
                     if (signalled)
                     {
                         // If we get here, there must have been a signal.
-                        string path;
+                        string? path;
                         using (Semaphore accessSemaphore = new(1, 1, MEMORY_SEMAPHORE_NAME))
                         {
                             accessSemaphore.WaitOne();
@@ -101,9 +101,9 @@ namespace StatsDirect.UI
             listening = false;
         }
 
-        private static void ReceiveFileOpen(string path)
+        private static void ReceiveFileOpen(string? path)
         {
-            SdApplication.SoleInstance.OpenFileOnUiThread(path);
+            SdApplication.OpenFileOnUiThread(path);
         }
     }
 }

@@ -1,29 +1,41 @@
-using System.Drawing;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
-using System.Windows.Forms;
 using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
+
 using StatsDirect.Templates;
+using StatsDirect.TemplateProcessing;
+using StatsDirect.Utilities;
+
 using DevExpress.XtraRichEdit;
 using DevExpress.XtraRichEdit.API.Native;
 using DevExpress.XtraRichEdit.Commands;
-using System.Drawing.Imaging;
-using StatsDirect.Utilities;
 using DevExpress.XtraRichEdit.Services;
-using System.Reflection;
-using StatsDirect.TemplateProcessing;
-using System.Text;
+using StatsDirect.Configuration;
+using System.Diagnostics.CodeAnalysis;
+using StatsDirect.Charting;
 
 namespace StatsDirect.UI
 {
-    public partial class frmReportRichEdit : StatsDirectForm, IReport
+    internal partial class frmReportRichEdit : StatsDirectForm, IReport
     {
-        public frmReportRichEdit()
+        private string? currentFile;
+
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private ISdPreferences SdPreferences { get; }
+
+        public frmReportRichEdit(IChartRendererFactory chartRendererFactory, ISdApplication sdApplication, ISdPreferences sdPreferences)
+            : base(sdApplication)
         {
+            ChartRendererFactory = chartRendererFactory;
+            SdPreferences = sdPreferences;
             InitializeComponent();
             LoadTemplateFile();
-            SdApplication.SoleInstance.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
+            SdApplication.EnsureBuiltInMenuItemsCanShowHelp(MenuStrip1);
             SetCustomCommandFactory(); // #1202: Paste in table form
         }
 
@@ -34,9 +46,7 @@ namespace StatsDirect.UI
             richEditControl1.AddService(typeof(IRichEditCommandFactoryService), commandFactory);
         }
 
-        private string currentFile;
-
-        private void frmReport_FormClosing(object sender, FormClosingEventArgs e)
+        private void frmReport_FormClosing(object? sender, FormClosingEventArgs e)
         {
             DoOrWarn(() =>
             {
@@ -46,13 +56,13 @@ namespace StatsDirect.UI
                     return;
                 }
                 UnmergeToolStrip();
-                SdApplication.SoleInstance.NoteFormClosing(this, e);
+                SdApplication.NoteFormClosing(this, e);
                 Visible = false;
                 MdiParent = null;
             }, "Couldn't close form");
         }
 
-        private void frmReport_TextChanged(object sender, EventArgs e)
+        private void frmReport_TextChanged(object? sender, EventArgs e)
         {
             Dirty = true;
         }
@@ -80,7 +90,7 @@ namespace StatsDirect.UI
             return true;
         }
 
-        private static void DoOrWarn(Action func, string explanation)
+        private void DoOrWarn(Action func, string explanation)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -91,7 +101,7 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError(explanation, ex, false);
+                SdApplication.FriendlyError(explanation, ex, false);
             }
 #endif
         }
@@ -112,17 +122,17 @@ namespace StatsDirect.UI
 #endif
         }
 
-        private void SaveToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(() => SaveContents(), "Couldn't save file");
         }
 
-        private void SaveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SaveAsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(() => SaveAsContents(), "Couldn't save file");
         }
 
-        private void SelectAllToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SelectAllToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditSelectAll, "Unable to select all document content");
         }
@@ -132,22 +142,22 @@ namespace StatsDirect.UI
             new SelectAllCommand(richEditControl1).Execute();
         }
 
-        private void CopyToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CopyToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditCopy, "Unable to copy document content");
         }
 
-        private void CutToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CutToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditCut, "Unable to cut document content");
         }
 
-        private void PasteToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PasteToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditPaste, "Unable to copy clipboard content to document");
         }
 
-        private void SelectFontToolStripMenuItem_Click(object sender, EventArgs e)
+        private void SelectFontToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowFontForm, "Unable to select font");
         }
@@ -157,7 +167,7 @@ namespace StatsDirect.UI
             new ShowFontFormCommand(richEditControl1).Execute();
         }
 
-        private void BoldToolStripMenuItem_Click(object sender, EventArgs e)
+        private void BoldToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleBold, "Unable to set bold font");
         }
@@ -167,7 +177,7 @@ namespace StatsDirect.UI
             new ToggleFontBoldCommand(richEditControl1).Execute();
         }
 
-        private void ItalicToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ItalicToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleItalic, "Unable to set italic font");
         }
@@ -177,7 +187,7 @@ namespace StatsDirect.UI
             new ToggleFontItalicCommand(richEditControl1).Execute();
         }
 
-        private void UnderlineToolStripMenuItem_Click(object sender, EventArgs e)
+        private void UnderlineToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleUnderline, "Unable to set underline font");
         }
@@ -187,7 +197,7 @@ namespace StatsDirect.UI
             new ToggleFontUnderlineCommand(richEditControl1).Execute();
         }
 
-        private void NormalToolStripMenuItem_Click(object sender, EventArgs e)
+        private void NormalToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ClearFormatting, "Unable to clear formatting");
         }
@@ -197,17 +207,17 @@ namespace StatsDirect.UI
             new ClearFormattingCommand(richEditControl1).Execute();
         }
 
-        private void mnuUndo_Click(object sender, EventArgs e)
+        private void mnuUndo_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditUndo, "Unable to undo");
         }
 
-        private void mnuRedo_Click(object sender, EventArgs e)
+        private void mnuRedo_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditRedo, "Unable to redo");
         }
 
-        private void LeftToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LeftToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AlignLeft, "Unable to set left alignment");
         }
@@ -217,7 +227,7 @@ namespace StatsDirect.UI
             new ToggleParagraphAlignmentLeftCommand(richEditControl1).Execute();
         }
 
-        private void CenterToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CenterToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AlignCenter, "Unable to set centre alignment");
         }
@@ -227,7 +237,7 @@ namespace StatsDirect.UI
             new ToggleParagraphAlignmentCenterCommand(richEditControl1).Execute();
         }
 
-        private void RightToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RightToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AlignRight, "Unable to set right alignment");
         }
@@ -237,7 +247,7 @@ namespace StatsDirect.UI
             new ToggleParagraphAlignmentRightCommand(richEditControl1).Execute();
         }
 
-        private void AddBulletsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void AddBulletsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleBullets, "Unable to set bullets");
         }
@@ -247,12 +257,12 @@ namespace StatsDirect.UI
             new ToggleBulletedListCommand(richEditControl1).Execute();
         }
 
-        private void RemoveBulletsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void RemoveBulletsToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleBullets, "Unable to set bullets");
         }
 
-        private void FindToolStripMenuItem_Click(object sender, EventArgs e)
+        private void FindToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditFind, "Cannot start find");
         }
@@ -262,7 +272,7 @@ namespace StatsDirect.UI
             new FindCommand(richEditControl1).Execute();
         }
 
-        private void FindAndReplaceToolStripMenuItem_Click(object sender, EventArgs e)
+        private void FindAndReplaceToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditReplace, "Cannot start replace");
         }
@@ -272,7 +282,7 @@ namespace StatsDirect.UI
             new ReplaceCommand(richEditControl1).Execute();
         }
 
-        private void PreviewToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PreviewToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(PrintPreview, "Couldn't print preview");
         }
@@ -282,17 +292,17 @@ namespace StatsDirect.UI
             new PrintPreviewCommand(richEditControl1).Execute();
         }
 
-        private void PrintToolStripMenuItem_Click(object sender, EventArgs e)
+        private void PrintToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(Print, "Couldn't print");
         }
 
-        private void mnuPageSetup_Click(object sender, EventArgs e)
+        private void mnuPageSetup_Click(object? sender, EventArgs e)
         {
             // TODO: Write me
         }
 
-        private void InsertImageToolStripMenuItem_Click(object sender, EventArgs e)
+        private void InsertImageToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(InsertPicture, "Couldn't insert image");
         }
@@ -302,49 +312,49 @@ namespace StatsDirect.UI
             new InsertPictureCommand(richEditControl1).Execute();
         }
 
-        private void tbrBold_Click(object sender, EventArgs e)
+        private void tbrBold_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleBold, "Unable to set bold font");
         }
 
-        private void tbrItalic_Click(object sender, EventArgs e)
+        private void tbrItalic_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleItalic, "Unable to set italic font");
         }
 
-        private void tbrUnderline_Click(object sender, EventArgs e)
+        private void tbrUnderline_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleUnderline, "Unable to set underline font");
         }
 
-        private void tbrFont_Click(object sender, EventArgs e)
+        private void tbrFont_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowFontForm, "Unable to select font");
         }
 
-        private void tbrLeft_Click(object sender, EventArgs e)
+        private void tbrLeft_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AlignLeft, "Unable to set left alignment");
         }
 
-        private void tbrCenter_Click(object sender, EventArgs e)
+        private void tbrCenter_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AlignCenter, "Unable to set centre alignment");
         }
 
-        private void tbrRight_Click(object sender, EventArgs e)
+        private void tbrRight_Click(object? sender, EventArgs e)
         {
             DoOrWarn(AlignRight, "Unable to set right alignment");
         }
 
-        private void tbrFind_Click(object sender, EventArgs e)
+        private void tbrFind_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditFind, "Couldn't start find");
         }
 
         #region IReport Members
 
-        void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, string redoInformation)
+        void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation)
         {
             Document document = richEditControl1.Document;
             int initialEnd = document.Range.End.ToInt();
@@ -352,14 +362,8 @@ namespace StatsDirect.UI
 
             // Append the text, surrounding it with the specified help context if required
             document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!help!-> " + helpContextId + @" <-!help!! }}");
-            // Add redo information if present
-            if (!string.IsNullOrEmpty(redoInformation))
-            {
-                string safeXml = redoInformation.Replace(@"\", "&#92;");
-                document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!redo!-> " + "\"" + operation.Name + "\" " + safeXml + @" <-!redo!! }}");
-            }
 
-            string rtf = new RtfRenderer(SdApplication.SoleInstance).Render(renderable);
+            string rtf = new RtfRenderer(ChartRendererFactory, SdPreferences).Render(renderable);
             string[] splitInserts = rtf.Split(new[] { "/split/" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string piece in splitInserts)
                 if (piece.StartsWith(@"{\rtf"))
@@ -383,12 +387,9 @@ namespace StatsDirect.UI
         #endregion
 
 
-        private string GetFreezeDriedData()
-        {
-            return GetHiddenTextEnclosedBy("redo");
-        }
+        private string? GetFreezeDriedData() => GetHiddenTextEnclosedBy("redo");
 
-        private string GetHiddenTextEnclosedBy(string enclosure)
+        private string? GetHiddenTextEnclosedBy(string enclosure)
         {
             string enclosedEnclosureStart = "!!" + enclosure + "!->";
             string enclosedEnclosureEnd = "<-!" + enclosure + "!!";
@@ -417,36 +418,30 @@ namespace StatsDirect.UI
 
         internal override void ShowHelp()
         {
-            string helpString = GetHiddenTextEnclosedBy("help");
+            string? helpString = GetHiddenTextEnclosedBy("help");
             if (int.TryParse(helpString, out int helpId))
-            {
-                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.DialogOwner, helpId.ToString(CultureInfo.InvariantCulture));
-            }
+                SdApplication.ShowHelp(SdApplication.DialogOwner, helpId.ToString(CultureInfo.InvariantCulture));
             else
-            {
-                SdApplication.SoleInstance.ShowHelp(SdApplication.SoleInstance.DialogOwner);
-            }
+                SdApplication.ShowHelp(SdApplication.DialogOwner);
         }
 
-        private void frmReport_Shown(object sender, EventArgs e)
+        private void frmReport_Shown(object? sender, EventArgs e)
         {
             DoOrSwallow(() => { MergeToolStrip(); richEditControl1.Focus(); });
         }
 
         private void LoadTemplateFile()
         {
-            string pathName = SdApplication.SoleInstance.TemplateFileForNewReports;
-            if (null != pathName)
-                richEditControl1.LoadDocument(pathName, DocumentFormat.Rtf);
+            richEditControl1.LoadDocument(SDConfiguration.TemplatePathForNewReports, DocumentFormat.Rtf);
         }
 
-        private void frmReport_Activated(object sender, EventArgs e)
+        private void frmReport_Activated(object? sender, EventArgs e)
         {
             DoOrSwallow(() =>
             {
                 MergeToolStrip();
                 if (null != Tag)
-                    SdApplication.SoleInstance.NoteFormActivated((WindowInformation)Tag);
+                    SdApplication.NoteFormActivated((WindowInformation)Tag);
                 richEditControl1.Visible = true;
                 richEditControl1.Focus();
             });
@@ -491,7 +486,7 @@ namespace StatsDirect.UI
                 SaveFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(currentFile);
                 SaveFileDialog1.FileName = System.IO.Path.GetFileName(currentFile);
             }
-            DialogResult res = SaveFileDialog1.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            DialogResult res = SaveFileDialog1.ShowDialog(SdApplication.DialogOwner);
             if (res != DialogResult.OK)
                 return false;
             if (string.IsNullOrEmpty(SaveFileDialog1.FileName))
@@ -507,7 +502,7 @@ namespace StatsDirect.UI
             else
                 richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.PlainText);
             currentFile = SaveFileDialog1.FileName;
-            SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
+            SdApplication.NoteRecentFile(currentFile, true);
             Text = currentFile;
             ((WindowInformation)Tag).Path = currentFile;
             richEditControl1.Modified = false;
@@ -519,14 +514,14 @@ namespace StatsDirect.UI
             new PrintCommand(richEditControl1).Execute();
         }
 
-        private void showRuler_CheckedChanged(object sender, EventArgs e)
+        private void showRuler_CheckedChanged(object? sender, EventArgs e)
         {
             RichEditRulerVisibility vis = showRuler.Checked ? RichEditRulerVisibility.Visible : RichEditRulerVisibility.Hidden;
             richEditControl1.Options.HorizontalRuler.Visibility = vis;
             richEditControl1.Options.VerticalRuler.Visibility = vis;
         }
 
-        private void frmReport_Deactivate(object sender, EventArgs e)
+        private void frmReport_Deactivate(object? sender, EventArgs e)
         {
             DoOrSwallow(UnmergeToolStrip);
         }
@@ -552,8 +547,8 @@ namespace StatsDirect.UI
         {
             if (IsImageSelected)
             {
-                Image img = GetSelectedImage(out byte[] bytes);
-                if (null != bytes)
+                Image? img = GetSelectedImage(out byte[]? bytes);
+                if (bytes is not null)
                 {
                     Metafile mf = (Metafile)img;
                     ClipboardMetafileHelper.PutEnhMetafileOnClipboard(Handle, mf);
@@ -568,29 +563,29 @@ namespace StatsDirect.UI
             new PasteSelectionCommand(richEditControl1).Execute();
         }
 
-        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void closeToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrSwallow(Close);
         }
 
-        private void exportGraphicToolStripMenuItem_Click(object sender, EventArgs e)
+        private void exportGraphicToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ExportSelectedImage, "Couldn't export image");
         }
 
         private void ExportSelectedImage()
         {
-            Image img = GetSelectedImage(out byte[] bytes);
+            Image? img = GetSelectedImage(out byte[]? bytes);
             if (null != bytes)
             {
-                using frmExportGraphic f = new(img, bytes);
-                f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+                using frmExportGraphic f = new(img, bytes, SdApplication);
+                f.ShowDialog(SdApplication.DialogOwner);
             }
             else
-                SdApplication.SoleInstance.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
+                SdApplication.MsgboxX("No chart is selected. Please select a chart to export.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Export graphic", true);
         }
 
-        private Image GetSelectedImage(out byte[] rawBytes)
+        private Image? GetSelectedImage(out byte[]? rawBytes)
         {
             rawBytes = null;
 
@@ -604,10 +599,12 @@ namespace StatsDirect.UI
                 return null;
 
             string trimmedRtf = rtfFromPict[..rtfFromPict.IndexOf("}", StringComparison.Ordinal)];
-            return 0 == trimmedRtf.Length ? null : RtfImageConverter.ParseRtfToImage(trimmedRtf, out rawBytes);
+            return 0 == trimmedRtf.Length
+                ? null
+                : RtfImageConverter.ParseRtfToImage(trimmedRtf, out rawBytes);
         }
 
-        private void EditToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void EditToolStripMenuItem_DropDownOpening(object? sender, EventArgs e)
         {
             exportGraphicToolStripMenuItem.Enabled = IsImageSelected;
         }
@@ -630,27 +627,27 @@ namespace StatsDirect.UI
             }
         }
 
-        private void exportGraphicContextMenuItem_Click(object sender, EventArgs e)
+        private void exportGraphicContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ExportSelectedImage, "Couldn't export image");
         }
 
-        private void cutContextMenuItem_Click(object sender, EventArgs e)
+        private void cutContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditCut, "Couldn't cut");
         }
 
-        private void copyContextMenuItem_Click(object sender, EventArgs e)
+        private void copyContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditCopy, "Couldn't copy");
         }
 
-        private void pasteContextMenuItem_Click(object sender, EventArgs e)
+        private void pasteContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditPaste, "Couldn't paste");
         }
 
-        private void undoContextMenuItem_Click(object sender, EventArgs e)
+        private void undoContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditUndo, "Couldn't undo");
         }
@@ -665,17 +662,17 @@ namespace StatsDirect.UI
             new RedoCommand(richEditControl1).Execute();
         }
 
-        private void findContextMenuItem_Click(object sender, EventArgs e)
+        private void findContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditFind, "Couldn't start find");
         }
 
-        private void replaceContextMenuItem_Click(object sender, EventArgs e)
+        private void replaceContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditReplace, "Couldn't start replace");
         }
 
-        private void deleteContextMenuItem_Click(object sender, EventArgs e)
+        private void deleteContextMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(EditDelete, "Couldn't delete");
         }
@@ -685,64 +682,19 @@ namespace StatsDirect.UI
             new DeleteCommand(richEditControl1).Execute();
         }
 
-        private void ReplayOperation(object sender, EventArgs e)
-        {
-            try
-            {
-                ReplayOperation();
-            }
-            catch (TemplateOperationCancelledException ex)
-            {
-                if (ex.ShouldShowError)
-                    SdApplication.SoleInstance.Error(ex.Message, ex.Caption);
-            }
-#if !WATCH_EXCEPTIONS
-            catch (Exception ex)
-            {
-                if (SdApplication.SoleInstance.InOperation)
-                {
-                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
-                }
-                else
-                {
-                    // Normally we'd just throw the exception; in this case, we're the top of the stack and that would bring the application down.  So we report instead.
-                    SdApplication.SoleInstance.FriendlyError("An internal error occurred while replaying the operation", ex, true);
-                }
-            }
-#endif
-        }
-
-        private void ReplayOperation()
-        {
-            string freezeDriedData = GetFreezeDriedData();
-            if (null != freezeDriedData)
-            {
-                // Operation is delimited by quotes and comes first
-                int firstQuote = freezeDriedData.IndexOf('"');
-                int secondQuote = freezeDriedData.IndexOf('"', firstQuote + 1);
-                string operationName = freezeDriedData[(firstQuote + 1)..secondQuote];
-                string freezeDriedParameters = freezeDriedData[(secondQuote + 1)..].Trim();
-                SdApplication.SoleInstance.ReplayWithCurrentData(operationName, freezeDriedParameters);
-            }
-        }
-
-        private bool IsSelectionReplayable => null != GetFreezeDriedData();
-
-        private void richEditControl1_PopupMenuShowing(object sender, PopupMenuShowingEventArgs e)
+        private void richEditControl1_PopupMenuShowing(object? sender, PopupMenuShowingEventArgs e)
         {
             DoOrSwallow(() =>
                 {
                     foreach (DevExpress.Utils.Menu.DXMenuItem candidate in e.Menu.Items)
                         if ("Copy".Equals(candidate.Caption))
                             ClearEventAndSet(candidate, "Click", new EventHandler(ContextMenuCopy));
-                    if (IsSelectionReplayable)
-                        e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay Operation", ReplayOperation));
                     if (IsImageSelected)
                         e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export Graphic", ExportGraphic));
                 });
         }
 
-        private void ContextMenuCopy(object sender, EventArgs e)
+        private void ContextMenuCopy(object? sender, EventArgs e)
         {
             DoOrSwallow(EditCopy);
         }
@@ -755,26 +707,26 @@ namespace StatsDirect.UI
             fieldInfo.SetValue(item, handler);
         }
 
-        private static FieldInfo GetEventField(Type type, string eventName)
+        private static FieldInfo? GetEventField(Type type, string eventName)
         {
-            FieldInfo fieldInfo = null;
-            while (type != null)
+            FieldInfo? fieldInfo = null;
+            while (type is not null)
             {
                 /* Find events defined as field */
                 fieldInfo = type.GetField(eventName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic);
-                if (fieldInfo != null && (fieldInfo.FieldType == typeof(MulticastDelegate) || fieldInfo.FieldType.IsSubclassOf(typeof(MulticastDelegate))))
+                if (fieldInfo is not null && (fieldInfo.FieldType == typeof(MulticastDelegate) || fieldInfo.FieldType.IsSubclassOf(typeof(MulticastDelegate))))
                     break;
 
                 /* Find events defined as property { add; remove; } */
                 fieldInfo = type.GetField("EVENT_" + eventName.ToUpper(), BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic);
-                if (fieldInfo != null)
+                if (fieldInfo is not null)
                     break;
                 type = type.BaseType;
             }
             return fieldInfo;
         }
 
-        private void ExportGraphic(object sender, EventArgs e)
+        private void ExportGraphic(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -785,20 +737,20 @@ namespace StatsDirect.UI
             }
             catch (Exception ex)
             {
-                if (SdApplication.SoleInstance.InOperation)
+                if (SdApplication.InOperation)
                 {
-                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
+                    SdApplication.PuntThroughEventLoop(ex);
                 }
                 else
                 {
                     // Normally we'd just throw the exception; in this case, we're the top of the stack and that would bring the application down.  So we report instead.
-                    SdApplication.SoleInstance.FriendlyError("An internal error occurred while exporting the graphic", ex, true);
+                    SdApplication.FriendlyError("An internal error occurred while exporting the graphic", ex, true);
                 }
             }
 #endif
         }
 
-        private void tbrParagraph_Click(object sender, EventArgs e)
+        private void tbrParagraph_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowParagraphForm, "Couldn't show paragraph properties");
         }
@@ -808,7 +760,7 @@ namespace StatsDirect.UI
             new ShowParagraphFormCommand(richEditControl1).Execute();
         }
 
-        private void tbrTabs_Click(object sender, EventArgs e)
+        private void tbrTabs_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowTabs, "Couldn't show tabs");
         }
@@ -818,7 +770,7 @@ namespace StatsDirect.UI
             new ShowTabsFormCommand(richEditControl1).Execute();
         }
 
-        private void tbrInsertSymbol_Click(object sender, EventArgs e)
+        private void tbrInsertSymbol_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ShowInsertSymbolForm, "Couldn't show Insert Symbol form");
         }
@@ -828,12 +780,12 @@ namespace StatsDirect.UI
             new ShowSymbolFormCommand(richEditControl1).Execute();
         }
 
-        private void tbrToggleBullets_Click(object sender, EventArgs e)
+        private void tbrToggleBullets_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleBullets, "Couldn't set bullets");
         }
 
-        private void tbrToggleNumbers_Click(object sender, EventArgs e)
+        private void tbrToggleNumbers_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleNumbers, "Couldn't set numbers");
         }
@@ -843,7 +795,7 @@ namespace StatsDirect.UI
             new ToggleSimpleNumberingListCommand(richEditControl1).Execute();
         }
 
-        private void tbrSubscript_Click(object sender, EventArgs e)
+        private void tbrSubscript_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleSubscript, "Couldn't set subscript");
         }
@@ -853,7 +805,7 @@ namespace StatsDirect.UI
             new ToggleFontSubscriptCommand(richEditControl1).Execute();
         }
 
-        private void tbrSuperscript_Click(object sender, EventArgs e)
+        private void tbrSuperscript_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleSuperscript, "Couldn't set superscript");
         }
@@ -863,7 +815,7 @@ namespace StatsDirect.UI
             new ToggleFontSuperscriptCommand(richEditControl1).Execute();
         }
 
-        private void tbrDecreaseIndent_Click(object sender, EventArgs e)
+        private void tbrDecreaseIndent_Click(object? sender, EventArgs e)
         {
             DoOrWarn(DecreaseIndent, "Couldn't decrease indent");
         }
@@ -873,7 +825,7 @@ namespace StatsDirect.UI
             new DecrementIndentCommand(richEditControl1).Execute();
         }
 
-        private void tbrIncreaseIndent_Click(object sender, EventArgs e)
+        private void tbrIncreaseIndent_Click(object? sender, EventArgs e)
         {
             DoOrWarn(IncreaseIndent, "Couldn't increase indent");
         }
@@ -883,7 +835,7 @@ namespace StatsDirect.UI
             new IncrementIndentCommand(richEditControl1).Execute();
         }
 
-        private void tbrZoomOut_Click(object sender, EventArgs e)
+        private void tbrZoomOut_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ZoomOut, "Couldn't set zoom");
         }
@@ -893,7 +845,7 @@ namespace StatsDirect.UI
             new ZoomOutCommand(richEditControl1).Execute();
         }
 
-        private void tbrZoomIn_Click(object sender, EventArgs e)
+        private void tbrZoomIn_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ZoomIn, "Couldn't zoom in");
         }
@@ -903,7 +855,7 @@ namespace StatsDirect.UI
             new ZoomInCommand(richEditControl1).Execute();
         }
 
-        private void tbrDraft_Click(object sender, EventArgs e)
+        private void tbrDraft_Click(object? sender, EventArgs e)
         {
             DoOrWarn(SetDraftLayout, "Couldn't set draft layout");
         }
@@ -913,7 +865,7 @@ namespace StatsDirect.UI
             richEditControl1.ActiveViewType = RichEditViewType.Draft;
         }
 
-        private void tbrPrintLayout_Click(object sender, EventArgs e)
+        private void tbrPrintLayout_Click(object? sender, EventArgs e)
         {
             DoOrWarn(SetPrintLayout, "Couldn't set print layout");
         }
@@ -923,7 +875,7 @@ namespace StatsDirect.UI
             richEditControl1.ActiveViewType = RichEditViewType.PrintLayout;
         }
 
-        private void tbrIndentedList_Click(object sender, EventArgs e)
+        private void tbrIndentedList_Click(object? sender, EventArgs e)
         {
             DoOrWarn(ToggleMultiLevelList, "Couldn't set multi-level list");
         }
@@ -933,12 +885,12 @@ namespace StatsDirect.UI
             new ToggleMultiLevelListCommand(richEditControl1).Execute();
         }
 
-        private void richEditControl1_ModifiedChanged(object sender, EventArgs e)
+        private void richEditControl1_ModifiedChanged(object? sender, EventArgs e)
         {
             Dirty = richEditControl1.Modified;
         }
 
-        private void tbrSimple_Click(object sender, EventArgs e)
+        private void tbrSimple_Click(object? sender, EventArgs e)
         {
             DoOrWarn(SetSimpleLayout, "Couldn't set simple layout");
         }
@@ -948,7 +900,7 @@ namespace StatsDirect.UI
             richEditControl1.ActiveViewType = RichEditViewType.Simple;
         }
 
-        void richEditControl1_KeyUp(object sender, KeyEventArgs e)
+        void richEditControl1_KeyUp(object? sender, KeyEventArgs e)
         {
             DoOrSwallow(() =>
             {
@@ -960,7 +912,7 @@ namespace StatsDirect.UI
             });
         }
 
-        private void insertDateAndTimeToolStripMenuItem_Click(object sender, EventArgs e)
+        private void insertDateAndTimeToolStripMenuItem_Click(object? sender, EventArgs e)
         {
             DoOrWarn(InsertDateAndTime, "Couldn't insert date and time");
         }

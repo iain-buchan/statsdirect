@@ -35,7 +35,7 @@ namespace StatsDirect.Builtins
             // int ner = 9; 
             int k1 = 0;
             for (i = 1; i <= nkey; i++)
-                if (indkey[i] < 1 | nrx > 0 & indkey[i] > nrx)
+                if (indkey[i] < 1 || nrx > 0 && indkey[i] > nrx)
                     k1 += 1;
             if (k1 > 0)
             {
@@ -368,7 +368,7 @@ namespace StatsDirect.Builtins
                                 WK[ii] = x[ii + i * nrx];
                             int it = iperm[i + 1];
                             int kompar = CompareVectors(kr, x, irowx + (i - 1) * nrx, WK, irowx);
-                            if (kompar != -1 & kompar != 0)
+                            if (kompar != -1 && kompar != 0)
                             {
                                 int k = i;
                                 do

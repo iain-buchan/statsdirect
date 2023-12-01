@@ -7,7 +7,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlFindAndReplaceData : UserControl, IFillParameterBag
+    internal partial class ctlFindAndReplaceData : UserControl, IFillParameterBag
     {
         private static string FIND_EXPRESSION = string.Empty;
         private static string REPLACE_EXPRESSION = string.Empty;
@@ -42,7 +42,7 @@ namespace StatsDirect.UI
                     int rows = source.Length;
                     IVariable outputVariable = new VariantVariable(rows, source.Title);
                     outputFrame.Variables.Add(outputVariable);
-                    double[] sourceData = ((DoubleVariable) source).Data;
+                    double[] sourceData = ((DoubleVariable)source).Data;
                     for (int n = 0; n < rows; n++)
                     {
                         if (sourceData[n] != Constant.MISSING)

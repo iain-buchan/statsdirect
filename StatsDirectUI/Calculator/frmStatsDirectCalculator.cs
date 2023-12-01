@@ -18,7 +18,7 @@ namespace StatsDirect.Calculator
             InitializeComponent();
         }
 
-        private void cmdCalculate_Click(object sender, EventArgs e)
+        private void cmdCalculate_Click(object? sender, EventArgs e)
         {
             DoCalculate();
         }
@@ -51,7 +51,7 @@ namespace StatsDirect.Calculator
 #endif
         }
 
-        private void cmdSave_Click(object sender, EventArgs e)
+        private void cmdSave_Click(object? sender, EventArgs e)
         {
             DoCalculate();
             DoSave();
@@ -82,7 +82,7 @@ namespace StatsDirect.Calculator
 #endif
         }
 
-        private void cmdClose_Click(object sender, EventArgs e)
+        private void cmdClose_Click(object? sender, EventArgs e)
         {
             Close();
         }
@@ -109,7 +109,7 @@ namespace StatsDirect.Calculator
             }
         }
 
-        private void cmdPaste_Click(object sender, EventArgs e)
+        private void cmdPaste_Click(object? sender, EventArgs e)
         {
             DoPaste();
         }
@@ -140,7 +140,7 @@ namespace StatsDirect.Calculator
 #endif
         }
 
-        private void cmdDelete_Click(object sender, EventArgs e)
+        private void cmdDelete_Click(object? sender, EventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -169,12 +169,12 @@ namespace StatsDirect.Calculator
 #endif
         }
 
-        private void cmdHelp_Click(object sender, EventArgs e)
+        private void cmdHelp_Click(object? sender, EventArgs e)
         {
-            SdApplication.SoleInstance.ShowHelp(this, "1020");
+            SdApplication.ShowHelp(this, "1020");
         }
 
-        private void lstSavedExpressions_Enter(object sender, EventArgs e)
+        private void lstSavedExpressions_Enter(object? sender, EventArgs e)
         {
             cmdPaste.Enabled = true;
             cmdDelete.Enabled = true;
@@ -182,10 +182,10 @@ namespace StatsDirect.Calculator
 
         private static void HandleException(Exception ex)
         {
-            SdApplication.SoleInstance.FriendlyError("Couldn't evaluate expression", ex, false);
+            SdApplication.FriendlyError("Couldn't evaluate expression", ex, false);
         }
 
-        private void frmStatsDirectCalculator_FormClosing(object sender, FormClosingEventArgs e)
+        private void frmStatsDirectCalculator_FormClosing(object? sender, FormClosingEventArgs e)
         {
 #if !WATCH_EXCEPTIONS
             try
@@ -218,12 +218,12 @@ namespace StatsDirect.Calculator
 #endif
         }
 
-        private void frmStatsDirectCalculator_Load(object sender, EventArgs e)
+        private void frmStatsDirectCalculator_Load(object? sender, EventArgs e)
         {
             LoadPosition();
         }
 
-        private void frmStatsDirectCalculator_Shown(object sender, EventArgs e)
+        private void frmStatsDirectCalculator_Shown(object? sender, EventArgs e)
         {
             txtExpression.Focus();
         }

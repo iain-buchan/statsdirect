@@ -1,4 +1,5 @@
 ﻿using Layout;
+using StatsDirect.Charting.Options;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Templates;
 using System;
@@ -10,8 +11,8 @@ namespace StatsDirect.Charting.Renderer
 {
     internal class HistogramChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public HistogramChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public HistogramChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -27,7 +28,7 @@ namespace StatsDirect.Charting.Renderer
 
             for (int i = 0; i < Definition.YSeries.Count; i++)
             {
-                HistogramSeriesOptions so = options.HistoSeriesOptions[i];
+                HistogramSeriesOptions so = options.HistogramSeriesOptions[i];
                 if (null == so.BinsDescriptor)
                     so.Reset(true, 0, (DoubleSeries)Definition.YSeries[i], options.BinChoiceMethod);
 
@@ -49,22 +50,21 @@ namespace StatsDirect.Charting.Renderer
                 if (seriesMaxY > maxY)
                     maxY = seriesMaxY;
             }
-            ScaleParameters sp = new()
-            {
-                X = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = minX, Max = maxX },
-                Y = { AllowedScaleTypes = new[] { ScaleType.Linear }, Min = 0, Max = maxY }
-            };
+            ScaleParameters sp = new(
+                new(new[] { ScaleType.Linear }) { Min = minX, Max = maxX },
+                new(new[] { ScaleType.Linear }) { Min = 0, Max = maxY }
+            );
             return sp;
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
-            IList<ISeries> seriesToUse = Definition.YSeries;
-            MarkerType[] originalMarkerTypes = null;
+            IReadOnlyList<ISeries> seriesToUse = Definition.YSeries;
+            IList<MarkerType> originalMarkerTypes = null;
             //  A space to save drawn ASCII plots until required
             List<string> savedLines = null;
 
@@ -87,7 +87,7 @@ namespace StatsDirect.Charting.Renderer
 
                     originalMarkerTypes = ChartPreferences.MarkerTypes;
                     ChartPreferences.PushAndCloneMarkerTypes();
-                    for (int i = 0; i < originalMarkerTypes.Length; i++)
+                    for (int i = 0; i < originalMarkerTypes.Count; i++)
                         ChartPreferences.MarkerTypes[i].Width = options.LineWidth;
                     AssignMarkersToSeries(seriesToUse);
                 }
@@ -100,7 +100,7 @@ namespace StatsDirect.Charting.Renderer
                 for (int seriesIndex = 0; seriesIndex < seriesToUse.Count; seriesIndex++)
                 {
                     DoubleSeries s = (DoubleSeries)seriesToUse[seriesIndex];
-                    HistogramSeriesOptions so = options.HistoSeriesOptions[seriesIndex];
+                    HistogramSeriesOptions so = options.HistogramSeriesOptions[seriesIndex];
                     string title = so.ChartTitle;
 
                     BinsDescriptor descriptor = so.BinsDescriptor;
@@ -144,8 +144,8 @@ namespace StatsDirect.Charting.Renderer
 
                         //  No longer the default Y axis!
                         Size extraSpaceForAxes = CalculateAxisSizes(title,
-                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                            new AxisDefinition(options.HistogramSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(options.HistogramSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             true);
                         DefaultAxes(null, extraSpaceForAxes);
                         YAxisCanvas = thisChartBottom + Math.Min(Math.Floor(imageHeight / 8.0), DefaultYGap);
@@ -161,8 +161,8 @@ namespace StatsDirect.Charting.Renderer
 
                         // Draw the axes
                         AxisScales ass = DrawAxes(title,
-                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                            new AxisDefinition(options.HistoSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
+                            new AxisDefinition(options.HistogramSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
+                            new AxisDefinition(options.HistogramSeriesOptions[seriesIndex].YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                             false,
                             true,
                             extraSpaceForAxes);
@@ -219,7 +219,7 @@ namespace StatsDirect.Charting.Renderer
                             WriteAsciiYX(c + AsciiYTxt, 1, buf);
                         }
 
-                        WriteAsciiYX(0, AsciiXTxt, options.HistoSeriesOptions[seriesIndex].XAxisTitle);
+                        WriteAsciiYX(0, AsciiXTxt, options.HistogramSeriesOptions[seriesIndex].XAxisTitle);
 
                         WriteAsciiYX(descriptor.Bins + AsciiYTxt, 16, "Mid-points");
                         WriteAsciiYX(descriptor.Bins + AsciiYTxt, 1, "Counts");
@@ -252,7 +252,7 @@ namespace StatsDirect.Charting.Renderer
             }
             finally
             {
-                if (originalMarkerTypes != null)
+                if (originalMarkerTypes is not null)
                 {
                     //  TODO: Resource leak on pens?
                     ChartPreferences.PopMarkerTypes();

@@ -6,9 +6,9 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlOneAxisOptions : UserControl
+    internal partial class ctlOneAxisOptions : UserControl
     {
-        private ICollection<ScaleType> allowedScaleTypes;
+        private IReadOnlySet<ScaleType> allowedScaleTypes;
         private double dataMinimum;
         private double dataMinGreaterThanZero;
         private double dataMaximum;
@@ -28,7 +28,7 @@ namespace StatsDirect.UI
 
         public bool IsYAxis { get; set; }
 
-        public ICollection<ScaleType> AllowedScaleTypes
+        public IReadOnlySet<ScaleType> AllowedScaleTypes
         {
             get => allowedScaleTypes;
             set
@@ -88,29 +88,20 @@ namespace StatsDirect.UI
             set => cboScale.SelectedIndex = scaleTypesInCboScale.IndexOf(value);
         }
 
-        public string Title
+        public string? Title
         {
-            get => txtTitle.Text;
-            set => txtTitle.Text = value;
+            get => string.IsNullOrWhiteSpace(txtTitle.Text) ? null : txtTitle.Text;
+            set => txtTitle.Text = value ?? string.Empty;
         }
 
-        public DashStyleDescriptor GridLineDashStyle
-        {
-            get
+        public DashStyleDescriptor GridLineDashStyle =>
+            cboGridLines.SelectedIndex switch
             {
-                switch (cboGridLines.SelectedIndex)
-                {
-                    case 0:
-                        return DashStyleDescriptor.Solid;
-                    case 1:
-                        return DashStyleDescriptor.Solid;
-                    case 2:
-                        return DashStyleDescriptor.Dash;
-                    default:
-                        return DashStyleDescriptor.Solid;
-                }
-            }
-        }
+                0 => DashStyleDescriptor.Solid,
+                1 => DashStyleDescriptor.Solid,
+                2 => DashStyleDescriptor.Dash,
+                _ => DashStyleDescriptor.Solid,
+            };
 
         public bool HasGridLines => cboGridLines.SelectedIndex > 0;
 
@@ -175,7 +166,7 @@ namespace StatsDirect.UI
 
         private static bool ShouldShowScaleTextDirection => true;
 
-        private void cboScale_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboScale_SelectedIndexChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -190,7 +181,7 @@ namespace StatsDirect.UI
 
         private void SetDataRangeLabel()
         {
-            lblDataRange.Text = $"Data range: {SdApplication.SoleInstance.RoundU(MinimumDataValue)} to {SdApplication.SoleInstance.RoundU(MaximumDataValue)}";
+            lblDataRange.Text = $"Data range: {SdApplication.RoundU(MinimumDataValue)} to {SdApplication.RoundU(MaximumDataValue)}";
         }
 
         private void SetCandidateScaleValues()
@@ -210,7 +201,7 @@ namespace StatsDirect.UI
                     maximumValue = v;
             }
             ScaleType selectedScaleType = ScaleType;
-            IAxisScale axisScale = Charting.AxisScalerFactory.AxisScalerFor(selectedScaleType).QAxis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
+            IAxisScale axisScale = AxisScalerFactory.AxisScalerFor(selectedScaleType).QAxis(minimumValue, DataMinGreaterThanZero, maximumValue, IsYAxis, false);
             MinimumScaleValue = axisScale.MinimumScaleValue;
             MaximumScaleValue = axisScale.MaximumScaleValue;
             settingValues = true;
@@ -219,7 +210,7 @@ namespace StatsDirect.UI
             settingValues = false;
         }
 
-        private void txtMinimum_TextChanged(object sender, EventArgs e)
+        private void txtMinimum_TextChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -239,7 +230,7 @@ namespace StatsDirect.UI
             MaximumScaleValue = Utilities.Parsing.Cdbl_Txt(txtMaximum.Text);
         }
 
-        private void txtMaximum_TextChanged(object sender, EventArgs e)
+        private void txtMaximum_TextChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -251,7 +242,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cboMarkerLineAt_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboMarkerLineAt_SelectedIndexChanged(object? sender, EventArgs e)
         {
             try
             {

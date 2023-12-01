@@ -28,7 +28,7 @@ using System.Windows.Forms;
 
 namespace StatsDirect.PJLControls
 {
-    internal delegate void ColorPanelClosingEventHandler(object sender, System.EventArgs e);
+    internal delegate void ColorPanelClosingEventHandler(object? sender, System.EventArgs e);
 
     /// <summary>
     /// This internal class adds mouse capture to the ColorPanel

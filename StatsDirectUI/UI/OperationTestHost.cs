@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using StatsDirect.Data;
 using StatsDirect.TemplateProcessing;
@@ -7,7 +8,7 @@ using StatsDirect.Templates;
 
 namespace StatsDirect.UI
 {
-    internal class OperationTestHost : ITemplateHost
+    internal class OperationTestHost : ITemplateHost, ISession
     {
         private Dictionary<string, OperationTestInputParameter> InputParameters { get; }
 
@@ -25,9 +26,7 @@ namespace StatsDirect.UI
 
         ParameterBag ISession.SessionParametersAcrossOperations => throw new NotImplementedException();
 
-        SDPreferences IPreferences.Preferences => throw new NotImplementedException();
-
-        Operation IUserInterface.Operation { get; set; }
+        Operation? IUserInterface.Operation { get; set; }
 
         ParameterBag IUserInterface.Amend(IFillable options, ParameterBag context)
         {
@@ -45,17 +44,17 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        ParameterBag IUserInterface.FillAndValidateCombinedParameters(ITemplateProcessor processor, ParameterBag context)
+        ParameterBag IUserInterface.FillAndValidateCombinedParameters(ParameterBag context)
         {
             // Should never be called
             throw new NotImplementedException();
         }
 
-        ParameterBag IUserInterface.FillParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context, bool shouldCombine)
+        ParameterBag IUserInterface.FillParameter(Parameter parameter, ParameterBag context, bool shouldCombine)
         {
-            if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter input))
+            if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter? input))
                 throw new NotImplementedException($"Operation {parameter.Operation.Name} expects parameter {parameter.Name} which was not specified in the test inputs");
-            return new ParameterBag(parameter.Name, FilledParameterFactory.Input(new InputParameterFiller(input).Fill(parameter)));
+            return new ParameterBag().AddInput(parameter.Name, new InputParameterFiller(input).Fill(parameter));
         }
 
         bool IUserInterface.GetBoolean(string prompt, string Title, bool initialValue, out bool cancelled)
@@ -63,11 +62,15 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        IScriptEngine IScriptEngineHost.GetScriptEngine(string language)
+        bool IScriptEngineHost.TryGetScriptEngine(string language, [NotNullWhen(true)] out IScriptEngine? scriptEngine)
         {
             if (ScriptEngine.CanHandle(language))
-                return new ScriptEngine();
-            return null;
+            {
+                scriptEngine = new ScriptEngine();
+                return true;
+            }
+            scriptEngine = null;
+            return false;
         }
 
         void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
@@ -75,32 +78,17 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
+        object? IUserInterface.OutputReport(IRenderable renderable, Operation operation, object? preferredOutputLocation)
         {
             // No UI during a test
             return null;
         }
 
-        void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
+        void IUserInterface.PrepareParameter(Parameter parameter, ParameterBag context)
         {
-            if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter input))
+            if (!InputParameters.TryGetValue(parameter.Name, out OperationTestInputParameter? input))
                 throw new NotImplementedException($"Operation {parameter.Operation.Name} expects parameter {parameter.Name} which was not specified in the test inputs");
             context.AddInput(parameter.Name, new InputParameterFiller(input).Fill(parameter));
-        }
-
-        string IFormatting.pval(double p)
-        {
-            throw new NotImplementedException();
-        }
-
-        string IFormatting.pval_half(double p)
-        {
-            throw new NotImplementedException();
-        }
-
-        string IFormatting.RoundU(double amount)
-        {
-            throw new NotImplementedException();
         }
 
         IProgressBar IProgressBarHost.StartProgress(string operationDescription, bool provideProgress, bool display)
@@ -139,11 +127,11 @@ namespace StatsDirect.UI
         {
             private OperationTestInputParameter Input { get; }
 
-            object parsedInput;
+            object? parsedInput;
 
             public InputParameterFiller(OperationTestInputParameter input)
             {
-                this.Input = input;
+                Input = input;
             }
             void IParameterVisitor.Visit(BooleanParameter parameter)
             {
@@ -240,7 +228,7 @@ namespace StatsDirect.UI
                 parsedInput = Input.Value;
             }
 
-            internal object Fill(Parameter parameter)
+            internal object? Fill(Parameter parameter)
             {
                 parameter.Accept(this);
                 return parsedInput;

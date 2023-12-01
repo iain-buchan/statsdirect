@@ -154,7 +154,7 @@ namespace StatsDirect.Numerics
             OLDA = -1.0; 
             OLDB = -1.0; 
                 RNG = null; 
-            if ( rug == null ) 
+            if ( rug is null ) 
             { 
                 RNG = new MersenneTwister(); 
                 RNG.Seed( sd ); 

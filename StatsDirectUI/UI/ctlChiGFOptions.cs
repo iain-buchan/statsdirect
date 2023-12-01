@@ -39,7 +39,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void lstFrequencies_MouseUp(object sender, MouseEventArgs e)
+        private void lstFrequencies_MouseUp(object? sender, MouseEventArgs e)
         {
             SetValueFromList();
         }
@@ -58,31 +58,31 @@ namespace StatsDirect.UI
             }
         }
 
-        private void rdoExpected_Click(object sender, EventArgs e)
+        private void rdoExpected_Click(object? sender, EventArgs e)
         {
             useProportionOfN = !rdoExpected.Checked;
             rdoN.Checked = useProportionOfN;
             SetValueFromList();
         }
 
-        private void rdoN_Click(object sender, EventArgs e)
+        private void rdoN_Click(object? sender, EventArgs e)
         {
             useProportionOfN = rdoN.Checked;
             rdoExpected.Checked = !useProportionOfN;
             SetValueFromList();
         }
 
-        private void lstFrequencies_KeyPress(object sender, KeyPressEventArgs e)
+        private void lstFrequencies_KeyPress(object? sender, KeyPressEventArgs e)
         {
             SetValueFromList();
         }
 
-        private void txtValue_Enter(object sender, EventArgs e)
+        private void txtValue_Enter(object? sender, EventArgs e)
         {
             listIndexAtFocus = lstFrequencies.SelectedIndices[0];
         }
 
-        private void txtValue_KeyPress(object sender, KeyPressEventArgs e)
+        private void txtValue_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (13 == e.KeyChar)
             {

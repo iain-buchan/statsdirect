@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StatsDirect.Templates
+﻿namespace StatsDirect.Templates
 {
     /// <summary>
     /// At least the thing that is handed out of builtins. TODO: Is this also the thing that is handed between parts of a step?  Between UI and template processing?

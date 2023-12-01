@@ -2,20 +2,22 @@ namespace StatsDirect.Charting
 {
     public class StringSeries : ISeries 
     { 
-        
-        public string[] Data;
+        public string?[] Data { get; }
 
-        public string Title { get; set; }
+        public string? Title { get; }
 
-        public StringSeries() 
+        public StringSeries(int dataLength, string? title = null)
         { 
-        } 
-        
-        public StringSeries( int dataLength ) 
-        { 
-            Data = new string[ dataLength ]; 
-        } 
-        
+            Data = new string?[dataLength];
+            Title = title;
+        }
+
+        public StringSeries(string?[] data, string? title = null)
+        {
+            Data = data;
+            Title = title;
+        }
+
         public int Length => Data.Length;
     } 
 } 

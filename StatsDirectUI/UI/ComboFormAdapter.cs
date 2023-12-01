@@ -2,38 +2,35 @@ namespace StatsDirect.UI
 {
     internal sealed class ComboFormAdapter
     {
-        private readonly StatsDirectForm statsDirectForm;
+        public StatsDirectForm? StatsDirectForm { get; }
 
-        public ComboFormAdapter(StatsDirectForm statsDirectForm)
+        public ComboFormAdapter(StatsDirectForm? statsDirectForm)
         {
-            this.statsDirectForm = statsDirectForm;
+            StatsDirectForm = statsDirectForm;
         }
 
-        public StatsDirectForm StatsDirectForm => statsDirectForm;
-
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (!(obj is ComboFormAdapter))
+            if (obj is not ComboFormAdapter rhs)
                 return false;
-            ComboFormAdapter rhs = (ComboFormAdapter)obj;
             // Check for null forms on either side.  If both are null, we're OK...
-            if (null == statsDirectForm && null == rhs.statsDirectForm)
+            if (null == StatsDirectForm && null == rhs.StatsDirectForm)
                 return true;
             // ... otherwise if either is null, the other isn't...
-            if (null == statsDirectForm || null == rhs.statsDirectForm)
+            if (null == StatsDirectForm || null == rhs.StatsDirectForm)
                 return false;
             // ... otherwise both are non-null.
-            return rhs.statsDirectForm.Equals(statsDirectForm);
+            return rhs.StatsDirectForm.Equals(StatsDirectForm);
         }
 
-        public override int GetHashCode()
-        {
-            return null == statsDirectForm ? 0 : statsDirectForm.GetHashCode();
-        }
+        public override int GetHashCode() =>
+            null == StatsDirectForm
+                ? 0
+                : StatsDirectForm.GetHashCode();
 
-        public override string ToString()
-        {
-            return null == statsDirectForm ? "New report" : statsDirectForm.Text;
-        }
+        public override string ToString() =>
+            null == StatsDirectForm
+                ? "New report"
+                : StatsDirectForm.Text;
     }
 }

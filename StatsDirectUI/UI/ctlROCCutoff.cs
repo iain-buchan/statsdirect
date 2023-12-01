@@ -1,9 +1,10 @@
+using StatsDirect.Templates;
 using System;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
-    public partial class ctlROCCutoff : UserControl, IOkable
+    internal partial class ctlROCCutoff : StatsDirectUserControl, IOkable
     {
         private readonly double inc;
         private double add;
@@ -13,7 +14,9 @@ namespace StatsDirect.UI
 
         public Charting.ROCSeriesRecord CurrentRecord { get; private set; }
 
-        public ctlROCCutoff(Charting.ROCSeriesRecord seriesRecord, string titleSuffix)
+
+        public ctlROCCutoff(Charting.ROCSeriesRecord seriesRecord, string titleSuffix, ISdPreferences sdPreferences)
+            : base(sdPreferences)
         {
             InitializeComponent();
             originalRecord = seriesRecord;
@@ -28,13 +31,13 @@ namespace StatsDirect.UI
             txtB.Text = record.b.ToString();
             txtC.Text = record.c.ToString();
             txtD.Text = record.d.ToString();
-            txtSensitivity.Text = SdApplication.SoleInstance.RoundU(record.sens);
-            txtSpecificity.Text = SdApplication.SoleInstance.RoundU(record.spec);
-            txtCutoff.Text = SdApplication.SoleInstance.RoundU(record.cutoff);
+            txtSensitivity.Text = RoundU(record.sens);
+            txtSpecificity.Text = RoundU(record.spec);
+            txtCutoff.Text = RoundU(record.cutoff);
             double ppv = record.a / ((double)record.a + record.b);
             double npv = record.d / ((double)record.d + record.c);
-            txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : SdApplication.SoleInstance.RoundU(ppv);
-            txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : SdApplication.SoleInstance.RoundU(npv);
+            txtPositive.Text = Numerics.Constant.MISSING == ppv ? "*" : RoundU(ppv);
+            txtNegative.Text = Numerics.Constant.MISSING == npv ? "*" : RoundU(npv);
             lastcut = record.cutoff;
         }
 
@@ -55,33 +58,33 @@ namespace StatsDirect.UI
             PopulateFormFromData(CurrentRecord);
         }
 
-        private void btnUp_MouseDown(object sender, MouseEventArgs e)
+        private void btnUp_MouseDown(object? sender, MouseEventArgs e)
         {
             StartSpinUp();
         }
 
-        private void btnUp_MouseUp(object sender, MouseEventArgs e)
+        private void btnUp_MouseUp(object? sender, MouseEventArgs e)
         {
             StopSpinUp();
         }
 
-        private void btnDown_MouseDown(object sender, MouseEventArgs e)
+        private void btnDown_MouseDown(object? sender, MouseEventArgs e)
         {
             StartSpinDown();
         }
 
-        private void btnDown_MouseUp(object sender, MouseEventArgs e)
+        private void btnDown_MouseUp(object? sender, MouseEventArgs e)
         {
             StopSpinDown();
         }
 
-        private void cmdReset_Click(object sender, EventArgs e)
+        private void cmdReset_Click(object? sender, EventArgs e)
         {
             CurrentRecord = originalRecord.Clone();
             PopulateFormFromData(CurrentRecord);
         }
 
-        private void txtCutoff_KeyPress(object sender, KeyPressEventArgs e)
+        private void txtCutoff_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (13 == e.KeyChar)
             {
@@ -94,7 +97,7 @@ namespace StatsDirect.UI
            }
         }
 
-        private void frmROCCutoff_KeyDown(object sender, KeyEventArgs e)
+        private void frmROCCutoff_KeyDown(object? sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
@@ -109,7 +112,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void frmROCCutoff_KeyUp(object sender, KeyEventArgs e)
+        private void frmROCCutoff_KeyUp(object? sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
@@ -146,7 +149,7 @@ namespace StatsDirect.UI
             timer1.Enabled = false;
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        private void timer1_Tick(object? sender, EventArgs e)
         {
             CurrentRecord.cutoff += add;
             if (CurrentRecord.cutoff != lastcut)
@@ -155,7 +158,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void ctlROCCutoff_Load(object sender, EventArgs e)
+        private void ctlROCCutoff_Load(object? sender, EventArgs e)
         {
             Text += titleSuffix;
             lblOptimum.Text = "For optimum, sensitivity:specificity weighting = " + originalRecord.weight.ToString() + ":1";

@@ -1,16 +1,20 @@
-﻿namespace StatsDirect.Charting
+﻿using System.Text.Json.Serialization;
+
+namespace StatsDirect.Charting
 {
     public class BrushDescriptor
     {
-        public static BrushDescriptor Black { get; } = new BrushDescriptor(ColorDescriptor.Black);
+        public static BrushDescriptor SolidBlack { get; } = new BrushDescriptor(ColorDescriptor.Black);
 
         public ColorDescriptor Color { get; }
-        public FillStyle FillStyle { get; set; } = FillStyle.Solid;
 
-        public BrushDescriptor(ColorDescriptor color)
+        [JsonPropertyName("fill")]
+        public FillStyle FillStyle { get; }
+
+        public BrushDescriptor(ColorDescriptor color, FillStyle fillStyle = FillStyle.Solid)
         {
             Color = color;
+            FillStyle = fillStyle;
         }
-
     }
 }

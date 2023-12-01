@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using StatsDirect.Charting;
+using StatsDirect.Charting.Options;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -9,8 +10,26 @@ using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
-    public static class Tables
+    public class Tables : RendererBase
     {
+        private IChartPreferences ChartPreferences { get; }
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private IProgressBarHost ProgressBarHost { get; }
+        private IUserInterface UserInterface { get; }
+        private Chi Chi { get; }
+        private Meta Meta { get; }
+
+        public Tables(Chi chi, IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, IProgressBarHost progressBarHost, ISdPreferences sdPreferences, IUserInterface userInterface, Meta meta)
+            : base(sdPreferences)
+        {
+            Chi = chi;
+            ChartPreferences = chartPreferences;
+            ChartRendererFactory = chartRendererFactory;
+            ProgressBarHost = progressBarHost;
+            UserInterface = userInterface;
+            Meta = meta;
+        }
+
         private class Namevar
         {
             public string Title { get; set;  }
@@ -28,7 +47,7 @@ namespace StatsDirect.Builtins
         /// </summary>
         private class NamevarAscending : IComparer<Namevar>
         {
-            public int Compare(Namevar x, Namevar y)
+            public int Compare(Namevar? x, Namevar? y)
             {
                 if (double.TryParse(x.Title, out double nx) && double.TryParse(y.Title, out double ny))
                     return nx.CompareTo(ny);
@@ -53,9 +72,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_a2", c);
             outputParameters.AddOutput("tab_b2", d);
             if (a > d)
-                Utilities.Utilities.Swap(ref a, ref d);
+                (d, a) = (a, d);
             if (b > c)
-                Utilities.Utilities.Swap(ref b, ref c);
+                (c, b) = (b, c);
             int p = a + b;
             int q = c + d;
             int r = a + c;
@@ -733,7 +752,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepOutput RptKappa(IPreferences host, ParameterBag parameters)
+        public StepOutput RptKappa(ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             double cit; double p;
@@ -874,16 +893,11 @@ namespace StatsDirect.Builtins
                     {
                         for (int j = 0; j < g; j++)
                         {
-                            switch (wtype)
+                            w[i, j] = wtype switch
                             {
-                                case 2:
-                                    w[i, j] = 1.0 - Math.Pow(Convert.ToDouble(i - j) / Convert.ToDouble(g - 1), 2.0);
-                                    break;
-                                default:
-                                    w[i, j] = 1.0 - Convert.ToDouble(Math.Abs(i - j)) / Convert.ToDouble(g - 1);
-                                    break;
-                            }
-
+                                2 => 1.0 - Math.Pow((i - j) / (g - 1.0), 2.0),
+                                _ => 1.0 - (Math.Abs(i - j)) / (g - 1.0),
+                            };
                         }
                     }
                 }
@@ -1048,7 +1062,7 @@ namespace StatsDirect.Builtins
                     if (minm == maxm)
                         ratz = raters.ToString();
                     else
-                        ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")";
+                        ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + RoundU(medm) + ")";
                     outputParameters.AddOutput("r", ratz);
                     outputParameters.AddOutput("k", k);
                     outputParameters.AddOutput("se", sek);
@@ -1097,7 +1111,7 @@ namespace StatsDirect.Builtins
                     if (minm == maxm)
                         ratz = raters.ToString();
                     else
-                        ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")";
+                        ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + RoundU(medm) + ")";
                     outputParameters.AddOutput("r", ratz);
                     if (minm == maxm)
                     {
@@ -1171,7 +1185,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepOutput RptKappaSimulateExactP(IProgressBarHost host, ParameterBag parameters)
+        public StepOutput RptKappaSimulateExactP(ParameterBag parameters)
         {
             int iter = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
@@ -1313,16 +1327,11 @@ namespace StatsDirect.Builtins
                 {
                     for (int j = 0; j < g; j++)
                     {
-                        switch (wtype)
+                        w[i, j] = wtype switch
                         {
-                            case 2:
-                                w[i, j] = 1.0 - Math.Pow((i - j) / (double)(g - 1), 2.0);
-                                break;
-                            default:
-                                w[i, j] = 1.0 - Math.Abs(i - j) / (double)(g - 1);
-                                break;
-                        }
-
+                            2 => 1.0 - Math.Pow((i - j) / (g - 1.0), 2.0),
+                            _ => 1.0 - Math.Abs(i - j) / (g - 1.0),
+                        };
                     }
                 }
             }
@@ -1331,7 +1340,7 @@ namespace StatsDirect.Builtins
             int exactIter = 0;
             int exactRw = 0;
             int exactIterW = 0;
-            KappaResample(host, o, w, g, cit, originalK, originalKw, iter, ref exactR, ref exactIter, ref exactRw, ref exactIterW, seed, ref ierror);
+            KappaResample(o, w, g, cit, originalK, originalKw, iter, ref exactR, ref exactIter, ref exactRw, ref exactIterW, seed, ref ierror);
 
             ParameterBag outputParameters = new();
             if (ierror == 0)
@@ -1381,7 +1390,7 @@ namespace StatsDirect.Builtins
         /// <param name="exactIter"></param>
         /// <param name="exactRw"></param>
         /// <remarks></remarks>
-        private static void KappaResample(IProgressBarHost host, int[,] o, double[,] w, int g, double cit, double originalK, double originalKw, int iter, ref int exactR, ref int exactIter, ref int exactRw, ref int exactIterW, int iseed, ref int ierror)
+        private void KappaResample(int[,] o, double[,] w, int g, double cit, double originalK, double originalKw, int iter, ref int exactR, ref int exactIter, ref int exactRw, ref int exactIterW, int iseed, ref int ierror)
         {
             int[] ncolt = new int[g];
             int[] nrowt = new int[g];
@@ -1392,7 +1401,7 @@ namespace StatsDirect.Builtins
 
             int bootsDivisor = Math.Max(1, iter / 1000);
 
-            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Simulating exact P", true);
 
             if (iseed != 0)
                 rng.Seed(iseed);
@@ -1534,7 +1543,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptChiGfSimulateExactP(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptChiGfSimulateExactP(ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
             int seed = parameters["seed"].AsInt32;
@@ -1561,7 +1570,7 @@ namespace StatsDirect.Builtins
                 p[n + 1] = expectedData[n] / expectedTotal;
             }
 
-            ResampleX2Gf(host, xn, p, observed.Length, x2, out int r, iterations, seed, out int actualIterations);
+            ResampleX2Gf(xn, p, observed.Length, x2, out int r, iterations, seed, out int actualIterations);
 
             ParameterBag outputParameters = new();
             double exactP = r / (double)actualIterations;
@@ -1590,7 +1599,7 @@ namespace StatsDirect.Builtins
         ///  <param name="iseed">RNG seed</param>
         /// <param name="actualIterations">The number of iterations that were actually run</param>
         /// <remarks></remarks>
-        private static void ResampleX2Gf(IPreferencesAndProgressBar host, int[] x, double[] p, int k, double x2, out int r, int iter, int iseed, out int actualIterations)
+        private void ResampleX2Gf(int[] x, double[] p, int k, double x2, out int r, int iter, int iseed, out int actualIterations)
         {
             int ntot = 0;
             for (int i = 1; i <= k; i++)
@@ -1600,7 +1609,7 @@ namespace StatsDirect.Builtins
             for (int i = 2; i <= k; i++)
                 pp[i] = Math.Round(p[i] + pp[i - 1], 12);
             r = 0;
-            using IProgressBar progress = host.StartProgress("Simulating exact P", true);
+            using IProgressBar progress = ProgressBarHost.StartProgress("Simulating exact P", true);
             MersenneTwister rng = new(iseed);
             for (int l = 1; l <= iter; l++)
             {
@@ -1764,7 +1773,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
+        public StepOutput RptCrosstabsPreprocess(ParameterBag parameters)
         {
             bool strat = false;
 
@@ -1792,7 +1801,7 @@ namespace StatsDirect.Builtins
             // Maybe go to three factors if one column classifier
             if (c2Frame.VariableCount == 1)
             {
-                strat = parameters.ContainsKey("c3") && parameters["c3"] != null;
+                strat = parameters.ContainsKey("c3") && parameters["c3"] is not null;
                 if (strat)
                 {
                     DataFrame c3Frame = parameters["c3"].AsDataFrame;
@@ -1828,14 +1837,14 @@ namespace StatsDirect.Builtins
                 bool wasCancelled;
                 if (ycats > 10 || xcats > 10)
                 {
-                    ok = host.GetBoolean($"Table is large: {ycats} rows by ${xcats} columns. Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
+                    ok = UserInterface.GetBoolean($"Table is large: {ycats} rows by ${xcats} columns. Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                 }
 
                 if (!XSymmetrical(xcats, xcat, ycats, ycat, false))
                 {
-                    bool symmetrise = host.GetBoolean("This table is asymmetrical. Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
+                    bool symmetrise = UserInterface.GetBoolean("This table is asymmetrical. Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                     if (symmetrise)
@@ -1854,13 +1863,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptCrosstabs(ITemplateHost host, ParameterBag parameters)
+        public StepOutput RptCrosstabs(ParameterBag parameters)
         {
-            double[] z = null;
-            string zLabel = null;
+            double[]? z = null;
+            string? zLabel = null;
             int zCategoryCount = 0;
             bool isStratified = false;
-            Namevar[] zcat = null;
+            Namevar[]? zcat = null;
 
             //  First classifier
             DataFrame c1Frame = parameters["c1"].AsDataFrame;
@@ -1892,7 +1901,7 @@ namespace StatsDirect.Builtins
             // Allow stratification iff one column classifier
             if (c2Frame.VariableCount == 1)
             {
-                isStratified = parameters.ContainsKey("c3") && parameters["c3"] != null;
+                isStratified = parameters.ContainsKey("c3") && parameters["c3"] is not null;
                 if (isStratified)
                 {
                     DataFrame c3Frame = parameters["c3"].AsDataFrame;
@@ -1946,14 +1955,14 @@ namespace StatsDirect.Builtins
                 bool wasCancelled;
                 if (yCategoryCount > 10 || xCategoryCount > 10)
                 {
-                    ok = host.GetBoolean("Table = " + yCategoryCount.ToString() + " rows by " + xCategoryCount.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
+                    ok = UserInterface.GetBoolean("Table = " + yCategoryCount.ToString() + " rows by " + xCategoryCount.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                 }
 
                 if (!XSymmetrical(xCategoryCount, xcat, yCategoryCount, ycat, false))
                 {
-                    bool symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
+                    bool symmetrise = UserInterface.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                     if (symmetrise)
@@ -1987,8 +1996,6 @@ namespace StatsDirect.Builtins
                             }
                         }
                     }
-                    y = null;
-                    z = null;
 
                     List<ParameterBag> xtabzList = new();
                     columnsParameters.AddOutput("*xtabz", xtabzList);
@@ -2034,8 +2041,8 @@ namespace StatsDirect.Builtins
                         string studyType = parameters["study_type"].AsString;
                         if ("casecontrol".Equals(studyType))
                         {
-                            ParameterBag mantelParameters = TabMh(host, cco, zCategoryCount, zt, zcat);
-                            if (mantelParameters != null)
+                            ParameterBag mantelParameters = TabMh(cco, zCategoryCount, zt, zcat);
+                            if (mantelParameters is not null)
                             {
                                 List<ParameterBag> mantelList = new();
                                 columnsParameters.AddOutput("*mantel", mantelList);
@@ -2044,8 +2051,8 @@ namespace StatsDirect.Builtins
                         }
                         else if ("cohort".Equals(studyType))
                         {
-                            ParameterBag rrmetaParameters = TabRelativeRisk(host, cco, zCategoryCount, zt, zcat);
-                            if (rrmetaParameters != null)
+                            ParameterBag rrmetaParameters = TabRelativeRisk(cco, zCategoryCount, zt, zcat);
+                            if (rrmetaParameters is not null)
                             {
                                 List<ParameterBag> rrmetaList = new();
                                 columnsParameters.AddOutput("*rrmeta", rrmetaList);
@@ -2056,7 +2063,7 @@ namespace StatsDirect.Builtins
                     else
                     {
                         ParameterBag gencmhParameters = TabCmh(parameters, zCategoryCount, yCategoryCount, xCategoryCount, zt, yLabel, xLabel, zLabel);
-                        if (gencmhParameters != null)
+                        if (gencmhParameters is not null)
                         {
                             List<ParameterBag> gencmhList = new();
                             columnsParameters.AddOutput("*gencmh", gencmhList);
@@ -2135,7 +2142,7 @@ namespace StatsDirect.Builtins
                         }
 
                         // w() was passed to a FORTRAN routine so must redim to (1 to c, 1 to r)
-                        ParameterBag chirxcParameters = SChi(host, ref cco, w, yCategoryCount, xCategoryCount, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
+                        ParameterBag chirxcParameters = SChi(ref cco, w, yCategoryCount, xCategoryCount, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed);
                         chirxcList.Add(chirxcParameters);
                     }
                 } // two factor <-----
@@ -2245,7 +2252,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        private static ParameterBag TabRelativeRisk(IPreferencesAndProgressBar host, double cco, int zcats, double[,,] zt, Namevar[] zcat)
+        private ParameterBag TabRelativeRisk(double cco, int zcats, double[,,] zt, Namevar[] zcat)
         {
             const int lowerBound = 1;
 
@@ -2267,7 +2274,7 @@ namespace StatsDirect.Builtins
             {
                 title[i] = zcat[i].Title;
                 if (title[i].Length > 50)
-                    title[i] = title[i].Substring(0, 50);
+                    title[i] = title[i][..50];
             }
 
             double[,] o = new double[k + 1, 4 + 1];
@@ -2281,7 +2288,7 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
+            Meta.RelativeRiskMA(lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException();
 
@@ -2301,7 +2308,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("lb", title[i]);
             }
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Koopman" : "approximate");
+            outputParameters.AddOutput("method", SdPreferences.MetaExact ? "Koopman" : "approximate");
             List<ParameterBag> risksList = new();
             outputParameters.AddOutput("*risks", risksList);
             for (int i = lowerBound; i < lowerBound + k; i++)
@@ -2316,7 +2323,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
                 risksParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
-                risksParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i, true, cced, title));
+                risksParameters.AddOutput("lb", Meta.GetMetaLabel(o, i, true, cced, title));
             }
             outputParameters.AddOutput("rr", rmh);
             outputParameters.AddOutput("from", ll);
@@ -2330,7 +2337,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            Meta.IsquareNcc(qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -2343,19 +2350,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_ds", 1);
             outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
-            Meta.GetAproxrrCI(host, o, k, cit, axll, axul);
+            Meta.GetAproxrrCI(o, k, cit, axll, axul);
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Meta.Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
+            Meta.Metabias(eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
-            Meta.ModMetabias(host, harbordParameters, o, k, cco, 2);
+            Meta.ModMetabias(harbordParameters, o, k, cco, 2);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2365,25 +2372,25 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false, ChartPreferences)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, ChartPreferences)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
             return outputParameters;
         }
 
-        public static ParameterBag SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
+        public ParameterBag SChi(ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
         {
             double ul; double ll; double p; double c1;
             double p2 = 0; double p1 = 0;
@@ -2427,7 +2434,7 @@ namespace StatsDirect.Builtins
                     sOptions.Values1.Add(r);
                 for (int c = 1; c <= cols; c++)
                     sOptions.Values2.Add(c);
-                bool userOk = null != host.Amend(sOptions, null);
+                bool userOk = null != UserInterface.Amend(sOptions, null);
                 if (userOk)
                 {
                     for (int r = 1; r <= rows; r++)
@@ -2819,7 +2826,7 @@ namespace StatsDirect.Builtins
             {
                 int ierrormc = 0;
 
-                Chi.ChiRCResample(host, o, rowScore, colScore, rows, cols, iterations, x2, out int rx2, x2Eq, out int rx2Eq, x2Trend, out int rx2Trend, g2, out int rg2, out int actualIterations, seed, ref ierrormc);
+                Chi.ChiRCResample(o, rowScore, colScore, rows, cols, iterations, x2, out int rx2, x2Eq, out int rx2Eq, x2Trend, out int rx2Trend, g2, out int rg2, out int actualIterations, seed, ref ierrormc);
                 outputParameters.AddOutput("*pmcx2", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2, actualIterations, seed, mcci) });
                 outputParameters.AddOutput("*pmcx2eq", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Eq, actualIterations, seed, mcci) });
                 outputParameters.AddOutput("*pmcx2trend", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Trend, actualIterations, seed, mcci) });
@@ -2951,7 +2958,7 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
-        private static ParameterBag TabMh(IPreferencesAndProgressBar host, double cco, int zcats, double[,,] zt, Namevar[] zcat)
+        private ParameterBag TabMh(double cco, int zcats, double[,,] zt, Namevar[] zcat)
         {
             const int lowerBound = 1;
 
@@ -2964,7 +2971,7 @@ namespace StatsDirect.Builtins
             {
                 title[i] = zcat[i].Title;
                 if (title[i].Length > 50)
-                    title[i] = title[i].Substring(0, 50);
+                    title[i] = title[i][..50];
             }
 
             double[,] o = new double[k + lowerBound, 4 + 1];
@@ -2978,7 +2985,7 @@ namespace StatsDirect.Builtins
                 o[i, 1] = zt[2, 2, i];
             }
 
-            Meta.Mantel(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
+            Meta.Mantel(lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -2998,7 +3005,7 @@ namespace StatsDirect.Builtins
                 tbl[i].IsInformative = o[i, 1] * o[i, 4] != 0.0 || o[i, 2] * o[i, 3] != 0.0;
             }
             bool useLogScale = false;
-            new ExactBB().Exact22K(host, lowerBound, k, Exact22KDataType.Type1, tbl, cco, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out ierr);
+            new ExactBB(ProgressBarHost).Exact22K(lowerBound, k, Exact22KDataType.Type1, tbl, cco, out double eor, out double ulf, out double llf, out double ulm, out double llm, out double p1F, out double p2F, out double p1M, out double p2M, ref useLogScale, out ierr);
             if (ierr != 0)
             {
                 eor = Constant.MISSING;
@@ -3027,7 +3034,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("lb", string.Empty);
             }
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
+            outputParameters.AddOutput("method", SdPreferences.MetaExact ? "CML" : "logit");
 
             List<ParameterBag> orList = new();
             outputParameters.AddOutput("*or", orList);
@@ -3043,8 +3050,8 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
                 orParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
-                string tmp = Meta.GetMetaLabel(host, o, i, true, cced, title);
-                if (host.Preferences.DelayContinuityCorrection)
+                string tmp = Meta.GetMetaLabel(o, i, true, cced, title);
+                if (SdPreferences.DelayContinuityCorrection)
                     tmp = tmp.Replace("[CC", "[late CC");
                 orParameters.AddOutput("lb", tmp);
 
@@ -3107,7 +3114,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            Meta.IsquareNcc(qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -3120,19 +3127,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_ds", 1);
             outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
-            Meta.GetLogitCi(host, o, k, cit, axll, axul);
+            Meta.GetLogitCi(o, k, cit, axll, axul);
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            Meta.Metabias(eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
-            Meta.ModMetabias(host, harbordParameters, o, k, cco, 1);
+            Meta.ModMetabias(harbordParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -3142,22 +3149,22 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false, ChartPreferences)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, ChartPreferences)));
 
             if (sk != 0)
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
 
             return outputParameters;
@@ -3173,7 +3180,6 @@ namespace StatsDirect.Builtins
             }
             return xcats == ycats;
         }
-
 
         ///  <summary>
         ///  Generalised Cochran Mantel Haenszel test
@@ -3195,7 +3201,6 @@ namespace StatsDirect.Builtins
 
         public static void Cmhexec(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, out int ierr)
         {
-
             int i;
 
             ierr = 0;
@@ -6099,10 +6104,10 @@ namespace StatsDirect.Builtins
             double y1 = y - cit * e;
             double y2 = y + cit * e;
             if (y1 > y2)
-                Utilities.Utilities.Swap(ref y1, ref y2);
+                (y2, y1) = (y1, y2);
             if (showIntermediates)
             {
-                outputParameters.AddOutput(new Dictionary<string, object>
+                outputParameters.AddOutput(new Dictionary<string, object?>
                 {
                     { "odds", x},
                     { "log", y },
@@ -6269,11 +6274,7 @@ namespace StatsDirect.Builtins
                 double y1X = m1X - cit * e1X;
                 double y2X = m1X + cit * e1X;
                 if (y1X > y2X)
-                {
-                    double ytx = y1X;
-                    y1X = y2X;
-                    y2X = ytx;
-                }
+                    (y2X, y1X) = (y1X, y2X);
                 combinedNoHaldaneParameters.AddOutput("pc", cco * 100);
                 combinedNoHaldaneParameters.AddOutput("ci_from", y1X);
                 combinedNoHaldaneParameters.AddOutput("ci_to", y2X);
@@ -6309,11 +6310,7 @@ namespace StatsDirect.Builtins
                 double y1 = m1 - cit * e1;
                 double y2 = m1 + cit * e1;
                 if (y1 > y2)
-                {
-                    double yt = y1;
-                    y1 = y2;
-                    y2 = yt;
-                }
+                    (y2, y1) = (y1, y2);
                 combinedWithHaldaneParameters.AddOutput("pc", cco * 100);
                 combinedWithHaldaneParameters.AddOutput("ci_fromx", y1);
                 combinedWithHaldaneParameters.AddOutput("ci_tox", y2);

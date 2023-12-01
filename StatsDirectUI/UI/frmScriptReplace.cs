@@ -11,13 +11,15 @@ namespace StatsDirect.UI
     ///  Replace All (replace all instances of search term with replacement text)
     ///  </summary>
     ///  <remarks></remarks>
-    public partial class frmScriptReplace
+    internal partial class frmScriptReplace
     {
-        private readonly frmScript mainForm;
+        private frmScript MainForm { get; }
+        private ISdApplication SdApplication { get; }
 
-        public frmScriptReplace(frmScript MainForm)
+        public frmScriptReplace(frmScript mainForm, ISdApplication sdApplication)
         {
-            mainForm = MainForm;
+            MainForm = mainForm;
+            SdApplication = sdApplication;
             InitializeComponent();
             // events handled by btnFind_Click
             btnFind.Click += btnFind_Click;
@@ -29,86 +31,86 @@ namespace StatsDirect.UI
             btnReplaceAll.Click += btnReplaceAll_Click;
         }
 
-        private void btnFind_Click(object sender, EventArgs e)
+        private void btnFind_Click(object? sender, EventArgs e)
         {
 
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
-            string text = mainForm.rtbDoc.Text;
+            string text = MainForm.rtbDoc.Text;
             string searchTerm = txtSearchTerm.Text;
             int startPosition = text.IndexOf(searchTerm, 0, comp);
 
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
+                SdApplication.MsgboxX("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
                 return;
             }
 
-            mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
-            mainForm.rtbDoc.ScrollToCaret();
-            mainForm.Focus();
+            MainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
+            MainForm.rtbDoc.ScrollToCaret();
+            MainForm.Focus();
 
 
         }
 
-        private void btnFindNext_Click(object sender, EventArgs e)
+        private void btnFindNext_Click(object? sender, EventArgs e)
         {
-            int startPosition = mainForm.rtbDoc.SelectionStart + 1;
+            int startPosition = MainForm.rtbDoc.SelectionStart + 1;
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
-            string text = mainForm.rtbDoc.Text;
+            string text = MainForm.rtbDoc.Text;
             string searchTerm = txtSearchTerm.Text;
             startPosition = text.IndexOf(searchTerm, startPosition, comp);
 
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: " + txtSearchTerm.Text + " not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
+                SdApplication.MsgboxX("String: " + txtSearchTerm.Text + " not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
                 return;
             }
 
-            mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
-            mainForm.rtbDoc.ScrollToCaret();
-            mainForm.Focus();
+            MainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
+            MainForm.rtbDoc.ScrollToCaret();
+            MainForm.Focus();
         }
 
-        private void btnReplace_Click(object sender, EventArgs e)
+        private void btnReplace_Click(object? sender, EventArgs e)
         {
-            if (mainForm.rtbDoc.SelectedText.Length != 0)
+            if (MainForm.rtbDoc.SelectedText.Length != 0)
             {
-                mainForm.rtbDoc.SelectedText = txtReplacementText.Text;
+                MainForm.rtbDoc.SelectedText = txtReplacementText.Text;
             }
 
-            int startPosition = mainForm.rtbDoc.SelectionStart + 1;
+            int startPosition = MainForm.rtbDoc.SelectionStart + 1;
             StringComparison comp = chkMatchCase.Checked ? StringComparison.CurrentCulture : StringComparison.CurrentCultureIgnoreCase;
 
-            string text = mainForm.rtbDoc.Text;
+            string text = MainForm.rtbDoc.Text;
             string searchTerm = txtSearchTerm.Text;
             startPosition = text.IndexOf(searchTerm, startPosition, comp);
 
             if (startPosition < 0)
             {
-                SdApplication.SoleInstance.MsgboxX("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
+                SdApplication.MsgboxX("String: '" + txtSearchTerm.Text + "' not found", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, "No Matches", false);
                 return;
             }
 
-            mainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
-            mainForm.rtbDoc.ScrollToCaret();
-            mainForm.Focus();
+            MainForm.rtbDoc.Select(startPosition, txtSearchTerm.Text.Length);
+            MainForm.rtbDoc.ScrollToCaret();
+            MainForm.Focus();
         }
 
-        private void btnReplaceAll_Click(object sender, EventArgs e)
+        private void btnReplaceAll_Click(object? sender, EventArgs e)
         {
             // Save the selection
-            int currentPosition = mainForm.rtbDoc.SelectionStart;
-            int currentSelect = mainForm.rtbDoc.SelectionLength;
+            int currentPosition = MainForm.rtbDoc.SelectionStart;
+            int currentSelect = MainForm.rtbDoc.SelectionLength;
 
-            string text = mainForm.rtbDoc.Rtf;
+            string text = MainForm.rtbDoc.Rtf;
             string searchTerm = txtSearchTerm.Text.Trim();
             string replaceTerm = txtReplacementText.Text.Trim();
-            mainForm.rtbDoc.Rtf = text.Replace(searchTerm, replaceTerm);
+            MainForm.rtbDoc.Rtf = text.Replace(searchTerm, replaceTerm);
 
             // Restore the selection
-            mainForm.rtbDoc.SelectionStart = currentPosition;
-            mainForm.rtbDoc.SelectionLength = currentSelect;
-            mainForm.Focus();
+            MainForm.rtbDoc.SelectionStart = currentPosition;
+            MainForm.rtbDoc.SelectionLength = currentSelect;
+            MainForm.Focus();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Layout;
+﻿using StatsDirect.Charting.Options;
 using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -8,54 +8,47 @@ namespace StatsDirect.Charting.Renderer
 {
     class BiasMAChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public BiasMAChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public BiasMAChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost host, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             BiasMAOptions options = (BiasMAOptions)Definition.ChartOptions;
             bool useCi = false;
-            int rows = options.rows;
-            double cit = options.cit;
-            double cco = options.cco;
-            double[] x = options.x;
-            GetMAOrdinate(host, out double[] y, options.yy, options.yw, options.cl, options.cu, ref cco, rows, out string title, out string ytxt, options.XAxisTitle, out int plotMethod, options.xform, out bool reverse, ref useCi);
+            int rows = options.Rows;
+            double cit = options.Cit;
+            double cco = options.Cco;
+            double[] x = options.X;
+            GetMAOrdinate(out double[] y, options.YY, options.YW, options.Cl, options.Cu, ref cco, rows, out string title, out string ytxt, options.XAxisTitle, out int plotMethod, options.Xform, out bool reverse, ref useCi);
 
             double[] xx = new double[rows + 1];
             xx[0] = Constant.MISSING;
-            switch (options.xform)
+            switch (options.Xform)
             {
                 case Transformation.Log:
                     for (int r = 1; r <= rows; r++)
-                    {
-                        if (x[r] > 0.0 && x[r] != Constant.MISSING)
-                            xx[r] = Math.Log(x[r]);
-                        else
-                            xx[r] = Constant.MISSING;
-                    }
+                        xx[r] = x[r] > 0.0 && x[r] != Constant.MISSING
+                            ? Math.Log(x[r])
+                            : Constant.MISSING;
                     break;
                 case Transformation.Z:
                     for (int r = 1; r <= rows; r++)
-                    {
-                        if (x[r] != Constant.MISSING)
-                            xx[r] = MathDbl.rtoz(x[r]);
-                        else
-                            xx[r] = Constant.MISSING;
-                    }
+                        xx[r] = x[r] != Constant.MISSING
+                            ? MathDbl.rtoz(x[r])
+                            : Constant.MISSING;
                     break;
                 case Transformation.None:
                     for (int r = 1; r <= rows; r++)
@@ -71,11 +64,11 @@ namespace StatsDirect.Charting.Renderer
             Layout.Range dataRangeY = GetMinMaxArray(y, ScaleType.Linear);
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
-            double pool = options.xform switch
+            double pool = options.Xform switch
             {
-                Transformation.Log => Math.Log(options.rmh),
-                Transformation.Z => MathDbl.rtoz(options.rmh),
-                Transformation.None => options.rmh,
+                Transformation.Log => Math.Log(options.Rmh),
+                Transformation.Z => MathDbl.rtoz(options.Rmh),
+                Transformation.None => options.Rmh,
                 _ => throw new ArgumentException("Unexpected transform: only Log, None, Z known")
             };
             ILinearAxisScale axisScale = (ILinearAxisScale)AxisScalerFactory.AxisScalerFor(ScaleType.Linear).QAxis(DataMinY, 0, DataMaxY, true, false);
@@ -94,7 +87,7 @@ namespace StatsDirect.Charting.Renderer
             }
 
             string xtxt = options.XAxisTitle;
-            switch (options.xform)
+            switch (options.Xform)
             {
                 case Transformation.Log:
                     xtxt = "Log(" + xtxt + ")";
@@ -112,20 +105,20 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(title,
                 new AxisDefinition(xtxt, AxisMode.Scale, ScaleType.Linear),
                 new AxisDefinition(ytxt, reverse ? AxisMode.ReverseScale : AxisMode.Scale, ScaleType.Linear),
-                !reverse && options.diagonal, false);
+                !reverse && options.Diagonal, false);
 
             // plot the points
             for (int r = 1; r <= rows; r++)
                 if (xx[r] != Constant.MISSING && y[r] != Constant.MISSING)
                     DrawMarkerInChartCoordinates(xx[r], y[r], 6, ChartPreferences.MarkerTypes[0]);
 
-            if (!options.diagonal)
+            if (!options.Diagonal)
             {
                 // mark pooled value
                 DrawLineInChartCoordinates(GrBlack, pool, axisScales.Y.MinimumScaleValue, pool, axisScales.Y.MaximumScaleValue);
             }
 
-            if ((plotMethod == 1 || plotMethod == 2 || plotMethod == 7) && !options.diagonal && useCi)
+            if ((plotMethod == 1 || plotMethod == 2 || plotMethod == 7) && !options.Diagonal && useCi)
             {
                 // plot confidence interval
                 int incs = plotMethod == 1 ? 1 : 300;
@@ -199,13 +192,13 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            if (options.diagonal)
+            if (options.Diagonal)
                 DrawLineInChartCoordinates(GrBlack, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
             EndVectorPlot();
             return new ParameterBag();
         }
 
-        private static void GetMAOrdinate(IPreferences host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
+        private void GetMAOrdinate(out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
         {
             y = new double[rows + 1];
             y[0] = Constant.MISSING;
@@ -226,13 +219,13 @@ namespace StatsDirect.Charting.Renderer
             }
 
             bool usept = xtxt.Contains("Incidence");
-            useCi = host.Preferences.MetaPlotCI;
+            useCi = SdPreferences.MetaPlotCI;
 
             if (cco <= 0.0)
                 cco = 0.95;
             double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
 
-            plotMethod = host.Preferences.MetaPlotMethod;
+            plotMethod = SdPreferences.MetaPlotMethod;
 
             switch (plotMethod)
             {

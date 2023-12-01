@@ -5,10 +5,6 @@ namespace StatsDirect.Templates
     [Serializable]
     public sealed class FilledInt32Parameter : FilledParameter
     {
-        internal FilledInt32Parameter()
-        {
-        }
-
         public FilledInt32Parameter(FilledParameterDirection direction, int data)
             : base(direction)
         {
@@ -18,15 +14,13 @@ namespace StatsDirect.Templates
 
         public override bool HasData => true;
 
-        public int Data { get; set; }
+        public int Data { get; }
 
         public override int AsInt32 => Data;
 
         public override object AsObject => Data;
 
         public override bool IsInt32 => true;
-
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
 
         public override string ToString() => $"FP({Direction}, {Data})";
 

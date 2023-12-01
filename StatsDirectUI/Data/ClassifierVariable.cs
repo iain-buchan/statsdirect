@@ -37,7 +37,7 @@ namespace StatsDirect.Data
         {
             ClassifierVariable copy = new();
             CopyAndStripForRedoInto(copy, shouldKeepData);
-            if (Origin == null || shouldKeepData)
+            if (Origin is null || shouldKeepData)
             {
                 //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
                 copy.Groups = Groups;
@@ -76,7 +76,7 @@ namespace StatsDirect.Data
             }
         }
 
-        protected override bool HasData => base.HasData && Groups != null;
+        protected override bool HasData => base.HasData && Groups is not null;
 
         public Group GroupWithId(double id)
         {

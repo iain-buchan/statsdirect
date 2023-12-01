@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-namespace StatsDirect.Templates
+﻿namespace StatsDirect.Templates
 {
     public interface IFilledParameterVisitor
     {

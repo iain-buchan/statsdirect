@@ -8,21 +8,20 @@ namespace StatsDirect.Charting.Renderer
 {
     class PolynomialRegressionChartRenderer : AbstractXYZChartRenderer, IChartRenderer
     {
-        public PolynomialRegressionChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public PolynomialRegressionChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new ScaleParameters(
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             const int MARKER_SIZE = 6;
 
@@ -37,7 +36,7 @@ namespace StatsDirect.Charting.Renderer
             AxisScales axisScales = LayoutChartAndDrawAxes(options.Title,
                 new AxisDefinition(options.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(options.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                ChartPreferences.DefaultBoxAxes, false);
+                ChartPreferences.BoxAxes, false);
 
             // plot points
             DoubleSeries xs = (DoubleSeries)Definition.XSeries[0];

@@ -5,9 +5,8 @@ namespace StatsDirect.Charting
 {
     public class DoubleSeries : ISeries
     {
-        public double[] Data { get; set; }
+        public double[] Data { get; }
 
-        //  Similar to markers
         public MarkerType MarkerType { get; set; }
 
         private bool hasSum;
@@ -19,18 +18,17 @@ namespace StatsDirect.Charting
         private double max;
         private bool hasMinMax;
 
-        public DoubleSeries()
-        {
-            MarkerType = new MarkerType();
-        }
-
-        public DoubleSeries(double[] data, string title)
-            : this()
+        public DoubleSeries(double[] data, string? title = default)
         {
             Data = data;
             Title = title;
+            // TODO: We need a better way of handling unknown marker types. This should not be here.
+            MarkerType = MarkerType.Default;
         }
 
+        /// <summary>
+        /// TODO: CORRECTNESS: What if there are missing values?  How many points do we have, and how does that affect the StdDev?
+        /// </summary>
         public int Points => Data.Length;
 
         public double Sum
@@ -40,7 +38,7 @@ namespace StatsDirect.Charting
                 if (!hasSum)
                 {
                     double s = 0.0;
-                    for (int i = Data.GetLowerBound(0); i <= Data.GetUpperBound(0); i++)
+                    for (int i = 0; i < Data.Length; i++)
                         if (Data[i] != Constant.MISSING)
                             s += Data[i];
                     sum = s;
@@ -56,15 +54,18 @@ namespace StatsDirect.Charting
             {
                 if (!hasStdDev)
                 {
-                    double avg = Sum / Convert.ToDouble(Points);
+                    double avg = Sum / Points;
                     double ep = 0.0; double var = 0.0;
-                    for (int C = Data.GetLowerBound(0); C <= Data.GetUpperBound(0); C++)
+                    for (int i = 0; i < Data.Length; i++)
                     {
-                        double s = Data[C] - avg;
-                        ep += s;
-                        var += s * s;
+                        if (Data[i] != Constant.MISSING)
+                        {
+                            double s = Data[i] - avg;
+                            ep += s;
+                            var += s * s;
+                        }
                     }
-                    var = (var - Math.Pow(ep, 2.0) / Convert.ToDouble(Points)) / Convert.ToDouble(Points - 1);
+                    var = (var - Math.Pow(ep, 2.0) / Points) / (Points - 1);
                     stdDev = Math.Sqrt(var);
                     hasStdDev = true;
                 }
@@ -102,14 +103,14 @@ namespace StatsDirect.Charting
             }
         }
 
-        public string Title { get; set; }
+        public string? Title { get; }
 
         private void CalcMinMax()
         {
             double mn = double.MaxValue;
             double mg0 = double.MaxValue;
             double mx = double.MinValue;
-            for (int i = Data.GetLowerBound(0); i <= Data.GetUpperBound(0); i++)
+            for (int i = 0; i < Data.Length; i++)
             {
                 double v = Data[i];
                 if (v != Constant.MISSING)

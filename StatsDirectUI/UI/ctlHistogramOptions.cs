@@ -5,6 +5,7 @@ using StatsDirect.Charting;
 using System.Media;
 using StatsDirect.Utilities;
 using StatsDirect.Numerics;
+using StatsDirect.Charting.Options;
 
 namespace StatsDirect.UI
 {
@@ -27,13 +28,15 @@ namespace StatsDirect.UI
             set
             {
                 definition = value;
-                if (null != options)
+                if (options is not null)
                     options.ScaleChanged -= options_ScaleChanged;
                 options = (HistogramOptions)definition.ChartOptions;
                 options.ScaleChanged += options_ScaleChanged;
-                IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                IReadOnlyList<ISeries> series = definition.XSeries.Count > 0
+                    ? definition.XSeries
+                    : definition.YSeries;
                 // On a new call, series options will exist, but Bins will be set to zero for all.  On a replay, Bins will be set to sane values.  Detect the replay and don't reset the bins on one.
-                if (null != options.HistoSeriesOptions && options.HistoSeriesOptions.Count > 0 && options.HistoSeriesOptions[0].BinsDescriptor.Bins == 0)
+                if (options.HistogramSeriesOptions is not null && options.HistogramSeriesOptions.Count > 0 && options.HistogramSeriesOptions[0].BinsDescriptor.Bins == 0)
                 {
                     for (int i = 0; i < series.Count; i++)
                         options.Reset(true, 0, i, (DoubleSeries)series[i]);
@@ -42,7 +45,7 @@ namespace StatsDirect.UI
             }
         }
 
-        void options_ScaleChanged(object sender, EventArgs e)
+        void options_ScaleChanged(object? sender, EventArgs e)
         {
             ScaleChanged?.Invoke(this, e);
         }
@@ -54,7 +57,7 @@ namespace StatsDirect.UI
             options.PoolVariablesForBins = chkPoolVariables.Checked;
             options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
 
-            HistogramSeriesOptions seriesOptions = options.HistoSeriesOptions[currentSeriesIndex];
+            HistogramSeriesOptions seriesOptions = options.HistogramSeriesOptions[currentSeriesIndex];
             if (!int.TryParse(txtBins.Text, out int bins))
             {
                 FailAndHighlight(txtBins);
@@ -95,7 +98,9 @@ namespace StatsDirect.UI
             try
             {
                 cboBinChoiceMethod.SelectedItem = ToDisplayString(options.BinChoiceMethod);
-                IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                IReadOnlyList<ISeries> series = definition.XSeries.Count > 0
+                    ? definition.XSeries
+                    : definition.YSeries;
                 fillingForm = true;
                 if (0 == cboVariable.Items.Count)
                 {
@@ -108,7 +113,7 @@ namespace StatsDirect.UI
                 cmdPreviousVariable.Enabled = currentSeriesIndex > 0;
                 cboVariable.SelectedIndex = currentSeriesIndex;
 
-                HistogramSeriesOptions seriesOptions = options.HistoSeriesOptions[currentSeriesIndex];
+                HistogramSeriesOptions seriesOptions = options.HistogramSeriesOptions[currentSeriesIndex];
                 BinsDescriptor descriptor = seriesOptions.BinsDescriptor;
                 double minimumBinMidpoint = (descriptor.Edges[0] + descriptor.Edges[1]) / 2.0;
                 double maximumBinMidpoint = (descriptor.Edges[descriptor.Bins] + descriptor.Edges[descriptor.Bins - 1]) / 2.0;
@@ -168,7 +173,7 @@ namespace StatsDirect.UI
             return q;
         }
 
-        private void cmdAutoBins_Click(object sender, EventArgs e)
+        private void cmdAutoBins_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -182,26 +187,30 @@ namespace StatsDirect.UI
 
         private void DoAutoBins()
         {
-            IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            IReadOnlyList<ISeries> series = definition.XSeries.Count > 0
+                ? definition.XSeries
+                : definition.YSeries;
             options.BinChoiceMethod = ToBinChoiceMethod((string)cboBinChoiceMethod.SelectedItem);
             options.PoolVariablesForBins = chkPoolVariables.Checked;
             options.Reset(true, 0, currentSeriesIndex, (DoubleSeries)series[currentSeriesIndex]);
             FillFormFromOptions();
         }
 
-        private void cmdAutoMidpoints_Click(object sender, EventArgs e)
+        private void cmdAutoMidpoints_Click(object? sender, EventArgs e)
         {
             try
             {
                 int bins = Parsing.Cint_Txt(txtBins.Text);
                 options.PoolVariablesForBins = chkPoolVariables.Checked;
-                IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+                IReadOnlyList<ISeries> series = definition.XSeries.Count > 0
+                    ? definition.XSeries
+                    : definition.YSeries;
                 options.Reset(false, bins, currentSeriesIndex, (DoubleSeries)series[currentSeriesIndex]);
                 FillFormFromOptions();
             }
             catch (FormatException)
             {
-                SdApplication.SoleInstance.MsgboxX("Please enter the number of bins", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Histogram", true);
+                SdApplication.MsgboxX("Please enter the number of bins", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, "Histogram", true);
             }
             catch (Exception)
             {
@@ -209,7 +218,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cmdReset_Click(object sender, EventArgs e)
+        private void cmdReset_Click(object? sender, EventArgs e)
         {
             try
             {
@@ -221,7 +230,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cmdPreviousVariable_Click(object sender, EventArgs e)
+        private void cmdPreviousVariable_Click(object? sender, EventArgs e)
         {
             if (currentSeriesIndex > 0)
             {
@@ -232,9 +241,11 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cmdNextVariable_Click(object sender, EventArgs e)
+        private void cmdNextVariable_Click(object? sender, EventArgs e)
         {
-            IList<ISeries> series = definition.XSeries.Count > 0 ? definition.XSeries : definition.YSeries;
+            IReadOnlyList<ISeries> series = definition.XSeries.Count > 0
+                ? definition.XSeries
+                : definition.YSeries;
             if (currentSeriesIndex < series.Count - 1)
             {
                 if (!FillOptionsFromForm())
@@ -244,7 +255,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cboVariable_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboVariable_SelectedIndexChanged(object? sender, EventArgs e)
         {
             if (!fillingForm)
             {
@@ -255,7 +266,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private void cboBinChoiceMethod_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboBinChoiceMethod_SelectedIndexChanged(object? sender, EventArgs e)
         {
             if (!fillingForm)
             {
@@ -270,11 +281,11 @@ namespace StatsDirect.UI
             }
         }
 
-        private void chkShowRelativeFrequencies_CheckedChanged(object sender, EventArgs e)
+        private void chkShowRelativeFrequencies_CheckedChanged(object? sender, EventArgs e)
         {
             if (!FillOptionsFromForm())
                 return;
-            foreach (HistogramSeriesOptions hso in options.HistoSeriesOptions)
+            foreach (HistogramSeriesOptions hso in options.HistogramSeriesOptions)
             {
                 if (chkShowRelativeFrequencies.Checked)
                 {
@@ -290,24 +301,14 @@ namespace StatsDirect.UI
             ScaleChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private static string ToDisplayString(BinChoiceMethod binChoiceMethod)
-        {
-            switch (binChoiceMethod)
+        private static string ToDisplayString(BinChoiceMethod binChoiceMethod) =>
+            binChoiceMethod switch
             {
-                case BinChoiceMethod.FreedmanDaconis:
-                    return "Freedman-Daconis";
-                case BinChoiceMethod.Shimazaki:
-                    return "Shimazaki-Shinomoto";
-                case BinChoiceMethod.OldStatsDirect:
-                    return "StatsDirect Mid-point";
-                case BinChoiceMethod.NotSet:
-                case BinChoiceMethod.Doane:
-                case BinChoiceMethod.Stata:
-                case BinChoiceMethod.Sturges:
-                default:
-                    return binChoiceMethod.ToString();
-            }
-        }
+                BinChoiceMethod.FreedmanDaconis => "Freedman-Daconis",
+                BinChoiceMethod.Shimazaki => "Shimazaki-Shinomoto",
+                BinChoiceMethod.OldStatsDirect => "StatsDirect Mid-point",
+                _ => binChoiceMethod.ToString(),
+            };
 
         private static BinChoiceMethod ToBinChoiceMethod(string displayString)
         {

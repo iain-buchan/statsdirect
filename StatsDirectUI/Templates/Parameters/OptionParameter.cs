@@ -46,9 +46,9 @@ namespace StatsDirect.Templates
         }
 
         [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression { get; set; }
+        public Expression? DefaultValueExpression { get; set; }
 
-        public string DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        public string? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
         {
             if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
                 return null;
@@ -78,7 +78,7 @@ namespace StatsDirect.Templates
 
         public override ParameterBag AllDefaults(ITemplateProcessor processor, ParameterBag context)
         {
-            return new ParameterBag(Name, FilledParameterFactory.Default(DefaultValue(processor, context)));
+            return new ParameterBag().AddDefault(Name, DefaultValue(processor, context));
         }
     }
 }

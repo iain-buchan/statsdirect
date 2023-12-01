@@ -93,12 +93,12 @@ namespace StatsDirect.PJLControls
         }
         #endregion
 
-        private void colorPanel_ColorChanged(object sender, ColorChangedEventArgs e)
+        private void colorPanel_ColorChanged(object? sender, ColorChangedEventArgs e)
         {
             DialogResult = DialogResult.OK;
         }
 
-        private void colorPanel_PanelClosing(object sender, System.EventArgs e)
+        private void colorPanel_PanelClosing(object? sender, System.EventArgs e)
         {
             if (DialogResult != DialogResult.OK)
             {
@@ -106,7 +106,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
-        private void colorPanel_Resize(object sender, System.EventArgs e)
+        private void colorPanel_Resize(object? sender, System.EventArgs e)
         {
             // make the form the same size as the panel
             colorPanel.Top = 0;

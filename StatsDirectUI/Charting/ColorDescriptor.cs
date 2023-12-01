@@ -1,49 +1,42 @@
-﻿namespace StatsDirect.Charting
+﻿using System.Text.Json.Serialization;
+
+namespace StatsDirect.Charting
 {
+    /// <remarks>
+    /// Immutable.
+    /// </remarks>
     public class ColorDescriptor
     {
+        [JsonPropertyName("red")]
         public int R { get; }
+
+        [JsonPropertyName("green")]
         public int G { get; }
+
+        [JsonPropertyName("blue")]
         public int B { get; }
 
-        public static ColorDescriptor Black { get; } = FromArgb(0, 0, 0);
-        public static ColorDescriptor Blue { get; } = FromArgb(0, 0, 255);
-        public static ColorDescriptor Gray { get; } = FromArgb(128, 128, 128);
-        public static ColorDescriptor Green { get; } = FromArgb(255, 0, 0);
-        public static ColorDescriptor Magenta { get; } = FromArgb(255, 0, 255);
-        public static ColorDescriptor Red { get; } = FromArgb(255, 0, 0);
-        public static ColorDescriptor White { get; } = FromArgb(255, 255, 255);
+        public static ColorDescriptor Black { get; } = new(0, 0, 0);
+        public static ColorDescriptor Blue { get; } = new(0, 0, 255);
+        public static ColorDescriptor Gray { get; } = new(128, 128, 128);
+        public static ColorDescriptor Green { get; } = new(255, 0, 0);
+        public static ColorDescriptor Magenta { get; } = new(255, 0, 255);
+        public static ColorDescriptor Red { get; } = new(255, 0, 0);
+        public static ColorDescriptor White { get; } = new(255, 255, 255);
 
-        public static ColorDescriptor FromArgb(int r, int g, int b)
-        {
-            return new ColorDescriptor(r, g, b);
-        }
-
-        public override bool Equals(object obj)
-        {
-            ColorDescriptor descriptor = obj as ColorDescriptor;
-            return descriptor != null &&
-                   R == descriptor.R &&
-                   G == descriptor.G &&
-                   B == descriptor.B;
-        }
-
-        public override int GetHashCode()
-        {
-            var hashCode = -1520100960;
-            hashCode = hashCode * -1521134295 + R.GetHashCode();
-            hashCode = hashCode * -1521134295 + G.GetHashCode();
-            hashCode = hashCode * -1521134295 + B.GetHashCode();
-            return hashCode;
-        }
-
-        private ColorDescriptor(int r, int g, int b)
+        public ColorDescriptor(int r, int g, int b)
         {
             R = r;
             G = g;
             B = b;
         }
 
+        public override bool Equals(object? obj) =>
+            obj is ColorDescriptor descriptor
+                && R == descriptor.R
+                && G == descriptor.G
+                && B == descriptor.B;
 
+        public override int GetHashCode() => System.HashCode.Combine(R, G, B);
     }
 }

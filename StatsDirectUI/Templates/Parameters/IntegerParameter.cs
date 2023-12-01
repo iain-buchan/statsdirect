@@ -12,7 +12,13 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The default value for this parameter, or null for no default.
         /// </summary>
-        public int? DefaultValue(ITemplateProcessor processor, ParameterBag parameters)
+        [XmlElement(ElementName = "default-value")]
+        public Expression? DefaultValueExpression { get; set; }
+
+        /// <summary>
+        /// The default value for this parameter, or null for no default.
+        /// </summary>
+        public int? DefaultValue(ITemplateProcessor processor, ParameterBag? parameters)
         {
             if (null == DefaultValueExpression || null == DefaultValueExpression.Body)
                 return null;
@@ -24,12 +30,6 @@ namespace StatsDirect.Templates
         /// true iff the parameter defines a default.
         /// </summary>
         public bool HasDefaultValue => null != DefaultValueExpression;
-
-        /// <summary>
-        /// The default value for this parameter, or null for no default.
-        /// </summary>
-        [XmlElement(ElementName = "default-value")]
-        public Expression DefaultValueExpression { get; set; }
 
         [XmlElement(ElementName = "minimum-value")]
         public int MinimumValue
@@ -54,7 +54,7 @@ namespace StatsDirect.Templates
         {
             int? defaultValue = DefaultValue(processor, context);
             if (defaultValue.HasValue)
-                return new ParameterBag(Name, FilledParameterFactory.Default(defaultValue.Value));
+                return new ParameterBag().AddDefault(Name, defaultValue.Value);
             return new ParameterBag();
         }
     }

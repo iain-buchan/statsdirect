@@ -4,10 +4,10 @@
     {
         public string Name { get; }
         public bool IsOptional { get; }
-        public string Default { get; }
+        public string? Default { get; }
         public DataType DataType { get; }
 
-        public ArgumentDefinition(string name, DataType dataType, bool isOptional = false, string parameterDefault = null)
+        public ArgumentDefinition(string name, DataType dataType, bool isOptional = false, string? parameterDefault = null)
         {
             Name = name;
             DataType = dataType;
@@ -15,7 +15,7 @@
             Default = parameterDefault;
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             // Mandatory parameters only show their name.
             if (!IsOptional)

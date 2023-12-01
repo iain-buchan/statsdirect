@@ -1,10 +1,10 @@
 using StatsDirect.Builtins;
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class XyrOptions : GenericOptions
+    public class XyrOptions : AbstractGenericOptions
     {
         public double[,] x;
         public double[,,] y;

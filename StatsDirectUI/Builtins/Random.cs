@@ -11,8 +11,7 @@ namespace StatsDirect.Builtins
 
         public static DataFrame RndPoisson(int rows, int cols, double xm, int seed)
         {
-            PoissonRNG rng = new();
-            rng.Seed(seed, null);
+            PoissonRNG rng = new(seed);
             string ti = $"Poisson (seed {seed}, mean {xm})";
             DataFrame outputFrame = new();
             for (int c = 0; c < cols; c++)
@@ -119,8 +118,7 @@ namespace StatsDirect.Builtins
             if (rows <= 0 || a <= 0.0 || a > 1.0)
                 throw new TemplateOperationCancelledException(BADPARA, mx);
 
-            PoissonRNG rng = new();
-            rng.Seed(seed);
+            PoissonRNG rng = new(seed);
             string ti = $"Geometric (seed {seed}, P = {a})";
             DataFrame outputFrame = new();
             for (int c = 0; c < cols; c++)
@@ -139,8 +137,7 @@ namespace StatsDirect.Builtins
             if (rows <= 0 || b <= 0.0 || b > 1.0 || a <= 0.0)
                 throw new TemplateOperationCancelledException(BADPARA, mx);
 
-            PoissonRNG rng = new();
-            rng.Seed(seed);
+            PoissonRNG rng = new(seed);
             string ti = $"Negative binomial (seed {seed}, size = {a}, P = {b})";
             DataFrame outputFrame = new();
             for (int c = 0; c < cols; c++)

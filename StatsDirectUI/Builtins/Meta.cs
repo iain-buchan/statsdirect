@@ -1,4 +1,5 @@
 using StatsDirect.Charting;
+using StatsDirect.Charting.Options;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
@@ -12,9 +13,24 @@ using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
-    public static class Meta
+    public class Meta
     {
-        public static StepOutput RptPetoMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        private Anova Anova { get; }
+        private IChartPreferences ChartPreferences { get; }
+        private IChartRendererFactory ChartRendererFactory { get; }
+        private IProgressBarHost ProgressBarHost { get; }
+        private ISdPreferences SdPreferences { get; }
+
+        public Meta(Anova anova, IChartPreferences chartPreferences, IChartRendererFactory chartRendererFactory, IProgressBarHost progressBarHost, ISdPreferences sdPreferences)
+        {
+            Anova = anova;
+            ChartPreferences = chartPreferences;
+            ChartRendererFactory = chartRendererFactory;
+            ProgressBarHost = progressBarHost;
+            SdPreferences = sdPreferences;
+        }
+
+        public StepOutput RptPetoMeta(ParameterBag parameters)
         {
             double rmh = 0;
 
@@ -152,7 +168,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("b", o[i, 2]);
                 inputsParameters.AddOutput("c", o[i, 3]);
                 inputsParameters.AddOutput("d", o[i, 4]);
-                inputsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
+                inputsParameters.AddOutput("lb", GetMetaLabel(o, i, hasUserSuppliedLabels, allFalse, title));
             }
 
             outputParameters.AddOutput("pc", cco * 100);
@@ -171,7 +187,7 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("lci", odrl[i]);
                 oddsParameters.AddOutput("uci", odru[i]);
                 oddsParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
-                oddsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
+                oddsParameters.AddOutput("lb", GetMetaLabel(o, i, hasUserSuppliedLabels, allFalse, title));
             }
 
             IList<ParameterBag> zList = new List<ParameterBag>();
@@ -194,7 +210,7 @@ namespace StatsDirect.Builtins
                 {
                     zParameters.AddOutput("p", Formatting.ASTERISK);
                 }
-                zParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
+                zParameters.AddOutput("lb", GetMetaLabel(o, i, hasUserSuppliedLabels, allFalse, title));
             }
 
             outputParameters.AddOutput("por", por);
@@ -210,7 +226,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("qc", qc);
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -220,13 +236,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, odr, odrl, odru, k, ref cco, Transformation.Log);
+            Metabias(eggerParameters, odr, odrl, odru, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
-            ModMetabias(host, harbordParameters, o, k, cco, 1);
+            ModMetabias(harbordParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -236,28 +252,28 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Peto odds ratio", odrl, odru, cco, cit, por, Transformation.Log, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Peto odds ratio", odrl, odru, cco, cit, por, Transformation.Log, false, ChartPreferences)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, ChartPreferences)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, por, porl, poru, cco, odr, odrl, odru, allFalse, allFalse, included, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, odw, title, por, porl, poru, cco, odr, odrl, odru, allFalse, allFalse, included, "Peto odds ratio plot", 1, "Peto odds ratio" /* , "Pooled Peto odds ratio" */)));
 
             if (k > 2)
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odw, oe, oe, k, "Peto weights", odrl, odru, cco, cit, por, Transformation.None, true, ChartPreferences)));
             }
 
             return new StepOutput(outputParameters);
         }
 
-        public static void Metabias(IProgressBarHost host, ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
+        public void Metabias(ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
         {
             double cit;
             if (cco > 0)
@@ -317,7 +333,7 @@ namespace StatsDirect.Builtins
                     case Transformation.Z:
                         for (int i = 1; i <= n; i++)
                         {
-                            if (t[i] != Constant.MISSING & tl[i] != Constant.MISSING & tu[i] != Constant.MISSING & !double.IsInfinity(tl[i]) & !double.IsInfinity(tu[i]) & tu[i] - tl[i] != 0.0 & t[i] > 0.0 & tl[i] > 0.0 & tu[i] > 0.0)
+                            if (t[i] != Constant.MISSING && tl[i] != Constant.MISSING && tu[i] != Constant.MISSING && !double.IsInfinity(tl[i]) && !double.IsInfinity(tu[i]) && tu[i] - tl[i] != 0.0 && t[i] > 0.0 && tl[i] > 0.0 && tu[i] > 0.0)
                             {
                                 se = (MathDbl.rtoz(tu[i]) - MathDbl.rtoz(tl[i])) / 2 / cit;
                                 if (se != 0.0)
@@ -336,7 +352,7 @@ namespace StatsDirect.Builtins
                     case Transformation.None:
                         for (int i = 1; i <= n; i++)
                         {
-                            if (t[i] != Constant.MISSING & tl[i] != Constant.MISSING & tu[i] != Constant.MISSING & !double.IsInfinity(tl[i]) & !double.IsInfinity(tu[i]))
+                            if (t[i] != Constant.MISSING && tl[i] != Constant.MISSING && tu[i] != Constant.MISSING && !double.IsInfinity(tl[i]) && !double.IsInfinity(tu[i]))
                             {
                                 se = (tu[i] - tl[i]) / 2 / cit;
                                 if (se != 0)
@@ -368,7 +384,7 @@ namespace StatsDirect.Builtins
                     double vt = var[i] - 1.0 / sumwt;
                     ts[i] = (tt[i] - sumwtt / sumwt) / Math.Sqrt(vt);
                 }
-                Anova.XAgreeKendall(host, ts, var, 1, ref nx, out tau, out p2, out bool isLowPower, out bool isTauB);
+                Anova.XAgreeKendall(ts, var, 1, ref nx, out tau, out p2, out bool isLowPower, out bool isTauB);
 
                 // setup regression call
                 seb = new double[P + 1];
@@ -456,7 +472,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", prob);
         }
 
-        public static StepOutput RptRiskDifferenceMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptRiskDifferenceMeta(ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
@@ -506,7 +522,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Riskdifma(host, k, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, cced, out int ierr);
+            Riskdifma(k, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, cced, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException();
 
@@ -527,16 +543,16 @@ namespace StatsDirect.Builtins
                 if (cced[i])
                 {
                     tmp += " [CC = ";
-                    tmp += host.Preferences.MetaCC == -9.0
+                    tmp += SdPreferences.MetaCC == -9.0
                               ? "treatment arm"
-                              : host.Preferences.MetaCC.ToString();
+                              : SdPreferences.MetaCC.ToString();
                     tmp += "]";
                 }
                 inputsParameters.AddOutput("lb", tmp);
             }
 
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Miettinen" : "approximate");
+            outputParameters.AddOutput("method", SdPreferences.MetaExact ? "Miettinen" : "approximate");
             IList<ParameterBag> differencesList = new List<ParameterBag>();
             outputParameters.AddOutput("*differences", differencesList);
             for (int i = 1; i <= k; i++)
@@ -571,7 +587,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", k - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -588,7 +604,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, Transformation.None);
+            Metabias(eggerParameters, rkr, rkrl, rkru, k, ref cco, Transformation.None);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -603,21 +619,21 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false, ChartPreferences)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(ChartPreferences, 1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(ChartPreferences, 1, k, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
 
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptRelativeRiskMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptRelativeRiskMeta(ParameterBag parameters)
         {
             const int lowerBound = 1;
 
@@ -663,7 +679,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException("All data values must be >= 0, and the number responding must be less than the sample size");
             }
 
-            RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
+            RelativeRiskMA(lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException("relriskma() returned an error");
 
@@ -684,7 +700,7 @@ namespace StatsDirect.Builtins
             }
 
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "Koopman" : "approximate");
+            outputParameters.AddOutput("method", SdPreferences.MetaExact ? "Koopman" : "approximate");
 
             IList<ParameterBag> risksList = new List<ParameterBag>();
             outputParameters.AddOutput("*risks", risksList);
@@ -700,7 +716,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
                 risksParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
-                risksParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, cced, title));
+                risksParameters.AddOutput("lb", GetMetaLabel(o, i, hasUserSuppliedLabels, cced, title));
             }
 
             outputParameters.AddOutput("rr", rmh);
@@ -715,7 +731,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -729,19 +745,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_ds", 1);
             outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
-            GetAproxrrCI(host, o, k, cit, axll, axul);
+            GetAproxrrCI(o, k, cit, axll, axul);
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
+            Metabias(eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
-            ModMetabias(host, harbordParameters, o, k, cco, 2);
+            ModMetabias(harbordParameters, o, k, cco, 2);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -751,20 +767,20 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Relative risk", axll, axul, cco, cit, rmh, Transformation.Log, false, ChartPreferences)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, ChartPreferences)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (fixed effects)", 1, "relative risk")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, dsw, title, dsrr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Relative risk meta-analysis plot (random effects)", 1, "relative risk")));
 
             return new StepOutput(outputParameters);
         }
@@ -795,7 +811,7 @@ namespace StatsDirect.Builtins
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)
-                            buf = buf.Substring(0, 50);
+                            buf = buf[..50];
                         title[i] = buf;
                     }
                     else
@@ -811,7 +827,7 @@ namespace StatsDirect.Builtins
             return title;
         }
 
-        public static StepOutput RptEffect(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptEffect(ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
@@ -819,20 +835,12 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(1.0 - (1.0 - cco) / 2.0);
 
             string type = parameters["type"].AsString.ToLower(CultureInfo.InvariantCulture);
-            int proc;
-            switch (type)
+            var proc = type switch
             {
-                case "g":
-                    proc = 2;
-                    break;
-                case "m":
-                    proc = 3;
-                    break;
-                default:
-                    proc = 1;
-                    break;
-            }
-
+                "g" => 2,
+                "m" => 3,
+                _ => 1,
+            };
             DataFrame enFrame = parameters["en"].AsDataFrame;
             DoubleVariable enVariable = (DoubleVariable)enFrame.Variables[0];
             int rawRows = enVariable.Length;
@@ -1056,7 +1064,7 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("df", k - 1);
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
                     poolOkParameters.AddOutput("tausq", tausq);
-                    IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+                    IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
                     poolOkParameters.AddOutput("isq", isq);
                     poolOkParameters.AddOutput("pc1", cco * 100);
                     poolOkParameters.AddOutput("llisq", llisq);
@@ -1084,7 +1092,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*egger", eggerList);
                 ParameterBag eggerParameters = new();
                 eggerList.Add(eggerParameters);
-                Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
+                Metabias(eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
 
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
@@ -1094,16 +1102,16 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false)));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false, ChartPreferences)));
                 }
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(ChartPreferences, k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "effect size")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(ChartPreferences, k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "effect size")));
 
                 return new StepOutput(outputParameters);
             }
@@ -1120,7 +1128,7 @@ namespace StatsDirect.Builtins
                 {
                     double n = cn[i] + en[i];
                     rkx[i] = n;
-                    if (en[i] > 0 & cn[i] > 0 & cs[i] > 0)
+                    if (en[i] > 0 && cn[i] > 0 && cs[i] > 0)
                     {
                         double spool = ((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (en[i] + cn[i] - 2.0);
                         double sed = Math.Sqrt(spool * (1.0 / en[i] + 1.0 / cn[i]));
@@ -1220,7 +1228,7 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("df", k - 1);
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
                     poolOkParameters.AddOutput("tausq", tausq);
-                    IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+                    IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
                     poolOkParameters.AddOutput("isq", isq);
                     poolOkParameters.AddOutput("pc1", cco * 100);
                     poolOkParameters.AddOutput("llisq", llisq);
@@ -1236,7 +1244,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*egger", eggerList);
                 ParameterBag eggerParameters = new();
                 eggerList.Add(eggerParameters);
-                Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
+                Metabias(eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
 
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
@@ -1246,17 +1254,17 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false)));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(d, rkx, rkw, k, "Effect size", lcid, ucid, cco, cit, dplus, Transformation.None, false, ChartPreferences)));
                 }
 
                 // bool bfault = false; 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(ChartPreferences, k, cn, en, title, dplus, dplusll, dplusul, cco, d, lcid, ucid, "Effect size meta-analysis plot [fixed effects]", 1, "weighted mean difference")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Effect, new EffectOptions(ChartPreferences, k, cn, en, title, dsd, dsll, dsul, cco, d, lcid, ucid, "Effect size meta-analysis plot [random effects]", 1, "weighted mean difference")));
 
                 return new StepOutput(outputParameters);
             }
@@ -1330,7 +1338,7 @@ namespace StatsDirect.Builtins
                 gtry = x + gstep;
                 na = ExFortran.pnct(t, df, gtry, out _);
             }
-            while (!(na > 0 & na < 1));
+            while (!(na > 0 && na < 1));
 
             if (Math.Abs(na - au) > delta)
                 gstep = -gstep;
@@ -1361,7 +1369,7 @@ namespace StatsDirect.Builtins
             while (true);
         }
 
-        public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
+        public void RelativeRiskMA(int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
         {
             ierr = -1;
             double siga = 0.0;
@@ -1398,7 +1406,7 @@ namespace StatsDirect.Builtins
                 {
                     realk++;
 
-                    if (host.Preferences.MetaExact)
+                    if (SdPreferences.MetaExact)
                     {
                         // try Koopman rr and ci for stratum before continuity correction
                         MathDbl.lr_ci(b, a, b + d, a + c, cit, out rkrl[i], out rkru[i]);
@@ -1410,14 +1418,14 @@ namespace StatsDirect.Builtins
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                     {
                         cced[i] = true;
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                     }
                     else
                     {
                         cced[i] = false;
                     }
                     rkr[i] = a / (a + c) / (b / (b + d));
-                    if (!host.Preferences.MetaExact)
+                    if (!SdPreferences.MetaExact)
                     {
                         // approximate se of log rr
                         double selogrr = Math.Sqrt(1.0 / a + 1.0 / b - 1.0 / (a + c) - 1.0 / (b + d));
@@ -1454,7 +1462,7 @@ namespace StatsDirect.Builtins
             ll = Math.Exp(Math.Log(rmh) - Math.Sqrt(serr * cit * cit));
             ul = Math.Exp(Math.Log(rmh) + Math.Sqrt(serr * cit * cit));
             if (ll > ul)
-                Utilities.Utilities.Swap(ref ll, ref ul);
+                (ul, ll) = (ll, ul);
             x2Rmh = Math.Pow(Math.Log(rmh) / Math.Sqrt(serr), 2.0);
 
             // Q (combinability)
@@ -1470,7 +1478,7 @@ namespace StatsDirect.Builtins
                     double c = o[i, 3];
                     double d = o[i, 4];
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
 
                     double n = a + b + c + d;
                     // Weight = b * ( a + C ) / N; - unused
@@ -1505,7 +1513,7 @@ namespace StatsDirect.Builtins
                     double c = o[i, 3];
                     double d = o[i, 4];
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                     double n = a + b + c + d;
                     // using weight as 1/var
                     svd1 = ((a + b) * (a + c) * (b + d) - a * b * n) / Math.Pow(n, 2.0);
@@ -1524,11 +1532,11 @@ namespace StatsDirect.Builtins
             dsll = Math.Exp(wlrr / sumwt - cit / Math.Sqrt(sumwt));
             dsul = Math.Exp(wlrr / sumwt + cit / Math.Sqrt(sumwt));
             if (dsll > dsul)
-                Utilities.Utilities.Swap(ref dsll, ref dsul);
+                (dsul, dsll) = (dsll, dsul);
             ierr = 0;
         }
 
-        private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, out int ierr)
+        private void Riskdifma(int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, out int ierr)
         {
             ierr = -1;
             double sumlk = 0.0;
@@ -1554,7 +1562,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     rkr[i] = a / (a + c) - b / (b + d);
-                    if (host.Preferences.MetaExact)
+                    if (SdPreferences.MetaExact)
                     {
                         double r1 = a;
                         double n1 = a + c;
@@ -1574,7 +1582,7 @@ namespace StatsDirect.Builtins
                 mhd += nmn;
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                 {
-                    ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                    ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                     n = a + b + c + d;
                     cced[i] = true;
                 }
@@ -1587,7 +1595,7 @@ namespace StatsDirect.Builtins
                 sumlk += lk;
                 // inverse variance weights
                 // rkw(i) = 1# / vark
-                if (!host.Preferences.MetaExact)
+                if (!SdPreferences.MetaExact)
                 {
                     double vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
                     double se = Math.Sqrt(vark);
@@ -1602,7 +1610,7 @@ namespace StatsDirect.Builtins
             ll = rmh - serd * cit;
             ul = rmh + serd * cit;
             if (ll > ul)
-                Utilities.Utilities.Swap(ref ll, ref ul);
+                (ul, ll) = (ll, ul);
             x2Rmh = Math.Pow(rmh / serd, 2.0);
             // Q (combinability)
             qc = 0.0;
@@ -1617,7 +1625,7 @@ namespace StatsDirect.Builtins
                 // nmn = ( a + C ) * ( b + D ) / N; 
                 double rkrs = a / (a + c) - b / (b + d);
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                    ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                 double vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
                 double wt = 1.0 / vark;
                 qc += wt * Math.Pow(rkrs - rmh, 2.0);
@@ -1649,7 +1657,7 @@ namespace StatsDirect.Builtins
                 // nmn = ( ( a + C ) * ( b + D ) ) / N; 
                 double rkrs = a / (a + c) - b / (b + d);
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                    ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                 double vark = a * c / Math.Pow(a + c, 3) + b * d / Math.Pow(b + d, 3);
                 double wt = 1.0 / vark;
                 double weight = 1.0 / (tausq + 1.0 / wt);
@@ -1662,7 +1670,7 @@ namespace StatsDirect.Builtins
             dsll = wrd / sumwt - cit / Math.Sqrt(sumwt);
             dsul = wrd / sumwt + cit / Math.Sqrt(sumwt);
             if (dsll > dsul)
-                Utilities.Utilities.Swap(ref dsll, ref dsul);
+                (dsul, dsll) = (dsll, dsul);
             ierr = 0;
         }
 
@@ -1672,11 +1680,11 @@ namespace StatsDirect.Builtins
             Ratio = 2
         }
 
-        public static StepOutput RptMetaIncidenceRateRatio(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Ratio);
+        public StepOutput RptMetaIncidenceRateRatio(ParameterBag parameters) => RptMetaIncidenceRate(parameters, MetaIncidenceRateMode.Ratio);
 
-        public static StepOutput RptMetaIncidenceRateDifference(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Difference);
+        public StepOutput RptMetaIncidenceRateDifference(ParameterBag parameters) => RptMetaIncidenceRate(parameters, MetaIncidenceRateMode.Difference);
 
-        private static StepOutput RptMetaIncidenceRate(IPreferencesAndProgressBar host, ParameterBag parameters, MetaIncidenceRateMode mode)
+        private StepOutput RptMetaIncidenceRate(ParameterBag parameters, MetaIncidenceRateMode mode)
         {
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
@@ -1729,7 +1737,7 @@ namespace StatsDirect.Builtins
             if (mode == MetaIncidenceRateMode.Ratio)
             {
                 // Try exact IRR
-                if (host.Preferences.MetaExact)
+                if (SdPreferences.MetaExact)
                 {
                     Rec2X2[] tbl = new Rec2X2[k + 1];
                     for (int i = 1; i <= k; i++)
@@ -1742,7 +1750,7 @@ namespace StatsDirect.Builtins
                         tbl[i].IsInformative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
                     }
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    new ExactBB(ProgressBarHost).Exact22K(1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -1844,7 +1852,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
             // Call isquare(qc, k, cit, isq, llisq, ulisq)
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -1867,7 +1875,7 @@ namespace StatsDirect.Builtins
             Transformation xform = Transformation.None;
             if (mode != MetaIncidenceRateMode.Difference)
                 xform = Transformation.Log;
-            Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
+            Metabias(eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
 
             double[] ptt = new double[k + 1];
             for (int i = 1; i <= k; i++)
@@ -1893,16 +1901,16 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false)));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false, ChartPreferences)));
                 }
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(ChartPreferences, 1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Incidence rate difference meta-analysis plot [fixed effects]", 1, "incidence rate difference")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(ChartPreferences, 1, k, dsw, title, dsird, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Incidence rate difference meta-analysis plot [random effects]", 1, "incidence rate difference")));
             }
             else
             {
@@ -1910,20 +1918,20 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false)));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false, ChartPreferences)));
                 }
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [fixed effects]", 1, "incidence rate ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, dsw, title, dsirr, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Incidence rate ratio meta-analysis plot [random effects]", 1, "incidence rate ratio")));
             }
             return new StepOutput(outputParameters);
         }
-        public static StepOutput RptMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptMantel(ParameterBag parameters)
         {
             double p2M = 0; double p1M = 0;
             double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0;
@@ -1969,7 +1977,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
+            Mantel(1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
             if (ierr != 0)
             {
                 if (ierr != 99)
@@ -1978,7 +1986,7 @@ namespace StatsDirect.Builtins
             }
 
             // Try exact Mantel
-            if (host.Preferences.MetaExact)
+            if (SdPreferences.MetaExact)
             {
                 Rec2X2[] tbl = new Rec2X2[k + 1];
                 for (int i = 1; i <= k; i++)
@@ -1991,7 +1999,7 @@ namespace StatsDirect.Builtins
                     tbl[i].IsInformative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
                 }
                 bool useLogScale = false;
-                new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                new ExactBB(ProgressBarHost).Exact22K(1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
             }
             else
             {
@@ -2027,7 +2035,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
             }
 
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
+            outputParameters.AddOutput("method", SdPreferences.MetaExact ? "CML" : "logit");
 
             IList<ParameterBag> orList = new List<ParameterBag>();
             outputParameters.AddOutput("*or", orList);
@@ -2043,11 +2051,11 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
                 orParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
-                string tmp = GetMetaLabel(host, o, i, hasUserSuppliedLabels, cced, title);
-                if (host.Preferences.DelayContinuityCorrection)
+                string tmp = GetMetaLabel(o, i, hasUserSuppliedLabels, cced, title);
+                if (SdPreferences.DelayContinuityCorrection)
                     tmp = tmp.Replace("[CC", "[late CC");
                 orParameters.AddOutput("lb", tmp);
-                //if (host.Preferences.MetaExact & ((i) == Constant.MISSING || odru[i] == Constant.MISSING))
+                //if (host.Preferences.MetaExact && ((i) == Constant.MISSING || odru[i] == Constant.MISSING))
                 //{
                 //    OrciCorn(host, ref cco, ref o[i, 1], ref o[i, 2], ref o[i, 3], ref o[i, 4], out odr[i], out odrl[i], out odru[i]);
                 //    orParameters = new ParameterBag();
@@ -2106,7 +2114,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
 
-            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -2119,19 +2127,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_ds", 1);
             outputParameters.AddOutput("xp_ds", PDF.chivalp(dsx2, 1.0));
 
-            GetLogitCi(host, o, k, cit, axll, axul);
+            GetLogitCi(o, k, cit, axll, axul);
 
             IList<ParameterBag> eggerList = new List<ParameterBag>();
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            Metabias(eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
-            ModMetabias(host, harbordParameters, o, k, cco, 1);
+            ModMetabias(harbordParameters, o, k, cco, 1);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2141,27 +2149,27 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(odr, odx, odw, k, "Odds ratio", axll, axul, cco, cit, rmh, Transformation.Log, false, ChartPreferences)));
             }
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh, ChartPreferences)));
 
             if (sk != 0)
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, odw, title, rmh, ll, ul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [fixed effects]", 1, "odds ratio")));
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(ChartPreferences, 1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return new StepOutput(outputParameters);
         }
 
-        public static void Mantel(IPreferencesAndProgressBar host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr)
+        public void Mantel(int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr)
         {
             odr = new double[k + lowerBound];
             odrl = new double[k + lowerBound];
@@ -2202,7 +2210,7 @@ namespace StatsDirect.Builtins
                 if (n <= 0)
                     throw new InvalidDataException();
 
-                if (!host.Preferences.DelayContinuityCorrection)
+                if (!SdPreferences.DelayContinuityCorrection)
                     rkok = false;
 
                 // MH across strata
@@ -2214,7 +2222,7 @@ namespace StatsDirect.Builtins
                     {
                         if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         {
-                            ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                            ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                             n = a + b + c + d;
                             cced[i] = true;
                         }
@@ -2256,7 +2264,7 @@ namespace StatsDirect.Builtins
                         // do cc if not done earlier
                         if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                         {
-                            ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                            ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                             // N = a + b + C + D; 
                             cced[i] = true;
                         }
@@ -2266,9 +2274,9 @@ namespace StatsDirect.Builtins
                         }
                     }
                     odr[i] = a * d / (b * c);
-                    if (host.Preferences.MetaExact)
+                    if (SdPreferences.MetaExact)
                     {
-                        OddsRatioCI(host, cco, a, b, c, d, out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
+                        ExactBB.OddsRatioCI(cco, a, b, c, d, out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
                     }
                     else
                     {
@@ -2301,7 +2309,7 @@ namespace StatsDirect.Builtins
                 ul = Math.Exp(Math.Log(rk / sk) + Math.Sqrt(cit * cit * vrbg));
             }
             if (ll > ul)
-                Utilities.Utilities.Swap(ref ll, ref ul);
+                (ul, ll) = (ll, ul);
             x2 = Math.Pow(Math.Abs(eai) - 0.5, 2.0) / vari;
 
             // Q (combinability)
@@ -2336,7 +2344,7 @@ namespace StatsDirect.Builtins
                 if (included[i])
                 {
                     if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                     double n = a + b + c + d;
                     double rr = a * d / n;
                     double ss = b * c / n;
@@ -2372,7 +2380,7 @@ namespace StatsDirect.Builtins
                 if (included[i])
                 {
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                     double n = a + b + c + d;
                     double rr = a * d / n;
                     double ss = b * c / n;
@@ -2394,11 +2402,11 @@ namespace StatsDirect.Builtins
             dsll = Math.Exp(wlor / sumwt - cit / Math.Sqrt(sumwt));
             dsul = Math.Exp(wlor / sumwt + cit / Math.Sqrt(sumwt));
             if (dsll > dsul)
-                Utilities.Utilities.Swap(ref dsll, ref dsul);
+                (dsul, dsll) = (dsll, dsul);
             ierr = 0;
         }
 
-        public static void GetLogitCi(IPreferences host, double[,] o, int k, double cit, double[] axll, double[] axul)
+        public void GetLogitCi(double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
             {
@@ -2416,7 +2424,7 @@ namespace StatsDirect.Builtins
                 {
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                     {
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                         // N = a + b + C + D; 
                     }
                     double odr = a * d / (b * c);
@@ -2427,7 +2435,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static void GetAproxrrCI(IPreferences host, double[,] o, int k, double cit, double[] axll, double[] axul)
+        public void GetAproxrrCI(double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
             {
@@ -2438,7 +2446,7 @@ namespace StatsDirect.Builtins
                 if (IncludeTable(o, i))
                 {
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                        ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                     double rkr = a / (a + c) / (b / (b + d));
                     // approximate se of log rr
                     double se = Math.Sqrt(1.0 / a + 1.0 / b - 1.0 / (a + c) - 1.0 / (b + d));
@@ -2678,7 +2686,7 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
-        public static StepOutput RptMetaSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptMetaSummary(ParameterBag parameters)
         {
             double dsul; double dsll; double dsrr;
             double tausq;
@@ -2723,7 +2731,7 @@ namespace StatsDirect.Builtins
                     if (ulY[i] == Constant.MISSING && useRatio)
                         ulY[i] = 1.0;
                     if (llY[i] > ulY[i])
-                        Utilities.Utilities.Swap(ref llY[i], ref ulY[i]);
+                        (ulY[i], llY[i]) = (llY[i], ulY[i]);
                     if (useRatio)
                         seY[i] = (Math.Log(ulY[i]) - Math.Log(llY[i])) / 2.0 / cit;
                     else
@@ -2799,7 +2807,7 @@ namespace StatsDirect.Builtins
                 llrmh = Math.Exp(Math.Log(rmh) - sermh * cit);
                 ulrmh = Math.Exp(Math.Log(rmh) + sermh * cit);
                 if (llrmh > ulrmh)
-                    Utilities.Utilities.Swap(ref llrmh, ref ulrmh);
+                    (ulrmh, llrmh) = (llrmh, ulrmh);
                 zrmh = Math.Log(rmh) / sermh;
             }
             else
@@ -2854,7 +2862,7 @@ namespace StatsDirect.Builtins
             double dsz = wlrr / Math.Sqrt(sumwt);
             if (dsll > dsul)
             {
-                Utilities.Utilities.Swap(ref dsll, ref dsul);
+                (dsul, dsll) = (dsll, dsul);
             }
 
             ParameterBag outputParameters = new();
@@ -2891,7 +2899,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -2913,7 +2921,7 @@ namespace StatsDirect.Builtins
             Transformation xform = Transformation.None;
             if (useRatio)
                 xform = Transformation.Log;
-            Metabias(host, biasParameters, y, llY, ulY, k, ref cco, xform);
+            Metabias(biasParameters, y, llY, ulY, k, ref cco, xform);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2923,7 +2931,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), odx, wt, k, stat.ToLower(CultureInfo.CurrentCulture), ShallowCopy(llY), ShallowCopy(ulY), cco, cit, rmh, xform, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), odx, wt, k, stat.ToLower(CultureInfo.CurrentCulture), ShallowCopy(llY), ShallowCopy(ulY), cco, cit, rmh, xform, false, ChartPreferences)));
             }
 
             y[k + 1] = rmh;
@@ -2931,19 +2939,19 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Summary meta-analysis plot [fixed effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio, ChartPreferences)));
 
             y[k + 1] = dsrr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Summary meta-analysis plot [random effects]", stat.ToLower(CultureInfo.CurrentCulture) + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", xform, !useRatio, ChartPreferences)));
 
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptMetaCorrelation(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptMetaCorrelation(ParameterBag parameters)
         {
             double tausq;
             double cit;
@@ -3009,7 +3017,7 @@ namespace StatsDirect.Builtins
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)
-                            buf = buf.Substring(0, 50);
+                            buf = buf[..50];
                         title[i] = buf;
                     }
                     else
@@ -3048,7 +3056,7 @@ namespace StatsDirect.Builtins
             double llrmh = MathDbl.ztor(MathDbl.rtoz(rmh) - sermh * cit);
             double ulrmh = MathDbl.ztor(MathDbl.rtoz(rmh) + sermh * cit);
             if (llrmh > ulrmh)
-                Utilities.Utilities.Swap(ref llrmh, ref ulrmh);
+                (ulrmh, llrmh) = (llrmh, ulrmh);
             double zrmh = MathDbl.rtoz(rmh) / sermh;
 
             // Q (combinability)
@@ -3078,7 +3086,7 @@ namespace StatsDirect.Builtins
             double dsul = MathDbl.ztor(wlrr / sumwt + cit / Math.Sqrt(sumwt));
             double dsz = wlrr / Math.Sqrt(sumwt);
             if (dsll > dsul)
-                Utilities.Utilities.Swap(ref dsll, ref dsul);
+                (dsul, dsll) = (dsll, dsul);
 
             // Schmidt-Hunter
             double varR = 0, wmrCrll, wmrCrul;
@@ -3155,7 +3163,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
 
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -3189,7 +3197,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*bias", biasList);
             ParameterBag biasParameters = new();
             biasList.Add(biasParameters);
-            Metabias(host, biasParameters, y, llY, ulY, k, ref cco, Transformation.Z);
+            Metabias(biasParameters, y, llY, ulY, k, ref cco, Transformation.Z);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -3199,7 +3207,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), odx, wt, k, "Correlation", ShallowCopy(llY), ShallowCopy(ulY), cco, cit, wmr, Transformation.Z, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), odx, wt, k, "Correlation", ShallowCopy(llY), ShallowCopy(ulY), cco, cit, wmr, Transformation.Z, false, ChartPreferences)));
             }
 
             y[k + 1] = rmh;
@@ -3207,26 +3215,26 @@ namespace StatsDirect.Builtins
             ulY[k + 1] = ulrmh;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Correlation (Hedges-Olkin fixed effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false, ChartPreferences)));
 
             y[k + 1] = dsrr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Correlation (Hedges-Olkin random effects) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false, ChartPreferences)));
 
             y[k + 1] = wmr;
             llY[k + 1] = wmrLcl;
             ulY[k + 1] = wmrUcl;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, y, llY, ulY, wt, pg, "Correlation (Schmidt-Hunter) meta-analysis plot", stat + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false, ChartPreferences)));
 
             return new StepOutput(outputParameters);
         }
 
-        public static void OrciCorn(IPreferences host, ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
+        public void OrciCorn(ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
         {
             //  ref Alan Agresti R script http://web.stat.ufl.edu/~aa/cda/R/two_sample/R2/
             double aa;
@@ -3235,7 +3243,7 @@ namespace StatsDirect.Builtins
             double dd;
             if (b * c == 0.0)
             {
-                ContinuityCorrect(host, a, b, c, d, out aa, out bb, out cc, out dd);
+                ContinuityCorrect(a, b, c, d, out aa, out bb, out cc, out dd);
                 odr = aa * dd / (bb * cc);
             }
             else
@@ -3253,7 +3261,7 @@ namespace StatsDirect.Builtins
             double px = x1 / n1;
             double py = x2 / n2;
             double theta;
-            if (((aa == 0.0) & (bb == 0.0)) | ((aa == aa + cc) & (bb == bb + dd)))
+            if (((aa == 0.0) && (bb == 0.0)) | ((aa == aa + cc) && (bb == bb + dd)))
             {
                 ul = double.PositiveInfinity;
                 ll = 0.0;
@@ -3360,9 +3368,11 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static void ContinuityCorrect(IPreferences host, double a, double b, double c, double d, out double ax, out double bx, out double cx, out double dx)
+        private void ContinuityCorrect(double a, double b, double c, double d, out double ax, out double bx, out double cx, out double dx)
         {
-            double x = host.Preferences.MetaCC == 0.0 ? 0.5 : host.Preferences.MetaCC;
+            double x = SdPreferences.MetaCC == 0.0
+                ? 0.5
+                : SdPreferences.MetaCC;
             if (x > 0.0 && x < 1.0)
             {
                 ax = a + x;
@@ -3401,7 +3411,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepOutput RptProportionMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
+        public StepOutput RptProportionMeta(ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
             VarianceStabilisationMethod method = "doubleArcsine".Equals(parameters["method"].AsString) ? VarianceStabilisationMethod.DoubleArcsine : VarianceStabilisationMethod.ArcsineSquareRoot;
@@ -3502,7 +3512,7 @@ namespace StatsDirect.Builtins
             double dsul = wlrr / sumwt + cit / Math.Sqrt(sumwt);
             // double dsx2 = Math.Pow( wlrr, 2.0 ) / sumwt; - unused
             if (dsll > dsul)
-                Utilities.Utilities.Swap(ref dsll, ref dsul);
+                (dsul, dsll) = (dsll, dsul);
 
             // convert back to proportion scale
             double[,] o = new double[k + 1, 4 + 1];
@@ -3579,7 +3589,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -3593,13 +3603,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, y, llY, ulY, k, ref cco, Transformation.None);
+            Metabias(eggerParameters, y, llY, ulY, k, ref cco, Transformation.None);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
-            ModMetabias(host, harbordParameters, o, k, cco, 3);
+            ModMetabias(harbordParameters, o, k, cco, 3);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -3609,7 +3619,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), sn, wt, k, "Proportion", ShallowCopy(llY), ShallowCopy(ulY), cco, cit, rmh, Transformation.None, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(ShallowCopy(y), sn, wt, k, "Proportion", ShallowCopy(llY), ShallowCopy(ulY), cco, cit, rmh, Transformation.None, false, ChartPreferences)));
             }
 
             y[k + 1] = rmh;
@@ -3618,14 +3628,14 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), wt, pg, "Proportion meta-analysis plot [fixed effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false, ChartPreferences)));
 
             y[k + 1] = dspr;
             llY[k + 1] = dsll;
             ulY[k + 1] = dsul;
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Correlation, new CorrelationOptions(k + 1, title, ShallowCopy(y), ShallowCopy(llY), ShallowCopy(ulY), dswt, pg, "Proportion meta-analysis plot [random effects]", "proportion" + " (" + Formatting.XRound(cco * 100, 1) + "% confidence interval" + ")", Transformation.None, false, ChartPreferences)));
 
             return new StepOutput(outputParameters);
         }
@@ -3676,23 +3686,24 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static bool IncludeTable(double[,] o, int i)
-        {
-            return !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
-        }
+        private static bool IncludeTable(double[,] o, int i) =>
+            !(
+                o[i, 1] == 0.0 && o[i, 2] == 0.0 
+                    || o[i, 3] == 0.0 && o[i, 4] == 0.0
+            );
 
-        public static string GetMetaLabel(IPreferences host, double[,] o, int i, bool stratlab, bool[] cced, string[] title)
+        public string GetMetaLabel(double[,] o, int i, bool stratlab, bool[] cced, string[] title)
         {
             if (IncludeTable(o, i))
                 return (stratlab ? title[i] : string.Empty)
                     + (cced[i]
-                        ? " [CC = " + (host.Preferences.MetaCC == -9.0 ? "treatment arm" : host.Preferences.MetaCC.ToString()) + "]"
+                        ? " [CC = " + (SdPreferences.MetaCC == -9.0 ? "treatment arm" : SdPreferences.MetaCC.ToString()) + "]"
                         : string.Empty);
             else
                 return "* (excluded)";
         }
 
-        public static void ModMetabias(IPreferences host, ParameterBag outputParameters, double[,] o, int k, double cco, int method)
+        public void ModMetabias(ParameterBag outputParameters, double[,] o, int k, double cco, int method)
         {
             //  Horbord et al 2006
             // get linear regression of z on sqr(v)
@@ -3735,7 +3746,7 @@ namespace StatsDirect.Builtins
                         {
                             if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                             {
-                                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                                ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                                 n = a + b + c + d;
                             }
                             // relative risk parameters from Whitehead
@@ -3746,7 +3757,7 @@ namespace StatsDirect.Builtins
                         {
                             if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
                             {
-                                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                                ContinuityCorrect(a, b, c, d, out a, out b, out c, out d);
                                 n = a + b + c + d;
                             }
                             // efficient score
@@ -3774,7 +3785,7 @@ namespace StatsDirect.Builtins
             double bias = yInt;
             double ll; double ul;
             double se = 0;
-            if (realk > 2 & ssres >= 0.0)
+            if (realk > 2 && ssres >= 0.0)
             {
                 double mnsqr = ssres / (realk - 2);
                 se = Math.Sqrt(mnsqr * (1.0 / realk + Math.Pow(sumx / realk, 2.0) / ssx));
@@ -3799,7 +3810,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", p2);
         }
 
-        public static void IsquareNcc(IPreferences host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
+        public void IsquareNcc(double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
         {
             double SElnH;
             double minLbNc;
@@ -3862,7 +3873,7 @@ namespace StatsDirect.Builtins
             ll = 100.0 * lbI2;
             ul = 100.0 * ubI2;
 
-            if (!host.Preferences.MetaExact)
+            if (!SdPreferences.MetaExact)
                 return;
 
             //  Iterative solution to seek CI for non-centrality parameter (and then for H and I2)
@@ -3991,7 +4002,7 @@ namespace StatsDirect.Builtins
                 if (Math.Abs(xm) <= tol1 | fb == 0.0)
                     break;
 
-                if (Math.Abs(e) >= tol1 & Math.Abs(fa) > Math.Abs(fb))
+                if (Math.Abs(e) >= tol1 && Math.Abs(fa) > Math.Abs(fb))
                 {
                     double s = fb / fa;
                     double p;

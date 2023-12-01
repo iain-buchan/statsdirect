@@ -1,9 +1,9 @@
 using System;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class TiesOptions : GenericOptions
+    public class TiesOptions : AbstractGenericOptions
     {
         public double[] x;
         public double[] y;

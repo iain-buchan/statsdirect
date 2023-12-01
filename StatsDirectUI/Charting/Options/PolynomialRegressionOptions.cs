@@ -3,7 +3,7 @@ using System;
 namespace StatsDirect.Charting
 {
     [Serializable]
-    public class PolynomialRegressionOptions : ChartOptions
+    public class PolynomialRegressionOptions : AbstractChartOptions
     {
         public int mode;
         public double[,] xtxi;

@@ -1,4 +1,5 @@
-﻿using StatsDirect.Templates;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
 
@@ -6,8 +7,8 @@ namespace StatsDirect.Charting.Renderer
 {
     class ErrorBarChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public ErrorBarChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory)
-            : base(cd, canvasFactory)
+        public ErrorBarChartRenderer(ChartDefinition cd, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(cd, canvasFactory, sdPreferences)
         {
         }
 
@@ -40,29 +41,27 @@ namespace StatsDirect.Charting.Renderer
             }
 
             return new ScaleParameters
-            {
-                X =
-                    {
-                        ScaleType = ScaleType.Linear,
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = DataMaxX,
-                        Min = DataMinX
-                    },
-                Y =
-                    {
-                        ScaleType = ScaleType.Linear,
-                        AllowedScaleTypes = new[] { ScaleType.Linear },
-                        Max = DataMaxY,
-                        Min = DataMinY
-                    }
-            };
+            (
+                new(new[] { ScaleType.Linear })
+                {
+                    ScaleType = ScaleType.Linear,
+                    Max = DataMaxX,
+                    Min = DataMinX
+                },
+                new(new[] { ScaleType.Linear })
+                {
+                    ScaleType = ScaleType.Linear,
+                    Max = DataMaxY,
+                    Min = DataMinY
+                }
+            );
         }
 
         /// <summary>
         /// Series setup: Y[0] = centre value, Y[1] = lower error bar value, Y[2] = upper error bar value.
         /// </summary>
         /// <returns></returns>
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
@@ -96,12 +95,13 @@ namespace StatsDirect.Charting.Renderer
             }
 
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
-            Legend legend = null;
+            Legend? legend = null;
             if (eOptions.ShowLegend && eOptions.ShowLegendIsRelevant)
             {
-                legend = new Legend() { Position = LegendPosition.Bottom };
+                List<LegendEntry> legendEntries = new();
                 for (int i = 0; i < seriesCount; i++)
-                    legend.LegendEntries.Add(new LegendEntry { Label = eOptions.SeriesTitles[i], MarkerType = eOptions.MarkerTypes[i] });
+                    legendEntries.Add(new LegendEntry(eOptions.MarkerTypes[i], eOptions.SeriesTitles[i]));
+                legend = new(LegendPosition.Bottom, legendEntries);
             }
 
             StartVectorPlot(eOptions, legend);
@@ -111,7 +111,7 @@ namespace StatsDirect.Charting.Renderer
             LayoutChartAndDrawAxes(eOptions.Title,
                 new AxisDefinition(eOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(eOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
-                ChartPreferences.DefaultBoxAxes, false,
+                ChartPreferences.BoxAxes, false,
                 legend);
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
@@ -135,7 +135,7 @@ namespace StatsDirect.Charting.Renderer
                         while (true)
                         {
                             int roughX = (int)Math.Round(ToCanvasX(safePoint.X));
-                            if (!alreadyUsed.TryGetValue(roughX, out List<MultiDoublePoint> barsAtRoughX))
+                            if (!alreadyUsed.TryGetValue(roughX, out List<MultiDoublePoint>? barsAtRoughX))
                             {
                                 // this one's the first point at this X; known safe.  Record it and move on.
                                 alreadyUsed.Add(roughX, new List<MultiDoublePoint> { safePoint });

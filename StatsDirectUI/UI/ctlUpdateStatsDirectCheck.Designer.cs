@@ -15,7 +15,7 @@
         {
             if (disposing)
                 statsDirectChecker.Dispose();
-            if (disposing && (components != null))
+            if (disposing && (components is not null))
             {
                 components.Dispose();
             }

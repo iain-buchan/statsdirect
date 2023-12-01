@@ -1,15 +1,13 @@
 ﻿using System;
+using System.IO;
 using StatsDirect.Templates;
 
 namespace StatsDirect.Charting
 {
     public interface IChartRenderer : IDisposable
     {
-        ParameterBag Plot(ITemplateHost host, bool isForReturnedParametersOnly);
-        /// <summary>
-        /// Intended to obtain a completed canvas for read only.
-        /// </summary>
-        IStatsDirectCanvas Canvas { get; }
+        ParameterBag Plot(bool isForReturnedParametersOnly);
+        Stream? DetachAndReturnImageStream();
         string GetAscii();
 
         ScaleParameters GetScaleParameters();

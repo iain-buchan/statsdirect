@@ -266,7 +266,7 @@ namespace StatsDirect.Numerics
         { 
             
                 RNG = null; 
-            if ( rug == null ) 
+            if ( rug is null ) 
             { 
                 RNG = new MersenneTwister(); 
                 RNG.Seed( sd ); 

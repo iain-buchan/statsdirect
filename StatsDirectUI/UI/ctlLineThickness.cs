@@ -49,7 +49,7 @@ namespace StatsDirect.UI
                 LineThicknessChanged(this, e);
         }
 
-        private void cboLineThickness_SelectedIndexChanged(object sender, EventArgs e)
+        private void cboLineThickness_SelectedIndexChanged(object? sender, EventArgs e)
         {
             LineThickness = cboLineThickness.SelectedIndex + 1;
         }

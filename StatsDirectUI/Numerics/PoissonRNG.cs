@@ -13,11 +13,23 @@ namespace StatsDirect.Numerics
         private const double A6 = -0.1384794;
         private const double A7 = 0.125006;
 
-        private double ONE_7;
-        private double ONE_12;
-        private double ONE_24;
+        private const double ONE_7 = 1.0 / 7.0;
+        private const double ONE_12 = 1.0 / 12.0;
+        private const double ONE_24 = 1.0 / 24.0;
 
-        private readonly double[] FACT = new double[10];
+        private readonly double[] FACT =
+        {
+            1.0,
+            1.0,
+            2.0,
+            6.0,
+            24.0,
+            120.0,
+            720.0,
+            5040.0,
+            40320.0,
+            362880.0
+        };
 
         private int L;
         private int M;
@@ -39,16 +51,34 @@ namespace StatsDirect.Numerics
 
         private double MUPREV;
         private double MUPREV2;
-        // private double MUOLD; 
 
         private readonly double Sqr2PI = Math.Pow(2.0 * Constant.PI, -0.5);
 
-        private bool SEEDED;
+        private readonly MersenneTwister RNG;
+        private readonly ExponentialRNG RNGEXP;
+        private readonly NormalRNG RNGNORM;
+        private readonly GammaRNG RNGGAMMA;
 
-        private MersenneTwister RNG;
-        private ExponentialRNG RNGEXP;
-        private NormalRNG RNGNORM;
-        private GammaRNG RNGGAMMA;
+        public PoissonRNG(int sd, MersenneTwister? rug = null)
+        {
+            if (rug is null)
+            {
+                RNG = new MersenneTwister();
+                RNG.Seed(sd);
+            }
+            else
+            {
+                RNG = rug;
+            }
+            RNGEXP = new ExponentialRNG();
+            RNGNORM = new NormalRNG();
+            RNGGAMMA = new GammaRNG();
+            RNGEXP.Seed(sd, ref RNG);
+            RNGNORM.Seed(sd, ref RNG);
+            RNGGAMMA.Seed(sd, RNG, RNGEXP, RNGNORM);
+            MUPREV = 0.0;
+            MUPREV2 = 0.0;
+        }
 
         /// <summary>
         ///  generate lambda as exponential with scale parameter p / (1 - p).
@@ -80,13 +110,7 @@ namespace StatsDirect.Numerics
         public double GenNegbin(double n, double p)
         {
             if (n <= 0.0 || p <= 0.0 || p > 1.0)
-            {
                 return double.NaN;
-            }
-            if (SEEDED == false)
-            {
-                Seed(Base.DefaultSeed(), null);
-            }
             return GenPoisson(RNGGAMMA.GenGamma(n, (1.0 - p) / p));
         }
 
@@ -95,11 +119,6 @@ namespace StatsDirect.Numerics
             double genPoissonReturn = 0;
 
             bool new_big_mu = false;
-
-            if (SEEDED == false)
-            {
-                Seed(Base.DefaultSeed());
-            }
 
             double u;
 
@@ -339,52 +358,6 @@ namespace StatsDirect.Numerics
                 genPoissonReturn = pois;
             }
             return genPoissonReturn;
-        }
-
-        public void Seed(int sd, MersenneTwister rug)
-        {
-
-            RNG = null;
-            RNGEXP = null;
-            RNGNORM = null;
-            RNGGAMMA = null;
-            if (rug == null)
-            {
-                RNG = new MersenneTwister();
-                RNG.Seed(sd);
-            }
-            else
-            {
-                RNG = rug;
-            }
-            RNGEXP = new ExponentialRNG();
-            RNGNORM = new NormalRNG();
-            RNGGAMMA = new GammaRNG();
-            RNGEXP.Seed(sd, ref RNG);
-            RNGNORM.Seed(sd, ref RNG);
-            RNGGAMMA.Seed(sd, RNG, RNGEXP, RNGNORM);
-            ONE_7 = 1.0 / 7.0;
-            ONE_12 = 1.0 / 12.0;
-            ONE_24 = 1.0 / 24.0;
-            FACT[0] = 1.0;
-            FACT[1] = 1.0;
-            FACT[2] = 2.0;
-            FACT[3] = 6.0;
-            FACT[4] = 24.0;
-            FACT[5] = 120.0;
-            FACT[6] = 720.0;
-            FACT[7] = 5040.0;
-            FACT[8] = 40320.0;
-            FACT[9] = 362880.0;
-            MUPREV = 0.0;
-            MUPREV2 = 0.0;
-            // MUOLD = 0.0; 
-            SEEDED = true;
-        }
-
-        public void Seed(int sd)
-        {
-            Seed(sd, null);
         }
     }
 }

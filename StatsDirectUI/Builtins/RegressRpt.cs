@@ -35,7 +35,7 @@ namespace StatsDirect.Builtins
         public double[] rssx;
         public string xlab;
         public double[] xmean;
-        public double[,] xt;
+        public double[,]? xt;
         public double[, ,] y;
         public double[] ymean;
     }
@@ -108,7 +108,7 @@ namespace StatsDirect.Builtins
         {
             double grandn = 0; double grandx = 0;
 
-            GroupedCovarianceData groupedCovarianceData = (GroupedCovarianceData)parameters["gcd"].AsObject;
+            GroupedCovarianceData? groupedCovarianceData = (GroupedCovarianceData)parameters["gcd"].AsObject;
             int k = groupedCovarianceData.k;
             int[] nxi = groupedCovarianceData.nxi;
             int[,] ny = groupedCovarianceData.ny;
@@ -135,11 +135,24 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptGroupedCovariance(ParameterBag parameters)
         {
-            double gtxx = 0; double gtxy = 0; double gtyy = 0; double grandn = 0; double grandx = 0; double grandsqx = 0; double grandsqy = 0;
-            double tsy = 0; double tsx = 0; double grandcpr = 0;
+            double gtxx = 0;
+            double gtxy = 0;
+            double gtyy = 0;
+            double grandn = 0;
+            double grandx = 0;
+            double grandsqx = 0;
+            double grandsqy = 0;
+            double tsy = 0;
+            double tsx = 0;
+            double grandcpr = 0;
             double grandbit = 0;
-            double residssq = 0; double t;
-            double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
+            double residssq = 0;
+            double t;
+            double syy = 0;
+            double sxx = 0;
+            double sxy = 0;
+            double tn = 0;
+            double tnx = 0;
 
             GroupedCovarianceData groupedCovarianceData = (GroupedCovarianceData)parameters["gcd"].AsObject;
             double[] a = groupedCovarianceData.a;
@@ -550,7 +563,7 @@ namespace StatsDirect.Builtins
                 double lci = Formatting.SafeExp(-b[i] - se[i] * cit);
                 double uci = Formatting.SafeExp(-b[i] + se[i] * cit);
                 if (lci > uci)
-                    Utilities.Utilities.Swap(ref lci, ref uci);
+                    (uci, lci) = (lci, uci);
                 orParameters.AddOutput("from", lci);
                 orParameters.AddOutput("to", uci);
             }
@@ -858,7 +871,7 @@ namespace StatsDirect.Builtins
                         wdb[i, 1] = sc[i];
                     dpptrs(ip, cov, wdb, out info);
                     for (int i = 1; i <= ip; i++)
-                        b[i] = b[i] + wdb[i, 1];
+                        b[i] += wdb[i, 1];
                 }
 
                 if (iter != 1)
@@ -970,8 +983,7 @@ namespace StatsDirect.Builtins
                     dspr(j - 1, 1.0, ap, jc, 1, ap, 1);
                 double ajj = ap[jj];
                 int ict = jc;
-                int k;
-                for (k = 1; k <= j; k++)
+                for (int k = 1; k <= j; k++)
                 {
                     ap[ict] = ap[ict] * ajj;
                     ict += 1;

@@ -1,45 +1,44 @@
-﻿using StatsDirect.Templates;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Templates;
 
 namespace StatsDirect.Charting.Renderer
 {
     class LAbbeChartRenderer : AbstractXYZChartRenderer, IChartRenderer
     {
-        public LAbbeChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public LAbbeChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
         ScaleParameters IChartRenderer.GetScaleParameters()
         {
-            return new ScaleParameters
-            {
-                X = new AxisScaleParameters { ScaleType = ScaleType.Linear },
-                Y = new AxisScaleParameters { ScaleType = ScaleType.Linear }
-            };
+            return new
+            (
+                new AxisScaleParameters { ScaleType = ScaleType.Linear },
+                new AxisScaleParameters { ScaleType = ScaleType.Linear }
+            );
         }
 
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
             LAbbeOptions options = (LAbbeOptions)Definition.ChartOptions;
-            double[] y = new double[options.k + 1];
-            double[] x = new double[options.k + 1];
-            double[] w = new double[options.k + 1];
-            for (int i = 1; i <= options.k; i++)
+            double[] y = new double[options.K + 1];
+            double[] x = new double[options.K + 1];
+            double[] w = new double[options.K + 1];
+            for (int i = 1; i <= options.K; i++)
             {
-                if (options.o[i, 1] + options.o[i, 3] == 0)
-                    y[i] = 0;
-                else
-                    y[i] = options.o[i, 1] / (options.o[i, 1] + options.o[i, 3]);
-                if (options.o[i, 2] + options.o[i, 4] == 0)
-                    x[i] = 0;
-                else
-                    x[i] = options.o[i, 2] / (options.o[i, 2] + options.o[i, 4]);
-                w[i] = options.o[i, 1] + options.o[i, 2] + options.o[i, 3] + options.o[i, 4];
+                y[i] = options.O[i, 1] + options.O[i, 3] == 0
+                    ? 0
+                    : options.O[i, 1] / (options.O[i, 1] + options.O[i, 3]);
+                x[i] = options.O[i, 2] + options.O[i, 4] == 0 
+                    ? 0
+                    : options.O[i, 2] / (options.O[i, 2] + options.O[i, 4]);
+                w[i] = options.O[i, 1] + options.O[i, 2] + options.O[i, 3] + options.O[i, 4];
             }
-            PlotXYZ(x, y, w, 1, options.k, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, ChartPreferences.MarkerTypes[0], options.rmh);
+            PlotXYZ(x, y, w, 1, options.K, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, ChartPreferences.MarkerTypes[0], options.Rmh);
             return new ParameterBag();
         }
     }

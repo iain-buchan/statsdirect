@@ -1,42 +1,81 @@
-using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
-    [Serializable]
-    public class BarOptions : GenericOptions
+    public class BarOptions : AbstractGenericOptions
+        , IAxisLabelFontOptions
+        , IAxisTitleFontOptions
+        , IBarOptions
+        , IBoxAxesOptions
+        , IChartTitleOptions
+        , IMarkerTypes
+        , IXAxisTitleOptions
+        , IYAxisTitleOptions
     {
-        private bool showLegendIsRelevant;
+        private const double DEFAULT_MAX_BAR_WIDTH = 0.5;
+        private const bool DEFAULT_ROTATE_WHEN_STACKED = true;
+        private const bool DEFAULT_STACKED = false;
+        private const bool DEFAULT_STACKED_100_PERCENT = false;
 
-        ///  <summary>
-        ///  The widest a bar may be, as a fraction of its containing space.
-        ///  </summary>
-        public double MaxBarWidth { get; set; } = 0.5;
+        public FillStyle? ForcedFillStyle { get; }
+        public bool? ForcedIsFilled { get; }
+        public IReadOnlyList<MarkerType> MarkerTypes { get; }
+        public double MaxBarWidth { get; }
+        public bool RotateWhenStacked { get; }
+        public IReadOnlyList<SeriesOptionsDescriptor> SeriesOptions { get; }
+        public override bool ShowLegendIsRelevant { get; }
+        public bool Stacked { get; }
+        public bool Stacked100Percent { get; }
 
-        ///  <summary>
-        ///  If false, bars should be drawn side-by-side.  If true, bars should be drawn end-to-end.
-        ///  </summary>
-        public bool Stacked { get; set; }
-
-        /// <summary>
-        /// If false, stacked bar charts should be drawn per Excel.  If true, they should be drawn per StatsDirect.
-        /// </summary>
-        public bool RotateWhenStacked { get; set; } = true;
-
-        ///  <summary>
-        ///  If Stacked and true, bars should be drawn end-to-end scaled 0..1.  If Stacked and false, bars should be drawn end-to-end scaled to the largest bar.
-        ///  If not Stacked, no effect.
-        ///  </summary>
-        public bool Stacked100Percent { get; set; }
-
-        public void SetMarkers(IList<ISeries> seriesToUse)
+        public BarOptions(IChartPreferences chartPreferences,
+            IReadOnlyList<MarkerType> markerTypes,
+            IReadOnlyList<ISeries> seriesToUse,
+            FontDescriptor? axisLabelFontDescriptor = default,
+            float? axisLineThickness = default,
+            FontDescriptor? axisTitleFontDescriptor = default,
+            FontDescriptor? legendFontDescriptor = default,
+            double? maxBarWidth = default,
+            ChartOrientation? orientation = default,
+            bool? rotateWhenStacked = default,
+            IReadOnlyList<string?>? seriesTitles = default,
+            bool? shouldAutoscale = default,
+            bool? shouldBoxAxes = default,
+            bool? showLegend = default,
+            bool? stacked = default,
+            bool? stacked100Percent = default,
+            string? title = default,
+            FontDescriptor? titleFontDescriptor = default,
+            bool? useColour = default,
+            string? xAxisTitle = default,
+            string? yAxisTitle = default)
+            : base(chartPreferences,
+                  axisLabelFontDescriptor,
+                  axisLineThickness,
+                  axisTitleFontDescriptor,
+                  legendFontDescriptor,
+                  orientation,
+                  seriesTitles,
+                  shouldAutoscale,
+                  shouldBoxAxes,
+                  showLegend,
+                  title,
+                  titleFontDescriptor,
+                  useColour,
+                  xAxisTitle,
+                  yAxisTitle)
         {
-            //  Markers will be calculated automatically as required (though we need to force fills); we just need to set up the option descriptors.
+            MarkerTypes = markerTypes;
+            MaxBarWidth = maxBarWidth ?? DEFAULT_MAX_BAR_WIDTH;
+            RotateWhenStacked = rotateWhenStacked ?? DEFAULT_ROTATE_WHEN_STACKED;
+            Stacked = stacked ?? DEFAULT_STACKED;
+            Stacked100Percent = stacked100Percent ?? DEFAULT_STACKED_100_PERCENT;
+
+            // Markers will be calculated automatically as required (though we need to force fills); we just need to set up the option descriptors.
             // ShouldForceIsFilled = True
             // ForcedIsFilled = True
             // ShouldForceFillStyle = True
             // ForcedFillStyle = FillStyle.None
-
+            List<SeriesOptionsDescriptor> seriesOptions = new();
             for (int i = 0; i < seriesToUse.Count; i++)
             {
                 SeriesOptionsDescriptor soleOptions = new()
@@ -49,38 +88,36 @@ namespace StatsDirect.Charting
                     AllowChangeToFill = true,
                     MarkerIndex = i
                 };
-                SeriesOptions.Add(soleOptions);
+                seriesOptions.Add(soleOptions);
             }
-            showLegendIsRelevant = Stacked || seriesToUse.Count > 1;
+            SeriesOptions = seriesOptions;
+            ShowLegendIsRelevant = Stacked || seriesToUse.Count > 1;
         }
 
-        public override bool UsesChartTitle => true;
-
-        public override bool UsesXAxisTitle => true;
-
-        public override bool UsesYAxisTitle => true;
-
-        public override bool UsesAutoscale => true;
-
-        public override bool UsesAxisLabelFontDescriptor => true;
-
-        public override bool UsesAxisTitleFontDescriptor => true;
-
-        public override bool UsesBoxAxes => true;
-
-        public override bool UsesOrientation => true;
-
-        public override bool ShowBarOptions => true;
-
-        public override string OrientationLabel => "Bar orientation";
-
-        public override bool ShowLegendIsRelevant => showLegendIsRelevant;
+        public BarOptions(
+            AbstractGenericOptions genericOptions,
+            IReadOnlyList<MarkerType> markerTypes,
+            List<SeriesOptionsDescriptor> seriesOptions,
+            double? maxBarWidth = default,
+            bool? rotateWhenStacked = default,
+            bool? stacked = default,
+            bool? stacked100Percent = default)
+            : base(genericOptions)
+        {
+            MarkerTypes = markerTypes;
+            MaxBarWidth = maxBarWidth ?? DEFAULT_MAX_BAR_WIDTH;
+            RotateWhenStacked = rotateWhenStacked ?? DEFAULT_ROTATE_WHEN_STACKED;
+            Stacked = stacked ?? DEFAULT_STACKED;
+            SeriesOptions = seriesOptions;
+            ShowLegendIsRelevant = Stacked || seriesOptions.Count > 1;
+            Stacked100Percent = stacked100Percent ?? DEFAULT_STACKED_100_PERCENT;
+        }
 
         public override bool IsNaturalOrientation => Orientation == ChartOrientation.Vertical;
+        public override string OrientationLabel => "Bar orientation";
+        public override bool UsesAutoscale => true;
+        public override bool UsesOrientation => true;
 
-        public override void Accept(IChartOptionVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IChartOptionVisitor visitor) => visitor.Visit(this);
     }
 }

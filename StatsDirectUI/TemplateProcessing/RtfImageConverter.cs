@@ -86,10 +86,10 @@ namespace StatsDirect.TemplateProcessing
             return rtf.ToString();
         }
 
-        public static Image ParseRtfToImage(string rtf, out byte[] rawBytes)
+        public static Image? ParseRtfToImage(string rtf, out byte[] rawBytes)
         {
             string[] parts = rtf.Split(new[] { '\\', '\r', '\n', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            ImageFormat imageFormat = null;
+            ImageFormat? imageFormat = null;
             using MemoryStream bytes = new();
             foreach (string s in parts)
             {
@@ -142,15 +142,11 @@ namespace StatsDirect.TemplateProcessing
             }
             rawBytes = bytes.ToArray();
             bytes.Position = 0;
-            Image img = null;
+            Image? img = null;
             if (imageFormat == ImageFormat.Emf)
-            {
                 img = Image.FromStream(bytes);
-            }
             else if (imageFormat == ImageFormat.Png)
-            {
                 img = Image.FromStream(bytes);
-            }
             return img;
         }
 

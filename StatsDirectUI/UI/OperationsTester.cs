@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using StatsDirect.Charting;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 
@@ -16,7 +17,6 @@ namespace StatsDirect.UI
         [TestMethod]
         public static void TestAll()
         {
-            SdApplication.InitialiseFunctionRegistry();
             foreach (Operation operation in TemplateFactory.Operations.Values)
                 TestOperation(operation);
         }
@@ -26,15 +26,20 @@ namespace StatsDirect.UI
             if (0 == operation.Tests.Count)
                 return;
             foreach (OperationTest test in operation.Tests)
-                TestOperation(operation, test);
+            {
+                IChartPreferences chartPreferences = new ChartPreferencesImpl(); // TODO: Set to some sane defaults
+                ISdPreferences sdPreferences = new SDPreferencesImpl(); // Sets itself to sane defaults
+                ISession session = something;
+                TestOperation(operation, test, chartPreferences, sdPreferences, session);
+            }
         }
 
-        private static void TestOperation(Operation operation, OperationTest test)
+        private static void TestOperation(Operation operation, OperationTest test, IChartPreferences chartPreferences, ISdPreferences sdPreferences, ISession session)
         {
             // Dispose of empty tests
             if (test.Inputs.Count == 0 && test.Outputs.Count == 0)
                 return;
-            ITemplateProcessor templateProcessor = new TemplateProcessor(new OperationTestHost(test.Inputs));
+            ITemplateProcessor templateProcessor = new TemplateProcessor(chartPreferences, sdPreferences, session, new OperationTestHost(test.Inputs));
             StepOutput stepOutput = templateProcessor.Execute(operation, new ParameterBag(), false);
             VerifyOutputs(operation, stepOutput, test.Outputs);
         }
@@ -47,7 +52,7 @@ namespace StatsDirect.UI
             // Test each output that is present; where nothing is specified for something that is in outputParameters, no assumptions are made.
             foreach (var output in outputs)
             {
-                bool found = TryGetPath(stepOutput.ParameterBag, output.Name, out FilledParameter parameter, operation.Name);
+                bool found = TryGetPath(stepOutput.ParameterBag, output.Name, out FilledParameter? parameter, operation.Name);
                 if (output.ShouldBeMissing)
                 {
                     // The relevant name shouldn't be mentioned in outputParameters at all
@@ -63,14 +68,14 @@ namespace StatsDirect.UI
             }
         }
 
-        private static bool TryGetPath(ParameterBag outputParameters, string path, out FilledParameter parameter, string operationName)
+        private static bool TryGetPath(ParameterBag outputParameters, string path, out FilledParameter? parameter, string operationName)
         {
             if (path.Contains('$'))
             {
                 // Split on the first $ in the path: we want the item in here that matches the prefix, then we'll work on the rest.
                 string prefix = path[..path.IndexOf("$")];
                 string suffix = path[(prefix.Length + 1)..];
-                if (!outputParameters.TryGetValue(prefix, out FilledParameter subParameter))
+                if (!outputParameters.TryGetValue(prefix, out FilledParameter? subParameter))
                     throw new Exception($"Operation {operationName} failed: parameter {path} must be present in the output but there's no output named {prefix}");
                 // Check subParameter for the rest of the path
                 PathFollower pathFollower = new(operationName, suffix);
@@ -179,7 +184,7 @@ namespace StatsDirect.UI
         {
             private string OperationName { get; }
             private string Path { get; }
-            public FilledParameter ResolvedParameter { get; private set; }
+            public FilledParameter? ResolvedParameter { get; private set; }
 
             public PathFollower(string operationName, string path)
             {
@@ -234,7 +239,7 @@ namespace StatsDirect.UI
                     // Split on the first $ in the path: we want the item in here that matches the prefix, then we'll work on the rest.
                     string prefix = Path[..Path.IndexOf("$")];
                     string suffix = Path[(prefix.Length + 1)..];
-                    if (!victim.Data.TryGetValue(prefix, out FilledParameter subParameter))
+                    if (!victim.Data.TryGetValue(prefix, out FilledParameter? subParameter))
                         throw new Exception($"Operation {OperationName} failed: parameter {Path} must be present in the output but there's no output named {prefix}");
                     // Check subParameter for the rest of the path
                     PathFollower pathFollower = new(OperationName, suffix);
@@ -243,7 +248,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    if (!victim.Data.TryGetValue(Path, out FilledParameter parameter))
+                    if (!victim.Data.TryGetValue(Path, out FilledParameter? parameter))
                         throw new Exception($"Operation {OperationName} failed: parameter {Path} must be present in the output but is missing");
                     ResolvedParameter = parameter;
                 }

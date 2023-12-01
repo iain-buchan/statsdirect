@@ -8,9 +8,9 @@ namespace StatsDirect.UI
     public class CancelCurrentOperationAndDoException : TemplateExecutionHandlesMeSpeciallyException
     {
         public Operation Operation { get; }
-        public ParameterBag InputParameters { get; }
+        public ParameterBag? InputParameters { get; }
 
-        public CancelCurrentOperationAndDoException(Operation operation, ParameterBag inputParameters)
+        public CancelCurrentOperationAndDoException(Operation operation, ParameterBag? inputParameters)
         {
             Operation = operation;
             InputParameters = inputParameters;

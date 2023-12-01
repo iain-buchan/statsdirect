@@ -19,14 +19,10 @@ namespace StatsDirect.Charting
         const float POINTS_PER_INCH = 72.0f;
         const float PIXELS_PER_POINT = PIXELS_PER_INCH / POINTS_PER_INCH;
 
-        const float SMALLEST_PIXEL_SIZE = 5;
-        const float LARGEST_PIXEL_SIZE = 100;
-
         public double Width { get; }
         public double Height { get; }
 
         private XNamespace SvgNamespace { get; }
-        private XNamespace XlinkNamespace { get; }
         private XElement root;
 
         public SvgCanvas(double width, double height)
@@ -34,7 +30,6 @@ namespace StatsDirect.Charting
             Width = width;
             Height = height;
             SvgNamespace = "http://www.w3.org/2000/svg";
-            XlinkNamespace = "http://www.w3.org/1999/xlink";
             root = new XElement(SvgNamespace + "svg",
                 // new XAttribute("xmlns", SvgNamespace.NamespaceName),
                 new XAttribute("width", "6in"),
@@ -55,43 +50,27 @@ namespace StatsDirect.Charting
             ));
         }
 
-        private string ToDy(StringFormat txtFormat)
-        {
-            switch (txtFormat.LineAlignment)
+        private static string ToDy(StringFormat txtFormat) =>
+            txtFormat.LineAlignment switch
             {
-                case StringAlignment.Near:
-                    return "0.8em";
-                case StringAlignment.Center:
-                    return "0.4em";
-                case StringAlignment.Far:
-                    return "0";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(txtFormat), txtFormat.LineAlignment, "Unknown line alignment");
-            }
-        }
+                StringAlignment.Near => "0.8em",
+                StringAlignment.Center => "0.4em",
+                StringAlignment.Far => "0",
+                _ => throw new ArgumentOutOfRangeException(nameof(txtFormat), txtFormat.LineAlignment, "Unknown line alignment"),
+            };
 
-        private object ToCss(FontDescriptor font)
-        {
-            return $"font-family:{font.FontFamily};font-size:{font.SizeInPoints * PIXELS_PER_POINT}px;";
-        }
+        private static object ToCss(FontDescriptor font) =>
+            $"font-family:{font.FontFamily};font-size:{font.SizeInPoints * PIXELS_PER_POINT}px;";
 
         private string ToCss(StringFormat txtFormat)
         {
-            string textAnchor;
-            switch (txtFormat.Alignment)
+            string textAnchor = txtFormat.Alignment switch
             {
-                case StringAlignment.Near:
-                    textAnchor = "start";
-                    break;
-                case StringAlignment.Center:
-                    textAnchor = "middle";
-                    break;
-                case StringAlignment.Far:
-                    textAnchor = "end";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(txtFormat), txtFormat.Alignment, "Unknown alignment");
-            }
+                StringAlignment.Near => "start",
+                StringAlignment.Center => "middle",
+                StringAlignment.Far => "end",
+                _ => throw new ArgumentOutOfRangeException(nameof(txtFormat), txtFormat.Alignment, "Unknown alignment"),
+            };
             return $"text-anchor:{textAnchor};";
         }
 
@@ -160,29 +139,19 @@ namespace StatsDirect.Charting
             ));
         }
 
-        public SizeD MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction)
-        {
-            return ToBoundingSize(MeasureString(s, font), direction);
-        }
+        public SizeD MeasureStringAtAngle(string s, FontDescriptor font, LabelDirection direction) =>
+            ToBoundingSize(MeasureString(s, font), direction);
 
-        private static double DirectionToAngle(LabelDirection direction)
-        {
-            switch (direction)
+        private static double DirectionToAngle(LabelDirection direction) =>
+            direction switch
             {
-                case LabelDirection.Across:
-                    return 0;
-                case LabelDirection.Up:
-                    return -90;
-                case LabelDirection.Down:
-                    return 90;
-                case LabelDirection.SlopeUp:
-                    return -45;
-                case LabelDirection.SlopeDown:
-                    return 45;
-            }
-
-            return 0;
-        }
+                LabelDirection.Across => 0,
+                LabelDirection.Up => -90,
+                LabelDirection.Down => 90,
+                LabelDirection.SlopeUp => -45,
+                LabelDirection.SlopeDown => 45,
+                _ => (double)0,
+            };
 
         public static SizeD ToBoundingSize(SizeD uprightSize, LabelDirection direction)
         {
@@ -259,7 +228,7 @@ namespace StatsDirect.Charting
                 ));
         }
 
-        private string ToPointsString(IList<PointD> points)
+        private static string ToPointsString(IList<PointD> points)
         {
             return string.Join(" ", points.Select(p => $"{p.X},{p.Y}").ToArray());
         }
@@ -267,7 +236,7 @@ namespace StatsDirect.Charting
         public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, PenDescriptor p)
         {
             double size2 = size * 2;
-            BrushDescriptor b = isFilled ? new BrushDescriptor(p.Color) : null;
+            BrushDescriptor? b = isFilled ? new BrushDescriptor(p.Color) : null;
             PenDescriptor pd = isFilled ? PenDescriptor.White : p;
 
             switch (shape)
@@ -321,7 +290,7 @@ namespace StatsDirect.Charting
             }
         }
 
-        private void DrawEllipse(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h)
+        private void DrawEllipse(PenDescriptor? p, BrushDescriptor? b, double x, double y, double w, double h)
         {
             root.Add(new XElement(SvgNamespace + "ellipse",
                 new XAttribute("cx", x),
@@ -332,7 +301,7 @@ namespace StatsDirect.Charting
                 ));
         }
 
-        public void DrawRectangle(PenDescriptor p, BrushDescriptor b, double x, double y, double w, double h)
+        public void DrawRectangle(PenDescriptor? p, BrushDescriptor? b, double x, double y, double w, double h)
         {
             root.Add(new XElement(SvgNamespace + "rect",
                 new XAttribute("x", x),
@@ -343,7 +312,7 @@ namespace StatsDirect.Charting
                 ));
         }
 
-        public void DrawLine(PenDescriptor p, double x1, double y1, double x2, double y2)
+        public void DrawLine(PenDescriptor? p, double x1, double y1, double x2, double y2)
         {
             root.Add(new XElement(SvgNamespace + "line",
                 new XAttribute("x1", x1),
@@ -354,8 +323,11 @@ namespace StatsDirect.Charting
                 ));
         }
 
-        private static string ToCss(PenDescriptor p)
+        private static string ToCss(PenDescriptor? p)
         {
+            if (null == p)
+                return string.Empty;
+
             StringBuilder sb = new();
             sb.AppendFormat("stroke:{0};", ToCss(p.Color));
             if (!(p.CapStyle == CapStyle.Butt))
@@ -363,47 +335,26 @@ namespace StatsDirect.Charting
             return sb.ToString();
         }
 
-        private static object ToCss(CapStyle capStyle)
-        {
-            switch (capStyle)
+        private static object ToCss(CapStyle capStyle) =>
+            capStyle switch
             {
-                case CapStyle.Butt:
-                    return "butt";
-                case CapStyle.Round:
-                    return "round";
-                case CapStyle.Square:
-                    return "square";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, "Only Butt, Round, Square known.");
-            }
-        }
+                CapStyle.Butt => "butt",
+                CapStyle.Round => "round",
+                CapStyle.Square => "square",
+                _ => throw new ArgumentOutOfRangeException(nameof(capStyle), capStyle, "Only Butt, Round, Square known."),
+            };
 
-        private static string ToCss(BrushDescriptor b)
-        {
-            return $"fill:{ToCss(b.Color)};";
-        }
+        private static string ToCss(BrushDescriptor b) => $"fill:{ToCss(b.Color)};";
 
-        private static string ToCss(PenDescriptor p, BrushDescriptor b)
-        {
-            if (null == b)
-                return ToCss(p) + "fill:none;";
-            return ToCss(p) + $"fill:{ToCss(b.Color)};";
-        }
+        private static string ToCss(PenDescriptor? p, BrushDescriptor? b) =>
+            ToCss(p)
+                + (null == b
+                    ? "fill:none;"
+                    : $"fill:{ToCss(b.Color)};");
 
-        private object ToCssFill(bool fill)
-        {
-            return fill ? string.Empty : "fill:none;";
-        }
+        private static string ToCssFill(bool fill) => fill ? string.Empty : "fill:none;";
 
-        private static string ToCss(ColorDescriptor c)
-        {
-            return "#" + c.R.ToString("X2") + c.G.ToString("X2") + c.B.ToString("X2");
-        }
-
-        public double GetFontHeight(FontDescriptor f)
-        {
-            return f.SizeInPoints * PIXELS_PER_POINT;
-        }
+        private static string ToCss(ColorDescriptor c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
 
         #region IDisposable Support
         private bool disposedValue;
@@ -438,8 +389,8 @@ namespace StatsDirect.Charting
 
         private static Size MeasureText(string s, FontDescriptor f)
         {
-            // HACK: Truly horrible layer-smashing, but the only way to get a reasonable size for a string.
-            return System.Windows.Forms.TextRenderer.MeasureText(s, FontCache.Font(f), default(Size), System.Windows.Forms.TextFormatFlags.NoPadding);
+            // TODO: HACK: Truly horrible layer-smashing, but the only way to get a reasonable size for a string.
+            return System.Windows.Forms.TextRenderer.MeasureText(s, FontCache.Font(f), default, System.Windows.Forms.TextFormatFlags.NoPadding);
         }
     }
 }

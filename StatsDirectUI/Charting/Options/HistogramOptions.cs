@@ -1,26 +1,70 @@
 using System;
 using System.Collections.Generic;
 
-namespace StatsDirect.Charting
+namespace StatsDirect.Charting.Options
 {
     [Serializable]
-    public class HistogramOptions : GenericOptions
+    public class HistogramOptions : AbstractGenericOptions
     {
         private bool showRelativeFrequencies;
 
-        public bool OverlayNormalCurve { get; set; }
+        //  Display options
+        public int LineWidth { get; }
+        public IReadOnlyList<HistogramSeriesOptions> HistogramSeriesOptions { get; }
+        public bool OverlayNormalCurve { get; }
         ///  <summary>
         ///  Informational to the filler.  ASCII charts cannot overlay normals, so the option should not be given.
         ///  </summary>
-        public bool IsAscii { get; set; }
+        public bool IsAscii { get; }
 
         ///  <summary>
         ///  If true, all variables are pooled for bin calculations (i.e. there is a common X axis).
         ///  If false, bin calculations are per-variable.
         ///  </summary>
-        public bool PoolVariablesForBins { get; set; }
+        public bool PoolVariablesForBins { get; }
 
-        public BinChoiceMethod BinChoiceMethod { get; set; } = BinChoiceMethod.Doane;
+        public BinChoiceMethod BinChoiceMethod { get; }
+
+        public HistogramOptions(IChartPreferences chartPreferences,
+            IReadOnlyList<HistogramSeriesOptions> histogramSeriesOptions,
+            FontDescriptor? axisLabelFontDescriptor = default,
+            float? axisLineThickness = default,
+            FontDescriptor? axisTitleFontDescriptor = default,
+            BinChoiceMethod? binChoiceMethod = default,
+            bool? isAscii = default,
+            FontDescriptor? legendFontDescriptor = default,
+            int? lineWidth = default,
+            ChartOrientation? orientation = default,
+            IReadOnlyList<string?>? seriesTitles = default,
+            bool? shouldAutoscale = default,
+            bool? shouldBoxAxes = default,
+            bool? showLegend = default,
+            string? title = default,
+            FontDescriptor? titleFontDescriptor = default,
+            bool? useColour = default,
+            string? xAxisTitle = default,
+            string? yAxisTitle = default)
+            : base(chartPreferences,
+                  axisLabelFontDescriptor,
+                  axisLineThickness,
+                  axisTitleFontDescriptor,
+                  legendFontDescriptor,
+                  orientation,
+                  seriesTitles,
+                  shouldAutoscale,
+                  shouldBoxAxes,
+                  showLegend,
+                  title,
+                  titleFontDescriptor,
+                  useColour,
+                  xAxisTitle,
+                  yAxisTitle)
+        {
+            BinChoiceMethod = binChoiceMethod ?? BinChoiceMethod.Doane;
+            HistogramSeriesOptions = histogramSeriesOptions;
+            IsAscii = isAscii ?? false;
+            LineWidth = lineWidth ?? 1;
+        }
 
         /// <summary>
         /// Calculate minimum bin midpoint, midpoint interval and number of bins given the current state of the options.
@@ -32,7 +76,7 @@ namespace StatsDirect.Charting
         /// <param name="series"> </param>
         public void Reset(bool calculateBinCount, int binsFromUser, int seriesIndex, DoubleSeries series)
         {
-            HistoSeriesOptions[seriesIndex].Reset(calculateBinCount, binsFromUser, series, BinChoiceMethod);
+            HistogramSeriesOptions[seriesIndex].Reset(calculateBinCount, binsFromUser, series, BinChoiceMethod);
 
             // Warn listeners that we've just changed our scale.
             ScaleChanged?.Invoke(this, EventArgs.Empty);
@@ -50,24 +94,14 @@ namespace StatsDirect.Charting
             }
         }
 
-        //  Display options
-        public int LineWidth { get; set; }
-        public string AxisFontDescriptor { get; set; }
-        public List<HistogramSeriesOptions> HistoSeriesOptions { get; set; }
         [field: NonSerialized]
-        public event EventHandler ScaleChanged;
+        public event EventHandler? ScaleChanged;
 
         public override bool UsesShowLegend => false;
-
         public override bool UsesXAxisOptions => false;
 
-        public override bool ShowHistogramOptions => true;
+        public override bool ShowLegendIsRelevant => HistogramSeriesOptions.Count > 1;
 
-        public override bool ShowLegendIsRelevant => HistoSeriesOptions.Count > 1;
-
-        public override void Accept(IChartOptionVisitor visitor)
-        {
-            visitor.Visit(this);
-        }
+        public override void Accept(IChartOptionVisitor visitor) => visitor.Visit(this);
     }
 }

@@ -1,15 +1,17 @@
-﻿using StatsDirect.Charting.Scales;
+﻿using StatsDirect.Charting.Options;
+using StatsDirect.Charting.Scales;
 using StatsDirect.Numerics;
 using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StatsDirect.Charting.Renderer
 {
     class BarChartRenderer : AbstractChartRenderer, IChartRenderer
     {
-        public BarChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory)
-            : base(definition, canvasFactory)
+        public BarChartRenderer(ChartDefinition definition, ICanvasFactory canvasFactory, ISdPreferences sdPreferences)
+            : base(definition, canvasFactory, sdPreferences)
         {
         }
 
@@ -34,7 +36,7 @@ namespace StatsDirect.Charting.Renderer
                     for (int offset = 0; offset < ((DoubleSeries)Definition.YSeries[0]).Points; offset++)
                     {
                         double thisTotal = 0;
-                        foreach (DoubleSeries s in Definition.YSeries)
+                        foreach (DoubleSeries s in Definition.YSeries.Cast<DoubleSeries>())
                             if (s.Data[offset] != Constant.MISSING)
                                 thisTotal += s.Data[offset];
                         if (thisTotal > largestSoFar)
@@ -50,29 +52,24 @@ namespace StatsDirect.Charting.Renderer
             // Label orientation: As standard, there are 80 characters across.
             const int maxLabelChars = 80;
             int longestTitle = 0;
-            foreach (string title in bOptions.SeriesTitles)
+            foreach (string? title in bOptions.SeriesTitles)
                 if (title.Length > longestTitle)
                     longestTitle = title.Length;
             LabelDirection preferredLabelDirection = LabelDirection.Across;
-            if (longestTitle * bOptions.SeriesTitles.Length > maxLabelChars)
+            if (longestTitle * bOptions.SeriesTitles.Count > maxLabelChars)
                 preferredLabelDirection = LabelDirection.Up;
 
-            return new ScaleParameters
-            {
-                X =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Category },
+            return new ScaleParameters(
+                new(new[] { ScaleType.Category }) { 
                     Max = 0,
                     Min = 0,
                     LabelDirection = preferredLabelDirection
                 },
-                Y =
-                {
-                    AllowedScaleTypes = new[] { ScaleType.Linear },
+                new(new[] { ScaleType.Linear }) {
                     Max = DataMaxY,
                     Min = DataMinY
                 }
-            };
+            );
         }
 
 
@@ -80,32 +77,30 @@ namespace StatsDirect.Charting.Renderer
         ///  Plot a bar, stacked bar or 100% stacked bar chart.
         ///  </summary>
         ///  <remarks></remarks>
-        ParameterBag IChartRenderer.Plot(/* TODO: IPreferences*/ ITemplateHost _, bool isForReturnedParametersOnly)
+        ParameterBag IChartRenderer.Plot(bool isForReturnedParametersOnly)
         {
             if (isForReturnedParametersOnly)
                 return new ParameterBag();
 
-            Definition = Definition.Clone();
-
-            IList<ISeries> seriesToUse = Definition.YSeries;
+            IReadOnlyList<ISeries> seriesToUse = Definition.YSeries;
             BarOptions bOptions = (BarOptions)Definition.ChartOptions;
 
-            string xAxisTitle = bOptions.XAxisTitle;
-            string yAxisTitle = bOptions.YAxisTitle;
+            string? xAxisTitle = bOptions.XAxisTitle;
+            string? yAxisTitle = bOptions.YAxisTitle;
 
             // If we've been asked to flip rows and columns, do so
             if (bOptions.Stacked && bOptions.RotateWhenStacked)
             {
-                string[] oldSeriesTitles = bOptions.SeriesTitles;
+                IReadOnlyList<string?>? oldSeriesTitles = bOptions.SeriesTitles;
 
                 // The new series titles are the old series names
-                string[] newSeriesTitles = new string[seriesToUse.Count];
+                string?[] newSeriesTitles = new string[seriesToUse.Count];
                 for (int i = 0; i < seriesToUse.Count; i++)
                     newSeriesTitles[i] = seriesToUse[i].Title;
 
                 // One new series for each old title
-                List<ISeries> newSeriesToUse = new(oldSeriesTitles.Length);
-                foreach (string t in oldSeriesTitles)
+                List<ISeries> newSeriesToUse = new(oldSeriesTitles.Count);
+                foreach (string? t in oldSeriesTitles)
                 {
                     ISeries s = new DoubleSeries(new double[seriesToUse.Count], t);
                     newSeriesToUse.Add(s);
@@ -113,7 +108,7 @@ namespace StatsDirect.Charting.Renderer
 
                 // Rotate the data
                 for (int oldSeries = 0; oldSeries < seriesToUse.Count; oldSeries++)
-                    for (int oldRow = 0; oldRow < oldSeriesTitles.Length; oldRow++)
+                    for (int oldRow = 0; oldRow < oldSeriesTitles.Count; oldRow++)
                         ((DoubleSeries)newSeriesToUse[oldRow]).Data[oldSeries] = ((DoubleSeries)seriesToUse[oldSeries]).Data[oldRow];
 
                 // Assign
@@ -123,9 +118,7 @@ namespace StatsDirect.Charting.Renderer
 
                 // Ensure we have enough markers
                 bOptions.SetMarkers(seriesToUse);
-                bOptions.MarkerTypes = MarkersFromDescriptors(bOptions.SeriesOptions, bOptions.ShouldForceIsFilled,
-                                                              bOptions.ForcedIsFilled, bOptions.ShouldForceFillStyle,
-                                                              bOptions.ForcedFillStyle);
+                bOptions.MarkerTypes = MarkersFromDescriptors(bOptions.SeriesOptions, bOptions.ForcedIsFilled, bOptions.ForcedFillStyle);
             }
 
             //  Sort out the axes for different chart types
@@ -158,38 +151,38 @@ namespace StatsDirect.Charting.Renderer
             }
 
             //  If there's a legend, work out how many series there are and extend the plot area as required to hold the legend
-            bool shouldDrawLegend = bOptions.Stacked || bOptions.ShowLegend && bOptions.ShowLegendIsRelevant;
+            bool shouldDrawLegend = bOptions.Stacked || bOptions.ShowLegend.HasValue && bOptions.ShowLegend.Value && bOptions.ShowLegendIsRelevant;
 
-            Legend legend = null;
+            Legend? legend = null;
             if (shouldDrawLegend)
             {
-                legend = new Legend { Position = LegendPosition.Bottom };
+                List<LegendEntry> legendEntries = new();
                 for (int i = 0; i < Definition.YSeries.Count; i++)
                 {
                     ISeries series = Definition.YSeries[i];
-                    MarkerType mt = bOptions.MarkerTypes[i].Clone();
-                    mt.MarkerShape = MarkerShape.Square;
-                    legend.LegendEntries.Add(new LegendEntry { Label = series.Title, MarkerType = mt });
+                    legendEntries.Add(new(
+                        new(bOptions.MarkerTypes[i], markerShape: MarkerShape.Square),
+                        series.Title ?? $"series {i + 1}"
+                    ));
                 }
+                legend = new Legend(LegendPosition.Bottom, legendEntries);
             }
 
             //  Plot
             if (bOptions.Orientation == ChartOrientation.Horizontal)
             {
-                //  Flip the series, and hence the min/max values
-                Definition = Definition.Clone();
-                Definition.SwapXAndYSeries();
-                AxisScaleParameters tempAxisScaleParameters = Definition.ScaleParameters.X;
-                Definition.ScaleParameters.X = Definition.ScaleParameters.Y;
-                Definition.ScaleParameters.Y = tempAxisScaleParameters;
+                //  Swap over the X and Y axis definitions, as we've flipped the drawing
+                //  Ensure the X and Y series are where we need them to be for drawing axes
+                Definition = new ChartDefinition(Definition,
+                    scaleParameters: new(Definition.ScaleParameters.Y, Definition.ScaleParameters.X),
+                    xSeries: Definition.YSeries,
+                    ySeries: Definition.XSeries
+                );
                 DataMinX = DataMinY;
                 DataMaxX = DataMaxY;
                 DataMinY = 0;
                 DataMaxY = 0;
-                string temp = yAxisTitle;
-                yAxisTitle = xAxisTitle;
-                xAxisTitle = temp;
-
+                (xAxisTitle, yAxisTitle) = (yAxisTitle, xAxisTitle);
                 StartVectorPlot(bOptions, legend);
 
                 // Draw the scale
@@ -307,7 +300,7 @@ namespace StatsDirect.Charting.Renderer
                 MaybeDrawMarkerLines(axisScales);
 
                 //  Legend
-                if (shouldDrawLegend)
+                if (null != legend)
                     DrawLegend(legend);
             }
             else
@@ -321,7 +314,7 @@ namespace StatsDirect.Charting.Renderer
                 double min = 0; // We don't do false origins, so axis minimum cannot be greater than zero
                 double minGreaterThanZero = double.MaxValue;
                 double max = double.MinValue;
-                foreach (DoubleSeries s in seriesToUse)
+                foreach (DoubleSeries s in seriesToUse.Cast<DoubleSeries>())
                 {
                     min = Math.Min(min, s.Min);
                     minGreaterThanZero = Math.Min(minGreaterThanZero, s.MinGreaterThanZero);
@@ -386,9 +379,7 @@ namespace StatsDirect.Charting.Renderer
                                     if (probeValue != Constant.MISSING)
                                     {
                                         if (probeIndex < c)
-                                        {
                                             totalBelowThisBar += probeValue;
-                                        }
                                         totalOfAllBars += probeValue;
                                     }
                                 }
@@ -445,7 +436,7 @@ namespace StatsDirect.Charting.Renderer
                 MaybeDrawMarkerLines(axisScales);
 
                 //  Legend
-                if (shouldDrawLegend)
+                if (legend is not null)
                     DrawLegend(legend);
             }
             EndVectorPlot();

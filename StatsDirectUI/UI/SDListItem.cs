@@ -1,12 +1,9 @@
+using System;
+
 namespace StatsDirect.UI
 {
     public sealed class SDListItem
     {
-        public SDListItem()
-        {
-            // Nothing else required
-        }
-
         public SDListItem(string label, string operation)
         {
             Label = label;
@@ -17,22 +14,15 @@ namespace StatsDirect.UI
 
         public string Operation { get; }
 
-        public override string ToString()
-        {
-            return Label;
-        }
+        public override string ToString() => Label;
 
-        public override int GetHashCode()
-        {
-            // Beware of bitwise-XOR in this case; the two values may frequently be identical, leading to hash codes of 0 after an XOR.
-            return Label.GetHashCode() + Operation.GetHashCode();
-        }
+        public override int GetHashCode() =>
+            HashCode.Combine(Label, Operation);
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (!(obj is SDListItem))
+            if (obj is not SDListItem other)
                 return false;
-            SDListItem other = (SDListItem)obj;
             if (string.IsNullOrEmpty(Label))
                 return string.IsNullOrEmpty(other.Label);
             if (!string.Equals(Label, other.Label))
