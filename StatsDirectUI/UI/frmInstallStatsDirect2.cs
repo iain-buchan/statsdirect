@@ -21,7 +21,7 @@ namespace StatsDirect.UI
 
         private void lnkInstallR_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("http://www.statsdirect.com/download/setup.exe");
+            Process.Start(new ProcessStartInfo("http://www.statsdirect.com/download/setup.exe") { UseShellExecute = true });
         }
 
         private void cmdDoNotInstall_Click(object sender, EventArgs e)

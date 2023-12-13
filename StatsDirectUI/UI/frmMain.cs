@@ -4183,7 +4183,7 @@ namespace StatsDirect.UI
                     preferredVersion = RController.PreferredRVersion();
                 }
                 string guiPath = preferredVersion.GuiPath;
-                Process.Start(guiPath);
+                Process.Start(new ProcessStartInfo(guiPath) { UseShellExecute = true });
             }
             catch (Exception ex)
             {

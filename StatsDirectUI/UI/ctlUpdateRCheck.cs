@@ -49,7 +49,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                Process.Start("http://cran.r-project.org/bin/windows/base/release.htm");
+                Process.Start(new ProcessStartInfo("http://cran.r-project.org/bin/windows/base/release.htm") { UseShellExecute = true });
             }
             catch (Exception ex)
             {

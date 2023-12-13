@@ -209,8 +209,7 @@ namespace StatsDirect.UI
 
         public static void FetchTheUpgrade()
         {
-            const string DOWNLOAD_URL = "http://www.statsdirect.com/download/StatsDirectSetup.exe";
-            Process.Start(DOWNLOAD_URL);
+            Process.Start(new ProcessStartInfo("http://www.statsdirect.com/download/StatsDirectSetup.exe") { UseShellExecute = true });
         }
 
         private void SavePersistentValues()

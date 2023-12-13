@@ -65,7 +65,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                Process.Start("http://www.statsdirect.com/Revisions.aspx");
+                Process.Start(new ProcessStartInfo("http://www.statsdirect.com/Revisions.aspx") { UseShellExecute = true });
             }
             catch (Exception ex)
             {
