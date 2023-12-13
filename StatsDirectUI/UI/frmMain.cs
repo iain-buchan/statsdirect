@@ -3058,9 +3058,8 @@ namespace StatsDirect.UI
             try
             {
                 object tagObject = ToTagObject(menuItem);
-                if (!(tagObject is Dictionary<string, string>))
+                if (tagObject is not Dictionary<string, string> tagDictionary)
                     return;
-                Dictionary<string, string> tagDictionary = (Dictionary<string, string>)tagObject;
                 if (!tagDictionary.TryGetValue("cmd", out string commandLine))
                     return;
                 if (null == commandLine)
