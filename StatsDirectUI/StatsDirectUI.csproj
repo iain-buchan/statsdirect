@@ -5,6 +5,8 @@
     <AssemblyName>StatsDirect</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>StatsDirect</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="UI\frmReportDNBTest.cs" />
