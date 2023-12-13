@@ -56,9 +56,9 @@ namespace StatsDirect.Templates
             return (string)processor.Evaluate(YAxisTitleExpression, parameters);
         }
 
-        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
+        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters)
         {
-            return processor.ExecuteInternal(this, parameters, isRedo);
+            return processor.ExecuteInternal(this, parameters);
         }
 
         public override InputDuringStep RequiresInputGiven(ParameterBag parameters)

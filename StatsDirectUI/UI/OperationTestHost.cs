@@ -75,7 +75,7 @@ namespace StatsDirect.UI
             throw new NotImplementedException();
         }
 
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
+        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation)
         {
             // No UI during a test
             return null;

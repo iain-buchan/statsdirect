@@ -23,7 +23,7 @@ namespace StatsDirect.Templates
             return ReportRenderer.GetContent(FileName);
         }
 
-        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo) => processor.ExecuteInternal(this, parameters, isRedo);
+        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters) => processor.ExecuteInternal(this, parameters);
 
         /// <summary>
         /// Doesn't need to be told where to put the output as that's now UI state rather than requested on demand.

@@ -8,7 +8,7 @@ namespace StatsDirect.UI
     /// This may be a report (there's only one object in it), a script (ditto) or a grid (which may have sheets within it)
     /// </summary>
     [Serializable]
-    public class Pane : IStripForRedo
+    public class Pane
     {
         public string Name { get; }
         [NonSerialized]
@@ -62,18 +62,6 @@ namespace StatsDirect.UI
         public override int GetHashCode()
         {
             return Name.GetHashCode() ^ WindowInformation.GetHashCode() ^ Tag.GetHashCode();
-        }
-
-        public object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            // Indicate that this should not be kept
-            return null;
-        }
-
-        public void RefillForRedo(IRefillSource source)
-        {
-            // Should never refill, as should never have been present in the first place!
-            throw new NotImplementedException();
         }
     }
 }

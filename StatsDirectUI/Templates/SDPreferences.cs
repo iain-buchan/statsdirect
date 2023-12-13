@@ -96,15 +96,6 @@
             set;
         }
 
-        /// <summary>
-        /// If true, source data should be kept in the log of an operation so that the operation can be re-done.
-        /// </summary>
-        bool ShouldKeepData
-        {
-            get;
-            set;
-        }
-
         bool ShouldUseColour
         {
             get;

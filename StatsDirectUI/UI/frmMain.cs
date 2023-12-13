@@ -1735,7 +1735,7 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    outputParameters = templateProcessor.Execute(operation, inputParameters, isRedo); // Keep the results of this; some functions (notably the best subset of multiple linear regression) relies on replacing parameters
+                    outputParameters = templateProcessor.Execute(operation, inputParameters); // Keep the results of this; some functions (notably the best subset of multiple linear regression) relies on replacing parameters
                     // Null output parameters indicate a cancelled operation
                     if (null != outputParameters)
                         NoteOperation(outputParameters, operation);
@@ -1967,7 +1967,7 @@ namespace StatsDirect.UI
             if (!shouldRun)
                 return null; // Cannot be run now, as the operation has no initial parameters, so no results
 
-            StepOutput results = processor.Execute(operation, context, false);
+            StepOutput results = processor.Execute(operation, context);
             if (null != results)
                 NoteOperation(results, operation);
             return results;

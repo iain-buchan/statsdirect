@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace StatsDirect.Data
 {
     [Serializable]
-    public class DataFrame : IStripForRedo
+    public class DataFrame
     {
         public DataFrame()
         {
@@ -110,19 +110,6 @@ namespace StatsDirect.Data
                 if (v.Title != null && v.Title.Equals(title))
                     return v;
             return null;
-        }
-
-        public object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            DataFrame copy = new() { Name = Name };
-            foreach (IVariable v in Variables)
-                copy.Variables.Add((IVariable)v.CopyAndStripForRedo(shouldKeepData));
-            return copy;
-        }
-
-        public void RefillForRedo(IRefillSource refillSource)
-        {
-            refillSource.Refill(Variables);
         }
     }
 }

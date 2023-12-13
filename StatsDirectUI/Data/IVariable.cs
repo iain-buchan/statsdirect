@@ -32,8 +32,6 @@ namespace StatsDirect.Data
         ///  <param name="maximumLength"></param>
         void TruncateDataToLength(int maximumLength);
 
-        object CopyAndStripForRedo(bool shouldKeepData);
-
         ///  <summary>
         ///  A fast but destructive way of transferring victim's data to this variable.  Victim should not be used after this operation.
         ///  </summary>

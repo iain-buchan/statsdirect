@@ -28,8 +28,6 @@ namespace StatsDirect.Templates
 
         public override bool IsParameterBagList => true;
 
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData) => FilledParameterFactory.Make(Direction, Data);
-
         public override string ToString() => $"FP({Direction}, {Data})";
 
         public override void Accept(IFilledParameterVisitor visitor)

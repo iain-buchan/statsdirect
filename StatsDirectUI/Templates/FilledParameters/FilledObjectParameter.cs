@@ -68,30 +68,6 @@ namespace StatsDirect.Templates
 
         public override bool IsString => Data is string;
 
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData)
-        {
-            object copiedData;
-            if (Data is IStripForRedo)
-            {
-                copiedData = ((IStripForRedo)Data).CopyAndStripForRedo(shouldKeepData);
-                if (null == copiedData)
-                    return null;
-            }
-            else
-            {
-                copiedData = Data;
-            }
-
-            return FilledParameterFactory.Make(Direction, copiedData);
-        }
-
-        internal override void RefillForRedo(IRefillSource refillSource)
-        {
-            base.RefillForRedo(refillSource);
-            if (Data is IStripForRedo)
-                ((IStripForRedo)Data).RefillForRedo(refillSource);
-        }
-
         public override string ToString()
         {
             return "FP(" + Direction.ToString() + ", " + (null == Data ? "(null)" : Data.ToString()) + ")";

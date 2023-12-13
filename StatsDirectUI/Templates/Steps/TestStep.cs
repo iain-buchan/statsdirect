@@ -80,9 +80,9 @@ namespace StatsDirect.Templates
         /// </summary>
         public IList<Step> FalseSteps { get; }
 
-        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
+        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters)
         {
-            return processor.ExecuteInternal(this, parameters, isRedo);
+            return processor.ExecuteInternal(this, parameters);
         }
 
         public override bool RequiresGrid

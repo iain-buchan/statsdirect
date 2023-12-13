@@ -142,19 +142,6 @@ namespace StatsDirect.Data
             Invalidate();
         }
 
-        public abstract object CopyAndStripForRedo(bool shouldKeepData);
-
-        protected void CopyAndStripForRedoInto(GenericVariable<T> copy, bool shouldKeepData)
-        {
-            copy.Title = Title;
-            copy.Origin = Origin;
-            if (Origin == null || shouldKeepData)
-            {
-                //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
-                copy.data = data;
-            }
-        }
-
         public object DataAsObject(int i)
         {
             return Data[i];

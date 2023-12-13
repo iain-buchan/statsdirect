@@ -85,13 +85,6 @@ namespace StatsDirect.Data
             hasSummaries = true;
         }
 
-        public override object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            DoubleVariable copy = new();
-            CopyAndStripForRedoInto(copy, shouldKeepData);
-            return copy;
-        }
-
         public override void Accept(IVariableVisitor visitor)
         {
             visitor.Visit(this);

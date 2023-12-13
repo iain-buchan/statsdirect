@@ -20,7 +20,7 @@ namespace StatsDirect.UI
     /// The central class for managing the state of StatsDirect.
     /// </summary>
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
-    public sealed class SdApplication : ITemplateHost, IRefillSource
+    public sealed class SdApplication : ITemplateHost
     {
         private const int MAX_RECENT_FILES = 7;
 
@@ -601,7 +601,7 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, string redoInformation, object preferredOutputLocation)
+        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation)
         {
             // Locate the existing report window if it still exists
             IReport report;
@@ -616,7 +616,7 @@ namespace StatsDirect.UI
             }
             if (null == report)
                 throw new TemplateOperationCancelledException();
-            report.AppendRenderable(renderable, ActiveHelpTopic, operation, redoInformation);
+            report.AppendRenderable(renderable, ActiveHelpTopic, operation);
             report.EnsureActive();
             return report.SelectedPane;
         }
@@ -1167,80 +1167,6 @@ namespace StatsDirect.UI
                     output.Add(defaultRecentlyUsedPath);
                 }
                 return output;
-            }
-        }
-
-        public void ReplayWithCurrentData(string operationName, string freezeDriedData)
-        {
-            ParameterBag parameters = ParameterBag.DeserializeAndRefillForRedo(freezeDriedData, this);
-            if (null != parameters)
-            {
-                if (null != MainWindow)
-                {
-                    Operation operation = TemplateFactory.Operations[operationName];
-                    MainWindow.DoOperation(operation, parameters, true);
-                }
-            }
-        }
-
-        void IRefillSource.Refill(IList<IVariable> variables)
-        {
-            // Split up the variables, which might occasionally have come from more than one selection, into their different selections.
-            Dictionary<int, List<IVariable>> variablesByOriginGroup = new();
-            foreach (IVariable variable in variables)
-            {
-                if (null == variable.Origin)
-                    continue;
-                if (!variablesByOriginGroup.TryGetValue(variable.Origin.OriginGroup, out List<IVariable> variablesByThisGroup))
-                {
-                    variablesByThisGroup = new List<IVariable>();
-                    variablesByOriginGroup.Add(variable.Origin.OriginGroup, variablesByThisGroup);
-                }
-                variablesByThisGroup.Add(variable);
-            }
-
-            // For each selection, check they all have the same workbook (we can't handle cross-workbook selections as we hand off to an IGrid), load it and delegate the refill to it.
-            foreach (List<IVariable> candidates in variablesByOriginGroup.Values)
-            {
-                string workbookPath = null;
-                bool atLeastOneFailedVariable = false;
-                foreach (IVariable candidate in candidates)
-                {
-                    if (candidate.Origin is not WorksheetOrigin worksheetOrigin)
-                    {
-                        atLeastOneFailedVariable = true;
-                        break;
-                    }
-                    if (null == worksheetOrigin.WorkbookPath)
-                    {
-                        atLeastOneFailedVariable = true;
-                        break;
-                    }
-                    if (null == workbookPath)
-                        workbookPath = worksheetOrigin.WorkbookPath;
-                    else
-                    {
-                        if (!workbookPath.Equals(worksheetOrigin.WorkbookPath))
-                        {
-                            atLeastOneFailedVariable = true;
-                            break;
-                        }
-                    }
-                }
-                if (atLeastOneFailedVariable)
-                {
-                    // Can't refill this
-                    break;
-                }
-
-                StatsDirectForm gridWindow = MainWindow.FindOrOpenGrid(workbookPath);
-                if (null == gridWindow)
-                {
-                    FriendlyError("Cannot replay the operation as it took data from the unsaved workbook \"" + workbookPath + "\", which is no longer open.", null, false);
-                    throw new TemplateOperationCancelledException();
-                }
-                IGrid grid = (IGrid)gridWindow;
-                grid.Refill(candidates);
             }
         }
 

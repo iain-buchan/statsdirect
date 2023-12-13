@@ -59,7 +59,7 @@ namespace StatsDirect.Templates
         /// <param name="isRedo"></param>
         /// <returns></returns>
         /// <remarks>Note that this may return parameters with key->null; it is up to the caller to deal with this.</remarks>
-        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parms, bool isRedo) => processor.ExecuteInternal(this, parms, isRedo);
+        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parms) => processor.ExecuteInternal(this, parms);
 
         public override void PrepareInternal(ITemplateProcessor processor, ParameterBag parms) => processor.PrepareInternal(this, parms);
 

@@ -27,19 +27,6 @@ namespace StatsDirect.Templates
 
         public override bool IsParameterBag => true;
 
-        internal override FilledParameter CopyAndStripForRedo(bool shouldKeepData)
-        {
-            ParameterBag copiedData = null == Data ? null : Data.CopyAndStripForRedo(shouldKeepData);
-            return null == copiedData? null : FilledParameterFactory.Make(Direction, copiedData);
-        }
-
-        internal override void RefillForRedo(IRefillSource refillSource)
-        {
-            base.RefillForRedo(refillSource);
-            if (null != Data)
-                Data.RefillForRedo(refillSource);
-        }
-
         public override string ToString() => $"FP({Direction}, {Data})";
 
         public override void Accept(IFilledParameterVisitor visitor)

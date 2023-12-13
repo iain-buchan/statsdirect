@@ -9,14 +9,14 @@ namespace StatsDirect.Templates
     {
         void PrepareInternal(ParametersStep step, ParameterBag parameters);
 
-        StepOutput ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(IterationStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(ParametersStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(ReportStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo);
-        StepOutput ExecuteInternal(TestStep step, ParameterBag parameters, bool isRedo);
+        StepOutput ExecuteInternal(BuiltinStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(ChartStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(IterationStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(OutputFrameStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(ParametersStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(ReportStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(ScriptStep step, ParameterBag parameters);
+        StepOutput ExecuteInternal(TestStep step, ParameterBag parameters);
 
         object Evaluate(Expression expression, ParameterBag parameters);
 
@@ -30,7 +30,6 @@ namespace StatsDirect.Templates
         /// </summary>
         /// <param name="operation"></param>
         /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
-        /// <param name="isRedo"> </param>
-        StepOutput Execute(Operation operation, ParameterBag startingParameters, bool isRedo);
+        StepOutput Execute(Operation operation, ParameterBag startingParameters);
     }
 }

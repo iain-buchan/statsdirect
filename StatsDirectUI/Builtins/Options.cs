@@ -13,7 +13,6 @@ namespace StatsDirect.Builtins
             preferences.SelectGroupsByIdentifier = parameters["selectGroupsByIdentifier"].AsBoolean;
             preferences.DisplayDecimalPlaces = Parsing.Cint_Txt(parameters["decp"].AsString);
             preferences.PDecimalPlaces = Parsing.Cint_Txt(parameters["pdecp"].AsString);
-            preferences.ShouldKeepData = parameters["should-keep-data"].AsBoolean;
             preferences.UseScientificNotationForSmallPValues = parameters["use-scientific-notation-for-small-p-values"].AsBoolean;
             return StepOutput.Empty();
         }

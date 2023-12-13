@@ -35,8 +35,7 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         /// <param name="operation"></param>
         /// <param name="startingParameters">If non-null, some parameters to be used as defaults.</param>
-        /// <param name="isRedo"> </param>
-        StepOutput ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters, bool isRedo)
+        StepOutput ITemplateProcessor.Execute(Operation operation, ParameterBag startingParameters)
         {
             host.Operation = operation;
             ParameterBag filledParameters = startingParameters ?? new ParameterBag();
@@ -62,7 +61,7 @@ namespace StatsDirect.TemplateProcessing
             {
                 try
                 {
-                    StepOutput stepOutput = Execute(step, filledParameters, isRedo);
+                    StepOutput stepOutput = Execute(step, filledParameters);
                     filledParameters = stepOutput.ParameterBag;
                 }
                 catch (TemplateOperationCancelledException ex)
@@ -107,14 +106,13 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         /// <param name="step"></param>
         /// <param name="parameters"></param>
-        /// <param name="isRedo"></param>
         /// <returns></returns>
-        private StepOutput Execute(Step step, ParameterBag parameters, bool isRedo)
+        private StepOutput Execute(Step step, ParameterBag parameters)
         {
             if (null == parameters)
                 return StepOutput.Empty();
             
-            StepOutput result = step.ExecuteInternal(this, parameters, isRedo);
+            StepOutput result = step.ExecuteInternal(this, parameters);
             // If required, transfer input parameters where the same name is not already present in the results.
             if (null != result.ParameterBag)
             {
@@ -135,7 +133,7 @@ namespace StatsDirect.TemplateProcessing
             return result;
         }
 
-        public StepOutput ExecuteInternal(BuiltinStep step, ParameterBag parameters, bool isRedo)
+        public StepOutput ExecuteInternal(BuiltinStep step, ParameterBag parameters)
         {
             if (null == parameters)
                 throw new ArgumentOutOfRangeException(nameof(parameters), "parameters must be a dictionary and cannot be null. Did a previous script step return null?");
@@ -145,10 +143,9 @@ namespace StatsDirect.TemplateProcessing
             return builtin.Invoke(host, parameters);
         }
 
-        void FillChartDefinition(ChartStep step, ParameterBag parameters, bool isRedo, ChartDefinition definition, string dataName)
+        void FillChartDefinition(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName)
         {
-            definition.ScaleParameters = MaybeFindScaleParameters(step, parameters, isRedo);
-            definition.ChartOptions = FindOrPreprocessChartOptions(step, parameters, isRedo, definition, dataName);
+            definition.ChartOptions = ChartOptionProcessor.PreprocessChartOptions(step, parameters, definition, dataName, host);
             definition.IsAscii = step.IsAscii;
 
             // TODO: Gross hack (see #993): Forest lin/log depends on the chart options for the data.
@@ -169,41 +166,7 @@ namespace StatsDirect.TemplateProcessing
             ChartOptionProcessor.PostProcessFilledChartOptions(definition);
         }
 
-        private ChartOptions FindOrPreprocessChartOptions(ChartStep step, ParameterBag parameters, bool isRedo, ChartDefinition definition, string dataName)
-        {
-            // If we're redoing a previous operation, we should in theory have the previous ChartOptions.  Go look!
-            if (isRedo)
-            {
-                string possibleParameterName = STATSDIRECT_CHART_OPTIONS + (step.ChartName ?? string.Empty);
-                if (parameters.TryGetValue(possibleParameterName, out FilledParameter fp))
-                {
-                    if (null != fp && fp.HasData)
-                        return fp.AsChartOptions;
-                }
-            }
-
-            // If we're not redoing, or we can't find the options, then we need to fill them in now.
-            return ChartOptionProcessor.PreprocessChartOptions(step, parameters, definition, dataName, host);
-        }
-
-        private static ScaleParameters MaybeFindScaleParameters(ChartStep step, ParameterBag parameters, bool isRedo)
-        {
-            // If we're redoing a previous operation, we should in theory have the previous ScaleParameters.  Go look!
-            if (isRedo)
-            {
-                string possibleParameterName = STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty);
-                if (parameters.TryGetValue(possibleParameterName, out FilledParameter fp))
-                {
-                    if (null != fp && fp.HasData)
-                        return fp.AsScaleParameters;
-                }
-            }
-
-            // If we're not redoing, or we can't find the options, then leave blank and they'll be filled later.
-            return null;
-        }
-
-        public StepOutput ExecuteInternal(ChartStep step, ParameterBag parameters, bool isRedo)
+        public StepOutput ExecuteInternal(ChartStep step, ParameterBag parameters)
         {
             ChartDefinition definition = new() { ChartType = step.ChartType };
             // Series: First X...
@@ -234,7 +197,7 @@ namespace StatsDirect.TemplateProcessing
                 dataName = frame.Name;
             }
 
-            FillChartDefinition(step, parameters, isRedo, definition, dataName);
+            FillChartDefinition(step, parameters, definition, dataName);
             string xAxisTitle = step.XAxisTitle(this, parameters);
             string yAxisTitle = step.YAxisTitle(this, parameters);
             if (!string.IsNullOrEmpty(xAxisTitle))
@@ -255,7 +218,7 @@ namespace StatsDirect.TemplateProcessing
             results.AddInput(STATSDIRECT_CHART_SCALE_PARAMETERS + (step.ChartName ?? string.Empty), definition.ScaleParameters);
         }
 
-        public StepOutput ExecuteInternal(IterationStep step, ParameterBag parms, bool isRedo)
+        public StepOutput ExecuteInternal(IterationStep step, ParameterBag parms)
         {
             // Detect bounds: default 0 to 0 inclusive (1 iteration), then add any fixed values, then any variables if found.
             int lower = 0;
@@ -278,7 +241,7 @@ namespace StatsDirect.TemplateProcessing
                 foreach (Step s in step.Steps)
                 {
                     // TODO: How to handle execution failures?
-                    StepOutput result = s.ExecuteInternal(this, filledParameters, isRedo);
+                    StepOutput result = s.ExecuteInternal(this, filledParameters);
                     // Add in any required parameters, combining everything into one big mass of outputs.
                     // Overwrite earlier loop results with later ones.
                     foreach (string k in result.ParameterBag.Keys)
@@ -288,7 +251,7 @@ namespace StatsDirect.TemplateProcessing
             return new StepOutput(filledParameters);
         }
 
-        public StepOutput ExecuteInternal(OutputFrameStep step, ParameterBag parameters, bool isRedo)
+        public StepOutput ExecuteInternal(OutputFrameStep step, ParameterBag parameters)
         {
             DataFrame frame = parameters[step.ParameterName].AsDataFrame;
             if (null != frame)
@@ -307,15 +270,10 @@ namespace StatsDirect.TemplateProcessing
         /// </summary>
         /// <param name="step"></param>
         /// <param name="parms"></param>
-        /// <param name="isRedo"></param>
         /// <returns></returns>
         /// <remarks>Note that this may return parameters with null values; it is up to the caller to remove these.</remarks>
-        public StepOutput ExecuteInternal(ParametersStep step, ParameterBag parms, bool isRedo)
+        public StepOutput ExecuteInternal(ParametersStep step, ParameterBag parms)
         {
-            // If we're redoing a previous operation, then all parameters are taken from the previous operation.  We do not request any.
-            if (isRedo)
-                return StepOutput.Empty();
-
             try
             {
                 ParameterBag filledParameters = new();
@@ -586,7 +544,7 @@ namespace StatsDirect.TemplateProcessing
             }
         }
 
-        public StepOutput ExecuteInternal(ReportStep reportStep, ParameterBag parameters, bool isRedo)
+        public StepOutput ExecuteInternal(ReportStep reportStep, ParameterBag parameters)
         {
             ReportTemplateAndParameters filledTemplate = new(new ReportTemplate(reportStep.GetContent(), reportStep.MimeType), parameters);
 
@@ -594,17 +552,7 @@ namespace StatsDirect.TemplateProcessing
             if (parameters.ContainsKey(STATSDIRECT_REPORT_PANE)
                 && null != parameters[STATSDIRECT_REPORT_PANE])
                 preferredPane = parameters[STATSDIRECT_REPORT_PANE].AsPane;
-            string xml = null;
-            try
-            {
-                bool shouldKeepData = host.Preferences.ShouldKeepData;
-                xml = parameters.SerializeForRedo(shouldKeepData);
-            }
-            catch (Exception)
-            {
-                // TODO: Log what failed to be serialized so that it's possible to fix the problem.
-            }
-            preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, xml, preferredPane);
+            preferredPane = host.OutputReport(filledTemplate, reportStep.Operation, preferredPane);
 
             // Log the ID of the report that was actually used
             ParameterBag outputParameters = new();
@@ -614,7 +562,7 @@ namespace StatsDirect.TemplateProcessing
             return new StepOutput(outputParameters);
         }
 
-        public StepOutput ExecuteInternal(ScriptStep step, ParameterBag parameters, bool isRedo)
+        public StepOutput ExecuteInternal(ScriptStep step, ParameterBag parameters)
         {
             IScriptEngine scriptEngine = host.GetScriptEngine(step.Language);
             string entryPoint = step.EntryPoint;
@@ -622,14 +570,14 @@ namespace StatsDirect.TemplateProcessing
             return new StepOutput((ParameterBag)scriptEngine.Run(step.Language, step.Body, scriptType, host, parameters, null, entryPoint));
         }
 
-        public StepOutput ExecuteInternal(TestStep step, ParameterBag parms, bool isRedo)
+        public StepOutput ExecuteInternal(TestStep step, ParameterBag parms)
         {
             // HACK: This is not a proper interpreter, and should be!
             bool result = (bool)Evaluate(step.Condition, parms);
             IList<Step> steps = result ? step.TrueSteps : step.FalseSteps;
             foreach (Step s in steps)
             {
-                StepOutput stepResult = Execute(s, parms, isRedo);
+                StepOutput stepResult = Execute(s, parms);
                 if (null == stepResult.ParameterBag)
                     return stepResult;
                 parms = stepResult.ParameterBag;

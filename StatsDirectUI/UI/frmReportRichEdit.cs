@@ -344,7 +344,7 @@ namespace StatsDirect.UI
 
         #region IReport Members
 
-        void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation, string redoInformation)
+        void IReport.AppendRenderable(IRenderable renderable, int helpContextId, Operation operation)
         {
             Document document = richEditControl1.Document;
             int initialEnd = document.Range.End.ToInt();
@@ -352,12 +352,6 @@ namespace StatsDirect.UI
 
             // Append the text, surrounding it with the specified help context if required
             document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!help!-> " + helpContextId + @" <-!help!! }}");
-            // Add redo information if present
-            if (!string.IsNullOrEmpty(redoInformation))
-            {
-                string safeXml = redoInformation.Replace(@"\", "&#92;");
-                document.InsertRtfText(document.Range.End, @"{\rtf1\ansi {\v !!redo!-> " + "\"" + operation.Name + "\" " + safeXml + @" <-!redo!! }}");
-            }
 
             string rtf = new RtfRenderer(SdApplication.SoleInstance).Render(renderable);
             string[] splitInserts = rtf.Split(new[] { "/split/" }, StringSplitOptions.RemoveEmptyEntries);
@@ -685,49 +679,6 @@ namespace StatsDirect.UI
             new DeleteCommand(richEditControl1).Execute();
         }
 
-        private void ReplayOperation(object sender, EventArgs e)
-        {
-            try
-            {
-                ReplayOperation();
-            }
-            catch (TemplateOperationCancelledException ex)
-            {
-                if (ex.ShouldShowError)
-                    SdApplication.SoleInstance.Error(ex.Message, ex.Caption);
-            }
-#if !WATCH_EXCEPTIONS
-            catch (Exception ex)
-            {
-                if (SdApplication.SoleInstance.InOperation)
-                {
-                    SdApplication.SoleInstance.PuntThroughEventLoop(ex);
-                }
-                else
-                {
-                    // Normally we'd just throw the exception; in this case, we're the top of the stack and that would bring the application down.  So we report instead.
-                    SdApplication.SoleInstance.FriendlyError("An internal error occurred while replaying the operation", ex, true);
-                }
-            }
-#endif
-        }
-
-        private void ReplayOperation()
-        {
-            string freezeDriedData = GetFreezeDriedData();
-            if (null != freezeDriedData)
-            {
-                // Operation is delimited by quotes and comes first
-                int firstQuote = freezeDriedData.IndexOf('"');
-                int secondQuote = freezeDriedData.IndexOf('"', firstQuote + 1);
-                string operationName = freezeDriedData[(firstQuote + 1)..secondQuote];
-                string freezeDriedParameters = freezeDriedData[(secondQuote + 1)..].Trim();
-                SdApplication.SoleInstance.ReplayWithCurrentData(operationName, freezeDriedParameters);
-            }
-        }
-
-        private bool IsSelectionReplayable => null != GetFreezeDriedData();
-
         private void richEditControl1_PopupMenuShowing(object sender, PopupMenuShowingEventArgs e)
         {
             DoOrSwallow(() =>
@@ -735,8 +686,6 @@ namespace StatsDirect.UI
                     foreach (DevExpress.Utils.Menu.DXMenuItem candidate in e.Menu.Items)
                         if ("Copy".Equals(candidate.Caption))
                             ClearEventAndSet(candidate, "Click", new EventHandler(ContextMenuCopy));
-                    if (IsSelectionReplayable)
-                        e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Replay Operation", ReplayOperation));
                     if (IsImageSelected)
                         e.Menu.Items.Add(new DevExpress.Utils.Menu.DXMenuItem("Export Graphic", ExportGraphic));
                 });

@@ -33,18 +33,6 @@ namespace StatsDirect.Data
                 Groups.Add(null);
         }
 
-        public override object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            ClassifierVariable copy = new();
-            CopyAndStripForRedoInto(copy, shouldKeepData);
-            if (Origin == null || shouldKeepData)
-            {
-                //  Note: This is deliberately a shallow copy for speed.  It does mean that callers should not alter anything in copy's data, though.
-                copy.Groups = Groups;
-            }
-            return copy;
-        }
-
         public string CommaSeparatedCategoryNames
         {
             get

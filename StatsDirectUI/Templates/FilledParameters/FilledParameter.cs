@@ -95,13 +95,6 @@ namespace StatsDirect.Templates
         [XmlIgnore]
         public virtual bool IsString { get => false; }
 
-        internal abstract FilledParameter CopyAndStripForRedo(bool shouldKeepData);
-
-        internal virtual void RefillForRedo(IRefillSource refillSource)
-        {
-            // Nothing required at base level yet
-        }
-
         public abstract void Accept(IFilledParameterVisitor visitor);
     }
 }

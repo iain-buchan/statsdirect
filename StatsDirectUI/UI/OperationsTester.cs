@@ -35,7 +35,7 @@ namespace StatsDirect.UI
             if (test.Inputs.Count == 0 && test.Outputs.Count == 0)
                 return;
             ITemplateProcessor templateProcessor = new TemplateProcessor(new OperationTestHost(test.Inputs));
-            StepOutput stepOutput = templateProcessor.Execute(operation, new ParameterBag(), false);
+            StepOutput stepOutput = templateProcessor.Execute(operation, new ParameterBag());
             VerifyOutputs(operation, stepOutput, test.Outputs);
         }
 

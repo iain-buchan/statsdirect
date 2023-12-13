@@ -63,7 +63,7 @@ namespace StatsDirect.Templates
         /// <param name="processor"></param>
         /// <param name="isRedo"></param>
         /// <returns></returns>
-        public abstract StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo);
+        public abstract StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters);
 
         internal virtual void NoteOperation(Operation op)
         {

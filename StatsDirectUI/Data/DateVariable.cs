@@ -23,13 +23,6 @@ namespace StatsDirect.Data
         {
         }
 
-        public override object CopyAndStripForRedo(bool shouldKeepData)
-        {
-            DateVariable copy = new();
-            CopyAndStripForRedoInto(copy, shouldKeepData);
-            return copy;
-        }
-
         public override void Accept(IVariableVisitor visitor)
         {
             visitor.Visit(this);

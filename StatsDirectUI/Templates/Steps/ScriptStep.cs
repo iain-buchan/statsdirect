@@ -23,9 +23,9 @@ namespace StatsDirect.Templates
         [XmlText]
         public string Body { get; set; }
 
-        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters, bool isRedo)
+        public override StepOutput ExecuteInternal(ITemplateProcessor processor, ParameterBag parameters)
         {
-            return processor.ExecuteInternal(this, parameters, isRedo);
+            return processor.ExecuteInternal(this, parameters);
         }
 
         [XmlAttribute(AttributeName = "requires-input")]
