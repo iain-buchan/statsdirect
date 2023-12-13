@@ -3030,8 +3030,8 @@ namespace StatsDirect.UI
             }
 
             // Set up the new items
-            StringCollection names = Settings.Default.ToolsNames;
-            StringCollection paths = Settings.Default.ToolsPrograms;
+            IReadOnlyList<string> names = Settings.Default.ToolsNames;
+            IReadOnlyList<string> paths = Settings.Default.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
             {
                 string name = names[i];

@@ -99,13 +99,14 @@ namespace StatsDirect.Calculator
 
         private void LoadPosition()
         {
-            if (null != Settings.Default && null != Settings.Default.Properties)
+            Settings settings = Settings.Default;
+            if (settings is not null && settings.WasLoaded)
             {
-                Top = Settings.Default.CalculatorTop;
-                Left = Settings.Default.CalculatorLeft;
-                Width = Settings.Default.CalculatorWidth;
-                Height = Settings.Default.CalculatorHeight;
-                WindowState = Settings.Default.CalculatorMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
+                Top = settings.CalculatorTop;
+                Left = settings.CalculatorLeft;
+                Width = settings.CalculatorWidth;
+                Height = settings.CalculatorHeight;
+                WindowState = settings.CalculatorMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
             }
         }
 

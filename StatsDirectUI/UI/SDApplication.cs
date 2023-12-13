@@ -1119,7 +1119,7 @@ namespace StatsDirect.UI
         internal void NoteRecentFile(string path, bool openedOk)
         {
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
-            System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList ?? new System.Collections.Specialized.StringCollection();
+            List<string> recentFiles = new(Properties.Settings.Default.RecentFileList ?? Array.Empty<string>());
             if (recentFiles.Contains(path))
                 recentFiles.Remove(path);
             if (openedOk)
@@ -1140,13 +1140,8 @@ namespace StatsDirect.UI
             get
             {
                 // Stored in reverse order (most recent last), so reverse on the way out
-                System.Collections.Specialized.StringCollection recentFiles = Properties.Settings.Default.RecentFileList;
+                IReadOnlyList<string> recentFiles = Properties.Settings.Default.RecentFileList ?? Array.Empty<string>();
                 IList<string> output = new List<string>();
-                if (null == recentFiles)
-                {
-                    recentFiles = new System.Collections.Specialized.StringCollection();
-                }
-
                 string appPath = Path.GetDirectoryName(Application.ExecutablePath);
                 if (null != appPath)
                 {

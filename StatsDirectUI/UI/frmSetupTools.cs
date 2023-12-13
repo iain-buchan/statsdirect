@@ -3,6 +3,8 @@ using System.IO;
 using System.Windows.Forms;
 using System.Collections.Specialized;
 using System.Xml;
+using System.Collections.Generic;
+using StatsDirect.UI.Properties;
 
 namespace StatsDirect.UI
 {
@@ -39,21 +41,18 @@ namespace StatsDirect.UI
 
         private void LoadData()
         {
-            StringCollection names = Properties.Settings.Default.ToolsNames;
-            StringCollection paths = Properties.Settings.Default.ToolsPrograms;
+            IReadOnlyList<string> names = Properties.Settings.Default.ToolsNames;
+            IReadOnlyList<string> paths = Properties.Settings.Default.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
                 grid.Rows.Add(names[i], paths[i]);
         }
 
         private void DefaultData()
         {
-            string xNames = (string)Properties.Settings.Default.Properties["ToolsNames"].DefaultValue;
-            string xPaths = (string)Properties.Settings.Default.Properties["ToolsPrograms"].DefaultValue;
-            StringCollection names = ParseXmlToStringCollection(xNames);
-            StringCollection paths = ParseXmlToStringCollection(xPaths);
+            Settings installationDefaults = Settings.InstallationDefaults;
             grid.Rows.Clear();
-            for (int i = 0; i < names.Count; i++)
-                grid.Rows.Add(names[i], paths[i]);
+            for (int i = 0; i < installationDefaults.ToolsNames.Count; i++)
+                grid.Rows.Add(installationDefaults.ToolsNames[i], installationDefaults.ToolsPrograms[i]);
         }
 
         private static StringCollection ParseXmlToStringCollection(string rawXml)
@@ -72,8 +71,8 @@ namespace StatsDirect.UI
 
         private void SaveData()
         {
-            StringCollection names = new();
-            StringCollection paths = new();
+            List<string> names = new();
+            List<string> paths = new();
             foreach (DataGridViewRow row in grid.Rows)
             {
                 if (null != row.Cells[0].Value && null != row.Cells[1].Value)

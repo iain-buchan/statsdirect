@@ -11,6 +11,7 @@ namespace StatsDirect.Configuration
         private const string R_FOLDER_NAME = "R";
         public const string PERSISTENT_VALUE_FILE_NAME = "session.ser";
         private const string HELP_FILE_NAME = "statsdirect.chm";
+        private const string SETTINGS_FILE_NAME = "statsdirect.json";
 
         public static string HelpFilePath => Path.Combine(InstallationDirectory, HELP_FILE_NAME);
 
@@ -20,24 +21,10 @@ namespace StatsDirect.Configuration
 
         public static string MyStatsDirectRFolder => Path.Combine(MyStatsDirectFolder, R_FOLDER_NAME);
 
-        public static string MyTestFilePath
-        {
-            get
-            {
-                string mySdPath = MyStatsDirectFolder;
-                string defaultRecentlyUsedFile = Settings.Default.DefaultRecentlyUsedFile;
-                return Path.Combine(mySdPath, defaultRecentlyUsedFile);
-            }
-        }
+        public static string MyTestFilePath => Path.Combine(MyStatsDirectFolder, Settings.Default.DefaultRecentlyUsedFile);
 
-        public static string InstallationDirectory
-        {
-            get
-            {
-                // string exeName = Process.GetCurrentProcess().MainModule.FileName;
-                string exeName = Assembly.GetExecutingAssembly().Location;
-                return Path.GetDirectoryName(exeName);
-            }
-        }
+        public static string InstallationDirectory => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+        public static string SettingsPath => Path.Combine(MyStatsDirectFolder, SETTINGS_FILE_NAME);
     }
 }
