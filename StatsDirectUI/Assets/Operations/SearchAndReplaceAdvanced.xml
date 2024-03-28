@@ -119,10 +119,12 @@
     <test>
       <condition>="count".Equals(parameters["action"].AsString)</condition>
       <iftrue>
-        <script language="C#"><![CDATA[
-        System.Windows.Forms.MessageBox.Show(parameters["matches"].AsInt32.ToString() + " cells match your search", "StatsDirect", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
-        return new ParameterBag();
-        ]]></script>
+        <script language="C#">
+          <![CDATA[
+            StatsDirect.UI.OperationHacks.ShowInformation(parameters["matches"].AsInt32.ToString() + " cells match your search");
+            return new ParameterBag();
+          ]]>
+        </script>
       </iftrue>
       <iffalse>
         <output-frame frame-name="output" keep-selection="true" default-placement="ReplaceSelection"/>

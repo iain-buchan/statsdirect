@@ -21,8 +21,7 @@ namespace StatsDirect.UI
             CatchMostErrors();
 #endif
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            ApplicationConfiguration.Initialize();
 
             if (args.Length > 0 && "-calculator".Equals(args[0]))
                 StartCalculator();
@@ -70,6 +69,9 @@ namespace StatsDirect.UI
                 loader.Left = bestSoFar.Bounds.Left + (bestSoFar.Bounds.Width - loader.Width) / 2;
                 loader.Show();
                 Application.DoEvents(); // Force display of the show form
+
+                // SpreadsheetGear needs its license before any workbook open - do it here.
+                SpreadsheetGear.Factory.SetSignedLicense("SpreadsheetGear.License, Type=Standard, Hash=QKD8/zf1FXbb620S2da5gk6, Product=WIN, NewVersionsUntil=2025-01-08, Company=StatsDirect Limited, Email=rachel@ozzard.org, Signature=***REMOVED***");
 
                 // Prep a background check for new version, if there is one.  This will tidy up after itself.
                 int checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect3", "Startup", "CheckForUpdates", true);

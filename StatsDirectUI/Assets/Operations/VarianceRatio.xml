@@ -35,17 +35,17 @@
         f = var(top) / var(bot)
         Dim outputParameters As ParameterBag = New ParameterBag()
         outputParameters.AddOutput("title_0", data.Variables(top).Title)
-        outputParameters.AddOutput("df_0", Format(tnx(top) - 1))
+        outputParameters.AddOutput("df_0", tnx(top) - 1)
         outputParameters.AddOutput("var_0", host.RoundU(var(top)))
         outputParameters.AddOutput("title_1", data.Variables(bot).Title)
-        outputParameters.AddOutput("df_1", Format(tnx(bot) - 1))
+        outputParameters.AddOutput("df_1", tnx(bot) - 1)
         outputParameters.AddOutput("var_1", host.RoundU(var(bot)))
         outputParameters.AddOutput("f", host.RoundU(f))
         P = PDF.fvalp(f, CDbl(tnx(top) - 1), CDbl(tnx(bot) - 1))
         outputParameters.AddOutput("p_1", host.pval(P))
         If P > 0.5 Then P = 0.5
         outputParameters.AddOutput("p_2", host.pval(P * 2))
-        If Err.Number <> 0 Then host.Error(Formatting.ERRCOLON & Err.Description, "Variance")
+        ' If Err.Number <> 0 Then host.Error(Formatting.ERRCOLON & Err.Description, "Variance")
         Return outputParameters
     End Function
 
