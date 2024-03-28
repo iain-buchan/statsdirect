@@ -6,9 +6,6 @@
   <Component Id="STATSDIRECT.chm">
     <File Id="STATSDIRECT.chm" KeyPath="yes" Name="STATSDIRECT.chm" Checksum="yes" />
   </Component>
-  <Component Id="StatsDirect.exe.config">
-    <File Id="StatsDirect.exe.config" KeyPath="yes" Name="StatsDirect.exe.config" Checksum="yes" />
-  </Component>
 
   <!-- Sample data files -->
   <Directory Id="data" Name="data">

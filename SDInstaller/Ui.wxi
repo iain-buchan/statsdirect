@@ -2,10 +2,10 @@
 <Include xmlns="http://schemas.microsoft.com/wix/2006/wi"
          xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
   <!-- Upgrading: we're willing to upgrade pretty much any version up to this one. -->
-  <!-- For now, that's 3.x only - we're not blowing away 2.x installs.  That will change. -->
+  <!-- For now, that's 3.x and 4.x - we're not blowing away 2.x installs.  That will change. -->
   <Property Id="PREVIOUSVERSIONSINSTALLED" Secure="yes" />
   <Property Id="NEWERVERSIONINSTALLED" Secure="yes" />
-  <!-- SD3, upgrade code CA3C.... -->
+  <!-- SD3+, upgrade code CA3C.... -->
   <Upgrade Id="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
     <UpgradeVersion OnlyDetect="no" Minimum="3.0.0.0" Maximum="!(bind.FileVersion.statsdirectexe)" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="no" />
     <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
@@ -42,9 +42,9 @@
   <Condition Message="[ProductName] requires .NET Framework 4.6.2 or higher.">
     <![CDATA[Installed OR WIX_IS_NETFRAMEWORK_462_OR_LATER_INSTALLED]]>
   </Condition>
-  <!-- Installation conditions: At least Windows 7, no service pack required, no upper limit on OS version-->
-  <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 7, 2012, 8, 8.1, 2012R2, 10, and 2016.">
-    <![CDATA[Installed OR (VersionNT >= 601)]]>
+  <!-- Installation conditions: At least Windows 10, no upper limit on OS version-->
+  <Condition Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 10, 11 and Server 2016-2022.">
+    <![CDATA[Installed OR (VersionNT >= 603)]]>
   </Condition>
   <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
   <Condition Message="A later version of [ProductName] is already installed. If you wish to install this version, uninstall the later version then run this installer again. Setup will now exit.">

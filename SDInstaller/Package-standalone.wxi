@@ -5,7 +5,7 @@
     InstallScope="perMachine"
     InstallerVersion="405"
     Compressed="yes"
-    Description="StatsDirect v3.0"
+    Description="StatsDirect v4"
     Manufacturer="StatsDirect Limited"/>
   <Media Id="1" Cabinet="SD.cab" EmbedCab="yes" />
 </Include>

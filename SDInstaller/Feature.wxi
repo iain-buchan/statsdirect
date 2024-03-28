@@ -10,7 +10,6 @@
     <!-- Other StatsDirect -->
     <ComponentRef Id="menu.xml" />
     <ComponentRef Id="STATSDIRECT.chm" />
-    <ComponentRef Id="StatsDirect.exe.config" />
     <ComponentGroupRef Id="Dlls" />
 
     <!-- Sample files -->

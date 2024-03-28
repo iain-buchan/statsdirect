@@ -3,7 +3,7 @@
   <!-- Desktop shortcuts - assumes surrounding Directory structure has been created. -->
   <Shortcut Id="StatsDirectExeDesktopShortcut"
             Directory="DesktopFolder"
-            Name="StatsDirect 3"
+            Name="StatsDirect"
             Description="StatsDirect Statistical Package"
             Icon="statsdirect.ico"
             WorkingDirectory="INSTALLLOCATION"

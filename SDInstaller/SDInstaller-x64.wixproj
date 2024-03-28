@@ -14,17 +14,17 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug;OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)</DefineConstants>
+    <DefineConstants>Debug;OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)</DefineConstants>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|x64' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)</DefineConstants>
+    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
     <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
@@ -86,7 +86,7 @@
     </HeatDirectory>
     <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" RunAsSeparateProcess="true" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="TemplateFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Template" ComponentGroupName="Template" DirectoryRefId="Template" KeepEmptyDirectories="false" PreprocessorVariable="var.TemplateSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
     </HeatDirectory>
-    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" RunAsSeparateProcess="true" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="DllsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="$(SolutionDir)SDInstaller\DllsOnly.xslt" Directory="$(SolutionDir)StatsDirectUI\bin\AnyCPU\$(Configuration)" ComponentGroupName="Dlls" DirectoryRefId="INSTALLLOCATION" KeepEmptyDirectories="false" PreprocessorVariable="var.DllsSource" SuppressCom="true" SuppressRootDirectory="true" SuppressRegistry="true">
+    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" RunAsSeparateProcess="true" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="DllsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="$(SolutionDir)SDInstaller\DllsOnly.xslt" Directory="$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0" ComponentGroupName="Dlls" DirectoryRefId="INSTALLLOCATION" KeepEmptyDirectories="false" PreprocessorVariable="var.DllsSource" SuppressCom="true" SuppressRootDirectory="true" SuppressRegistry="true">
     </HeatDirectory>
   </Target>
   <Target Name="AfterBuild">

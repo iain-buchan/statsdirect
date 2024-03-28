@@ -10,7 +10,7 @@
                 Target="[INSTALLLOCATION]StatsDirect.exe"
                 WorkingDirectory="INSTALLLOCATION"/>
       <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-      <RegistryValue Root="HKCU" Key="Software\StatsDirect3\StatsDirect" Name="startMenuInstalled" Type="integer" Value="1" KeyPath="yes"/>
+      <RegistryValue Root="HKCU" Key="Software\StatsDirect\StatsDirect" Name="startMenuInstalled" Type="integer" Value="1" KeyPath="yes"/>
     </Component>
   </Directory>
 </Include>
