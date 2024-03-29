@@ -74,7 +74,7 @@ namespace StatsDirect.UI
                     break;
             }
 
-            string clrVersion = RuntimeEnvironment.GetSystemVersion();
+            string clrVersion = Environment.Version.ToString();
             string bitness = ", unknown bitness";
             switch (IntPtr.Size)
             {
