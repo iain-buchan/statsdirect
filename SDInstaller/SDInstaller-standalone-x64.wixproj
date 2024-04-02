@@ -1,46 +1,16 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project Sdk="WixToolset.Sdk/5.0.0-rc.2">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProductVersion>3.0</ProductVersion>
-    <ProjectGuid>{046bf937-0395-4a59-a4df-d29314574f41}</ProjectGuid>
-    <SchemaVersion>2.0</SchemaVersion>
+    <Platform>x64</Platform>
+    <ProductVersion>4.0</ProductVersion>
     <OutputName>StatsDirect-x64</OutputName>
-    <OutputType>Package</OutputType>
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug;OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|x64' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)Release\net6.0-windows10.0.17763.0</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseWithSigning|Any CPU' ">
-    <OutputPath>bin\$(Platform)\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>OperationsSource=$(SolutionDir)StatsDirectUI\Assets\Operations;TemplateSource=$(SolutionDir)StatsDirectUI\Assets\Template;DllsSource=$(SolutionDir)Release\net6.0-windows10.0.17763.0</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DllsFragment.wxs" />
-    <Compile Include="OperationsFragment.wxs" />
-    <Compile Include="StatsDirect-standalone-x64.wxs" />
-    <Compile Include="TemplateFragment.wxs" />
+    <Content Include="bannrbmp-sd.bmp" />
+    <Content Include="dlgbmp-sd.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="global.json" />
+    <None Include="Licence.rtf" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StatsDirectUI\StatsDirectUI.csproj">
@@ -50,48 +20,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <WixExtension Include="WixNetFxExtension">
-      <HintPath>$(WixExtDir)\WixNetFxExtension.dll</HintPath>
-      <Name>WixNetFxExtension</Name>
-    </WixExtension>
-    <WixExtension Include="WixUtilExtension">
-      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
-      <Name>WixUtilExtension</Name>
-    </WixExtension>
-    <WixExtension Include="WixUIExtension">
-      <HintPath>$(WixExtDir)\WixUIExtension.dll</HintPath>
-      <Name>WixUIExtension</Name>
-    </WixExtension>
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.0-rc.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.0-rc.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0-rc.2" />
+    <PackageReference Include="WixToolset.Heat" Version="5.0.0-rc.2" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="bannrbmp-sd.bmp" />
-    <Content Include="Component.wxi" />
-    <Content Include="OptimiseAfterInstall.wxi" />
-    <Content Include="Desktop.wxi" />
-    <Content Include="DllsOnly.xslt" />
-    <Content Include="Package-standalone.wxi" />
-    <Content Include="StartMenu.wxi" />
-    <Content Include="Ui.wxi" />
-    <Content Include="Feature.wxi" />
-    <Content Include="dlgbmp-sd.bmp" />
-    <Content Include="Licence.rtf" />
-  </ItemGroup>
-  <Import Project="$(WixTargetsPath)" />
-  <!--
-	To modify your build process, add your task inside one of the targets below and uncomment it.
-	Other similar extension points exist, see Wix.targets.
-  -->
-  <Target Name="BeforeBuild">
-    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" RunAsSeparateProcess="true" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="OperationsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Operations" ComponentGroupName="Operations" DirectoryRefId="Operations" KeepEmptyDirectories="false" PreprocessorVariable="var.OperationsSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
-    </HeatDirectory>
-    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" RunAsSeparateProcess="true" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="TemplateFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="%(HarvestDirectory.Transforms)" Directory="$(SolutionDir)StatsDirectUI\Assets\Template" ComponentGroupName="Template" DirectoryRefId="Template" KeepEmptyDirectories="false" PreprocessorVariable="var.TemplateSource" SuppressCom="%(HarvestDirectory.SuppressCom)" SuppressRootDirectory="true" SuppressRegistry="%(HarvestDirectory.SuppressRegistry)">
-    </HeatDirectory>
-    <HeatDirectory NoLogo="$(HarvestDirectoryNoLogo)" RunAsSeparateProcess="true" SuppressAllWarnings="$(HarvestDirectorySuppressAllWarnings)" SuppressSpecificWarnings="$(HarvestDirectorySuppressSpecificWarnings)" ToolPath="$(WixToolPath)" TreatWarningsAsErrors="$(HarvestDirectoryTreatWarningsAsErrors)" TreatSpecificWarningsAsErrors="$(HarvestDirectoryTreatSpecificWarningsAsErrors)" VerboseOutput="$(HarvestDirectoryVerboseOutput)" AutogenerateGuids="$(HarvestDirectoryAutogenerateGuids)" GenerateGuidsNow="$(HarvestDirectoryGenerateGuidsNow)" OutputFile="DllsFragment.wxs" SuppressFragments="$(HarvestDirectorySuppressFragments)" SuppressUniqueIds="$(HarvestDirectorySuppressUniqueIds)" Transforms="$(SolutionDir)SDInstaller\DllsOnly.xslt" Directory="$(SolutionDir)StatsDirectUI\bin\Release\net6.0-windows10.0.17763.0" ComponentGroupName="Dlls" DirectoryRefId="INSTALLLOCATION" KeepEmptyDirectories="false" PreprocessorVariable="var.DllsSource" SuppressCom="true" SuppressRootDirectory="true" SuppressRegistry="true">
-    </HeatDirectory>
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  <PropertyGroup>
-    <PostBuildEvent>if $(ConfigurationName) == ReleaseWithSigning copy "$(TargetPath)" "$(SolutionDir)ReleaseBuild"</PostBuildEvent>
-  </PropertyGroup>
 </Project>
