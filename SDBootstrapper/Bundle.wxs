@@ -1,29 +1,52 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
-     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
+﻿<Wix
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+  xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
   <Bundle
     Name="StatsDirect"
-    Version="!(bind.packageVersion.MsiForVersionNumber)"
+    Version="!(bind.packageVersion.StatsDirectMsi)"
     Manufacturer="StatsDirect Limited"
     UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5"
     DisableModify="yes"
     Copyright="Copyright ©1995-2024 StatsDirect Limited. All rights reserved."
     HelpUrl="http://www.statsdirect.com/Support.aspx"
     UpdateUrl="http://www.statsdirect.com/Update.aspx"
-    IconSourceFile="sd3.ico">
-    <bal:Condition Message="User Account Control appears to be disabled on this computer. You need either to enable it or to be an administrator to install StatsDirect.">Privileged</bal:Condition>
-    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
-      <bal:WixStandardBootstrapperApplication ThemeFile="Theme.xml"
-            LicenseFile="Licence.rtf"
-            />
+    IconSourceFile="sd3.ico"
+    >
+    <!-- <bal:Condition Message="User Account Control appears to be disabled on this computer. You need either to enable it or to be an administrator to install StatsDirect." Condition="Privileged" /> -->
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+        ThemeFile="Theme.xml"
+        LicenseFile="Licence.rtf"
+        Theme="rtfLicense" />
       <Payload SourceFile="dlgbmp-sd.png" />
       <Payload SourceFile="bannrbmp-sd.png" />
       <Payload SourceFile="greybar.png" />
-    </BootstrapperApplicationRef>
+    </BootstrapperApplication>
     <Chain>
-      <PackageGroupRef Id="NetFx462Web"/>
-      <MsiPackage Id="MsiForVersionNumber" Compressed="yes" SourceFile="$(var.SDInstaller-x64.TargetPath)" Vital="yes" DisplayInternalUI="no" InstallCondition="VersionNT64" ForcePerMachine="yes" />
+      <PackageGroupRef Id="DotNetDesktopRedist" />
+      <MsiPackage
+        Id="StatsDirectMsi"
+        Compressed="yes"
+        SourceFile="StatsDirect-x64.msi"
+        />
     </Chain>
   </Bundle>
+
+  <Fragment>
+    <netfx:DotNetCoreSearch RuntimeType="desktop" MajorVersion="6" Platform="x64" Variable="DOTNETDESKTOPVERSION" />
+    <PackageGroup Id="DotNetDesktopRedist">
+      <ExePackage
+        Id="DotNetDesktop"
+        DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;6.0.29&quot;"
+        InstallArguments="windowsdesktop-runtime-6.0.29-win-x64.exe /install /quiet /norestart"
+        RepairArguments="windowsdesktop-runtime-6.0.29-win-x64.exe /repair /quiet /norestart"
+        UninstallArguments="windowsdesktop-runtime-6.0.29-win-x64.exe /uninstall /quiet /norestart">
+        <ExePackagePayload
+          Name="windowsdesktop-runtime-6.0.29-win-x64.exe"
+          SourceFile="..\..\..\..\DownloadedBinaries\windowsdesktop-runtime-6.0.29-win-x64.exe"
+          />
+      </ExePackage>
+    </PackageGroup>
+  </Fragment>
 </Wix>
