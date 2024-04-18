@@ -16,7 +16,6 @@
     <!-- <bal:Condition Message="User Account Control appears to be disabled on this computer. You need either to enable it or to be an administrator to install StatsDirect." Condition="Privileged" /> -->
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication
-        ThemeFile="Theme.xml"
         LicenseFile="Licence.rtf"
         Theme="rtfLicense" />
       <Payload SourceFile="dlgbmp-sd.png" />
