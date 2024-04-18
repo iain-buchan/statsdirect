@@ -11,16 +11,18 @@
     Copyright="Copyright ©1995-2024 StatsDirect Limited. All rights reserved."
     HelpUrl="http://www.statsdirect.com/Support.aspx"
     UpdateUrl="http://www.statsdirect.com/Update.aspx"
-    IconSourceFile="sd3.ico"
+    IconSourceFile="statsdirect.ico"
     >
     <!-- <bal:Condition Message="User Account Control appears to be disabled on this computer. You need either to enable it or to be an administrator to install StatsDirect." Condition="Privileged" /> -->
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication
         LicenseFile="Licence.rtf"
+        LogoFile="statsdirect.png"
         Theme="rtfLicense" />
-      <Payload SourceFile="dlgbmp-sd.png" />
       <Payload SourceFile="bannrbmp-sd.png" />
+      <Payload SourceFile="dlgbmp-sd.png" />
       <Payload SourceFile="greybar.png" />
+      <Payload SourceFile="statsdirect.png" />
     </BootstrapperApplication>
     <Chain>
       <PackageGroupRef Id="DotNetDesktopRedist" />

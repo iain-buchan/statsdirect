@@ -18,7 +18,8 @@
     <Content Include="dlgbmp-sd.png" />
     <Content Include="greybar.png" />
     <Content Include="Licence.rtf" />
-    <Content Include="sd3.ico" />
+    <Content Include="statsdirect.ico" />
+    <Content Include="statsdirect.png" />
     <Content Include="Theme.xml" />
   </ItemGroup>
   <ItemGroup>
