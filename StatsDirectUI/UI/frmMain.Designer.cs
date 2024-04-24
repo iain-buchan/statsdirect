@@ -1,5 +1,3 @@
-using System.Windows.Forms;
-
 namespace StatsDirect.UI
 {
     partial class frmMain
@@ -639,7 +637,7 @@ namespace StatsDirect.UI
             this.tabWindows.CausesValidation = false;
             this.tabWindows.ContextMenuStrip = this.tabContextMenuStrip;
             this.tabWindows.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.tabWindows.ItemSize = new System.Drawing.Size(0, 55);
+            this.tabWindows.ItemSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Location = new System.Drawing.Point(0, 6);
             this.tabWindows.Margin = new System.Windows.Forms.Padding(0);
             this.tabWindows.MaximumSize = new System.Drawing.Size(0, 25);
@@ -651,14 +649,6 @@ namespace StatsDirect.UI
             this.tabWindows.TabIndex = 3;
             this.tabWindows.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabWindows_Selecting);
             this.tabWindows.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tabWindows_MouseDown);
-            this.tabWindows.SizeMode = TabSizeMode.Normal;
-            double GetTextScaleFactor()
-            {
-                return (new Windows.UI.
-                    ViewManagement.UISettings()).TextScaleFactor;
-            }
-
-            double val = GetTextScaleFactor();
             // 
             // tabContextMenuStrip
             // 
