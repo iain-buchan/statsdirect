@@ -60,7 +60,7 @@
       RuntimeType="desktop"
       Platform="x64"
       Version="6.0.0"/>
-    <Launch Condition="Installed OR NETCORESTATUS=&quot;0&quot;" Message="[ProductName] requires .NET 6." />
+<!--    <Launch Condition="Installed OR NETCORESTATUS=&quot;0&quot;" Message="[ProductName]  requires .NET 6." /> -->
     <!-- Installation conditions: At least Windows 10, no upper limit on OS version-->
     <Launch Condition="Installed OR (VersionNT &gt;= 603)" Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 10, 11 and Server 2016-2022." />
     <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->

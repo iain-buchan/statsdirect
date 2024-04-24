@@ -867,7 +867,7 @@ namespace StatsDirect.UI
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip;
-            this.MinimumSize = new System.Drawing.Size(300, 150);
+            this.MinimumSize = new System.Drawing.Size(300, 50);
             this.Name = "frmSpreadsheetGear";
             this.Text = "Data";
             this.Activated += new System.EventHandler(this.frmSpreadsheetGear_Activated);
