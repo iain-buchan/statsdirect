@@ -499,7 +499,7 @@ namespace StatsDirect.Builtins
             }
             if (ierr == 0)
                 cMLE = CalcCmle(1.0, ref ierr);
-            else
+            if (ierr != 0)
             {
                 UseLogScale = true;
                 CalcPoly(dataType, lowerBound, numTables, tables, out ierr);
@@ -510,6 +510,7 @@ namespace StatsDirect.Builtins
             }
             if (ierr == 0)
             {
+                cMLE = 0.0;
                 upFishLim = CalcExactLim(false, true, cMLE, confLevel, ref ierr);
                 loFishLim = CalcExactLim(true, true, cMLE, confLevel, ref ierr);
                 upMidPLim = CalcExactLim(false, false, cMLE, confLevel, ref ierr);

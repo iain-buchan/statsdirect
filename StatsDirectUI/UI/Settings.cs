@@ -34,8 +34,8 @@ namespace StatsDirect.UI.Properties
         public double DefaultConfidenceInterval { get; set; } = 0.95;
         public IReadOnlyList<string> RecentFileList { get; set; }
         public bool SelectGroupsByIdentifier { get; set; } = false;
-        public IReadOnlyList<string> ToolsNames { get; set; } = new string[] { "Calculator", "Notepad", "Wordpad" };
-        public IReadOnlyList<string> ToolsPrograms { get; set; } = new string[] { "%STATSDIRECT%\\StatsDirect.exe -calculator", "notepad.exe", "wordpad.exe" };
+        public IReadOnlyList<string> ToolsNames { get; set; } = new string[] { "Calculator", "Notepad"};
+        public IReadOnlyList<string> ToolsPrograms { get; set; } = new string[] { "%STATSDIRECT%\\StatsDirect.exe -calculator", "notepad.exe" };
 
         [JsonIgnore]
         public string DataDirectory => "Data";

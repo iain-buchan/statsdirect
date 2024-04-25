@@ -3,6 +3,7 @@
     <Platform>x64</Platform>
     <ProductVersion>4.0</ProductVersion>
     <OutputName>StatsDirect-x64</OutputName>
+    <SignOutput>true</SignOutput>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="bannrbmp-sd.bmp" />
@@ -25,4 +26,8 @@
     <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0" />
     <PackageReference Include="WixToolset.Heat" Version="5.0.0" />
   </ItemGroup>
+  <Target Name="SignMsi">
+    <Message Importance="high" Text="SignMsi: @(SignMsi)" />
+    <Exec Command='..\Key\sign.cmd "%(SignMsi.FullPath)" ' />
+  </Target>
 </Project>
