@@ -41,12 +41,12 @@
     </ContentWithTargetPath>
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <DefineConstants>$(DefineConstants);WATCH_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWatchExceptions|AnyCPU'">
+    <DefineConstants>$(DefineConstants);WATCH_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
 </Project>
