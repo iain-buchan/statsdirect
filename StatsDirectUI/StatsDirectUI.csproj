@@ -10,6 +10,9 @@
     <ApplicationDefaultFont>Microsoft Sans Serif, 8.25pt</ApplicationDefaultFont>
     <UseWPF>False</UseWPF>
     <StartupObject>StatsDirect.UI.Program</StartupObject>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredCompilation>true</TieredCompilation>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="UI\frmReportDNBTest.cs" />
@@ -32,6 +35,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.8.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
     <PackageReference Include="OpenMcdf" Version="2.3.0" />
+    <PackageReference Include="PresentationFramework" Version="4.6.0" />
     <PackageReference Include="SpreadsheetGear.Windows" Version="9.2.26" />
   </ItemGroup>
   <ItemGroup>
@@ -39,6 +43,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationFramework">
+      <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
   </PropertyGroup>
@@ -49,4 +58,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWatchExceptions|AnyCPU'">
     <DefineConstants>$(DefineConstants);WATCH_EXCEPTIONS</DefineConstants>
   </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  </Target>
 </Project>
