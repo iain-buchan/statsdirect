@@ -405,6 +405,7 @@ namespace StatsDirect.UI
 
         public void Visit(OptionsParameter parameter)
         {
+            int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
             string prompt = parameter.Prompt(Processor, Context);
@@ -450,8 +451,7 @@ namespace StatsDirect.UI
 
             panelOptions.Height = panelOptions.PreferredSize.Height;
             // TODO: RD Changing the y position seems to fix #12
-            int scalingFactor = (int)(100 * Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
-            int yPos = ((int)((scalingFactor * 20) / 100.0)) + 1;
+            int yPos = ((int)(scalingFactor * 20)) + 1;
             panelOptions.Location = new Point(7, yPos);
             groupBox.Controls.Add(panelOptions);
             tlp.Controls.Add(groupBox);
@@ -1043,6 +1043,7 @@ namespace StatsDirect.UI
                     break;
                 case OptionFormatType.Radio:
                     {
+                        int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
                         GroupBox groupBox = null;
                         string prompt = parameter.Prompt(Processor, Context);
                         if (!string.IsNullOrEmpty(prompt))
@@ -1063,6 +1064,7 @@ namespace StatsDirect.UI
                             Tag = parameter,
                             RowCount = (parameter.Options.Count + 1) / 2,
                             ColumnCount = parameter.Columns,
+                            Width = (int)(scalingFactor * 150 ) + 1,
                             AutoSize = true
                         };
                         //panelOptions.BackColor = System.Drawing.Color.FromName("Yellow"); ;
@@ -1106,8 +1108,7 @@ namespace StatsDirect.UI
                         {
                             panelOptions.Height = panelOptions.PreferredSize.Height;
                             // TODO: RD Changing the y position seems to fix #12
-                            int scalingFactor = (int)(100 * Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
-                            int yPos = ((int)((scalingFactor * 20 )/100.0)) + 1;
+                            int yPos = (int)(scalingFactor * 20 ) + 1;
                             panelOptions.Location = new Point(7, yPos);
                             groupBox.Controls.Add(panelOptions);
                             tlp.Controls.Add(groupBox);
