@@ -1046,13 +1046,19 @@ namespace StatsDirect.UI
                         int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
                         GroupBox groupBox = null;
                         string prompt = parameter.Prompt(Processor, Context);
+
+                        int controlWidth = 0;
+
                         if (!string.IsNullOrEmpty(prompt))
                         {
+                            // simple scaling for GroupBox and TableLayoutPanel to take account of GroupBox title length in characters
+                            controlWidth = (int)((float)(prompt.Length * 8 * scalingFactor) * 1.05);
                             groupBox = new SDGroupBox
                             {
                                 Tag = parameter,
                                 Padding = new Padding(3, 3, 3, 3),
                                 AutoSize = true,
+                                Width = controlWidth,
                                 Text = prompt
                             };
                             // Add later so that autosizing can size the contained controls as well
@@ -1064,7 +1070,6 @@ namespace StatsDirect.UI
                             Tag = parameter,
                             RowCount = (parameter.Options.Count + 1) / 2,
                             ColumnCount = parameter.Columns,
-                            Width = (int)(scalingFactor * 150 ) + 1,
                             AutoSize = true
                         };
                         //panelOptions.BackColor = System.Drawing.Color.FromName("Yellow"); ;
