@@ -1863,17 +1863,21 @@ namespace StatsDirect.UI
                 settingUpSubOperations = true;
                 if (shouldRegenerateList)
                 {
+                    int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
                     cboOperation.Items.Clear();
+                    int maxLabelLength = 0;
                     int itemNumber = 0;
                     foreach (SDListItem suggestedListItem in suggestedListItems)
                     {
                         cboOperation.Items.Add(suggestedListItem);
+                        maxLabelLength = Math.Max(maxLabelLength, suggestedListItem.Label.Length);
                         if (currentOperation.Name.Equals(suggestedListItem.Operation))
                         {
                             selectedItemNumber = itemNumber;
                         }
                         itemNumber++;
                     }
+                    cboOperation.Width = (maxLabelLength * 10 ) +1;
                 }
                 else
                 {
