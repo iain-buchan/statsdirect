@@ -1662,7 +1662,11 @@ namespace StatsDirect.UI
                 }
                 finally
                 {
-                    ResetHelp();
+                    // Leave help as is if there are follow-on functions, fixes #18
+                    if (operation.SuggestedOperations.Count == 0)
+                    {
+                        ResetHelp();
+                    }
                     Text = "StatsDirect";
                 }
             }
@@ -2003,6 +2007,7 @@ namespace StatsDirect.UI
         {
             bool shouldRun = ShouldRunOperationOnSelection(operation, knownParameters);
             pnlFollowOnInstructions.Visible = !shouldRun;
+            pnlVariables.Visible = false;
             if (InOperation)
             {
                 // There's already an operation running; deal with it
@@ -4143,7 +4148,7 @@ namespace StatsDirect.UI
 
             // Ensure the (select) is visible
             cboRecentOperations.SelectedIndex = 0;
-
+            
             settingUpRecentOperations = false;
         }
 
