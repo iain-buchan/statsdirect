@@ -4148,7 +4148,17 @@ namespace StatsDirect.UI
 
             // Ensure the (select) is visible
             cboRecentOperations.SelectedIndex = 0;
-            
+            int maxLength = 0;
+            using (Graphics g = cboRecentOperations.ComboBox.CreateGraphics())
+            {
+                foreach (var item in cboRecentOperations.Items)
+                {
+                    // Append the item name to the string
+                    maxLength = Math.Max(maxLength, TextRenderer.MeasureText(g, item.ToString(), cboRecentOperations.Font).Width);
+                }
+            }
+            cboRecentOperations.Width = (maxLength + 20);
+            cboRecentOperations.DropDownWidth = (maxLength + 20);
             settingUpRecentOperations = false;
         }
 
