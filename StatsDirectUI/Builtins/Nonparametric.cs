@@ -3443,6 +3443,13 @@ namespace StatsDirect.Builtins
 
             // Conover-Iman method
             p = confidence;
+            //////////////////////////
+            // updates p as per issue #19
+            if (sided == 1)
+                p = 0.95;
+            else
+                p = 0.975;
+            //////////////////////////
             if (p == 0)
                 p = 0.05;
             if (p > 1.0 - p)
@@ -3487,7 +3494,10 @@ namespace StatsDirect.Builtins
                     p = PDF.tvalp(Math.Abs(stata / statq), df);
                     if (p > 1.0 - p)
                         p = 1.0 - p;
-                    inequalityParameters.AddOutput("p", 2.0 * p);
+                    if ( sided == 1 )
+                       inequalityParameters.AddOutput("p", p);
+                    else
+                       inequalityParameters.AddOutput("p", 2.0 * p);
                     inequalityList.Add(inequalityParameters);
                 }
             }
