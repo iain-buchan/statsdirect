@@ -26,7 +26,7 @@ namespace StatsDirect.UI
         public FilledParameter FilledParameter { get; private set; }
 
         public InlineParameterPreparer(ParameterBag context, frmMain form, ITemplateProcessor processor)
-        {
+        {           
             Context = context;
             Form = form;
             Processor = processor;
@@ -405,6 +405,7 @@ namespace StatsDirect.UI
 
         public void Visit(OptionsParameter parameter)
         {
+            int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
             TableLayoutPanel tlp = Form.GetUserInputTableForColumn(parameter.Column);
 
             string prompt = parameter.Prompt(Processor, Context);
@@ -424,7 +425,7 @@ namespace StatsDirect.UI
                 ColumnCount = parameter.Columns + 1,
                 AutoSize = true,
             };
-            for (int column = 0; column < parameter.Columns; column++)
+           for (int column = 0; column < parameter.Columns; column++)
                 panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             int count = 0;
@@ -449,7 +450,9 @@ namespace StatsDirect.UI
             }
 
             panelOptions.Height = panelOptions.PreferredSize.Height;
-            panelOptions.Location = new Point(7, 20);
+            // TODO: RD Changing the y position seems to fix #12
+            int yPos = ((int)(scalingFactor * 20)) + 1;
+            panelOptions.Location = new Point(7, yPos);
             groupBox.Controls.Add(panelOptions);
             tlp.Controls.Add(groupBox);
             tlp.SetColumnSpan(groupBox, 2);
@@ -1040,18 +1043,26 @@ namespace StatsDirect.UI
                     break;
                 case OptionFormatType.Radio:
                     {
+                        int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
                         GroupBox groupBox = null;
                         string prompt = parameter.Prompt(Processor, Context);
+
+                        int controlWidth = 0;
+
                         if (!string.IsNullOrEmpty(prompt))
                         {
+                            // simple scaling for GroupBox and TableLayoutPanel to take account of GroupBox title length in characters
+                            controlWidth = (int)((float)(prompt.Length * 8 * scalingFactor) * 1.05);
                             groupBox = new SDGroupBox
                             {
                                 Tag = parameter,
                                 Padding = new Padding(3, 3, 3, 3),
                                 AutoSize = true,
+                                Width = controlWidth,
                                 Text = prompt
                             };
                             // Add later so that autosizing can size the contained controls as well
+                            //groupBox.BackColor = System.Drawing.Color.FromName("Green"); ;
                         }
 
                         TableLayoutPanel panelOptions = new()
@@ -1061,6 +1072,7 @@ namespace StatsDirect.UI
                             ColumnCount = parameter.Columns,
                             AutoSize = true
                         };
+                        //panelOptions.BackColor = System.Drawing.Color.FromName("Yellow"); ;
                         for (int column = 0; column < parameter.Columns; column++)
                             panelOptions.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
@@ -1084,6 +1096,8 @@ namespace StatsDirect.UI
                                 Tag = optionOption.Value,
                                 UseVisualStyleBackColor = true
                             };
+                            
+                            //rad.BackColor = System.Drawing.Color.FromName("SlateBlue"); ;
                             AddAppropriateEventHandlersTo(rad);
                             panelOptions.Controls.Add(rad);
                             if (null != defaultValue)
@@ -1098,7 +1112,9 @@ namespace StatsDirect.UI
                         else
                         {
                             panelOptions.Height = panelOptions.PreferredSize.Height;
-                            panelOptions.Location = new Point(7, 20);
+                            // TODO: RD Changing the y position seems to fix #12
+                            int yPos = (int)(scalingFactor * 20 ) + 1;
+                            panelOptions.Location = new Point(7, yPos);
                             groupBox.Controls.Add(panelOptions);
                             tlp.Controls.Add(groupBox);
                             tlp.SetColumnSpan(groupBox, 2);

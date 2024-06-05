@@ -19,7 +19,7 @@
   Dim cols as Integer = data.VariableCount
   Dim L as String = ""
   For j as Integer = 1 To cols
-      L &= "X" & j.ToString() & ": " & data.Variables(j - 1).Title & vbCrLf
+      L &= "X" & j.ToString() & ": " & data.Variables(j - 1).Title & Environment.NewLine
   Next
   Dim outputParameters As New ParameterBag
   outputParameters.Add("variable_list", FilledParameterFactory.Input(L))

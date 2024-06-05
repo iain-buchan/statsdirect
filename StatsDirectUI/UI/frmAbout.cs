@@ -74,7 +74,7 @@ namespace StatsDirect.UI
                     break;
             }
 
-            string clrVersion = RuntimeEnvironment.GetSystemVersion();
+            string clrVersion = Environment.Version.ToString();
             string bitness = ", unknown bitness";
             switch (IntPtr.Size)
             {
@@ -84,7 +84,7 @@ namespace StatsDirect.UI
                 case 8:
                     bitness = "64-bit";
                     break;
-                // Default: Do nothing
+                    // Default: Do nothing
             }
             string version = Platform + " v" + osInfo.Version.Major + "." + osInfo.Version.Minor + "." + osInfo.Version.Build + " " + osInfo.ServicePack + ", CLR " + clrVersion + " " + bitness + (IsNgen() ? ", native image" : ", JIT-compiled");
             lblSysInfo.Text = version;

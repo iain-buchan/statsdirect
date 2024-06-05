@@ -127,7 +127,7 @@ if (exists("returning.to.statsdirect")) {
   outs<-c("start~names",colnames(r1),"start~data",as.character(r1))
   outs<-c(outs,"start~names",colnames(rn),"start~data",as.character(rn),"start~titles",rn.titles)
   if (shouldPlot)
-    outs<-c(outs,"start~graphics",paste('"',gr1,'"'))
+    outs<-c(outs,"start~graphics",paste('"',gr1,'"', sep=""))
   op<-file("results.txt")
   writeLines(outs, op)
   close(op)

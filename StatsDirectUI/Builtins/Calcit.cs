@@ -1,20 +1,30 @@
 using System;
-using System.CodeDom.Compiler;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Microsoft.CSharp;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
 using StatsDirect.Expressions;
+using StatsDirect.TemplateProcessing;
 
 namespace StatsDirect.Builtins
 {
-    public class Calcit  
+    public class Calcit
     {
+        private static readonly IEnumerable<MetadataReference> metadataReferences;
+
         private object instance;
         private MethodInfo methodInfo;
         public DataType OutputType { get; }
+
+        static Calcit()
+        {
+            metadataReferences = new MetadataReferenceGatherer(true).MetadataReferences;
+        }
 
         /// <summary>
         /// 
@@ -46,7 +56,7 @@ namespace StatsDirect.Builtins
             functionBuilder.AppendLine("{");
             functionBuilder.Append("public object ");
             functionBuilder.Append(methodName);
-            functionBuilder.Append("(");
+            functionBuilder.Append('(');
             functionBuilder.Append(compiledForVariants ? "object" : "double");
             functionBuilder.AppendLine("[] x)");
             functionBuilder.AppendLine("{");
@@ -56,55 +66,65 @@ namespace StatsDirect.Builtins
             functionBuilder.AppendLine("}");
             functionBuilder.AppendLine("}");
             string cSharpFunction = functionBuilder.ToString();
-            CompilerParameters compilerParameters = new();
             string mainModulePath = Process.GetCurrentProcess().MainModule.FileName;
             string assemblyPath = Path.GetDirectoryName(mainModulePath);
-            Debug.Assert(null != assemblyPath);
-            compilerParameters.ReferencedAssemblies.Add(Path.Combine(assemblyPath, "StatsDirect.exe"));
-            compilerParameters.GenerateInMemory = true;
-            using (CodeDomProvider codeProvider = new CSharpCodeProvider())
-            {
-                CompilerResults compilerResults = codeProvider.CompileAssemblyFromSource(compilerParameters, cSharpFunction);
-                if (compilerResults.Errors.HasErrors)
-                {
-                    StringBuilder errorBuilder = new();
-                    errorBuilder.AppendLine("Errors in compilation:");
-                    foreach (CompilerError error in compilerResults.Errors)
-                    {
-                        errorBuilder.Append("line ");
-                        errorBuilder.Append(error.Line);
-                        errorBuilder.Append(": ");
-                        errorBuilder.Append(error.IsWarning ? "warning " : "error ");
-                        errorBuilder.Append(error.ErrorNumber);
-                        errorBuilder.Append(": ");
-                        errorBuilder.AppendLine(error.ErrorText);
-                    }
-                    compilerResults.TempFiles.Delete();
-                    throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + errorBuilder);
-                }
-                // No compile errors - save and prepare to run it!
-                Assembly assembly = compilerResults.CompiledAssembly;
-                instance = assembly.CreateInstance(typeName);
-                Debug.Assert(null != instance);
-                Type type = instance.GetType();
-                methodInfo = type.GetMethod(methodName);
-                compilerResults.TempFiles.Delete();
-                // By now, compiledScript is non-null or an exception has been thrown
-            }
+            Debug.Assert(assemblyPath is not null);
+            if (!TryCompileAssembly(cSharpFunction, metadataReferences, out Assembly assembly, out string errorMessage))
+                throw new Exception("Couldn't translate your expression to valid C# code:" + Environment.NewLine + errorMessage);
+
+            instance = assembly.CreateInstance(typeName);
+            Debug.Assert(instance is not null);
+            Type type = instance.GetType();
+            methodInfo = type.GetMethod(methodName);
+
+            // By now, compiledScript is non-null or an exception has been thrown
             return retval;
+        }
+
+        public bool TryCompileAssembly(string source, IEnumerable<MetadataReference> references, out Assembly assembly, out string errorMessage, bool load = true)
+        {
+            SyntaxTree tree = SyntaxFactory.ParseSyntaxTree(source.Trim());
+            Compilation compilation = CSharpCompilation.Create(null)
+                .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+                            optimizationLevel: OptimizationLevel.Debug))
+                .AddReferences(references)
+                .AddSyntaxTrees(tree);
+
+            using MemoryStream codeStream = new();
+            EmitResult compilationResult = null;
+            compilationResult = compilation.Emit(codeStream);
+
+            // Compilation Error handling
+            if (!compilationResult.Success)
+            {
+                StringBuilder sb = new();
+                foreach (Diagnostic diag in compilationResult.Diagnostics)
+                    sb.AppendLine(diag.ToString());
+
+                errorMessage = sb.ToString();
+                assembly = null;
+                return false;
+            }
+
+            errorMessage = null;
+            assembly = load
+                ? Assembly.Load(((MemoryStream)codeStream).ToArray())
+                : null;
+
+            return true;
         }
 
         public T Evaluate<T>(double[] values)
         {
             try
             {
-                object[] parameters = { values};
+                object[] parameters = { values };
                 object output = methodInfo.Invoke(instance, parameters);
                 return (T)Convert.ChangeType(output, typeof(T));
             }
             catch (TargetInvocationException tie)
             {
-                if (null != tie.InnerException)
+                if (tie.InnerException is not null)
                     throw tie.InnerException;
                 throw;
             }
@@ -119,7 +139,7 @@ namespace StatsDirect.Builtins
             }
             catch (TargetInvocationException tie)
             {
-                if (null != tie.InnerException)
+                if (tie.InnerException is not null)
                     throw tie.InnerException;
                 throw;
             }

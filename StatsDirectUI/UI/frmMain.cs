@@ -1662,7 +1662,11 @@ namespace StatsDirect.UI
                 }
                 finally
                 {
-                    ResetHelp();
+                    // Leave help as is if there are follow-on functions, fixes #18
+                    if (operation.SuggestedOperations.Count == 0)
+                    {
+                        ResetHelp();
+                    }
                     Text = "StatsDirect";
                 }
             }
@@ -1863,17 +1867,21 @@ namespace StatsDirect.UI
                 settingUpSubOperations = true;
                 if (shouldRegenerateList)
                 {
+                    int scalingFactor = (int)(Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth);
                     cboOperation.Items.Clear();
+                    int maxLabelLength = 0;
                     int itemNumber = 0;
                     foreach (SDListItem suggestedListItem in suggestedListItems)
                     {
                         cboOperation.Items.Add(suggestedListItem);
+                        maxLabelLength = Math.Max(maxLabelLength, suggestedListItem.Label.Length);
                         if (currentOperation.Name.Equals(suggestedListItem.Operation))
                         {
                             selectedItemNumber = itemNumber;
                         }
                         itemNumber++;
                     }
+                    cboOperation.Width = (maxLabelLength * 10 ) +1;
                 }
                 else
                 {
@@ -1999,6 +2007,7 @@ namespace StatsDirect.UI
         {
             bool shouldRun = ShouldRunOperationOnSelection(operation, knownParameters);
             pnlFollowOnInstructions.Visible = !shouldRun;
+            pnlVariables.Visible = false;
             if (InOperation)
             {
                 // There's already an operation running; deal with it
@@ -4139,7 +4148,17 @@ namespace StatsDirect.UI
 
             // Ensure the (select) is visible
             cboRecentOperations.SelectedIndex = 0;
-
+            int maxLength = 0;
+            using (Graphics g = cboRecentOperations.ComboBox.CreateGraphics())
+            {
+                foreach (var item in cboRecentOperations.Items)
+                {
+                    // Append the item name to the string
+                    maxLength = Math.Max(maxLength, TextRenderer.MeasureText(g, item.ToString(), cboRecentOperations.Font).Width);
+                }
+            }
+            cboRecentOperations.Width = (maxLength + 20);
+            cboRecentOperations.DropDownWidth = (maxLength + 20);
             settingUpRecentOperations = false;
         }
 

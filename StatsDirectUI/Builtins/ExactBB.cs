@@ -464,7 +464,6 @@ namespace StatsDirect.Builtins
             //   Tables(i).informative = (d(0) * d(3) <> 0) Or (d(1) * d(2) <> 0)
 
             Host = host;
-            //cMLE = 0.0;
 
             //  Make sure that exact calculations can be performed
             UseLogScale = useLogScale;

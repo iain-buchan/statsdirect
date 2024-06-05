@@ -8,8 +8,8 @@ namespace StatsDirect.UI
 {
     public static class ExcelAddInManager
     {
-        private const string Sdxlam = "StatsDirect3ExcelLink.xlam";
-        private const string Sdxla = "StatsDirect3ExcelLink.xla";
+        private const string Sdxlam = "StatsDirect4ExcelLink.xlam";
+        private const string Sdxla = "StatsDirect4ExcelLink.xla";
 
         public static bool IsExcelInstalled()
         {
@@ -124,7 +124,7 @@ namespace StatsDirect.UI
                     oParam[0] = i;
                     var addIn = oAddins.GetType().InvokeMember("Item", BindingFlags.GetProperty, null, oAddins, oParam);
                     string addinName = (string) addIn.GetType().InvokeMember("Fullname", BindingFlags.GetProperty, null, addIn , null);
-                    if (addinName.EndsWith("StatsDirect3ExcelLink.xlam"))
+                    if (addinName.EndsWith("StatsDirect4ExcelLink.xlam"))
                     {
                         oParam[0] = "False";
                         addIn.GetType().InvokeMember("Installed", BindingFlags.SetProperty, null, addIn, oParam);
@@ -168,7 +168,7 @@ namespace StatsDirect.UI
                     oParam[0] = i;
                     var addIn = oAddins.GetType().InvokeMember("Item", BindingFlags.GetProperty, null, oAddins, oParam);
                     string addinName = (string)addIn.GetType().InvokeMember("Fullname", BindingFlags.GetProperty, null, addIn, null);
-                    if (addinName.EndsWith("StatsDirect3ExcelLink.xla"))
+                    if (addinName.EndsWith("StatsDirect4ExcelLink.xla"))
                     {
                         oParam[0] = "False";
                         addIn.GetType().InvokeMember("Installed", BindingFlags.SetProperty, null, addIn, oParam);

@@ -17,8 +17,26 @@
           <max-columns>200</max-columns>
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
+        <option>
+          <name>sided</name>
+          <prompt>One or two sided</prompt>
+          <must-request>true</must-request>
+          <options>
+            <option value="1">1-sided</option>
+            <option value="2">2-sided</option>
+          </options>
+          <default-value>2</default-value>
+        </option>
       </parameters>
 		<builtin function-name="rptKwMultiple" />
-    <report type="application/x-statsdirect-creole" filename="kwmulti.creole" />
+    <test>
+      <condition>="one".Equals(parameters["sidedoutput"].AsString)</condition>
+      <iftrue>
+        <report type="application/x-statsdirect-creole" filename="kwmultionesided.creole" />
+      </iftrue>
+      <iffalse>
+        <report type="application/x-statsdirect-creole" filename="kwmultitwosided.creole" />
+      </iffalse>
+    </test>
 	</steps>
 </operation>

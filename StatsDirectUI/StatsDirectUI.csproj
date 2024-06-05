@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0-windows10.0.17763.0</TargetFramework>
+    <OutputType>WinExe</OutputType>
     <AssemblyName>StatsDirect</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>StatsDirect</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <NoWarn>CA1416</NoWarn>
+    <ApplicationDefaultFont>Microsoft Sans Serif, 8.25pt</ApplicationDefaultFont>
+    <UseWPF>False</UseWPF>
+    <StartupObject>StatsDirect.UI.Program</StartupObject>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredCompilation>true</TieredCompilation>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="UI\frmReportDNBTest.cs" />
@@ -24,10 +30,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
-    <PackageReference Include="DevExpress.Win.RichEdit" Version="23.1.4" />
+    <PackageReference Include="DevExpress.Win.RichEdit" Version="23.2.5" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.8.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
     <PackageReference Include="OpenMcdf" Version="2.3.0" />
-    <PackageReference Include="SpreadsheetGear.Windows" Version="9.1.60-beta" />
+    <PackageReference Include="PresentationFramework" Version="4.6.0" />
+    <PackageReference Include="SpreadsheetGear.Windows" Version="9.2.26" />
   </ItemGroup>
   <ItemGroup>
     <ContentWithTargetPath Include="Assets/**">
@@ -35,4 +44,20 @@
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationFramework">
+      <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithSigning|AnyCPU'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWatchExceptions|AnyCPU'">
+    <DefineConstants>$(DefineConstants);WATCH_EXCEPTIONS</DefineConstants>
+  </PropertyGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  </Target>
 </Project>

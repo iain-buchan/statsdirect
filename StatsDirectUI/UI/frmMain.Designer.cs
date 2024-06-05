@@ -637,10 +637,10 @@ namespace StatsDirect.UI
             this.tabWindows.CausesValidation = false;
             this.tabWindows.ContextMenuStrip = this.tabContextMenuStrip;
             this.tabWindows.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.tabWindows.ItemSize = new System.Drawing.Size(0, 25);
+            this.tabWindows.ItemSize = new System.Drawing.Size(0, 50);
             this.tabWindows.Location = new System.Drawing.Point(0, 6);
             this.tabWindows.Margin = new System.Windows.Forms.Padding(0);
-            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 25);
+            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 50);
             this.tabWindows.MinimumSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Name = "tabWindows";
             this.tabWindows.SelectedIndex = 0;
@@ -871,7 +871,7 @@ namespace StatsDirect.UI
             this.toolStrip.MinimumSize = new System.Drawing.Size(0, 27);
             this.toolStrip.Name = "toolStrip";
             this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
-            this.toolStrip.Size = new System.Drawing.Size(692, 27);
+            this.toolStrip.Size = new System.Drawing.Size(1000, 27);
             this.toolStrip.TabIndex = 5;
             // 
             // newToolStripButton
@@ -996,7 +996,7 @@ namespace StatsDirect.UI
             this.cboRecentOperations.Items.AddRange(new object[] {
             "(none)"});
             this.cboRecentOperations.Name = "cboRecentOperations";
-            this.cboRecentOperations.Size = new System.Drawing.Size(121, 27);
+            this.cboRecentOperations.Size = new System.Drawing.Size(300, 27);
             this.cboRecentOperations.SelectedIndexChanged += new System.EventHandler(this.cboRecentOperations_SelectedIndexChanged);
             // 
             // pnlTop

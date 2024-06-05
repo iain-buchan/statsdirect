@@ -3296,92 +3296,120 @@ namespace StatsDirect.Builtins
 
             double confidence = parameters["confidence"].AsDouble;
 
-            // treatment groups
-            int k = frame.VariableCount;
+           ParameterBag outputParameters = new();
 
             // Steel-Dwass-Critchlow-Fligner method
             double p = confidence;
+
+            // Evaluates the input parameters for the sided value
+            // The output "sided" is used to change which creole file is used.
+            int sided = 2;
+            if (parameters["sided"].HasData)
+            {
+                sided = Parsing.Cint_Txt(parameters["sided"].AsString);
+                if (sided == 1)
+                {
+                    // updates p as per issue #19
+                    p = 0.95;
+                    outputParameters.AddOutput("sidedoutput", "one");
+                }
+                else if (sided == 2)
+                {
+                    // updates p as per issue #19
+                    p = 0.975;
+                    outputParameters.AddOutput("sidedoutput", "two");
+                }
+            }
+
+
+            // treatment groups
+            int k = frame.VariableCount;
+
             if (p == 0)
                 p = 0.95;
             double qval = PDF.quantsr(p, k, 1000000.0);
 
-            ParameterBag outputParameters = new();
-            outputParameters.AddOutput("q", qval);
+ 
+ 
 
-            IList<ParameterBag> variableList = new List<ParameterBag>();
-            for (int i = 1; i < frame.VariableCount; i++)
+            if (sided != 1)
             {
-                for (int j = i + 1; j <= k; j++)
+                outputParameters.AddOutput("q", qval);
+
+                IList<ParameterBag> variableList = new List<ParameterBag>();
+                for (int i = 1; i < frame.VariableCount; i++)
                 {
-
-                    int i0 = i - 1;
-                    int j0 = j - 1;
-                    int kn = frame.Variables[i0].Length + frame.Variables[j0].Length;
-                    x = new double[kn + 1];
-                    ri = new double[kn + 1];
-
-                    int ki = 0;
-                    foreach (double val in ((DoubleVariable)frame.Variables[i0]).Data)
+                    for (int j = i + 1; j <= k; j++)
                     {
-                        if (val != Constant.MISSING)
+
+                        int i0 = i - 1;
+                        int j0 = j - 1;
+                        int kn = frame.Variables[i0].Length + frame.Variables[j0].Length;
+                        x = new double[kn + 1];
+                        ri = new double[kn + 1];
+
+                        int ki = 0;
+                        foreach (double val in ((DoubleVariable)frame.Variables[i0]).Data)
                         {
-                            ki += 1;
-                            x[ki] = val;
+                            if (val != Constant.MISSING)
+                            {
+                                ki += 1;
+                                x[ki] = val;
+                            }
                         }
-                    }
 
-                    int kj = 0;
-                    foreach (double val in ((DoubleVariable)frame.Variables[j0]).Data)
-                    {
-                        if (val != Constant.MISSING)
+                        int kj = 0;
+                        foreach (double val in ((DoubleVariable)frame.Variables[j0]).Data)
                         {
-                            kj += 1;
-                            x[ki + kj] = val;
+                            if (val != Constant.MISSING)
+                            {
+                                kj += 1;
+                                x[ki + kj] = val;
+                            }
                         }
+
+                        kn = ki + kj;
+                        ExFortran.Rank(x, ri, 1, kn, 5, out double ct);
+
+                        double sr1 = 0.0;
+                        double sr2 = 0.0;
+                        for (int n = 1; n <= ki; n++)
+                            sr1 += ri[n];
+                        for (int n = ki + 1; n <= ki + kj; n++)
+                            sr2 += ri[n];
+                        double njj;
+                        double nii;
+                        double wij;
+                        if (ki < kj)
+                        {
+                            wij = sr1;
+                            nii = ki;
+                            njj = kj;
+                        }
+                        else
+                        {
+                            wij = sr2;
+                            nii = kj;
+                            njj = ki;
+                        }
+
+                        double v = nii * njj / 24.0;
+                        v *= (nii + njj + 1.0 - ct / ((nii + njj) * (nii + njj - 1.0)));
+                        double wx = (wij - nii * (nii + njj + 1) / 2.0) / Math.Sqrt(v);
+
+                        ParameterBag variableParameters = new();
+                        variableParameters.AddOutput("t1", frame.Variables[i0].Title);
+                        variableParameters.AddOutput("t2", frame.Variables[j0].Title);
+                        variableParameters.AddOutput("diff", Math.Abs(wx) > qval ? "significant" : "not significant");
+                        variableParameters.AddOutput("wx", wx);
+                        variableParameters.AddOutput("qval", qval);
+                        p = 1.0 - PDF.probsr(Math.Abs(wx), k, 1000000.0);
+                        variableParameters.AddOutput("p", p);
+                        variableList.Add(variableParameters);
                     }
-
-                    kn = ki + kj;
-                    ExFortran.Rank(x, ri, 1, kn, 5, out double ct);
-
-                    double sr1 = 0.0;
-                    double sr2 = 0.0;
-                    for (int n = 1; n <= ki; n++)
-                        sr1 += ri[n];
-                    for (int n = ki + 1; n <= ki + kj; n++)
-                        sr2 += ri[n];
-                    double njj;
-                    double nii;
-                    double wij;
-                    if (ki < kj)
-                    {
-                        wij = sr1;
-                        nii = ki;
-                        njj = kj;
-                    }
-                    else
-                    {
-                        wij = sr2;
-                        nii = kj;
-                        njj = ki;
-                    }
-
-                    double v = nii * njj / 24.0;
-                    v *= (nii + njj + 1.0 - ct / ((nii + njj) * (nii + njj - 1.0)));
-                    double wx = (wij - nii * (nii + njj + 1) / 2.0) / Math.Sqrt(v);
-
-                    ParameterBag variableParameters = new();
-                    variableParameters.AddOutput("t1", frame.Variables[i0].Title);
-                    variableParameters.AddOutput("t2", frame.Variables[j0].Title);
-                    variableParameters.AddOutput("diff", Math.Abs(wx) > qval ? "significant" : "not significant");
-                    variableParameters.AddOutput("wx", wx);
-                    variableParameters.AddOutput("qval", qval);
-                    p = 1.0 - PDF.probsr(Math.Abs(wx), k, 1000000.0);
-                    variableParameters.AddOutput("p", p);
-                    variableList.Add(variableParameters);
                 }
+                outputParameters.AddOutput("*dwass", variableList);
             }
-            outputParameters.AddOutput("*dwass", variableList);
-
             //  Re-do Kruskal-Wallis test (from rpt_kruskal)
             int prelx = 0;
             foreach (IVariable varbl in frame.Variables)
@@ -3415,6 +3443,13 @@ namespace StatsDirect.Builtins
 
             // Conover-Iman method
             p = confidence;
+            //////////////////////////
+            // updates p as per issue #19
+            if (sided == 1)
+                p = 0.95;
+            else
+                p = 0.975;
+            //////////////////////////
             if (p == 0)
                 p = 0.05;
             if (p > 1.0 - p)
@@ -3459,7 +3494,10 @@ namespace StatsDirect.Builtins
                     p = PDF.tvalp(Math.Abs(stata / statq), df);
                     if (p > 1.0 - p)
                         p = 1.0 - p;
-                    inequalityParameters.AddOutput("p", 2.0 * p);
+                    if ( sided == 1 )
+                       inequalityParameters.AddOutput("p", p);
+                    else
+                       inequalityParameters.AddOutput("p", 2.0 * p);
                     inequalityList.Add(inequalityParameters);
                 }
             }
