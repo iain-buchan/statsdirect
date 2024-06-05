@@ -18,7 +18,7 @@
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
         <option>
-          <name>onesided</name>
+          <name>sided</name>
           <prompt>One or two sided</prompt>
           <must-request>true</must-request>
           <options>
@@ -30,7 +30,7 @@
       </parameters>
 		<builtin function-name="rptKwMultiple" />
     <test>
-      <condition>="one".Equals(parameters["sided"].AsString)</condition>
+      <condition>="one".Equals(parameters["sidedoutput"].AsString)</condition>
       <iftrue>
         <report type="application/x-statsdirect-creole" filename="kwmultionesided.creole" />
       </iftrue>
