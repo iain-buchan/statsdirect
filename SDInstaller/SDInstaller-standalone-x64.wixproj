@@ -3,6 +3,7 @@
     <Platform>x64</Platform>
     <ProductVersion>4.0</ProductVersion>
     <OutputName>StatsDirect-x64</OutputName>
+    <OutputPath>..\ReleaseBuild</OutputPath>
     <SignOutput>true</SignOutput>
   </PropertyGroup>
   <ItemGroup>

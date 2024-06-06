@@ -45,7 +45,7 @@
         UninstallArguments="windowsdesktop-runtime-6.0.29-win-x64.exe /uninstall /quiet /norestart">
         <ExePackagePayload
           Name="windowsdesktop-runtime-6.0.29-win-x64.exe"
-          SourceFile="..\..\..\..\DownloadedBinaries\windowsdesktop-runtime-6.0.29-win-x64.exe"
+          SourceFile="..\DownloadedBinaries\windowsdesktop-runtime-6.0.29-win-x64.exe"
           />
       </ExePackage>
     </PackageGroup>
