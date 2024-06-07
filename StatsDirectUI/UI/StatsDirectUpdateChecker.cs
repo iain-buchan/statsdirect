@@ -39,10 +39,10 @@ namespace StatsDirect.UI
                 return;
             }
             latestVersionLine = latestVersionLine.Substring(0, versionsEndPos - 1);
-            MajorMinorPoint availableVersion = GetVersion3(latestVersionLine);
+            MajorMinorPoint availableVersion = GetVersion4(latestVersionLine);
             if (null == availableVersion || !availableVersion.IsValid)
             {
-                UpdateStatus(true, false, false, "Could not locate a version of StatsDirect 3 on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatus(true, false, false, "Could not locate a version of StatsDirect on update page. Please check manually at www.statsdirect.com/update.aspx");
                 return;
             }
             MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
@@ -57,7 +57,7 @@ namespace StatsDirect.UI
             }
         }
 
-        private static MajorMinorPoint GetVersion3(string latestVersionLine)
+        private static MajorMinorPoint GetVersion4(string latestVersionLine)
         {
             Regex versionSpotter = new Regex("[0-9]+\\.[0-9]+\\.[0-9]+");
             MatchCollection matches = versionSpotter.Matches(latestVersionLine);
@@ -66,7 +66,7 @@ namespace StatsDirect.UI
             foreach (Match m in matches)
             {
                 MajorMinorPoint version = new MajorMinorPoint(m.Value);
-                if (version.IsValid && version.Major == 3)
+                if (version.IsValid && version.Major == 4)
                     return version;
             }
             return null;
