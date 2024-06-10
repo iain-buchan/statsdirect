@@ -1221,7 +1221,7 @@ namespace StatsDirect.UI
                 {
                     return OpenSdwOrPrompt(path);
                 }
-                SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect 3 can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
+                SdApplication.SoleInstance.MsgboxX("Could not open '" + path + "'.  StatsDirect can only open Excel, rich text, HTML and script files.", MessageBoxButtons.OK, MessageBoxIcon.Error, "StatsDirect", true);
                 SdApplication.SoleInstance.NoteRecentFile(path, false);
                 return false;
             }

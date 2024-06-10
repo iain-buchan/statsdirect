@@ -60,9 +60,11 @@
       RuntimeType="desktop"
       Platform="x64"
       Version="6.0.0"/>
-    <Launch Condition="Installed OR DOTNETDESKTOP6RUNTIMECHECK=&quot;0&quot;" Message="[ProductName] requires .NET 6." />
+    <Launch Condition="Installed OR DOTNETDESKTOP6RUNTIMECHECK=&quot;0&quot;" Message="[ProductName] requires .NET 6. Download 6.0.29 for your OS from here https://dotnet.microsoft.com/en-us/download/dotnet/6.0" />
     <!-- Installation conditions: At least Windows 10, no upper limit on OS version-->
+<!--
     <Launch Condition="Installed OR (VersionNT &gt;= 603)" Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 10, 11 and Server 2016-2022." />
+-->
     <!-- If we're attempting to install an older version over a newer one, warn the user and stop -->
     <Launch Condition="NOT NEWERVERSIONDETECTED OR Installed" Message="A later version of [ProductName] is already installed. If you wish to install this version, uninstall the later version then run this installer again. Setup will now exit." />
 

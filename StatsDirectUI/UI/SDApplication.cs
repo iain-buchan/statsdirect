@@ -940,7 +940,7 @@ namespace StatsDirect.UI
                 "ChiSquareGoodnessOfFit" or "ConvertUnits" or "Distribution" or "Dummy" or "Extraction" or "GraphicsOptions" or "ROCCutoff" or "Scores" or "SortInPlace" => AmendUsingControl(fillable),
                 "ToggleFilters" => ToggleFilters(),
                 "Categorise" => Amend((Builtins.CategoriseOptions)fillable),
-                "ChartExplorer" => throw new NotImplementedException("Chart explorer is not implemented in StatsDirect 3.0"),
+                "ChartExplorer" => throw new NotImplementedException("Chart explorer is not implemented in StatsDirect"),
                 "ChartOptions" => FillChartOptions((Charting.ChartDefinition)fillable, context),
                 "SummaryStatistics" => Amend((Builtins.SummaryStatisticsOptions)fillable),
                 _ => throw new ArgumentOutOfRangeException(nameof(fillable), fillable, "fillable.FillerToUse: Unknown option"),
