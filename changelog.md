@@ -3,6 +3,17 @@ Changelog:
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v4.0.3] 2024-06-10
+### Changed
+- Removed check of Windows version from installer.
+
+### Fixed
+- Update to check update.aspx for a new update if available, fixes [#23](https://github.com/statsdirect/statsdirect4/issues/23)
+- Added more information in message about missing .Net 6 in Installer [#24](https://github.com/statsdirect/statsdirect4/issues/24)
+
+##[v4.0.2] 2024-06-07
+### Changed
+- Updated website check for newer version, changed major version check from 3 to 4
 
 
 ##[v4.0.1] 2024-06-06
