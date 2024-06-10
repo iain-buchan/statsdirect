@@ -9,7 +9,7 @@ namespace StatsDirect.UI
     {
         public void StartCheck(StatusChangedEventHandler handler)
         {
-            base.StartCheck(new Uri("http://www.statsdirect.com/update.aspx"), handler);
+            base.StartCheck(new Uri("http://www.statsdirect.com/download.aspx"), handler);
         }
 
         protected override void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
@@ -28,21 +28,21 @@ namespace StatsDirect.UI
             int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
             if (latestVersionPos < 0)
             {
-                UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
                 return;
             }
             string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
             int versionsEndPos = latestVersionLine.IndexOf("<br", StringComparison.InvariantCulture);
             if (versionsEndPos < 0)
             {
-                UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
                 return;
             }
             latestVersionLine = latestVersionLine.Substring(0, versionsEndPos - 1);
             MajorMinorPoint availableVersion = GetVersion4(latestVersionLine);
             if (null == availableVersion || !availableVersion.IsValid)
             {
-                UpdateStatus(true, false, false, "Could not locate a version of StatsDirect on update page. Please check manually at www.statsdirect.com/update.aspx");
+                UpdateStatus(true, false, false, "Could not locate a version of StatsDirect on update page. Please check manually at www.statsdirect.com/download.aspx");
                 return;
             }
             MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
