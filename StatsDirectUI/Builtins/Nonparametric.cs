@@ -3069,6 +3069,8 @@ namespace StatsDirect.Builtins
             int n;
             double a2 = 0;
             double b2 = 0;
+            // moved variable nd definition here so can be used in mean value calculations;
+            double nd = 0;
             if (parameters.ContainsKey("w2") && parameters.ContainsKey("N") && parameters.ContainsKey("A2") && parameters.ContainsKey("B2"))
             {
                 w2 = (double[])parameters["w2"].AsObject;
@@ -3081,45 +3083,144 @@ namespace StatsDirect.Builtins
                 //  Calculate parameters
                 double t1 = 0;
                 double t2 = 0;
-                double nd = 0;
+
                 CalcFriedman(frame, out w2, out n, ref a2, ref b2, ref t1, ref t2, ref nd, out bool allAreBinary, out bool numbersAreSmall);
             }
 
+            ParameterBag outputParameters = new();
             double dfq = (n - 1) * (frame.VariableCount - 1);
-            double p = confidence;
+            double p = confidence;            ////////////////////////////////////
+            // TODO: RD need to check this?
+            // Evaluates the input parameters for the sided value
+            // The output "sided" is used to change which creole file is used.
+            int sided = 2;
+            string comparison = ">";
+            if (parameters["sided"].HasData)
+            {
+                sided = Parsing.Cint_Txt(parameters["sided"].AsString);
+                if (sided == 1)
+                {
+                    outputParameters.AddOutput("sidedoutput", "one");
+                }
+                else if (sided == 2)
+                {
+                    outputParameters.AddOutput("sidedoutput", "two");
+                }
+            }
+            ////////////////////////////////////
+
             if (p == 0)
                 p = 0.05;
-            if (p > 1.0 - p)
-                p = 1.0 - p;
-            p /= 2.0;
+
+            if (sided == 1)
+            {
+                if (p > 1.0 - p)
+                    p = 1.0 - p;
+                // p /= 2.0;
+            }
+            else 
+            { 
+                if (p > 1.0 - p)
+                    p = 1.0 - p;
+                p /= 2.0;
+            }
+
+
+
             double tval = PDF.tfromp(p, dfq);
             double tcriq = Math.Pow(Math.Abs(2 * n * (a2 - b2) / dfq), 0.5);
             double tcrit = tcriq * tval;
 
-            ParameterBag outputParameters = new();
+
             outputParameters.AddOutput("df", dfq);
             outputParameters.AddOutput("t", tval);
 
-            IList<ParameterBag> pairList = new List<ParameterBag>();
-            for (int g = 1; g < frame.VariableCount; g++)
+
+            // ONE SIDED
+            if (sided == 1)
             {
-                for (int j = g + 1; j <= frame.VariableCount; j++)
+                IList<ParameterBag> pairList = new List<ParameterBag>();
+                for (int g = 1; g < frame.VariableCount; g++)
                 {
-                    ParameterBag pairParameters = new();
-                    double stata = w2[g] - w2[j];
-                    pairParameters.AddOutput("t1", frame.Variables[g - 1].Title);
-                    pairParameters.AddOutput("t2", frame.Variables[j - 1].Title);
-                    pairParameters.AddOutput("diff", Math.Abs(stata) > tcrit ? "significant" : "not significant");
-                    pairParameters.AddOutput("stata", stata);
-                    pairParameters.AddOutput("tcrit", tcrit);
-                    p = PDF.tvalp(Math.Abs(stata / tcriq), dfq);
-                    if (p > 1.0 - p)
-                        p = 1.0 - p;
-                    pairParameters.AddOutput("p", 2.0 * p);
-                    pairList.Add(pairParameters);
+                    for (int j = g + 1; j <= frame.VariableCount; j++)
+                    {
+                        ParameterBag pairParameters = new();
+                        double stata = w2[g] - w2[j];
+                        pairParameters.AddOutput("t1", frame.Variables[g - 1].Title);
+                        pairParameters.AddOutput("t2", frame.Variables[j - 1].Title);
+                        pairParameters.AddOutput("diff", Math.Abs(stata) > tcrit ? "significant" : "not significant");
+                        pairParameters.AddOutput("stata", stata);
+                        pairParameters.AddOutput("tcrit", tcrit);
+                        p = PDF.tvalp(Math.Abs(stata / tcriq), dfq);
+                        if (p > 1.0 - p)
+                            p = 1.0 - p;
+                        if (sided == 1)
+                            pairParameters.AddOutput("p", p);
+                        else
+                            pairParameters.AddOutput("p", 2.0 * p);
+                        if (w2[g] < w2[j])
+                            comparison = "<";
+                        else 
+                            comparison = ">";
+                        pairParameters.AddOutput("comp", comparison);
+
+                        //////////////////////////////////////////////////////////
+                        double meanRank1 = w2[g]/nd;
+                        double meanRank2 = w2[j]/nd;
+
+                        pairParameters.AddOutput("meanrank1", meanRank1);
+                        pairParameters.AddOutput("meanrank2", meanRank2);
+                        if (meanRank1 > meanRank2)
+                            pairParameters.AddOutput("compmeanrank", ">");
+                        else
+                            pairParameters.AddOutput("compmeanrank", "<");
+                        //////////////////////////////////////////////////////////
+
+
+                        pairList.Add(pairParameters);
+                    }
                 }
+                outputParameters.AddOutput("*pair", pairList);
             }
-            outputParameters.AddOutput("*pair", pairList);
+            else // 2 SIDED
+            {
+                IList<ParameterBag> pairList = new List<ParameterBag>();
+                for (int g = 1; g < frame.VariableCount; g++)
+                {
+                    for (int j = g + 1; j <= frame.VariableCount; j++)
+                    {
+                        ParameterBag pairParameters = new();
+                        double stata = w2[g] - w2[j];
+                        pairParameters.AddOutput("t1", frame.Variables[g - 1].Title);
+                        pairParameters.AddOutput("t2", frame.Variables[j - 1].Title);
+                        pairParameters.AddOutput("diff", Math.Abs(stata) > tcrit ? "significant" : "not significant");
+                        pairParameters.AddOutput("stata", stata);
+                        pairParameters.AddOutput("tcrit", tcrit);
+                        p = PDF.tvalp(Math.Abs(stata / tcriq), dfq);
+                        if (p > 1.0 - p)
+                            p = 1.0 - p;
+                        pairParameters.AddOutput("p", 2.0 * p);
+                        if (w2[g] < w2[j])
+                            comparison = "<";
+                        else
+                            comparison = ">";
+                        pairParameters.AddOutput("comp", comparison);
+
+                        //////////////////////////////////////////////////////////
+                        double meanRank1 = w2[g] / nd;
+                        double meanRank2 = w2[j] / nd;
+
+                        pairParameters.AddOutput("meanrank1", meanRank1);
+                        pairParameters.AddOutput("meanrank2", meanRank2);
+                        pairParameters.AddOutput("compmeanrank", ">");
+                        //////////////////////////////////////////////////////////
+                        ///
+                        pairList.Add(pairParameters);
+                    }
+                }
+                outputParameters.AddOutput("*pair", pairList);
+
+            }
             return new StepOutput(outputParameters);
         }
 
@@ -3293,7 +3394,6 @@ namespace StatsDirect.Builtins
             double[] x;
 
             DataFrame frame = parameters["data"].AsDataFrame;
-
             double confidence = parameters["confidence"].AsDouble;
 
            ParameterBag outputParameters = new();
@@ -3320,7 +3420,40 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("sidedoutput", "two");
                 }
             }
+            ////////////////////////////////////////////////////////////////////////
+            // MOVED CODE SO GET ACCESS TO l
+            //  Re-do Kruskal-Wallis test (from rpt_kruskal)
+            int prelx = 0;
+            int[] l = new int[frame.VariableCount + 1];
+            foreach (IVariable varbl in frame.Variables)
+                prelx += varbl.Length;
+            x = new double[prelx + 1];
 
+
+            int qty = 0;
+            for (int d = 0; d < frame.VariableCount; d++)
+            {
+                int cnt = 0;
+                DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
+                foreach (double val in varbl.Data)
+                {
+                    if (val != Constant.MISSING)
+                    {
+                        qty += 1;
+                        cnt += 1;
+                        x[qty] = val;
+                    }
+                }
+                l[d + 1] = cnt;
+            }
+            int lx = qty;
+
+            double[] w1 = new double[lx + 1];
+            double ha = 0;
+            double t = 0;
+            XKwt(x, lx, l, frame.VariableCount, out double h, ref ha, ref t, ref w1, out int _);
+            //  End copy from rpt_kruskal
+            //////////////////////////////////////////////////////////////////////////////
 
             // treatment groups
             int k = frame.VariableCount;
@@ -3331,7 +3464,7 @@ namespace StatsDirect.Builtins
 
  
  
-
+            // 2 sided
             if (sided != 1)
             {
                 outputParameters.AddOutput("q", qval);
@@ -3405,41 +3538,54 @@ namespace StatsDirect.Builtins
                         variableParameters.AddOutput("qval", qval);
                         p = 1.0 - PDF.probsr(Math.Abs(wx), k, 1000000.0);
                         variableParameters.AddOutput("p", p);
+
+                        // TODO: RD change comp text according to requirement in issue #19
+                        double meanRank1 = ri[i] / l[i];
+                        double meanRank2 = ri[j] / l[j];
+                        variableParameters.AddOutput("meanrank1", meanRank1);
+                        variableParameters.AddOutput("meanrank2", meanRank2);
+                        if (meanRank1 > meanRank2)
+                            variableParameters.AddOutput("compmeanrank", ">");
+                        else
+                            variableParameters.AddOutput("compmeanrank", "<");
+
+
                         variableList.Add(variableParameters);
                     }
                 }
                 outputParameters.AddOutput("*dwass", variableList);
             }
-            //  Re-do Kruskal-Wallis test (from rpt_kruskal)
-            int prelx = 0;
-            foreach (IVariable varbl in frame.Variables)
-                prelx += varbl.Length;
-            x = new double[prelx + 1];
-            int[] l = new int[frame.VariableCount + 1];
+            ////  Re-do Kruskal-Wallis test (from rpt_kruskal)
+            //int prelx = 0;
+            //int[] l = new int[frame.VariableCount + 1];
+            //foreach (IVariable varbl in frame.Variables)
+            //    prelx += varbl.Length;
+            //x = new double[prelx + 1];
 
-            int qty = 0;
-            for (int d = 0; d < frame.VariableCount; d++)
-            {
-                int cnt = 0;
-                DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
-                foreach (double val in varbl.Data)
-                {
-                    if (val != Constant.MISSING)
-                    {
-                        qty += 1;
-                        cnt += 1;
-                        x[qty] = val;
-                    }
-                }
-                l[d + 1] = cnt;
-            }
-            int lx = qty;
 
-            double[] w1 = new double[lx + 1];
-            double ha = 0;
-            double t = 0;
-            XKwt(x, lx, l, frame.VariableCount, out double h, ref ha, ref t, ref w1, out int _);
-            //  End copy from rpt_kruskal
+            //int qty = 0;
+            //for (int d = 0; d < frame.VariableCount; d++)
+            //{
+            //    int cnt = 0;
+            //    DoubleVariable varbl = (DoubleVariable)frame.Variables[d];
+            //    foreach (double val in varbl.Data)
+            //    {
+            //        if (val != Constant.MISSING)
+            //        {
+            //            qty += 1;
+            //            cnt += 1;
+            //            x[qty] = val;
+            //        }
+            //    }
+            //    l[d + 1] = cnt;
+            //}
+            //int lx = qty;
+
+            //double[] w1 = new double[lx + 1];
+            //double ha = 0;
+            //double t = 0;
+            //XKwt(x, lx, l, frame.VariableCount, out double h, ref ha, ref t, ref w1, out int _);
+            ////  End copy from rpt_kruskal
 
             // Conover-Iman method
             p = confidence;
@@ -3491,6 +3637,18 @@ namespace StatsDirect.Builtins
                     inequalityParameters.AddOutput("diff", stata > statb ? "significant" : "not significant");
                     inequalityParameters.AddOutput("stata", stata);
                     inequalityParameters.AddOutput("statb", statb);
+
+
+                    // TODO: RD change comp text according to requirement in issue #19
+                    double meanRank1 = ri[i] / l[i];
+                    double meanRank2 = ri[j] / l[j];
+                    inequalityParameters.AddOutput("meanrank1", meanRank1);
+                    inequalityParameters.AddOutput("meanrank2", meanRank2);
+                    if (meanRank1 > meanRank2)
+                       inequalityParameters.AddOutput("compmeanrank", ">");
+                    else
+                       inequalityParameters.AddOutput("compmeanrank", "<");
+
                     p = PDF.tvalp(Math.Abs(stata / statq), df);
                     if (p > 1.0 - p)
                         p = 1.0 - p;
