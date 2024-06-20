@@ -3075,6 +3075,10 @@ namespace StatsDirect.Builtins
             {
                 w2 = (double[])parameters["w2"].AsObject;
                 n = parameters["N"].AsInt32;
+
+                // added as part of #27 
+                nd = Convert.ToDouble(parameters["N"].AsInt32);
+
                 a2 = parameters["A2"].AsDouble;
                 b2 = parameters["B2"].AsDouble;
             }
