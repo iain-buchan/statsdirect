@@ -18,8 +18,26 @@
           <max-columns>200</max-columns>
           <ask-for-group-id>true</ask-for-group-id>
         </frame>
+        <option>
+          <name>sided</name>
+          <prompt>One or two sided</prompt>
+          <must-request>true</must-request>
+          <options>
+            <option value="1">1-sided</option>
+            <option value="2">2-sided</option>
+          </options>
+          <default-value>2</default-value>
+        </option>
       </parameters>
 		<builtin function-name="rptFrMultiple" />
-    <report type="application/x-statsdirect-creole" filename="frmulti.creole" />
-	</steps>
+    <test>
+      <condition>="one".Equals(parameters["sidedoutput"].AsString)</condition>
+      <iftrue>
+        <report type="application/x-statsdirect-creole" filename="frmultionesided.creole" />
+      </iftrue>
+      <iffalse>
+        <report type="application/x-statsdirect-creole" filename="frmultitwosided.creole" />
+      </iffalse>
+    </test>
+  </steps>
 </operation>
