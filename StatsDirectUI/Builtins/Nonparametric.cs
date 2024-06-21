@@ -3162,12 +3162,6 @@ namespace StatsDirect.Builtins
                             pairParameters.AddOutput("p", p);
                         else
                             pairParameters.AddOutput("p", 2.0 * p);
-                        if (w2[g] < w2[j])
-                            comparison = "<";
-                        else 
-                            comparison = ">";
-                        pairParameters.AddOutput("comp", comparison);
-
                         //////////////////////////////////////////////////////////
                         double meanRank1 = w2[g]/nd;
                         double meanRank2 = w2[j]/nd;
@@ -3204,19 +3198,16 @@ namespace StatsDirect.Builtins
                         if (p > 1.0 - p)
                             p = 1.0 - p;
                         pairParameters.AddOutput("p", 2.0 * p);
-                        if (w2[g] < w2[j])
-                            comparison = "<";
-                        else
-                            comparison = ">";
-                        pairParameters.AddOutput("comp", comparison);
-
                         //////////////////////////////////////////////////////////
                         double meanRank1 = w2[g] / nd;
                         double meanRank2 = w2[j] / nd;
 
                         pairParameters.AddOutput("meanrank1", meanRank1);
                         pairParameters.AddOutput("meanrank2", meanRank2);
-                        pairParameters.AddOutput("compmeanrank", ">");
+                        if (meanRank1 > meanRank2)
+                            pairParameters.AddOutput("compmeanrank", ">");
+                        else
+                            pairParameters.AddOutput("compmeanrank", "<");
                         //////////////////////////////////////////////////////////
                         ///
                         pairList.Add(pairParameters);
@@ -3544,11 +3535,11 @@ namespace StatsDirect.Builtins
                         variableParameters.AddOutput("p", p);
 
                         // TODO: RD change comp text according to requirement in issue #19
-                        double meanRank1 = ri[i] / l[i];
-                        double meanRank2 = ri[j] / l[j];
-                        variableParameters.AddOutput("meanrank1", meanRank1);
-                        variableParameters.AddOutput("meanrank2", meanRank2);
-                        if (meanRank1 > meanRank2)
+                        double sr1Output = sr1 / nii;
+                        double sr2Output = sr2 / njj;
+                        variableParameters.AddOutput("meanrank1", sr1Output);
+                        variableParameters.AddOutput("meanrank2", sr2Output);
+                        if (sr1Output > sr2Output)
                             variableParameters.AddOutput("compmeanrank", ">");
                         else
                             variableParameters.AddOutput("compmeanrank", "<");

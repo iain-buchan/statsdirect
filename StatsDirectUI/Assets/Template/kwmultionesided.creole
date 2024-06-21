@@ -13,7 +13,7 @@
         </td>
       </tr>
       <tr>
-        <td>(@{meanrank1:roundu} vs @{meanrank2:roundu})</td>
+        <td>(@{meanrank1:roundu} @compmeanrank @{meanrank2:roundu})</td>
         <td>
           <pval>@{p:pval}</pval>
         </td>

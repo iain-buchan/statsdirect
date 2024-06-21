@@ -5,7 +5,7 @@
 
 <table>
 <tr><td>@t1 vs @t2</td><td><ci>@diff</ci></td></tr>
-<tr><td>(@{meanrank1:roundu} vs @{meanrank2:roundu})</td><td><pval>@{p:pval}</pval></td></tr>
+<tr><td>(@{meanrank1:roundu} @compmeanrank @{meanrank2:roundu})</td><td><pval>@{p:pval}</pval></td></tr>
 </table>
 </block>
 </report>
