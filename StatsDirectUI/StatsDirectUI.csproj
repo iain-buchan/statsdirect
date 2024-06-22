@@ -11,7 +11,7 @@
     <UseWPF>False</UseWPF>
     <StartupObject>StatsDirect.UI.Program</StartupObject>
     <PublishReadyToRun>false</PublishReadyToRun>
-    <TieredCompilation>false</TieredCompilation>
+    <TieredCompilation>true</TieredCompilation>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
