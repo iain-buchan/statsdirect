@@ -1,17 +1,17 @@
 <report>
-<title>Kruskal-Wallis: all pairwise comparisons (2-sided Dwass-Steel-Chritchlow-Fligner)</title>
+<title>Kruskal-Wallis: all pairwise comparisons (Dwass-Steel-Chritchlow-Fligner, 2-sided)</title>
 <p>Critical q (range) = @{q:roundu}</p>
 
 <block name="dwass">
 <table>
 <tr><td>@t1 vs @t2</td><td><ci>@diff</ci></td></tr>
-<tr><td>(@{wx:roundu} vs @{qval:roundu})</td><td><pval>@{p:pval}</pval></td></tr>
+<tr><td>(|@{wx:roundu}| > @{qval:roundu})</td><td><pval>@{p:pval}</pval></td></tr>
 </table>
 </block>
 <br />
 
 <p>
-  <title>Kruskal-Wallis: all pairwise comparisons (2-sided Conover-Iman)</title><br />
+<title>Kruskal-Wallis: all pairwise comparisons (Conover-Iman, 2-sided)</title><br />
 Critical t (@{df:round0} df, @{sided:roundu}-sided) = @{t:roundu}
 </p>
 
@@ -20,7 +20,7 @@ Critical t (@{df:round0} df, @{sided:roundu}-sided) = @{t:roundu}
 <tr><td>@t1 vs @t2</td><td><ci>@diff</ci></td></tr>
 
 <tr>
-  <td>(@{meanrank1:roundu} @compmeanrank @{meanrank2:roundu})</td>
+  <td>(@{stata:roundu} > @{statb:roundu})</td>
     <td>
       <pval>@{p:pval}</pval>
     </td>

@@ -1,19 +1,17 @@
 <report>
-  <title>Kruskal-Wallis: all pairwise comparisons (1-sided Conover-Inman)</title>
-  <p>
-    Critical t (@{df:round0} df, @{sided:roundu}-sided) = @{t:roundu}
-  </p>
+  <title>Kruskal-Wallis: all pairwise comparisons (Conover-Inman, 1-sided)</title>
+  <p>Critical t (@{df:round0} df, @{sided:roundu}-sided) = @{t:roundu}</p>
 
   <block name="conover">
     <table>
       <tr>
-        <td>@t1 vs @t2</td>
+        <td>@t1 @compare @t2</td>
         <td>
           <ci>@diff</ci>
         </td>
       </tr>
       <tr>
-        <td>(@{meanrank1:roundu} @compmeanrank @{meanrank2:roundu})</td>
+        <td>(@{stata:roundu} > @{statb:roundu})</td>
         <td>
           <pval>@{p:pval}</pval>
         </td>

@@ -3,6 +3,8 @@
 
 <p>Variables: @tlist</p>
 
+<p>Mean rank: @rlist</p>
+
 <p>Groups = @grps<br />
 df = @df<br />
 Total observations = @tot_obs</p>
