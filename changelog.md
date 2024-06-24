@@ -3,6 +3,11 @@ Changelog:
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v4.0.4] 2024-06-24
+
+### Changed
+
+
 ##[v4.0.3] 2024-06-10
 ### Changed
 - Removed check of Windows version from installer.
