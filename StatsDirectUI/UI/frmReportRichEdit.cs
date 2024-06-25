@@ -62,11 +62,11 @@ namespace StatsDirect.UI
             string strExt = System.IO.Path.GetExtension(filename) ?? string.Empty;
             strExt = strExt.ToLower(CultureInfo.InvariantCulture);
             if (".rtf".Equals(strExt))
-                richEditControl1.LoadDocument(filename, DocumentFormat.Rtf);
+                richEditControl1.LoadDocument(filename, DevExpress.XtraRichEdit.DocumentFormat.Rtf);
             else if (".htm".Equals(strExt) || ".html".Equals(strExt))
-                richEditControl1.LoadDocument(filename, DocumentFormat.Html);
+                richEditControl1.LoadDocument(filename, DevExpress.XtraRichEdit.DocumentFormat.Html);
             else if (".mht".Equals(strExt) || ".mhtml".Equals(strExt))
-                richEditControl1.LoadDocument(filename, DocumentFormat.Mht);
+                richEditControl1.LoadDocument(filename, DevExpress.XtraRichEdit.DocumentFormat.Mht);
             else
             {
                 using StreamReader txtReader = new(filename);
@@ -431,7 +431,7 @@ namespace StatsDirect.UI
         {
             string pathName = SdApplication.SoleInstance.TemplateFileForNewReports;
             if (null != pathName)
-                richEditControl1.LoadDocument(pathName, DocumentFormat.Rtf);
+                richEditControl1.LoadDocument(pathName, DevExpress.XtraRichEdit.DocumentFormat.Rtf);
         }
 
         private void frmReport_Activated(object sender, EventArgs e)
@@ -464,7 +464,7 @@ namespace StatsDirect.UI
             }
             string strExt = System.IO.Path.GetExtension(currentFile);
             strExt = strExt.ToUpper(CultureInfo.InvariantCulture);
-            richEditControl1.SaveDocument(currentFile, ".RTF".Equals(strExt) ? DocumentFormat.Rtf : DocumentFormat.PlainText);
+            richEditControl1.SaveDocument(currentFile, ".RTF".Equals(strExt) ? DevExpress.XtraRichEdit.DocumentFormat.Rtf : DevExpress.XtraRichEdit.DocumentFormat.PlainText);
             Text = "Editor: " + currentFile;
             richEditControl1.Modified = false;
             return true;
@@ -493,13 +493,13 @@ namespace StatsDirect.UI
             string strExt = System.IO.Path.GetExtension(SaveFileDialog1.FileName) ?? string.Empty;
             strExt = strExt.ToUpper(CultureInfo.InvariantCulture);
             if (".RTF".Equals(strExt))
-                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Rtf);
+                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DevExpress.XtraRichEdit.DocumentFormat.Rtf);
             else if (".HTM".Equals(strExt) || ".HTML".Equals(strExt))
-                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Html);
+                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DevExpress.XtraRichEdit.DocumentFormat.Html);
             else if (".MHT".Equals(strExt) || ".MHTML".Equals(strExt))
-                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.Mht);
+                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DevExpress.XtraRichEdit.DocumentFormat.Mht);
             else
-                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DocumentFormat.PlainText);
+                richEditControl1.SaveDocument(SaveFileDialog1.FileName, DevExpress.XtraRichEdit.DocumentFormat.PlainText);
             currentFile = SaveFileDialog1.FileName;
             SdApplication.SoleInstance.NoteRecentFile(currentFile, true);
             Text = currentFile;
