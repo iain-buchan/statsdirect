@@ -3,9 +3,11 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Linq;
 using System;
+using System.Web;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Policy;
+using DevExpress.Data.Svg;
 
 namespace StatsDirect.UI
 {
@@ -95,11 +97,34 @@ namespace StatsDirect.UI
             // activeTopic
             try
             {
-                string url = folder + "/WebHelp/default.htm";
+                string filePath = "file:///" + folder + "\\WebHelp\\default.htm";
+                string startingFolder = folder + "\\WebHelp\\";
+
+                string[] pages = urlData[activeTopic];
+                char[] charsToTrim = { '/' };
+                string fragment = pages[2].TrimStart(charsToTrim);
+                string anchor = "#" + fragment;
+
+                string fullURL = filePath + anchor; // + "?tocpath=nonparametric_methods";
+
+
+
+                //string filePathJustURL = "file:///" + folder + "\\WebHelp\\" + pages[2].TrimStart(charsToTrim);
+                //Uri uriAddressFull = new Uri(filePathJustURL);
+                Uri baseUri = new Uri(filePath);
+                Uri fullUri = new Uri(baseUri, "%23" + fragment);
+
+
+
+                Uri uriAddress = new Uri(fullURL);
+                Console.WriteLine(uriAddress.Fragment.ToString());
+
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = url,
-                    UseShellExecute = true
+                    //FileName = uriAddress.ToString(),
+                    FileName = fullURL.ToString(),
+                    UseShellExecute = true,
+                    WorkingDirectory = startingFolder,
                 });
             }
             catch (System.ComponentModel.Win32Exception e)
