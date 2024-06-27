@@ -39,6 +39,8 @@ namespace StatsDirect.UI
 
         private ParameterBag sessionParametersAcrossOperations;
 
+        private HTMLLOADER htmlLoader = null;
+
         internal void NoteASubformCloseIsStarting()
         {
             MainWindow.NoteASubformCloseIsStarting();
@@ -414,6 +416,12 @@ namespace StatsDirect.UI
 
         internal void ShowHelp(Form Parent)
         {
+            if (htmlLoader == null)
+            {
+                htmlLoader = new HTMLLOADER();
+                htmlLoader.LoadXLSX();
+
+            }
             if (null != ActiveHelpUrl)
             {
                 // Show the URL
@@ -422,19 +430,40 @@ namespace StatsDirect.UI
             else if (0 != ActiveHelpTopic)
             {
                 // Specific help - show it.
-                Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, ActiveHelpTopic.ToString());
+                if (htmlLoader == null)
+                {
+                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, ActiveHelpTopic.ToString());
+                }
+                else
+                {
+                    htmlLoader.OpenURL(SDConfiguration.InstallationDirectory, ActiveHelpTopic.ToString());
+                }
             }
             else
             {
                 // Nothing in particular, guess something useful or show the ToC if we can't.
                 if (SoleInstance?.ActiveWindow != null && SoleInstance.ActiveWindow.HasWindow && SoleInstance.ActiveWindow.Window is IGrid)
                 {
-                    // Grid - show the worksheet help, which is 1040.
-                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, "1040");
+                    if (htmlLoader == null)
+                    {
+                        // Grid - show the worksheet help, which is 1040.
+                        Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TopicId, "1040");
+                    }
+                    else
+                    {
+                        htmlLoader.OpenURL(SDConfiguration.InstallationDirectory, "1040");
+                    }
                 }
                 else
                 {
-                    Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TableOfContents);
+                    if (htmlLoader == null)
+                    {
+                        Help.ShowHelp(Parent, HelpFilePath, HelpNavigator.TableOfContents);
+                    }
+                    else
+                    {
+                        htmlLoader.OpenURL(SDConfiguration.InstallationDirectory, "1000");
+                    }
                 }
             }
         }
