@@ -1,6 +1,8 @@
-﻿using System;
+﻿using ABI.System;
+using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.Http;
 
 namespace StatsDirect.UI
 {
@@ -11,14 +13,14 @@ namespace StatsDirect.UI
     /// The check is designed not to slow down a UI, so runs asynchronously once started (via StartCheck), and therefore callbacks may be run on a background thread.
     /// Clients or subclasses may hand in a status changed handler, which will get called on significant changes; this can for example be used to enable/disable buttons or update textual status.
     /// </summary>
-    abstract class UpdateChecker : IDisposable
+    abstract class UpdateChecker : System.IDisposable
     {
-        private Uri Uri { get; set; }
+        private System.Uri Uri { get; set; }
         private string DnsDomain { get; set; }
-        private WebClient webClient;
+        HttpClient httpClient;
         private event StatusChangedEventHandler statusChanged;
 
-        protected void StartCheck(Uri uri, StatusChangedEventHandler handler)
+        protected void StartCheck(System.Uri uri, StatusChangedEventHandler handler)
         {
             Uri = uri;
             DnsDomain = uri.DnsSafeHost;
@@ -30,8 +32,8 @@ namespace StatsDirect.UI
 
         public void StopCheck()
         {
-            if (null != webClient)
-                webClient.CancelAsync();
+            if (null != httpClient)
+                httpClient.CancelPendingRequests();
         }
 
         /// <summary>
@@ -49,14 +51,26 @@ namespace StatsDirect.UI
                 Dns.EndGetHostAddresses(ar);
                 UpdateStatus(false, false, false, "Contacting " + DnsDomain + "...");
 
-                webClient = new WebClient();
-                webClient.DownloadStringCompleted += DownloadStringCompleted;
-                webClient.DownloadStringAsync(Uri);
+                httpClient = new HttpClient();
+                try
+                {
+                    string result = httpClient.GetStringAsync(Uri).GetAwaiter().GetResult();
+                    DownloadStringCompleted(result);
+                }
+                catch (System.Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
             }
             catch (SocketException)
             {
                 UpdateStatus(true, false, false, "Could not resolve " + DnsDomain + "; are you connected to a network?");
             }
+        }
+        private void DownloadStringCompleted(string result)
+        {
+            // Handle the result here
+            Console.WriteLine(result);
         }
 
         protected void UpdateStatus(bool isFinal, bool successful, bool newerVersionAvailable, string message)
@@ -78,7 +92,7 @@ namespace StatsDirect.UI
             {
                 if (disposing)
                 {
-                    webClient?.Dispose();
+                    httpClient?.Dispose();
                 }
 
                 disposedValue = true;
