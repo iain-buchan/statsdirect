@@ -419,7 +419,7 @@ namespace StatsDirect.UI
             if (htmlLoader == null)
             {
                 htmlLoader = new HTMLLOADER();
-                htmlLoader.LoadXLSX();
+                htmlLoader.LoadXLSX(SDConfiguration.InstallationDirectory);
 
             }
             if (null != ActiveHelpUrl)

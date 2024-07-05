@@ -33,43 +33,52 @@ namespace StatsDirect.UI
             }
             return index;
         }
-        public void LoadXLSX()
+        public void LoadXLSX(string folder)
         {
             // Open a SpreadsheetDocument based on a file path.
-            string filePath = "E:\\work\\StatsDirect\\git\\statsdirect4\\StatsDirectUI\\Assets\\SD Help ID to File Name Mapping.xlsx";
+//            string filePath = "E:\\work\\StatsDirect\\git\\statsdirect4\\StatsDirectUI\\Assets\\SD Help ID to File Name Mapping.xlsx";
+            string filePath = folder + "\\SD Help ID to File Name Mapping.xlsx";
             // Open the spreadsheet document for read-only access.
-            using (SpreadsheetDocument document = SpreadsheetDocument.Open(filePath, false))
+            try
             {
-                // Retrieve a reference to the workbook part.
-                WorkbookPart workbookPart = document.WorkbookPart;
-
-                foreach( Sheet sheet in workbookPart.Workbook.Sheets)
+                using (SpreadsheetDocument document = SpreadsheetDocument.Open(filePath, false))
                 {
-                    WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
-                    Worksheet worksheet = worksheetPart.Worksheet;
+                    // Retrieve a reference to the workbook part.
+                    WorkbookPart workbookPart = document.WorkbookPart;
 
-//                    var sheetData = new List<List<string>>();
-                    var sheetData = new List<string[]>();
-                    foreach (Row row in worksheet.Descendants<Row>())
+                    foreach (Sheet sheet in workbookPart.Workbook.Sheets)
                     {
-                        try
-                        { 
-                            string[] tempRow = new string[4];
-                            for (int i = 0; i < row.Descendants<Cell>().Count(); i++)
-                            {
-                                Cell cell = row.Descendants<Cell>().ElementAt(i);
-                                int actualCellIndex = CellReferenceToIndex(cell);
-                                tempRow[actualCellIndex] = GetCellValue(document, cell);
-                            }     
-                            urlData[tempRow[3]] = tempRow;
-                        }
-                        catch (Exception ex)
+                        WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
+                        Worksheet worksheet = worksheetPart.Worksheet;
+
+                        //                    var sheetData = new List<List<string>>();
+                        var sheetData = new List<string[]>();
+                        foreach (Row row in worksheet.Descendants<Row>())
                         {
-                            Console.WriteLine(ex.Message);
+                            try
+                            {
+                                string[] tempRow = new string[4];
+                                for (int i = 0; i < row.Descendants<Cell>().Count(); i++)
+                                {
+                                    Cell cell = row.Descendants<Cell>().ElementAt(i);
+                                    int actualCellIndex = CellReferenceToIndex(cell);
+                                    tempRow[actualCellIndex] = GetCellValue(document, cell);
+                                }
+                                urlData[tempRow[3]] = tempRow;
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
                         }
                     }
                 }
             }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message); 
+            }
+
         }
 
         // Method to get the cell value.
@@ -119,7 +128,7 @@ namespace StatsDirect.UI
                 Uri uriAddress = new Uri(fullURL);
                 Console.WriteLine(uriAddress.Fragment.ToString());
 
-                Process.Start(new ProcessStartInfo
+                Process p = Process.Start(new ProcessStartInfo
                 {
                     //FileName = uriAddress.ToString(),
                     FileName = fullURL.ToString(),
