@@ -111,27 +111,16 @@ namespace StatsDirect.UI
 
                 string[] pages = urlData[activeTopic];
                 char[] charsToTrim = { '/' };
-                string fragment = pages[2].TrimStart(charsToTrim);
-                string anchor = "#" + fragment;
 
-                string fullURL = filePath + anchor; // + "?tocpath=nonparametric_methods";
+                /////////////////////////////////////////////
+                string directHelpLocation = folder + "\\WebHelp\\" + pages[2].TrimStart(charsToTrim);
+                Uri directHelpUri = new Uri(directHelpLocation);
 
-
-
-                //string filePathJustURL = "file:///" + folder + "\\WebHelp\\" + pages[2].TrimStart(charsToTrim);
-                //Uri uriAddressFull = new Uri(filePathJustURL);
-                Uri baseUri = new Uri(filePath);
-                Uri fullUri = new Uri(baseUri, "%23" + fragment);
-
-
-
-                Uri uriAddress = new Uri(fullURL);
-                Console.WriteLine(uriAddress.Fragment.ToString());
+                /////////////////////////////////////////////
 
                 Process p = Process.Start(new ProcessStartInfo
                 {
-                    //FileName = uriAddress.ToString(),
-                    FileName = fullURL.ToString(),
+                    FileName = directHelpUri.ToString(),
                     UseShellExecute = true,
                     WorkingDirectory = startingFolder,
                 });
