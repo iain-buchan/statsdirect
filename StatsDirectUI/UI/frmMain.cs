@@ -363,13 +363,13 @@ namespace StatsDirect.UI
             try
             {
 #endif
-            ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
-            if (null != menuItem.Tag)
-                Debug.Print((string)menuItem.Tag);
-            object tagObject = ToTagObject(menuItem);
-            if (!(tagObject is Dictionary<string, string>))
-                return;
-            Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
+                ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
+                if (null != menuItem.Tag)
+                    Debug.Print((string)menuItem.Tag);
+                object tagObject = ToTagObject(menuItem);
+                if (!(tagObject is Dictionary<string, string>))
+                    return;
+                Dictionary<string, string> tags = (Dictionary<string, string>)tagObject;
                 if (!tags.TryGetValue("operation", out string operationName))
                     return;
                 if (!TemplateFactory.Operations.TryGetValue(operationName, out Operation operation))
@@ -669,6 +669,26 @@ namespace StatsDirect.UI
                 SdApplication.SoleInstance.FriendlyError("Creating a new grid failed due to an internal error", ex, false);
             }
         }
+        private void tabWindows_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            TabPage tabPage = this.tabWindows.TabPages[e.Index];
+            Rectangle tabRect = this.tabWindows.GetTabRect(e.Index);
+
+            // Draw the background
+            e.Graphics.FillRectangle(SystemBrushes.Control, tabRect);
+
+            // Set the text alignment and font
+            StringFormat stringFormat = new StringFormat();
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Near;
+
+            //tabRect.X += 5;
+            tabRect.Y += 2;
+
+            // Draw the text
+            e.Graphics.DrawString(tabPage.Text, e.Font, SystemBrushes.ControlText, tabRect, stringFormat);
+            
+        }
 
         private void tabWindows_Selecting(object sender, TabControlCancelEventArgs e)
         {
@@ -802,7 +822,7 @@ namespace StatsDirect.UI
         /// <returns>the active window's WindowInformation object, or null if there is no active window or the active window has no WindowInformation</returns>
         private WindowInformation ActiveWindowInformation()
         {
-            return (WindowInformation) ActiveMdiChild?.Tag;
+            return (WindowInformation)ActiveMdiChild?.Tag;
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -1881,7 +1901,7 @@ namespace StatsDirect.UI
                         }
                         itemNumber++;
                     }
-                    cboOperation.Width = (maxLabelLength * 10 ) +1;
+                    cboOperation.Width = (maxLabelLength * 10) + 1;
                 }
                 else
                 {
