@@ -7,8 +7,6 @@ using StatsDirect.UI;
 using StatsDirect.Utilities;
 using System.Globalization;
 using StatsDirect.Templates;
-using System.Diagnostics;
-using System.Linq;
 
 namespace StatsDirect.TemplateProcessing
 {
