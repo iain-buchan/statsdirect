@@ -23,10 +23,5 @@ namespace StatsDirect.Utilities
         protected TemplateExecutionHandlesMeSpeciallyException()
         {
         }
-
-        protected TemplateExecutionHandlesMeSpeciallyException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
     }
 }

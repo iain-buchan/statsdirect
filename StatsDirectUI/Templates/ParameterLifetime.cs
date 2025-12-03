@@ -16,10 +16,6 @@ namespace StatsDirect.Templates
         /// <summary>
         /// The parameter is preserved for the session, for all operations that use the same named parameter.  Beware - the type is not checked!
         /// </summary>
-        SessionForAllOperations,
-        /// <summary>
-        /// The parameter is preserved for the session and saved between sessions, but only for use within this operation
-        /// </summary>
-        CrossSessionForThisOperation
+        SessionForAllOperations
     }
 }

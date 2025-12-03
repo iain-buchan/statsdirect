@@ -17,9 +17,5 @@ namespace StatsDirect.Creole
         public CreoleParserException(string message, Exception innerException) : base(message, innerException)
         {
         }
-
-        protected CreoleParserException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Diagnostics;
 using System.Windows.Forms;
 
@@ -73,7 +72,6 @@ namespace StatsDirect.UI
         {
             queuedDialogs = new Queue<DialogAndAction>();
             InitialiseFunctionRegistry();
-            LoadPersistentValues();
         }
 
         internal void NoteASubformCloseIsCancelled()
@@ -178,31 +176,11 @@ namespace StatsDirect.UI
                 ShowDialogOnUiThread(newDialog.Form, newDialog.PostCloseAction);
         }
 
-        private void LoadPersistentValues()
-        {
-            string loadPath = Path.Combine(SDConfiguration.MyStatsDirectFolder, SDConfiguration.PERSISTENT_VALUE_FILE_NAME);
-            if (File.Exists(loadPath))
-            {
-                try
-                {
-                    BinaryFormatter fmt = new();
-                    using Stream ws = new FileStream(loadPath, FileMode.Open, FileAccess.Read);
-                    sessionParametersAcrossOperations = (ParameterBag)fmt.Deserialize(ws);
-                    sessionParametersPerOperation = (Dictionary<string, ParameterBag>)fmt.Deserialize(ws);
-                }
-                catch (Exception)
-                {
-                    // Silently ignore the problem
-                }
-            }
-        }
-
         /// <summary>
         /// The application is closing down.  Save anything we need!
         /// </summary>
         internal void Shutdown()
         {
-            SavePersistentValues();
             if (ClosingForUpgrade)
                 FetchTheUpgrade();
         }
@@ -210,28 +188,6 @@ namespace StatsDirect.UI
         public static void FetchTheUpgrade()
         {
             Process.Start(new ProcessStartInfo("http://www.statsdirect.com/download/StatsDirectSetup.exe") { UseShellExecute = true });
-        }
-
-        private void SavePersistentValues()
-        {
-            try
-            {
-                string savePath = Path.Combine(SDConfiguration.MyStatsDirectFolder, SDConfiguration.PERSISTENT_VALUE_FILE_NAME);
-                BinaryFormatter fmt = new();
-                using Stream ws = new FileStream(savePath, FileMode.Create, FileAccess.Write);
-                if (null == sessionParametersAcrossOperations)
-                    sessionParametersAcrossOperations = new ParameterBag();
-                fmt.Serialize(ws, sessionParametersAcrossOperations);
-                if (null == sessionParametersPerOperation)
-                    sessionParametersPerOperation = new Dictionary<string, ParameterBag>();
-                fmt.Serialize(ws, sessionParametersPerOperation);
-                // #760
-                Application.DoEvents();
-            }
-            catch (IOException)
-            {
-                // If multiple SDs close at once (for example via a "Close All" gesture), they can all try to write at the same time.  Fail silently! 
-            }
         }
 
         /// <summary>
