@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 
@@ -70,6 +71,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// If true, changes have been made to the form since it was last saved.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Dirty { get; protected set; }
 
         internal bool SafeToClose => dirtyButSafeToClose || !Dirty;
@@ -109,6 +111,7 @@ namespace StatsDirect.UI
         /// <summary>
         /// The full path to the file shown in this form, if any
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal string Path
         {
             get => path;

@@ -1,10 +1,11 @@
+using StatsDirect.Charting;
+using StatsDirect.Numerics;
+using StatsDirect.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using StatsDirect.Charting;
+using System.ComponentModel;
 using System.Media;
-using StatsDirect.Utilities;
-using StatsDirect.Numerics;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -22,6 +23,7 @@ namespace StatsDirect.UI
             InitializeComponent();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ChartDefinition ChartDefinition
         {
             set

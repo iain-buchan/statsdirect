@@ -31,6 +31,7 @@ namespace StatsDirect.UI
             cboMarkerShape.Items.Add(new ComboBoxExItem(string.Empty, 8));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Charting.MarkerShape MarkerShape
         {
             get

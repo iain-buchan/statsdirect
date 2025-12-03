@@ -100,6 +100,7 @@ namespace StatsDirect.UI
         /// Graphics rendering mode. Supprot for antialiasing.
         /// </summary>
         [Category("Properties"), Description("Rendering mode.")]
+        [DefaultValue(System.Drawing.Text.TextRenderingHint.SystemDefault)]
         public System.Drawing.Text.TextRenderingHint RenderingMode { get; set; } = System.Drawing.Text.TextRenderingHint.SystemDefault;
 
         /// <summary>
@@ -119,9 +120,11 @@ namespace StatsDirect.UI
         /// 
         /// </summary>
         [Category("Properties"), Description("Whether the text will be drawn from Bottom or from Top.")]
+        [DefaultValue(VerticalLabelDrawMode.BottomUp)]
         public VerticalLabelDrawMode TextDrawMode { get; set; } = VerticalLabelDrawMode.BottomUp;
 
         [Category("Properties"), Description("Whether the text will be drawn with transparent background or not.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool TransparentBackground { get; set; }
     }
     /// <summary>

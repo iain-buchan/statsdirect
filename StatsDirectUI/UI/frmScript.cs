@@ -1,10 +1,11 @@
+using StatsDirect.TemplateProcessing;
+using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
-using System.IO;
-using StatsDirect.Templates;
+using System.ComponentModel;
 using System.Globalization;
-using StatsDirect.TemplateProcessing;
+using System.IO;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -321,12 +322,14 @@ namespace StatsDirect.UI
 
         #region IScriptWindow Members
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RtfText
         {
             get => rtbDoc.Rtf;
             set => rtbDoc.Rtf = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string TextInRtfBox
         {
             get => rtbDoc.Text;

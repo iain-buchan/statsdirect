@@ -16,6 +16,7 @@ namespace StatsDirect.UI
             userFont = Font;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Font UserFont
         {
             get => userFont;
@@ -28,6 +29,7 @@ namespace StatsDirect.UI
 
         [Browsable(true)]
         [Description("The name that will be used to describe why the font is being requested")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string Purpose
         {
             get => lblPurpose.Text;

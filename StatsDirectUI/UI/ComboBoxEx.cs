@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -9,6 +10,7 @@ namespace StatsDirect.UI
     /// </summary>
     public partial class ComboBoxEx : ComboBox
     {
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public ImageList ImageList { get; set; }
 
         public ComboBoxEx()

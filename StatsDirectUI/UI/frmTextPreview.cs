@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace StatsDirect.UI
@@ -15,6 +16,7 @@ namespace StatsDirect.UI
             Close();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Rtf
         {
             get => rtb.Rtf;

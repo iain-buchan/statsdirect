@@ -27,6 +27,7 @@ namespace StatsDirect.UI
             cboFillStyle.Items.Add(new ComboBoxExItem(string.Empty, 4));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Charting.FillStyle FillStyle
         {
             get

@@ -103,6 +103,7 @@ namespace StatsDirect.PJLControls
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal int ParentWidth
         {
             set

@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -21,6 +22,7 @@ namespace StatsDirect.UI
 
         public ctlOneAxisOptions Y => ctlOneAxisOptionsY;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowX
         {
             get => xIsVisible;
@@ -31,6 +33,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowY
         {
             get => yIsVisible;
@@ -41,6 +44,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool AxisLabelsAreSwapped
         {
             get => axisLabelsAreSwapped;

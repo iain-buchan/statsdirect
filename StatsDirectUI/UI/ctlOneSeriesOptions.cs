@@ -1,4 +1,5 @@
 ﻿using StatsDirect.Charting;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -21,6 +22,7 @@ namespace StatsDirect.UI
             InitializeComponent();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowMarkerStyle
         {
             get => showMarkerStyle;
@@ -31,6 +33,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowMarkerSize
         {
             get => showMarkerSize;
@@ -41,6 +44,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowMarkerColour
         {
             get => showMarkerColour;
@@ -51,6 +55,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowLineColour
         {
             get => showLineColour;
@@ -61,6 +66,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowLineThickness
         {
             get => showLineThickness;
@@ -71,6 +77,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowDashStyle
         {
             get => showDashStyle;
@@ -81,6 +88,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowFillStyle
         {
             get => showFillStyle;
@@ -92,6 +100,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Charting.MarkerType MarkerType
         {
             get => markerType;

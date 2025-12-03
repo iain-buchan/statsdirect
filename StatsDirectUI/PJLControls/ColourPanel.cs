@@ -1248,6 +1248,7 @@ namespace StatsDirect.PJLControls
         /// Set/get the custom Color.
         /// </summary>
         [Browsable(true), Category("ColorPanel"), Description("Get/set the initial custom color for the custom well.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color CustomColor
         {
             get
@@ -1405,6 +1406,7 @@ namespace StatsDirect.PJLControls
         [Browsable(true)]
         [Category("ColorPanel")]
         [Description("If true, the last custom element's colour can be changed by the user.")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool LastWellIsCustom
         {
             get => lastWellIsCustom;

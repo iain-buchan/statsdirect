@@ -32,6 +32,7 @@ namespace StatsDirect.UI
         }
 
         [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RelativePosition WritePosition
         {
             get => writePosition;
@@ -97,6 +98,7 @@ namespace StatsDirect.UI
         }
 
         [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShowLabel
         {
             get => lblSelectWindow.Visible;
@@ -104,6 +106,7 @@ namespace StatsDirect.UI
         }
 
         [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public OutputType OutputType
         {
             get => outputType;

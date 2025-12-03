@@ -1,9 +1,10 @@
-using System;
-using System.Windows.Forms;
-using StatsDirect.Templates;
 using DevExpress.XtraRichEdit;
 using DevExpress.XtraRichEdit.API.Native;
 using DevExpress.XtraRichEdit.Commands;
+using StatsDirect.Templates;
+using System;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -213,6 +214,7 @@ namespace StatsDirect.UI
 
         #region IReport Members
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string RtfText
         {
             get => richEditControl1.Document.RtfText;

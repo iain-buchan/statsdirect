@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using StatsDirect.Charting;
+﻿using StatsDirect.Charting;
 using StatsDirect.Templates;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -26,8 +27,10 @@ namespace StatsDirect.UI
             scaleTypesInCboScale = new List<ScaleType>();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool IsYAxis { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICollection<ScaleType> AllowedScaleTypes
         {
             get => allowedScaleTypes;
@@ -38,6 +41,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MinimumDataValue
         {
             get => dataMinimum;
@@ -49,6 +53,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double DataMinGreaterThanZero
         {
             get => dataMinGreaterThanZero;
@@ -60,6 +65,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public double MaximumDataValue
         {
             get => dataMaximum;
@@ -71,6 +77,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public LabelDirection LabelDirection
         {
             get => (LabelDirection)cboScaleTextDirection.SelectedIndex;
@@ -81,6 +88,7 @@ namespace StatsDirect.UI
 
         public double MaximumScaleValue { get; private set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ScaleType ScaleType
         {
             // TODO: Why does the combo on Y sometimes drift to having nothing selected?
@@ -88,6 +96,7 @@ namespace StatsDirect.UI
             set => cboScale.SelectedIndex = scaleTypesInCboScale.IndexOf(value);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public string Title
         {
             get => txtTitle.Text;
@@ -116,6 +125,7 @@ namespace StatsDirect.UI
 
         public bool HasMarkerLine => double.TryParse(cboMarkerLineAt.Text, out double _);
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool HasTitle
         {
             get => pnlTitle.Visible;

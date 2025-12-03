@@ -200,6 +200,7 @@ namespace StatsDirect.PJLControls
         /// <summary>
         /// 
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ZAxis ZAxis
         {
             get => zaxis;
@@ -238,6 +239,7 @@ namespace StatsDirect.PJLControls
         /// Sets/gets the pick color.
         /// </summary>
         [Browsable(true), Category("ColorPanel")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color Color
         {
             get
@@ -285,6 +287,7 @@ namespace StatsDirect.PJLControls
         /// isotropic is <b>true</b> then the x and y axis will be the same.
         /// </remarks>
         [Browsable(true), Category("ColorPanel")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool Isotropic
         {
             get
@@ -306,6 +309,7 @@ namespace StatsDirect.PJLControls
         /// Set/get the controls border style.
         /// </summary>
         [Browsable(true), Category("ColorPanel")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public new BorderStyle BorderStyle
         {
             get => borderStyle;

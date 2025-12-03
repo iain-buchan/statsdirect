@@ -23,6 +23,7 @@
 // that you have found/implemented and I will fix/incorporate them into this
 // file.
 
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -127,42 +128,49 @@ namespace StatsDirect.PJLControls
         }
 
         // Forward properties to contained panel
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public BorderStyle PanelBorderStyle
         {
             get => colorPanel.BorderStyle;
             set => colorPanel.BorderStyle = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color Color
         {
             get => colorPanel.Color;
             set => colorPanel.Color = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public ColorSet ColorSet
         {
             get => colorPanel.ColorSet;
             set => colorPanel.ColorSet = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Size ColorWellSize
         {
             get => colorPanel.ColorWellSize;
             set => colorPanel.ColorWellSize = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public ColorSortOrder ColorSortOrder
         {
             get => colorPanel.ColorSortOrder;
             set => colorPanel.ColorSortOrder = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int Columns
         {
             get => colorPanel.Columns;
             set => colorPanel.Columns = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public Color[] CustomColors
         {
             get => colorPanel.CustomColors;
@@ -173,6 +181,7 @@ namespace StatsDirect.PJLControls
         /// This is so ColorPicker can inform the ColorPanelForm/ColorPanel of the desired
         /// width of the control.
         /// </summary>
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         internal int ParentWidth
         {
             set => colorPanel.ParentWidth = value;

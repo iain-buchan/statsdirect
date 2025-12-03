@@ -27,6 +27,7 @@ namespace StatsDirect.UI
             cboDashStyle.Items.Add(new ComboBoxExItem(string.Empty, 4));
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public DashStyleDescriptor DashStyle
         {
             get

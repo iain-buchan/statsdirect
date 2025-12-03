@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -15,6 +16,7 @@ namespace StatsDirect.PJLControls
 
         public bool UserCancelled => userCancelled;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color CustomColor
         {
             get => picker.Color;

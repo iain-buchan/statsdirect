@@ -14,6 +14,7 @@ namespace StatsDirect.UI
         public event SelectedChangedEventHandler SelectedChanged;
 
         [Description("Is the PictureBox selected?")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool Selected
         {
             get => selected;

@@ -1,7 +1,8 @@
-﻿using System;
+﻿using StatsDirect.Charting;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Windows.Forms;
-using StatsDirect.Charting;
 
 namespace StatsDirect.UI
 {
@@ -79,12 +80,14 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public IList<MarkerType> MarkerTypes
         {
             get => markerTypes;
             set => markerTypes = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public IList<SeriesOptionsDescriptor> SeriesOptionsDescriptors
         {
             get => seriesOptionsDescriptors;
@@ -95,9 +98,13 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShouldForceIsFilled { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ForcedIsFilled { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public bool ShouldForceFillStyle { get; set; }
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public FillStyle ForcedFillStyle { get; set; }
 
         private void cboSeries_SelectedIndexChanged(object sender, EventArgs e)

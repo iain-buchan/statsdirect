@@ -26,6 +26,7 @@ namespace StatsDirect.UI
         }
 
         [Browsable(true)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int LineThickness
         {
             get

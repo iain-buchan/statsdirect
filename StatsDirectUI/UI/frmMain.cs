@@ -102,6 +102,7 @@ namespace StatsDirect.UI
         private bool settingUpSubOperations /* = false */;
         private bool settingUpRecentOperations /* = false */;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal bool InsideSubformClose { get; set; }
         /// <summary>
         /// Keep a count of panel pops during a close operation, so that (if necessary) we can fix up the panels after a cancel.
@@ -942,11 +943,13 @@ namespace StatsDirect.UI
             AddTemplates();
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CanSelectMultipleRows
         {
             set => lblNonAdjoined.Visible = value;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CanSelectGroupMethod
         {
             set
@@ -957,6 +960,7 @@ namespace StatsDirect.UI
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool GroupsByIdentifier
         {
             set
@@ -4211,6 +4215,7 @@ namespace StatsDirect.UI
 
         internal ComboBox IntegratedConfidenceIntervalControl => cboConfidenceInterval;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         internal bool IntegratedConfidenceIntervalControlVisible
         {
             get => pnlConfidenceInterval.Visible;
