@@ -31,12 +31,12 @@
     </PackageReference>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
     <PackageReference Include="DevExpress.Win.RichEdit" Version="24.1.3" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="4.10.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.4.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.0.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
     <PackageReference Include="OpenMcdf" Version="3.1.0" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
-    <PackageReference Include="SpreadsheetGear.Windows" Version="9.2.44" />
+    <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.52" />
   </ItemGroup>
   <ItemGroup>
     <ContentWithTargetPath Include="Assets/**">
