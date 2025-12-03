@@ -26,16 +26,16 @@ namespace StatsDirect.UI
         {
             try
             {
-                using CompoundFile contents = new(s);
-                if (!contents.RootStorage.TryGetStream("Book", out CFStream bookStream)
-                    && !contents.RootStorage.TryGetStream("Workbook", out bookStream))
+                using RootStorage rs = RootStorage.Open(s);
+                if (!rs.TryOpenStream("Book", out CfbStream bookStream)
+                    && !rs.TryOpenStream("Workbook", out bookStream))
                 {
                     // Nothing named Book or Workbook; not an Excel workbook.
                     return BiffFormat.SomethingElse;
                 }
 
                 // By now, bookStream is known to be non-null.  Test the first few bytes (no need to read the whole lot) to see whether this is an Excel Biff5 workbook.
-                if (bookStream.Size < 6)
+                if (bookStream.Length < 6)
                     return BiffFormat.SomethingElse;
                 byte[] bytes = new byte[6];
                 bookStream.Read(bytes, 0, 6);
@@ -48,7 +48,7 @@ namespace StatsDirect.UI
                     return BiffFormat.Biff8;
                 return BiffFormat.SomethingElse;
             }
-            catch (CFFileFormatException)
+            catch (OpenMcdf.FileFormatException)
             {
                 // Not a valid OLE format
                 return BiffFormat.SomethingElse;
