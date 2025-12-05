@@ -32,10 +32,10 @@ namespace StatsDirect.UI
         {
             id = "StatsDirectForm:" + NEXT_ID++.ToString(CultureInfo.InvariantCulture);
             // Add this in the StatsDirectForm constructor so that it's earlier in the call chain than the subclass' close, and can therefore set variables before the subclass does anything.
-            Closing += StatsDirectForm_Closing;
+            FormClosing += StatsDirectForm_FormClosing;
         }
 
-        void StatsDirectForm_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        void StatsDirectForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             DoOrSwallow(() => SdApplication.SoleInstance.NoteASubformCloseIsStarting());
         }
