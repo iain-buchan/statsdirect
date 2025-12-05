@@ -38,9 +38,9 @@ namespace StatsDirect.UI
                 if (bookStream.Length < 6)
                     return BiffFormat.SomethingElse;
                 byte[] bytes = new byte[6];
-                bookStream.Read(bytes, 0, 6);
+                int bytesRead = bookStream.Read(bytes, 0, 6);
                 // Excel BIFF, BOF record, at least BIFF5 starts with 0x0809 (little-endian).  Version is at offset 4: 0x0500 (again little-endian) for BIFF5/BIFF7, 0x0600 for BIFF8.
-                if (bytes.Length < 6 || bytes[0] != 9 || bytes[1] != 8)
+                if (bytesRead < 6 || bytes[0] != 9 || bytes[1] != 8)
                     return BiffFormat.SomethingElse;
                 if (bytes[4] == 0 && bytes[5] == 5)
                     return BiffFormat.Biff5Or7;
