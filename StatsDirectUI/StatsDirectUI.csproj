@@ -5,7 +5,7 @@
     <AssemblyName>StatsDirect</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>StatsDirect</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <NoWarn>CA1416</NoWarn>
     <ApplicationDefaultFont>Microsoft Sans Serif, 8.25pt</ApplicationDefaultFont>
     <UseWPF>False</UseWPF>
@@ -13,7 +13,23 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+	<Version>4.0.5-alpha.1</Version>
+	<AssemblyTitle>StatsDirect</AssemblyTitle>
+	<AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
+	<Company>StatsDirect Limited</Company>
+	<Product>StatsDirect</Product>
+	<Copyright>Copyright ©1997-2025 StatsDirect Limited</Copyright>
   </PropertyGroup>
+  <PropertyGroup>
+	<!-- Pull the SSG license string from the environment - make sure you set this in your environment variables on your build machine! -->
+    <SpreadsheetGearLicenseString>$(SPREADSHEETGEAR_LICENSE_STRING)</SpreadsheetGearLicenseString>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="StatsDirect.UI.SpreadsheetGearLicenseAttribute">
+      <_Parameter1>$(SpreadsheetGearLicenseString)</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Remove="UI\frmReportDNBTest.cs" />
     <Compile Remove="UI\frmReportDNBTest.Designer.cs" />

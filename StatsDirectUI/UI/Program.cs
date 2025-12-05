@@ -1,10 +1,11 @@
-using System;
-using System.Windows.Forms;
-using System.IO;
 using StatsDirect.Calculator;
-using StatsDirect.Utilities;
 using StatsDirect.Configuration;
 using StatsDirect.UI.Properties;
+using StatsDirect.Utilities;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace StatsDirect.UI
 {
@@ -71,7 +72,13 @@ namespace StatsDirect.UI
                 Application.DoEvents(); // Force display of the show form
 
                 // SpreadsheetGear needs its license before any workbook open - do it here.
-                SpreadsheetGear.Factory.SetSignedLicense("SpreadsheetGear.License, Type=Standard, Hash=QKD8/zf1FXbb620S2da5gk6, Product=WIN, NewVersionsUntil=2025-01-08, Company=StatsDirect Limited, Email=rachel@ozzard.org, Signature=***REMOVED***");
+                // The license comes into MSBuild via an environment variable to prevent it being exposed in revision control, and there are limited ways of wrangling it into the binary from there.
+                // The approach taken here is from https://stackoverflow.com/questions/49522751/how-to-read-get-a-propertygroup-value-from-a-csproj-file-using-c-sharp-in-a-ne,
+                // and involves adding an AssemblyAttribute into the build.
+                string licenseString = Assembly.GetEntryAssembly()
+                    .GetCustomAttribute<SpreadsheetGearLicenseAttribute>()
+                    .LicenseString;
+                SpreadsheetGear.Factory.SetSignedLicense(licenseString);
 
                 // Prep a background check for new version, if there is one.  This will tidy up after itself.
                 int? checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect4", "Startup", "CheckForUpdates", true);
@@ -307,12 +314,26 @@ namespace StatsDirect.UI
 
                 if (DialogResult.Yes ==
                     MessageBox.Show(
-                        "StatsDirect Excel integration allows you to\n\rstart StatsDirect to process an Excel spreadsheet.\n\r\n\rWould you like to enable this integration?\r\nYou can turn it on and off from the StatsDirect Tools menu.",
+                        "StatsDirect Excel integration allows you to\r\nstart StatsDirect to process an Excel spreadsheet.\r\n\r\nWould you like to enable this integration?\r\nYou can turn it on and off from the StatsDirect Tools menu.",
                         "StatsDirect", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1))
                 {
                     ExcelAddInManager.InstallAddIn();
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// An attribute used as an assembly attribute that allows us to define a value in MSBuild and write it into the assembly for retrieval at runtime.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
+    sealed class SpreadsheetGearLicenseAttribute : Attribute
+    {
+        public string LicenseString { get; }
+
+        public SpreadsheetGearLicenseAttribute(string licenseString)
+        {
+            LicenseString = licenseString;
         }
     }
 }
