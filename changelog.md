@@ -1,13 +1,20 @@
-Changelog:
-----------
+# Changelog
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
+
+##[v4.0.5] 2025-12-05
+
+### Changed
+- DevExpress.Win.RichEdit updated to 25.1.7
+- Runs on .Net 8, rather than .Net 6 (which is no longer supported)
+- Dependencies updated
+- WiX v6 used for Windows Installer preparation, up from v5
+- Repository prepared for open source release
 
 ##[v4.0.4] 2024-06-24
 
 ### Changed
 - DevExpress.Win.RichEdit updated to 24.1.3
-
 
 ##[v4.0.3] 2024-06-10
 ### Changed
@@ -20,7 +27,6 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ##[v4.0.2] 2024-06-07
 ### Changed
 - Updated website check for newer version, changed major version check from 3 to 4
-
 
 ##[v4.0.1] 2024-06-06
 ### Changed
