@@ -637,10 +637,10 @@ namespace StatsDirect.UI
             this.tabWindows.CausesValidation = false;
             this.tabWindows.ContextMenuStrip = this.tabContextMenuStrip;
             this.tabWindows.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.tabWindows.ItemSize = new System.Drawing.Size(0, 50);
+            this.tabWindows.ItemSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Location = new System.Drawing.Point(0, 6);
             this.tabWindows.Margin = new System.Windows.Forms.Padding(0);
-            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 50);
+            this.tabWindows.MaximumSize = new System.Drawing.Size(0, 25);
             this.tabWindows.MinimumSize = new System.Drawing.Size(0, 25);
             this.tabWindows.Name = "tabWindows";
             this.tabWindows.SelectedIndex = 0;
