@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("StatsDirect Limited")]
 [assembly: AssemblyProduct("StatsDirect")]
-[assembly: AssemblyCopyright("Copyright ©1997-2024 StatsDirect Limited")]
+[assembly: AssemblyCopyright("Copyright ©1997-2025 StatsDirect Limited")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

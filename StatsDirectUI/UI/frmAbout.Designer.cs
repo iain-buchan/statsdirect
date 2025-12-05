@@ -63,7 +63,7 @@
             lblCopyright.Name = "lblCopyright";
             lblCopyright.Size = new System.Drawing.Size(282, 13);
             lblCopyright.TabIndex = 1;
-            lblCopyright.Text = "Copyright ©1990-2024 StatsDirect Ltd.  All rights reserved.";
+            lblCopyright.Text = "Copyright ©1990-2025 StatsDirect Ltd.  All rights reserved.";
             // 
             // cmdOK
             // 
