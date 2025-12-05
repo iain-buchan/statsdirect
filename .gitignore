@@ -21,4 +21,4 @@ ReleaseBuild/*.wixpdb
 # Ignore help index files that don't need to be released
 *.chw
 /Key/sign.txt
-/DownloadedBinaries
+/DownloadedBinaries/*.exe
