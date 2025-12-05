@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Microsoft.Win32;
 
 namespace StatsDirect.Utilities
@@ -25,7 +25,7 @@ namespace StatsDirect.Utilities
                     return false;
 
                 // Create VB/VBA key if not present
-                if (!new List<string>(softwareKey.GetSubKeyNames()).Contains("VB and VBA Program Settings"))
+                if (!softwareKey.GetSubKeyNames().Contains("VB and VBA Program Settings"))
                 {
                     RegistryKey scrap = softwareKey.CreateSubKey("VB and VBA Program Settings");
                     if (null == scrap)
@@ -37,7 +37,7 @@ namespace StatsDirect.Utilities
                     return false;
 
                 // We may or may not have our own subkey now
-                if (!new List<string>(vbKey.GetSubKeyNames()).Contains(app))
+                if (!vbKey.GetSubKeyNames().Contains(app))
                 {
                     RegistryKey scrap = vbKey.CreateSubKey(app);
                     if (null == scrap)
@@ -48,7 +48,7 @@ namespace StatsDirect.Utilities
                 if (null == appKey)
                     return false;
 
-                if (!new List<string>(appKey.GetSubKeyNames()).Contains(key))
+                if (!appKey.GetSubKeyNames().Contains(key))
                 {
                     RegistryKey scrap = appKey.CreateSubKey(key);
                     if (null == scrap)
@@ -88,9 +88,9 @@ namespace StatsDirect.Utilities
                 using RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
                     softwareKey = root.OpenSubKey("Software"),
                     vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"),
-                    appKey = vbKey.OpenSubKey(app),
-                    keyKey = appKey.OpenSubKey(key);
-                object val = keyKey.GetValue(valueName);
+                    appKey = vbKey?.OpenSubKey(app),
+                    keyKey = appKey?.OpenSubKey(key);
+                object val = keyKey?.GetValue(valueName);
                 return (string)val;
             }
             catch (Exception)
@@ -111,21 +111,21 @@ namespace StatsDirect.Utilities
         /// <param name="getFromMachine"></param>
         /// <returns></returns>
         [SuppressMessage("ReSharper", "PossibleNullReferenceException")]
-        internal static int GetDwordSetting(string app, string key, string valueName, bool getFromMachine)
+        internal static int? GetDwordSetting(string app, string key, string valueName, bool getFromMachine)
         {
             try
             {
                 using RegistryKey root = getFromMachine ? Registry.LocalMachine : Registry.CurrentUser,
                     softwareKey = root.OpenSubKey("Software"),
                     vbKey = softwareKey.OpenSubKey("VB and VBA Program Settings"),
-                    appKey = vbKey.OpenSubKey(app),
-                    keyKey = appKey.OpenSubKey(key);
-                object val = keyKey.GetValue(valueName);
-                return (int)val;
+                    appKey = vbKey?.OpenSubKey(app),
+                    keyKey = appKey?.OpenSubKey(key);
+                object val = keyKey?.GetValue(valueName);
+                return val is null ? default : (int)val;
             }
             catch (Exception)
             {
-                return int.MinValue;
+                return default;
             }
         }
 

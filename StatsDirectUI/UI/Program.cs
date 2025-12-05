@@ -74,8 +74,8 @@ namespace StatsDirect.UI
                 SpreadsheetGear.Factory.SetSignedLicense("SpreadsheetGear.License, Type=Standard, Hash=QKD8/zf1FXbb620S2da5gk6, Product=WIN, NewVersionsUntil=2025-01-08, Company=StatsDirect Limited, Email=rachel@ozzard.org, Signature=***REMOVED***");
 
                 // Prep a background check for new version, if there is one.  This will tidy up after itself.
-                int checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect4", "Startup", "CheckForUpdates", true);
-                if (checkForUpdatesInt != 0) // If the value is not there, this returns int.MinValue, which is non-zero; we should check in this case.
+                int? checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect4", "Startup", "CheckForUpdates", true);
+                if (checkForUpdatesInt.HasValue && checkForUpdatesInt.Value != 0) // If the value is not there, this returns int.MinValue, which is non-zero; we should check in this case.
                     new frmUpdateCheck(true);
 
                 // Preload and parse XML for operations
