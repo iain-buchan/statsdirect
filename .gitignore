@@ -8,7 +8,7 @@ ReleaseBuild/*.exe
 *.csproj.user
 *.bak
 
-# gvim backups (Peter has a nasty habit of using gvim for bulk edits)
+# gvim backups (Rachel has a nasty habit of using gvim for bulk edits)
 *~
 
 # Don't store certs
