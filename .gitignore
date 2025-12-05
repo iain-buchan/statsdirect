@@ -5,6 +5,7 @@ SDInstaller/*Fragment.wxs
 packages/*/
 ReleaseBuild/*.msi
 ReleaseBuild/*.exe
+ReleaseBuild/*.wixpdb
 *.csproj.user
 *.bak
 
