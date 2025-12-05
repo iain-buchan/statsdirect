@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/5.0.0">
+﻿<Project Sdk="WixToolset.Sdk/6.0.2">
   <PropertyGroup>
     <Platform>x64</Platform>
     <ProductVersion>4.0</ProductVersion>
@@ -22,13 +22,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.NetFx.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.0" />
-    <PackageReference Include="WixToolset.Heat" Version="5.0.0" />
+    <PackageReference Include="WixToolset.NetFx.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
   </ItemGroup>
   <Target Name="SignMsi">
     <Message Importance="high" Text="SignMsi: @(SignMsi)" />
-    <Exec Command='..\Key\sign.cmd "%(SignMsi.FullPath)" ' />
+    <Exec Command="..\Key\sign.cmd &quot;%(SignMsi.FullPath)&quot; " />
   </Target>
 </Project>
