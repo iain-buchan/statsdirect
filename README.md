@@ -6,4 +6,6 @@ The code is evolving toward a cross-platform application with generative AI inte
 
 The work is supported as free and open resource by The University of Liverpool, Leap of Faith Ventures and StatsDirect Ltd.
 
-Professor Iain E. Buchan (buchan@liverpool.ac.uk)
+## Building
+
+See [BUILDING](BUILDING.md).
