@@ -13,7 +13,7 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-	<Version>4.0.5-alpha.1</Version>
+	<Version>4.0.5</Version>
 	<AssemblyTitle>StatsDirect</AssemblyTitle>
 	<AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
 	<Company>StatsDirect Limited</Company>
