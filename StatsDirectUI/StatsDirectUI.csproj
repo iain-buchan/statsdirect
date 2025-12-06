@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
     <OutputType>WinExe</OutputType>
     <AssemblyName>StatsDirect</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
@@ -13,12 +13,12 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-	<Version>4.0.5</Version>
-	<AssemblyTitle>StatsDirect</AssemblyTitle>
-	<AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
-	<Company>StatsDirect Limited</Company>
-	<Product>StatsDirect</Product>
-	<Copyright>Copyright ©1997-2025 StatsDirect Limited</Copyright>
+    <Version>4.0.5</Version>
+    <AssemblyTitle>StatsDirect</AssemblyTitle>
+    <AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
+    <Company>StatsDirect Limited</Company>
+    <Product>StatsDirect</Product>
+    <Copyright>Copyright ©1997-2025 StatsDirect Limited</Copyright>
   </PropertyGroup>
   <PropertyGroup>
 	<!-- Pull the SSG license string from the environment - make sure you set this in your environment variables on your build machine! -->
@@ -27,6 +27,11 @@
   <ItemGroup>
     <AssemblyAttribute Include="StatsDirect.UI.SpreadsheetGearLicenseAttribute">
       <_Parameter1>$(SpreadsheetGearLicenseString)</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.CLSCompliantAttribute">
+      <_Parameter1>false</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
 
