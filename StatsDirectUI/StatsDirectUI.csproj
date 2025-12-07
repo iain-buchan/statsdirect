@@ -57,7 +57,7 @@
     <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
     <PackageReference Include="OpenMcdf" Version="3.1.0" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
-    <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.52" />
+    <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.56" />
   </ItemGroup>
   <ItemGroup>
     <ContentWithTargetPath Include="Assets/**">

@@ -2,14 +2,14 @@
 
 ## Prerequisites
 
-These prerequisites are for .Net 8.
+These prerequisites are for .Net 10.
 
 You will need:
 * A Windows 10 or 11 system on which to build - the StatsDirect UI is WinForms-only, and does not (yet!) run on Linux or Mac.
-* A recent release of the [.Net 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-* A trial or purchased license for [SpreadsheetGear for Windows](https://www.spreadsheetgear.com/).
+* A recent release of the [.Net 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
+* A trial or purchased license for [SpreadsheetGear for Windows](https://www.spreadsheetgear.com/) that allows you to use Hotfix 9.3.56 or later. Earlier versions are not compatible with .Net 10.
 * A trial or purchased license for [DevExpress Components for WinForms](https://www.devexpress.com/products/net/controls/winforms/).
-* [A current installer executable for the .Net 8 Windows Desktop runtime](DownloadedBinaries/README.md), to be included in the bundled executable installer.
+* [A current installer executable for the .Net 10 Windows Desktop runtime](DownloadedBinaries/README.md), to be included in the bundled executable installer.
 
 You may want:
 * An IDE capable of working with C# and MSBuild, such as Visual Studio 2026 or Visual Studio Code.
