@@ -238,9 +238,10 @@ namespace StatsDirect.UI
 
         private void FillFormFromOptions()
         {
-            rdoColour.Checked = options.UseColour;
+            bool useColour = options.UseColour.HasValue ? options.UseColour.Value : definition.ChartPreferences.ShouldUseColour;
+            rdoColour.Checked = useColour;
             rdoMonochrome.Checked = !rdoColour.Checked;
-            SetColour(options.UseColour);
+            SetColour(useColour);
             pnlBoxAxes.Visible = options.UsesBoxAxes;
             pnlChartTitle.Visible = options.UsesChartTitle;
             pnlSeriesLabels.Visible = options.UsesSeriesLabels;

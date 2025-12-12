@@ -20,6 +20,10 @@
     <Build Solution="DebugWatchExceptions|*" Project="false" />
     <Build Solution="Debug|*" Project="false" />
   </Project>
+  <Project Path="StatsDirectEngine/StatsDirectEngine.csproj" Id="5f914d1d-81e6-4159-bae3-fb0b3eae9471">
+    <BuildType Solution="DebugWatchExceptions|*" Project="Debug" />
+    <BuildType Solution="ReleaseWithSigning|*" Project="Release" />
+  </Project>
   <Project Path="StatsDirectUI/StatsDirectUI.csproj">
     <BuildType Solution="DebugWatchExceptions|*" Project="Debug" />
     <BuildType Solution="ReleaseWithSigning|*" Project="Release" />

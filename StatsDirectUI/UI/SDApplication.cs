@@ -12,6 +12,8 @@ using StatsDirect.TemplateProcessing;
 using StatsDirect.Utilities;
 using System.Text;
 using System.Collections;
+using StatsDirect.Charting;
+using StatsDirect.Builtins;
 
 namespace StatsDirect.UI
 {
@@ -21,16 +23,18 @@ namespace StatsDirect.UI
     /// <remarks>This class is a Singleton (ref Gamma et al "Design Patterns")</remarks>
     public sealed class SdApplication : ITemplateHost
     {
+        private const string STATSDIRECT_REPORT_PANE = "statsdirect-report-pane";
         private const int MAX_RECENT_FILES = 7;
+
+        private static SdApplication soleInstance;
 
         private int sActiveHelpTopic;
         private string activeHelpUrl;
-        private static SdApplication soleInstance;
 
-        // public PaneAndBoolean MostRecentlySelectedGrid { get; set; }
         public PaneAndPosition MostRecentlySelectedReport { get; set; }
 
         private SDPreferences preferences;
+        private ChartPreferences chartPreferences;
 
         private List<Parameter> outstandingParameters;
 
@@ -509,7 +513,7 @@ namespace StatsDirect.UI
                     bool cancelled = null == results || !results.ContainsKey(KEY);
                     if (cancelled)
                         throw new TemplateOperationCancelledException();
-                    PaneAndPosition selectedPaneAndCurrent = results[KEY].AsPaneAndPosition;
+                    PaneAndPosition selectedPaneAndCurrent = results[KEY].AsObject as PaneAndPosition;
                     selectedPane = selectedPaneAndCurrent.Pane;
                     relativePosition = selectedPaneAndCurrent.WritePosition;
                 }
@@ -556,13 +560,14 @@ namespace StatsDirect.UI
         /// <param name="operation"></param>
         /// <param name="redoInformation"></param>
         /// <param name="preferredOutputLocation"></param>
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation)
+        ParameterBag IUserInterface.OutputReport(IRenderable renderable, Operation operation, ParameterBag context)
         {
             // Locate the existing report window if it still exists
             IReport report;
-            if (null != preferredOutputLocation)
+            if (context is not null
+                && context.TryGetValue(STATSDIRECT_REPORT_PANE, out FilledParameter candidate)
+                && (candidate.AsObject is Pane pane))
             {
-                Pane pane = (Pane)preferredOutputLocation;
                 report = SelectReportWindow(pane);
             }
             else
@@ -573,13 +578,18 @@ namespace StatsDirect.UI
                 throw new TemplateOperationCancelledException();
             report.AppendRenderable(renderable, ActiveHelpTopic, operation);
             report.EnsureActive();
-            return report.SelectedPane;
+
+            // Log the ID of the report that was actually used
+            ParameterBag outputParameters = new();
+            if (!context.ContainsKey(STATSDIRECT_REPORT_PANE))
+                outputParameters.AddInput(STATSDIRECT_REPORT_PANE, report.SelectedPane);
+            return outputParameters;
         }
 
         /// <summary>
         /// Append the data in the frame to a new or existing user-selected grid window.
         /// </summary>
-        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
+        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, ParameterBag context, RelativePosition defaultPosition)
         {
             IGrid grid;
             RelativePosition writePosition = defaultPosition;
@@ -592,9 +602,10 @@ namespace StatsDirect.UI
             }
             else
             {
-                if (null != preferredOutputLocation)
+                if (context is not null
+                    && context.TryGetValue(TemplateProcessor.STATSDIRECT_FRAME_PANE, out FilledParameter candidate)
+                    && candidate.AsObject is PaneAndPosition paneAndPosition)
                 {
-                    PaneAndPosition paneAndPosition = preferredOutputLocation;
                     Pane pane = paneAndPosition.Pane;
                     writePosition = paneAndPosition.WritePosition;
                     grid = SelectGridWindow(pane, ref writePosition);
@@ -1120,6 +1131,23 @@ namespace StatsDirect.UI
             }
         }
 
+        public string GetReportTemplate(string name)
+        {
+            string path = Path.Combine(SDConfiguration.TemplatePath, name);
+            using TextReader tr = new StreamReader(path, Encoding.ASCII);
+            return tr.ReadToEnd();
+        }
+
+        /// <summary>
+        /// Prompt the user to install R.  Return true if we think the user might have installed R successfully, or false if there's no chance (for example, the user's told us that they're not going to).
+        /// </summary>
+        public bool RequestRInstallation()
+        {
+            using frmInstallR f = new();
+            f.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            return f.UserThinksRIsInstalled;
+        }
+
         IDictionary<string, ParameterBag> ISession.SessionParametersPerOperation => sessionParametersPerOperation ??= new Dictionary<string, ParameterBag>();
 
         ParameterBag ISession.SessionParametersAcrossOperations => sessionParametersAcrossOperations ??= new ParameterBag();
@@ -1225,11 +1253,47 @@ namespace StatsDirect.UI
 
         public Form ActiveMdiChild => MainWindow.ActiveMdiChild;
 
+        IChartPreferences IChartPreferencesHost.ChartPreferences => chartPreferences ??= ChartPreferencesFactory.GetChartPreferences();
+        // HACK: Sneaky trick: It's possible to return one thing from a call on an interface and a different thing from a public call. Poor naming; we should rename this.
+        public ChartPreferences ChartPreferences => chartPreferences ??= ChartPreferencesFactory.GetChartPreferences();
+
+        string IRControllerHost.MyStatsDirectRFolder => SDConfiguration.MyStatsDirectRFolder;
+
         internal void OpenFileOnUiThread(string path)
         {
             if (null != MainWindow)
                 if (MainWindow.InvokeRequired)
                     MainWindow.Invoke(new Action(() => OpenFile(path, false)));
+        }
+
+        FileDialogResult IUserInterface.RequestFile(OpenFileDialogOptions options)
+        {
+            using OpenFileDialog dialog = new();
+            dialog.CheckFileExists = options.CheckFileExists;
+            dialog.Filter = options.Filter;
+            dialog.ShowHelp = options.ShowHelp;
+            dialog.Title = options.Title;
+            DialogResult result = dialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            return new FileDialogResult()
+            {
+                DialogResult = result,
+                FileName = dialog.FileName
+            };
+        }
+
+        FileDialogResult IUserInterface.RequestFile(SaveFileDialogOptions options)
+        {
+            using SaveFileDialog dialog = new();
+            dialog.Title = options.Title;
+            dialog.Filter = options.Filter;
+            dialog.FileName = options.FileName;
+            dialog.OverwritePrompt = options.OverwritePrompt;
+            DialogResult result = dialog.ShowDialog(SdApplication.SoleInstance.DialogOwner);
+            return new FileDialogResult()
+            {
+                DialogResult = result,
+                FileName = dialog.FileName
+            };
         }
 
         private class SdProgressBarHolder : IProgressBar

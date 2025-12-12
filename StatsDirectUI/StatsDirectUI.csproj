@@ -66,6 +66,9 @@
     </ContentWithTargetPath>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\StatsDirectEngine\StatsDirectEngine.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="PresentationFramework">
       <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
     </Reference>

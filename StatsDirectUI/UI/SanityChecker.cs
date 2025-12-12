@@ -338,7 +338,8 @@ namespace StatsDirect.UI
 
             public void Visit(ReportStep step)
             {
-                CheckTemplateParses(step.GetContent(), prefix + " (" + (step.FileName ?? "inline") + ")");
+                string content = step.Text ?? SdApplication.SoleInstance.GetReportTemplate(step.FileName);
+                CheckTemplateParses(content, prefix + " (" + (step.FileName ?? "inline") + ")");
             }
 
             public void Visit(OutputFrameStep step)

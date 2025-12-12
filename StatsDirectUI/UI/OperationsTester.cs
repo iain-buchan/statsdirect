@@ -139,16 +139,6 @@ namespace StatsDirect.UI
                 throw new NotImplementedException();
             }
 
-            void IFilledParameterVisitor.Visit(FilledPaneParameter victim)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IFilledParameterVisitor.Visit(FilledPaneAndPositionParameter victim)
-            {
-                throw new NotImplementedException();
-            }
-
             void IFilledParameterVisitor.Visit(FilledParameterBagParameter victim)
             {
                 throw new NotImplementedException();
@@ -213,16 +203,6 @@ namespace StatsDirect.UI
             }
 
             void IFilledParameterVisitor.Visit(FilledObjectParameter victim)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IFilledParameterVisitor.Visit(FilledPaneParameter victim)
-            {
-                throw new NotImplementedException();
-            }
-
-            void IFilledParameterVisitor.Visit(FilledPaneAndPositionParameter victim)
             {
                 throw new NotImplementedException();
             }

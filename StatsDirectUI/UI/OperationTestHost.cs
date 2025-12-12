@@ -1,9 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using StatsDirect.Builtins;
+using StatsDirect.Charting;
+using StatsDirect.Configuration;
 using StatsDirect.Data;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
 
 namespace StatsDirect.UI
 {
@@ -70,16 +75,32 @@ namespace StatsDirect.UI
             return null;
         }
 
-        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, PaneAndPosition preferredOutputLocation, RelativePosition defaultPosition)
+        void IUserInterface.OutputFrame(DataFrame frame, bool keepSelection, bool isFormulae, string missingIndicator, ParameterBag context, RelativePosition defaultPosition)
         {
             throw new NotImplementedException();
         }
 
-        object IUserInterface.OutputReport(IRenderable renderable, Operation operation, object preferredOutputLocation)
+        ParameterBag IUserInterface.OutputReport(IRenderable renderable, Operation operation, ParameterBag context)
         {
             // No UI during a test
             return null;
         }
+
+        string IReportHost.GetReportTemplate(string name)
+        {
+            string path = Path.Combine(SDConfiguration.TemplatePath, name);
+            using TextReader tr = new StreamReader(path, Encoding.ASCII);
+            return tr.ReadToEnd();
+        }
+
+        string IRControllerHost.MyStatsDirectRFolder => SDConfiguration.MyStatsDirectRFolder;
+
+        bool IRControllerHost.RequestRInstallation() => false; // All R installations fail as we have no UI and it should already be there.
+
+        FileDialogResult IUserInterface.RequestFile(OpenFileDialogOptions options) => throw new NotImplementedException();
+        FileDialogResult IUserInterface.RequestFile(SaveFileDialogOptions options) => throw new NotImplementedException();
+
+        IChartPreferences IChartPreferencesHost.ChartPreferences => ChartPreferencesFactory.GetChartPreferences();
 
         void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
         {

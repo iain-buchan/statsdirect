@@ -4200,7 +4200,7 @@ namespace StatsDirect.UI
                 RVersion preferredVersion = RController.PreferredRVersion();
                 while (null == preferredVersion)
                 {
-                    if (!RController.UserMightHaveInstalledR())
+                    if (!SdApplication.SoleInstance.RequestRInstallation())
                         return;
                     preferredVersion = RController.PreferredRVersion();
                 }

@@ -1,7 +1,6 @@
 using StatsDirect.Calculator;
 using StatsDirect.Configuration;
 using StatsDirect.UI.Properties;
-using StatsDirect.Utilities;
 using System;
 using System.IO;
 using System.Reflection;
@@ -86,7 +85,7 @@ namespace StatsDirect.UI
                     new frmUpdateCheck(true);
 
                 // Preload and parse XML for operations
-                Templates.TemplateFactory.LoadOperationsAsync();
+                TemplateFactory.LoadOperationsAsync();
 
                 CheckExcelAddIn();
                 SetupInitialFiles();

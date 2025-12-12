@@ -1,5 +1,5 @@
-﻿using StatsDirect.Configuration;
-using System;
+﻿using StatsDirect.Charting;
+using StatsDirect.Configuration;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace StatsDirect.UI.Properties
 {
-    internal sealed class Settings
+    internal sealed class Settings : IChartingSettings
     {
         public static Settings Default { get; } = new();
         /// <summary>

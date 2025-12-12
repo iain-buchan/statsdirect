@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RootNamespace>StatsDirect</RootNamespace>
+	</PropertyGroup>
+    <ItemGroup>
+	    <AssemblyAttribute Include="System.CLSCompliantAttribute">
+		    <_Parameter1>false</_Parameter1>
+	    </AssemblyAttribute>
+    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Antlr4" Version="4.6.6">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.0.0" />
+	</ItemGroup>
+</Project>
