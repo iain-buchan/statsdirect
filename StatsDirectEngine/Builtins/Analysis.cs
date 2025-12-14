@@ -817,7 +817,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptKappaScreen(IPreferences host, ParameterBag parameters)
+        public static StepOutput RptKappaScreen(IPreferencesHost host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             if (cco <= 0.0 || cco >= 1.0)

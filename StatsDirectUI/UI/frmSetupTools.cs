@@ -4,7 +4,6 @@ using System.Windows.Forms;
 using System.Collections.Specialized;
 using System.Xml;
 using System.Collections.Generic;
-using StatsDirect.UI.Properties;
 
 namespace StatsDirect.UI
 {
@@ -41,8 +40,9 @@ namespace StatsDirect.UI
 
         private void LoadData()
         {
-            IReadOnlyList<string> names = Properties.Settings.Default.ToolsNames;
-            IReadOnlyList<string> paths = Properties.Settings.Default.ToolsPrograms;
+            Settings settings = Settings.Default;
+            IReadOnlyList<string> names = settings.ToolsNames;
+            IReadOnlyList<string> paths = settings.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
                 grid.Rows.Add(names[i], paths[i]);
         }
@@ -71,8 +71,8 @@ namespace StatsDirect.UI
 
         private void SaveData()
         {
-            List<string> names = new();
-            List<string> paths = new();
+            List<string> names = [];
+            List<string> paths = [];
             foreach (DataGridViewRow row in grid.Rows)
             {
                 if (null != row.Cells[0].Value && null != row.Cells[1].Value)
@@ -86,9 +86,11 @@ namespace StatsDirect.UI
                     }
                 }
             }
-            Properties.Settings.Default.ToolsNames = names;
-            Properties.Settings.Default.ToolsPrograms = paths;
-            Properties.Settings.Default.Save();
+
+            Settings settings = Settings.Default;
+            settings.ToolsNames = names;
+            settings.ToolsPrograms = paths;
+            settings.Save();
 
             // Get rid of any old add-in that might still be hanging around
             ExcelAddInManager.UninstallOldAddIn();

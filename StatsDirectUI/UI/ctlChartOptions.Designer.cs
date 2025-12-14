@@ -31,8 +31,6 @@ namespace StatsDirect.UI
             this.tlpDisplay = new System.Windows.Forms.TableLayoutPanel();
             this.pnlLegendFont = new System.Windows.Forms.Panel();
             this.ctlLegendFont = new StatsDirect.UI.ctlFont();
-            this.pnlSeriesLabelFont = new System.Windows.Forms.Panel();
-            this.ctlSeriesLabelFont = new StatsDirect.UI.ctlFont();
             this.pnlSeriesOptions = new System.Windows.Forms.Panel();
             this.seriesOptions = new StatsDirect.UI.ctlSeriesOptions();
             this.pnlColour = new System.Windows.Forms.Panel();
@@ -146,7 +144,6 @@ namespace StatsDirect.UI
             this.cmdRocEditCutoffs = new System.Windows.Forms.Button();
             this.tlpDisplay.SuspendLayout();
             this.pnlLegendFont.SuspendLayout();
-            this.pnlSeriesLabelFont.SuspendLayout();
             this.pnlSeriesOptions.SuspendLayout();
             this.pnlColour.SuspendLayout();
             this.grpColour.SuspendLayout();
@@ -190,8 +187,7 @@ namespace StatsDirect.UI
             this.tlpDisplay.ColumnCount = 1;
             this.tlpDisplay.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tlpDisplay.Controls.Add(this.pnlLegendFont, 0, 2);
-            this.tlpDisplay.Controls.Add(this.pnlSeriesLabelFont, 0, 3);
-            this.tlpDisplay.Controls.Add(this.pnlSeriesOptions, 0, 4);
+            this.tlpDisplay.Controls.Add(this.pnlSeriesOptions, 0, 3);
             this.tlpDisplay.Controls.Add(this.pnlColour, 0, 0);
             this.tlpDisplay.Controls.Add(this.pnlShowLegend, 0, 1);
             this.tlpDisplay.Location = new System.Drawing.Point(248, 0);
@@ -229,29 +225,6 @@ namespace StatsDirect.UI
             this.ctlLegendFont.Size = new System.Drawing.Size(203, 31);
             this.ctlLegendFont.TabIndex = 50;
             this.ctlLegendFont.UserFont = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            // 
-            // pnlSeriesLabelFont
-            // 
-            this.pnlSeriesLabelFont.AutoSize = true;
-            this.pnlSeriesLabelFont.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.pnlSeriesLabelFont.Controls.Add(this.ctlSeriesLabelFont);
-            this.pnlSeriesLabelFont.Location = new System.Drawing.Point(0, 116);
-            this.pnlSeriesLabelFont.Margin = new System.Windows.Forms.Padding(0, 3, 0, 3);
-            this.pnlSeriesLabelFont.Name = "pnlSeriesLabelFont";
-            this.pnlSeriesLabelFont.Size = new System.Drawing.Size(206, 34);
-            this.pnlSeriesLabelFont.TabIndex = 10;
-            // 
-            // ctlSeriesLabelFont
-            // 
-            this.ctlSeriesLabelFont.AutoSize = true;
-            this.ctlSeriesLabelFont.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ctlSeriesLabelFont.Location = new System.Drawing.Point(3, 3);
-            this.ctlSeriesLabelFont.Margin = new System.Windows.Forms.Padding(0);
-            this.ctlSeriesLabelFont.Name = "ctlSeriesLabelFont";
-            this.ctlSeriesLabelFont.Purpose = "Variable label font";
-            this.ctlSeriesLabelFont.Size = new System.Drawing.Size(203, 31);
-            this.ctlSeriesLabelFont.TabIndex = 50;
-            this.ctlSeriesLabelFont.UserFont = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             // 
             // pnlSeriesOptions
             // 
@@ -1601,8 +1574,6 @@ namespace StatsDirect.UI
             this.tlpDisplay.PerformLayout();
             this.pnlLegendFont.ResumeLayout(false);
             this.pnlLegendFont.PerformLayout();
-            this.pnlSeriesLabelFont.ResumeLayout(false);
-            this.pnlSeriesLabelFont.PerformLayout();
             this.pnlSeriesOptions.ResumeLayout(false);
             this.pnlSeriesOptions.PerformLayout();
             this.pnlColour.ResumeLayout(false);
@@ -1720,7 +1691,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.ComboBox cboForestDecimalPlaces;
         private System.Windows.Forms.Panel pnlAxisLineThickness;
         private ctlLineThickness ctlAxisLineThickness;
-        private System.Windows.Forms.Panel pnlSeriesLabelFont;
         private System.Windows.Forms.Panel pnlNormalOptions;
         private System.Windows.Forms.GroupBox grpNormalScaling;
         private System.Windows.Forms.GroupBox grpNormalOptions;
@@ -1765,7 +1735,6 @@ namespace StatsDirect.UI
         private System.Windows.Forms.Label lblAxisLineThickness;
         private ctlFont ctlTitleFont;
         private ctlFont ctlLegendFont;
-        private ctlFont ctlSeriesLabelFont;
         private ctlFont ctlAxisTitleFont;
         private ctlFont ctlAxisLabelFont;
         private System.Windows.Forms.Panel pnlColour;

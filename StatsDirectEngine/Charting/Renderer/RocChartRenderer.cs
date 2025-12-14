@@ -69,7 +69,7 @@ namespace StatsDirect.Charting.Renderer
                 legend, ChartAreaShape.Square);
 
             // null effect diagonal
-            PenDescriptor tenPenDiagonal = new(Definition.ChartPreferences.MarkerTypes[10].LineColor, rOptions.AxisLineThickness);
+            PenDescriptor tenPenDiagonal = new(Definition.ChartPreferences.FixedMarkerType.LineColor, rOptions.AxisLineThickness);
             DrawLineInCanvasCoordinates(tenPenDiagonal, XAxisCanvas, YAxisCanvas, XAxisCanvas + XExtCanvas, YAxisCanvas + YExtCanvas);
 
             // get the offsets for the markers

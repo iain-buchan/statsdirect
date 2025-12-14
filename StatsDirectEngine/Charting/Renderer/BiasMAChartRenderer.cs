@@ -205,7 +205,7 @@ namespace StatsDirect.Charting.Renderer
             return new ParameterBag();
         }
 
-        private static void GetMAOrdinate(IPreferences host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
+        private static void GetMAOrdinate(IPreferencesHost host, out double[] y, double[] yy, double[] yw, double[] cl, double[] cu, ref double cco, int rows, out string title, out string ytx, string xtxt, out int plotMethod, Transformation xform, out bool reverse, ref bool useCi)
         {
             y = new double[rows + 1];
             y[0] = Constant.MISSING;

@@ -7,7 +7,7 @@ namespace StatsDirect.Builtins
     {
         public static StepOutput SetAnalysisOptions(ITemplateHost host, ParameterBag parameters)
         {
-            SDPreferences preferences = host.Preferences;
+            IPreferences preferences = host.Preferences;
             preferences.CanDefaultConfidenceInterval = parameters["use-default-ci"].AsBoolean;
             preferences.DefaultConfidenceInterval = Parsing.Cdbl_Txt(parameters["default-ci"].AsString) / 100.0;
             preferences.SelectGroupsByIdentifier = parameters["selectGroupsByIdentifier"].AsBoolean;

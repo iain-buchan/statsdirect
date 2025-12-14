@@ -62,7 +62,7 @@ namespace StatsDirect.Builtins
 
         }
 
-        public static StepOutput RptKaplan(IPreferences host, ParameterBag parameters)
+        public static StepOutput RptKaplan(IPreferencesHost host, ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
             if (gamma <= 0.0)

@@ -1,14 +1,23 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace StatsDirect.Charting
 {
     /// <remarks>Immutable.</remarks>
-    public sealed class FontDescriptor(string fontFamily, int style, float sizeInPoints)
+    public sealed class FontDescriptor
     {
-        public string FontFamily { get; } = fontFamily;
+        public string FontFamily { get; }
         // TODO: Remove dependence on Windows-ish flags
-        public int Style { get; } = style;
-        public float SizeInPoints { get; } = sizeInPoints;
+        public int Style { get; }
+        public float SizeInPoints { get; }
+
+        [JsonConstructor]
+        public FontDescriptor(string fontFamily, int style, float sizeInPoints)
+        {
+            FontFamily = fontFamily;
+            Style = style;
+            SizeInPoints = sizeInPoints;
+        }
 
         public override bool Equals(object obj)
         {

@@ -1577,17 +1577,17 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput ShtPairDifferences(IPreferences host, ParameterBag parameters)
+        public static StepOutput ShtPairDifferences(IPreferencesHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 1);
         }
 
-        public static StepOutput ShtPairMeans(IPreferences host, ParameterBag parameters)
+        public static StepOutput ShtPairMeans(IPreferencesHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 2);
         }
 
-        public static StepOutput ShtPairSlopes(IPreferences host, ParameterBag parameters)
+        public static StepOutput ShtPairSlopes(IPreferencesHost host, ParameterBag parameters)
         {
             return ShtPair(host, parameters, 3);
         }
@@ -1595,7 +1595,7 @@ namespace StatsDirect.Builtins
         ///  <param name="parameters"></param>
         /// <param name="index">1 = differences, 2 = means, 3 = slopes</param>
         /// <param name="host"></param>
-        private static StepOutput ShtPair(IPreferences host, ParameterBag parameters, int index)
+        private static StepOutput ShtPair(IPreferencesHost host, ParameterBag parameters, int index)
         {
             int ctr; int rows2 = 0; int limit = 0;
             string qx = null; string xt = null;

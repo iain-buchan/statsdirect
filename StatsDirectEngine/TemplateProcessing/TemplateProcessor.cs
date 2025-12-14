@@ -465,7 +465,6 @@ namespace StatsDirect.TemplateProcessing
         {
             if (savedParameters.TryGetValue(name, out FilledParameter savedParameter))
             {
-                // #1289: In rare cases, operations overwrite input parameters with outputs and the outputs get saved to session.ser. To allow us to use old (arguably corrupt) session files rather than insist everyone deletes them, filter out problematic values.
                 if (savedParameter.IsInputParameter)
                     filledParameters.Add(name, savedParameter);
             }

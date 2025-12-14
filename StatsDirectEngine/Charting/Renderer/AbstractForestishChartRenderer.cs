@@ -58,7 +58,7 @@ namespace StatsDirect.Charting.Renderer
         protected void PlotPooledMarker(double odr, double odrl, double odru, double absMin, double saveYc, string label)
         {
             PenDescriptor pooledCiPen = GetLinePen(pooledMarkerType, true);
-            PenDescriptor pooledEffectPen = GetLinePen(Definition.ChartPreferences.MarkerTypes[10], false);
+            PenDescriptor pooledEffectPen = GetLinePen(Definition.ChartPreferences.FixedMarkerType, false);
 
             double yc = 0.5;
             // Pooled effect marker line - draw first so that it's behind the marker and its lower end is therefore hidden.
@@ -109,7 +109,7 @@ namespace StatsDirect.Charting.Renderer
         protected void DrawRowInChartCoordinates(string title, double odr, double odrl, double odru, double variance, double absMin, double yc, double xm, double xl, double xr, bool arrowL, bool arrowU, bool markCentres)
         {
             PenDescriptor ciPen = GetLinePen(studyMarkerType, true);
-            PenDescriptor dotPen = GetMarkerPen(Definition.ChartPreferences.MarkerTypes[10]);
+            PenDescriptor dotPen = GetMarkerPen(Definition.ChartPreferences.FixedMarkerType);
 
             // Weight blob.  Draw this first so that the line appears in front of it in the case of short lines (#994).
             // #688: Make blob size proportional to sqrt(1/variance) rather than 1/variance

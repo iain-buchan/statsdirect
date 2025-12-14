@@ -733,7 +733,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static StepOutput RptKappa(IPreferences host, ParameterBag parameters)
+        public static StepOutput RptKappa(IPreferencesHost host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
             double cit; double p;

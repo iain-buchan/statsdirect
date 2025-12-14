@@ -1263,7 +1263,7 @@ namespace StatsDirect.Charting.Renderer
         protected bool ShouldUseColour =>
             HasChartOptions && Definition.ChartOptions.UseColour.HasValue
                 ? Definition.ChartOptions.UseColour.Value
-                : Definition.ChartPreferences.ShouldUseColour;
+                : !Definition.ChartPreferences.BlackAndWhite;
 
         protected PenDescriptor GetMarkerPen(MarkerType mt)
         {
@@ -1521,13 +1521,10 @@ namespace StatsDirect.Charting.Renderer
             return markerTypes;
         }
 
-        protected BrushDescriptor MarkerTypeToBrush(MarkerType mt)
-        {
-            if (ShouldUseColour)
-                return new BrushDescriptor(mt.MarkerColor);
-            else
-                return new BrushDescriptor(GrBlack) { FillStyle = mt.MarkerFillStyle };
-        }
+        protected BrushDescriptor MarkerTypeToBrush(MarkerType mt) =>
+            ShouldUseColour
+                ? new BrushDescriptor(mt.MarkerColor)
+                : new BrushDescriptor(GrBlack) { FillStyle = mt.MarkerFillStyle };
 
         protected static string MakeTitle(string useIfAvailable, string defaultTitle)
         {

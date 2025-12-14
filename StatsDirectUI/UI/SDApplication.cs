@@ -33,9 +33,6 @@ namespace StatsDirect.UI
 
         public PaneAndPosition MostRecentlySelectedReport { get; set; }
 
-        private SDPreferences preferences;
-        private ChartPreferences chartPreferences;
-
         private List<Parameter> outstandingParameters;
 
         private Dictionary<string, ParameterBag> sessionParametersPerOperation;
@@ -963,99 +960,7 @@ namespace StatsDirect.UI
             return new ParameterBag();
         }
 
-        public SDPreferences Preferences => preferences ??= LoadPreferences();
-
-        private class SDPreferencesImpl : SDPreferences
-        {
-            public bool UseScientificNotationForSmallPValues
-            {
-                get => Properties.Settings.Default.UseScientificNotationForSmallPValues;
-                set => Properties.Settings.Default.UseScientificNotationForSmallPValues = value;
-            }
-
-            public bool CanDefaultConfidenceInterval
-            {
-                get => Properties.Settings.Default.CanDefaultConfidenceInterval;
-                set => Properties.Settings.Default.CanDefaultConfidenceInterval = value;
-            }
-
-            public double DefaultConfidenceInterval
-            {
-                get => Properties.Settings.Default.DefaultConfidenceInterval;
-                set => Properties.Settings.Default.DefaultConfidenceInterval = value;
-            }
-
-            public bool SelectGroupsByIdentifier
-            {
-                get => Properties.Settings.Default.SelectGroupsByIdentifier;
-                set => Properties.Settings.Default.SelectGroupsByIdentifier = value;
-            }
-
-            public double MetaCC
-            {
-                get => Properties.Settings.Default.MetaCC;
-                set => Properties.Settings.Default.MetaCC = value;
-            }
-
-            public bool MetaExact
-            {
-                get => Properties.Settings.Default.MetaExact;
-                set => Properties.Settings.Default.MetaExact = value;
-            }
-
-            public bool DelayContinuityCorrection
-            {
-                get => Properties.Settings.Default.DelayContinuityCorrection;
-                set => Properties.Settings.Default.DelayContinuityCorrection = value;
-            }
-
-            public int DisplayDecimalPlaces
-            {
-                get => Properties.Settings.Default.DisplayDecimalPlaces;
-                set => Properties.Settings.Default.DisplayDecimalPlaces = value;
-            }
-
-            public int PDecimalPlaces
-            {
-                get => Properties.Settings.Default.PDecimalPlaces;
-                set => Properties.Settings.Default.PDecimalPlaces = value;
-            }
-
-            public int MetaPlotMethod
-            {
-                get => Properties.Settings.Default.MetaPlotMethod;
-                set => Properties.Settings.Default.MetaPlotMethod = value;
-            }
-
-            public bool MetaPlotCI
-            {
-                get => Properties.Settings.Default.MetaPlotCI;
-                set => Properties.Settings.Default.MetaPlotCI = value;
-            }
-
-            public string DECP_CHAR => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-
-            public string Numeric_Thousands_Separator => System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
-
-            public int MaxRows => 64000;
-
-            public bool ShouldKeepData
-            {
-                get => Properties.Settings.Default.ShouldKeepData;
-                set => Properties.Settings.Default.ShouldKeepData = value;
-            }
-
-            public bool ShouldUseColour
-            {
-                get => Properties.Settings.Default.ShouldUseColour;
-                set => Properties.Settings.Default.ShouldUseColour = value;
-            }
-        }
-
-        private static SDPreferences LoadPreferences()
-        {
-            return new SDPreferencesImpl();
-        }
+        public IPreferences Preferences => Settings.Default;
 
         internal bool SelectingData => null != MainWindow && MainWindow.SelectingData;
 
@@ -1085,7 +990,7 @@ namespace StatsDirect.UI
         internal void NoteRecentFile(string path, bool openedOk)
         {
             // Ensure the path is the most recently used and appears no more than once; ensure no more than MAX_RECENT_FILES files are kept
-            List<string> recentFiles = new(Properties.Settings.Default.RecentFileList ?? Array.Empty<string>());
+            List<string> recentFiles = new(Settings.Default.RecentFileList ?? Array.Empty<string>());
             if (recentFiles.Contains(path))
                 recentFiles.Remove(path);
             if (openedOk)
@@ -1094,10 +999,10 @@ namespace StatsDirect.UI
                 if (recentFiles.Count > MAX_RECENT_FILES)
                 {
                     // Never remove the example file; keep it as the oldest entry even if that means removing a younger file
-                    recentFiles.RemoveAt(recentFiles[0].Equals(SDConfiguration.MyTestFilePath) ? 1 : 0);
+                    recentFiles.RemoveAt(recentFiles[0].Equals(SDConfiguration.MyExampleFilePath) ? 1 : 0);
                 }
             }
-            Properties.Settings.Default.RecentFileList = recentFiles;
+            Settings.Default.RecentFileList = recentFiles;
             MainWindow?.UpdateFileList();
         }
 
@@ -1106,7 +1011,7 @@ namespace StatsDirect.UI
             get
             {
                 // Stored in reverse order (most recent last), so reverse on the way out
-                IReadOnlyList<string> recentFiles = Properties.Settings.Default.RecentFileList ?? Array.Empty<string>();
+                IReadOnlyList<string> recentFiles = Settings.Default.RecentFileList ?? Array.Empty<string>();
                 IList<string> output = new List<string>();
                 string appPath = Path.GetDirectoryName(Application.ExecutablePath);
                 if (null != appPath)
@@ -1124,7 +1029,7 @@ namespace StatsDirect.UI
                 // If this is the first time we've been started, so there are no recently used files, add the centrally-maintained test.xlsx for this version.
                 if (0 == output.Count)
                 {
-                    string defaultRecentlyUsedPath = SDConfiguration.MyTestFilePath;
+                    string defaultRecentlyUsedPath = SDConfiguration.MyExampleFilePath;
                     output.Add(defaultRecentlyUsedPath);
                 }
                 return output;
@@ -1253,9 +1158,7 @@ namespace StatsDirect.UI
 
         public Form ActiveMdiChild => MainWindow.ActiveMdiChild;
 
-        IChartPreferences IChartPreferencesHost.ChartPreferences => chartPreferences ??= ChartPreferencesFactory.GetChartPreferences();
-        // HACK: Sneaky trick: It's possible to return one thing from a call on an interface and a different thing from a public call. Poor naming; we should rename this.
-        public ChartPreferences ChartPreferences => chartPreferences ??= ChartPreferencesFactory.GetChartPreferences();
+        IChartPreferences IChartPreferencesHost.ChartPreferences => Settings.Default;
 
         string IRControllerHost.MyStatsDirectRFolder => SDConfiguration.MyStatsDirectRFolder;
 

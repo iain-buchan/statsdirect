@@ -10,7 +10,7 @@ namespace StatsDirect.Charting
 {
     public static class ChartOptionProcessor
     {
-        public static ChartOptions PreprocessChartOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName, IPreferences preferences)
+        public static ChartOptions PreprocessChartOptions(ChartStep step, ParameterBag parameters, ChartDefinition definition, string dataName, IPreferencesHost preferences)
         {
             // Chart options
             // TODO: This is very poor placement of this logic.  It's an unpleasant mash of setting options (some of which should be defaults), data preparation and mapping from values in particular operations.  How much of this should be moved out to the XML?
@@ -168,7 +168,7 @@ namespace StatsDirect.Charting
             return spreadOptions;
         }
 
-        private static ROCOptions PreprocessRocOptions(IPreferences host, ParameterBag parameters, ChartDefinition definition)
+        private static ROCOptions PreprocessRocOptions(IPreferencesHost host, ParameterBag parameters, ChartDefinition definition)
         {
             if (!parameters.ContainsKey("series-count"))
                 throw new ArgumentException("Chart expected parameter \"series-count\", which was not supplied");

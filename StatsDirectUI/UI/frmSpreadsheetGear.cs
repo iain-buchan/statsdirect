@@ -36,7 +36,7 @@ namespace StatsDirect.UI
             workbookView.WithLock(() =>
             {
                 workbookView.ActiveWorkbook?.Close();
-                string fontString = Properties.Settings.Default.DefaultWorkbookFont;
+                string fontString = Settings.Default.DefaultWorkbookFont;
                 if (null != fontString)
                 {
                     using Font f = Utilities.Utilities.FontFromSaveString(fontString);
@@ -1543,8 +1543,10 @@ namespace StatsDirect.UI
                     workbookView.ActiveWorkbookSet.DefaultFontName = dlg.Font.FontFamily.Name;
                     workbookView.ActiveWorkbookSet.DefaultFontSize = dlg.Font.SizeInPoints;
                 });
-                Properties.Settings.Default.DefaultWorkbookFont = Utilities.Utilities.SaveStringFromFont(dlg.Font);
-                Properties.Settings.Default.Save();
+
+                Settings settings = Settings.Default;
+                settings.DefaultWorkbookFont = Utilities.Utilities.SaveStringFromFont(dlg.Font);
+                settings.Save();
             }
         }
 

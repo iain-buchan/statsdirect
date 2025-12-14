@@ -238,7 +238,7 @@ namespace StatsDirect.UI
 
         private void FillFormFromOptions()
         {
-            bool useColour = options.UseColour.HasValue ? options.UseColour.Value : definition.ChartPreferences.ShouldUseColour;
+            bool useColour = options.UseColour ?? !definition.ChartPreferences.BlackAndWhite;
             rdoColour.Checked = useColour;
             rdoMonochrome.Checked = !rdoColour.Checked;
             SetColour(useColour);

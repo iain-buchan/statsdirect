@@ -66,7 +66,7 @@ namespace StatsDirect.Charting.Renderer
             double ygap = YExtCanvas / DivY;
 
             //  Work out what markers to use
-            MarkerType mt = Definition.ChartPreferences.MarkerTypes[10]; // Default
+            MarkerType mt = Definition.ChartPreferences.FixedMarkerType; // Default
             double diam = mt.MarkerSize;
             if (sOptions.MarkerTypes != null && sOptions.MarkerTypes.Count > 0)
             {
@@ -157,7 +157,7 @@ namespace StatsDirect.Charting.Renderer
             double xgap = XExtCanvas / DivX;
 
             //  Work out what markers to use
-            MarkerType mt = Definition.ChartPreferences.MarkerTypes[10]; //  Default
+            MarkerType mt = Definition.ChartPreferences.FixedMarkerType; //  Default
             double diam = mt.MarkerSize;
             if (sOptions.MarkerTypes != null && sOptions.MarkerTypes.Count > 0)
             {

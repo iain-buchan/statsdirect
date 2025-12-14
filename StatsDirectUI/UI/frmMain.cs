@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
@@ -16,7 +15,6 @@ using System.Xml.Serialization;
 using StatsDirect.Configuration;
 using StatsDirect.Data;
 using StatsDirect.Templates;
-using StatsDirect.UI.Properties;
 using StatsDirect.Utilities;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -168,7 +166,7 @@ namespace StatsDirect.UI
 
         private void AddTemplates()
         {
-            SDMenuItem rootItem = LoadMenuItems(Path.Combine(SDConfiguration.InstallationDirectory, Settings.Default.MenuFileName));
+            SDMenuItem rootItem = LoadMenuItems(SDConfiguration.MenuPath);
             foreach (SDMenuItem sdMenuItem in rootItem.SubItems)
             {
                 ToolStripItem menuItem = MakeMenuItem(sdMenuItem);
@@ -847,7 +845,8 @@ namespace StatsDirect.UI
             const double FRACTION_OF_PRIMARY = 0.75;
 
             // If our settings have previously been saved, load them now.  Otherwise, default to 75% width and height, centred, on the primary screen.
-            if (Settings.Default.MainWidth <= 0)
+            Settings settings = Settings.Default;
+            if (settings.MainWidth <= 0)
             {
                 foreach (Screen screen in Screen.AllScreens)
                 {
@@ -864,10 +863,10 @@ namespace StatsDirect.UI
             {
                 try
                 {
-                    Top = Settings.Default.MainTop;
-                    Left = Settings.Default.MainLeft;
-                    Width = Settings.Default.MainWidth;
-                    Height = Settings.Default.MainHeight;
+                    Top = settings.MainTop;
+                    Left = settings.MainLeft;
+                    Width = settings.MainWidth;
+                    Height = settings.MainHeight;
 
                     // Check against current screen settings - on remote desktops, for example, a user may now have a smaller screen.
                     // If the window's title bar is completely invisible, force it onto the main screen.
@@ -905,7 +904,7 @@ namespace StatsDirect.UI
                 {
                     // The window was saved maximised, so we don't have sizes
                 }
-                WindowState = Settings.Default.MainWindowState;
+                WindowState = settings.MainWindowState;
                 // Prevent starting in a minimised state
                 if (FormWindowState.Minimized == WindowState)
                     WindowState = FormWindowState.Normal;
@@ -917,15 +916,17 @@ namespace StatsDirect.UI
         /// </summary>
         private void SaveWindowState()
         {
+            Settings settings = Settings.Default;
+
             // No point saving maximised or minimised settings, they're 0,0 when minimised or screen size when maximised
             if (FormWindowState.Normal == WindowState)
             {
-                Settings.Default.MainTop = Top;
-                Settings.Default.MainLeft = Left;
-                Settings.Default.MainWidth = Width;
-                Settings.Default.MainHeight = Height;
+                settings.MainTop = Top;
+                settings.MainLeft = Left;
+                settings.MainWidth = Width;
+                settings.MainHeight = Height;
             }
-            Settings.Default.MainWindowState = WindowState;
+            settings.MainWindowState = WindowState;
         }
 
         /// <summary>
@@ -3043,8 +3044,9 @@ namespace StatsDirect.UI
             }
 
             // Set up the new items
-            IReadOnlyList<string> names = Settings.Default.ToolsNames;
-            IReadOnlyList<string> paths = Settings.Default.ToolsPrograms;
+            Settings settings = Settings.Default;
+            IReadOnlyList<string> names = settings.ToolsNames;
+            IReadOnlyList<string> paths = settings.ToolsPrograms;
             for (int i = 0; i < names.Count; i++)
             {
                 string name = names[i];

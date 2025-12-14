@@ -177,7 +177,7 @@ namespace StatsDirect.Charting.Renderer
 
             double xstep = XExtCanvas / 2;
             double xc = XAxisCanvas + xstep;
-            PenDescriptor blackPen = GetMarkerPen(host.ChartPreferences.MarkerTypes[10]);
+            PenDescriptor blackPen = GetMarkerPen(host.ChartPreferences.FixedMarkerType);
             for (int i = 0; i < nmale; i++)
             {
                 double yt = YAxisCanvas + (nmale - i) * ystep;

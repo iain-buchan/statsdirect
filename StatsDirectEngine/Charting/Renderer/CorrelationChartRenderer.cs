@@ -220,9 +220,9 @@ namespace StatsDirect.Charting.Renderer
                 Width = 1
             };
 
-            PenDescriptor linePen = GetLinePen(host.ChartPreferences.MarkerTypes[10], true);
-            PenDescriptor pooledEffectPen = GetLinePen(host.ChartPreferences.MarkerTypes[10], false);
-            PenDescriptor dotPen = GetMarkerPen(host.ChartPreferences.MarkerTypes[10]);
+            PenDescriptor linePen = GetLinePen(host.ChartPreferences.FixedMarkerType, true);
+            PenDescriptor pooledEffectPen = GetLinePen(host.ChartPreferences.FixedMarkerType, false);
+            PenDescriptor dotPen = GetMarkerPen(host.ChartPreferences.FixedMarkerType);
             {
                 double rmh = -99;
                 int r = 0;

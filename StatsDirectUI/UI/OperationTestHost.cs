@@ -30,7 +30,7 @@ namespace StatsDirect.UI
 
         ParameterBag ISession.SessionParametersAcrossOperations => throw new NotImplementedException();
 
-        SDPreferences IPreferences.Preferences => throw new NotImplementedException();
+        IPreferences IPreferencesHost.Preferences => Settings.Default;
 
         Operation IUserInterface.Operation { get; set; }
 
@@ -100,7 +100,7 @@ namespace StatsDirect.UI
         FileDialogResult IUserInterface.RequestFile(OpenFileDialogOptions options) => throw new NotImplementedException();
         FileDialogResult IUserInterface.RequestFile(SaveFileDialogOptions options) => throw new NotImplementedException();
 
-        IChartPreferences IChartPreferencesHost.ChartPreferences => ChartPreferencesFactory.GetChartPreferences();
+        IChartPreferences IChartPreferencesHost.ChartPreferences => Settings.Default;
 
         void IUserInterface.PrepareParameter(ITemplateProcessor processor, Parameter parameter, ParameterBag context)
         {

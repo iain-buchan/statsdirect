@@ -64,7 +64,7 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
             //  Lines
-            MarkerType rungMarkerType = host.ChartPreferences.MarkerTypes[10];
+            MarkerType rungMarkerType = host.ChartPreferences.FixedMarkerType;
             if (lOptions.MarkerTypes != null && lOptions.MarkerTypes.Count >= 1 && lOptions.MarkerTypes[0] != null)
                 rungMarkerType = lOptions.MarkerTypes[0];
 

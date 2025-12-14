@@ -6,7 +6,6 @@ using StatsDirect.Numerics;
 using StatsDirect.UI;
 using StatsDirect.Utilities;
 using StatsDirect.Builtins;
-using StatsDirect.UI.Properties;
 using StatsDirect.Expressions;
 
 namespace StatsDirect.Calculator
@@ -89,12 +88,13 @@ namespace StatsDirect.Calculator
 
         private void SavePosition()
         {
-            Settings.Default.CalculatorTop = Top;
-            Settings.Default.CalculatorLeft = Left;
-            Settings.Default.CalculatorWidth = Width;
-            Settings.Default.CalculatorHeight = Height;
-            Settings.Default.CalculatorMaximized = WindowState == FormWindowState.Maximized;
-            Settings.Default.Save();
+            Settings settings = Settings.Default;
+            settings.CalculatorTop = Top;
+            settings.CalculatorLeft = Left;
+            settings.CalculatorWidth = Width;
+            settings.CalculatorHeight = Height;
+            settings.CalculatorMaximized = WindowState == FormWindowState.Maximized;
+            settings.Save();
         }
 
         private void LoadPosition()

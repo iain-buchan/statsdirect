@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace StatsDirect.Charting
 {
@@ -20,10 +21,7 @@ namespace StatsDirect.Charting
         public static ColorDescriptor Red { get; } = FromArgb(255, 0, 0);
         public static ColorDescriptor White { get; } = FromArgb(255, 255, 255);
 
-        public static ColorDescriptor FromArgb(int r, int g, int b)
-        {
-            return new ColorDescriptor(r, g, b);
-        }
+        public static ColorDescriptor FromArgb(int r, int g, int b) => new ColorDescriptor(r, g, b);
 
         public override bool Equals(object obj) =>
             obj is ColorDescriptor descriptor
@@ -34,6 +32,7 @@ namespace StatsDirect.Charting
 
         public override int GetHashCode() => HashCode.Combine(R, G, B);
 
+        [JsonConstructor]
         private ColorDescriptor(int r, int g, int b)
         {
             R = r;

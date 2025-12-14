@@ -53,7 +53,7 @@ namespace StatsDirect.Charting
             }
 
             //  Now add one more for the CIs
-            MarkerType ciMarkerType = ChartPreferences.MarkerTypes[10].Clone();
+            MarkerType ciMarkerType = ChartPreferences.FixedMarkerType.Clone();
             MarkerTypes.Add(ciMarkerType);
 
             SeriesOptionsDescriptor cisod = new()

@@ -108,7 +108,7 @@ namespace StatsDirect.Charting.Renderer
                     x1 = ToCanvasX(axisScales.X.MaximumScaleValue);
                     y1 = ToCanvasY(rmh * axisScales.X.MaximumScaleValue);
                 }
-                DrawLineInCanvasCoordinates(GetLinePen(Definition.ChartPreferences.MarkerTypes[10], false), ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
+                DrawLineInCanvasCoordinates(GetLinePen(Definition.ChartPreferences.FixedMarkerType, false), ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
             }
             EndVectorPlot();
         }

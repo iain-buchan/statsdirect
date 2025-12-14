@@ -1361,7 +1361,7 @@ namespace StatsDirect.Builtins
             while (true);
         }
 
-        public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
+        public static void RelativeRiskMA(IPreferencesHost host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
         {
             ierr = -1;
             double siga = 0.0;
@@ -1528,7 +1528,7 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
-        private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, out int ierr)
+        private static void Riskdifma(IPreferencesHost host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, out int ierr)
         {
             ierr = -1;
             double sumlk = 0.0;
@@ -2398,7 +2398,7 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
-        public static void GetLogitCi(IPreferences host, double[,] o, int k, double cit, double[] axll, double[] axul)
+        public static void GetLogitCi(IPreferencesHost host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
             {
@@ -2427,7 +2427,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        public static void GetAproxrrCI(IPreferences host, double[,] o, int k, double cit, double[] axll, double[] axul)
+        public static void GetAproxrrCI(IPreferencesHost host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
             {
@@ -3226,7 +3226,7 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static void OrciCorn(IPreferences host, ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
+        public static void OrciCorn(IPreferencesHost host, ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
         {
             //  ref Alan Agresti R script http://web.stat.ufl.edu/~aa/cda/R/two_sample/R2/
             double aa;
@@ -3360,7 +3360,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static void ContinuityCorrect(IPreferences host, double a, double b, double c, double d, out double ax, out double bx, out double cx, out double dx)
+        private static void ContinuityCorrect(IPreferencesHost host, double a, double b, double c, double d, out double ax, out double bx, out double cx, out double dx)
         {
             double x = host.Preferences.MetaCC == 0.0 ? 0.5 : host.Preferences.MetaCC;
             if (x > 0.0 && x < 1.0)
@@ -3681,7 +3681,7 @@ namespace StatsDirect.Builtins
             return !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
         }
 
-        public static string GetMetaLabel(IPreferences host, double[,] o, int i, bool stratlab, bool[] cced, string[] title)
+        public static string GetMetaLabel(IPreferencesHost host, double[,] o, int i, bool stratlab, bool[] cced, string[] title)
         {
             if (IncludeTable(o, i))
                 return (stratlab ? title[i] : string.Empty)
@@ -3692,7 +3692,7 @@ namespace StatsDirect.Builtins
                 return "* (excluded)";
         }
 
-        public static void ModMetabias(IPreferences host, ParameterBag outputParameters, double[,] o, int k, double cco, int method)
+        public static void ModMetabias(IPreferencesHost host, ParameterBag outputParameters, double[,] o, int k, double cco, int method)
         {
             //  Horbord et al 2006
             // get linear regression of z on sqr(v)
@@ -3799,7 +3799,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", p2);
         }
 
-        public static void IsquareNcc(IPreferences host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
+        public static void IsquareNcc(IPreferencesHost host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
         {
             double SElnH;
             double minLbNc;

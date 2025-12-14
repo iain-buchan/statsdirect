@@ -266,7 +266,7 @@ namespace StatsDirect.UI
                         ctl = new ctlExtraction(f);
                     break;
                 case "GraphicsOptions":
-                    ctl = new ctlGraphicsOptions(SdApplication.SoleInstance.ChartPreferences);
+                    ctl = new ctlGraphicsOptions();
                     break;
                 case "ROCCutoff":
                     {

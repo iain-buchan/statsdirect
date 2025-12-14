@@ -64,7 +64,7 @@ namespace StatsDirect.Charting.Renderer
 
             HistogramOptions options = (HistogramOptions)Definition.ChartOptions;
             IList<ISeries> seriesToUse = Definition.YSeries;
-            MarkerType[] originalMarkerTypes = null;
+            IReadOnlyList<MarkerType> originalMarkerTypes = null;
             //  A space to save drawn ASCII plots until required
             List<string> savedLines = null;
 
@@ -87,7 +87,7 @@ namespace StatsDirect.Charting.Renderer
 
                     originalMarkerTypes = Definition.ChartPreferences.MarkerTypes;
                     Definition.ChartPreferences.PushAndCloneMarkerTypes();
-                    for (int i = 0; i < originalMarkerTypes.Length; i++)
+                    for (int i = 0; i < originalMarkerTypes.Count; i++)
                         Definition.ChartPreferences.MarkerTypes[i].Width = options.LineWidth;
                     AssignMarkersToSeries(seriesToUse);
                 }

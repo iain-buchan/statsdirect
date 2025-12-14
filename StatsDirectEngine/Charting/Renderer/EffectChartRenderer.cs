@@ -96,7 +96,7 @@ namespace StatsDirect.Charting.Renderer
             DivY = kok + options.pbias;
             OffY = YAxisCanvas;
 
-            PenDescriptor linePen = GetLinePen(host.ChartPreferences.MarkerTypes[10], true);
+            PenDescriptor linePen = GetLinePen(host.ChartPreferences.FixedMarkerType, true);
             double txh = LabelHeightInCanvasCoordinates(options.Titles[1]);
             int r = 0;
             double yc = 0;
@@ -139,7 +139,7 @@ namespace StatsDirect.Charting.Renderer
                 DrawDiamondInCanvasCoordinates(linePen, ToCanvasX(options.rmh), yc, diamondHalfSize * 2, false);
                 DrawLineInCanvasCoordinates(linePen, ToCanvasX(options.ul), yc, ToCanvasX(options.ll), yc);
                 // pooled effect marker
-                PenDescriptor pooledEffectPen = GetLinePen(host.ChartPreferences.MarkerTypes[10], false);
+                PenDescriptor pooledEffectPen = GetLinePen(host.ChartPreferences.FixedMarkerType, false);
                 DrawLineInCanvasCoordinates(pooledEffectPen, ToCanvasX(options.rmh), saveYc, ToCanvasX(options.rmh), yt);
                 string lab = "pooled " + options.qid + " = " + host.RoundU(options.rmh) + "  (" + Formatting.XRound(options.cco * 100, 1) + "% CI = " + host.RoundU(options.ll) + " to " + host.RoundU(options.ul) + ")";
                 string xlab = options.cap.IndexOf("fixed", StringComparison.Ordinal) + 1 != 0 ? string.Empty : "DL ";

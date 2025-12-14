@@ -1,6 +1,5 @@
 using StatsDirect.Configuration;
 using StatsDirect.Templates;
-using StatsDirect.UI.Properties;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -63,10 +62,10 @@ namespace StatsDirect.UI
         {
             lock (lockObject)
             {
-                Dictionary<string, Exception> loadErrors = new();
+                Dictionary<string, Exception> loadErrors = [];
                 operations = new Dictionary<string, Operation>();
                 System.Xml.Serialization.XmlSerializer s = new(typeof(Operation));
-                DirectoryInfo di = new(Path.Combine(SDConfiguration.InstallationDirectory, Settings.Default.OperationsDirectory));
+                DirectoryInfo di = new(SDConfiguration.OperationsPath);
                 FileInfo[] knownOperations = di.GetFiles();
                 foreach (FileInfo info in knownOperations)
                 {
@@ -92,7 +91,7 @@ namespace StatsDirect.UI
                 }
 
                 userOperations = new List<Operation>();
-                string userOperationDir = Path.Combine(SDConfiguration.InstallationDirectory, Settings.Default.UserOperationsDirectory);
+                string userOperationDir = SDConfiguration.UserOperationsPath;
                 if (Directory.Exists(userOperationDir))
                 {
                     di = new DirectoryInfo(userOperationDir);

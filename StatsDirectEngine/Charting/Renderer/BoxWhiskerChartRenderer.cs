@@ -95,7 +95,7 @@ namespace StatsDirect.Charting.Renderer
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                 new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Series = seriesToUse },
                 false, false);
-            MarkerType mt = Definition.ChartPreferences.MarkerTypes[10];
+            MarkerType mt = Definition.ChartPreferences.FixedMarkerType;
             ColorDescriptor black = ColorDescriptor.Black;
             MarkerType crossMarker = new() { MarkerShape = MarkerShape.Cross, MarkerColor = black, MarkerSize = 10 };
             MarkerType filledDiamondMarker = new() { MarkerShape = MarkerShape.Diamond, IsMarkerFilled = true, MarkerColor = black, MarkerSize = 10 };
@@ -361,8 +361,8 @@ namespace StatsDirect.Charting.Renderer
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
                 false, false);
 
-            PenDescriptor blackPen = GetMarkerPen(Definition.ChartPreferences.MarkerTypes[10]);
-            PenDescriptor dottedBlackPen = GetMarkerPen(Definition.ChartPreferences.MarkerTypes[10]);
+            PenDescriptor blackPen = GetMarkerPen(Definition.ChartPreferences.FixedMarkerType);
+            PenDescriptor dottedBlackPen = GetMarkerPen(Definition.ChartPreferences.FixedMarkerType);
             dottedBlackPen.DashStyle = DashStyleDescriptor.Dot;
 
             // work through the columns

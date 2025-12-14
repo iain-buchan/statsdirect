@@ -1,6 +1,5 @@
 using StatsDirect.Calculator;
 using StatsDirect.Configuration;
-using StatsDirect.UI.Properties;
 using System;
 using System.IO;
 using System.Reflection;
@@ -48,8 +47,9 @@ namespace StatsDirect.UI
                         return;
 
             // As soon as possible, put up a loader - #1224 on the screen on which frmMain will open.
-            double mainMidY = Settings.Default.MainTop + Settings.Default.MainHeight / 2.0;
-            double mainMidX = Settings.Default.MainLeft + Settings.Default.MainWidth / 2.0;
+            Settings settings = Settings.Default;
+            double mainMidY = settings.MainTop + settings.MainHeight / 2.0;
+            double mainMidX = settings.MainLeft + settings.MainWidth / 2.0;
             Screen bestSoFar = Screen.PrimaryScreen;
             double smallestSquaredDistanceSoFar = double.MaxValue;
             foreach (Screen candidate in Screen.AllScreens)
@@ -209,19 +209,19 @@ namespace StatsDirect.UI
                     return;
                 }
             }
-            string myTestXlsx = SDConfiguration.MyTestFilePath;
-            if (File.Exists(myTestXlsx))
+            string myExampleFilePath = SDConfiguration.MyExampleFilePath;
+            if (File.Exists(myExampleFilePath))
             {
                 // If we have a newer distribution file, save the user's as an old version (in case they've made any alterations) and then copy over our new one.
-                string distTestXlsx = DistTestXlsx();
-                if (null != distTestXlsx)
+                string distributionExampleFilePath = DistributionExampleFilePath();
+                if (null != distributionExampleFilePath)
                 {
-                    DateTime distModified = new FileInfo(distTestXlsx).LastWriteTimeUtc;
-                    DateTime mineModified = new FileInfo(myTestXlsx).LastWriteTimeUtc;
+                    DateTime distModified = new FileInfo(distributionExampleFilePath).LastWriteTimeUtc;
+                    DateTime mineModified = new FileInfo(myExampleFilePath).LastWriteTimeUtc;
                     if (distModified > mineModified)
                     {
-                        string extension = Path.GetExtension(myTestXlsx);
-                        string prefix = Path.Combine(Path.GetDirectoryName(myTestXlsx), Path.GetFileNameWithoutExtension(myTestXlsx));
+                        string extension = Path.GetExtension(myExampleFilePath);
+                        string prefix = Path.Combine(Path.GetDirectoryName(myExampleFilePath), Path.GetFileNameWithoutExtension(myExampleFilePath));
                         int nonExistingVersion = 1;
                         while (true)
                         {
@@ -232,12 +232,12 @@ namespace StatsDirect.UI
                             {
                                 try
                                 {
-                                    File.Copy(myTestXlsx, probePath);
+                                    File.Copy(myExampleFilePath, probePath);
                                     if (File.Exists(probePath))
                                     {
-                                        new FileInfo(myTestXlsx).IsReadOnly = false;
-                                        File.Delete(myTestXlsx);
-                                        CopyTestFileTo(myTestXlsx);
+                                        new FileInfo(myExampleFilePath).IsReadOnly = false;
+                                        File.Delete(myExampleFilePath);
+                                        CopyTestFileTo(myExampleFilePath);
                                     }
                                 }
                                 catch (Exception ex)
@@ -254,7 +254,7 @@ namespace StatsDirect.UI
             {
                 try
                 {
-                    CopyTestFileTo(myTestXlsx);
+                    CopyTestFileTo(myExampleFilePath);
                 }
                 catch (Exception)
                 {
@@ -264,29 +264,26 @@ namespace StatsDirect.UI
             }
         }
 
-        private static void CopyTestFileTo(string myTestXlsx)
+        private static void CopyTestFileTo(string myExampleFilePath)
         {
-            string distTestXlsx = DistTestXlsx();
-            if (null == distTestXlsx)
+            string distributionExampleFilePath = DistributionExampleFilePath();
+            if (distributionExampleFilePath is null)
                 return;
-            File.Copy(distTestXlsx, myTestXlsx, false);
+            File.Copy(distributionExampleFilePath, myExampleFilePath, false);
             // Set the copied file read-only
-            FileInfo tx = new(myTestXlsx) {IsReadOnly = true};
+            FileInfo tx = new(myExampleFilePath) {IsReadOnly = true};
         }
 
         /// <summary>
         /// Return the path to the distribution test.xlsx if it is defined and the file exists at that location; otherwise return null.
         /// </summary>
         /// <returns></returns>
-        private static string DistTestXlsx()
+        private static string DistributionExampleFilePath()
         {
-            string appPath = Path.GetDirectoryName(Application.ExecutablePath);
-            if (null == appPath)
-                return null;
-            string path = Path.Combine(Path.Combine(appPath, "Data"), Settings.Default.DefaultRecentlyUsedFile);
-            if (!File.Exists(path))
-                return null;
-            return path;
+            string path = SDConfiguration.DistributionExampleFilePath;
+            return File.Exists(path)
+                ? path
+                : null;
         }
 
         static void CheckExcelAddIn()

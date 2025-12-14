@@ -196,9 +196,9 @@ namespace StatsDirect.Charting.Renderer
 
             int r = 0;
 
-            PenDescriptor effectTenPen = GetLinePen(host.ChartPreferences.MarkerTypes[10], false),
+            PenDescriptor effectTenPen = GetLinePen(host.ChartPreferences.FixedMarkerType, false),
                 ciPen = GetLinePen(studyMarkerType, true),
-                dotPen = GetMarkerPen(host.ChartPreferences.MarkerTypes[10]),
+                dotPen = GetMarkerPen(host.ChartPreferences.FixedMarkerType),
                 pooledCiPen = GetLinePen(pooledMarkerType, true);
             double yt = 0;
             for (int i = k - 1; i >= 0; --i)

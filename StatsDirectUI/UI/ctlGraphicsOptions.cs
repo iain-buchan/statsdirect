@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Drawing;
 using System.Windows.Forms;
 using StatsDirect.Charting;
@@ -13,11 +14,8 @@ namespace StatsDirect.UI
         private RadioButton[] rdoSeries;
         private MarkerType[] workingMarkerTypes;
 
-        private ChartPreferences ChartPreferences { get; }
-
-        public ctlGraphicsOptions(ChartPreferences chartPreferences)
+        public ctlGraphicsOptions()
         {
-            ChartPreferences = chartPreferences;
             InitializeComponent();
             SetupArrays();
             LoadOptions();
@@ -137,34 +135,33 @@ namespace StatsDirect.UI
 
         private void SaveOptions()
         {
-            ChartPreferences.BlackAndWhite = chkAllBlack.Checked;
-            ChartPreferences.BoxAxes = chkBoxAxes.Checked;
+            Settings settings = Settings.Default;
+            settings.BlackAndWhite = chkAllBlack.Checked;
+            settings.BoxAxes = chkBoxAxes.Checked;
 
-            for (int i = 0; i < 10; i++)
-                ChartPreferences.MarkerTypes[i] = workingMarkerTypes[i];
+            settings.MarkerTypes = workingMarkerTypes;
 
-            ChartPreferences.AxisLabelFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.AxisTitleFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.LabelFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.LegendFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
-            ChartPreferences.TitleFont = FontCache.DescriptorFromFont(lblTitleFont.Font);
+            settings.AxisLabelFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            settings.AxisTitleFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            settings.LabelFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            settings.LegendFont = FontCache.DescriptorFromFont(lblAxisLabelFont.Font);
+            settings.TitleFont = FontCache.DescriptorFromFont(lblTitleFont.Font);
 
-            ChartPreferencesFactory.Save(ChartPreferences);
+            settings.Save();
         }
 
         private void LoadOptions()
         {
-            lblAxisLabelFont.Font = FontCache.FontFromDescriptor(ChartPreferences.LabelFont);
-            lblTitleFont.Font = FontCache.FontFromDescriptor(ChartPreferences.TitleFont);
+            Settings settings = Settings.Default;
+            lblAxisLabelFont.Font = FontCache.FontFromDescriptor(settings.LabelFont);
+            lblTitleFont.Font = FontCache.FontFromDescriptor(settings.TitleFont);
 
-            chkAllBlack.Checked = ChartPreferences.BlackAndWhite;
-            chkBoxAxes.Checked = ChartPreferences.BoxAxes;
+            chkAllBlack.Checked = settings.BlackAndWhite;
+            chkBoxAxes.Checked = settings.BoxAxes;
 
             workingMarkerTypes = new MarkerType[10];
             for (int i = 0; i < 10; i++)
-            {
-                workingMarkerTypes[i] = ChartPreferences.MarkerTypes[i].Clone();
-            }
+                workingMarkerTypes[i] = settings.MarkerTypes[i].Clone();
             rdoSeries1.Checked = true;
             LoadSeriesOptions();
         }
