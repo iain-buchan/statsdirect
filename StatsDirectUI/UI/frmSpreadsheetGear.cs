@@ -1270,6 +1270,18 @@ namespace StatsDirect.UI
             Application.DoEvents(); // Force processing of events, in this case showing the replace dialog
         }
 
+        /// <summary>
+        /// Send keystrokes to this grid as if the user had typed them, bringing the grid to the front first.
+        /// </summary>
+        /// <param name="keys">The keystrokes, in System.Windows.Forms.SendKeys format</param>
+        internal void SendKeysToGrid(string keys)
+        {
+            EnsureActive();
+            workbookView.Focus();
+            SendKeys.Send(keys);
+            Application.DoEvents(); // Force processing of events, so the keystrokes take effect before we return
+        }
+
         private void goToCellToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DoOrWarn(GoToCell, "Go to cell failed");

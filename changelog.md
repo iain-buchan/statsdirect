@@ -9,6 +9,9 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - SpreadsheetGear updated to 9.3.84
 - Dependencies updated
 
+### Fixed
+- Data > Cleaning and Encoding > Search and Replace (Basic), and the Count action of Search and Replace (Advanced), failed with a script compilation error
+
 ##[v4.0.5] 2025-12-05
 
 ### Changed
