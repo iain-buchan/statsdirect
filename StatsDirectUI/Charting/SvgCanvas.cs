@@ -78,7 +78,8 @@ namespace StatsDirect.Charting
             string weight = style.HasFlag(FontStyle.Bold) ? "font-weight:bold;" : string.Empty;
             string slant = style.HasFlag(FontStyle.Italic) ? "font-style:italic;" : string.Empty;
             string size = (font.SizeInPoints * PIXELS_PER_POINT).ToString(CultureInfo.InvariantCulture);
-            return $"font-family:{font.FontFamily};font-size:{size}px;{weight}{slant}";
+            //  The generic fallback matters where the named font is not installed (Calibri away from Windows): without it a browser falls back to its default, usually a serif
+            return $"font-family:'{font.FontFamily}',sans-serif;font-size:{size}px;{weight}{slant}";
         }
 
         private string ToCss(StringFormat txtFormat)
