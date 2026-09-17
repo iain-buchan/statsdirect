@@ -78,7 +78,7 @@ namespace StatsDirect.Numerics
         /// Safe Exponent
         /// </summary>
         /// <returns>double.MaxValue if this would overflow, otherwise Math.Exp(x)</returns>
-        public static double SafeExp(double x) => Math.Log(x) > Constant.MAXEXP ? double.MaxValue : Math.Exp(x);
+        public static double SafeExp(double x) => x > Constant.MAXEXP ? double.MaxValue : Math.Exp(x);
 
         /// <summary>
         /// Safe square root (was Safe_Sqr in SD2).

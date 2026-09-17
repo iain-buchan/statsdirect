@@ -1151,6 +1151,10 @@ namespace StatsDirect.Builtins
                         outputParameters.AddOutput("sec", Constant.MISSING);
                         outputParameters.AddOutput("zc", Constant.MISSING);
                         outputParameters.AddOutput("p", "* number of ratings per subject not constant, so tests do not apply");
+                        //  The report prints the interval line whether or not there is an interval: without these it reads "% CI:  to "
+                        outputParameters.AddOutput("pc", 100.0 * cco);
+                        outputParameters.AddOutput("ll", Constant.MISSING);
+                        outputParameters.AddOutput("ul", Constant.MISSING);
                     }
                     // <----wt m x k
                 }

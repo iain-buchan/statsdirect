@@ -425,7 +425,7 @@ namespace StatsDirect.Numerics
                 xsd = Constant.MISSING;
                 return;
             }
-            xmean = xsum / k;
+            xmean = xsum / ctr;
             double xss = 0.0;
             for (int i = 0; i < k; i++)
                 if (x[i] != Constant.MISSING)
@@ -636,38 +636,64 @@ namespace StatsDirect.Numerics
             return kendpReturn;
         }
 
+        /// <summary>
+        /// Upper-side P for Spearman's rho: P(S &lt;= ix), including ix, where S is the sum of squared rank differences.
+        /// </summary>
+        /// <remarks>
+        /// ExFortran.prho gives P(S &gt;= ix), including ix, and treats an odd ix as the next even number because S is always even.
+        /// The complement of P(S &lt;= ix) is therefore P(S &gt;= the next attainable score above that), as in RptSpearman.
+        /// </remarks>
+        public static double prhoUpper(int nx, int ix, out int ifault)
+        {
+            //  Below the smallest score, or so far above the largest that the next score does not fit an int: prho is called only to validate nx
+            long next = (long)ix + (ix & 1) + 2;
+            if (ix < 0 || next > int.MaxValue)
+            {
+                ExFortran.prho(nx, -1, out ifault);
+                return ix < 0 ? 0.0 : 1.0;
+            }
+            return 1.0 - ExFortran.prho(nx, (int)next, out ifault);
+        }
+
+        /// <summary>
+        /// Critical value of Spearman's rho: the rho of the largest score ix whose upper-side P, P(S &lt;= ix), does not exceed P.
+        /// </summary>
+        /// <param name="P">Upper-side probability</param>
+        /// <param name="pu">The upper-side P attained at ix, which is at most P</param>
+        /// <param name="ix">The critical score, the sum of squared rank differences</param>
+        /// <param name="nx">Number of pairs of observations</param>
+        /// <param name="ifault">Non-zero if there is no such score (even rho = 1 has an upper-side P above P) or nx is out of range</param>
         public static double rhofromp(double P, out double pu, out int ix, int nx, out int ifault)
         {
-            double rhofrompReturn = 0;
+            const double tolerance = 0.00000000000001;
+            ix = 0;
+            //  S is always even and runs from 0 (rho = 1) to n(n^2 - 1)/3 (rho = -1)
+            double maxScore = Convert.ToDouble(nx) * (Convert.ToDouble(nx) * Convert.ToDouble(nx) - 1.0) / 3.0;
+            pu = prhoUpper(nx, 0, out ifault);
+            if (ifault != 0)
+                return 0;
+            if (maxScore > int.MaxValue - 4 || pu > P + tolerance)
+            {
+                ifault = 1;
+                return 0;
+            }
 
-            ix = -5;
-            do
+            //  P(S <= ix) does not decrease with ix, so bisect on the half scores: low always satisfies the condition, high never does
+            int low = 0;
+            int high = Convert.ToInt32(maxScore / 2.0);
+            if (prhoUpper(nx, 2 * high, out ifault) <= P + tolerance)
+                low = high;
+            while (high - low > 1)
             {
-                ix += 10;
-                pu = 1.0 - ExFortran.prho(nx, ix, out ifault);
-                if (pu > P)
-                    break;
-                if (ix > 50000)
-                    break;
+                int mid = low + (high - low) / 2;
+                if (prhoUpper(nx, 2 * mid, out ifault) <= P + tolerance)
+                    low = mid;
+                else
+                    high = mid;
             }
-            while (true);
-            do
-            {
-                ix -= 1;
-                pu = 1.0 - ExFortran.prho(nx, ix, out ifault);
-                if (ifault == 0 & (pu < P | Math.Abs(pu - P) < 0.00000000000001))
-                {
-                    rhofrompReturn = 1.0 - Convert.ToDouble(ix) / (Convert.ToDouble(nx) * (Convert.ToDouble(nx) * Convert.ToDouble(nx) - 1.0) / 6.0);
-                    break;
-                }
-                if (ix < 3)
-                {
-                    ifault = 1;
-                    break;
-                }
-            }
-            while (true);
-            return rhofrompReturn;
+            ix = 2 * low;
+            pu = prhoUpper(nx, ix, out ifault);
+            return 1.0 - Convert.ToDouble(ix) / (maxScore / 2.0);
         }
 
 

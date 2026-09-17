@@ -611,7 +611,8 @@ namespace StatsDirect.Builtins
                 blockParameters.AddOutput("to", ula);
                 IList<ParameterBag> allResults = new List<ParameterBag>();
                 allResults.Add(blockParameters);
-                outputParameters.AddOutput("*", allResults);
+                //  The name after the asterisk must match agree.creole's <block name="all">, or the limits of agreement are not printed
+                outputParameters.AddOutput("*all", allResults);
             }
             outputParameters.AddOutput("icc", icc);
             outputParameters.AddOutput("icc_pc", 100 * GAMMA);

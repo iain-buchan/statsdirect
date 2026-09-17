@@ -496,7 +496,7 @@ namespace StatsDirect.UI
             if (txtDf2.Text == Formatting.ERRR || nx < 4)
                 fault = -1;
             else
-                pu = 1.0 - ExFortran.prho(nx, ix, out fault);
+                pu = MathDbl.prhoUpper(nx, ix, out fault);
             Pval15Into(txtUp, pu, false, fault != 0);
             lastCalculationAsString = "P(Hotelling T " + ix.ToString() + ", n " + nx.ToString() + ") = " + txtUp.Text.Trim() + " upper tail";
         }
