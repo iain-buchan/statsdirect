@@ -2750,28 +2750,30 @@ namespace StatsDirect.Builtins
             //    ps = Constant.MISSING; 
             //} 
             //else 
+            double puExact;
             {
-                pl = 1.0 - MathDbl.kendp(ls, nxx, ref ifault);
+                //  kendp gives P(S' >= ls), including ls; the distribution of S is symmetric about zero, so the lower side P(S' <= ls) is P(S' >= -ls).
+                //  The lower side was 1 - P(S' >= ls), which left the observed score out, so it and the two sided P were too small whenever tau was negative.
+                puExact = MathDbl.kendp(ls, nxx, ref ifault);
+                pl = ifault != 0 ? Constant.MISSING : MathDbl.kendp(-ls, nxx, ref ifault);
                 if (ifault != 0)
                 {
                     ps = Constant.MISSING;
                     pl = Constant.MISSING;
+                    puExact = Constant.MISSING;
                 }
                 else
                 {
-                    if (pl > 1.0 - pl)
-                        ps = 1.0 - pl;
-                    else
-                        ps = pl;
+                    ps = Math.Min(pl, puExact);
                 }
             }
             if (siga != 0 || sigb != 0)
                 outputParameters.AddOutput("adjexact", " (NOT adjusted for ties)");
             else
                 outputParameters.AddOutput("adjexact", string.Empty);
-            outputParameters.AddOutput("p_uexact", 1.0 - pl);
+            outputParameters.AddOutput("p_uexact", puExact);
             outputParameters.AddOutput("p_lexact", pl);
-            outputParameters.AddOutput("p_2exact", ps * 2);
+            outputParameters.AddOutput("p_2exact", ps == Constant.MISSING ? Constant.MISSING : Math.Min(1.0, ps * 2));
 
             return new StepOutput(outputParameters);
         }

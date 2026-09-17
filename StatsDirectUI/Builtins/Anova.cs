@@ -387,16 +387,11 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                ps = MathDbl.kendp(ls, nxx, out fault);
+                //  kendp gives P(S' >= ls), including ls, and the distribution of S is symmetric about zero, so the tail at and beyond a negative score is P(S' >= -ls).
+                //  Folding P(S' >= ls) with its complement instead left the observed score out of that tail, so P was too small whenever tau was negative.
+                ps = MathDbl.kendp(Math.Abs(ls), nxx, out fault);
                 if (fault)
-                {
                     ps = Constant.MISSING;
-                }
-                else
-                {
-                    if (ps > 1.0 - ps)
-                        ps = 1.0 - ps;
-                }
             }
             if (wasException)
             {
@@ -412,7 +407,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                p2 = ps * 2;
+                p2 = Math.Min(1.0, ps * 2);
             }
             isLowPower = nxx < 11;
         }
