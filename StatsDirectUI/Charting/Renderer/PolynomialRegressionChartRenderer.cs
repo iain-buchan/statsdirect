@@ -65,7 +65,9 @@ namespace StatsDirect.Charting.Renderer
             double rms = options.rss / rdf;
             double[] px = new double[options.p + 1];
             px[1] = 1.0;
-            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / axisScales.X.Tics().Count / 2;
+            //  Fine enough for the curve and its bands to look curved: two steps a tic (16 segments in the help's example) was visibly angular.
+            //  Not much finer than this, though: EmfCanvas rounds the ends of each line to whole pixels, which shows as a wobble when the segments are only a few pixels long.
+            double xstep = (axisScales.X.MaximumScaleValue - axisScales.X.MinimumScaleValue) / 64.0;
 
             // This routine has changed from the original
             // It is more efficient in drawing - but bigger in code

@@ -24,7 +24,9 @@ namespace StatsDirect.Charting.Scales
             int maximumScaleTicMultiplier = 10;
             int candidateDivisions = maxPower - minPower;
             int[] minorTicMultipliers;
-            if (candidateDivisions <= 5)
+            //  Labelling 1, 2 and 5 in every decade gives three labels a decade. Side by side on an X axis they collide beyond about three decades ("0.002 0.0050.010.02"); stacked on a Y axis there is room for five.
+            int mostDecadesLabelledWithin = isYAxis ? 5 : 3;
+            if (candidateDivisions <= mostDecadesLabelledWithin)
             {
                 minorTicMultipliers = new[] { 2, 5 };
                 foreach (int candidateScaleTicMultiplier in minorTicMultipliers)

@@ -1247,14 +1247,68 @@ namespace StatsDirect.Charting.Renderer
 
         protected void MaybeDrawLineInChartCoordinates(AxisScales axisScales, ColorDescriptor color, double x1, double y1, double x2, double y2)
         {
-            if (AreInsidePlotArea(axisScales, x1, y1, x2, y2))
-                DrawLineInChartCoordinates(new PenDescriptor(color), x1, y1, x2, y2);
+            MaybeDrawLineInChartCoordinates(axisScales, new PenDescriptor(color), x1, y1, x2, y2);
         }
 
+        /// <summary>
+        /// Draw the part of the line that lies within the plot area, if any.
+        /// </summary>
+        /// <remarks>
+        /// A line with an end outside the plot area used to be left out altogether, so a fitted curve or confidence band stopped a whole segment short of the axis it was heading for.
+        /// It is now clipped to the plot area instead. A line with a missing end is still not drawn.
+        /// </remarks>
         protected void MaybeDrawLineInChartCoordinates(AxisScales axisScales, PenDescriptor p, double x1, double y1, double x2, double y2)
         {
             if (AreInsidePlotArea(axisScales, x1, y1, x2, y2))
+            {
                 DrawLineInChartCoordinates(p, x1, y1, x2, y2);
+                return;
+            }
+            if (x1 == Constant.MISSING || y1 == Constant.MISSING || x2 == Constant.MISSING || y2 == Constant.MISSING)
+                return;
+
+            //  Clip in canvas coordinates, where the line is straight whatever the scale types (Liang-Barsky)
+            double cx1 = ToCanvasX(x1);
+            double cy1 = ToCanvasY(y1);
+            double cx2 = ToCanvasX(x2);
+            double cy2 = ToCanvasY(y2);
+            double edgeA = ToCanvasX(axisScales.X.MinimumScaleValue);
+            double edgeB = ToCanvasX(axisScales.X.MaximumScaleValue);
+            double edgeC = ToCanvasY(axisScales.Y.MinimumScaleValue);
+            double edgeD = ToCanvasY(axisScales.Y.MaximumScaleValue);
+            foreach (double value in new[] { cx1, cy1, cx2, cy2, edgeA, edgeB, edgeC, edgeD })
+                if (double.IsNaN(value) || double.IsInfinity(value))
+                    return;
+            double left = Math.Min(edgeA, edgeB);
+            double right = Math.Max(edgeA, edgeB);
+            double low = Math.Min(edgeC, edgeD);
+            double high = Math.Max(edgeC, edgeD);
+
+            double dx = cx2 - cx1;
+            double dy = cy2 - cy1;
+            double tEnter = 0.0;
+            double tLeave = 1.0;
+            double[] directions = { -dx, dx, -dy, dy };
+            double[] distances = { cx1 - left, right - cx1, cy1 - low, high - cy1 };
+            for (int edge = 0; edge < 4; edge++)
+            {
+                if (directions[edge] == 0.0)
+                {
+                    if (distances[edge] < 0.0)
+                        return; // Parallel to this edge and outside it
+                }
+                else
+                {
+                    double t = distances[edge] / directions[edge];
+                    if (directions[edge] < 0.0)
+                        tEnter = Math.Max(tEnter, t);
+                    else
+                        tLeave = Math.Min(tLeave, t);
+                }
+            }
+            if (tEnter > tLeave)
+                return; // Wholly outside
+            Canvas.DrawLine(p, cx1 + tEnter * dx, cy1 + tEnter * dy, cx1 + tLeave * dx, cy1 + tLeave * dy);
         }
 
         protected void DrawLineInChartCoordinates(ColorDescriptor color, double x1, double y1, double x2, double y2)
