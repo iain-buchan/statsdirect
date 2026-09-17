@@ -8,6 +8,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - DevExpress.Win.RichEdit updated to 26.1.4
 - SpreadsheetGear updated to 9.3.84
 - Dependencies updated
+- The setup executable bundles the .Net 10.0.12 Windows Desktop runtime, up from 10.0.0
 
 ### Fixed
 - Data > Cleaning and Encoding > Search and Replace (Basic), and the Count action of Search and Replace (Advanced), failed with a script compilation error

@@ -2,6 +2,9 @@
   xmlns="http://wixtoolset.org/schemas/v4/wxs"
   xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
   xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx">
+  <!-- The .Net Windows Desktop runtime bundled into the setup executable. To move to a newer one, change this version and download the matching installer: see DownloadedBinaries/README.md. -->
+  <?define DotNetDesktopRuntimeVersion = "10.0.12" ?>
+  <?define DotNetDesktopRuntimeInstaller = "windowsdesktop-runtime-$(DotNetDesktopRuntimeVersion)-win-x64.exe" ?>
   <Bundle
     Name="StatsDirect"
     Version="!(bind.packageVersion.StatsDirectMsi)"
@@ -40,12 +43,12 @@
       <ExePackage
         Id="DotNetDesktop"
         DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;10.0.0&quot;"
-        InstallArguments="windowsdesktop-runtime-10.0.0-win-x64.exe /install /quiet /norestart"
-        RepairArguments="windowsdesktop-runtime-10.0.0-win-x64.exe /repair /quiet /norestart"
-        UninstallArguments="windowsdesktop-runtime-10.0.0-win-x64.exe /uninstall /quiet /norestart">
+        InstallArguments="$(DotNetDesktopRuntimeInstaller) /install /quiet /norestart"
+        RepairArguments="$(DotNetDesktopRuntimeInstaller) /repair /quiet /norestart"
+        UninstallArguments="$(DotNetDesktopRuntimeInstaller) /uninstall /quiet /norestart">
         <ExePackagePayload
-          Name="windowsdesktop-runtime-10.0.0-win-x64.exe"
-          SourceFile="..\DownloadedBinaries\windowsdesktop-runtime-10.0.0-win-x64.exe"
+          Name="$(DotNetDesktopRuntimeInstaller)"
+          SourceFile="..\DownloadedBinaries\$(DotNetDesktopRuntimeInstaller)"
           />
       </ExePackage>
     </PackageGroup>
