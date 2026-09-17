@@ -16,9 +16,41 @@ namespace StatsDirect.UI
         [TestMethod]
         public static void TestAll()
         {
-            SdApplication.InitialiseFunctionRegistry();
+            // The SdApplication constructor initialises the function registry; doing it separately here registers every builtin twice as soon as anything touches SoleInstance.
+            _ = SdApplication.SoleInstance;
+            int passed = 0, failed = 0, skipped = 0;
+            List<string> lines = new();
             foreach (Operation operation in TemplateFactory.Operations.Values)
-                TestOperation(operation);
+            {
+                for (int i = 0; i < operation.Tests.Count; i++)
+                {
+                    OperationTest test = operation.Tests[i];
+                    string id = $"{operation.Name}[{i + 1}]";
+                    if (test.Inputs.Count == 0 && test.Outputs.Count == 0)
+                    {
+                        skipped++;
+                        lines.Add($"SKIP  {id}  (empty test)");
+                        continue;
+                    }
+                    try
+                    {
+                        TestOperation(operation, test);
+                        passed++;
+                        lines.Add($"PASS  {id}  ({test.Outputs.Count} outputs checked)");
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        Exception inner = ex;
+                        while (inner is System.Reflection.TargetInvocationException && null != inner.InnerException)
+                            inner = inner.InnerException;
+                        lines.Add($"FAIL  {id}  {inner.GetType().Name}: {inner.Message.Replace("\r", " ").Replace("\n", " ")}");
+                    }
+                }
+            }
+            lines.Insert(0, $"Operations: {TemplateFactory.Operations.Count}; tests passed: {passed}, failed: {failed}, skipped: {skipped}");
+            System.IO.File.WriteAllLines(System.IO.Path.Combine(AppContext.BaseDirectory, "test-operations-results.txt"), lines);
+            Environment.Exit(0 == failed ? 0 : 1);
         }
 
         private static void TestOperation(Operation operation)

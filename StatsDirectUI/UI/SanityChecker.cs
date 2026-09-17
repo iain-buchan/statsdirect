@@ -15,8 +15,26 @@ namespace StatsDirect.UI
             List<Operation> operations = new();
             operations.AddRange(TemplateFactory.Operations.Values);
             operations.AddRange(TemplateFactory.UserOperations);
-            CheckAllTemplatesParse(operations);
-            CheckAllDynamicContentCompiles(operations);
+            List<string> lines = new();
+            int failed = 0;
+            foreach (Operation operation in operations)
+            {
+                foreach (Action<Operation> check in new Action<Operation>[] { CheckAllTemplatesParse, CheckAllDynamicContentCompiles })
+                {
+                    try
+                    {
+                        check(operation);
+                    }
+                    catch (Exception ex)
+                    {
+                        failed++;
+                        lines.Add($"FAIL  {operation.Name}  {ex.Message.Replace("\r", " ").Replace("\n", " ")}");
+                    }
+                }
+            }
+            lines.Insert(0, $"Operations checked: {operations.Count}; failures: {failed}");
+            System.IO.File.WriteAllLines(System.IO.Path.Combine(AppContext.BaseDirectory, "sanity-check-results.txt"), lines);
+            Environment.Exit(0 == failed ? 0 : 1);
         }
 
         /// <summary>
