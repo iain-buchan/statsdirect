@@ -987,12 +987,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("title_1", "* sample 2 from summary");
             outputParameters.AddOutput("mean_1", xm2);
             outputParameters.AddOutput("n1", nx2);
+            double xn1 = Convert.ToDouble(nx1);
+            double xn2 = Convert.ToDouble(nx2);
             // equal variances
             double cv = (var1 * (nx1 - 1) + var2 * (nx2 - 1)) / (nx1 + nx2 - 2);
             double cn = 1.0 / nx1 + 1.0 / nx2;
             double cset = Math.Sqrt(cv) * Math.Sqrt(cn);
             double tstat = (um1 - um2) / cset;
-            double power = Power.tstpower(1.0 - GAMMA, Math.Abs(um1 - um2), Math.Sqrt(cv), nx1, nx2);
+            double power = Power.tstpower(1.0 - GAMMA, Math.Abs(um1 - um2), Math.Sqrt(cv), nx1, xn2 / xn1);
             outputParameters.AddOutput("error", cset);
             outputParameters.AddOutput("df", degf);
             outputParameters.AddOutput("t", tstat);
@@ -1006,11 +1008,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to", xm1 - xm2 + cit * cset);
             outputParameters.AddOutput("pwr", Formatting.pwr(power, 1.0 - GAMMA));
             // unequal variances
-            double xn1 = Convert.ToDouble(nx1);
-            double xn2 = Convert.ToDouble(nx2);
             cset = Math.Sqrt(var1 / xn1 + var2 / xn2);
             tstat = (um1 - um2) / cset;
             double xdegf = Math.Pow(var1 / xn1 + var2 / xn2, 2.0) / (Math.Pow(var1 / xn1, 2.0) / (xn1 - 1.0) + Math.Pow(var2 / xn2, 2.0) / (xn2 - 1.0));
+            double citw = PDF.tfromp((1.0 - GAMMA) / 2.0, xdegf);
             outputParameters.AddOutput("error_unequal", cset);
             outputParameters.AddOutput("df_unequal", xdegf);
             outputParameters.AddOutput("t_unequal", tstat);
@@ -1020,8 +1021,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_1_unequal", P);
             outputParameters.AddOutput("p_2_unequal", P * 2.0);
             outputParameters.AddOutput("pc_unequal", 100 * (1 - P0));
-            outputParameters.AddOutput("from_unequal", xm1 - xm2 - cit * cset);
-            outputParameters.AddOutput("to_unequal", xm1 - xm2 + cit * cset);
+            outputParameters.AddOutput("from_unequal", xm1 - xm2 - citw * cset);
+            outputParameters.AddOutput("to_unequal", xm1 - xm2 + citw * cset);
             power = Power.uvttpower(1.0 - GAMMA, Math.Abs(um1 - um2), xn1, xn2, sd1, sd2);
             outputParameters.AddOutput("pwr_unequal", Formatting.pwr(power, 1.0 - GAMMA));
             double f;
@@ -1122,7 +1123,7 @@ namespace StatsDirect.Builtins
             double cn = 1.0 / tnx[0] + 1.0 / tnx[1];
             double cset = Math.Sqrt(cv * cn);
             double tstat = (um1 - um2) / cset;
-            double power = Power.tstpower(1.0 - GAMMA, Math.Abs(um1 - um2), Math.Sqrt(cv), tnx[0], tnx[1]);
+            double power = Power.tstpower(1.0 - GAMMA, Math.Abs(um1 - um2), Math.Sqrt(cv), tnx[0], Convert.ToDouble(tnx[1]) / tnx[0]);
             outputParameters.AddOutput("error", cset);
             outputParameters.AddOutput("df", degf);
             outputParameters.AddOutput("t", tstat);
@@ -1143,6 +1144,7 @@ namespace StatsDirect.Builtins
             cset = Math.Sqrt(xs1 / xn1 + xs2 / xn2);
             tstat = (um1 - um2) / cset;
             double xdegf = Math.Pow(xs1 / xn1 + xs2 / xn2, 2.0) / (Math.Pow(xs1 / xn1, 2.0) / (xn1 - 1.0) + Math.Pow(xs2 / xn2, 2.0) / (xn2 - 1.0));
+            double citw = PDF.tfromp((1.0 - GAMMA) / 2.0, xdegf);
             outputParameters.AddOutput("error_unequal", cset);
             outputParameters.AddOutput("df_unequal", xdegf);
             outputParameters.AddOutput("t_unequal", tstat);
@@ -1152,8 +1154,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_1_unequal", P);
             outputParameters.AddOutput("p_2_unequal", P * 2.0);
             outputParameters.AddOutput("pc_unequal", 100 * (1 - P0));
-            outputParameters.AddOutput("from_unequal", mean[0] - mean[1] - cit * cset);
-            outputParameters.AddOutput("to_unequal", mean[0] - mean[1] + cit * cset);
+            outputParameters.AddOutput("from_unequal", mean[0] - mean[1] - citw * cset);
+            outputParameters.AddOutput("to_unequal", mean[0] - mean[1] + citw * cset);
             power = Power.uvttpower(1.0 - GAMMA, Math.Abs(um1 - um2), tnx[0], tnx[1], sd[0], sd[1]);
             outputParameters.AddOutput("pwr_unequal", Formatting.pwr(power, 1.0 - GAMMA));
             if (Math.Abs(var[0]) > Math.Abs(var[1]))

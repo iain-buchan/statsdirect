@@ -1057,7 +1057,6 @@ namespace StatsDirect.Builtins
                 }
                 int gtot = Convert.ToInt32(sumn);
 
-                double sumnm1 = sumn - 1.0;
                 double[] rb = new double[rx + 1];
                 int[] cx = new int[rx + 1];
                 double[] simpsonb = new double[boots + 1];
@@ -1091,7 +1090,7 @@ namespace StatsDirect.Builtins
                     // get N members at random
                     for (int j = 1; j <= gtot; j++)
                     {
-                        pick = Convert.ToInt32(sumnm1 * rnd.NextDouble()) + 1;
+                        pick = Math.Min(gtot, (int)Math.Floor(gtot * rnd.NextDouble()) + 1);
                         for (int jj = 1; jj <= rx; jj++)
                         {
                             if (pick <= cx[jj])
@@ -1752,11 +1751,19 @@ namespace StatsDirect.Builtins
                 double qix = nxs * (nxs * nxs - 1.0) / 3.0;
                 int fault;
                 double pl;
+                double pu;
+                // prho gives P(S >= ix); the upper side P(S <= ix) includes the observed statistic, so it is 1 - P(S >= ix + 2) as S is even
                 if (dix >= int.MaxValue || qix >= int.MaxValue)
+                {
                     pl = MathDbl.bigprho(Convert.ToInt64(nxs), dix, out fault);
+                    pu = 1.0 - MathDbl.bigprho(Convert.ToInt64(nxs), dix + 2.0, out fault);
+                }
                 else
+                {
                     pl = ExFortran.prho(Convert.ToInt32(nxs), Convert.ToInt32(dix), out fault);
-                double p = pl > 1.0 - pl ? 1.0 - pl : pl;
+                    pu = 1.0 - ExFortran.prho(Convert.ToInt32(nxs), Convert.ToInt32(dix) + 2, out fault);
+                }
+                double p = pu < pl ? pu : pl;
 
                 if (fault != 0)
                 {
@@ -1773,16 +1780,19 @@ namespace StatsDirect.Builtins
                     resultsParameters.AddOutput("*results", results2List);
                     if (hasTies)
                     {
-                        double p2Approximate = PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - sr * sr), nx - 2);
+                        double p1Approximate = PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - sr * sr), nx - 2);
+                        if (p1Approximate > 1.0 - p1Approximate)
+                            p1Approximate = 1.0 - p1Approximate;
+                        double p2Approximate = Math.Min(1.0, 2.0 * p1Approximate);
                         results2Parameters.AddOutput("p_u", Constant.MISSING);
                         results2Parameters.AddOutput("p_l", Constant.MISSING);
                         results2Parameters.AddOutput("p_2", p2Approximate);
                     }
                     else
                     {
-                        results2Parameters.AddOutput("p_u", 1.0 - pl);
+                        results2Parameters.AddOutput("p_u", pu);
                         results2Parameters.AddOutput("p_l", pl);
-                        results2Parameters.AddOutput("p_2", p * 2.0);
+                        results2Parameters.AddOutput("p_2", Math.Min(1.0, p * 2.0));
                     }
                 }
             }
@@ -2576,25 +2586,23 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("y", v1.Title);
             XKstwo(d1, n1, d2, n2, out double d, out double dp, out double dn);
             outputParameters.AddOutput("d", d);
-            double p = ExFortran.ksp2(n1, n2, ref d, out int ifault);
-            if (ifault != 0)
-            {
-                p = Constant.MISSING;
-            }
+            // Exact P values conditional on the observed ties (permutation distribution of the
+            // statistic over all relabellings of the pooled sample), as in R's ks.test(exact = TRUE).
+            // With no ties this equals the classical exact distribution (ExFortran.ksp2).
+            double[] x0 = new double[n1];
+            double[] y0 = new double[n2];
+            Array.Copy(d1, 1, x0, 0, n1);
+            Array.Copy(d2, 1, y0, 0, n2);
+            double p = KsTies.TwoSided(x0, y0, d);
             outputParameters.AddOutput("p", p);
             outputParameters.AddOutput("sample_1", v0.Title);
             outputParameters.AddOutput("sample_2", v1.Title);
             outputParameters.AddOutput("d_l", dp);
-            p = ExFortran.ksp2(n1, n2, ref dp, out ifault) / 2.0;
-            if (ifault != 0)
-            {
-                p = Constant.MISSING;
-            }
+            // One-sided P values are the exact upper tails of D+ and D-, not half the two-sided P.
+            p = KsTies.OneSided(x0, y0, dp);
             outputParameters.AddOutput("p_l", p);
             outputParameters.AddOutput("d_r", dn);
-            p = ExFortran.ksp2(n1, n2, ref dn, out ifault) / 2.0;
-            if (ifault != 0)
-                p = Constant.MISSING;
+            p = KsTies.OneSided(y0, x0, dn);
             outputParameters.AddOutput("p_r", p);
 
             return new StepOutput(outputParameters);
@@ -3846,7 +3854,7 @@ namespace StatsDirect.Builtins
                 {
                     for (int j = 1; j <= rx; j++)
                     {
-                        pick = Convert.ToInt32(drxm1 * rng.NextDouble()) + 1;
+                        pick = Math.Min(rx, (int)Math.Floor(rx * rng.NextDouble()) + 1);
                         rb[j] = r[pick];
                     }
                     Array.Sort(rb, 1, rx);

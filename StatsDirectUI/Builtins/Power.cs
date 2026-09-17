@@ -93,15 +93,80 @@ namespace StatsDirect.Builtins
         /// <returns></returns>
         public static double ptpower( double alpha, double mean, double s, double N ) 
         {
-            double C = PDF.tfromp( alpha / 2.0, N - 1.0 ) * s / Math.Sqrt( N ); 
-            if ( C == Constant.MISSING || s == 0.0 )
+            if ( s == 0.0 || N < 2.0 )
                 return Constant.MISSING; 
-            double t1 = PDF.tvalp( ( mean - C ) / ( s / Math.Sqrt( N ) ), N - 1.0 ); 
-            double t2 = PDF.tvalp( ( mean + C ) / ( s / Math.Sqrt( N ) ), N - 1.0 ); 
-            if ( t1 == Constant.MISSING || t2 == Constant.MISSING )
+            return nctpower( alpha, mean / ( s / Math.Sqrt( N ) ), N - 1.0 ); 
+        } 
+        
+        /// <summary>
+        /// power of a two sided Student t test from the non-central t distribution:
+        /// P(|T'| > t) where T' has df degrees of freedom and non-centrality delta and t is the central critical value for alpha
+        /// (ExFortran.pnct takes integer df, so power at a fractional df is interpolated linearly between the adjacent integer df)
+        /// </summary>
+        /// <param name="alpha">two sided significance level</param>
+        /// <param name="delta">non-centrality parameter (expected difference divided by its standard error)</param>
+        /// <param name="df">degrees of freedom</param>
+        /// <returns></returns>
+        private static double nctpower( double alpha, double delta, double df ) 
+        {
+            if ( !( df >= 1.0 ) || df > int.MaxValue - 1.0 || double.IsNaN( delta ) || double.IsInfinity( delta ) )
                 return Constant.MISSING; 
-            double BETA = t1 - t2; 
-            return 1.0 - BETA; 
+            int idf = (int)Math.Floor( df ); 
+            double frac = df - idf; 
+            if ( frac < 0.00000001 || frac > 1.0 - 0.00000001 )
+                return nctpower( alpha, delta, frac > 0.5 ? idf + 1 : idf ); 
+            // Fractional degrees of freedom (Welch): P(T' <= t) = integral over v of Phi(t sqrt(v/df) - delta) f(v) dv,
+            // f the chi-square density with df degrees of freedom, evaluated by Simpson's rule on w = sqrt(v).
+            double tcrit = PDF.tfromp2( alpha, df ); 
+            if ( double.IsNaN( tcrit ) )
+                return Constant.MISSING; 
+            double upper = pnctFractional( tcrit, df, delta ); 
+            double lower = pnctFractional( -tcrit, df, delta ); 
+            if ( double.IsNaN( upper ) || double.IsNaN( lower ) )
+                return Constant.MISSING; 
+            return 1.0 - upper + lower; 
+        } 
+
+        /// <summary>
+        /// Non-central t distribution function for non-integer degrees of freedom, by numerical integration over
+        /// the chi-square denominator (w = sqrt(v), so the integrand is smooth at the origin for df >= 1).
+        /// </summary>
+        private static double pnctFractional( double t, double df, double delta ) 
+        {
+            double wmax = Math.Sqrt( df + 12.0 * Math.Sqrt( 2.0 * df ) + 60.0 ); 
+            const int panels = 4000; 
+            double h = wmax / panels; 
+            double lc = -0.5 * df * Math.Log( 2.0 ) - PDF.alogam( 0.5 * df ) + Math.Log( 2.0 ); // 2 w f(w^2) 
+            double sum = 0.0; 
+            for ( int i = 0; i <= panels; i++ ) 
+            {
+                double w = i * h; 
+                double g; 
+                if ( w <= 0.0 )
+                    g = 0.0; 
+                else
+                {
+                    double logf = lc + ( df - 1.0 ) * Math.Log( w ) - 0.5 * w * w; 
+                    g = Math.Exp( logf ) * PDF.alnorm( t * w / Math.Sqrt( df ) - delta ); 
+                }
+                double weight = ( i == 0 || i == panels ) ? 1.0 : ( ( i % 2 == 1 ) ? 4.0 : 2.0 ); 
+                sum += weight * g; 
+            }
+            return sum * h / 3.0; 
+        } 
+
+        private static double nctpower( double alpha, double delta, int idf ) 
+        {
+            double tcrit = PDF.tfromp2( alpha, idf ); 
+            if ( double.IsNaN( tcrit ) )
+                return Constant.MISSING; 
+            double upper = ExFortran.pnct( tcrit, idf, delta, out int ifault ); 
+            if ( ifault != 0 )
+                return Constant.MISSING; 
+            double lower = ExFortran.pnct( -tcrit, idf, delta, out ifault ); 
+            if ( ifault != 0 )
+                return Constant.MISSING; 
+            return 1.0 - upper + lower; 
         } 
         
         
@@ -201,23 +266,17 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// two-sample Student t test power
         /// </summary>
-        /// <param name="alpha"></param>
-        /// <param name="DELTA"></param>
-        /// <param name="s"></param>
-        /// <param name="N"></param>
-        /// <param name="M"></param>
+        /// <param name="alpha">two sided significance level</param>
+        /// <param name="DELTA">difference between means</param>
+        /// <param name="s">pooled standard deviation</param>
+        /// <param name="N">size of the first sample</param>
+        /// <param name="M">size of the second sample as a ratio of the first (n2 / n1)</param>
         /// <returns></returns>
         public static double tstpower( double alpha, double DELTA, double s, double N, double M ) 
         {
-            double C = PDF.tfromp( alpha / 2.0, N * ( M + 1.0 ) - 2.0 ) * s * Math.Sqrt( ( 1.0 + 1.0 / M ) / N ); 
-            if ( C == Constant.MISSING )
+            if ( s == 0.0 || N <= 0.0 || M <= 0.0 )
                 return Constant.MISSING; 
-            double t1 = PDF.tvalp( ( DELTA - C ) / ( s * Math.Sqrt( ( 1.0 + 1.0 / M ) / N ) ), N * ( M + 1.0 ) - 2.0 ); 
-            double t2 = PDF.tvalp( ( DELTA + C ) / ( s * Math.Sqrt( ( 1.0 + 1.0 / M ) / N ) ), N * ( M + 1.0 ) - 2.0 ); 
-            if ( t1 == Constant.MISSING || t2 == Constant.MISSING )
-                return Constant.MISSING; 
-            double BETA = t1 - t2; 
-            return 1.0 - BETA;
+            return nctpower( alpha, DELTA / ( s * Math.Sqrt( ( 1.0 + 1.0 / M ) / N ) ), N * ( M + 1.0 ) - 2.0 ); 
         } 
         
         /// <summary>
@@ -232,14 +291,13 @@ namespace StatsDirect.Builtins
         /// <returns></returns>
         public static double uvttpower( double sig, double dif, double n1, double n2, double sdev1, double sdev2 ) 
         {
-            double alpha = sig / 2.0; 
             double k = Math.Pow( sdev1, 2.0 ) / n1 + Math.Pow( sdev2, 2.0 ) / n2; 
             double f = Math.Pow( sdev1, 4.0 ) / ( Math.Pow( k, 2.0 ) * Math.Pow( n1, 2.0 ) * ( n1 - 1.0 ) ) + Math.Pow( sdev2, 4.0 ) / ( Math.Pow( k, 2.0 ) * Math.Pow( n2, 2.0 ) * ( n2 - 1.0 ) ); 
             double df = 1.0 / f; 
-            double tval = PDF.tfromp( alpha, df ); 
-            double denom = Math.Sqrt( Math.Pow( sdev1, 2.0 ) / n1 + Math.Pow( sdev2, 2.0 ) / n2 ); 
-            double term = tval - dif / denom; 
-            return PDF.tvalp( term, df ); 
+            double denom = Math.Sqrt( k ); 
+            if ( denom == 0.0 )
+                return Constant.MISSING; 
+            return nctpower( sig, dif / denom, df ); 
         } 
         
     } 

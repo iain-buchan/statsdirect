@@ -213,7 +213,7 @@ namespace StatsDirect.Builtins
         ///  <param name="maxm"></param>
         ///  <param name="medm"></param>
         ///  <remarks></remarks>
-        private static void KappaHat(DataFrame frame, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm)
+        private static void KappaHat(DataFrame frame, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm, out double nRated)
         {
             int n = frame.Variables[0].Length;
             double[] qm = new double[n];
@@ -251,12 +251,13 @@ namespace StatsDirect.Builtins
                     mbarh += 1.0 / qm[i];
                     xn += 1;
                 }
-                if (qm[i] < minm)
+                if (qm[i] != 0.0 && qm[i] < minm)
                     minm = qm[i];
                 if (qm[i] > maxm)
                     maxm = qm[i];
             }
             medm = Describe.Median(qm, 0, n - 1);
+            nRated = xn;
             mbar /= xn;
             mbarh = xn / mbarh;
             pbar = 0.0;
@@ -283,9 +284,9 @@ namespace StatsDirect.Builtins
             Namevar[] maxcat = new Namevar[xcats + ycats + lowerBound];
             // fill in the gaps if non-contiguous series - 12/02/05 --->
             for (int i = lowerBound; i < xcats + lowerBound; i++)
-                maxcat[i] = xcat[i];
+                maxcat[i] = new Namevar(xcat[i].Title, xcat[i].X); // AUDIT FIX: copy, do not alias
             for (int i = lowerBound; i < ycats + lowerBound; i++)
-                maxcat[xcats + i] = ycat[i];
+                maxcat[xcats + i] = new Namevar(ycat[i].Title, ycat[i].X); // AUDIT FIX
             SortName(xcats + ycats, maxcat, lowerBound);
             for (int i = lowerBound + 1; i < xcats + ycats + lowerBound; i++)
                 if (maxcat[i - 1].Title == maxcat[i].Title)
@@ -316,15 +317,13 @@ namespace StatsDirect.Builtins
                     //  Shuffle the end of the array up
                     for (int j = maxcats - 2 + lowerBound; j >= i; j--)
                         xcat[j + 1] = xcat[j];
-                    xcat[i].Title = maxcat[g + i - lowerBound].Title;
-                    xcat[i].X = -Constant.MISSING;
+                    xcat[i] = new Namevar(maxcat[g + i - lowerBound].Title, -Constant.MISSING); // AUDIT FIX: new entry, not a shared object
                 }
                 if (ycat[i].Title != maxcat[g + i - lowerBound].Title)
                 {
                     for (int j = maxcats - 2 + lowerBound; j >= i; j--)
                         ycat[j + 1] = ycat[j];
-                    ycat[i].Title = maxcat[g + i - lowerBound].Title;
-                    ycat[i].X = -Constant.MISSING;
+                    ycat[i] = new Namevar(maxcat[g + i - lowerBound].Title, -Constant.MISSING); // AUDIT FIX
                 }
             }
             xcats = maxcats;
@@ -1040,13 +1039,13 @@ namespace StatsDirect.Builtins
                 if (cats == 2)
                 {
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses
-                    int n = frame.Variables[0].Length; // subjects
-                    KappaHat(frame, catz[0], out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm);
+                    KappaHat(frame, catz[0], out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm, out double nRated);
+                    double n = nRated; // subjects with at least one rating (the same n that mbar, mbarh and pbar use)
                     double sek = 1.0 / ((mbar - 1.0) * Math.Sqrt(n * mbarh)) * Math.Sqrt(2.0 * (mbarh - 1.0) + (mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar)) / (mbar * pbar * (1.0 - pbar)));
                     double z = sek != 0.0 ? k / sek : Constant.MISSING;
                     string ratz;
                     if (minm == maxm)
-                        ratz = raters.ToString();
+                        ratz = Convert.ToInt64(minm).ToString();
                     else
                         ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")";
                     outputParameters.AddOutput("r", ratz);
@@ -1065,8 +1064,6 @@ namespace StatsDirect.Builtins
                 else
                 {
                     // ----> Landis and Koch (Fleiss, Nee, Landis se) kappa for raters and categories > 2
-                    int n = frame.Variables[0].Length; // subjects
-                    double mx = raters;
                     double kbarn = 0.0;
                     double kbard = 0.0;
                     double se2 = 0.0;
@@ -1075,16 +1072,20 @@ namespace StatsDirect.Builtins
                     double minm = 0;
                     double maxm = 0;
                     double medm = 0;
+                    double n = 0; // subjects with at least one rating
+                    double mx = 0; // ratings per subject (constant when minm == maxm)
                     for (int i = 0; i < cats; i++)
                     {
-                        KappaHat(frame, catz[i], out double k, out double _, out double _, out double pbar, out minm, out maxm, out medm);
+                        KappaHat(frame, catz[i], out double k, out double mbar, out double _, out double pbar, out minm, out maxm, out medm, out n);
+                        mx = minm == maxm ? minm : mbar;
                         double qbar = 1.0 - pbar;
                         kj[i] = k;
-                        sej[i] = Math.Sqrt(2.0 / (n * mx * (mx - 1.0)));
                         kbarn += pbar * qbar * k;
                         kbard += pbar * qbar;
                         se2 += pbar * qbar * (qbar - pbar);
                     }
+                    for (int i = 0; i < cats; i++)
+                        sej[i] = Math.Sqrt(2.0 / (n * mx * (mx - 1.0)));
                     double kbar = kbard != 0.0 ? kbarn / kbard : Constant.MISSING;
                     double sek = Math.Pow(kbard, 2.0) - se2 < 0.0
                         ? Constant.MISSING
@@ -1095,7 +1096,7 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("cats", cats);
                     string ratz;
                     if (minm == maxm)
-                        ratz = raters.ToString();
+                        ratz = Convert.ToInt64(minm).ToString();
                     else
                         ratz = Convert.ToInt64(minm).ToString() + " to " + Convert.ToInt64(maxm).ToString() + " (median " + host.RoundU(medm) + ")";
                     outputParameters.AddOutput("r", ratz);
@@ -1150,22 +1151,9 @@ namespace StatsDirect.Builtins
                         outputParameters.AddOutput("sec", Constant.MISSING);
                         outputParameters.AddOutput("zc", Constant.MISSING);
                         outputParameters.AddOutput("p", "* number of ratings per subject not constant, so tests do not apply");
-                        outputParameters.AddOutput("kw", Constant.MISSING);
-                        outputParameters.AddOutput("pw", Constant.MISSING);
                     }
                     // <----wt m x k
                 }
-
-                double[,,] agreeData = new double[frame.Variables[0].Length + 1, raters + 1, 2];
-                for (int rater = 0; rater < raters; rater++)
-                {
-                    double[] data = ((ClassifierVariable)frame.Variables[rater]).Data;
-                    for (int row = 0; row < data.Length; row++)
-                        agreeData[row + 1, rater + 1, 1] = data[row] + 1;
-                }
-                Agreement.Agree(frame.Variables[0].Length, raters, 1, agreeData, out double _, out double _, out double _, out double _, out double r, out p);
-                outputParameters.AddOutput("kw", r);
-                outputParameters.AddOutput("pw", p);
 
                 return new StepOutput(outputParameters);
             }
@@ -6220,10 +6208,10 @@ namespace StatsDirect.Builtins
                     d1 = d;
                     vs = 1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d;
                     WoolfStratum(noHaldaneParameters, showIntermediates, a1, b1, c1, d1, vs, cit, out y, out w);
-                    n1X = n1 + 1.0;
-                    w1X = w1 + w;
-                    t1X = t1 + w * y;
-                    s1X = s1 + w * y * y;
+                    n1X += 1.0;
+                    w1X += w;
+                    t1X += w * y;
+                    s1X += w * y * y;
                 }
                 else
                 {

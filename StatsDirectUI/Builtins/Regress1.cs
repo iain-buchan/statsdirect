@@ -199,11 +199,13 @@ namespace StatsDirect.Builtins
                         }
                         if (Math.Abs(wd[nm]) + anorm == anorm)
                         {
+                            c = 0.0;
                             s = 1.0;
                             for (i = l; i <= k; i++)
                             {
                                 f = s * rv1[i];
-                                if (Math.Abs(f) + anorm != anorm)
+                                rv1[i] = c * rv1[i];
+                                if (Math.Abs(f) + anorm == anorm)
                                     break;
                                 g = wd[i];
                                 h = X_PYTHAG(f, g);
@@ -426,7 +428,7 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= p; j++)
                 if (wmax < wd[j])
                     wmax = wd[j];
-            const double tol = Constant.EPSNEG;
+            double tol = wmax * 1.0e-12;
             for (int j = 1; j <= p; j++)
                 if (wd[j] < tol)
                     wd[j] = 0.0;
@@ -1915,7 +1917,7 @@ namespace StatsDirect.Builtins
             int iseas = 0;
             const int idif = 1;
             x_difd(er, erd, nx, idif, ref iseas);
-            erd[1] = 0.0;
+            //  erd[1..nx-1] hold the nx-1 successive differences and erd[nx] is zero; all of them belong in the numerator
             double sum1 = 0.0;
             double sum2 = 0.0;
             for (int i = 1; i <= nx; i++)

@@ -219,6 +219,33 @@ namespace StatsDirect.Builtins
             fault = 0;
         }
 
+        /// <summary>
+        /// Tie test for XAgreeKendall: the means and standard deviations compared are computed values,
+        /// so two values that agree to a relative tolerance of 1e-12 are treated as tied
+        /// </summary>
+        private static bool XAgreeTied(double a, double b)
+        {
+            return a == b || Math.Abs(a - b) <= 1e-12 * Math.Max(Math.Abs(a), Math.Abs(b));
+        }
+
+        /// <summary>
+        /// Records a tied value so that each tie group is credited once (cf. RptKendall); returns false if already recorded
+        /// </summary>
+        /// <param name="v">tied value</param>
+        /// <param name="tv">1-based list of tie group values already counted</param>
+        /// <param name="tvn">number of values in tv</param>
+        private static bool XAgreeNewTie(double v, double[] tv, ref int tvn)
+        {
+            for (int n = 1; n <= tvn; n++)
+            {
+                if (XAgreeTied(v, tv[n]))
+                    return false;
+            }
+            tvn += 1;
+            tv[tvn] = v;
+            return true;
+        }
+
         ///  <summary>
         ///  
         ///  </summary>
@@ -265,6 +292,11 @@ namespace StatsDirect.Builtins
                 {
                     nxx = nx;
                     double gd = nxx - 1;
+                    //  Tie group values already counted (1-based), so each tie group is credited once
+                    double[] xtv = new double[nxx + 1];
+                    double[] ytv = new double[nxx + 1];
+                    int xtvn = 0;
+                    int ytvn = 0;
                     using (IProgressBar progress = host.StartProgress("Calculating Kendall", true))
                     {
                         int pn;
@@ -277,17 +309,22 @@ namespace StatsDirect.Builtins
                             int ytie = 0;
                             for (int N = pn + 1; N <= nxx; N++)
                             {
-                                if ((x[pn] > x[N] && y[pn] > y[N]) || (x[pn] < x[N] && y[pn] < y[N]))
-                                    p += 1.0;
-                                if ((x[pn] > x[N] && y[pn] < y[N]) || (x[pn] < x[N] && y[pn] > y[N]))
-                                    q += 1.0;
-                                if (x[pn] == x[N])
+                                bool xTied = XAgreeTied(x[pn], x[N]);
+                                bool yTied = XAgreeTied(y[pn], y[N]);
+                                if (!xTied && !yTied)
+                                {
+                                    if ((x[pn] > x[N] && y[pn] > y[N]) || (x[pn] < x[N] && y[pn] < y[N]))
+                                        p += 1.0;
+                                    if ((x[pn] > x[N] && y[pn] < y[N]) || (x[pn] < x[N] && y[pn] > y[N]))
+                                        q += 1.0;
+                                }
+                                if (xTied)
                                     xtie += 1;
-                                if (y[pn] == y[N])
+                                if (yTied)
                                     ytie += 1;
                             }
                             int cnt = xtie + 1;
-                            if (cnt > 1)
+                            if (cnt > 1 && XAgreeNewTie(x[pn], xtv, ref xtvn))
                             {
                                 siga += cnt * (cnt - 1) / 2.0;
                                 sigat1 += cnt * (cnt - 1);
@@ -295,7 +332,7 @@ namespace StatsDirect.Builtins
                                 sigat3 += cnt * (cnt - 1) * (2 * cnt + 5);
                             }
                             cnt = ytie + 1;
-                            if (cnt > 1)
+                            if (cnt > 1 && XAgreeNewTie(y[pn], ytv, ref ytvn))
                             {
                                 sigb += cnt * (cnt - 1) / 2.0;
                                 sigbt1 += cnt * (cnt - 1);
@@ -328,7 +365,13 @@ namespace StatsDirect.Builtins
             {
                 isTauB = siga != 0 || sigb != 0;
                 if (isTauB)
-                    tau = s / Math.Sqrt((hn - siga) * (hn - sigb));
+                {
+                    //  Every value of one variable tied: tau b is undefined
+                    double denom = (hn - siga) * (hn - sigb);
+                    if (denom <= 0.0)
+                        throw new ArithmeticException("Kendall's tau b is undefined");
+                    tau = s / Math.Sqrt(denom);
+                }
                 else
                     tau = s / Math.Sqrt(hn * hn);
                 fault = false;
@@ -355,7 +398,11 @@ namespace StatsDirect.Builtins
                         ps = 1.0 - ps;
                 }
             }
-            if (ps == Constant.MISSING || fault || siga != 0 || sigb != 0)
+            if (wasException)
+            {
+                p2 = Constant.MISSING;
+            }
+            else if (ps == Constant.MISSING || fault || siga != 0 || sigb != 0)
             {
                 double kzc = (Math.Abs(s) - 1.0) / Math.Sqrt(varf);
                 double pvs = 1.0 - PDF.alnorm(kzc);
@@ -503,6 +550,8 @@ namespace StatsDirect.Builtins
                         sq += ARR2[c][r] * ARR2[c][r];
                     }
                 }
+                if (nx != cols)
+                    continue; // ICC uses the same complete rows as the rest of the report
                 sqtot += sq;
                 if (nx != 0)
                     sum2tot += sum * sum / nx;
@@ -520,7 +569,23 @@ namespace StatsDirect.Builtins
             double sstot = sqtot - cc;
             double ssgroup = sum2tot - cc;
             double m = cols;
-            double icc = (m * ssgroup - sstot) / ((m - 1.0) * sstot);
+            //  One-way random effects ANOVA estimator ICC(1) = (MSB - MSW) / (MSB + (m - 1) MSW)
+            //  with the exact F-based confidence interval (Shrout & Fleiss 1979; McGraw & Wong 1996)
+            double n = rx;
+            double icc_df1 = n - 1.0;
+            double icc_df2 = n * (m - 1.0);
+            double msb = ssgroup / icc_df1;
+            double msw = (sstot - ssgroup) / icc_df2;
+            double icc = (msb - msw) / (msb + (m - 1.0) * msw);
+            double fratio = msb / msw;
+            //  PDF.ffromp(dfd, dfn, p) returns the F quantile whose upper tail area is p
+            double fupper = PDF.ffromp(icc_df2, icc_df1, (1.0 - GAMMA) / 2.0);
+            double flower = PDF.ffromp(icc_df2, icc_df1, 1.0 - (1.0 - GAMMA) / 2.0);
+            double icc_lcl = (fratio / fupper - 1.0) / (fratio / fupper + m - 1.0);
+            double icc_ucl = (fratio / flower - 1.0) / (fratio / flower + m - 1.0);
+            double icc_min = -1.0 / (m - 1.0);
+            icc_lcl = Math.Max(icc_min, Math.Min(1.0, icc_lcl));
+            icc_ucl = Math.Max(icc_min, Math.Min(1.0, icc_ucl));
             double tau;
             double p2;
             bool isLowPower = false;
@@ -549,6 +614,11 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*", allResults);
             }
             outputParameters.AddOutput("icc", icc);
+            outputParameters.AddOutput("icc_pc", 100 * GAMMA);
+            outputParameters.AddOutput("icc_lcl", icc_lcl);
+            outputParameters.AddOutput("icc_ucl", icc_ucl);
+            outputParameters.AddOutput("icc_df1", icc_df1);
+            outputParameters.AddOutput("icc_df2", icc_df2);
             outputParameters.AddOutput("wssd", wssd);
             outputParameters.AddOutput("tau_b_addendum", isTauB ? "b " : string.Empty);
             outputParameters.AddOutput("tau", tau);
@@ -1092,6 +1162,8 @@ namespace StatsDirect.Builtins
             double se = Math.Sqrt(carrier.Msx * (1.0 / carrier.Tnx[z_vb] + 1.0 / carrier.Tnx[z_va]));
             double tav = means / se;
             MathDbl.civ(carrier.Dferr, out double cit, GAMMA, out double P0);
+            //  Simultaneous (Bonferroni-adjusted) interval: each of the k comparisons at confidence 1 - alpha/k
+            MathDbl.civ(carrier.Dferr, out double citAdj, 1.0 - (1.0 - GAMMA) / comparisons, out double P0Adj);
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("var_a", frame.Variables[z_va].Title);
@@ -1102,6 +1174,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", 100 * (1 - P0));
             outputParameters.AddOutput("from", means - cit * se);
             outputParameters.AddOutput("to", means + cit * se);
+            outputParameters.AddOutput("adj_pc", 100 * (1 - P0Adj));
+            outputParameters.AddOutput("adj_from", means - citAdj * se);
+            outputParameters.AddOutput("adj_to", means + citAdj * se);
             outputParameters.AddOutput("t", tav);
             outputParameters.AddOutput("df", carrier.Dferr);
             double P = PDF.tvalp(Math.Abs(tav), carrier.Dferr);

@@ -188,38 +188,34 @@ namespace StatsDirect.Builtins
             double ztot = zpow + zsig;
             double dif = Math.Abs(Power.fisher_z1(r0) - Power.fisher_z1(r1));
             double sn = Math.Pow(ztot / dif, 2.0) + 3.0;
-            // get precise (to 0.001) result by monotone bisection
-            const double acc = 0.0000001;
-            double stp = sn / 10.0;
-            double xp = sn;
-            int ctr = 0;
-            double lastDelta = 0;
-            do
+            // smallest integer n at which the Fisher z power (z ~ N(z(r), 1 / (n - 3))) reaches the target
+            if (sn < int.MaxValue)
             {
-                ctr += 1;
-                double delta = p - Power.rpower(r0, r1, xp, a);
-                if (Math.Abs(delta) < acc)
-                {
-                    sn = xp;
-                    break;
-                }
-                if (ctr > 500)
-                    break;
-                if (Math.Abs(delta) > Math.Abs(lastDelta))
-                    stp /= 2.0;
-                stp = delta > 0.0 ? Math.Abs(stp) : -Math.Abs(stp);
-                lastDelta = delta;
-                xp += stp;
+                sn = Math.Max(Math.Ceiling(sn), 4.0);
+                while (sn > 4.0 && x_rpower(dif, sn - 1.0, zsig) >= p)
+                    sn -= 1.0;
+                while (sn < int.MaxValue && x_rpower(dif, sn, zsig) < p)
+                    sn += 1.0;
             }
-            while (true);
+            else
+                sn = Math.Floor(sn) + 1;
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("alpha", a);
             outputParameters.AddOutput("power", p);
             outputParameters.AddOutput("r0Fmt", r0);
             outputParameters.AddOutput("r1Fmt", r1);
-            outputParameters.AddOutput("size", Math.Floor(sn) + 1);
+            outputParameters.AddOutput("size", sn);
             return new StepOutput(outputParameters);
+        }
+
+        /// <summary>
+        /// two sided power for a difference dif between Fisher z transformed correlation coefficients with n pairs
+        /// </summary>
+        private static double x_rpower(double dif, double n, double zsig)
+        {
+            double z = dif * Math.Sqrt(n - 3.0);
+            return PDF.alnorm(z - zsig) + PDF.alnorm(-z - zsig);
         }
 
         public static StepOutput RptSizeSurvival(ParameterBag parameters)
@@ -568,7 +564,7 @@ namespace StatsDirect.Builtins
                     pbar = (p1 + M * p0) / (M + 1.0);
                     double nx = Math.Pow(zalpha * Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar)) + zcvalue(1.0 - power) * Math.Sqrt(p0 * (1.0 - p0) / M + p1 * (1.0 - p1)), 2.0) / Math.Pow(p0 - p1, 2.0);
                     N = Math.Floor(nx) + 1.0;
-                    ncor = Math.Floor(N / 4.0 * Math.Pow(1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (N * M * Math.Abs(p0 - p1))), 2.0)) + 1.0;
+                    ncor = Math.Floor(nx / 4.0 * Math.Pow(1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (nx * M * Math.Abs(p0 - p1))), 2.0)) + 1.0;
                 }
                 catch (Exception)
                 {
@@ -645,7 +641,7 @@ namespace StatsDirect.Builtins
                     pbar = (P1 + M * P0) / (M + 1.0);
                     double nx = Math.Pow(zalpha * Math.Sqrt((1.0 + 1.0 / M) * pbar * (1.0 - pbar)) + zcvalue(1.0 - power) * Math.Sqrt(P0 * (1.0 - P0) / M + P1 * (1.0 - P1)), 2.0) / Math.Pow(P0 - P1, 2.0);
                     N = Math.Floor(nx) + 1.0;
-                    ncor = Math.Floor(N / 4.0 * Math.Pow(1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (N * M * Math.Abs(P0 - P1))), 2.0)) + 1.0;
+                    ncor = Math.Floor(nx / 4.0 * Math.Pow(1.0 + Math.Sqrt(1.0 + 2.0 * (M + 1.0) / (nx * M * Math.Abs(P0 - P1))), 2.0)) + 1.0;
                 }
                 catch (Exception)
                 {
@@ -917,6 +913,8 @@ namespace StatsDirect.Builtins
             if (xn < Convert.ToDouble(int.MaxValue))
             {
                 N = Math.Floor(xn) + 1.0;
+                if (ok)
+                    N = x_ncsize(false, a, P, D, sd, M, N);
             }
             else
             {
@@ -1001,6 +999,8 @@ namespace StatsDirect.Builtins
             if (xn < Convert.ToDouble(int.MaxValue))
             {
                 N = Math.Floor(xn) + 1L;
+                if (ok)
+                    N = x_ncsize(true, a, P, D, sd, M, N);
             }
             else
             {
@@ -1026,6 +1026,36 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("no_less", ll);
             outputParameters.AddOutput("no_greater", ul);
             return outputParameters;
+        }
+
+        private static double x_tpower(bool unpaired, double alpha, double delta, double sd, double m, double n) => unpaired ? Power.tstpower(alpha, delta, sd, n, m) : Power.ptpower(alpha, delta, sd, n);
+
+        /// <summary>
+        /// smallest integer sample size (per experimental group if unpaired) whose two sided non-central t power reaches the target, searched from the approximation n0
+        /// </summary>
+        private static double x_ncsize(bool unpaired, double alpha, double power, double delta, double sd, double m, double n0)
+        {
+            double n = Math.Max(n0, 2.0);
+            double pw = x_tpower(unpaired, alpha, delta, sd, m, n);
+            if (pw != Constant.MISSING && pw >= power)
+            {
+                while (n > 2.0)
+                {
+                    pw = x_tpower(unpaired, alpha, delta, sd, m, n - 1.0);
+                    if (pw == Constant.MISSING || pw < power)
+                        break;
+                    n -= 1.0;
+                }
+                return n;
+            }
+            for (int i = 0; i < 1000; i++)
+            {
+                n += 1.0;
+                pw = x_tpower(unpaired, alpha, delta, sd, m, n);
+                if (pw != Constant.MISSING && pw >= power)
+                    return n;
+            }
+            return n0;
         }
 
         private static void x_tres(ParameterBag outputParameters, bool unpaired, double alpha, double b, double power, double m, double n, double delta, double sd)

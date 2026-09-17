@@ -947,7 +947,7 @@ namespace StatsDirect.Numerics
                 double y = Math.Pow(x, 2.0 / dn);
                 double pp = p * 0.5;
                 x = gauinv(pp, out ifault);
-                if (y <= 0.5 + a)
+                if (y <= 0.05 + a)
                     y = ((1.0 / (((dn + 6.0) / (dn * y) - 0.089 * d - 0.822) * (dn + 2.0) * 3.0) + 0.5 / (dn + 4.0)) * y - 1.0) * (dn + 1.0) / (dn + 2.0) + 1.0 / y;
                 else
                 {
@@ -962,6 +962,28 @@ namespace StatsDirect.Numerics
                         y = 0.5 * y * y + y;
                 }
                 ret = Math.Sqrt(dn * y);
+                //  Newton polish of Hill's approximation (as R's qt does), where the tail area is resolved well enough
+                //  by tvalp: not for huge df, where Hill's expansion is already exact to rounding and tvalp is not, nor near t = 0.
+                if (dn <= 2.0e6 && ret >= 0.01 && p > 0.0)
+                {
+                    double target = 0.5 * p;
+                    double dp = tvalp(ret, dn) - target;
+                    for (int it = 0; it < 8 && Math.Abs(dp) > 1.0e-13 * target; it++)
+                    {
+                        double dens = Math.Exp(alogam(0.5 * (dn + 1.0)) - alogam(0.5 * dn) - 0.5 * (dn + 1.0) * Math.Log(1.0 + ret * ret / dn)) / Math.Sqrt(dn * Constant.PI);
+                        if (!(dens > 0.0))
+                            break;
+                        double step = dp / dens;
+                        double trial = ret + step * (1.0 + step * ret * (dn + 1.0) / (2.0 * (ret * ret + dn)));
+                        if (double.IsNaN(trial) || double.IsInfinity(trial) || trial <= 0.0)
+                            break;
+                        double dpTrial = tvalp(trial, dn) - target;
+                        if (!(Math.Abs(dpTrial) < Math.Abs(dp)))
+                            break;
+                        ret = trial;
+                        dp = dpTrial;
+                    }
+                }
             }
             return ret;
         }
@@ -982,7 +1004,19 @@ namespace StatsDirect.Numerics
         /// </summary>
         public static double gammad(double x, double p, out int ifault)
         {
-            const double tol = Constant.DBL_SRS, zero = 0.0, one = 1.0, two = 2.0, three = 3.0, nine = 9.0, plimit = 1000.0, xbig = 1.0e12;
+            return gammad(x, p, false, out ifault);
+        }
+
+        /// <summary>
+        /// lower tail area of the gamma distribution, or the upper tail if upper is true
+        /// </summary>
+        /// <remarks>
+        /// AS 239 with the normal approximation for p > 1000 omitted: in double precision the series
+        /// and continued fraction are accurate to about 1e-9 or better for any p, the approximation is not
+        /// </remarks>
+        public static double gammad(double x, double p, bool upper, out int ifault)
+        {
+            const double tol = Constant.DBL_SRS, zero = 0.0, one = 1.0, two = 2.0, xbig = 1.0e12;
             double
                 elimit = Math.Log(Constant.DBL_MIN),
                 oflo = Math.Sqrt(double.MaxValue);
@@ -996,18 +1030,12 @@ namespace StatsDirect.Numerics
             ifault = 0;
             if (x == zero)
             {
-                ret = zero;
-                return ret;
-            }
-            if (x > plimit)
-            {
-                pn1 = three * Math.Sqrt(p) * (Math.Pow(x / p, one / three) + one / (nine * p) - one);
-                ret = alnorm(pn1);
+                ret = upper ? one : zero;
                 return ret;
             }
             if (x > xbig)
             {
-                ret = one;
+                ret = upper ? zero : one;
                 return ret;
             }
             if (x <= one | x < p)
@@ -1026,6 +1054,7 @@ namespace StatsDirect.Numerics
                 arg += Math.Log(ret);
                 ret = zero;
                 if (arg >= elimit) ret = Math.Exp(arg);
+                if (upper) ret = one - ret;
             }
             else
             {
@@ -1065,9 +1094,9 @@ namespace StatsDirect.Numerics
                     }
                 }
                 arg += Math.Log(ret);
-                ret = one;
+                ret = upper ? zero : one;
                 if (arg >= elimit)
-                    ret = one - Math.Exp(arg);
+                    ret = upper ? Math.Exp(arg) : one - Math.Exp(arg);
             }
             return ret;
         }
@@ -1129,7 +1158,7 @@ namespace StatsDirect.Numerics
             {
                 // ERF(X) = 1.0 - ERFC(X)  FOR  -1.0 <= X <= 1.0
                 if (y <= sqeps)
-                    ret = 2.0 * x * x / Constant.SQRTPI;
+                    ret = 2.0 * x / Constant.SQRTPI;
                 else
                     ret = x * (1.0 + Base.cheby(2.0 * x * x - 1.0, erfcs, nterf));
             }
@@ -1441,97 +1470,81 @@ namespace StatsDirect.Numerics
             return ret;
         }
 
+        /// <summary>
+        ///     chi-square percentage point for p outside the range of AS 91:
+        ///     the tail with the smaller probability is bracketed from a Wilson and Hilferty
+        ///     start (or the small chi-square approximation) and the root is found by bisection
+        /// </summary>
         private static double ppchir(double p, double df, out int ifault)
         {
             const double eps = 10.0 * Constant.DBL_LRS;
-            double x2, xd;
-            double ret = double.NaN;
-            ifault = 0;
-            if (p <= 0.0 | p >= 1.0) return ret;
-            if (df < 0.5) return ret;
+            const int maxit = 2200;
+            ifault = 1;
+            if (p <= 0.0 | p >= 1.0 | double.IsNaN(p)) return double.NaN;
+            ifault = 2;
+            if (df <= 0.0 | double.IsNaN(df)) return double.NaN;
+            bool upper = p > 0.5;
+            double q = upper ? 1.0 - p : p;
+            //  f(x) = sgn * (tail(x) - q) increases with x
+            double sgn = upper ? -1.0 : 1.0;
             double xint = gauinv(p, out ifault);
-            if (ifault != 0) return ret;
+            if (ifault != 0) return double.NaN;
             double x0 = 2.0 / (9.0 * df);
             double x1 = df * Math.Pow(1.0 - x0 + xint * Math.Sqrt(x0), 3.0);
-            if (x1 < 0.0) x1 = 0.0;
-            double f1 = chivalp(x1, df) - p;
-            if (f1 == 0.0)
+            if (!(x1 > 0.0))
+                x1 = 2.0 * Math.Exp((Math.Log(p) + alogam(0.5 * df + 1.0)) * 2.0 / df);
+            if (!(x1 > 0.0))
+                x1 = Constant.DBL_MIN;
+            double f1 = ppchirf(x1, df, upper, q, sgn, out ifault);
+            if (ifault != 0) return double.NaN;
+            double x2 = x1;
+            double f2 = f1;
+            int iter = 0;
+            if (f1 < 0.0)
             {
-                x2 = x1;
-                ret = (x1 + x2) / 2.0;
-                return ret;
-            }
-            if (Math.Abs(xint) >= 1.0)
-            {
-                x2 = xint * 1.05;
-                xd = x2 - x1;
+                //  start too small: double until the root is bracketed
+                do
+                {
+                    x1 = x2;
+                    f1 = f2;
+                    x2 *= 2.0;
+                    f2 = ppchirf(x2, df, upper, q, sgn, out ifault);
+                    if (ifault != 0 || double.IsInfinity(x2) || ++iter > maxit) return double.NaN;
+                }
+                while (f2 < 0.0);
             }
             else
             {
-                x2 = xint + 0.05;
-                xd = 0.05;
+                //  start too large: halve until the root is bracketed
+                do
+                {
+                    x2 = x1;
+                    f2 = f1;
+                    x1 *= 0.5;
+                    f1 = ppchirf(x1, df, upper, q, sgn, out ifault);
+                    if (ifault != 0 || ++iter > maxit) return double.NaN;
+                }
+                while (f1 > 0.0 && x1 > 0.0);
             }
-            if (x2 < 0.0) x2 = 0.0;
-            double f2 = chivalp(x2, df) - p;
-            double slope = Math.Max(0.01, (f2 - f1) / xd);
-            double delta = -f1 / slope;
-            int iter = 0;
-            for (; ; )
+            //  bisection
+            for (iter = 1; iter <= maxit; iter++)
             {
-                delta = 2.0 * delta;
-                iter += 1;
-                if (iter > 100) return double.NaN;
-                x2 = x1 + delta;
-                if (x2 < 0.0) x2 = 0.0;
-                f2 = chivalp(x2, df) - p;
-                if (f1 * f2 >= 0.0)
-                    x1 = x2;
+                double xm = 0.5 * (x1 + x2);
+                if (x2 - x1 <= eps * xm) break;
+                double fm = ppchirf(xm, df, upper, q, sgn, out ifault);
+                if (ifault != 0) return double.NaN;
+                if (fm == 0.0) return xm;
+                if (fm < 0.0)
+                    x1 = xm;
                 else
-                    break;
+                    x2 = xm;
             }
-            //  regula falsi estimate
-            bool ibisec = false;
-            for (iter = 1; iter <= 100; iter++)
-            {
-                double xm = (x1 + x2) / 2.0;
-                double fd = f2 - f1;
-                xd = x2 - x1;
-                if (Math.Abs(xm) != 0.0)
-                {
-                    if (Math.Abs(xd) < xm * eps) break;
-                }
-                else
-                {
-                    if (Math.Abs(xd) < eps) break;
-                }
-                double x3 = ibisec ? xm : x2 - f2 * xd / fd;
-                ibisec = false;
-                if (x3 < 0.0) x3 = 0.0;
-                double f3 = chivalp(x3, df) - p;
-                if (f3 * f2 <= 0.0)
-                {
-                    //                root was trapped, use regula falsi
-                    x1 = x2;
-                    f1 = f2;
-                    x2 = x3;
-                    f2 = f3;
-                }
-                else
-                {
-                    //                root was not trapped, use illinois
-                    x2 = x3;
-                    f2 = f3;
-                    f1 /= 2.0;
-                    if (Math.Abs(f2) > Math.Abs(f1))
-                    {
-                        //            use bisection
-                        f1 = 2.0 * f1;
-                        ibisec = true;
-                    }
-                }
-            }
-            ret = (x1 + x2) / 2.0;
-            return ret;
+            return 0.5 * (x1 + x2);
+        }
+
+        private static double ppchirf(double x, double df, bool upper, double q, double sgn, out int ifault)
+        {
+            return sgn * (gammad(0.5 * x, 0.5 * df, upper, out ifault) - q);
         }
 
         public static void bino(int n, double p, int k, ref double term, ref double plo, ref double phi, out int ifault)
@@ -1614,49 +1627,26 @@ namespace StatsDirect.Numerics
             }
             double xn = n;
             double xn1 = xn + 1.0;
-            // double xk = k;
-            double plo = 0.0;
-            // p1 = plo;
-            // p2 = plo;
-            double term = 0.0;
-            for (i = 0; i <= k; i++)
+            double[] pr = new double[n + 1];
+            for (i = 0; i <= n; i++)
             {
                 xi = i;
-                term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if (term > sml) plo += Math.Exp(term);
+                double term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                pr[i] = term > sml ? Math.Exp(term) : 0.0;
             }
-            if (term > sml) term = Math.Exp(term);
-            if (term < 0.0) term = 0.0;
-            double phi = 1.0 - plo + term;
+            // tails summed from the smallest terms
+            double plo = 0.0;
+            for (i = 0; i <= k; i++) plo += pr[i];
+            double phi = 0.0;
+            for (i = n; i >= k; i--) phi += pr[i];
             p1 = phi < plo ? phi : plo;
-            p2 = p1;
-            double z = term + Constant.DBL_LRS;
-            double znp = n * p;
-            if (k >= znp)
+            // two sided P: total probability of the counts no more likely than the observed count (relative tolerance as R binom.test)
+            double z = pr[k] * (1.0 + 1.0e-7);
+            p2 = 0.0;
+            for (i = 0; i <= n; i++)
             {
-                for (i = 0; i < k; i++)
-                {
-                    xi = i;
-                    term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                    if (term > sml)
-                    {
-                        px = Math.Exp(term);
-                        if (px < z) p2 += px;
-                    }
-                }
-            }
-            else
-            {
-                for (i = (int)znp; i <= n; i++)
-                {
-                    xi = i;
-                    term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                    if (term > sml)
-                    {
-                        px = Math.Exp(term);
-                        if (px < z) p2 += px;
-                    }
-                }
+                px = pr[i];
+                if (px <= z) p2 += px;
             }
         }
 

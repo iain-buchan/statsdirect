@@ -129,11 +129,12 @@
 <p>Subjects: @subjects<br />
 Total (mean per time point) observations: @totalObservations (@{meanObservationsPerTimePoint:roundx})<br />
 Mean (SD) area under curve (AUC): @{aucMean:roundx} (@{aucSd:roundx})<br />
-<ci>@ciOutput% t-interval for AUC: @{aucTLcl:roundx} to @{aucTUcl:roundx}</ci></p>
+SE of mean AUC: @{aucSe:roundx}<br />
+<ci>@ciOutput% t-interval for mean AUC: @{aucTLcl:roundx} to @{aucTUcl:roundx}</ci></p>
 <block name="bootstrap">
-<p><ci>@ciOutput% bootstrap-t interval for AUC (@completedIterations iterations, seed @seed): @{aucTLclBoot:roundx} to @{aucTUclBoot:roundx}</ci></p>
+<p><ci>@ciOutput% bootstrap-t interval for mean AUC (@completedIterations iterations, seed @seed): @{aucTLclBoot:roundx} to @{aucTUclBoot:roundx}</ci></p>
 </block>
-<p><ci>@ciOutput% z-interval for AUC: @{aucZLcl:roundx} to @{aucZUcl:roundx}</ci><br />
+<p><ci>@ciOutput% z-interval for mean AUC: @{aucZLcl:roundx} to @{aucZUcl:roundx}</ci><br />
 Median (IQR) area under curve: @{medianAuc:roundx} (@{iqrAuc:roundx})<br />
 Median (IQR) time to maximum: @{medianTimeToMax:roundx} (@{iqrTimeToMax:roundx})<br />
 Median (IQR) slope to maximum: @{medianSlopeToMax:roundx} (@{iqrSlopeToMax:roundx})<br />
@@ -150,8 +151,8 @@ R-square for log(AUC) vs. normal scores: @{rSquareLogNormal:roundx}</p>
 <block name="groupComparison">
 <subtitle>Group comparison: @group1Title vs. @group2Title</subtitle>
 
-<p>t (SE): @{t:roundx} (@{se:roundx})<br />
-DF: @{df:roundx}<br />
+<p>Welch t (SE of difference): @{t:roundx} (@{se:roundx})<br />
+DF (Satterthwaite): @{df:roundx}<br />
 <pval>Two sided @{p2:pval}</pval><br />
 <ci>AUC difference (@ciOutput% CI): @{aucDifference:roundx} (@{aucDifferenceLcl:roundx} to @{aucDifferenceUcl:roundx})</ci></p>
 <block name="bootstrap">

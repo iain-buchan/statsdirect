@@ -246,7 +246,7 @@ namespace StatsDirect.Numerics
                     int ise = 0;
                     for (int i = 1; i <= n; i++)
                         ise += (i - l[i]) * (i - l[i]);
-                    if (js < ise)
+                    if (js <= ise)
                         ifr++;
                     int n1 = n;
                     do

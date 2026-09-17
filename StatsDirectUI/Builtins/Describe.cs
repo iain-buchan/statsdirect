@@ -230,7 +230,7 @@ namespace StatsDirect.Builtins
                 {
                     for (int k = lowerBound; k <= upperBound; k++)
                     {
-                        int nrp = Convert.ToInt32((upperBound - lowerBound - 1) * mt.NextDouble()) + lowerBound;
+                        int nrp = (int)Math.Floor((upperBound - lowerBound + 1) * mt.NextDouble()) + lowerBound;
                         int tp = ary[k];
                         ary[k] = ary[nrp];
                         ary[nrp] = tp;
@@ -894,6 +894,7 @@ namespace StatsDirect.Builtins
                 groupParameters.AddOutput("meanObservationsPerTimePoint", group.MeanObservationsPerTimePoint);
                 groupParameters.AddOutput("aucMean", group.AucMean);
                 groupParameters.AddOutput("aucSd", group.AucSd);
+                groupParameters.AddOutput("aucSe", group.Se);
                 groupParameters.AddOutput("aucTLcl", group.TLclAucBar);
                 groupParameters.AddOutput("aucTUcl", group.TUclAucBar);
                 groupParameters.AddOutput("aucZLcl", group.ZLclAucBar);
@@ -1070,13 +1071,14 @@ namespace StatsDirect.Builtins
                 groupComparisonParameters.AddOutput("group1Title", groups[0].Group.Label);
                 groupComparisonParameters.AddOutput("group2Title", groups[1].Group.Label);
 
-                double dfNumerator = Math.Pow(Math.Sqrt(groups[0].DfNumerator) + Math.Sqrt(groups[1].DfNumerator), 2);
-                double dfDenominator = groups[0].DfDenominator + groups[1].DfDenominator;
-                double df = dfNumerator / dfDenominator;
+                // Welch two sample t test on the subjects' AUCs (Satterthwaite degrees of freedom), group 1 minus group 2
+                double v1 = groups[0].VarAucMean;
+                double v2 = groups[1].VarAucMean;
+                double df = (v1 + v2) * (v1 + v2) / (v1 * v1 / groups[0].Df + v2 * v2 / groups[1].Df);
                 double gamma = 1.0 - (1.0 - ci) / 2.0;
                 double criticalT = Math.Abs(PDF.tfromp(gamma, df));
                 double aucDifference = groups[0].AucMean - groups[1].AucMean;
-                double se = Math.Sqrt(groups[0].VarAucMean + groups[1].VarAucMean);
+                double se = Math.Sqrt(v1 + v2);
                 double t = aucDifference / se;
                 double p = PDF.tvalp(t, df);
                 if (p > 1.0 - p)
@@ -1145,12 +1147,11 @@ namespace StatsDirect.Builtins
             public int AucN { get; private set; }
             public double AucSum { get; private set; }
             public double AucMean { get; private set; }
+            public double AucSd { get; private set; }
             public double VarAucMean { get; private set; }
             public double Se { get; private set; }
             public double ZLclAucBar { get; private set; }
             public double ZUclAucBar { get; private set; }
-            public double DfNumerator { get; private set; }
-            public double DfDenominator { get; private set; }
             public double Df { get; private set; }
             public double CriticalT { get; private set; }
             public double TLclAucBar { get; private set; }
@@ -1181,8 +1182,6 @@ namespace StatsDirect.Builtins
             }
 
             public int N => SortedSubjectIds.Count;
-
-            public double AucSd => VarAucMean == Constant.MISSING ? Constant.MISSING : Math.Sqrt(VarAucMean);
 
             internal void NoteRowPass1(double time, double subjectId)
             {
@@ -1271,8 +1270,6 @@ namespace StatsDirect.Builtins
                     int weightUpperIndex = Math.Min(IndexToTimeMap.Length - 1, timeIndex + 1);
                     summary.Weight = (IndexToTimeMap[weightUpperIndex] - IndexToTimeMap[weightLowerIndex]) / 2.0;
                     summary.MeanTimesWeight = summary.Mean * summary.Weight;
-                    summary.VarTWeighted = summary.Weight * summary.Weight * summary.Variance / summary.N;
-                    summary.DfDenominator = Math.Pow(summary.Weight, 4) * Math.Pow(summary.Sd, 4) / (summary.N * summary.N * (summary.N - 1));
                     for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
                         AreasUnderCurve[timeIndex, subjectIndex] = summary.Weight == Constant.MISSING || Observations[timeIndex, subjectIndex] == Constant.MISSING ? Constant.MISSING : summary.Weight * Observations[timeIndex, subjectIndex];
 
@@ -1337,19 +1334,20 @@ namespace StatsDirect.Builtins
                     }
                 }
 
+                // Precision of the mean AUC from the subjects' AUCs (Bland 2000): SD across subjects, SE = SD / sqrt(n), n - 1 degrees of freedom
                 AucMean = AucN == 0 || AucSum == Constant.MISSING ? Constant.MISSING : AucSum / AucN;
-                VarAucMean = 0;
-                DfDenominator = 0;
-                foreach (TimeSummary ts in TimeToSummaryMap.Values)
+                double aucSumOfSquares = 0;
+                for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
                 {
-                    VarAucMean += ts.VarTWeighted == Constant.MISSING ? 0 : ts.VarTWeighted;
-                    DfDenominator += ts.DfDenominator;
+                    double deviation = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]].Auc - AucMean;
+                    aucSumOfSquares += deviation * deviation;
                 }
-                Se = Math.Sqrt(VarAucMean);
+                AucSd = AucN < 2 || AucMean == Constant.MISSING ? Constant.MISSING : Math.Sqrt(aucSumOfSquares / (AucN - 1));
+                VarAucMean = AucSd == Constant.MISSING ? Constant.MISSING : AucSd * AucSd / AucN;
+                Se = AucSd == Constant.MISSING ? Constant.MISSING : AucSd / Math.Sqrt(AucN);
+                Df = AucN - 1;
                 if (!isBootstrap)
                 {
-                    DfNumerator = VarAucMean * VarAucMean;
-                    Df = DfNumerator / DfDenominator;
                     double gamma = 1.0 - (1.0 - ci) / 2.0;
                     CriticalT = Math.Abs(PDF.tfromp(gamma, Df));
                     double td = Se * CriticalT;
@@ -1464,15 +1462,18 @@ namespace StatsDirect.Builtins
             }
 
             /// <summary>
-            /// Resample the observations for each time point from input into output, with replacement.
+            /// Resample whole subjects (their observations at every time point) from input into output, with replacement.
             /// </summary>
             private static void Shuffle(MersenneTwister mt, double[,] input, double[,] output)
             {
                 int tub = input.GetUpperBound(0);
                 int sub = input.GetUpperBound(1);
-                for (int timeIndex = 0; timeIndex <= tub; timeIndex++)
-                    for (int subjectIndex = 0; subjectIndex <= sub; subjectIndex++)
-                        output[timeIndex, subjectIndex] = input[timeIndex, mt.NextInteger(sub)];
+                for (int subjectIndex = 0; subjectIndex <= sub; subjectIndex++)
+                {
+                    int drawn = (int)Math.Floor((sub + 1) * mt.NextDouble());
+                    for (int timeIndex = 0; timeIndex <= tub; timeIndex++)
+                        output[timeIndex, subjectIndex] = input[timeIndex, drawn];
+                }
             }
         }
     }

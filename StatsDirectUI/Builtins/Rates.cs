@@ -571,7 +571,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("method", meth);
             List<ParameterBag> ratesList = new();
             outputParameters.AddOutput("*rates", ratesList);
-            for (int i = 1; i <= k; i++)
+            for (int i = 1; i <= k + 1; i++)
             {
                 ParameterBag ratesParameters = new();
                 ratesList.Add(ratesParameters);

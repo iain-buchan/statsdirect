@@ -4099,7 +4099,7 @@ namespace StatsDirect.Builtins
                 double[] rndwt = new double[n + 1];
                 for (j = 1; j <= gtot; j++)
                 {
-                    int pick = Convert.ToInt32((gtot - 1) * rng.NextDouble()) + 1;
+                    int pick = Math.Min(gtot, (int)Math.Floor(gtot * rng.NextDouble()) + 1);
                     int pivot = 0;
                     int k;
                     for (k = 1; k <= n; k++)

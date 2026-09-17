@@ -7,7 +7,4 @@ Kappa = @{k:roundu} (se = @{se:roundu})<br />
 z (for k = 0) = @{z:roundu}<br />
 <pval>@{p:pval}</pval></p>
 
-<p><u>Universal (Berry-Mielke) R</u><br />
-Weighted (linear) kappa = @{kw:roundu}<br />
-<pval>@{pw:pval}</pval></p>
 </report>

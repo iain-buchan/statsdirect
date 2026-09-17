@@ -1268,7 +1268,7 @@ namespace StatsDirect.Builtins
             double t = g * z;
             double al = 1.0 - alpha;
             double au = alpha;
-            const double acc = 0.0001;
+            const double acc = 0.000000001;
             double x = t; // lcid * z; 
             double na = ExFortran.pnct(t, df, x, out _);
             double delta = Math.Abs(na - al);
@@ -1296,7 +1296,7 @@ namespace StatsDirect.Builtins
             do
             {
                 cnt++;
-                if (cnt > 500)
+                if (cnt > 5000)
                 {
                     lcig = Constant.MISSING;
                     break;
@@ -1341,7 +1341,7 @@ namespace StatsDirect.Builtins
             do
             {
                 cnt++;
-                if (cnt > 500)
+                if (cnt > 5000)
                 {
                     lcig = Constant.MISSING;
                     break;
@@ -3751,8 +3751,8 @@ namespace StatsDirect.Builtins
                             }
                             // efficient score
                             z = a - (a + b) * (a + c) / n;
-                            // use profile likelihood variance rather than conditional likelihood of Peto method
-                            v = (a + b) * (c + d) * (a + c) * (b + d) / Math.Pow(n, 3.0);
+                            // hypergeometric variance of the score (Harbord, Egger and Sterne 2006)
+                            v = (a + b) * (c + d) * (a + c) * (b + d) / (n * n * (n - 1.0));
                         }
                         double x = Math.Sqrt(v);
                         double y = z / Math.Sqrt(v);

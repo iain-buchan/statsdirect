@@ -399,11 +399,13 @@ namespace StatsDirect.Builtins
             DoubleVariable caseControlVariable = (DoubleVariable) caseControlFrame.Variables[0];
             for (int i = 1; i <= rows; i++)
             {
-                //  Pre-validated to 0 or 1
+                //  Pre-validated to 0 or 1: user codes 1 = case, 0 = control; AS 196 codes 0 = case, 1 = control
                 if (caseControlVariable.Data[i - 1] == Constant.MISSING)
                     isi[i] = 0;
+                else if (caseControlVariable.Data[i - 1] == 0.0 || caseControlVariable.Data[i - 1] == 1.0)
+                    ic[i] = 1 - Convert.ToInt32(caseControlVariable.Data[i - 1]);
                 else
-                    ic[i] = Convert.ToInt32(caseControlVariable.Data[i - 1]);
+                    throw new TemplateOperationCancelledException("Case-control indicator must contain only 1 (case) or 0 (control).", capti);
             }
 
             DataFrame predictorsFrame = parameters["predictors"].AsDataFrame;
@@ -517,7 +519,7 @@ namespace StatsDirect.Builtins
                 ParameterBag estParameters = new();
                 estList.Add(estParameters);
                 estParameters.AddOutput("lab", cd[i].Title);
-                estParameters.AddOutput("b", -b[i]);
+                estParameters.AddOutput("b", b[i]);
                 estParameters.AddOutput("se", se[i]);
                 double zz;
                 if (se[i] == 0.0)
@@ -528,7 +530,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    zz = -b[i] / se[i];
+                    zz = b[i] / se[i];
                     double p = 1.0 - PDF.alnorm(zz);
                     if (p > 1.0 - p)
                         p = 1.0 - p;
@@ -546,9 +548,9 @@ namespace StatsDirect.Builtins
                 ParameterBag orParameters = new();
                 orList.Add(orParameters);
                 orParameters.AddOutput("lab", cd[i].Title);
-                orParameters.AddOutput("or", Formatting.SafeExp(-b[i]));
-                double lci = Formatting.SafeExp(-b[i] - se[i] * cit);
-                double uci = Formatting.SafeExp(-b[i] + se[i] * cit);
+                orParameters.AddOutput("or", Formatting.SafeExp(b[i]));
+                double lci = Formatting.SafeExp(b[i] - se[i] * cit);
+                double uci = Formatting.SafeExp(b[i] + se[i] * cit);
                 if (lci > uci)
                     Utilities.Utilities.Swap(ref lci, ref uci);
                 orParameters.AddOutput("from", lci);

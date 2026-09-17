@@ -542,7 +542,7 @@ namespace StatsDirect.Numerics
                 t = 0.5 * (1.0 - PDF.alnorm(b));
                 if (z < 0.0)
                     t = -t;
-                return 0.0; //  TODO: Should be t?
+                return t; // AUDIT FIX (finding 3)
             }
             double ta = Math.Atan(a);
             if (b == 0.0)
@@ -550,14 +550,14 @@ namespace StatsDirect.Numerics
                 t = oned2p * ta;
                 if (z < 0.0)
                     t = -t;
-                return 0.0; //  TODO: Should be t?
+                return t; // AUDIT FIX (finding 3)
             }
             if (a * b > 4.0)
             {
                 t = 0.25 - 0.5 * (PDF.alnorm(b) - 0.5);
                 if (z < 0.0)
                     t = -t;
-                return 0.0; //  TODO: Should be t?
+                return t; // AUDIT FIX (finding 3)
             }
             double hsqb = 0.5 * b * b;
             if (hsqb <= expov)

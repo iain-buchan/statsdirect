@@ -497,6 +497,7 @@ namespace StatsDirect.Builtins
                 cMLE = Constant.MISSING;
                 return;
             }
+            cMLE = Constant.MISSING; // definite assignment; replaced by the estimate below
             if (ierr == 0)
                 cMLE = CalcCmle(1.0, ref ierr);
             if (ierr != 0)
@@ -510,7 +511,8 @@ namespace StatsDirect.Builtins
             }
             if (ierr == 0)
             {
-                cMLE = 0.0;
+                //  cMLE keeps the conditional maximum likelihood estimate from CalcCmle above (it was
+                //  reset to 0 here in 2024, which zeroed the estimate printed by every caller)
                 upFishLim = CalcExactLim(false, true, cMLE, confLevel, ref ierr);
                 loFishLim = CalcExactLim(true, true, cMLE, confLevel, ref ierr);
                 upMidPLim = CalcExactLim(false, false, cMLE, confLevel, ref ierr);
