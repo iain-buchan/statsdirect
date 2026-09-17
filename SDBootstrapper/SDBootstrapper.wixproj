@@ -5,7 +5,9 @@
     <OutputName>StatsDirectSetup</OutputName>
     <OutputType>Bundle</OutputType>
     <OutputPath>..\ReleaseBuild</OutputPath>
-    <SignOutput>true</SignOutput>
+    <Configurations>Debug;Release;ReleaseWithSigning</Configurations>
+    <!-- Only ReleaseWithSigning signs: Release must build on a machine that has no signing key. StatsDirectUI.slnx passes the solution's Release and ReleaseWithSigning configurations straight through to this project. -->
+    <SignOutput Condition="'$(Configuration)' == 'ReleaseWithSigning'">true</SignOutput>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.NetFx.wixext" Version="6.0.2" />
@@ -29,8 +31,5 @@
   </Target>
   <Target Name="SignBundle">
     <Exec Command="..\Key\sign.cmd &quot;%(SignBundle.FullPath)&quot;" />
-  </Target>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if $(ConfigurationName) == ReleaseWithSigning copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)ReleaseBuild&quot;" />
   </Target>
 </Project>

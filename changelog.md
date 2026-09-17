@@ -11,6 +11,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Data > Cleaning and Encoding > Search and Replace (Basic), and the Count action of Search and Replace (Advanced), failed with a script compilation error
+- The Release build configuration tried to sign the installers, so failed without a signing key; only ReleaseWithSigning signs now
 
 ##[v4.0.5] 2025-12-05
 

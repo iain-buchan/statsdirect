@@ -50,7 +50,7 @@ Release
 : Builds the StatsDirect executable, installer, and bundler; but does not sign them. Useful when checking build processes or when wishing to release an unsigned version.
 
 ReleaseWithSigning
-: Builds the StatsDirect executable, installer, and bundler, signing all artifacts via `<repository-root>/Key/sign.cmd`.
+: Builds the StatsDirect executable, installer, and bundler, signing the installer (.msi) and the bundled setup executable via `<repository-root>/Key/sign.cmd`. The StatsDirect executable inside the installer is not itself signed.
 
 ### Output locations
 

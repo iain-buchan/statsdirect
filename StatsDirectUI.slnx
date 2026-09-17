@@ -9,13 +9,15 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="SDBootstrapper/SDBootstrapper.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
-    <BuildType Project="Release" />
+    <BuildType Solution="DebugWatchExceptions|*" Project="Release" />
+    <BuildType Solution="Debug|*" Project="Release" />
     <Platform Project="x64" />
     <Build Solution="DebugWatchExceptions|*" Project="false" />
     <Build Solution="Debug|*" Project="false" />
   </Project>
   <Project Path="SDInstaller/SDInstaller-standalone-x64.wixproj" Type="b7dd6f7e-def8-4e67-b5b7-07ef123db6f0">
-    <BuildType Project="Release" />
+    <BuildType Solution="DebugWatchExceptions|*" Project="Release" />
+    <BuildType Solution="Debug|*" Project="Release" />
     <Platform Project="x64" />
     <Build Solution="DebugWatchExceptions|*" Project="false" />
     <Build Solution="Debug|*" Project="false" />
