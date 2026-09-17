@@ -13,12 +13,12 @@
     <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <Version>4.0.5</Version>
+    <Version>5.0.0</Version>
     <AssemblyTitle>StatsDirect</AssemblyTitle>
     <AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
     <Company>StatsDirect Limited</Company>
     <Product>StatsDirect</Product>
-    <Copyright>Copyright ©1997-2025 StatsDirect Limited</Copyright>
+    <Copyright>Copyright ©1997-2026 StatsDirect Limited</Copyright>
   </PropertyGroup>
   <PropertyGroup>
 	<!-- Pull the SSG license string from the environment - make sure you set this in your environment variables on your build machine! -->

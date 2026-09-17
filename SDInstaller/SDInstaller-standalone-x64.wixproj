@@ -1,7 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/6.0.2">
   <PropertyGroup>
     <Platform>x64</Platform>
-    <ProductVersion>4.0</ProductVersion>
+    <ProductVersion>5.0</ProductVersion>
     <OutputName>StatsDirect-x64</OutputName>
     <OutputPath>..\ReleaseBuild</OutputPath>
     <Configurations>Debug;Release;ReleaseWithSigning</Configurations>
