@@ -28,6 +28,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Woolf's pooled odds ratio without Haldane correction, its interval and chi-square statistics were contaminated by the corrected analysis
 - Two-sample Smirnov one sided P values were half the two sided P; P values ignored ties
 - Time series summary understated the standard error of the mean AUC by treating time points as independent
+- Time series summary printed the correlation coefficient r under the label R-square for AUC and log(AUC) against normal scores; it now prints r squared
 - Durbin-Watson statistic omitted the first squared residual difference in multiple linear and polynomial regression
 - Compare two standardized rates: the "All" (crude) row was not printed
 - Agreement report: Kendall's tau b of within-subject standard deviation against mean overcounted tie groups of three or more, and could exceed 1

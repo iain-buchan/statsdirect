@@ -996,7 +996,9 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
                 outputParameters.AddOutput("aucNormalChart", cd);
-                outputParameters.AddOutput("rSquareNormal", ((SimpleLinearRegressionContext)results["context"].AsObject).R);
+                //  The context holds the correlation coefficient r; the report prints R-square
+                double rNormal = ((SimpleLinearRegressionContext)results["context"].AsObject).R;
+                outputParameters.AddOutput("rSquareNormal", rNormal * rNormal);
 
             }
             {
@@ -1015,7 +1017,8 @@ namespace StatsDirect.Builtins
                 cd.ChartOptions = options;
                 ParameterBag results = ChartRendererFactory.PlotForResultsOnly(host, cd);
                 outputParameters.AddOutput("aucLogNormalChart", cd);
-                outputParameters.AddOutput("rSquareLogNormal", ((SimpleLinearRegressionContext)results["context"].AsObject).R);
+                double rLogNormal = ((SimpleLinearRegressionContext)results["context"].AsObject).R;
+                outputParameters.AddOutput("rSquareLogNormal", rLogNormal * rLogNormal);
             }
 
             // Compare mean AUCs by group with timepoint standard errors
