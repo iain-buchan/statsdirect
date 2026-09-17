@@ -51,13 +51,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
-    <PackageReference Include="DevExpress.Win.RichEdit" Version="25.1.7" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.0.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
-    <PackageReference Include="OpenMcdf" Version="3.1.0" />
+    <PackageReference Include="DevExpress.Win.RichEdit" Version="26.1.4" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.9.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.4.1" />
+    <PackageReference Include="OpenMcdf" Version="3.3.0" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
-    <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.56" />
+    <PackageReference Include="SpreadsheetGear" Version="9.3.84" />
+    <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.84" />
   </ItemGroup>
   <ItemGroup>
     <ContentWithTargetPath Include="Assets/**">

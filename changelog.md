@@ -2,6 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Changed
+- DevExpress.Win.RichEdit updated to 26.1.4
+- SpreadsheetGear updated to 9.3.84
+- Dependencies updated
+
 ##[v4.0.5] 2025-12-05
 
 ### Changed
