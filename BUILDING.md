@@ -32,6 +32,7 @@ You may want:
   * Set the user variable `SPREADSHEETGEAR_LICENSE_STRING` to the SpreadsheetGear license string you recorded earlier.
   * If you have a signing key, set the user variable `STATSDIRECT_SIGNING_PASSWORD` to the password to your .pfx file.
   * Note that these environment variables are set at process start, so you'll need to restart any IDE or terminal you had open at this point if you want to use them.
+  * The build stops with an error if `SPREADSHEETGEAR_LICENSE_STRING` is not set, because the resulting StatsDirect would not start. To build without a license anyway (for example, to run `-sanity-check` or `-test-operations`), add `-p:AllowMissingSpreadsheetGearLicense=true` to the `dotnet build` command.
 
 ## Building the StatsDirect program, installer, and bundled executable installer
 

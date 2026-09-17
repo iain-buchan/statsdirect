@@ -29,6 +29,10 @@
       <_Parameter1>$(SpreadsheetGearLicenseString)</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
+  <!-- Without a license string the build would succeed, but StatsDirect would then fail at startup with "Invalid signed license" - on this machine and for anyone who installs the result. Stop here instead. -->
+  <Target Name="CheckSpreadsheetGearLicenseString" BeforeTargets="BeforeBuild" Condition="'$(AllowMissingSpreadsheetGearLicense)' != 'true'">
+    <Error Condition="'$(SpreadsheetGearLicenseString)' == ''" Text="The SPREADSHEETGEAR_LICENSE_STRING environment variable is not set, so StatsDirect would be built without a SpreadsheetGear license and would not start. Set it as described in BUILDING.md, then restart Visual Studio or your terminal (environment variables are read at process start) and rebuild. To build without a license anyway, for example to run -sanity-check or -test-operations, pass -p:AllowMissingSpreadsheetGearLicense=true." />
+  </Target>
   <ItemGroup>
     <AssemblyAttribute Include="System.CLSCompliantAttribute">
       <_Parameter1>false</_Parameter1>
