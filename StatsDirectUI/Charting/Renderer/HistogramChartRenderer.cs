@@ -154,7 +154,7 @@ namespace StatsDirect.Charting.Renderer
                         //  If necessary, extend the Y axis to accommodate the normal curve
                         if (overlayNormalCurve)
                         {
-                            double mxy = PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, null);
+                            double mxy = PlotNormalCurve(descriptor.LowestEdge, binMidpointInterval, descriptor.Bins, s, proportionScaler, null);
                             if (mxy > DataMaxY)
                                 DataMaxY = mxy;
                         }
@@ -182,7 +182,7 @@ namespace StatsDirect.Charting.Renderer
 
                         //  ZInt was calculated at Mp*2
                         if (overlayNormalCurve)
-                            PlotNormalCurve(minimumBinMidpoint, binMidpointInterval, descriptor.Bins - 1, s, proportionScaler, markerPen);
+                            PlotNormalCurve(descriptor.LowestEdge, binMidpointInterval, descriptor.Bins, s, proportionScaler, markerPen);
 
                         MaybeDrawMarkerLines(ass);
                     }
@@ -264,8 +264,8 @@ namespace StatsDirect.Charting.Renderer
         /// <summary>
         /// Returns the maximum value of a normal curve from the specified series and bin values.
         /// </summary>
-        /// <param name="zmin">The smallest midpoint</param>
-        /// <param name="zint">The midpoint interval</param>
+        /// <param name="zmin">The x value at which the curve starts: the lowest bin edge</param>
+        /// <param name="zint">The width of a bin</param>
         /// <param name="count">The number of bins</param>
         /// <param name="s">The series whose data is to be used for the calculation</param>
         /// <param name="p">Draws using p if set; merely returns the maximum value if null</param>
@@ -279,7 +279,7 @@ namespace StatsDirect.Charting.Renderer
             double bins = zint * s.Points * (1.0 / (sdv * Math.Sqrt(2.0 * Math.PI)));
 
             //  Multiply the count to give more steps
-            int div = Convert.ToInt32(XExtCanvas / count / 5);
+            int div = Math.Max(1, Convert.ToInt32(XExtCanvas / count / 5));
             count *= div;
             zint /= div;
 
@@ -287,7 +287,8 @@ namespace StatsDirect.Charting.Renderer
             double y = bins * Math.Exp(-0.5 * Math.Pow((sumx - xbar) / sdv, 2.0)) * proportionScaler;
             double yMax = y;
             double yold = ToCanvasY(y);
-            double xold = XAxisCanvas;
+            //  Each point of the curve belongs at its own x value, as the bars do. It used to be spread evenly over the whole axis, which shifted and widened it whenever the axis did not run exactly from the first to the last bin mid-point.
+            double xold = ToCanvasX(sumx);
 
             for (int c = 1; c <= count; c++)
             {
@@ -298,7 +299,7 @@ namespace StatsDirect.Charting.Renderer
                 if (null != p)
                 {
                     double y1 = ToCanvasY(y);
-                    double x1 = XAxisCanvas + c / (double)count * XExtCanvas;
+                    double x1 = ToCanvasX(sumx);
                     DrawLineInCanvasCoordinates(p, xold, yold, x1, y1);
                     xold = x1;
                     yold = y1;

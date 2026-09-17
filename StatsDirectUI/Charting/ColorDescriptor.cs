@@ -9,7 +9,7 @@
         public static ColorDescriptor Black { get; } = FromArgb(0, 0, 0);
         public static ColorDescriptor Blue { get; } = FromArgb(0, 0, 255);
         public static ColorDescriptor Gray { get; } = FromArgb(128, 128, 128);
-        public static ColorDescriptor Green { get; } = FromArgb(255, 0, 0);
+        public static ColorDescriptor Green { get; } = FromArgb(0, 128, 0);
         public static ColorDescriptor Magenta { get; } = FromArgb(255, 0, 255);
         public static ColorDescriptor Red { get; } = FromArgb(255, 0, 0);
         public static ColorDescriptor White { get; } = FromArgb(255, 255, 255);

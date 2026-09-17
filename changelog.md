@@ -41,6 +41,9 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Hedges g confidence limit could be lost for odd degrees of freedom (non-central t returned 0 in three special cases)
 - Chi-square quantiles failed outside 0.000002 < p < 0.999998; chi-square P values and quantiles were inaccurate in the tails above about 2000 degrees of freedom
 - Smaller numerical corrections: t quantile for extremely small P with 60 to 65 degrees of freedom, error function for tiny arguments, singular value decomposition with exactly collinear variables
+- Charts: every line meant to be green was drawn in red, including the 1 SD lines of the control chart and the Lorenz curve of the Gini chart
+- Histogram: the overlaid normal curve was shifted and too wide (by 11% to 18% in the help's examples), and stopped at the first and last bin mid-points
+- Charts in HTML reports: line thickness and dash patterns were ignored, filled squares and diamonds were black whatever their colour (hiding the confidence interval of the pooled estimate in meta-analysis plots), and bold or italic text was drawn plain
 - Agreement > Continuous never printed the limits of agreement for two columns
 - The distribution calculator's critical values of Spearman's rho were wrong for 71 or more pairs (for 100 pairs, 0.699946 at every P), and an error was shown where the critical value is rho = 1; its critical values and P now include the observed statistic for more than 10 pairs too, as they already did for 10 or fewer
 - Help > Check for Updates could never find a newer version: the running version was read as invalid because of the source revision that current .Net SDKs append to it, and only versions numbered 4 were looked for

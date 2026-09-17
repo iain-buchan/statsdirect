@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -72,7 +73,12 @@ namespace StatsDirect.Charting
 
         private object ToCss(FontDescriptor font)
         {
-            return $"font-family:{font.FontFamily};font-size:{font.SizeInPoints * PIXELS_PER_POINT}px;";
+            //  FontDescriptor.Style holds System.Drawing.FontStyle flags
+            FontStyle style = (FontStyle)font.Style;
+            string weight = style.HasFlag(FontStyle.Bold) ? "font-weight:bold;" : string.Empty;
+            string slant = style.HasFlag(FontStyle.Italic) ? "font-style:italic;" : string.Empty;
+            string size = (font.SizeInPoints * PIXELS_PER_POINT).ToString(CultureInfo.InvariantCulture);
+            return $"font-family:{font.FontFamily};font-size:{size}px;{weight}{slant}";
         }
 
         private string ToCss(StringFormat txtFormat)
@@ -255,13 +261,13 @@ namespace StatsDirect.Charting
         {
             root.Add(new XElement(SvgNamespace + "polygon",
                 new XAttribute("points", ToPointsString(pt)),
-                new XAttribute("style", $"{ToCss(p)}{ToCssFill(fill)}")
+                new XAttribute("style", $"{ToCss(p)}{ToCssFill(p, fill)}")
                 ));
         }
 
         private string ToPointsString(IList<PointD> points)
         {
-            return string.Join(" ", points.Select(p => $"{p.X},{p.Y}").ToArray());
+            return string.Join(" ", points.Select(p => string.Format(CultureInfo.InvariantCulture, "{0},{1}", p.X, p.Y)).ToArray());
         }
 
         public void DrawMarker(double x, double y, double size, MarkerShape shape, bool isFilled, PenDescriptor p)
@@ -358,9 +364,42 @@ namespace StatsDirect.Charting
         {
             StringBuilder sb = new();
             sb.AppendFormat("stroke:{0};", ToCss(p.Color));
+            //  As EmfCanvas does: without these, every line was one pixel wide and solid whatever the pen said
+            if (p.LineThickness > 0.0 && p.LineThickness != 1.0)
+                sb.AppendFormat(CultureInfo.InvariantCulture, "stroke-width:{0};", p.LineThickness);
+            string dashes = ToDashArray(p);
+            if (null != dashes)
+                sb.AppendFormat("stroke-dasharray:{0};", dashes);
             if (!(p.CapStyle == CapStyle.Butt))
                 sb.AppendFormat("stroke-linecap:{0};", ToCss(p.CapStyle));
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// The pen's dash pattern in the proportions GDI+ uses for its named dash styles (dash 3, dot 1, gap 1, each in units of the line thickness), or null for a solid line.
+        /// </summary>
+        private static string ToDashArray(PenDescriptor p)
+        {
+            int[] pattern;
+            switch (p.DashStyle)
+            {
+                case DashStyleDescriptor.Dash:
+                    pattern = new[] { 3, 1 };
+                    break;
+                case DashStyleDescriptor.Dot:
+                    pattern = new[] { 1, 1 };
+                    break;
+                case DashStyleDescriptor.DashDot:
+                    pattern = new[] { 3, 1, 1, 1 };
+                    break;
+                case DashStyleDescriptor.DashDotDot:
+                    pattern = new[] { 3, 1, 1, 1, 1, 1 };
+                    break;
+                default:
+                    return null;
+            }
+            double unit = p.LineThickness > 0.0 ? p.LineThickness : 1.0;
+            return string.Join(",", pattern.Select(n => (n * unit).ToString(CultureInfo.InvariantCulture)));
         }
 
         private static object ToCss(CapStyle capStyle)
@@ -390,9 +429,12 @@ namespace StatsDirect.Charting
             return ToCss(p) + $"fill:{ToCss(b.Color)};";
         }
 
-        private object ToCssFill(bool fill)
+        /// <summary>
+        /// A filled polygon takes its fill colour from the pen, as the documentation of DrawSquare and DrawDiamond says. With no fill style at all, SVG fills in black.
+        /// </summary>
+        private static string ToCssFill(PenDescriptor p, bool fill)
         {
-            return fill ? string.Empty : "fill:none;";
+            return fill ? $"fill:{ToCss(p.Color)};" : "fill:none;";
         }
 
         private static string ToCss(ColorDescriptor c)
