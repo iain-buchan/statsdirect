@@ -122,8 +122,8 @@ namespace StatsDirect.UI
 
             bool IProgressBar.Update(double fractionComplete)
             {
-                // Do nothing, assume continue
-                return true;
+                // Do nothing, and continue: true would mean that the user had cancelled, which made any operation that reports progress cancel itself during a test
+                return false;
             }
 
             #region IDisposable Support
