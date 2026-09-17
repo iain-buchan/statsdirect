@@ -328,7 +328,8 @@ namespace StatsDirect.Builtins
                     case Transformation.Z:
                         for (int i = 1; i <= n; i++)
                         {
-                            if (t[i] != Constant.MISSING & tl[i] != Constant.MISSING & tu[i] != Constant.MISSING & !double.IsInfinity(tl[i]) & !double.IsInfinity(tu[i]) & tu[i] - tl[i] != 0.0 & t[i] > 0.0 & tl[i] > 0.0 & tu[i] > 0.0)
+                            //  Fisher's z is defined for any correlation strictly between -1 and 1. This test used to require the correlation and both limits to be positive, as the log transformation above does, which silently left out every study with a correlation or lower limit at or below zero.
+                            if (t[i] != Constant.MISSING & tl[i] != Constant.MISSING & tu[i] != Constant.MISSING & !double.IsInfinity(tl[i]) & !double.IsInfinity(tu[i]) & tu[i] - tl[i] != 0.0 & Math.Abs(t[i]) < 1.0 & Math.Abs(tl[i]) < 1.0 & Math.Abs(tu[i]) < 1.0)
                             {
                                 se = (MathDbl.rtoz(tu[i]) - MathDbl.rtoz(tl[i])) / 2 / cit;
                                 if (se != 0.0)

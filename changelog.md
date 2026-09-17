@@ -25,6 +25,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected
 - Two-rater kappa from worksheet columns always stopped with "Invalid data"; multi-rater kappa stopped with an error for three or more categories with unequal numbers of ratings, and its standard errors used the number of columns rather than the number of ratings
 - Spearman's rank correlation with ties reported a one sided P as two sided; the exact P for 10 or fewer pairs excluded the observed statistic on the lower side
+- Correlation meta-analysis: the Begg-Mazumdar and Egger bias indicators left out any study whose correlation or lower confidence limit was zero or negative; the Egger line was printed unrounded
 - Incidence rate difference meta-analysis printed the lower limit of the Egger interval unformatted
 - Unpaired t test: the unequal-variance (Welch) confidence interval used the pooled degrees of freedom, and power was calculated with the second sample size in place of the ratio of sample sizes
 - Woolf's pooled odds ratio without Haldane correction, its interval and chi-square statistics were contaminated by the corrected analysis
