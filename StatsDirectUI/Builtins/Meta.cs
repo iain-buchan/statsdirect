@@ -257,6 +257,17 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Confidence level for the intervals of the bias (small study effect) tests of Egger and Harbord: twice the alpha of the analysis, so 90% where the analysis uses 95%.
+        /// </summary>
+        /// <remarks>These tests have low power, so they are conventionally judged at P &lt; 0.1 and reported with the matching 90% interval (Egger et al. 1997; Harbord et al. 2006).</remarks>
+        /// <param name="cco">Confidence level of the analysis, as a proportion</param>
+        private static double BiasTestConfidenceLevel(double cco)
+        {
+            double level = 1.0 - 2.0 * (1.0 - cco);
+            return level > 0.0 && level < 1.0 ? level : 0.9;
+        }
+
         public static void Metabias(IProgressBarHost host, ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
         {
             double cit;
@@ -405,10 +416,12 @@ namespace StatsDirect.Builtins
                 }
             }
 
+            //  cco and cit above recover each study's standard error from its limits, so they stay at the level of the analysis; only Egger's own interval uses the bias test level
+            double biasCco = BiasTestConfidenceLevel(cco);
             double a, prob, cla, cua;
             if (!tooFewStrata)
             {
-                MathDbl.civ(nx - P, out double citt, cco, out double _);
+                MathDbl.civ(nx - P, out double citt, biasCco, out double _);
                 Debug.Assert(null != seb);
                 double tz = Math.Abs(bd[1] / seb[1]);
                 prob = PDF.tvalp(tz, Convert.ToDouble(nx - P));
@@ -450,7 +463,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("a", a);
             }
 
-            outputParameters.AddOutput("pc_egger", 100.0 * cco);
+            outputParameters.AddOutput("pc_egger", 100.0 * biasCco);
             outputParameters.AddOutput("cl", cla);
             outputParameters.AddOutput("cu", cua);
             outputParameters.AddOutput("p", prob);
@@ -3696,9 +3709,8 @@ namespace StatsDirect.Builtins
         {
             //  Horbord et al 2006
             // get linear regression of z on sqr(v)
-            double ncco = cco > 0.0
-                ? cco - (1.0 - cco) / 2.0
-                : 0.95;
+            //  This was cco - (1 - cco) / 2, which gave a 92.5% interval at 95%; the help has always described, and earlier versions printed, a 90% interval
+            double ncco = BiasTestConfidenceLevel(cco > 0.0 ? cco : 0.95);
             double sumx = 0.0;
             double sumy = 0.0;
             double sumxy = 0.0;

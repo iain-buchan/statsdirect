@@ -11,6 +11,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Power for the t tests uses the exact non-central t distribution; sample sizes for the paired t test, independent proportions and correlation are one smaller in some cases
 - Two-sample Smirnov P values are exact and conditional on ties, as R's ks.test, at any sample size
 - Harbord's test uses the hypergeometric variance of the score for odds-ratio analyses; the exact confidence interval for Hedges g converges to 1e-9
+- Meta-analysis bias indicators: the confidence intervals for the Egger and Harbord-Egger bias estimates are given at twice the alpha of the analysis, so 90% by default, matching the P < 0.1 convention for these low-powered tests. Egger's interval was previously at the level of the analysis (95%); Harbord's was at 92.5% by mistake, where earlier versions and the help gave 90%. The bias estimates and P values are unchanged
 - A Bonferroni-adjusted (simultaneous) confidence interval is added to the Bonferroni multiple comparison report
 - Time series summary: the precision of the mean AUC comes from the subjects' own AUCs, the group comparison is a Welch t test, and the bootstrap resamples whole subjects
 - The multi-rater kappa report no longer prints the line labelled weighted kappa, which was a Berry-Mielke coefficient on per-column codes
@@ -24,6 +25,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected
 - Two-rater kappa from worksheet columns always stopped with "Invalid data"; multi-rater kappa stopped with an error for three or more categories with unequal numbers of ratings, and its standard errors used the number of columns rather than the number of ratings
 - Spearman's rank correlation with ties reported a one sided P as two sided; the exact P for 10 or fewer pairs excluded the observed statistic on the lower side
+- Incidence rate difference meta-analysis printed the lower limit of the Egger interval unformatted
 - Unpaired t test: the unequal-variance (Welch) confidence interval used the pooled degrees of freedom, and power was calculated with the second sample size in place of the ratio of sample sizes
 - Woolf's pooled odds ratio without Haldane correction, its interval and chi-square statistics were contaminated by the corrected analysis
 - Two-sample Smirnov one sided P values were half the two sided P; P values ignored ties
