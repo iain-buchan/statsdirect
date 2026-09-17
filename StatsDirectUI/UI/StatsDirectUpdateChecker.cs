@@ -38,14 +38,14 @@ namespace StatsDirect.UI
                 UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
                 return;
             }
-            latestVersionLine = latestVersionLine.Substring(0, versionsEndPos - 1);
-            MajorMinorPoint availableVersion = GetVersion4(latestVersionLine);
+            latestVersionLine = latestVersionLine.Substring(0, versionsEndPos);
+            MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
+            MajorMinorPoint availableVersion = GetListedVersion(latestVersionLine, installedVersion);
             if (null == availableVersion || !availableVersion.IsValid)
             {
                 UpdateStatus(true, false, false, "Could not locate a version of StatsDirect on update page. Please check manually at www.statsdirect.com/download.aspx");
                 return;
             }
-            MajorMinorPoint installedVersion = new MajorMinorPoint(Application.ProductVersion);
             // isNewer = true; // useful for testing without updating the web site!
             if (installedVersion < availableVersion)
             {
@@ -57,16 +57,31 @@ namespace StatsDirect.UI
             }
         }
 
-        private static MajorMinorPoint GetVersion4(string latestVersionLine)
+        /// <summary>
+        /// Find the version the update page lists as current.
+        /// </summary>
+        /// <param name="latestVersionLine">The text following "Current version" on the update page</param>
+        /// <param name="installedVersion">The version that is running</param>
+        /// <returns>The listed version, or null if none could be found</returns>
+        /// <remarks>
+        /// The page reads "Current version 4.0.4 (24th June 2024) for Microsoft Windows...", so the version wanted is the one that immediately follows the prefix, whatever its major version.
+        /// Only a colon, an equals sign, "is" or a "v" may come between them: anything looser could pick up another number of the same shape, such as a .Net runtime version.
+        /// Failing that, look further along the line, but only for a version with the same major version as the one running.
+        /// </remarks>
+        private static MajorMinorPoint GetListedVersion(string latestVersionLine, MajorMinorPoint installedVersion)
         {
+            Match immediatelyFollowing = Regex.Match(latestVersionLine, "^\\s*(?:[:=]|is)?\\s*v?([0-9]+\\.[0-9]+\\.[0-9]+)");
+            if (immediatelyFollowing.Success)
+            {
+                MajorMinorPoint version = new MajorMinorPoint(immediatelyFollowing.Groups[1].Value);
+                if (version.IsValid)
+                    return version;
+            }
             Regex versionSpotter = new Regex("[0-9]+\\.[0-9]+\\.[0-9]+");
-            MatchCollection matches = versionSpotter.Matches(latestVersionLine);
-            if (matches.Count == 0)
-                return null;
-            foreach (Match m in matches)
+            foreach (Match m in versionSpotter.Matches(latestVersionLine))
             {
                 MajorMinorPoint version = new MajorMinorPoint(m.Value);
-                if (version.IsValid && version.Major == 4)
+                if (version.IsValid && installedVersion.IsValid && version.Major == installedVersion.Major)
                     return version;
             }
             return null;

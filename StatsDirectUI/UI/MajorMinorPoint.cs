@@ -13,6 +13,10 @@
 
         public MajorMinorPoint(string s)
         {
+            // Application.ProductVersion is the informational version, to which current .Net SDKs append the source revision ("5.0.0+0123abc...") and which may carry a pre-release label ("5.0.0-beta"); neither is part of the number.
+            int suffixPos = s.IndexOfAny(new[] { '+', '-' });
+            if (suffixPos >= 0)
+                s = s.Substring(0, suffixPos);
             string[] parts = s.Split('.');
             if (parts.Length >= 3 && int.TryParse(parts[0], out int major) && int.TryParse(parts[1], out int minor) && int.TryParse(parts[2], out int point))
             {
