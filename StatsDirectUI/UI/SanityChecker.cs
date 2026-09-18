@@ -2,6 +2,7 @@
 using StatsDirect.Templates;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace StatsDirect.UI
 {
@@ -32,9 +33,39 @@ namespace StatsDirect.UI
                     }
                 }
             }
+            //  The sample workbook must open in the spreadsheet component.  Version 5.0.0 was nearly released with one that did not (a column definition
+            //  ran past the last column of the sheet), and nothing else in these checks, or in the operation tests, opens it.
+            string workbookLine = CheckSampleWorkbookOpens(out bool workbookFailed);
+            if (workbookFailed)
+                failed++;
+            if (null != workbookLine)
+                lines.Insert(0, workbookLine);
             lines.Insert(0, $"Operations checked: {operations.Count}; failures: {failed}");
             System.IO.File.WriteAllLines(System.IO.Path.Combine(AppContext.BaseDirectory, "sanity-check-results.txt"), lines);
             Environment.Exit(0 == failed ? 0 : 1);
+        }
+
+        /// <summary>
+        /// Opens Data\test.xlsx as the workbook window would.  Returns the line to report, and whether it is a failure.
+        /// </summary>
+        private static string CheckSampleWorkbookOpens(out bool isFailure)
+        {
+            isFailure = false;
+            try
+            {
+                string licenseString = Assembly.GetEntryAssembly()?.GetCustomAttribute<SpreadsheetGearLicenseAttribute>()?.LicenseString;
+                if (string.IsNullOrEmpty(licenseString))
+                    return "SKIP  Data\\test.xlsx  built without a SpreadsheetGear license, so the sample workbook cannot be opened";
+                SpreadsheetGear.Factory.SetSignedLicense(licenseString);
+                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "Data", "test.xlsx");
+                SpreadsheetGear.IWorkbook workbook = SpreadsheetGear.Factory.GetWorkbookSet().Workbooks.Open(path);
+                return $"PASS  Data\\test.xlsx  opens, {workbook.Worksheets.Count} worksheets";
+            }
+            catch (Exception ex)
+            {
+                isFailure = true;
+                return $"FAIL  Data\\test.xlsx  {ex.Message.Replace("\r", " ").Replace("\n", " ")}";
+            }
         }
 
         /// <summary>
