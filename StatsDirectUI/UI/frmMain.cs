@@ -939,8 +939,36 @@ namespace StatsDirect.UI
 
         private void frmMain_Load(object sender, EventArgs e)
         {
+            FitWindowTabsToText();
             LoadWindowState();
             AddTemplates();
+        }
+
+        /// <summary>
+        /// Makes the strip of window tabs tall enough for its text.  WinForms scales the form to the display's text size, but a TabControl's ItemSize is
+        /// not part of that scaling, so the 25 pixel tab height from the designer stayed 25 pixels however large the text became: at 150% the captions lost
+        /// their descenders and underscores, and at 200% and above most of each caption was cut off.  The toolbar below the tabs grows with the text as
+        /// well, so the panel that holds them both is sized from what they need rather than from a scaled constant.
+        /// </summary>
+        private void FitWindowTabsToText()
+        {
+            //  What the designer's numbers were chosen for: Microsoft Sans Serif 8.25pt at 96 dpi
+            const int designedTabHeight = 25;
+            const int designedFontHeight = 13;
+            const int designedGapAboveTabs = 6;
+
+            int tabHeight = Math.Max(designedTabHeight, (int)Math.Ceiling(tabWindows.Font.Height * (double)designedTabHeight / designedFontHeight));
+            tabWindows.ItemSize = new Size(0, tabHeight);
+            tabWindows.MaximumSize = Size.Empty;
+            tabWindows.MinimumSize = new Size(0, tabHeight);
+            tabWindows.MaximumSize = new Size(0, tabHeight);
+            tabWindows.Height = tabHeight;
+
+            int panelHeight = LogicalToDeviceUnits(designedGapAboveTabs) + tabHeight + toolStrip.Height;
+            pnlDefault.MaximumSize = Size.Empty;
+            pnlDefault.MinimumSize = new Size(0, panelHeight);
+            pnlDefault.MaximumSize = new Size(0, panelHeight);
+            pnlDefault.Height = panelHeight;
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
