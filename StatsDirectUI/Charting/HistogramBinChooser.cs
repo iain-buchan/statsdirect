@@ -127,32 +127,25 @@ namespace StatsDirect.Charting
         /// Returns an array of bin counts, placing values from sortedX[0] to sortedX[length - 1] into bins defined by edges.
         /// </summary>
         /// <param name="sortedX">Array of values to be counted into bins. PRECONDITION: This array must be sorted low to high by value.</param>
-        /// <param name="edges">Bin edges.  The ith element in the returned array will correspond to values [edges[i], edges[i+1]).</param>
+        /// <param name="edges">Bin edges.  The ith element in the returned array is the number of values in (edges[i], edges[i+1]]: a value equal to a bin's upper
+        /// limit belongs to that bin, as the help describes.  Values at or below the lowest edge are counted in the first bin and values above the highest edge in the last.</param>
         public static int[] SortedHist(double[] sortedX, int length, double[] edges)
         {
             int bins = edges.Length - 1;
-            int[] binCounts = new int[bins];
+            int[] binCounts = new int[Math.Max(bins, 0)];
+            if (bins < 1)
+                return binCounts;
+            //  Edges from Linspace carry floating-point error (0.6000000000000001 for 0.6), so a value exactly on an edge must be compared with a tolerance;
+            //  without one the same chart counted the values on some edges upwards and those on others downwards.  The second term covers data whose
+            //  magnitude dwarfs their range (values near 1e7 spanning less than 1), where the error sits in the edge's own last digits.
+            double tolerance = Math.Max(Math.Abs(edges[bins] - edges[0]) * 1e-9, Math.Max(Math.Abs(edges[0]), Math.Abs(edges[bins])) * 1e-15);
             int bin = 0;
-            double nextEdge = edges[bin + 1];
-            int firstIndexAboveBoundary = 0;
             for (int i = 0; i < length; i++)
             {
-                while (sortedX[i] >= nextEdge)
-                {
-                    binCounts[bin++] = i - firstIndexAboveBoundary;
-                    firstIndexAboveBoundary = i;
-                    if (bin >= bins)
-                    {
-                        binCounts[bin - 1] += length - firstIndexAboveBoundary;
-                        return binCounts;
-                    }
-                    nextEdge = edges[bin + 1];
-                }
-                if (bin >= bins)
-                    break;
+                while (bin < bins - 1 && sortedX[i] > edges[bin + 1] + tolerance)
+                    bin++;
+                binCounts[bin]++;
             }
-            if (bin < bins)
-                binCounts[bin] = length - firstIndexAboveBoundary;
             return binCounts;
         }
 
