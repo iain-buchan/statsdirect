@@ -189,6 +189,13 @@ namespace StatsDirect.Setup
             if (whatIf)
                 return true;
 
+            // The registration is deleted last, but must be known to be deletable first: an entry left pointing at a setup that has gone is worse than one left alone.
+            if (!CanDeleteTree(uninstall, bundleId))
+            {
+                log($"Left setup {bundleId} registered and its files in place, because its registration cannot be deleted.");
+                return false;
+            }
+
             // The cached setup goes first.  If its program cannot be deleted Burn will still run it, and a setup that runs and fails writes its registration again;
             // better then to leave the registration alone.  (Anything else left in the folder does no harm.)
             if (!DeleteCacheFolder(setupFolder, log) && Directory.Exists(setupFolder) && Directory.GetFiles(setupFolder, "*.exe").Length > 0)
@@ -306,6 +313,24 @@ namespace StatsDirect.Setup
                 }
             }
             return providers.ToList();
+        }
+
+        /// <summary>
+        /// Whether this process may delete the key and everything under it (a setup's registration normally has nothing under it).
+        /// </summary>
+        private static bool CanDeleteTree(RegistryKey parent, string name)
+        {
+            try
+            {
+                using RegistryKey key = parent.OpenSubKey(name, RegistryKeyPermissionCheck.ReadWriteSubTree, System.Security.AccessControl.RegistryRights.Delete | System.Security.AccessControl.RegistryRights.EnumerateSubKeys | System.Security.AccessControl.RegistryRights.QueryValues);
+                if (null == key)
+                    return false;
+                return key.GetSubKeyNames().All(child => CanDeleteTree(key, child));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         private static bool IsProductInstalled(string productCode, IList<RegistryKey> views)
