@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The installer's helper that retires StatsDirect 4 setups which cannot remove themselves: see OldSetupRetirer.cs.  StatsDirectUI copies its output beside
+       StatsDirect.exe, from where the installer packages it and runs it with the dotnet host.  There is deliberately no .exe of its own: see the custom action
+       RetireOldSetups in SDInstaller. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseAppHost>false</UseAppHost>
+    <AssemblyName>StatsDirectRetire</AssemblyName>
+    <RootNamespace>StatsDirect.Setup</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Configurations>Debug;Release</Configurations>
+    <Version>5.0.0</Version>
+    <Product>StatsDirect</Product>
+    <Company>StatsDirect Limited</Company>
+    <Copyright>Copyright ©1995-2026 StatsDirect Limited. All rights reserved.</Copyright>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>embedded</DebugType>
+    <PathMap>$(MSBuildProjectDirectory)=StatsDirectRetire</PathMap>
+  </PropertyGroup>
+</Project>

@@ -84,6 +84,17 @@
       <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <!-- The installer's helper (StatsDirectRetire: see OldSetupRetirer.cs there) is packaged from this project's output folder, beside StatsDirect.exe. Nothing in
+       StatsDirect refers to it, so it is built first and its files are copied here rather than referenced. -->
+  <ItemGroup>
+    <ProjectReference Include="..\StatsDirectRetire\StatsDirectRetire.csproj" ReferenceOutputAssembly="false" OutputItemType="StatsDirectRetireAssembly" SetConfiguration="Configuration=Release" />
+  </ItemGroup>
+  <Target Name="CopyStatsDirectRetire" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <_StatsDirectRetireFile Include="@(StatsDirectRetireAssembly->'%(RootDir)%(Directory)StatsDirectRetire.dll');@(StatsDirectRetireAssembly->'%(RootDir)%(Directory)StatsDirectRetire.runtimeconfig.json');@(StatsDirectRetireAssembly->'%(RootDir)%(Directory)StatsDirectRetire.deps.json')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_StatsDirectRetireFile)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">

@@ -17,13 +17,6 @@ namespace StatsDirect.UI
         [STAThread]
         public static void Main(string[] args)
         {
-            // The installer's errand, run as the system account where nobody can see or answer anything: before the error dialogs and everything else are set up.
-            if (args.Length > 0 && "-retire-old-setups".Equals(args[0]))
-            {
-                OldSetupRetirer.RunFromInstaller();
-                return;
-            }
-
 #if !WATCH_EXCEPTIONS
             // Right at the start, cope with as many variants of chaos as we can.
             CatchMostErrors();

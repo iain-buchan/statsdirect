@@ -32,10 +32,15 @@
       <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
     </Upgrade>
     <!-- A version 4 setup whose cached .NET runtime installer has gone cannot uninstall itself, so after an upgrade it stayed in Windows' list of installed apps
-         beside the new version, and Uninstall there asked for the original StatsDirectSetup.exe.  Once the new program is in place it retires such setups: see
-         StatsDirectUI/Utilities/OldSetupRetirer.cs.  It runs as the system account (it deletes keys under HKLM and folders of the package cache), last in the
-         script so that little can fail after it, and a failure in it never fails the installation. -->
-    <CustomAction Id="RetireOldSetups" FileRef="statsdirectexe" ExeCommand="-retire-old-setups" Execute="deferred" Impersonate="no" Return="ignore" />
+         beside the new version, and Uninstall there asked for the original StatsDirectSetup.exe.  Once the new program is in place the installer retires such
+         setups: see StatsDirectRetire/OldSetupRetirer.cs.  The helper runs as the system account (it deletes keys under HKLM and folders of the package cache),
+         last in the script so that little can fail after it, and its result is ignored.
+         It is started with the dotnet host, and is not part of StatsDirect.exe, because Windows Installer waits for it where nobody can see or answer anything:
+         dotnet.exe is a console program, so a runtime it cannot find is an exit code, where StatsDirect.exe (a windowed program) would put up the host's
+         "You must install .NET" dialog and hold the installation for ever; and a new file cannot be an older build that ignores the errand and starts the
+         whole application, as StatsDirect.exe can when StatsDirect was running during the upgrade and its files are only replaced at the next restart.
+         If dotnet.exe is not there, nothing is retired and the installation carries on. -->
+    <CustomAction Id="RetireOldSetups" Directory="INSTALLLOCATION" ExeCommand="&quot;[ProgramFiles64Folder]dotnet\dotnet.exe&quot; &quot;[INSTALLLOCATION]StatsDirectRetire.dll&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
     <InstallExecuteSequence>
       <RemoveExistingProducts Before="InstallInitialize"></RemoveExistingProducts>
       <Custom Action="RetireOldSetups" Before="InstallFinalize" Condition="NOT Installed" />
@@ -65,7 +70,7 @@
     <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
 
     <!-- Installation conditions: the .NET 10 Windows Desktop runtime. The setup bundle installs it before this package runs; this check matters only when the .msi is run on its own.
-         RollForward is the program's own policy (the default, "minor": StatsDirect.runtimeconfig.json sets none), so that the check passes exactly when the program can start.
+         RollForward is the program's own policy (the default, "minor": StatsDirect.runtimeconfig.json sets none), so that the check looks for a runtime in the same way as the program will.
          With "major", a PC that has only a later major version passed the check and then could not start the program. -->
     <netfx:DotNetCompatibilityCheck
       Property="DOTNETDESKTOP10RUNTIMECHECK"
