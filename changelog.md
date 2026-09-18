@@ -50,6 +50,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Histogram: the x axis is again labelled at the bin mid-points, as its title says and as earlier versions did, rather than at round values that fell between the bars
 - Box and whisker plot: the quartiles were the (np + 0.5)th ordered values, which matched neither the descriptive statistics nor the help nor earlier versions; they are now the conventional p(n + 1)th values (centile type 2)
 - Stacked bar charts: the legend listed the value columns as well as the bar labels (seven entries for four segments in the help's example) and the fourth segment was filled with the first colour
+- Scatter chart with more than one series and a legend failed with "Don't know how to draw style's shape" the first time it was drawn
 - Charts: a linear axis scale built directly rather than by the automatic scaler recursed until the stack overflowed; no menu route that reaches it was found, so this is a latent crash
 - Agreement > Continuous never printed the limits of agreement for two columns
 - The distribution calculator's critical values of Spearman's rho were wrong for 71 or more pairs (for 100 pairs, 0.699946 at every P), and an error was shown where the critical value is rho = 1; its critical values and P now include the observed statistic for more than 10 pairs too, as they already did for 10 or fewer

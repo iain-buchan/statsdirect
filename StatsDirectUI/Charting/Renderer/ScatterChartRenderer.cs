@@ -47,18 +47,19 @@ namespace StatsDirect.Charting.Renderer
 
             bool showLegend = sOptions.ShowLegend && Definition.XSeries.Count > 1;
             Legend legend = null;
-            if (showLegend)
-            {
-                legend = new Legend() { Position = LegendPosition.Left };
-                foreach (ISeries s in Definition.XSeries)
-                    legend.LegendEntries.Add(new LegendEntry() { MarkerType = ((DoubleSeries)s).MarkerType, Label = s.Title });
-            }
-
             if (!IsAscii)
             {
+                // The legend copies each series' marker, so the markers must be assigned first: on the first render they were still unset, and drawing the legend threw.
+                AssignMarkersToSeries(sOptions);
+                if (showLegend)
+                {
+                    legend = new Legend() { Position = LegendPosition.Left };
+                    foreach (ISeries s in Definition.XSeries)
+                        legend.LegendEntries.Add(new LegendEntry() { MarkerType = ((DoubleSeries)s).MarkerType, Label = s.Title });
+                }
+
                 // Plot a metafile version
                 StartVectorPlot(sOptions, legend);
-                AssignMarkersToSeries(sOptions);
                 AxisScales axisScales = LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                     new AxisDefinition(sOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
                     new AxisDefinition(sOptions.YAxisTitle, AxisMode.Scale, Definition.ScaleParameters.Y.ScaleType),
