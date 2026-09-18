@@ -21,10 +21,10 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Dependencies updated
 - The setup executable bundles the .Net 10.0.12 Windows Desktop runtime, up from 10.0.0
 - LOESS: the default polynomial degree is 2, as the help says and as in R itself, not 1
-- The installer puts 487 files on the machine instead of 1,503 and is 6 MB smaller: it no longer carries a superseded copy of the web help, the compiler's messages in twelve other languages, the test framework, a separate debug symbols file or the help maintainer's mapping workbook. Error messages still give source line numbers, because the symbols are now inside StatsDirect.dll
+- The installer puts about 490 files on the machine instead of 1,503 and is 6 MB smaller: it no longer carries a superseded copy of the web help, the compiler's messages in twelve other languages, the test framework, a separate debug symbols file or the help maintainer's mapping workbook. Error messages still give source line numbers, because the symbols are now inside StatsDirect.dll
 - Signed builds use the StatsDirect Ltd certificate on its USB token, timestamp at GlobalSign, verify each signature, and sign StatsDirect.exe and StatsDirect.dll as well as the installer and setup executable
 - The licence shown by setup and in Help is now the MIT License under which StatsDirect is released, followed by the terms of the components from other suppliers (SpreadsheetGear and DevExpress remain proprietary and may not be redistributed), in place of the former proprietary licence. LICENSE.txt and THIRD-PARTY-NOTICES.txt are installed with the program
-- StatsDirect starts faster, and the first run of each analysis is quicker (about a quarter to nearly a half less time in measurements of start-up work): .Net's tiered compilation, switched off since June 2024, is back at its default. Results are unchanged
+- StatsDirect starts faster and the first analysis of a session is quicker (about a quarter to nearly a half less time in measurements of start-up work); a few calculation-heavy analyses take slightly longer the first time they run. .Net's tiered compilation, switched off since June 2024, is back at its default. Results are unchanged
 - The installer no longer tries to generate native images with the .NET Framework's ngen, a step left from version 3 that could do nothing for a .NET 10 program; the About box no longer reports "JIT-compiled"
 
 ### Fixed
