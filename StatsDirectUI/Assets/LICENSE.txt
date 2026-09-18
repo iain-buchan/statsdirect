@@ -1,8 +1,26 @@
 This licence covers StatsDirect's own code only: StatsDirect.exe, StatsDirect.dll
-and StatsDirectRetire.dll, and the operations, templates and example data
+and StatsDirectRetire.dll, and the help, operations, templates and example data
 installed with them. The other files in this folder belong to other suppliers
 and have their own terms: see THIRD-PARTY-NOTICES.txt. StatsDirect's source code
 is at https://github.com/iain-buchan/statsdirect
+
+
+NO LIABILITY FOR RELIANCE ON RESULTS
+
+StatsDirect as a whole, including its help and the components from other
+suppliers, is provided "as is", without warranty of any kind, either expressed
+or implied; in particular it is not warranted to be free of errors, or that
+errors will be corrected. To the extent that the law allows, the authors, the
+copyright holders and anyone who distributes StatsDirect on their behalf shall
+not be liable for any loss or damage whatsoever or howsoever caused arising
+directly or indirectly in connection with the software, its use or otherwise, in
+particular as a result of installation or reliance upon the software or the
+results of use of the software, and expressly exclude liability for indirect,
+special, incidental or consequential loss or damage, even if advised of the
+possibility of such damage. Nothing in these terms excludes or limits liability
+for death or personal injury arising from negligence, or any other liability
+that cannot be excluded or limited by law.
+
 
 MIT License
 
