@@ -19,6 +19,14 @@
     <Company>StatsDirect Limited</Company>
     <Product>StatsDirect</Product>
     <Copyright>Copyright ©1997-2026 StatsDirect Limited</Copyright>
+    <!-- Take only the English resources of the packages we use. The other twelve languages of the compiler's messages added 15 MB to the installer and are never shown. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- Keep the line numbers in the stack traces that error messages show, without installing a separate .pdb: the symbols are embedded in StatsDirect.dll,
+         and source paths are recorded relative to the repository rather than to the folders of whoever built it. -->
+    <DebugType>embedded</DebugType>
+    <PathMap>$(MSBuildProjectDirectory)=StatsDirectUI</PathMap>
   </PropertyGroup>
   <PropertyGroup>
 	<!-- Pull the SSG license string from the environment - make sure you set this in your environment variables on your build machine! -->
@@ -58,14 +66,15 @@
     <PackageReference Include="DevExpress.Win.RichEdit" Version="26.1.4" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.VisualBasic" Version="5.9.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="4.4.1" />
     <PackageReference Include="OpenMcdf" Version="3.3.0" />
     <PackageReference Include="PresentationFramework" Version="4.6.0" />
     <PackageReference Include="SpreadsheetGear" Version="9.3.84" />
     <PackageReference Include="SpreadsheetGear.Windows" Version="9.3.84" />
   </ItemGroup>
   <ItemGroup>
-    <ContentWithTargetPath Include="Assets/**">
+    <!-- Assets/WebHelp is a superseded copy of the web help that nothing in the program opens (Help uses STATSDIRECT.chm), and the mapping workbook is a
+         note for whoever maintains the help; neither belongs on users' machines. -->
+    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/WebHelp/**;Assets/SD Help ID to File Name Mapping.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>

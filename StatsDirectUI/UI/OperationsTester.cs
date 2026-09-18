@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using StatsDirect.TemplateProcessing;
 using StatsDirect.Templates;
 
@@ -10,10 +9,8 @@ namespace StatsDirect.UI
     /// <summary>
     /// Test runner for operations with tests
     /// </summary>
-    [TestClass]
     internal class OperationsTester
     {
-        [TestMethod]
         public static void TestAll()
         {
             // The SdApplication constructor initialises the function registry; doing it separately here registers every builtin twice as soon as anything touches SoleInstance.
