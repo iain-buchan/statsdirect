@@ -11,18 +11,17 @@ namespace StatsDirect.UI
             base.StartCheck(new Uri("http://cran.r-project.org/bin/windows/base/release.htm"), handler);
         }
 
-        protected override void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        protected override void PageDownloaded(string downloadedPage, Exception error, bool cancelled)
         {
             const string prefix = "URL=R-";
-            if (e.Cancelled)
+            if (cancelled)
                 return;
-            if (null != e.Error)
+            if (null != error || null == downloadedPage)
             {
                 UpdateStatus(true, false, false, "Could not check for R updates. Please check your Internet connection.");
                 return;
             }
             // Success - look for the version
-            string downloadedPage = e.Result;
             int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
             if (latestVersionPos < 0)
             {

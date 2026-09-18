@@ -12,27 +12,26 @@ namespace StatsDirect.UI
             base.StartCheck(new Uri("http://www.statsdirect.com/download.aspx"), handler);
         }
 
-        protected override void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        protected override void PageDownloaded(string downloadedPage, Exception error, bool cancelled)
         {
             const string prefix = "Current version";
-            if (e.Cancelled)
+            if (cancelled)
                 return;
-            if (null != e.Error)
+            if (null != error || null == downloadedPage)
             {
                 UpdateStatus(true, false, false, "Could not check for StatsDirect updates. Please check your Internet connection.");
                 return;
             }
 
             // Success - look for the version
-            string downloadedPage = e.Result;
-            int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.Ordinal);
+            int latestVersionPos = downloadedPage.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
             if (latestVersionPos < 0)
             {
                 UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
                 return;
             }
             string latestVersionLine = downloadedPage.Substring(latestVersionPos + prefix.Length);
-            int versionsEndPos = latestVersionLine.IndexOf("<br", StringComparison.InvariantCulture);
+            int versionsEndPos = latestVersionLine.IndexOf("<br", StringComparison.OrdinalIgnoreCase);
             if (versionsEndPos < 0)
             {
                 UpdateStatus(true, false, false, "Could not locate StatsDirect version on update page. Please check manually at www.statsdirect.com/download.aspx");
