@@ -21,7 +21,7 @@
     <AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
     <Company>StatsDirect Limited</Company>
     <Product>StatsDirect</Product>
-    <Copyright>Copyright ©1997-2026 StatsDirect Limited</Copyright>
+    <Copyright>Copyright ©1990-2026 Professor Iain E. Buchan at The University of Liverpool</Copyright>
     <!-- Take only the English resources of the packages we use. The other twelve languages of the compiler's messages added 15 MB to the installer and are never shown. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>

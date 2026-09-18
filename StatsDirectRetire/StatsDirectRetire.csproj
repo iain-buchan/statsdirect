@@ -14,7 +14,7 @@
     <Version>5.0.0</Version>
     <Product>StatsDirect</Product>
     <Company>StatsDirect Limited</Company>
-    <Copyright>Copyright ©1995-2026 StatsDirect Limited. All rights reserved.</Copyright>
+    <Copyright>Copyright ©1990-2026 Professor Iain E. Buchan at The University of Liverpool</Copyright>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
