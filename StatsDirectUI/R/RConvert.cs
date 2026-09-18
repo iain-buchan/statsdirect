@@ -123,11 +123,11 @@ namespace StatsDirect.R
         }
 
         /// <summary>
-        /// Return unquoted in such a way that it is guaranteed to be an acceptable string to the R parser.  This surrounds the string with double-quotes and replaces any " in the string with "".
+        /// Return unquoted in such a way that it is guaranteed to be an acceptable string to the R parser.  This surrounds the string with double-quotes and escapes any \ or " in the string with a backslash (doubling the quote, as was done before, is not valid R).
         /// </summary>
         private static string RQuote(string unquoted)
         {
-            return "\"" + unquoted.Replace("\"", "\"\"") + "\"";
+            return "\"" + unquoted.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
 
         private class ToRVariableVisitor : IVariableVisitor
@@ -283,21 +283,23 @@ namespace StatsDirect.R
 
         internal static DataFrame ToFrame(string frameName, string variableName, List<object> data)
         {
-            // Check types: use double if all double, else (for now) string.  TODO: Other types.
-            bool allDouble = data.All(o => o is double);
+            // Check types: use double if all numeric, else (for now) string.  TODO: Other types.
+            // R's NA arrives as null and is a missing value; a whole number arrives as an int.  Neither used to be allowed for: an NA threw a
+            // NullReferenceException and one whole number among the values turned the whole column into text.
+            bool allNumeric = data.All(o => o is null || o is double || o is int);
             IVariable v;
-            if (allDouble)
+            if (allNumeric)
             {
                 DoubleVariable dv = new(data.Count, variableName);
                 for (int i = 0; i < data.Count; i++)
-                    dv.Data[i] = (double)data[i];
+                    dv.Data[i] = data[i] is null ? Constant.MISSING : Convert.ToDouble(data[i], CultureInfo.InvariantCulture);
                 v = dv;
             }
             else
             {
                 StringVariable dv = new(data.Count, variableName);
                 for (int i = 0; i < data.Count; i++)
-                    dv.Data[i] = data[i].ToString();
+                    dv.Data[i] = data[i]?.ToString() ?? string.Empty;
                 v = dv;
             }
             return new DataFrame(v, frameName);

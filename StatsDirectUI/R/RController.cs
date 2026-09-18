@@ -18,7 +18,7 @@ namespace StatsDirect.R
         const string RSCRIPT_NAME = "script.r";
         const string RESULTS_FILE_NAME = "results.txt";
         const string ERROR_FILE_NAME = "error.txt";
-        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(rlib)";
+        const string SCRIPT_HEAD = "userdir<-\"{0}\"\r\nlibdir<-\"Lib\"\r\nrlib=file.path(userdir, libdir)\r\ndir.create(rlib,recursive=T,showWarnings=F)\r\nsetwd(file.path(userdir))\r\n.libPaths(c(rlib, .libPaths()))";
         const string STATSDIRECT_HEAD = "zz <- file(\"{0}\", open = \"wt\")\r\nsink(zz, type = \"message\")\r\nreturning.to.statsdirect <- TRUE";
         /// <summary>
         /// Checks whether R is installed and, if so, what versions.
@@ -93,7 +93,7 @@ namespace StatsDirect.R
                 .Replace("}", @"\}")
                 .Replace("\n", "\n\\par ");
 
-            using (TextWriter tw = new StreamWriter(scriptPath, false, Encoding.ASCII))
+            using (TextWriter tw = new StreamWriter(scriptPath, false, new UTF8Encoding(false)))
             {
                 tw.Write(SCRIPT_HEAD, rFolder.Replace(@"\", @"\\"));
                 tw.WriteLine();
@@ -120,7 +120,7 @@ namespace StatsDirect.R
             {
                 FileName = Path.Combine(preferredVersion.BinPath, RSCRIPT_EXE_NAME),
                 WorkingDirectory = rFolder,
-                Arguments = $"--vanilla \"{scriptPath}\"",
+                Arguments = $"--vanilla --encoding=UTF-8 \"{scriptPath}\"",
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
