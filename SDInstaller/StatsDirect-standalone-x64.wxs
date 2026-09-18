@@ -31,8 +31,14 @@
       <UpgradeVersion OnlyDetect="no" Minimum="3.0.0.0" Maximum="!(bind.FileVersion.statsdirectexe)" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="yes" />
       <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
     </Upgrade>
+    <!-- A version 4 setup whose cached .NET runtime installer has gone cannot uninstall itself, so after an upgrade it stayed in Windows' list of installed apps
+         beside the new version, and Uninstall there asked for the original StatsDirectSetup.exe.  Once the new program is in place it retires such setups: see
+         StatsDirectUI/Utilities/OldSetupRetirer.cs.  It runs as the system account (it deletes keys under HKLM and folders of the package cache), last in the
+         script so that little can fail after it, and a failure in it never fails the installation. -->
+    <CustomAction Id="RetireOldSetups" FileRef="statsdirectexe" ExeCommand="-retire-old-setups" Execute="deferred" Impersonate="no" Return="ignore" />
     <InstallExecuteSequence>
       <RemoveExistingProducts Before="InstallInitialize"></RemoveExistingProducts>
+      <Custom Action="RetireOldSetups" Before="InstallFinalize" Condition="NOT Installed" />
     </InstallExecuteSequence>
 
     <!-- User interface and license -->
