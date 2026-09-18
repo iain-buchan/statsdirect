@@ -24,7 +24,9 @@
     <!-- SD3+, upgrade code CA3C.... -->
     <!-- The maximum is inclusive, so that another build with this same version number (a test build, or the unsigned build before the signed one) is removed
          first like any older version.  Otherwise the two are installed together, and Windows Installer keeps the existing StatsDirect.exe and StatsDirect.dll
-         because their file version is not older than the new one's: the new build's program files never reach the disk.  ICE61 warns about this; it is intended. -->
+         because their file version is not older than the new one's: the new build's program files never reach the disk.  ICE61 warns about this; it is intended.
+         Windows Installer compares the first three fields only, so a build that differs in the fourth field counts as the same version and is replaced as well,
+         whichever of the two is newer.  The setup bundle compares all four and refuses to replace a newer build. -->
     <Upgrade Id="CA3CA7A5-59DA-44a0-9716-15CFBAFDC77A">
       <UpgradeVersion OnlyDetect="no" Minimum="3.0.0.0" Maximum="!(bind.FileVersion.statsdirectexe)" Property="PREVIOUSVERSIONSINSTALLED" IncludeMinimum="yes" IncludeMaximum="yes" />
       <UpgradeVersion OnlyDetect="yes" Minimum="!(bind.FileVersion.statsdirectexe)" Maximum="99.99.9999.9999" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" IncludeMaximum="yes" />
