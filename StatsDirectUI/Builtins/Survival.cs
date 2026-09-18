@@ -1210,7 +1210,8 @@ namespace StatsDirect.Builtins
         {
             double p = (1.0 - gamma) / 2;
             double cit = PDF.gauinv(1.0 - p);
-            int r = 0;
+            int r = 0;  // rows written, from 0
+            int k = 1;  // position in alltime and allcens, which Plprep fills from 1: reading them from 0 wrote a spurious first row for every group
             double sumn = 0.0;
             double sumd = 0.0;
             string g = Formatting.XRound(gamma * 100, 1);
@@ -1275,7 +1276,7 @@ namespace StatsDirect.Builtins
                 do
                 {
                     timeVariable.SetData(r, stime[j, lap]);
-                    deathVariable.SetData(r, allcens[r].ToString());
+                    deathVariable.SetData(r, allcens[k].ToString());
                     survivalVariable.SetData(r, s[j, lap]);
                     seVariable.SetData(r, vs[j] == Constant.MISSING ? Constant.MISSING : Math.Sqrt(vs[j]));
                     if (conus == Constant.MISSING)
@@ -1311,8 +1312,9 @@ namespace StatsDirect.Builtins
                         sehuVariable.SetData(r, h[j, lap] + cit * Math.Sqrt(vh[j]));
                     }
                     r++;
+                    k++;
                 }
-                while (alltime[r] == stime[j, lap]);
+                while (alltime[k] == stime[j, lap]);
             }
             timeVariable.TruncateDataToLength(r);
             deathVariable.TruncateDataToLength(r);
