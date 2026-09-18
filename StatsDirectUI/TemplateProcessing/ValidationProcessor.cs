@@ -292,7 +292,7 @@ namespace StatsDirect.TemplateProcessing
                     return new ValidationResult()
                     {
                         Validity = Validity.NeedMoreInformation,
-                        HelpContextId = 140766,
+                        HelpContextId = 1068,
                         TitleForMoreInformation = "Regression Predictor Scan",
                         PromptForMoreInformation = "The variable named '" + v.Title + "' seems to contain categorical data.\r\n\r\nIf you want to use categorical data containing more than two categories,\r\nthen please use the 'Data_Dummy Variables' menu item to convert this variable\r\nto dummy variables before running the regression again.\r\n\r\nDo you want to quit this regression and sort out your data?",
                         ActionOnMoreInformationYes = ValidationAction.CancelOperation,

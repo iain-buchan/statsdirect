@@ -2,7 +2,7 @@
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
   <name>TransformZECDF</name>
   <friendly-name lang="en-GB">Transformation: Z score based on the empirical cumulative distribution</friendly-name>
-  <help chm-id="140713" />
+  <help chm-id="1094" />
   <steps>
     <parameters>
       <frame>

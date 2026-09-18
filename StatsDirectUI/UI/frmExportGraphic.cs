@@ -135,7 +135,7 @@ namespace StatsDirect.UI
         {
             try
             {
-                SdApplication.SoleInstance.ShowHelp(this, "220554");
+                SdApplication.SoleInstance.ShowHelp(this, "1121");
             }
             catch (Exception ex)
             {
