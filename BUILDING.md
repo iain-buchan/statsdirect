@@ -25,6 +25,7 @@ You may want:
 * Download and install the DevExpress Components for Windows, or follow DevExpress instructions to set up your NuGet package sources to include your subscription feed.
 * Follow the instructions on the SpreadsheetGear web site to obtain a license **string** from your license **key**.  Record that string.
 * Clone this repository. In these instructions, we use `<repository-root>` to refer to the top of the cloned repository.
+  * Keep `<repository-root>` short, such as `C:\src\statsdirect`. Unless Windows long paths are enabled, the installer build fails with `WIX0103: Cannot find the file ...` once the path to a file in the build output passes 260 characters, which happens when the repository root is longer than about 125 characters (a clone inside a deep OneDrive or Temp folder, for example).
 * If you will sign builds:
   * Install the token's SafeNet Authentication Client and plug the token in. `certmgr.msc` (Personal > Certificates) should then list a certificate issued to `StatsDirect Ltd`.
   * `<repository-root>/Key/sign.cmd` selects that certificate by its name. If more than one certificate with that name is present, set the user environment variable `STATSDIRECT_SIGNING_THUMBPRINT` to the SHA-1 thumbprint of the right one.
