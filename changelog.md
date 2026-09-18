@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.0.0] 2026-09-17
+##[v5.0.0] 2026-09-18
 
 Version 5 follows an independent audit of the calculation layer against R (and more accurate references where R has none), which found 24 defects. All are corrected here, and each correction was confirmed on the Windows build. Results from the procedures listed below can differ from version 4.
 
