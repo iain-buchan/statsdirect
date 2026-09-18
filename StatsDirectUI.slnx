@@ -22,6 +22,10 @@
     <Build Solution="DebugWatchExceptions|*" Project="false" />
     <Build Solution="Debug|*" Project="false" />
   </Project>
+  <Project Path="StatsDirectRetire/StatsDirectRetire.csproj">
+    <BuildType Solution="DebugWatchExceptions|*" Project="Debug" />
+    <BuildType Solution="ReleaseWithSigning|*" Project="Release" />
+  </Project>
   <Project Path="StatsDirectUI/StatsDirectUI.csproj">
     <BuildType Solution="DebugWatchExceptions|*" Project="Debug" />
     <BuildType Solution="ReleaseWithSigning|*" Project="Release" />

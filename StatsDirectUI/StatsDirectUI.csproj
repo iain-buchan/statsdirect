@@ -11,14 +11,17 @@
     <UseWPF>False</UseWPF>
     <StartupObject>StatsDirect.UI.Program</StartupObject>
     <PublishReadyToRun>false</PublishReadyToRun>
-    <TieredCompilation>false</TieredCompilation>
+    <!-- Tiered compilation is left at the .NET default, on. It was switched off here from June 2024 to version 4.0.5, which made every method compile at full
+         optimisation on first use. Measured on .NET 10, start-up work takes 25 to 45% less time with it on (-sanity-check about 8.5 s off, 6 s on;
+         -test-operations 2.4 s off, 1.4 s on); a few calculation-heavy analyses take slightly longer the first time they run, and the longest calculations
+         change by a few per cent either way (hot loops are re-optimised while they run). Results are the same either way. Measure before changing it. -->
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <Version>5.0.0</Version>
     <AssemblyTitle>StatsDirect</AssemblyTitle>
     <AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
     <Company>StatsDirect Limited</Company>
     <Product>StatsDirect</Product>
-    <Copyright>Copyright ©1997-2026 StatsDirect Limited</Copyright>
+    <Copyright>Copyright ©1990-2026 Professor Iain E. Buchan at The University of Liverpool</Copyright>
     <!-- Take only the English resources of the packages we use. The other twelve languages of the compiler's messages added 15 MB to the installer and are never shown. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
@@ -85,6 +88,17 @@
       <HintPath>..\..\..\..\..\Windows Kits\10\Windows Performance Toolkit\PresentationFramework.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <!-- The installer's helper (StatsDirectRetire: see OldSetupRetirer.cs there) is packaged from this project's output folder, beside StatsDirect.exe. Nothing in
+       StatsDirect refers to it, so it is built first and its files are copied here rather than referenced. -->
+  <ItemGroup>
+    <ProjectReference Include="..\StatsDirectRetire\StatsDirectRetire.csproj" ReferenceOutputAssembly="false" OutputItemType="StatsDirectRetireAssembly" SetConfiguration="Configuration=Release" />
+  </ItemGroup>
+  <Target Name="CopyStatsDirectRetire" AfterTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <_StatsDirectRetireFile Include="@(StatsDirectRetireAssembly->'%(RootDir)%(Directory)StatsDirectRetire.dll');@(StatsDirectRetireAssembly->'%(RootDir)%(Directory)StatsDirectRetire.runtimeconfig.json');@(StatsDirectRetireAssembly->'%(RootDir)%(Directory)StatsDirectRetire.deps.json')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_StatsDirectRetireFile)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">

@@ -29,7 +29,7 @@ You may want:
 * If you will sign builds:
   * Install the token's SafeNet Authentication Client and plug the token in. `certmgr.msc` (Personal > Certificates) should then list a certificate issued to `StatsDirect Ltd`.
   * `<repository-root>/Key/sign.cmd` selects that certificate by its name. If more than one certificate with that name is present, set the user environment variable `STATSDIRECT_SIGNING_THUMBPRINT` to the SHA-1 thumbprint of the right one.
-  * The token client asks for the token password when the first file is signed. A signing build signs five files (the program, its main library, the .msi, the setup bundle's engine and the bundle), so consider enabling the client's single log-on option or you will be asked five times.
+  * The token client asks for the token password when the first file is signed. A signing build signs six files (the program, its main library, the installer's helper `StatsDirectRetire.dll`, the .msi, the setup bundle's engine and the bundle), so consider enabling the client's single log-on option or you will be asked six times.
   * Signatures are timestamped at GlobalSign's RFC 3161 server; set `STATSDIRECT_SIGNING_TIMESTAMP_URL` to use a different one.
   * The older way of signing with a `.pfx` file still works: put it at `<repository-root>/Key/sdsign.pfx` and set `STATSDIRECT_SIGNING_PASSWORD` to its password. Certificate authorities no longer issue keys that way.
 * [Set environment variables](https://www.youtube.com/watch?v=5BTnfpIq5mI) for your SpreadsheetGear license string.

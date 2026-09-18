@@ -63,7 +63,7 @@
             lblCopyright.Name = "lblCopyright";
             lblCopyright.Size = new System.Drawing.Size(282, 13);
             lblCopyright.TabIndex = 1;
-            lblCopyright.Text = "Copyright ©1990-2026 StatsDirect Ltd.  All rights reserved.";
+            lblCopyright.Text = "Copyright ©1990-2026 Iain E. Buchan, University of Liverpool";
             // 
             // cmdOK
             // 

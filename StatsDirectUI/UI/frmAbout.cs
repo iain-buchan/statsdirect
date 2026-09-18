@@ -48,6 +48,26 @@ namespace StatsDirect.UI
         {
             RefreshVersion();
             RefreshSysInfo();
+            RefreshLicence();
+        }
+
+        /// <summary>
+        /// Show the licence that is installed with the program, so that there is one text and not a second copy here to fall out of step with it.
+        /// The form's own text, a short statement of the same thing, stays if the files cannot be read.
+        /// </summary>
+        private void RefreshLicence()
+        {
+            try
+            {
+                string licence = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "LICENSE.txt"));
+                string notices = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt"));
+                string text = licence.TrimEnd() + "\n\n\n" + notices.TrimEnd();
+                txtLicense.Text = text.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+            }
+            catch (Exception)
+            {
+                // Keep the form's own text.
+            }
         }
 
         private void RefreshSysInfo()
@@ -86,7 +106,7 @@ namespace StatsDirect.UI
                     break;
                     // Default: Do nothing
             }
-            string version = Platform + " v" + osInfo.Version.Major + "." + osInfo.Version.Minor + "." + osInfo.Version.Build + " " + osInfo.ServicePack + ", CLR " + clrVersion + " " + bitness + (IsNgen() ? ", native image" : ", JIT-compiled");
+            string version = Platform + " v" + osInfo.Version.Major + "." + osInfo.Version.Minor + "." + osInfo.Version.Build + " " + osInfo.ServicePack + ", CLR " + clrVersion + " " + bitness;
             lblSysInfo.Text = version;
         }
 
@@ -139,18 +159,6 @@ namespace StatsDirect.UI
                     return "Windows NT";
                 return "Unknown platform";
             }
-        }
-
-        private static bool IsNgen()
-        {
-            Process process = Process.GetCurrentProcess();
-            ProcessModuleCollection modules = process.Modules;
-            foreach (ProcessModule m in modules)
-            {
-                if (m.FileName.Contains("\\" + process.ProcessName + ".ni"))
-                    return true;
-            }
-            return false;
         }
     }
 }

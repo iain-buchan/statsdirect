@@ -1,0 +1,212 @@
+THIRD-PARTY NOTICES
+
+StatsDirect's own code is released under the MIT License: see LICENSE.txt beside
+this file, and https://github.com/iain-buchan/statsdirect for the source code.
+
+StatsDirect is supplied with the components listed here. They belong to their
+owners, are not covered by StatsDirect's licence, and are used under the
+licences shown.
+
+
+A. PROPRIETARY COMPONENTS
+
+1. SpreadsheetGear
+   Copyright SpreadsheetGear LLC.
+   https://www.spreadsheetgear.com
+
+2. DevExpress WinForms controls (rich text editor and supporting libraries)
+   Copyright Developer Express Inc.
+   https://www.devexpress.com
+
+3. Windows SDK projection for .NET (Microsoft.Windows.SDK.NET.dll)
+   Copyright (c) Microsoft Corporation. Microsoft Software License Terms for the
+   Windows Software Development Kit: https://aka.ms/WinSDKLicenseURL
+
+   These components are included for use only as part of StatsDirect. You may
+   not redistribute them, on their own or within a copy of StatsDirect; you may
+   not modify, reverse engineer, decompile or disassemble them, or use them to
+   develop other software; and you may not export them contrary to the export
+   laws of the United States. Anyone who builds StatsDirect from its source code
+   needs their own licences for SpreadsheetGear and DevExpress.
+
+
+B. OPEN SOURCE COMPONENTS
+
+4. ANTLR 4 runtime for C# (Antlr4.Runtime)
+   https://github.com/tunnelvisionlabs/antlr4cs
+
+   [The "BSD license"]
+   Copyright (c) 2013 Sam Harwell
+   Copyright (c) 2013 Terence Parr
+   All rights reserved.
+   
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+   
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+   3. Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+   
+   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+   IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+   NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+5. OpenMcdf 3.3.0
+   https://github.com/openmcdf/openmcdf (tag v3.3.0)
+   Used, unmodified, under the Mozilla Public License 2.0, the text of which is
+   at https://www.mozilla.org/MPL/2.0/. The source code is available from the
+   address above.
+
+
+6. The .NET Compiler Platform ("Roslyn": Microsoft.CodeAnalysis) and other .NET
+   libraries (Microsoft.Extensions.ObjectPool, System.Data.OleDb,
+   System.ServiceModel)
+   https://github.com/dotnet
+
+   The MIT License (MIT)
+   
+   Copyright (c) .NET Foundation and Contributors
+   
+   All rights reserved.
+   
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+   
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+7. C#/WinRT (WinRT.Runtime.dll)
+   https://github.com/microsoft/CsWinRT
+
+       MIT License
+   
+       Copyright (c) Microsoft Corporation.
+   
+       Permission is hereby granted, free of charge, to any person obtaining a copy
+       of this software and associated documentation files (the "Software"), to deal
+       in the Software without restriction, including without limitation the rights
+       to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+       copies of the Software, and to permit persons to whom the Software is
+       furnished to do so, subject to the following conditions:
+   
+       The above copyright notice and this permission notice shall be included in all
+       copies or substantial portions of the Software.
+   
+       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+       IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+       FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+       AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+       LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+       OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+       SOFTWARE
+
+
+C. CODE FROM OTHERS INSIDE STATSDIRECT'S OWN PROGRAM FILE (StatsDirect.dll)
+
+8. Mersenne Twister random number generator, MT19937 (translated to C#)
+
+   Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+   All rights reserved.                          
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+     3. The names of its contributors may not be used to endorse or promote 
+        products derived from this software without specific prior written 
+        permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+9. CSV grammar for ANTLR 4
+
+   [The "BSD licence"]
+   Copyright (c) 2013 Terence Parr
+   All rights reserved.
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+   3. The name of the author may not be used to endorse or promote products
+      derived from this software without specific prior written permission.
+   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+   IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+   NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+10. Colour picker controls
+    Author: Philip Lee. Copyright PJL Consultants Ltd. 2001, All Rights Reserved.
+    Used in compiled form, as the author's notice permits: "This code may be
+    used in compiled form in any way you desire. ... This file is provided
+    "as is" with no expressed or implied warranty. The author accepts no
+    liability for any damage, in any form, caused by this code."
+
+11. Vertical label control
+    From the article "Extended Vertical Label Control in C# .NET" by /randz at
+    The Code Project:
+    http://www.codeproject.com/KB/miscctrl/Vertical_Label_Control.aspx
+    Used under The Code Project Open License (CPOL) 1.02:
+    http://www.codeproject.com/info/cpol10.aspx
+    (the Code Project site has closed; the same text is at
+    https://spdx.org/licenses/CPOL-1.02.html)
+
+
+The Microsoft .NET Windows Desktop Runtime, which StatsDirect needs and which
+its setup program installs when the computer does not have it, is Microsoft's
+software, provided under Microsoft's own terms:
+https://dotnet.microsoft.com/dotnet_library_license.htm

@@ -11,7 +11,7 @@
     Manufacturer="StatsDirect Limited"
     UpgradeCode="e52fa35e-33b1-45d2-b004-cfc5cc7c7ef5"
     DisableModify="yes"
-    Copyright="Copyright ©1995-2026 StatsDirect Limited. All rights reserved."
+    Copyright="Copyright ©1990-2026 Professor Iain E. Buchan at The University of Liverpool"
     HelpUrl="http://www.statsdirect.com/Support.aspx"
     UpdateUrl="http://www.statsdirect.com/Update.aspx"
     IconSourceFile="statsdirect.ico"
@@ -44,8 +44,10 @@
            uninstalls the package whenever this bundle is uninstalled and the package is detected, whether or not this bundle installed it.  That includes
            the uninstall of the old bundle at the end of an upgrade, which comes after the new bundle has found the runtime present and skipped it: the
            upgrade left StatsDirect installed with no runtime to start it ("You must install or update .NET to run this application").
-           For the same reason there are no repair arguments (the runtime has its own entry in Windows' installed apps), and Cache="remove" deletes the
-           60 MB runtime installer from the package cache once it has run: Burn never cleans up the cached copy of a permanent package otherwise. -->
+           For the same reason there are no repair arguments (the runtime has its own entry in Windows' installed apps).  Cache="remove" deletes the 60 MB
+           runtime installer from the package cache once it has run: otherwise Burn caches it even when the runtime is already present, and keeps the copy of a
+           permanent package for as long as the runtime stays installed.  The price is that installing a missing runtime always needs the setup file itself; the
+           copy of setup in the package cache looks for it only under the name StatsDirectSetup.exe. -->
       <ExePackage
         Id="DotNetDesktop"
         Permanent="yes"
