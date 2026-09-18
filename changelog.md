@@ -16,7 +16,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Time series summary: the precision of the mean AUC comes from the subjects' own AUCs, the group comparison is a Welch t test, and the bootstrap resamples whole subjects
 - The multi-rater kappa report no longer prints the line labelled weighted kappa, which was a Berry-Mielke coefficient on per-column codes
 - Bootstrap and random allocation draws are uniform, so bootstrap and randomisation results differ from version 4 even with the same seed
-- DevExpress.Win.RichEdit updated to 26.1.4
+- DevExpress.Win.RichEdit updated to 26.1.5
 - SpreadsheetGear updated to 9.3.84
 - Dependencies updated
 - The setup executable bundles the .Net 10.0.12 Windows Desktop runtime, up from 10.0.0
