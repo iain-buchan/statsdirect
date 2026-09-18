@@ -53,14 +53,14 @@
     <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico" />
     <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
 
-    <!-- Installation conditions: Something that can run .NET 6 applications. -->
+    <!-- Installation conditions: the .NET 10 Windows Desktop runtime (or a later major version). The setup bundle installs it before this package runs; this check matters only when the .msi is run on its own. -->
     <netfx:DotNetCompatibilityCheck
-      Property="DOTNETDESKTOP6RUNTIMECHECK"
+      Property="DOTNETDESKTOP10RUNTIMECHECK"
       RollForward="major"
       RuntimeType="desktop"
       Platform="x64"
-      Version="6.0.0"/>
-    <Launch Condition="Installed OR DOTNETDESKTOP6RUNTIMECHECK=&quot;0&quot;" Message="[ProductName] requires .NET 6. Download 6.0.29 for your OS from here https://dotnet.microsoft.com/en-us/download/dotnet/6.0" />
+      Version="10.0.0"/>
+    <Launch Condition="Installed OR DOTNETDESKTOP10RUNTIMECHECK=&quot;0&quot;" Message="[ProductName] requires the .NET 10 Desktop Runtime (x64). Install it from https://dotnet.microsoft.com/en-us/download/dotnet/10.0 and run this installer again, or use StatsDirectSetup.exe, which installs it for you." />
     <!-- Installation conditions: At least Windows 10, no upper limit on OS version-->
 <!--
     <Launch Condition="Installed OR (VersionNT &gt;= 603)" Message="StatsDirect is not supported on this version of Windows. It is supported on Windows 10, 11 and Server 2016-2022." />

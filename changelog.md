@@ -59,6 +59,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Help > Check for Updates could never find a newer version: the running version was read as invalid because of the source revision that current .Net SDKs append to it, and only versions numbered 4 were looked for
 - Data > Cleaning and Encoding > Search and Replace (Basic), and the Count action of Search and Replace (Advanced), failed with a script compilation error
 - The Release build configuration tried to sign the installers, so failed without a signing key; only ReleaseWithSigning signs now
+- The installer's own runtime check still asked for .NET 6, so a .msi run on its own would have installed on a machine whose runtime is too old to start the program; it now requires the .NET 10 Desktop Runtime and says so
 
 ##[v4.0.5] 2025-12-05
 
