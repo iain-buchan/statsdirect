@@ -30,14 +30,15 @@ namespace StatsDirect.Templates
         /// </summary>
         public IList<Tic> Tics()
         {
-            string msk = LinearAxisMasker.AxisMask(this);
-            List<Tic> tics = new(Intervals + 1);
             double interval = (MaximumScaleValue - MinimumScaleValue) / Intervals;
+            double[] values = new double[Intervals + 1];
             for (int i = 0; i <= Intervals; i++)
-            {
-                double value = MinimumScaleValue + interval * i;
+                values[i] = MinimumScaleValue + interval * i;
+            //  The mask is chosen from the values: the masker used to ask this scale for its Tics() to find them, which recursed until the stack overflowed.
+            string msk = LinearAxisMasker.AxisMask(this, values);
+            List<Tic> tics = new(Intervals + 1);
+            foreach (double value in values)
                 tics.Add(new Tic(value, value.ToString(msk)));
-            }
             return tics;
         }
 

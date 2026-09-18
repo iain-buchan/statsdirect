@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using StatsDirect.Templates;
@@ -8,11 +9,12 @@ namespace StatsDirect.Charting.Scales
     public static class LinearAxisMasker
     {
         /// <summary>
-        /// Work out a sensible axis mask for the given linear scale
+        /// Work out a sensible axis mask for the given linear scale, whose tics are at the given values.
+        /// The values are passed in rather than taken from axisScale.Tics(), because a scale calls this while building its tics and would otherwise recurse.
         /// </summary>
-        public static string AxisMask(IAxisScale axisScale)
+        public static string AxisMask(IAxisScale axisScale, IEnumerable<double> ticValues)
         {
-            int numberOfDecimalPlaces = DecimalPlaces(axisScale);
+            int numberOfDecimalPlaces = DecimalPlaces(ticValues);
 
             // Count characters before the decimal point
             int maxCharactersBeforeDecimalPoint = 1;
@@ -41,10 +43,11 @@ namespace StatsDirect.Charting.Scales
             return axisMask;
         }
 
-        private static int DecimalPlaces(IAxisScale axisScale)
+        private static int DecimalPlaces(IEnumerable<double> ticValues)
         {
-            return axisScale.Tics()
-                .Select(tic => DecimalPlaces(tic.Value))
+            return ticValues
+                .Select(DecimalPlaces)
+                .DefaultIfEmpty(0)
                 .Max();
         }
 
