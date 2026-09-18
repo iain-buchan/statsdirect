@@ -1,0 +1,97 @@
+THIRD-PARTY NOTICES
+
+StatsDirect's own code is released under the MIT License: see LICENSE.txt beside
+this file, and https://github.com/iain-buchan/statsdirect for the source code.
+
+StatsDirect is supplied with the components listed here. They belong to their
+owners, are not covered by StatsDirect's licence, and are used under the
+licences shown.
+
+
+1. SpreadsheetGear
+   Copyright SpreadsheetGear LLC. Proprietary software.
+   https://www.spreadsheetgear.com
+
+2. DevExpress WinForms controls (rich text editor and supporting libraries)
+   Copyright Developer Express Inc. Proprietary software.
+   https://www.devexpress.com
+
+   SpreadsheetGear and the DevExpress controls are included under licences held
+   by the developers of StatsDirect, for use only as part of StatsDirect. You
+   may not redistribute them, on their own or within a copy of StatsDirect, and
+   you may not use them to develop other software. Anyone who builds StatsDirect
+   from its source code needs their own licences for these two products.
+
+
+3. ANTLR 4 runtime for C# (Antlr4.Runtime)
+   https://github.com/tunnelvisionlabs/antlr4cs
+
+   [The "BSD license"]
+   Copyright (c) 2013 Sam Harwell
+   Copyright (c) 2013 Terence Parr
+   All rights reserved.
+   
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+   
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+   3. Neither the name of the copyright holder nor the names of its
+      contributors may be used to endorse or promote products derived from
+      this software without specific prior written permission.
+   
+   THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+   IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+   OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+   IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+   NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+4. OpenMcdf
+   https://github.com/ironfede/openmcdf
+   Used, unmodified, under the Mozilla Public License 2.0, the text of which is
+   at https://www.mozilla.org/MPL/2.0/. The source code is available from the
+   address above.
+
+
+5. The .NET Compiler Platform ("Roslyn": Microsoft.CodeAnalysis) and other .NET
+   libraries (Microsoft.Extensions.ObjectPool, System.Data.OleDb,
+   System.ServiceModel)
+   https://github.com/dotnet
+
+   The MIT License (MIT)
+   
+   Copyright (c) .NET Foundation and Contributors
+   
+   All rights reserved.
+   
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+   
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+   
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+The Microsoft .NET Windows Desktop Runtime, which StatsDirect's setup installs
+when the computer does not have it, is Microsoft's software and is provided
+under Microsoft's own terms: https://dotnet.microsoft.com
