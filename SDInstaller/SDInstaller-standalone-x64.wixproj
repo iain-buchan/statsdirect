@@ -31,6 +31,18 @@
     <PackageReference Include="WixToolset.UI.wixext" Version="6.0.2" />
     <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
   </ItemGroup>
+  <!-- ReleaseWithSigning: sign StatsDirect.exe and StatsDirect.dll in StatsDirectUI's output before they are bound into the installer, so that the
+       program itself carries the publisher's signature as well as the .msi and the setup bundle. Runs once the project references are resolved,
+       which is when StatsDirectUI has been built, and before CoreCompile binds the files. WiX keeps the resolved outputs in _WixReferencedProjectOutputs. -->
+  <Target Name="SignStatsDirectBinaries" AfterTargets="_ConvertResolvedProjectReferencesIntoWixConstructs" BeforeTargets="CoreCompile" Condition="'$(SignOutput)' == 'true'">
+    <ItemGroup>
+      <_StatsDirectOutputDir Include="@(_WixReferencedProjectOutputs->'%(RootDir)%(Directory)')" Condition="'%(Filename)' == 'StatsDirect'" />
+      <_StatsDirectBinaryToSign Include="@(_StatsDirectOutputDir->'%(Identity)StatsDirect.exe');@(_StatsDirectOutputDir->'%(Identity)StatsDirect.dll')" />
+    </ItemGroup>
+    <Error Condition="'@(_StatsDirectBinaryToSign)' == ''" Text="SignStatsDirectBinaries: the StatsDirectUI project reference was not resolved, so there is nothing to sign." />
+    <Message Importance="high" Text="SignStatsDirectBinaries: @(_StatsDirectBinaryToSign)" />
+    <Exec Command="..\Key\sign.cmd &quot;%(_StatsDirectBinaryToSign.FullPath)&quot;" Condition="Exists('%(_StatsDirectBinaryToSign.FullPath)')" />
+  </Target>
   <Target Name="SignMsi">
     <Message Importance="high" Text="SignMsi: @(SignMsi)" />
     <Exec Command="..\Key\sign.cmd &quot;%(SignMsi.FullPath)&quot; " />

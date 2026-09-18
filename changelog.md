@@ -20,6 +20,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - SpreadsheetGear updated to 9.3.84
 - Dependencies updated
 - The setup executable bundles the .Net 10.0.12 Windows Desktop runtime, up from 10.0.0
+- Signed builds use the StatsDirect Ltd certificate on its USB token, timestamp at GlobalSign, verify each signature, and sign StatsDirect.exe and StatsDirect.dll as well as the installer and setup executable
 
 ### Fixed
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected
