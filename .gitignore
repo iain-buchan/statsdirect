@@ -22,3 +22,7 @@ ReleaseBuild/*.wixpdb
 *.chw
 /Key/sign.txt
 /DownloadedBinaries/*.exe
+
+# Left beside STATSDIRECT.chm by MadCap Flare when it publishes the help there
+/StatsDirectUI/Assets/Data/*.output
+/StatsDirectUI/Assets/*.log.zip

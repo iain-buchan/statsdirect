@@ -73,8 +73,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Assets/WebHelp is a superseded copy of the web help that nothing in the program opens (Help uses STATSDIRECT.chm), and the mapping workbook is a
-         note for whoever maintains the help; neither belongs on users' machines. -->
-    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/WebHelp/**;Assets/SD Help ID to File Name Mapping.xlsx">
+         note for whoever maintains the help; neither belongs on users' machines. Nor do the build records that MadCap Flare leaves beside STATSDIRECT.chm
+         when it publishes the help here (Data/*.output, *.log.zip). -->
+    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/WebHelp/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
