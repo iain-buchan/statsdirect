@@ -943,19 +943,23 @@ namespace StatsDirect.Charting.Renderer
         }
 
         ///  <summary>
-        ///  Get the nth centile (divided by 100,  so 0.25 for lower quartile etc) from the given series containing a sorted 0-based array of data
+        ///  Get the nth centile (divided by 100,  so 0.25 for lower quartile etc) from the given series containing a sorted 0-based array of data.
+        ///  This is the conventional quantile of the descriptive statistics (centile type 2, Summary.GetCentile): the n(count + 1)th ordered value, interpolating
+        ///  between neighbours, which is what the help describes and what earlier versions plotted.  The C# port had used the (n * count + 0.5)th value.
         ///  </summary>
         private static double Quantile(DoubleSeries s, double n)
         {
             int count = s.Data.Length;
-            double imdn = n * count - 0.5;
-            if (imdn < 0)
-                imdn = 0.0;
-            if (imdn > s.Data.Length - 1)
-                imdn = s.Data.Length - 1;
-            if (imdn - Math.Floor(imdn) == 0.0)
-                return s.Data[Convert.ToInt32(imdn)];
-            return s.Data[(int)Math.Floor(imdn)] + (s.Data[(int)Math.Floor(imdn) + 1] - s.Data[(int)Math.Floor(imdn)]) * (imdn - Math.Floor(imdn));
+            if (count == 0)
+                return Constant.MISSING;
+            double position = n * (count + 1) - 1; // 0-based
+            if (position <= 0.0)
+                return s.Data[0];
+            if (position >= count - 1)
+                return s.Data[count - 1];
+            int lower = (int)Math.Floor(position);
+            double h = position - lower;
+            return h == 0.0 ? s.Data[lower] : s.Data[lower] + (s.Data[lower + 1] - s.Data[lower]) * h;
         }
     }
 }
