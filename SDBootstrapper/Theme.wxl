@@ -21,7 +21,7 @@
 	<String Id="OptionsBrowseButton" Value="&amp;Browse" />
 	<String Id="OptionsOkButton" Value="&amp;OK" />
 	<String Id="OptionsCancelButton" Value="&amp;Cancel" />
-	<String Id="ProgressHeader" Value="Setup and Optimisation Progress" />
+	<String Id="ProgressHeader" Value="Setup Progress" />
 	<String Id="ProgressLabel" Value="Processing:" />
 	<String Id="OverallProgressPackageText" Value="Initializing..." />
 	<String Id="ProgressCancelButton" Value="&amp;Cancel" />
