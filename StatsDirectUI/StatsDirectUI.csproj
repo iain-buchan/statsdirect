@@ -11,7 +11,9 @@
     <UseWPF>False</UseWPF>
     <StartupObject>StatsDirect.UI.Program</StartupObject>
     <PublishReadyToRun>false</PublishReadyToRun>
-    <TieredCompilation>false</TieredCompilation>
+    <!-- Tiered compilation is left at the .NET default, on. It was switched off here from June 2024 to version 4.0.5, which made every method compile at full
+         optimisation on first use: measured on .NET 10, that cost 25 to 45% more time in start-up and in the first run of each analysis, for a gain of a few
+         per cent at most in the longest calculations (hot loops are re-optimised while they run). Results are the same either way. Measure before changing it. -->
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <Version>5.0.0</Version>
     <AssemblyTitle>StatsDirect</AssemblyTitle>

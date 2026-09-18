@@ -23,6 +23,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - LOESS: the default polynomial degree is 2, as the help says and as in R itself, not 1
 - The installer puts 487 files on the machine instead of 1,503 and is 6 MB smaller: it no longer carries a superseded copy of the web help, the compiler's messages in twelve other languages, the test framework, a separate debug symbols file or the help maintainer's mapping workbook. Error messages still give source line numbers, because the symbols are now inside StatsDirect.dll
 - Signed builds use the StatsDirect Ltd certificate on its USB token, timestamp at GlobalSign, verify each signature, and sign StatsDirect.exe and StatsDirect.dll as well as the installer and setup executable
+- StatsDirect starts faster, and the first run of each analysis is quicker (about a quarter to nearly a half less time in measurements of start-up work): .Net's tiered compilation, switched off since June 2024, is back at its default. Results are unchanged
 
 ### Fixed
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected
