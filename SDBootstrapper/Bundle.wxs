@@ -40,12 +40,18 @@
   <Fragment>
     <netfx:DotNetCoreSearch RuntimeType="desktop" MajorVersion="10" Platform="x64" Variable="DOTNETDESKTOPVERSION" />
     <PackageGroup Id="DotNetDesktopRedist">
+      <!-- Permanent: the runtime is a shared Microsoft component, so StatsDirect installs it when it is missing but never removes it.  Without this, Burn
+           uninstalls the package whenever this bundle is uninstalled and the package is detected, whether or not this bundle installed it.  That includes
+           the uninstall of the old bundle at the end of an upgrade, which comes after the new bundle has found the runtime present and skipped it: the
+           upgrade left StatsDirect installed with no runtime to start it ("You must install or update .NET to run this application").
+           For the same reason there are no repair arguments (the runtime has its own entry in Windows' installed apps), and Cache="remove" deletes the
+           60 MB runtime installer from the package cache once it has run: Burn never cleans up the cached copy of a permanent package otherwise. -->
       <ExePackage
         Id="DotNetDesktop"
+        Permanent="yes"
+        Cache="remove"
         DetectCondition="DOTNETDESKTOPVERSION &gt;= &quot;10.0.0&quot;"
-        InstallArguments="$(DotNetDesktopRuntimeInstaller) /install /quiet /norestart"
-        RepairArguments="$(DotNetDesktopRuntimeInstaller) /repair /quiet /norestart"
-        UninstallArguments="$(DotNetDesktopRuntimeInstaller) /uninstall /quiet /norestart">
+        InstallArguments="$(DotNetDesktopRuntimeInstaller) /install /quiet /norestart">
         <ExePackagePayload
           Name="$(DotNetDesktopRuntimeInstaller)"
           SourceFile="..\DownloadedBinaries\$(DotNetDesktopRuntimeInstaller)"
