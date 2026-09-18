@@ -48,6 +48,26 @@ namespace StatsDirect.UI
         {
             RefreshVersion();
             RefreshSysInfo();
+            RefreshLicence();
+        }
+
+        /// <summary>
+        /// Show the licence that is installed with the program, so that there is one text and not a second copy here to fall out of step with it.
+        /// The form's own text, a short statement of the same thing, stays if the files cannot be read.
+        /// </summary>
+        private void RefreshLicence()
+        {
+            try
+            {
+                string licence = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "LICENSE.txt"));
+                string notices = System.IO.File.ReadAllText(System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt"));
+                string text = licence.TrimEnd() + "\n\n\n" + notices.TrimEnd();
+                txtLicense.Text = text.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+            }
+            catch (Exception)
+            {
+                // Keep the form's own text.
+            }
         }
 
         private void RefreshSysInfo()
