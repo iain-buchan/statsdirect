@@ -89,6 +89,10 @@
         </Component>
         <Files Include="$(var.StatsDirectUI.TargetDir)\**">
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\StatsDirect.exe" />
+          <!-- Things that can be in the build output but do not belong on a user's machine: the result files that -sanity-check and -test-operations write beside the program, and any separate symbol files. -->
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\sanity-check-results.txt" />
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\test-operations-results.txt" />
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\*.pdb" />
         </Files>
       </Directory>
     </StandardDirectory>
