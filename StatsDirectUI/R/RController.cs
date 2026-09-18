@@ -124,6 +124,19 @@ namespace StatsDirect.R
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
+
+            //  Rscript.exe is not DPI-aware, so on a scaled display Windows tells it the screen is 96 dpi while the metafile it records is framed against the
+            //  display's true resolution: at 225% R draws its chart into the top left 40% of the picture and leaves the rest blank.  This compatibility layer
+            //  makes Windows give R the real figures, so the drawing fills its frame.  Any layers already set for this process are kept.
+            const string compatLayerVariable = "__COMPAT_LAYER";
+            const string highDpiAwareLayer = "HighDpiAware";
+            //  (TryGetValue, because the indexer throws when the variable is not set, which is the normal case.)
+            startInfo.Environment.TryGetValue(compatLayerVariable, out string existingLayers);
+            if (string.IsNullOrWhiteSpace(existingLayers))
+                startInfo.Environment[compatLayerVariable] = highDpiAwareLayer;
+            else if (existingLayers.IndexOf(highDpiAwareLayer, StringComparison.OrdinalIgnoreCase) < 0)
+                startInfo.Environment[compatLayerVariable] = existingLayers + " " + highDpiAwareLayer;
+
             return Process.Start(startInfo);
         }
 
