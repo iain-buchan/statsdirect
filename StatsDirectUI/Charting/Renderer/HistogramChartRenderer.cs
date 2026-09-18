@@ -142,6 +142,14 @@ namespace StatsDirect.Charting.Renderer
                         double thisChartTop = imageHeight - seriesIndex * heightPerChart;
                         double thisChartBottom = thisChartTop - heightPerChart;
 
+                        //  The x axis is labelled at the bin mid-points, as the bins are specified and as the axis title says, not at neat round values.
+                        //  Only when the axis spans exactly this series' bins: with "pool variables" it can span several series' differing bin grids, and then
+                        //  the neat scale is kept, as before (as it is for a degenerate range, which the scaler reports properly).  Set before the axis space
+                        //  is measured, so that the measured labels are the ones drawn.
+                        XAxisScaleOverride = descriptor.LowestEdge == DataMinX && descriptor.HighestEdge == DataMaxX && descriptor.HighestEdge > descriptor.LowestEdge
+                            ? new HistogramAxisScale(descriptor.LowestEdge, descriptor.HighestEdge, descriptor.Bins)
+                            : null;
+
                         //  No longer the default Y axis!
                         Size extraSpaceForAxes = CalculateAxisSizes(title,
                             new AxisDefinition(options.HistoSeriesOptions[seriesIndex].XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
@@ -166,6 +174,7 @@ namespace StatsDirect.Charting.Renderer
                             false,
                             true,
                             extraSpaceForAxes);
+                        XAxisScaleOverride = null;
 
                         // Plot each bar
                         PenDescriptor markerPen = GetMarkerPen(s.MarkerType);

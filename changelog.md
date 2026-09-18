@@ -47,6 +47,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Charts: labels on a horizontal log axis overlapped when it spanned four or five decades (meta-analysis plots with very wide intervals); such axes now label the decades only
 - Charts in HTML reports: line thickness and dash patterns were ignored, filled squares and diamonds were black whatever their colour (hiding the confidence interval of the pooled estimate in meta-analysis plots), and bold or italic text was drawn plain
 - Histogram: a value equal to a bin's upper limit was counted in the bin above, and inconsistently so because of floating-point error in the bin edges (the help's IgM example had 3 and 120 in its first two bins where the documented rule gives 10 and 113)
+- Histogram: the x axis is again labelled at the bin mid-points, as its title says and as earlier versions did, rather than at round values that fell between the bars
 - Charts: a linear axis scale built directly rather than by the automatic scaler recursed until the stack overflowed; no menu route that reaches it was found, so this is a latent crash
 - Agreement > Continuous never printed the limits of agreement for two columns
 - The distribution calculator's critical values of Spearman's rho were wrong for 71 or more pairs (for 100 pairs, 0.699946 at every P), and an error was shown where the critical value is rho = 1; its critical values and P now include the observed statistic for more than 10 pairs too, as they already did for 10 or fewer

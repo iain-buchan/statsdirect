@@ -28,7 +28,7 @@ namespace StatsDirect.Templates
         /// <summary>
         /// Returns a linear list of tics constructed according to the parameters.
         /// </summary>
-        public IList<Tic> Tics()
+        public virtual IList<Tic> Tics()
         {
             double interval = (MaximumScaleValue - MinimumScaleValue) / Intervals;
             double[] values = new double[Intervals + 1];

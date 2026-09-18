@@ -565,8 +565,15 @@ namespace StatsDirect.Charting.Renderer
             return labelHeight + AxisBigTick;
         }
 
+        /// <summary>
+        /// A scale that the renderer wants used for its x axis in place of the definition's or a calculated one; the histogram uses it to put the tics at the bin mid-points.
+        /// </summary>
+        protected IAxisScale XAxisScaleOverride { get; set; }
+
         private IAxisScale QAxisOrFromDefinition(double qmin, double qMinGreaterThanZero, double qmax, bool isY, ScaleType scaleType, bool useCalculatedScalesEvenWithDefinition)
         {
+            if (!isY && XAxisScaleOverride != null)
+                return XAxisScaleOverride;
             if (Definition != null && Definition.HasScaleParameters && !useCalculatedScalesEvenWithDefinition)
             {
                 //  Use the values in our scale parameters
