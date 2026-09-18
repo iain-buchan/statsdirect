@@ -116,7 +116,6 @@ namespace StatsDirect.Charting.Renderer
 
             // #1079: Prevent overdrawing of error bars by offsetting bars that would otherwise overlap.
             Dictionary<int, List<MultiDoublePoint>> alreadyUsed = new();
-            double aboutALineWidth = ToCanvasWidth(1);
 
             // Work through the series
             for (int seriesIndex = 0; seriesIndex < eOptions.Series.Count; seriesIndex++)
@@ -126,6 +125,9 @@ namespace StatsDirect.Charting.Renderer
 
                 // Draw the error bars first so we don't interfere with connection lines
                 PenDescriptor p = GetMarkerPen(eOptions.MarkerTypes[seriesIndex]);
+                //  How far along the x axis to move a bar that would be drawn over another: the width of the line plus a gap.  This was ToCanvasWidth(1), the
+                //  CANVAS width of one DATA unit, added to a data coordinate, which moved the bar dozens of units along the axis and usually off the chart.
+                double offsetForOverlap = FromCanvasWidth(Math.Max(1.0, p.LineThickness) + 1.0);
                 foreach (MultiDoublePoint pt in s.Data)
                 {
                     // Check for overlaps with any existing error bar.  If none, save this one; if there is one, offset by the line width and try again.
@@ -150,7 +152,7 @@ namespace StatsDirect.Charting.Renderer
                                 {
                                     atLeastOneOverlap = true;
                                     safePoint = safePoint.Clone();
-                                    safePoint.X += aboutALineWidth;
+                                    safePoint.X += offsetForOverlap;
                                     break;
                                 }
                             }
