@@ -58,10 +58,12 @@
     <Icon Id="statsdirect.ico" SourceFile="..\StatsDirectUI\UI\Graphics\sd3.ico" />
     <Property Id="ARPPRODUCTICON" Value="statsdirect.ico" />
 
-    <!-- Installation conditions: the .NET 10 Windows Desktop runtime (or a later major version). The setup bundle installs it before this package runs; this check matters only when the .msi is run on its own. -->
+    <!-- Installation conditions: the .NET 10 Windows Desktop runtime. The setup bundle installs it before this package runs; this check matters only when the .msi is run on its own.
+         RollForward is the program's own policy (the default, "minor": StatsDirect.runtimeconfig.json sets none), so that the check passes exactly when the program can start.
+         With "major", a PC that has only a later major version passed the check and then could not start the program. -->
     <netfx:DotNetCompatibilityCheck
       Property="DOTNETDESKTOP10RUNTIMECHECK"
-      RollForward="major"
+      RollForward="minor"
       RuntimeType="desktop"
       Platform="x64"
       Version="10.0.0"/>
