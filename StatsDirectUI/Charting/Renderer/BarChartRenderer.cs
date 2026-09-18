@@ -116,12 +116,15 @@ namespace StatsDirect.Charting.Renderer
                     for (int oldRow = 0; oldRow < oldSeriesTitles.Length; oldRow++)
                         ((DoubleSeries)newSeriesToUse[oldRow]).Data[oldSeries] = ((DoubleSeries)seriesToUse[oldSeries]).Data[oldRow];
 
-                // Assign
+                // Assign.  The rotated series replace the originals (Definition and its options are our own clone): adding them alongside listed both sets
+                // of names in the legend and, as SetMarkers appends a descriptor for each series, coloured the segments differently from the legend.
                 bOptions.SeriesTitles = newSeriesTitles;
+                Definition.YSeries.Clear();
                 Definition.AddYSeries(newSeriesToUse);
                 seriesToUse = newSeriesToUse;
 
                 // Ensure we have enough markers
+                bOptions.SeriesOptions.Clear();
                 bOptions.SetMarkers(seriesToUse);
                 bOptions.MarkerTypes = MarkersFromDescriptors(bOptions.SeriesOptions, bOptions.ShouldForceIsFilled,
                                                               bOptions.ForcedIsFilled, bOptions.ShouldForceFillStyle,
