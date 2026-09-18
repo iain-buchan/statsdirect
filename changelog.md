@@ -20,6 +20,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - SpreadsheetGear updated to 9.3.84
 - Dependencies updated
 - The setup executable bundles the .Net 10.0.12 Windows Desktop runtime, up from 10.0.0
+- LOESS: the default polynomial degree is 2, as the help says and as in R itself, not 1
 - Signed builds use the StatsDirect Ltd certificate on its USB token, timestamp at GlobalSign, verify each signature, and sign StatsDirect.exe and StatsDirect.dll as well as the installer and setup executable
 
 ### Fixed
@@ -55,6 +56,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Kaplan-Meier: "Save estimates and CIs to worksheet" wrote a spurious extra first row for each group (the first time repeated, marked as a non-event)
 - Charts: a linear axis scale built directly rather than by the automatic scaler recursed until the stack overflowed; no menu route that reaches it was found, so this is a latent crash
 - Error bar plot: with two or more series, the default option that moves overlapping bars apart moved the later series' bars, markers and lines dozens of units along the axis, usually off the chart
+- LOESS: with missing values the curve was drawn against the wrong x values, and the saved fits, standard errors and residuals were shorter than the data and out of step with it from the first missing row; the "Plot fits" options and the confidence level were ignored (the fit and a band of 2 standard errors were always drawn)
 - Agreement > Continuous never printed the limits of agreement for two columns
 - The distribution calculator's critical values of Spearman's rho were wrong for 71 or more pairs (for 100 pairs, 0.699946 at every P), and an error was shown where the critical value is rho = 1; its critical values and P now include the observed statistic for more than 10 pairs too, as they already did for 10 or fewer
 - Help > Check for Updates never finished, in version 4.0.5 as well: the downloaded page was written to the console instead of being examined, so the dialog stayed at "Contacting www.statsdirect.com..." and the check at start-up could not announce a new version. The same fault stopped the check for a newer R. Once examined, the page could still never yield a newer version: the running version was read as invalid because of the source revision that current .Net SDKs append to it, and only versions numbered 4 were looked for

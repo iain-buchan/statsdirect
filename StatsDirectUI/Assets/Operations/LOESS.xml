@@ -66,7 +66,7 @@
             <option value="1">1</option>
             <option value="2">2</option>
           </options>
-          <default-value>1</default-value>
+          <default-value>2</default-value>
         </option>
         <boolean>
           <name>plotFits</name>
@@ -101,8 +101,15 @@
       </parameters>
     <script language="R">
   <![CDATA[
+degree <- as.numeric(degree)
 m<-loess(model,span=span,degree=degree)
 p<-predict(m,se=T)
+
+# loess leaves out any row with a missing value, so its results are shorter than the worksheet columns when data are missing.
+# 'used' marks the rows that were fitted, and padded() puts a result back on the worksheet's rows with NA where a row was left out.
+used <- complete.cases(data.frame(outcome, predictors))
+if (sum(used) != m$n) used <- rep(TRUE, m$n) # the formula dropped other rows as well: leave the results as they are
+padded <- function(v) { out <- rep(NA_real_, length(used)); out[used] <- v; out }
 
 shouldPlot <- ncol(predictors) == 1 # Plots are only valid if there is a single predictor
 if (shouldPlot) {
@@ -111,10 +118,18 @@ if (shouldPlot) {
     win.metafile(gr1)
   }
   plot(predictors[[1]],outcome[[1]],main=title,ylab=ylab,xlab=xlab)
-  i <- order(predictors[[1]]) # The line plot requires the x values pre-sorted; this approach ensures that pre-sorting.  See e.g. http://stackoverflow.com/questions/10007830/loess-line-not-plotting-correctly
-  lines(predictors[[1]][i],p$fit[i])
-  lines(predictors[[1]][i],p$fit[i]+2*p$s[i], lty=2)
-  lines(predictors[[1]][i],p$fit[i]-2*p$s[i], lty=2)
+  x <- m$x[,1] # the x values that were fitted, which are the ones p$fit belongs to (not the worksheet column, which may hold rows loess left out)
+  i <- order(x) # The line plot requires the x values pre-sorted; this approach ensures that pre-sorting.  See e.g. http://stackoverflow.com/questions/10007830/loess-line-not-plotting-correctly
+  # The two plotting prompts and the confidence level used to be ignored: the fit and a band of 2 standard errors were always drawn.
+  plotfits <- isTRUE(get0("plotfits", ifnotfound=FALSE))
+  plotfitsandci <- isTRUE(get0("plotfitsandci", ifnotfound=FALSE))
+  if (plotfits || plotfitsandci)
+    lines(x[i],p$fit[i])
+  if (plotfitsandci) {
+    crit <- qt(1-(1-get0("ci", ifnotfound=0.95))/2, p$df)
+    lines(x[i],p$fit[i]+crit*p$se.fit[i], lty=2)
+    lines(x[i],p$fit[i]-crit*p$se.fit[i], lty=2)
+  }
   if (exists("returning.to.statsdirect")) {
     suppressWarnings(dev.off())
   }
@@ -122,7 +137,7 @@ if (shouldPlot) {
 
 if (exists("returning.to.statsdirect")) {
   r1<-data.frame(observations=m$n,parameters=m$enp,residualse=m$s,df=p$df)
-  rn<-data.frame(residuals=m$residuals,fits=m$fitted,sefits=p$se.fit)
+  rn<-data.frame(residuals=padded(m$residuals),fits=padded(m$fitted),sefits=padded(p$se.fit))
   rn.titles<-c('"LOESS residuals"','"LOESS fit"','"LOESS fit SE"')
   outs<-c("start~names",colnames(r1),"start~data",as.character(r1))
   outs<-c(outs,"start~names",colnames(rn),"start~data",as.character(rn),"start~titles",rn.titles)
