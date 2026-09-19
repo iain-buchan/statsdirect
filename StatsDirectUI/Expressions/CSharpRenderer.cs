@@ -66,7 +66,8 @@ namespace StatsDirect.Expressions
 
         public void Visit(DoubleNode node)
         {
-            activeBuilder.Append(node.Value);
+            // invariant culture and round-trip format: with a decimal comma in the Windows locale "7,5D" is not C#
+            activeBuilder.Append(node.Value.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
             activeBuilder.Append("D");
         }
 

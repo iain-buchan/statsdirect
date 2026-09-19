@@ -138,7 +138,8 @@ namespace StatsDirect.Builtins
             double iq = qc * (rx + 1);
             if (iq > rx)
                 iq = rx;
-            if (iq < 0)
+            // below the first order statistic the quantile is the minimum; "iq < 0" could never be true, and r[0] is not an observation
+            if (iq < 1)
                 iq = 1;
             if (iq - Math.Floor(iq) == 0)
                 xq = r[Convert.ToInt32(iq)];
@@ -616,7 +617,8 @@ namespace StatsDirect.Builtins
             int i;
             int m2; int m1;
 
-            double[] wrk = new double[n1 * ((int)Math.Floor((double)n2 / 2) + 1)];
+            // at least iv + 2 cells: the product alone is too small when n1 is 1, or 2 with n2 odd, and U is at the centre
+            double[] wrk = new double[Math.Max(n1 * ((int)Math.Floor((double)n2 / 2) + 1), iv + 2)];
             if (n1 < n2)
             {
                 m1 = n1;
@@ -654,63 +656,102 @@ namespace StatsDirect.Builtins
                 p = 0;
         }
 
-        private static double XMwupNt(int n1, int n2, double u)
+        /// <summary>
+        /// Exact one sided P values for the Mann-Whitney U statistic without ties: lower = P(U &lt;= u), upper = P(U &gt;= u),
+        /// each including the observed value, so they sum to more than 1.
+        /// </summary>
+        /// <remarks>
+        /// The lower tail routine is only good up to the middle of the distribution, so the tail on the far side of u is
+        /// found from the symmetry of U about n1 * n2 / 2. This function used to return whichever tail was the smaller, which
+        /// the report then labelled as the lower side: wrong whenever u was above n1 * n2 / 2.
+        /// </remarks>
+        private static void XMwupNt(int n1, int n2, double u, out double lower, out double upper)
         {
-            double p = 0;
-            bool fault;
+            lower = Constant.MISSING;
+            upper = Constant.MISSING;
+            if (n1 < 1 || n2 < 1 || u < 0)
+                return;
 
-            if (n1 < 1 || n2 < 1)
+            int nm = n1 * n2;
+            int iv = (int)Math.Floor(u);
+            if (iv > nm)
+                return;
+            if (2 * iv <= nm)
             {
-                fault = true;
-            }
-            else if (u < 0)
-            {
-                fault = true;
+                XMwupNtLtp(n1, n2, iv, out lower);
+                // P(U >= u) = 1 - P(U <= u - 1)
+                if (iv == 0)
+                    upper = 1.0;
+                else
+                {
+                    XMwupNtLtp(n1, n2, iv - 1, out double below);
+                    upper = 1.0 - below;
+                }
             }
             else
             {
-                fault = false;
-                int nm = n1 * n2;
-                int iv = (int)Math.Floor(u);
-                if (2 * iv <= nm)
-                {
-                    XMwupNtLtp(n1, n2, iv, out p);
-                }
+                // P(U >= u) = P(U <= nm - u), and P(U <= u) = 1 - P(U >= u + 1) = 1 - P(U <= nm - u - 1)
+                XMwupNtLtp(n1, n2, nm - iv, out upper);
+                if (iv == nm)
+                    lower = 1.0;
                 else
                 {
-                    iv = nm - iv;
-                    XMwupNtLtp(n1, n2, iv, out p);
+                    XMwupNtLtp(n1, n2, nm - iv - 1, out double above);
+                    lower = 1.0 - above;
                 }
             }
-            return fault ? Constant.MISSING : p;
         }
 
         /// <summary>
-        /// 
+        /// Exact one sided P values for the Mann-Whitney U statistic with ties: lower = P(U &lt;= u), upper = P(U &gt;= u), each
+        /// including the observed value. See <see cref="XMwupNt"/> for why both are returned.
         /// </summary>
         /// <param name="n1"></param>
         /// <param name="n2"></param>
         /// <param name="ranks">1-based array of ranks, with ties represented as x.5 values</param>
         /// <param name="u">Mann-Whitney U statistic</param>
-        /// <returns></returns>
-        private static double XMwupTi(int n1, int n2, double[] ranks, double u)
+        /// <param name="lower"></param>
+        /// <param name="upper"></param>
+        private static void XMwupTi(int n1, int n2, double[] ranks, double u, out double lower, out double upper)
         {
-            if (n1 < 1 || n2 < 1)
-                return Constant.MISSING;
-            if (u < 0)
-                return Constant.MISSING;
+            lower = Constant.MISSING;
+            upper = Constant.MISSING;
+            if (n1 < 1 || n2 < 1 || u < 0)
+                return;
 
             int nsum = n1 + n2;
             int[] iRanks = new int[2 * (n1 + n2 + 1) + 1]; //  1-based
             for (int i = 1; i <= nsum; i++)
                 iRanks[i] = Convert.ToInt32(2 * ranks[i]);
             Array.Sort(iRanks, 1, nsum);
+            // everything is doubled so that mid-ranks are whole numbers; the tail routine destroys its copy of the ranks
             int nm = 2 * n1 * n2;
             int iv = Convert.ToInt32(2.0 * u);
+            if (iv > nm)
+                return;
             if (2 * iv <= nm)
-                return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n1, n2, iRanks, iv);
-            iv = nm - iv;
-            return NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, iRanks, iv);
+            {
+                lower = NonParametric.WilcoxonMannWhitneyLowerTailProbability(n1, n2, (int[])iRanks.Clone(), iv);
+                if (iv == 0)
+                    upper = 1.0;
+                else
+                {
+                    double below = NonParametric.WilcoxonMannWhitneyLowerTailProbability(n1, n2, (int[])iRanks.Clone(), iv - 1);
+                    upper = below == Constant.MISSING ? Constant.MISSING : 1.0 - below;
+                }
+            }
+            else
+            {
+                // with ties U is not symmetrical, but U for the other sample is nm - U, so its lower tail is this one's upper
+                upper = NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, (int[])iRanks.Clone(), nm - iv);
+                if (iv == nm)
+                    lower = 1.0;
+                else
+                {
+                    double above = NonParametric.WilcoxonMannWhitneyLowerTailProbability(n2, n1, (int[])iRanks.Clone(), nm - iv - 1);
+                    lower = above == Constant.MISSING ? Constant.MISSING : 1.0 - above;
+                }
+            }
         }
 
         private static ParameterBag MannWhitneyExactConfidence(ITemplateHost host, double[] x, int k, int n1, int n2)
@@ -1510,11 +1551,21 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
-                    pl = xf == 0 ? XMwupNt(n1, n2, u) : XMwupTi(n1, n2, ranks, u);
-                    p = pl > 1.0 - pl ? 1.0 - pl : pl;
+                    // Lower side is P(U <= u), for H1 that x tends to be less than y; upper side is P(U >= u). Each includes the
+                    // observed U. Two sided is twice the smaller, as in R's wilcox.test. The smaller tail used to be printed as the
+                    // lower side whichever side it was on.
+                    double pu;
+                    if (xf == 0)
+                        XMwupNt(n1, n2, u, out pl, out pu);
+                    else
+                        XMwupTi(n1, n2, ranks, u, out pl, out pu);
+                    if (pl == Constant.MISSING || pu == Constant.MISSING)
+                        p = Constant.MISSING;
+                    else
+                        p = Math.Min(1.0, 2.0 * Math.Min(pl, pu));
                     outputParameters.AddOutput("p_l", pl);
-                    outputParameters.AddOutput("p_u", 1.0 - pl);
-                    outputParameters.AddOutput("p_2", p * 2.0);
+                    outputParameters.AddOutput("p_u", pu);
+                    outputParameters.AddOutput("p_2", p);
                 }
 
                 outputParameters.AddOutput("pc0", gamma * 100);

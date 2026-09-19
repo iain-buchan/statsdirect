@@ -24,7 +24,6 @@ namespace StatsDirect.Expressions
             ArgumentDefinition mean = new("mean", DataType.Double);
             ArgumentDefinition meanDef0 = new("mean", DataType.Double, false, "0");
             ArgumentDefinition n = new("n", DataType.Double);
-            ArgumentDefinition ncp = new("Simple linear regression ncp", DataType.Double);
             ArgumentDefinition ncpDefMissing = new("ncp", DataType.Double, false, "StatsDirect.Numerics.Constant.MISSING");
             ArgumentDefinition p = new("p", DataType.Double);
             ArgumentDefinition q = new("q", DataType.Double);
@@ -159,7 +158,7 @@ namespace StatsDirect.Expressions
                 new FunctionDefinition("DEG",                DataType.Double, "SDMath.Deg",          xOnly),
                 new FunctionDefinition("DPOIS",              DataType.Double, "SDMath.Dpois",        new[] { k, mean, logP }),
                 new FunctionDefinition("EXP",                DataType.Double, "Math.Exp",            xOnly),
-                new FunctionDefinition("FIX",                DataType.Double, "Math.Floor",          xOnly),
+                new FunctionDefinition("FIX",                DataType.Double, "Math.Truncate",          xOnly),
                 new FunctionDefinition("FTAIL",              DataType.Double, "SDMath.Ftail",        new[] { dfn, dfd, q }),
                 new FunctionDefinition("INT",                DataType.Double, "Math.Floor",          xOnly),
                 new FunctionDefinition("INVCHI2TAIL",        DataType.Double, "SDMath.InvChi2Tail",  new[] { df, p }),
@@ -175,11 +174,10 @@ namespace StatsDirect.Expressions
                 new FunctionDefinition("LOGFACTORIAL",       DataType.Double, "SDMath.LogFactorial", xOnly),
                 new FunctionDefinition("LOGIT",              DataType.Double, "SDMath.Logit",        xOnly),
                 new FunctionDefinition("LOGZ",               DataType.Double, "SDMath.Lz",           new[] { q }),
-                new FunctionDefinition("LR",                 DataType.Double, "SDMath.Lr",           xOnly),
                 new FunctionDefinition("LZ",                 DataType.Double, "SDMath.Lz",           new[] { q }),
                 new FunctionDefinition("NORMAL",             DataType.Double, "SDMath.Lz",           new[] { q }),
                 new FunctionDefinition("PBINOM",             DataType.Double, "SDMath.Pbinom",       new[] { r, n, p, lowerTail, logP }),
-                new FunctionDefinition("PCHISQ",             DataType.Double, "SDMath.Pchisq",       new[] { p, df, lowerTail, logP }),
+                new FunctionDefinition("PCHISQ",             DataType.Double, "SDMath.Pchisq",       new[] { q, df, lowerTail, logP }),
                 new FunctionDefinition("PF",                 DataType.Double, "SDMath.Pf",           new[] { q, df1, df2, lowerTail, logP }),
                 new FunctionDefinition("PNORM",              DataType.Double, "SDMath.Pnorm",        new[] { q, meanDef0, sdDef1, lowerTail, logP }),
                 new FunctionDefinition("POISSONP",           DataType.Double, "SDMath.Poissonp",     new[] { mean, k }),
@@ -188,10 +186,10 @@ namespace StatsDirect.Expressions
                 new FunctionDefinition("PT",                 DataType.Double, "SDMath.Pt",           new[] { q, df, ncpDefMissing, lowerTail, logP }),
                 new FunctionDefinition("PZ",                 DataType.Double, "SDMath.Lz",           new[] { q }),
                 new FunctionDefinition("QCHISQ",             DataType.Double, "SDMath.Qchisq",       new[] { p, df, lowerTail, logP }),
-                new FunctionDefinition("QF",                 DataType.Double, "SDMath.Qf",           new[] { q, df1, df2, lowerTail, logP }),
+                new FunctionDefinition("QF",                 DataType.Double, "SDMath.Qf",           new[] { p, df1, df2, lowerTail, logP }),
                 new FunctionDefinition("QNORM",              DataType.Double, "SDMath.Qnorm",        new[] { p, meanDef0, sdDef1, lowerTail, logP }),
                 new FunctionDefinition("QPOIS",              DataType.Double, "SDMath.Qpois",        new[] { p, mean, lowerTail, logP }),
-                new FunctionDefinition("QT",                 DataType.Double, "SDMath.Qt",           new[] { p, df, ncp, lowerTail, logP }),
+                new FunctionDefinition("QT",                 DataType.Double, "SDMath.Qt",           new[] { p, df, ncpDefMissing, lowerTail, logP }),
                 new FunctionDefinition("RAD",                DataType.Double, "SDMath.Rad",          xOnly),
                 new FunctionDefinition("SEC",                DataType.Double, "SDMath.Sec",          xOnly),
                 new FunctionDefinition("SECANT",             DataType.Double, "SDMath.Sec",          xOnly),
@@ -213,7 +211,7 @@ namespace StatsDirect.Expressions
                 new FunctionDefinition("TANGENTH",           DataType.Double, "SDMath.Tanh",         xOnly),
                 new FunctionDefinition("HYPERBOLICTAN",      DataType.Double, "SDMath.Tanh",         xOnly),
                 new FunctionDefinition("HYPERBOLICTANGENT",  DataType.Double, "SDMath.Tanh",         xOnly),
-                new FunctionDefinition("TRUNC",              DataType.Double, "Math.Floor",          xOnly),
+                new FunctionDefinition("TRUNC",              DataType.Double, "Math.Truncate",          xOnly),
                 new FunctionDefinition("TTAIL",              DataType.Double, "SDMath.TTail",        new[] { df, q }),
                 new FunctionDefinition("UZ",                 DataType.Double, "SDMath.Uz",           new[] { q })
             });

@@ -1521,7 +1521,7 @@ namespace StatsDirect.Builtins
             ExFortran.Rank(prk, r, 1, nx, 0, out double _);
             if (method == 3)
             {
-                if (rows > 2500)
+                if (nx > 2500)
                 {
                     method = 1;
                     lab = "vdW";
@@ -1531,11 +1531,13 @@ namespace StatsDirect.Builtins
             DataFrame outputFrame = new();
             DoubleVariable outputVariable = new(rows, pre + dataVariable.Title);
             outputFrame.Variables.Add(outputVariable);
+            // The sample size is the number of valid observations, nx, which is what the ranks run over. It was the length of the
+            // column, so missing cells inside it made every score too small in size and the scores no longer centred on zero.
             double den;
             if (method == 1)
-                den = Convert.ToDouble(rows + 1L);
+                den = Convert.ToDouble(nx + 1L);
             else
-                den = Convert.ToDouble(rows) + 1.0 / 4.0;
+                den = Convert.ToDouble(nx) + 1.0 / 4.0;
             int cx = 0;
             for (int c = 0; c < rows; c++)
             {
@@ -1560,7 +1562,12 @@ namespace StatsDirect.Builtins
                             break;
                         default:
                             // expected normal order
-                            tr = Expnos.expnos(Convert.ToInt32(r[cx]), rows);
+                            // a tied value has a mid-rank ending in .5: it takes the mean of the two neighbouring expected order
+                            // statistics. Rounding the mid-rank (to the even neighbour) made the scores of symmetrical data
+                            // asymmetrical. For a whole-number rank this is the same value as before.
+                            double eoBelow = Expnos.expnos((int)Math.Floor(r[cx]), nx);
+                            double eoAbove = Expnos.expnos((int)Math.Ceiling(r[cx]), nx);
+                            tr = eoBelow == Constant.MISSING || eoAbove == Constant.MISSING ? Constant.MISSING : 0.5 * (eoBelow + eoAbove);
                             break;
                     }
 

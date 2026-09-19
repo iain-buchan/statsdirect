@@ -78,6 +78,18 @@ namespace StatsDirect.Expressions
             return (Math.Exp(arg) - Math.Exp(-arg)) / 2.0;
         }
 
+        // CLOG (common logarithm) and COSH are in the function registry, and CLOG is in the help, but neither method existed,
+        // so an expression using them could not be compiled.
+        public static double Cosh(double arg)
+        {
+            return Math.Cosh(arg);
+        }
+
+        public static double Clog(double arg)
+        {
+            return Math.Log10(arg);
+        }
+
         public static double Tanh(double arg)
         {
             return (Math.Exp(arg) - Math.Exp(-arg)) / (Math.Exp(arg) + Math.Exp(-arg));
@@ -264,7 +276,7 @@ namespace StatsDirect.Expressions
 
         public static double InvChi2Tail(double df, double p)
         {
-            double result = PDF.ppchi2(p, df, out int fault);
+            double result = PDF.ppchi2(1.0 - p, df, out int fault); // p is an upper tail area, as CHI2TAIL returns; ppchi2 inverts a lower tail
             return fault != 0 ? Constant.MISSING : result;
         }
 
@@ -297,14 +309,15 @@ namespace StatsDirect.Expressions
             double term = PDF.gauinv(p, out int ifault);
             if (ifault != 0)
                 return Constant.MISSING;
-            return term;
+            // the quantile of Normal(mean, sd); mean and sd used to be ignored
+            return mean + sd * term;
         }
 
         public static double Pt(double q, double df, double ncp, bool lowerTail, bool logP)
         {
             double p;
             if (ncp == Constant.MISSING)
-                p = PDF.tvalp(q, df);
+                p = PDF.tvalp(-q, df); // tvalp is the upper tail area: the lower tail at q is the upper tail at -q
             else
             {
                 p = ExFortran.pnct(q, (int)Math.Floor(df), ncp, out int fault);
@@ -324,6 +337,9 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
+            // central t when no non-centrality parameter is given; tfromp takes an upper tail area
+            if (ncp == Constant.MISSING)
+                return -PDF.tfromp(p, df);
             double q = ExFortran.tnct(p, (int)Math.Floor(df), ncp, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
@@ -345,7 +361,7 @@ namespace StatsDirect.Expressions
             ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double _, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
-            double p = lowerTail ? plo : phi;
+            double p = lowerTail ? plo : 1.0 - plo; // P(X > k), the complement of the lower tail, as in R; phi is P(X >= k)
             if (logP)
                 p = Math.Log(p);
             return p;
@@ -357,18 +373,29 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            ExFortran.poissonNl(1, p, mean, out double _, out double _, out double _, out int nl, out int fault);
-            return fault != 0 ? Constant.MISSING : nl;
+            // The smallest k with P(X <= k) >= p, as R's qpois, by stepping up the engine's own lower tail. poissonNl, used
+            // here before, could never return 0 or 1 (QPOIS(0.05, 2) gave 2).
+            if (double.IsNaN(p) || p < 0.0 || p > 1.0 || mean < 0.0)
+                return Constant.MISSING;
+            if (p == 1.0)
+                return double.PositiveInfinity;
+            for (int k = 0; k < 100000000; k++)
+            {
+                ExFortran.poisson(mean, k, out double _, out double plo, out double _, out int fault);
+                if (fault != 0)
+                    return Constant.MISSING;
+                if (plo >= p - 1.0E-13) // a little slack, so that a p that is exactly a tail value is not missed through rounding
+                    return k;
+            }
+            return Constant.MISSING;
         }
 
         public static double Pbinom(double r, double n, double p, bool lowerTail, bool logP)
         {
-            if (logP)
-                p = Math.Exp(p);
             ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double _, out double dplo, out double dphi, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
-            double pOut = lowerTail ? dplo : dphi;
+            double pOut = lowerTail ? dplo : 1.0 - dplo; // P(X > r), as in R; dphi is P(X >= r)
             if (logP)
                 pOut = Math.Log(pOut);
             return pOut;
@@ -376,8 +403,6 @@ namespace StatsDirect.Expressions
 
         public static double Dbinom(double r, double n, double p, bool logP)
         {
-            if (logP)
-                p = Math.Exp(p);
             ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double _, out double _, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
@@ -389,7 +414,8 @@ namespace StatsDirect.Expressions
         public static double Pchisq(double q, double df, bool lowerTail, bool logP)
         {
             double p = PDF.chivalp(q, df);
-            if (!lowerTail)
+            // chivalp is the upper tail area
+            if (lowerTail)
                 p = 1.0 - p;
             if (logP)
                 p = Math.Log(p);
@@ -409,7 +435,8 @@ namespace StatsDirect.Expressions
         public static double Pf(double q, double df1, double df2, bool lowerTail, bool logP)
         {
             double p = PDF.fvalp(q, df1, df2);
-            if (!lowerTail)
+            // fvalp is the upper tail area
+            if (lowerTail)
                 p = 1.0 - p;
             if (logP)
                 p = Math.Log(p);
@@ -422,15 +449,17 @@ namespace StatsDirect.Expressions
                 p = Math.Exp(p);
             if (!lowerTail)
                 p = 1.0 - p;
-            return PDF.ffromp(df1, df2, p);
+            return PDF.ffromp(df2, df1, 1.0 - p); // ffromp(denominator df, numerator df, upper tail area); p here is a lower tail area
         }
 
         public static double Idiv(double numerator, double denominator)
         {
-            // Integer division, so the loss of fraction is entirely deliberate!
-            // ReSharper disable PossibleLossOfFraction
-            return (int)numerator / (int)denominator;
-            // ReSharper restore PossibleLossOfFraction
+            // Integer division: both operands lose their fractions, then so does the quotient. In doubles, because (int) casts
+            // threw for a divisor between -1 and 1 (stopping a whole worksheet column) and saturated above 2^31.
+            if (numerator == Constant.MISSING || denominator == Constant.MISSING || double.IsNaN(numerator) || double.IsNaN(denominator))
+                return Constant.MISSING;
+            double n = Math.Truncate(numerator), d = Math.Truncate(denominator);
+            return d == 0.0 ? Constant.MISSING : Math.Truncate(n / d);
         }
     }
 }

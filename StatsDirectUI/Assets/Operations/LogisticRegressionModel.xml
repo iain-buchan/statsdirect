@@ -14,7 +14,7 @@ Log likelihood with all covariates = @{ll:roundu}</p>
 
 <p>Deviance with all covariates = @{dev:roundu}   df = @idf   rank = @rank<br />
 Akaike information criterion = @{aka:roundu}<br />
-Schwartz information criterion = @{sch:roundu}</p>
+Schwarz information criterion = @{sch:roundu}</p>
 
 <p>Deviance with no covariates = @{devx:roundu}<br />
 Deviance (likelihood ratio) chi-square = @{x2dev:roundu}   df = @x2df   <pval>@{x2p:pval}</pval><br />
