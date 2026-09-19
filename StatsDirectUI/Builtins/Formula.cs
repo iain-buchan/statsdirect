@@ -260,9 +260,9 @@ namespace StatsDirect.Builtins
                 double n;
                 try
                 {
-                    n = Math.Pow(zalpha + zbeta, 2.0) * ((1.0 + 1.0 / M) / P) / Math.Pow(Math.Log(hr), 2.0) + 1.0;
-                    if (n != Math.Floor(n))
-                        n = Math.Floor(n) + 1;
+                    n = Math.Pow(zalpha + zbeta, 2.0) * ((1.0 + 1.0 / M) / P) / Math.Pow(Math.Log(hr), 2.0);
+                    // rounded as the other sample size functions round. It used to add one and then round up, one subject more than they give.
+                    n = Math.Floor(n) + 1;
                 }
                 catch (Exception)
                 {
