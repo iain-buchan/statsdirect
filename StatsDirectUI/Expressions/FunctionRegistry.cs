@@ -164,7 +164,7 @@ namespace StatsDirect.Expressions
                 new FunctionDefinition("INVCHI2TAIL",        DataType.Double, "SDMath.InvChi2Tail",  new[] { df, p }),
                 new FunctionDefinition("INVFTAIL",           DataType.Double, "SDMath.InvFtail",     new[] { dfn, dfd, p }),
                 new FunctionDefinition("INVNORMAL",          DataType.Double, "SDMath.Iz",           new[] { p }),
-                new FunctionDefinition("INVPOISSONTAIL",     DataType.Double, "SDMath.InvPoissonTail", new[] { mean, p }),
+                new FunctionDefinition("INVPOISSONTAIL",     DataType.Double, "SDMath.InvPoissonTail", new[] { mean, k }),
                 new FunctionDefinition("INVTTAIL",           DataType.Double, "SDMath.InvTTail",     new[] { df, p }),
                 new FunctionDefinition("IZ",                 DataType.Double, "SDMath.Iz",           new[] { p }),
                 new FunctionDefinition("LN",                 DataType.Double, "Math.Log",            xOnly),

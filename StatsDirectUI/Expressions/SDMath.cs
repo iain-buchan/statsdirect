@@ -224,10 +224,24 @@ namespace StatsDirect.Expressions
             return fault != 0 ? Constant.MISSING : phi;
         }
 
-        public static double InvPoissonTail(double mean, double p)
+        /// <summary>
+        /// probability of k or a more extreme number of events, in the direction away from the mean:
+        /// P(X &gt;= k) when k is at or above the mean, P(X &lt;= k) when k is below it
+        /// </summary>
+        /// <param name="mean"></param>
+        /// <param name="k"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// The author's definition (20 September 2026). Since version 3 this had taken a probability and returned a count,
+        /// by a bisection on the lower tail that could never return 0 or 1.
+        /// </remarks>
+        public static double InvPoissonTail(double mean, double k)
         {
-            ExFortran.poissonNl(1, p, mean, out double _, out double _, out double _, out int nl, out int fault);
-            return fault != 0 ? Constant.MISSING : nl;
+            double events = Math.Floor(k);
+            ExFortran.poisson(mean, (int)events, out double phi, out double plo, out double _, out int fault);
+            if (fault != 0)
+                return Constant.MISSING;
+            return events >= mean ? phi : plo;
         }
 
         /// <summary>
