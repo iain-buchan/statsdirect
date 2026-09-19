@@ -138,11 +138,17 @@ namespace StatsDirect.Numerics
             if (!change)
             {
                 int ir1 = low - m1 * (m1 + 1);
+                // below the smallest value U can take with these ties the lower tail is empty; without this the index falls
+                // on the last cell of the previous block of wrk, which holds 1
+                if (iv < ir1)
+                    return 0.0;
                 return wrk[ranks[l2 + m1 + 1] + iv - ir1 + 1];
             }
             else
             {
                 int ir1 = nsum * (nsum + 1) - high - m2 * (m2 + 1);
+                if (iv < ir1)
+                    return 0.0;
                 return 1.0 - wrk[ranks[l2 + m1 + 1] + ranks[l1 + m1 + 1] - iv + ir1];
             }
         }
