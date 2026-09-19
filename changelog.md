@@ -30,6 +30,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Help: a citation in a topic opens the entry it cites in the reference list, not the top of the list. The reference list is in one consistent style, with a DOI link wherever the work has one (257 entries, where 71 had one), and misspelt authors and wrong years in citations are corrected
 
 ### Fixed
+- Descriptive statistics of a single valid observation left the mean, range and variance coefficient at zero or at the previous variable's values
 - Weighted descriptive statistics saved to a worksheet put the weighted sum of the data in the row labelled Sum of weights
 - Diversity: the standard error of Chao's estimate of the number of classes was too small, because two divisors were inside their powers (16.2 where 23.2 is right for the help's example); the lower confidence limit is no longer allowed below the number of classes observed
 - Logistic regression prediction: a linear predictor of exactly zero gave a missing probability in place of 0.5, and very large ones gave missing in place of 0 or 1; a blank or non-numeric predictor gives a missing prediction

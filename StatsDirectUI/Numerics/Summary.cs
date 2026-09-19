@@ -281,7 +281,11 @@ namespace StatsDirect.Numerics
                 Variance = Constant.MISSING;
                 Maximum = xo[1];
                 Minimum = xo[1];
+                Range = 0.0;
                 Sum = xo[1];
+                // these three were left holding whatever the object held before: 0, or the previous variable's values
+                Mean = xo[1];
+                VarianceCoefficient = Constant.MISSING;
                 SD = Constant.MISSING;
                 SEM = Constant.MISSING;
                 MeanLCL = Constant.MISSING;
