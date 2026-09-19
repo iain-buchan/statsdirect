@@ -125,7 +125,8 @@ namespace StatsDirect.Expressions
 
         public static double Alogit(double arg)
         {
-            double term = Math.Exp(arg) / (1.0 + Math.Exp(arg));
+            // exp(arg) / (1 + exp(arg)) is infinity over infinity, NaN, for arg above about 709.8
+            double term = arg >= 0.0 ? 1.0 / (1.0 + Math.Exp(-arg)) : Math.Exp(arg) / (1.0 + Math.Exp(arg));
             if (term <= Constant.EPSNEG)
                 return 0.0;
             if (term >= 1.0 - Constant.EPSNEG)

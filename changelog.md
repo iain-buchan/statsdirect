@@ -30,6 +30,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Help: a citation in a topic opens the entry it cites in the reference list, not the top of the list. The reference list is in one consistent style, with a DOI link wherever the work has one (257 entries, where 71 had one), and misspelt authors and wrong years in citations are corrected
 
 ### Fixed
+- Calculator: ALOGIT of a number above about 709 returned NaN in place of 1
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected
 - Two-rater kappa from worksheet columns always stopped with "Invalid data"; multi-rater kappa stopped with an error for three or more categories with unequal numbers of ratings, and its standard errors used the number of columns rather than the number of ratings
 - Spearman's rank correlation with ties reported a one sided P as two sided; the exact P for 10 or fewer pairs excluded the observed statistic on the lower side
