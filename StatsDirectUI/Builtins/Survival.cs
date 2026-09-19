@@ -2479,7 +2479,7 @@ namespace StatsDirect.Builtins
                         IList<ParameterBag> matList = new List<ParameterBag>();
                         covarList.Add(new ParameterBag("*mat", new FilledParameterBagListParameter(FilledParameterDirection.Output, matList)));
                         for (int j2 = 1; j2 <= groups; j2++)
-                            matList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, vinv[j2, j])));
+                            matList.Add(new ParameterBag("cell", new FilledDoubleParameter(FilledParameterDirection.Output, v[j2, j]))); // v, not vinv: the leading block of vinv has been inverted in place above
                     }
                     //  test this stratum or whole
                     outerParameters.AddOutput("chi", x2);

@@ -26,7 +26,7 @@ Relative rate = @{rel:roundu}</p>
 <title>@test for COMBINED STRATA:</title>
 
 <table>
-<tr><th>Stratum</th><th>Deaths</th><th>Extent of exposure to risk of death</th><th>Relative rate</th></tr>
+<tr><th>Group</th><th>Deaths</th><th>Extent of exposure to risk of death</th><th>Relative rate</th></tr>
 <block name="stratum"><tr><td>@grp</td><td>@res</td><td>@{sum:roundu}</td><td>@{tot:roundu}</td></tr></block>
 </table>
 
