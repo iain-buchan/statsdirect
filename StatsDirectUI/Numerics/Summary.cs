@@ -178,8 +178,9 @@ namespace StatsDirect.Numerics
                 for (int i = 1; i <= ValidData; i++)
                 {
                     Sum += xo[i] * w[i];
-                    if (xo[i] * w[i] > 0.0)
-                        slog += Math.Log(xo[i] * w[i]);
+                    // weighted mean of the logs: the weight multiplies log(x), it does not go inside the logarithm
+                    if (xo[i] > 0.0 && w[i] >= 0.0)
+                        slog += w[i] * Math.Log(xo[i]);
                     else
                         geometricMeanOk = false;
                 }
