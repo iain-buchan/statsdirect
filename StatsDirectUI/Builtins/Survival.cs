@@ -2539,8 +2539,13 @@ namespace StatsDirect.Builtins
                         if (test == 1)
                         {
                             // stratified logrank
+                            // A copy is inverted: gaussj works in place, and the trend statistic below needs the summed covariance
+                            // matrix itself (it was being computed from the half-inverted one). imfault is cleared because gaussj
+                            // only ever sets it, so a singular last stratum used to make the combined test missing.
                             vtemp = new double[groups, 1 + 1];
-                            MathDbl.gaussj(vsuml, 1, groups - 1, vtemp, 1, ref imfault);
+                            double[,] vsumlInv = (double[,])vsuml.Clone();
+                            imfault = 0;
+                            MathDbl.gaussj(vsumlInv, 1, groups - 1, vtemp, 1, ref imfault);
                             if (imfault != 0)
                             {
                                 x2 = Constant.MISSING;
@@ -2549,7 +2554,7 @@ namespace StatsDirect.Builtins
                             {
                                 for (int j2 = 1; j2 < groups; j2++)
                                     for (int k = 1; k < groups; k++)
-                                        vtemp[j2, 1] = vtemp[j2, 1] + vsuml[j2, k] * u0Suml[k];
+                                        vtemp[j2, 1] = vtemp[j2, 1] + vsumlInv[j2, k] * u0Suml[k];
                                 x2 = 0.0;
                                 for (int k = 1; k < groups; k++)
                                     x2 += vtemp[k, 1] * u0Suml[k];
@@ -2557,9 +2562,11 @@ namespace StatsDirect.Builtins
                         }
                         else
                         {
-                            // stratified Wilcoxon
+                            // stratified Wilcoxon (a copy is inverted, as above)
                             vtemp = new double[groups, 1 + 1];
-                            MathDbl.gaussj(vsumw, 1, groups - 1, vtemp, 1, ref imfault);
+                            double[,] vsumwInv = (double[,])vsumw.Clone();
+                            imfault = 0;
+                            MathDbl.gaussj(vsumwInv, 1, groups - 1, vtemp, 1, ref imfault);
                             if (imfault != 0)
                             {
                                 x2 = Constant.MISSING;
@@ -2568,7 +2575,7 @@ namespace StatsDirect.Builtins
                             {
                                 for (int j2 = 1; j2 < groups; j2++)
                                     for (int k = 1; k < groups; k++)
-                                        vtemp[j2, 1] = vtemp[j2, 1] + vsumw[j2, k] * u0Sumw[k];
+                                        vtemp[j2, 1] = vtemp[j2, 1] + vsumwInv[j2, k] * u0Sumw[k];
                                 x2 = 0.0;
                                 for (int k = 1; k < groups; k++)
                                     x2 += vtemp[k, 1] * u0Sumw[k];
