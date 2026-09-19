@@ -28,7 +28,7 @@ namespace StatsDirect.Expressions
             definitions = new Dictionary<DyadicOperator, DyadicOperatorDefinition>();
             AddAll(new[]
             {
-                new DyadicOperatorDefinition(DyadicOperator.IntegerDivide,       "SDMath.IDiv({0}, {1})",       new[] { idd }),
+                new DyadicOperatorDefinition(DyadicOperator.IntegerDivide,       "SDMath.Idiv({0}, {1})",       new[] { idd }),
                 new DyadicOperatorDefinition(DyadicOperator.Pow,                 "Math.Pow({0}, {1})",          new[] { ddd }),
                 new DyadicOperatorDefinition(DyadicOperator.Add,                 "({0}) + ({1})",               new[] { iii, ddd, sss, ssd, ssi, ssb }),
                 new DyadicOperatorDefinition(DyadicOperator.And,                 "({0}) && ({1})",              new[] { bbb }),

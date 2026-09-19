@@ -33,6 +33,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Multiple regression: adjusted R² is reported as calculated when it is negative, as R, Stata and SAS do, where earlier versions showed 0%; without an intercept its total degrees of freedom are n, not n - 1, as in R
 
 ### Fixed
+- Calculator functions: the integer division operator \ and the functions CLOG and COSH could not be used at all; TRUNC and FIX rounded down instead of giving the integer part; PT, PCHISQ and PF returned the opposite tail, QF the wrong quantile, QT needed a third argument, INVCHI2TAIL did not invert CHI2TAIL, QNORM ignored its mean and standard deviation, QPOIS could not return 0 or 1, PBINOM and DBINOM with a log option took the exponential of the success probability, and the upper tails of PPOIS and PBINOM included the value itself
 - Calculator, user defined functions, fill series and unit conversion could not evaluate any number with a decimal fraction when Windows uses a decimal comma
 - Weighted descriptive statistics: a missing observation shifted the weights against the data in every later row, so the mean, variance, confidence interval, moments and centiles were wrong, sometimes wildly (values 1, missing, 3 with weights 1, 100, 1 gave a mean of 150.5)
 - Weighted geometric mean multiplied each value by its weight inside the logarithm; it is the exponential of the weighted mean of the logs (values 2, 2, 2 with weights 1, 2, 3 gave 1.817)
