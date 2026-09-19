@@ -175,7 +175,7 @@
             <menu-item label="&amp;F (Variance Ratio)" operation="DistributionF" />
             <menu-item label="&amp;Chi-Square" operation="DistributionChiSquare" />
             <menu-item label="Studentised Range (&amp;Q)" operation="DistributionQ" />
-            <menu-item label="&amp;Binomal" operation="DistributionBinomial" />
+            <menu-item label="&amp;Binomial" operation="DistributionBinomial" />
             <menu-item label="&amp;Poisson" operation="DistributionPoisson" />
             <menu-item label="&amp;Kendall's tau" operation="DistributionKendall" />
             <menu-item label="&amp;Spearman's rho" operation="DistributionSpearman" />
