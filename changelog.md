@@ -28,6 +28,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - The installer no longer tries to generate native images with the .NET Framework's ngen, a step left from version 3 that could do nothing for a .NET 10 program; the About box no longer reports "JIT-compiled"
 - Help: the Search tab finds words. The help file now carries a full-text search index, which the version 4 help never had
 - Help: a citation in a topic opens the entry it cites in the reference list, not the top of the list. The reference list is in one consistent style, with a DOI link wherever the work has one (257 entries, where 71 had one), and misspelt authors and wrong years in citations are corrected
+- Risk (retrospective): when no population exposure is entered it is estimated from the controls, not from cases and controls pooled, which moved with the number of controls sampled; the attributable risk then belongs with its (Walter) confidence interval, and the report says which exposure was used (51.29% where version 4 gave 55.29% for the help's example). When an exposure is entered, the interval comes from the odds ratio's logit limits; Walter's variance was used there too and could be several times too wide, or too narrow
 - Multiple regression: adjusted R² is reported as calculated when it is negative, as R, Stata and SAS do, where earlier versions showed 0%; without an intercept its total degrees of freedom are n, not n - 1, as in R
 
 ### Fixed

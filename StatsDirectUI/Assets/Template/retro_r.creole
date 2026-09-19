@@ -22,7 +22,7 @@ Conditional estimate of odds ratio = @{eor:roundu}<br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
 
 <block name="risk">
-<p>Population exposure % = @{pe:roundu}<br />
+<p>Population exposure % = @{pe:roundu}@pe_note<br />
 Population attributable risk % = @{par:roundu}<br />
 <ci>Approximate @{pc:round2}% confidence interval = @{from:roundu}  to  @{to:roundu}</ci></p>
 </block>

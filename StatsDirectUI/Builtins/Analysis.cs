@@ -421,6 +421,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptMiscRetroRisk(IProgressBarHost host, ParameterBag parameters)
         {
             double pe = Constant.MISSING;
+            bool peFromControls = false;
 
             double a = parameters["a"].AsDouble;
             double b = parameters["b"].AsDouble;
@@ -451,12 +452,33 @@ namespace StatsDirect.Builtins
             {
                 if (parameters.ContainsKey("pe") && null != parameters["pe"] && parameters["pe"].HasData)
                     pe = parameters["pe"].AsDouble;
+                // Without a population figure, exposure is estimated from the controls, who stand for the population when the
+                // outcome is rare. The pooled sample (a + c) / n, used before version 5, moves with the number of controls the
+                // investigator chose to sample. With this default PAR = 1 - (b / m1) / (d / m2), the estimator whose
+                // variance (Walter) is used below.
                 if (pe == Constant.MISSING || pe < 0.0 || pe > 1.0)
-                    pe = (a + c) / n;
+                {
+                    pe = c / m2;
+                    peFromControls = true;
+                }
                 par = pe * (odr - 1.0) / (1.0 + pe * (odr - 1.0));
-                double varPar = b * m2 / (d * m1) * (b * m2 / (d * m1)) * (a / (b * m1) + c / (d * m2));
-                parLl = par - zp * Math.Sqrt(varPar);
-                parUl = par + zp * Math.Sqrt(varPar);
+                if (peFromControls)
+                {
+                    double varPar = b * m2 / (d * m1) * (b * m2 / (d * m1)) * (a / (b * m1) + c / (d * m2));
+                    parLl = par - zp * Math.Sqrt(varPar);
+                    parUl = par + zp * Math.Sqrt(varPar);
+                }
+                else
+                {
+                    // An entered exposure is a fixed number, so the only sampling error is the odds ratio's. PAR rises with the
+                    // odds ratio, so its limits are those of the (Woolf, logit) interval for the odds ratio carried through the
+                    // same formula. Walter's variance belongs to the controls-based estimator above and was wrong here.
+                    double seLogOdr = Math.Sqrt(1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d);
+                    double odrL = Math.Exp(Math.Log(odr) - zp * seLogOdr);
+                    double odrU = Math.Exp(Math.Log(odr) + zp * seLogOdr);
+                    parLl = pe * (odrL - 1.0) / (1.0 + pe * (odrL - 1.0));
+                    parUl = pe * (odrU - 1.0) / (1.0 + pe * (odrU - 1.0));
+                }
             }
             else
             {
@@ -533,6 +555,7 @@ namespace StatsDirect.Builtins
                 ParameterBag riskParameters = new();
                 riskList.Add(riskParameters);
                 riskParameters.AddOutput("pe", pe * 100.0);
+                riskParameters.AddOutput("pe_note", peFromControls ? " (exposure among the controls)" : " (as entered)");
                 riskParameters.AddOutput("par", par * 100.0);
                 riskParameters.AddOutput("from", parLl * 100.0);
                 riskParameters.AddOutput("to", parUl * 100.0);
