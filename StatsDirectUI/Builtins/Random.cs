@@ -281,7 +281,8 @@ namespace StatsDirect.Builtins
         public static DataFrame RndGamma(int rows, int cols, double a, double b, int seed)
         {
             const string mx = "Gamma deviates";
-            if (a <= 0.0 || rows <= 0)
+            // both parameters must be positive: B = 0 filled the column with zeros and a negative B gave negative "gamma" deviates
+            if (a <= 0.0 || b <= 0.0 || rows <= 0)
                 throw new TemplateOperationCancelledException(BADPARA, mx);
 
             GammaRNG rng = new();
