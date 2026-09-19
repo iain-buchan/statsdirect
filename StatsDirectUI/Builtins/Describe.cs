@@ -566,7 +566,7 @@ namespace StatsDirect.Builtins
                             if (shouldOutput[s])
                             {
                                 labels.Data[row] = Caption(s, sx[0], titles);
-                                values.Data[row] = Value(s, sx[0]);
+                                values.Data[row] = Value(s, sx[0], isWeighted);
                                 row++;
                             }
                         }
@@ -582,7 +582,7 @@ namespace StatsDirect.Builtins
                         foreach (SummaryType s in Enum.GetValues(typeof(SummaryType)))
                         {
                             if (shouldOutput[s])
-                                outputFrame.Variables.Add(FillCell(s, sx, data.VariableCount, titles));
+                                outputFrame.Variables.Add(FillCell(s, sx, data.VariableCount, titles, isWeighted));
                         }
                     }
                 }
@@ -642,7 +642,7 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static double Value(SummaryType summaryType, Summary sx)
+        private static double Value(SummaryType summaryType, Summary sx, bool isWeighted)
         {
             switch (summaryType)
             {
@@ -651,7 +651,8 @@ namespace StatsDirect.Builtins
                 case SummaryType.MissingData:
                     return sx.MissingData;
                 case SummaryType.Sum:
-                    return sx.Sum;
+                    // the weighted summary labels this row "Sum of weights", and the report prints SumOfWeights for it
+                    return isWeighted ? sx.SumOfWeights : sx.Sum;
                 case SummaryType.Mean:
                     return sx.Mean;
                 case SummaryType.Variance:
@@ -695,13 +696,13 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string[] titles)
+        private static DoubleVariable FillCell(SummaryType summaryType, Summary[] sx, int cols, string[] titles, bool isWeighted)
         {
             DoubleVariable v = new();
             v.EnsureLength(cols);
             v.Title = Caption(summaryType, sx[0], titles);
             for (int i = 0; i < cols; i++)
-                v.SetData(i, Value(summaryType, sx[i]));
+                v.SetData(i, Value(summaryType, sx[i], isWeighted));
             return v;
         }
 
