@@ -30,6 +30,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Help: a citation in a topic opens the entry it cites in the reference list, not the top of the list. The reference list is in one consistent style, with a DOI link wherever the work has one (257 entries, where 71 had one), and misspelt authors and wrong years in citations are corrected
 
 ### Fixed
+- Diversity: the standard error of Chao's estimate of the number of classes was too small, because two divisors were inside their powers (16.2 where 23.2 is right for the help's example); the lower confidence limit is no longer allowed below the number of classes observed
 - Logistic regression prediction: a linear predictor of exactly zero gave a missing probability in place of 0.5, and very large ones gave missing in place of 0 or 1; a blank or non-numeric predictor gives a missing prediction
 - Calculator: ALOGIT of a number above about 709 returned NaN in place of 1
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected

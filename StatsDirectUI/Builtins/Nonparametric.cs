@@ -1373,7 +1373,8 @@ namespace StatsDirect.Builtins
                 double a = Convert.ToDouble(singletons);
                 double b = Convert.ToDouble(doubletons);
                 int stotal = rx + Convert.ToInt32(Math.Pow(a, 2.0) / (2.0 * b));
-                double stotalvar = b * (Math.Pow(a / b / 4.0, 4.0) + Math.Pow(a / b, 3.0) + Math.Pow(a / b / 2.0, 2.0));
+                // Chao (1987): var = f2 * (r^4 / 4 + r^3 + r^2 / 2) where r = f1 / f2; the divisors apply to the powers, not inside them
+                double stotalvar = b * (Math.Pow(a / b, 4.0) / 4.0 + Math.Pow(a / b, 3.0) + Math.Pow(a / b, 2.0) / 2.0);
                 int stotalcl;
                 int stotalcu;
                 if (stotalvar < 0.0)
@@ -1383,7 +1384,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    stotalcl = Convert.ToInt32(Convert.ToDouble(stotal) - cit * Math.Sqrt(stotalvar));
+                    // there cannot be fewer classes than were observed
+                    stotalcl = Math.Max(rx, Convert.ToInt32(Convert.ToDouble(stotal) - cit * Math.Sqrt(stotalvar)));
                     stotalcu = Convert.ToInt32(Convert.ToDouble(stotal) + cit * Math.Sqrt(stotalvar));
                 }
 
