@@ -3309,8 +3309,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("dev", dev);
             outputParameters.AddOutput("df", idf);
             outputParameters.AddOutput("rank", irank);
-            outputParameters.AddOutput("aka", dev + 2 * (1 + m));
-            outputParameters.AddOutput("sch", dev + (2 + m) * Math.Log(n));
+            outputParameters.AddOutput("aka", dev + 2 * p); // p parameters: the predictors, and the intercept only when one was fitted
+            outputParameters.AddOutput("sch", dev + p * Math.Log(n)); // the same p parameters as the Akaike criterion; it used to count one more
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
             if (x2Dev < 0.0)
@@ -3506,8 +3506,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("dev", dev);
             outputParameters.AddOutput("idf", idf);
             outputParameters.AddOutput("rank", irank);
-            outputParameters.AddOutput("aka", dev + 2 * (1 + m));
-            outputParameters.AddOutput("sch", dev + (2 + m) * Math.Log(n));
+            outputParameters.AddOutput("aka", dev + 2 * p); // p parameters: the predictors, and the intercept only when one was fitted
+            outputParameters.AddOutput("sch", dev + p * Math.Log(n)); // the same p parameters as the Akaike criterion; it used to count one more
             outputParameters.AddOutput("devx", devx);
             double x2Dev = devx - dev;
             if (devx == Constant.MISSING)
@@ -3887,7 +3887,7 @@ namespace StatsDirect.Builtins
             }
 
             parametersParameters.AddOutput("model", tx);
-            parametersParameters.AddOutput("aic", dev + 2 * (1 + m));
+            parametersParameters.AddOutput("aic", dev + 2 * totalCoefficients); // the parameters of THIS model; the full model's count made every sub-model look worse than it is
             double x2dev = devx - dev;
             double r2;
             if (devx == Constant.MISSING)
