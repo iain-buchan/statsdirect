@@ -33,6 +33,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Multiple regression: adjusted R² is reported as calculated when it is negative, as R, Stata and SAS do, where earlier versions showed 0%; without an intercept its total degrees of freedom are n, not n - 1, as in R
 
 ### Fixed
+- Quantile confidence interval and percentile reference range: a quantile below the first ordered value was interpolated towards zero instead of being the minimum, so a 95% percentile reference range was wrong for fewer than 39 observations
 - Logistic and Poisson regression: the Schwarz criterion counted one parameter more than the Akaike criterion (12.016 where 9.936 is right for the help's logistic example), both counted an intercept when none was fitted, and model selection gave every candidate the full model's penalty, so its Akaike column always favoured the largest model
 - Log-rank and Wilcoxon tests: the matrix printed as the variance-covariance matrix had its leading block inverted (0.088912 where 11.24706 belongs in the help's example); the combined strata table headed its column of groups Stratum. Test statistics and P values were right
 - Stratified log-rank and Wilcoxon tests with more than two groups: the chi-square for trend across the combined strata was calculated from a partly inverted covariance matrix, so it was wrong and could be negative; a singular last stratum made the combined test missing

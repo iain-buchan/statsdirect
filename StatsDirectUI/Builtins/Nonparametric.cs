@@ -138,7 +138,8 @@ namespace StatsDirect.Builtins
             double iq = qc * (rx + 1);
             if (iq > rx)
                 iq = rx;
-            if (iq < 0)
+            // below the first order statistic the quantile is the minimum; "iq < 0" could never be true, and r[0] is not an observation
+            if (iq < 1)
                 iq = 1;
             if (iq - Math.Floor(iq) == 0)
                 xq = r[Convert.ToInt32(iq)];
