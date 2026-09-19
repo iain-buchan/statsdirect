@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.0.0] 2026-09-18
+##[v5.0.0] 2026-09-20
 
 Version 5 follows an independent audit of the calculation layer against R (and more accurate references where R has none), which found 24 defects. All are corrected here, and each correction was confirmed on the Windows build. Results from the procedures listed below can differ from version 4.
 
@@ -27,6 +27,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - StatsDirect starts faster and the first analysis of a session is quicker (about a quarter to nearly a half less time in measurements of start-up work); a few calculation-heavy analyses take slightly longer the first time they run. .Net's tiered compilation, switched off since June 2024, is back at its default. Results are unchanged
 - The installer no longer tries to generate native images with the .NET Framework's ngen, a step left from version 3 that could do nothing for a .NET 10 program; the About box no longer reports "JIT-compiled"
 - Help: the Search tab finds words. The help file now carries a full-text search index, which the version 4 help never had
+- Help: a citation in a topic opens the entry it cites in the reference list, not the top of the list. The reference list is in one consistent style, with a DOI link wherever the work has one (257 entries, where 71 had one), and misspelt authors and wrong years in citations are corrected
 
 ### Fixed
 - Conditional maximum likelihood estimates printed as 0 in the diagnostic test, exact odds ratio interval, retrospective risk, comparison of two rates, log-rank hazard ratio and Mantel-Haenszel (exact option) reports; the intervals and P values were right. Introduced in April 2024, so versions 4.0.0 to 4.0.5 are affected
