@@ -28,6 +28,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - The installer no longer tries to generate native images with the .NET Framework's ngen, a step left from version 3 that could do nothing for a .NET 10 program; the About box no longer reports "JIT-compiled"
 - Help: the Search tab finds words. The help file now carries a full-text search index, which the version 4 help never had
 - Help: a citation in a topic opens the entry it cites in the reference list, not the top of the list. The reference list is in one consistent style, with a DOI link wherever the work has one (257 entries, where 71 had one), and misspelt authors and wrong years in citations are corrected
+- Multiple regression: adjusted R² is reported as calculated when it is negative, as R, Stata and SAS do, where earlier versions showed 0%; without an intercept its total degrees of freedom are n, not n - 1, as in R
 
 ### Fixed
 - Weighted descriptive statistics: a missing observation shifted the weights against the data in every later row, so the mean, variance, confidence interval, moments and centiles were wrong, sometimes wildly (values 1, missing, 3 with weights 1, 100, 1 gave a mean of 150.5)
