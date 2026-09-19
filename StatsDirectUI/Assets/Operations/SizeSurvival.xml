@@ -44,7 +44,7 @@
         </double>
         <double>
           <name>m</name>
-          <prompt>Number of controls per case</prompt>
+          <prompt>Number of controls per experimental subject</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
           <default-value>1</default-value>

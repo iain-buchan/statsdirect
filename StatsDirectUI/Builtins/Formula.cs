@@ -233,18 +233,20 @@ namespace StatsDirect.Builtins
             if (ct != 0.0)
             {
                 bool hasEt = "time".Equals(parameters["time-or-hr"].AsString);
+                // hr is the hazard of experimental subjects relative to controls, as the prompt asks for it. With exponential
+                // survival the hazard is ln(2) / median, so the hazards are in the inverse ratio of the median survival times.
                 if (hasEt)
                 {
                     et = parameters["et"].AsDouble;
-                    hr = et / ct;
+                    hr = ct / et;
                 }
                 else
                 {
                     hr = parameters["hr"].AsDouble;
-                    et = hr * ct;
+                    et = ct / hr;
                 }
             }
-            if (ct > 0.0 && power > 0.0 && power < 1.0 && alpha > 0.0 && alpha < 1.0 && hr != 1.0 && hr > 0.0 && at >= 0.0 && fut >= 0.0)
+            if (ct > 0.0 && et > 0.0 && power > 0.0 && power < 1.0 && alpha > 0.0 && alpha < 1.0 && hr != 1.0 && hr > 0.0 && !double.IsInfinity(hr) && at >= 0.0 && fut >= 0.0 && at + fut > 0.0)
             {
                 if (at == 0.0)
                     at = fut * 0.00004;
@@ -269,6 +271,8 @@ namespace StatsDirect.Builtins
 
                 ParameterBag outputParameters = new();
                 outputParameters.AddOutput("ctFmt", ct);
+                // the experimental median is shown whichever way the inputs were given, so that the direction of the ratio is visible
+                outputParameters.AddOutput("etFmt", et);
                 outputParameters.AddOutput("hrFmt", hr);
                 outputParameters.AddOutput("atFmt", at);
                 outputParameters.AddOutput("futFmt", fut);
@@ -282,7 +286,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     outputParameters.AddOutput("size", n);
-                    outputParameters.AddOutput("controls", n * M);
+                    outputParameters.AddOutput("controls", Math.Ceiling(n * M));
                 }
                 List<ParameterBag> assumptionsList = new();
                 outputParameters.AddOutput("*assumptions", assumptionsList);
