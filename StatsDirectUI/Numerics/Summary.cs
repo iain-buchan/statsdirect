@@ -346,18 +346,22 @@ namespace StatsDirect.Numerics
             }
 
             index = centile * n;
+            // Normalised weights carry rounding error (two weights of 49 become 0.99999999999999989 each), so whether the
+            // cumulative weight has reached the index exactly, which is when two neighbours are averaged, is tested within a
+            // tolerance. With unit weights the result is unchanged.
+            double tol = 1.0E-9 * n;
             double cumsum = 0.0;
             int i;
             for (i = 1; i <= n; i++)
             {
                 cumsum += x[i].Weight;
-                if (cumsum > index)
+                if (cumsum > index + tol)
                     break;
                 lastcumsum = cumsum;
             }
             if (i > n)
                 i = n;
-            if (lastcumsum == index)
+            if (i > 1 && Math.Abs(lastcumsum - index) <= tol)
                 return (x[i - 1].Data + x[i].Data) / 2.0;
             return x[i].Data;
         }
