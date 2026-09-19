@@ -179,7 +179,8 @@ namespace StatsDirect.Builtins
                 double v = (data.Variables[k] as DoubleVariable).Data[j];
                 if (v != Constant.MISSING)
                 {
-                    if (v >= 0.0)
+                    // strictly positive: the logarithm of zero is minus infinity, which made the log-normal lines meaningless
+                    if (v > 0.0)
                     {
                         N++;
                         r[N] = Math.Log(variable.Data[j]);
