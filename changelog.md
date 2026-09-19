@@ -33,6 +33,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Multiple regression: adjusted R² is reported as calculated when it is negative, as R, Stata and SAS do, where earlier versions showed 0%; without an intercept its total degrees of freedom are n, not n - 1, as in R
 
 ### Fixed
+- Calculator, user defined functions, fill series and unit conversion could not evaluate any number with a decimal fraction when Windows uses a decimal comma
 - Weighted descriptive statistics: a missing observation shifted the weights against the data in every later row, so the mean, variance, confidence interval, moments and centiles were wrong, sometimes wildly (values 1, missing, 3 with weights 1, 100, 1 gave a mean of 150.5)
 - Weighted geometric mean multiplied each value by its weight inside the logarithm; it is the exponential of the weighted mean of the logs (values 2, 2, 2 with weights 1, 2, 3 gave 1.817)
 - Weighted centiles: whether the cumulative weight fell exactly on a centile, where two neighbouring values are averaged, was tested exactly on weights that carry rounding error, so the average was often missed (values 1, 2 with weights 49, 49 gave a median of 2)
