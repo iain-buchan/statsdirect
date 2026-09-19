@@ -119,6 +119,8 @@ namespace StatsDirect.Numerics
                     k++;
                     xs[k].Data = x[i];
                     xo[k] = x[i];
+                    // keep each weight with its observation: rows dropped above must not shift the weights against the data
+                    w[k] = v[i];
                     sumv += v[i];
                     ValidData++;
                 }
@@ -134,12 +136,12 @@ namespace StatsDirect.Numerics
             else
             {
                 double nsumv = nvSum != Constant.MISSING ? nvSum : nnx / sumv;
-                for (int i = start; i < ValidData + start; i++)
+                for (int i = 1; i <= ValidData; i++)
                 {
-                    SumOfWeights += v[i];
-                    double wt = v[i] * nsumv;
-                    w[i + 1 - start] = wt;
-                    xs[i + 1 - start].Weight = wt;
+                    SumOfWeights += w[i];
+                    double wt = w[i] * nsumv;
+                    w[i] = wt;
+                    xs[i].Weight = wt;
                     WeightedSum += wt;
                 }
             }
