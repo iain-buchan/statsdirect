@@ -3620,8 +3620,16 @@ namespace StatsDirect.Builtins
             }
 
             // get inequalities (Fisher LSD on ranks) for each pair
-            double s2 = lx * (lx + 1) / 12.0;
-            double s2X = s2 * (lx - 1.0 - h) / (lx - frame.VariableCount);
+            // Conover (1999), as kwAllPairsConoverTest of PMCMRplus and conover.test do it in R: the variance of the ranks
+            // allows for ties, S2 = (sum of squared ranks - N(N+1)^2/4) / (N - 1), which is N(N+1)/12 when there are none, and the
+            // Kruskal-Wallis statistic is the one adjusted for ties. N(N+1)/12 and the unadjusted statistic were used before,
+            // ties or not, which made the comparisons slightly conservative with tied data.
+            double sumSquaredRanks = 0.0;
+            for (int n = 1; n <= lx; n++)
+                sumSquaredRanks += w1[n] * w1[n];
+            double s2 = (sumSquaredRanks - lx * (lx + 1.0) * (lx + 1.0) / 4.0) / (lx - 1.0);
+            double hForTies = t != 0.0 && ha != Constant.MISSING ? ha : h;
+            double s2X = s2 * (lx - 1.0 - hForTies) / (lx - frame.VariableCount);
 
             IList<ParameterBag> inequalityList = new List<ParameterBag>();
             for (int i = 1; i < frame.VariableCount; i++)
