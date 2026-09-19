@@ -4238,9 +4238,14 @@ namespace StatsDirect.Builtins
             //  Predictors are guaranteed to be in the same order as the labels
             StringVariable valueVariable = (StringVariable)candidatePredictors.Variables[1];
             DoubleVariable oldValueVariable = (DoubleVariable)candidatePredictors.Variables[2];
+            // A blank or non-numeric predictor arrives as MISSING (a huge negative number). The prediction is then missing too:
+            // PFromLogit would otherwise turn the resulting logit into a confident 0 or 1.
+            bool missingPredictor = false;
             for (int i = 1; i <= p - iq; i++)
             {
                 newx[i + 1] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1]);
+                if (newx[i + 1] == Constant.MISSING || double.IsNaN(newx[i + 1]) || double.IsInfinity(newx[i + 1]))
+                    missingPredictor = true;
                 if (newx[i + 1] != oldValueVariable.Data[i - 1])
                     lsqmean = false;
             }
@@ -4297,6 +4302,12 @@ namespace StatsDirect.Builtins
             else
             {
                 newy = PFromLogit(newy);
+                lcl = Constant.MISSING;
+                ucl = Constant.MISSING;
+            }
+            if (missingPredictor)
+            {
+                newy = Constant.MISSING;
                 lcl = Constant.MISSING;
                 ucl = Constant.MISSING;
             }
@@ -4395,10 +4406,14 @@ namespace StatsDirect.Builtins
 
         private static double PFromLogit(double x)
         {
-            double y = Formatting.SafeExp(-x);
-            return y != Constant.MISSING && y != 1.0
-                ? 1.0 / (1.0 + y) 
-                : Constant.MISSING;
+            if (x == Constant.MISSING || double.IsNaN(x))
+                return Constant.MISSING;
+            // Each branch exponentiates a non-positive number, so neither tail overflows; a logit of exactly zero is a
+            // probability of one half, which this function used to return as missing.
+            if (x >= 0.0)
+                return 1.0 / (1.0 + Math.Exp(-x));
+            double y = Math.Exp(x);
+            return y / (1.0 + y);
         }
 
         private static void x_lclass(double[] t, double[] fvl, double[] y, int N, out int tp, out int fp, out int fn, out int tn, double co)
