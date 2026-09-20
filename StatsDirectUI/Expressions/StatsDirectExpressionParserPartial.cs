@@ -48,6 +48,18 @@ namespace StatsDirect.Expressions
             return new IntegerNode { Value = int.Parse(text) };
         }
 
+        /// <summary>
+        /// The lexer admits digits, one decimal separator (a point or, by locale, a comma) and an exponent, and no grouping, so the
+        /// text is read the same way whatever the Windows number settings are. It used to be read with those settings, which
+        /// failed where the decimal symbol is neither a point nor a comma, and for the built-in unit conversions (written with a
+        /// point) wherever it is a comma.
+        /// </summary>
+        private static DoubleNode ParseFloat(string text)
+        {
+            string invariant = text.Replace('d', 'e').Replace('D', 'E').Replace(',', '.');
+            return new DoubleNode { Value = double.Parse(invariant, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture) };
+        }
+
         private static StringNode ParseString (string rawText)
         {
             // At present, there are no metacharacters within the string; it's just a case of topping and tailing the quoted string.

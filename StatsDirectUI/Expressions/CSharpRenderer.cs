@@ -192,7 +192,9 @@ namespace StatsDirect.Expressions
 
         public void Visit(IntegerNode node)
         {
-            activeBuilder.Append(node.Value);
+            // written for the compiler, not for the reader: some regional settings (Norwegian, Swedish, Finnish) give a negative
+            // number the typographic minus sign, which is not C#, so that -2 could not be evaluated at all
+            activeBuilder.Append(node.Value.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
 
         public void Visit(MonadicNode node)

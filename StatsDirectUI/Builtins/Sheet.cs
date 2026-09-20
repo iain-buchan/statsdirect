@@ -99,7 +99,9 @@ namespace StatsDirect.Builtins
             string[] splitConversion = conversion.Split('|');
             string formula = splitConversion[0];
             string outputUnits = splitConversion[1];
-            Calcit c = new(formula, new[] { DataType.Double }, false);
+            // the built-in conversions are written with a decimal point: read them so whatever the regional settings (60 of the 68
+            // could not be read where the comma is the decimal separator)
+            Calcit c = new(formula, new[] { DataType.Double }, false, true);
             double[] x = new double[1];
 
             DataFrame dataFrame = parameters["data"].AsDataFrame;

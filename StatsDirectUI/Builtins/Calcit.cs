@@ -33,19 +33,25 @@ namespace StatsDirect.Builtins
         /// <param name="passedVariableTypes"></param>
         /// <param name="assumeVariants">If true, </param>
         public Calcit(string equation, DataType[] passedVariableTypes, bool assumeVariants)
+            : this(equation, passedVariableTypes, assumeVariants, false)
         {
-            OutputType = SetEquation(equation, passedVariableTypes, assumeVariants, out bool _);
+        }
+
+        /// <param name="invariantNotation">true for a formula that ships with the program (the unit conversions), which is written with a decimal point whatever the regional settings</param>
+        public Calcit(string equation, DataType[] passedVariableTypes, bool assumeVariants, bool invariantNotation)
+        {
+            OutputType = SetEquation(equation, passedVariableTypes, assumeVariants, invariantNotation, out bool _);
         }
 
         public static bool IsValid(string expression) => Converter.IsValid(expression);
 
-        private DataType SetEquation(string equation, DataType[] passedVariableTypes, bool assumeVariants, out bool compiledForVariants)
+        private DataType SetEquation(string equation, DataType[] passedVariableTypes, bool assumeVariants, bool invariantNotation, out bool compiledForVariants)
         {
             const string typeName = "Temp1";
             const string methodName = "DoIt";
             bool allDoubles = passedVariableTypes.Aggregate(true, (okSoFar, dt) => okSoFar && dt == DataType.Double);
             compiledForVariants = assumeVariants || !allDoubles;
-            string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out DataType retval);
+            string cSharpExpression = Converter.ConvertToCSharp(equation, passedVariableTypes, compiledForVariants, out DataType retval, invariantNotation);
 
             // By now, cSharpExpression will either be safe (every character has been through the parser) or an exception will have been thrown.  Therefore, it's reasonable to throw the expression at the compiler.
             StringBuilder functionBuilder = new();

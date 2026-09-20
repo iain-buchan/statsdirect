@@ -62,7 +62,7 @@ factorial returns [INode node]
 	
 term returns [INode node]
 	: INTEGER { $node = ParseInteger($INTEGER.text); }
-	| FLOAT { $node = new DoubleNode { Value = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")) }; }
+	| FLOAT { $node = ParseFloat($FLOAT.text); }
 	| STRING { $node = ParseString($STRING.text); }
 	| LPAREN expr RPAREN { $node = $expr.node; }
 	| constant { $node = $constant.node; }
@@ -74,9 +74,11 @@ function returns [FunctionNode node]
 	: functionName=IDENTIFIER LPAREN argumentlist RPAREN { $node = new FunctionNode { Name = $functionName.text.ToUpper(System.Globalization.CultureInfo.InvariantCulture), Arguments = $argumentlist.arguments }; }
 	;
 	
+// Arguments are separated by a comma or, as in spreadsheets where the comma is the decimal separator, by a semicolon:
+// PT(2,5; 10) is PT of 2.5 with 10 degrees of freedom there. The semicolon is accepted everywhere.
 argumentlist returns [Arguments arguments]
 	: lhs=arg { $arguments = new Arguments(); if (null != $lhs.argument) $arguments.Add($lhs.argument); }
-	( COMMA rhs=arg { $arguments.Add($rhs.argument); }) *
+	( (COMMA | SEMICOLON) rhs=arg { $arguments.Add($rhs.argument); }) *
 	;
 	
 arg returns [Argument argument]
@@ -119,13 +121,20 @@ explicitParameterName
 
 // Anything below here is lexical analysis
 
-INTEGER :	DIGITSANDTHOUSANDS
+// A number is digits, an optional decimal separator and an optional exponent: no thousands separators. They used to be
+// looked for (a comma, a point or a space, by locale, followed by three digits), which nobody types in a formula but which
+// an argument list typed without spaces contains: PT(2,120) and PBINOM(3,100,0.5) stopped with a format error, and
+// PT(10,120.25,0.5) was silently read as PT(10120.25, 0.5). A whole number written with separators never did work.
+INTEGER :	DIGITS
     ;
 
+// A decimal point may end a number (2. is 2) but a decimal comma may not: where the comma is the decimal separator
+// "2," used to be taken as a number, so that PT(2, 10) could not be read at all.
 FLOAT
-    :   DIGITSANDTHOUSANDS DECIMALSEPARATOR ('0'..'9')* EXPONENT?
+    :   DIGITS DECIMALSEPARATOR ('0'..'9')+ EXPONENT?
+    |   DIGITS TRAILINGPOINT EXPONENT?
     |   DECIMALSEPARATOR ('0'..'9')+ EXPONENT?
-    |   DIGITSANDTHOUSANDS EXPONENT
+    |   DIGITS EXPONENT
     ;
 
 // Tokens.  Implemented in this way to provide cheap, portable case-insensitivity.
@@ -152,6 +161,7 @@ IDENTIFIER: L O G '!' | FirstOfIdentifier (MiddleOfIdentifier* LastOfIdentifier)
 BACKSLASH	: '\\';
 CARET		: '^';
 COMMA		: ',';
+SEMICOLON	: ';';
 DOUBLEAMPERSAND: '&&';
 DOUBLEBAR	: '||';
 EXCLAIM		: '!';
@@ -214,15 +224,12 @@ WS:     ( ' '
 
 fragment EXPONENT : ('d'|'D'|'e'|'E') ('+'|'-')? ('0'..'9')+ ;
 
-fragment DIGITSANDTHOUSANDS
-	: ('0'..'9')('0'..'9')('0'..'9')('0'..'9')+
-	| ('0'..'9')('0'..'9')?('0'..'9')? (THOUSANDSEPARATOR ('0'..'9')('0'..'9')('0'..'9'))*
+fragment DIGITS
+	: ('0'..'9')+
 	;
 
-fragment THOUSANDSEPARATOR
-	: {Separators == SeparatorStructure.CommaDot}? ','
-	| {Separators == SeparatorStructure.DotComma}? '.'
-	| {Separators == SeparatorStructure.SpaceDot}? ' '
+fragment TRAILINGPOINT
+	: {Separators != SeparatorStructure.DotComma}? '.'
 	;
 
 fragment DECIMALSEPARATOR

@@ -119,12 +119,22 @@ namespace StatsDirect.UI
                 txtTo.Text = Formatting.ASTERISK;
             else
             {
-                Conversion conversion = (Conversion)cboConversion.SelectedItem;
-                Calcit c = new(conversion.Expression, new[] { DataType.Double }, false);
-                double[] x = new double[1];
-                x[0] = from;
-                txtTo.Text = c.Evaluate<object>(x).ToString();
-                lastCalculationAsString = txtFrom.Text + " as " + conversion.ResultUnit + " = " + txtTo.Text;
+                if (cboConversion.SelectedItem is not Conversion conversion)
+                    return; // no conversion chosen yet
+                try
+                {
+                    // the built-in conversions are written with a decimal point: read them so whatever the regional settings
+                    Calcit c = new(conversion.Expression, new[] { DataType.Double }, false, true);
+                    double[] x = new double[1];
+                    x[0] = from;
+                    txtTo.Text = c.Evaluate<object>(x).ToString();
+                    lastCalculationAsString = txtFrom.Text + " as " + conversion.ResultUnit + " = " + txtTo.Text;
+                }
+                catch (Exception)
+                {
+                    // an error here used to reach the application's handler for unhandled errors, which closes the program
+                    txtTo.Text = Formatting.ASTERISK;
+                }
             }
         }
 

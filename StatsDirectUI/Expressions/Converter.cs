@@ -7,17 +7,13 @@ namespace StatsDirect.Expressions
 {
     public class Converter
     {
-        public static bool IsValid(string expr)
+        /// <param name="invariantNotation">true for a formula that ships with the program, which is written with a decimal point whatever the regional settings</param>
+        public static bool IsValid(string expr, bool invariantNotation = false)
         {
-            // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.
-            // TODO: This also smashes spaces in strings, which we don't want!
-            if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
-                expr = expr.Replace(" ", string.Empty);
-
             AntlrInputStream input = new(expr);
             StatsDirectExpressionLexer lexer = new(input)
             {
-                Separators = GetSeparatorStructure()
+                Separators = invariantNotation ? StatsDirectExpressionLexer.SeparatorStructure.CommaDot : GetSeparatorStructure()
             };
             CommonTokenStream tokenStream = new(lexer);
             StatsDirectExpressionParser parser = new(tokenStream);
@@ -46,17 +42,13 @@ namespace StatsDirect.Expressions
             return true;
         }
 
-        public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes, bool inputsAreObjects, out DataType resultType)
+        /// <param name="invariantNotation">true for a formula that ships with the program, which is written with a decimal point whatever the regional settings</param>
+        public static string ConvertToCSharp(string expr, DataType[] passedVariableTypes, bool inputsAreObjects, out DataType resultType, bool invariantNotation = false)
         {
-            // Spaces in the input stream get confused with spaces in thousand separators, so smash spaces if the thousands separator is spaces.
-            // TODO: This also smashes spaces in strings, which we don't want!
-            if (" ".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator))
-                expr = expr.Replace(" ", string.Empty);
-
             AntlrInputStream input = new(expr);
             StatsDirectExpressionLexer lexer = new(input)
             {
-                Separators = GetSeparatorStructure()
+                Separators = invariantNotation ? StatsDirectExpressionLexer.SeparatorStructure.CommaDot : GetSeparatorStructure()
             };
             CommonTokenStream tokenStream = new(lexer);
             StatsDirectExpressionParser parser = new(tokenStream);
@@ -113,6 +105,21 @@ namespace StatsDirect.Expressions
             public void SyntaxError(IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
             {
                 sb.AppendLine("Line " + line + ", character " + charPositionInLine + ": " + msg);
+                if (offendingSymbol == null || sb.ToString().Contains("thousands separators"))
+                    return;
+                bool decimalComma = ",".Equals(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+                string text = offendingSymbol.Text ?? string.Empty;
+                if (!decimalComma && ",".Equals(text))
+                {
+                    // a comma where none is expected is usually a thousands separator, which an expression does not take
+                    sb.AppendLine("Numbers are typed without thousands separators (1234.5). A comma or a semicolon separates the arguments of a function.");
+                }
+                else if (decimalComma && (".".Equals(text) || text.StartsWith(",", StringComparison.Ordinal)))
+                {
+                    // a point is the usual thousands separator here; and a comma straight before a digit begins a number (",5" is 0,5),
+                    // so that X1,5 is two values side by side
+                    sb.AppendLine("Numbers are typed without thousands separators (1234,5). The comma is the decimal separator, so separate the arguments of a function with a semicolon, or put a space after the comma: PT(X1; 5) or PT(X1, 5).");
+                }
             }
         }
     }
