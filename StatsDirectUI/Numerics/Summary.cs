@@ -351,7 +351,10 @@ namespace StatsDirect.Numerics
             index = centile * n;
             // Normalised weights carry rounding error (two weights of 49 become 0.99999999999999989 each), so whether the
             // cumulative weight has reached the index exactly, which is when two neighbours are averaged, is tested within a
-            // tolerance. With unit weights the result is unchanged.
+            // tolerance. With unit weights the median and quartiles are unchanged (0.25 n, 0.5 n and 0.75 n are exact). A user
+            // defined centile changes only where centile * n is a whole number that floating point misses: 0.29 * 100 is
+            // 28.999999999999996 and 0.07 * 100 is 7.000000000000001, so the 29th and 7th centiles of 100 values were not
+            // averaged although the 10th was; now all three are, as the definition says.
             double tol = 1.0E-9 * n;
             double cumsum = 0.0;
             int i;
