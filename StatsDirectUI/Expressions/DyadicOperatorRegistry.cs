@@ -19,7 +19,6 @@ namespace StatsDirect.Expressions
             InOutDataTypeDefinition bii = new(DataType.Boolean, new[] { DataType.Integer, DataType.Integer });
             InOutDataTypeDefinition bss = new(DataType.Boolean, new[] { DataType.String, DataType.String });
             InOutDataTypeDefinition ddd = new(DataType.Double, new[] { DataType.Double, DataType.Double });
-            InOutDataTypeDefinition idd = new(DataType.Integer, new[] { DataType.Double, DataType.Double });
             InOutDataTypeDefinition iii = new(DataType.Integer, new[] { DataType.Integer, DataType.Integer });
             InOutDataTypeDefinition ssb = new(DataType.String, new[] { DataType.String, DataType.Boolean });
             InOutDataTypeDefinition ssd = new(DataType.String, new[] { DataType.String, DataType.Double });
@@ -28,7 +27,7 @@ namespace StatsDirect.Expressions
             definitions = new Dictionary<DyadicOperator, DyadicOperatorDefinition>();
             AddAll(new[]
             {
-                new DyadicOperatorDefinition(DyadicOperator.IntegerDivide,       "SDMath.Idiv({0}, {1})",       new[] { idd }),
+                new DyadicOperatorDefinition(DyadicOperator.IntegerDivide,       "SDMath.Idiv({0}, {1})",       new[] { ddd }), // Idiv returns a double: typed as Integer it made a comparison of a whole number with an integer division throw at run time
                 new DyadicOperatorDefinition(DyadicOperator.Pow,                 "Math.Pow({0}, {1})",          new[] { ddd }),
                 new DyadicOperatorDefinition(DyadicOperator.Add,                 "({0}) + ({1})",               new[] { iii, ddd, sss, ssd, ssi, ssb }),
                 new DyadicOperatorDefinition(DyadicOperator.And,                 "({0}) && ({1})",              new[] { bbb }),

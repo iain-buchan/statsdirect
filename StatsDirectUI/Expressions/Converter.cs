@@ -24,7 +24,17 @@ namespace StatsDirect.Expressions
             StringBuilder errorBuilder = new();
             parser.RemoveErrorListeners();
             parser.AddErrorListener(new AccumulateErrors(errorBuilder));
-            StatsDirectExpressionParser.RContext retval = parser.r();
+            StatsDirectExpressionParser.RContext retval;
+            try
+            {
+                retval = parser.r();
+            }
+            catch (Exception)
+            {
+                // the parser's own actions throw for such things as a name that is not a variable ("abc"): that is an invalid
+                // expression, not a reason for the validation itself to fail
+                return false;
+            }
             if (parser.NumberOfSyntaxErrors > 0)
                 return false;
 

@@ -34,6 +34,7 @@ Version 5 follows an independent audit of the calculation layer against R (and m
 - Multiple regression: adjusted R² is reported as calculated when it is negative, as R, Stata and SAS do, where earlier versions showed 0%; without an intercept its total degrees of freedom are n, not n - 1, as in R
 
 ### Fixed
+- Calculator and worksheet functions: comparing a whole number with an integer division, as in 3 = 7\2, stopped with an error; checking whether a piece of text is a valid expression could itself stop with an error (for a text search such as abc) instead of answering no
 - Search and replace (advanced) evaluated missing cells, so a rule such as X < 0 matched blanks and a replacement such as ABS(X) turned them into 1.8E308; Fill series discarded any formula shorter than three characters, such as -X
 - Kruskal-Wallis, Conover-Iman comparisons: with tied data the variance of the ranks and the Kruskal-Wallis statistic in the comparison now allow for the ties, as Conover (1999) and the R packages PMCMRplus and conover.test do; the untied forms were used before, which was slightly conservative (0.0078 where 0.0071 is right for the first comparison in the help's example). Nothing changes without ties
 - Random numbers: gamma deviates were generated for a scaling parameter B of zero (a column of zeros) or below zero (negative "gamma" deviates) without complaint; the prompt for the second parameter of beta deviates called it a non-centrality parameter, where it is the second shape parameter
