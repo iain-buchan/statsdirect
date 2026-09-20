@@ -1425,9 +1425,14 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    // there cannot be fewer classes than were observed
-                    stotalcl = Math.Max(rx, Convert.ToInt32(Convert.ToDouble(stotal) - cit * Math.Sqrt(stotalvar)));
-                    stotalcu = Convert.ToInt32(Convert.ToDouble(stotal) + cit * Math.Sqrt(stotalvar));
+                    // Chao's (1987) log-normal interval, as SPECIES::chao1984 computes it in R: the number of classes NOT seen,
+                    // S - s = a^2 / 2b, is treated as log-normal, so the lower limit cannot fall below the s classes observed.
+                    // C = exp(z sqrt(ln(1 + var / (S - s)^2))); limits s + (S - s) / C and s + (S - s) C.
+                    // A symmetrical normal interval was printed before, which often went below s and could be negative.
+                    double unseen = Math.Pow(a, 2.0) / (2.0 * b);
+                    double c = Math.Exp(cit * Math.Sqrt(Math.Log(1.0 + stotalvar / (unseen * unseen))));
+                    stotalcl = Convert.ToInt32(rx + unseen / c);
+                    stotalcu = Convert.ToInt32(rx + unseen * c);
                 }
 
                 ParameterBag varParameters = new();

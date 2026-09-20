@@ -8,7 +8,7 @@ Number of classes observed (richness) = @s</p>
 
 <p><b>Estimated total number of classes = @stotal</b><br />
 Standard error (large sample) = @{se-largeSample:roundu}<br />
-<ci>Normal (large sample) @{pc:round2}% CI = @from-largeSample to @to-largeSample</ci></p>
+<ci>Log-normal (Chao) @{pc:round2}% CI = @from-largeSample to @to-largeSample</ci></p>
 
 <p><b>Simpson D<sub>s</sub> (Hurlburt PIE) = @{simpson:roundu}  </b>(dominance <i>l</i> = @{dom:roundu}, <i>d<sub>s</sub></i> = @{ds:roundu})<br />
 Standard error (large sample) = @{se-simpson-largeSample:roundu}<br />
