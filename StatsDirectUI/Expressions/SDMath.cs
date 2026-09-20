@@ -339,8 +339,8 @@ namespace StatsDirect.Expressions
 
         public static double InvChi2Tail(double df, double p)
         {
-            double result = PDF.ppchi2(1.0 - p, df, out int fault); // p is an upper tail area, as CHI2TAIL returns; ppchi2 inverts a lower tail
-            return fault != 0 ? Constant.MISSING : result;
+            // p is an upper tail area, as CHI2TAIL returns
+            return Qchisq(p, df, false, false);
         }
 
         public static double Ftail(double dfn, double dfd, double q)
@@ -350,7 +350,8 @@ namespace StatsDirect.Expressions
 
         public static double InvFtail(double dfn, double dfd, double p)
         {
-            return PDF.ffromp(dfd, dfn, p);
+            // p is an upper tail area, as FTAIL returns
+            return Qf(p, dfn, dfd, false, false);
         }
 
         public static double Pnorm(double q, double mean, double sd, bool lowerTail, bool logP)
@@ -887,44 +888,217 @@ namespace StatsDirect.Expressions
 
         public static double Pchisq(double q, double df, bool lowerTail, bool logP)
         {
-            // chi-square cannot be negative, so everything lies above a negative q (the engine's routine refuses one)
-            double p = q < 0.0 && df > 0.0 && q != Constant.MISSING ? 1.0 : PDF.chivalp(q, df);
-            // chivalp is the upper tail area
-            if (lowerTail)
-                p = 1.0 - p;
-            if (logP)
-                p = Math.Log(p);
-            return p;
+            // Each tail is computed as itself: the lower tail used to be 1 minus the upper, which lost a small one altogether
+            // (PCHISQ(5, 100) was 0 where it is 2.2e-46). Chi-square cannot be negative, so everything lies above a negative q
+            // (the engine's routine refuses one).
+            double lower, upper;
+            if (q < 0.0 && df > 0.0 && q != Constant.MISSING)
+            {
+                lower = 0.0;
+                upper = 1.0;
+            }
+            else
+            {
+                upper = PDF.chivalp(q, df);
+                lower = PDF.gammad(q / 2.0, df / 2.0, false, out int fault);
+                if (fault != 0)
+                    lower = double.NaN;
+            }
+            if (!logP)
+                return lowerTail ? lower : upper;
+            double tail = lowerTail ? lower : upper;
+            double smallLog = double.NaN;
+            if (tail < TinyTail && q > 0.0 && df > 0.0)
+                smallLog = lowerTail ? LogGammaLowerTail(df / 2.0, q / 2.0) : LogGammaUpperTail(df / 2.0, q / 2.0);
+            return LogOfTail(tail, lowerTail ? upper : lower, smallLog);
+        }
+
+        /// <summary>
+        /// log of the lower incomplete gamma ratio P(a, x) from its series x^a e^-x / gamma(a + 1) (1 + x / (a + 1) + x^2 / ((a + 1)(a + 2)) + ...),
+        /// for a tail too small for a double (x far below a)
+        /// </summary>
+        private static double LogGammaLowerTail(double a, double x)
+        {
+            return a * Math.Log(x) - x - PDF.alogam(a + 1.0) + Math.Log(TailSeries(j => x / (a + j)));
+        }
+
+        /// <summary>
+        /// log of the upper incomplete gamma ratio Q(a, x) from x^(a - 1) e^-x / gamma(a) (1 + (a - 1) / x + (a - 1)(a - 2) / x^2 + ...),
+        /// Abramowitz and Stegun 6.5.32, for a tail too small for a double (x beyond a). The terms fall while k is below a + x,
+        /// and change sign once k passes a; for a whole number a the series ends and is exact.
+        /// </summary>
+        private static double LogGammaUpperTail(double a, double x)
+        {
+            double sum = 1.0, term = 1.0;
+            for (int k = 1; k < 1000000; k++)
+            {
+                double next = term * (a - k) / x;
+                if (next == 0.0 || Math.Abs(next) > Math.Abs(term))
+                    break;
+                term = next;
+                sum += term;
+                if (Math.Abs(term) < 1.0E-17 * Math.Abs(sum))
+                    break;
+            }
+            return (a - 1.0) * Math.Log(x) - x - PDF.alogam(a) + Math.Log(sum);
         }
 
         public static double Qchisq(double p, double df, bool lowerTail, bool logP)
         {
             if (logP)
                 p = Math.Exp(p);
+            // a small upper tail area cannot survive 1 - p (INVCHI2TAIL(1, 1e-20) gave no answer): it is inverted as an upper tail
+            if (!lowerTail && p < 1.0E-6)
+                return ChiSquareFromUpperTail(p, df);
             if (!lowerTail)
                 p = 1.0 - p;
             double result = PDF.ppchi2(p, df, out int fault);
             return fault != 0 ? Constant.MISSING : result;
         }
 
+        /// <summary>The chi-square with upper tail area p, by bracketing and bisection on the upper tail itself; for a small p.</summary>
+        private static double ChiSquareFromUpperTail(double p, double df)
+        {
+            // an area below the smallest normal double is refused: the tail is cut to 0 there, so every such area would give the
+            // chi-square for 2.2e-308, and a subnormal area (the exp of a log p below -708.4) keeps too few digits to invert
+            if (double.IsNaN(p) || double.IsNaN(df) || p < Constant.DBL_MIN || p >= 1.0 || df <= 0.0 || p == Constant.MISSING || df == Constant.MISSING)
+                return Constant.MISSING;
+            double low = 0.0, high = df + 10.0;
+            for (int i = 0; ; i++)
+            {
+                double area = PDF.chivalp(high, df);
+                if (double.IsNaN(area) || i > 1100)
+                    return Constant.MISSING;
+                if (area < p)
+                    break;
+                low = high;
+                high *= 2.0;
+            }
+            for (int i = 0; i < 2000 && high - low > 1.0E-15 * high; i++)
+            {
+                double mid = 0.5 * (low + high);
+                double area = PDF.chivalp(mid, df);
+                if (double.IsNaN(area))
+                    return Constant.MISSING;
+                if (area > p)
+                    low = mid;
+                else
+                    high = mid;
+            }
+            return 0.5 * (low + high);
+        }
+
         public static double Pf(double q, double df1, double df2, bool lowerTail, bool logP)
         {
-            double p = PDF.fvalp(q, df1, df2);
-            // fvalp is the upper tail area
-            if (lowerTail)
-                p = 1.0 - p;
-            if (logP)
-                p = Math.Log(p);
-            return p;
+            // fvalp is the upper tail area, I_x(df2 / 2, df1 / 2) at x = df2 / (df2 + df1 q), an argument formed without
+            // subtraction. Up to F = 1 the lower tail is the same function with the arguments exchanged at
+            // df1 q / (df2 + df1 q), also formed without subtraction; taken as 1 minus the upper tail it lost a small lower tail
+            // altogether (PF(0.001, 40, 10) was 0 where it is 1.1e-44). Beyond F = 1 that argument closes on 1 and loses its
+            // figures, and the lower tail is 1 minus the upper, which cannot lose anything there. F cannot be negative, so
+            // everything lies above a negative q.
+            double lower, upper;
+            if (q < 0.0 && q != Constant.MISSING && df1 > 0.0 && df2 > 0.0)
+            {
+                lower = 0.0;
+                upper = 1.0;
+            }
+            else
+            {
+                upper = PDF.fvalp(q, df1, df2);
+                if (q > 1.0)
+                    lower = 1.0 - upper;
+                else
+                {
+                    lower = PDF.betain(df1 * q / (df2 + df1 * q), df1 / 2.0, df2 / 2.0, out int fault);
+                    if (fault != 0)
+                        lower = double.NaN;
+                }
+            }
+            if (!logP)
+                return lowerTail ? lower : upper;
+            return LogOfTail(lowerTail ? lower : upper, lowerTail ? upper : lower, double.NaN);
         }
 
         public static double Qf(double p, double df1, double df2, bool lowerTail, bool logP)
         {
             if (logP)
                 p = Math.Exp(p);
-            if (!lowerTail)
-                p = 1.0 - p;
-            return PDF.ffromp(df2, df1, 1.0 - p); // ffromp(denominator df, numerator df, upper tail area); p here is a lower tail area
+            // A small tail area (below 1e-6) is inverted as itself: turned into the other tail and back it was lost, and the
+            // engine routine loses accuracy there and then gives no answer. A small lower tail area is the upper tail area of
+            // 1 / F with the degrees of freedom exchanged.
+            if (p > 0.0 && p < 1.0E-6)
+                return lowerTail ? Reciprocal(FFromUpperTail(p, df2, df1)) : FFromUpperTail(p, df1, df2);
+            // Otherwise the engine routine, ffromp(denominator df, numerator df, upper tail area), as before - but its answer is
+            // kept only if the tail area at it comes back as asked. For some arguments it does not: a lower tail area of 1.1e-6
+            // with 1 and 1000 degrees of freedom gave a negative F, and an upper tail area of 0.0005 with 1 and 1e8 gave 3.34
+            // where F is 12.12. Those are inverted directly. An area of 0 or 1, or arguments the routine refuses, are left to it.
+            double upper = lowerTail ? 1.0 - p : p, lower = lowerTail ? p : 1.0 - p;
+            double f = PDF.ffromp(df2, df1, upper);
+            if (!(upper > 0.0 && upper < 1.0 && df1 > 0.0 && df2 > 0.0))
+                return f;
+            if (FGivesTail(f, upper, lower, df1, df2))
+                return f;
+            double direct = upper <= lower ? FFromUpperTail(upper, df1, df2) : Reciprocal(FFromUpperTail(lower, df2, df1));
+            if (direct != Constant.MISSING)
+                return direct;
+            return Constant.MISSING;
+        }
+
+        private static double Reciprocal(double f)
+        {
+            return f == Constant.MISSING ? Constant.MISSING : 1.0 / f;
+        }
+
+        /// <summary>true when the smaller of the two tail areas at f is the one asked for, to 9 figures</summary>
+        private static bool FGivesTail(double f, double upper, double lower, double dfn, double dfd)
+        {
+            if (!(f > 0.0) || double.IsInfinity(f))
+                return false;
+            double want = Math.Min(upper, lower), got;
+            if (upper <= lower)
+                got = PDF.fvalp(f, dfn, dfd);
+            else
+            {
+                got = PDF.betain(dfn * f / (dfd + dfn * f), dfn / 2.0, dfd / 2.0, out int fault);
+                if (fault != 0)
+                    return false;
+            }
+            return Math.Abs(got - want) <= 1.0E-9 * want;
+        }
+
+        /// <summary>
+        /// The F with upper tail area p, by bisection on the logarithm of F over the range of a double: infinity when even
+        /// e^700 leaves more than p above it, 0 when even e^-700 leaves less. An area below the smallest normal double is
+        /// refused: it keeps too few digits to invert.
+        /// </summary>
+        private static double FFromUpperTail(double p, double dfn, double dfd)
+        {
+            if (double.IsNaN(p) || double.IsNaN(dfn) || double.IsNaN(dfd) || p < Constant.DBL_MIN || p >= 1.0 || dfn <= 0.0 || dfd <= 0.0 || p == Constant.MISSING)
+                return Constant.MISSING;
+            // each tail area takes time in proportion to the degrees of freedom, and some sixty are needed: beyond ten million a
+            // single answer would take minutes, so none is given (a chi-square quantile over its degrees of freedom serves there)
+            if (dfn > 1.0E7 || dfd > 1.0E7)
+                return Constant.MISSING;
+            double low = -700.0, high = 700.0; // ln F: the tail area falls from 1 to 0 across this range
+            double atLow = PDF.fvalp(Math.Exp(low), dfn, dfd), atHigh = PDF.fvalp(Math.Exp(high), dfn, dfd);
+            if (double.IsNaN(atLow) || double.IsNaN(atHigh))
+                return Constant.MISSING;
+            if (atLow <= p)
+                return 0.0;
+            if (atHigh >= p)
+                return double.PositiveInfinity;
+            for (int i = 0; i < 200 && high - low > 1.0E-15 * Math.Max(1.0, Math.Abs(low) + Math.Abs(high)); i++)
+            {
+                double mid = 0.5 * (low + high);
+                double area = PDF.fvalp(Math.Exp(mid), dfn, dfd);
+                if (double.IsNaN(area))
+                    return Constant.MISSING;
+                if (area > p)
+                    low = mid;
+                else
+                    high = mid;
+            }
+            return Math.Exp(0.5 * (low + high));
         }
 
         // Unary minus for the expression evaluator. A missing value, which is a huge negative sentinel, stays missing: a plain
