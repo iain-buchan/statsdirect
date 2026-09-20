@@ -28,54 +28,70 @@ namespace StatsDirect.Expressions
             return a > maxExp ? Constant.MISSING : Math.Exp(a);
         }
 
+        // The hyperbolic functions and their inverses come from the runtime library. The textbook formulas in exponentials,
+        // squares and logarithms that stood here overflowed or cancelled where the answer is an ordinary number:
+        // ASINH(-1e8) and ASINH(1e200) were infinite, ASINH(1e-20) and ATANH(1e-20) were 0, TANH(1000) and COTH(1000) were
+        // not a number, SINH(710) was infinite. The inverses of the reciprocal functions use acsch x = asinh(1/x), and
+        // asech x = acosh(1/x), acoth x = atanh(1/x) except near 1, where the quotient 1/x throws away what 1 - x still holds.
         public static double Asinh(double arg)
         {
-            return Math.Log(arg + Math.Sqrt(arg * arg + 1.0));
+            return Math.Asinh(arg);
         }
 
         public static double Acosh(double arg)
         {
-            return Math.Log(arg + Math.Sqrt(arg * arg - 1.0));
+            return Math.Acosh(arg);
         }
 
         public static double Atanh(double arg)
         {
-            return Math.Log((1.0 + arg) / (1.0 - arg)) / 2.0;
+            return Math.Atanh(arg);
         }
 
         public static double Asech(double arg)
         {
-            return Math.Log((Math.Sqrt(-arg * arg + 1.0) + 1.0) / arg);
+            // just below 1 the quotient 1/x falls on the coarser grid above 1 and acosh(1/x) loses up to half the figures of
+            // 1 - x, which is itself exact there; log(1 + sqrt((1 - x)(1 + x))) - log x adds two non-negative terms instead
+            if (arg >= 0.5 && arg <= 1.0)
+                return Log1p(Math.Sqrt((1.0 - arg) * (1.0 + arg))) - Math.Log(arg);
+            return Math.Acosh(1.0 / arg);
         }
 
         public static double Acsch(double arg)
         {
-            return Math.Log((Math.Sign(arg) * Math.Sqrt(arg * arg + 1.0) + 1.0) / arg);
+            return Math.Asinh(1.0 / arg);
         }
 
         public static double Acoth(double arg)
         {
-            return Math.Log((arg + 1.0) / (arg - 1.0)) / 2.0;
+            // acoth x = log((x + 1) / (x - 1)) / 2 = log(1 + 2 / (|x| - 1)) / 2 with the sign of x. |x| - 1 is exact just
+            // beyond 1, where atanh(1/x) loses figures, and 2 / (|x| - 1) is small for a large x, where the plain logarithm did
+            double half = 0.5 * Log1p(2.0 / (Math.Abs(arg) - 1.0));
+            return arg < 0.0 ? -half : half;
         }
 
+        // Inverse secant, cosecant and cotangent by the reciprocal identities: asec x = acos(1/x) in [0, pi],
+        // acsc x = asin(1/x) in [-pi/2, pi/2], acot x = pi/2 - atan x in (0, pi), continuous through x = 0.
+        // The formulas that stood here were those of an old table of "derived math functions", which is wrong for all
+        // three: sec(ASEC(2)) was 1.53, csc(ACSC(2)) was 1.32 and cot(ACOT(2)) was -2, where each should be 2.
         public static double Asec(double arg)
         {
-            return Math.Atan(arg / Math.Sqrt(arg * arg - 1.0)) + Math.Sign(Math.Sign(arg) - 1.0) * (2.0 * Math.Atan(1.0));
+            return Math.Acos(1.0 / arg);
         }
 
         public static double Acsc(double arg)
         {
-            return Math.Atan(arg / Math.Sqrt(arg * arg - 1.0)) + (Math.Sign(arg) - 1.0) * (2.0 * Math.Atan(1.0));
+            return Math.Asin(1.0 / arg);
         }
 
         public static double Acot(double arg)
         {
-            return Math.Atan(arg) + 2.0 * Math.Atan(1.0);
+            return Math.Atan2(1.0, arg);
         }
 
         public static double Sinh(double arg)
         {
-            return (Math.Exp(arg) - Math.Exp(-arg)) / 2.0;
+            return Math.Sinh(arg);
         }
 
         // CLOG (common logarithm) and COSH are in the function registry, and CLOG is in the help, but neither method existed,
@@ -92,22 +108,22 @@ namespace StatsDirect.Expressions
 
         public static double Tanh(double arg)
         {
-            return (Math.Exp(arg) - Math.Exp(-arg)) / (Math.Exp(arg) + Math.Exp(-arg));
+            return Math.Tanh(arg);
         }
 
         public static double Sech(double arg)
         {
-            return 2.0 / (Math.Exp(arg) + Math.Exp(-arg));
+            return 1.0 / Math.Cosh(arg);
         }
 
         public static double Csch(double arg)
         {
-            return 2.0 / (Math.Exp(arg) - Math.Exp(-arg));
+            return 1.0 / Math.Sinh(arg);
         }
 
         public static double Coth(double arg)
         {
-            return (Math.Exp(arg) + Math.Exp(-arg)) / (Math.Exp(arg) - Math.Exp(-arg));
+            return 1.0 / Math.Tanh(arg);
         }
 
         public static double Cexp(double arg)
@@ -153,15 +169,17 @@ namespace StatsDirect.Expressions
 
         public static double Uz(double arg)
         {
-            return 1.0 - PDF.alnorm(arg);
+            // the upper tail at z is the lower tail at -z; 1 - lower lost an upper tail below about 1e-16
+            return PDF.alnorm(-arg);
         }
 
         public static double Iz(double arg)
         {
-            double term = PDF.gauinv(1.0 - arg, out int ifault);
+            // the deviate with upper tail area arg is minus the one with that lower tail area; 1 - arg lost a small arg
+            double term = PDF.gauinv(arg, out int ifault);
             if (ifault != 0)
                 throw new ArgumentOutOfRangeException(nameof(arg), arg, "gauinv returned fault");
-            return term;
+            return 0.0 - term; // not -term: IZ(0.5) would be the negative zero that is displayed as -0
         }
 
         public static double Deg(double arg)
@@ -337,40 +355,123 @@ namespace StatsDirect.Expressions
 
         public static double Pnorm(double q, double mean, double sd, bool lowerTail, bool logP)
         {
-            double p = PDF.alnorm((q - mean) / sd);
+            // The upper tail at z is the lower tail at -z, by symmetry, and is computed as such: taken as 1 - lower it was lost
+            // once it fell below about 1e-16 (PNORM(10, 0, 1, FALSE) was 0 where it is 7.6e-24).
+            double z = (q - mean) / sd;
             if (!lowerTail)
-                p = 1.0 - p;
-            if (logP)
-                p = Math.Log(p);
-            return p;
+                z = -z;
+            return logP ? LogNormalLowerTail(z) : PDF.alnorm(z);
+        }
+
+        private const double LogRoot2Pi = 0.91893853320467274178;
+
+        /// <summary>
+        /// The logarithm of the standard normal lower tail area at z: log1p of the other tail when the area is near 1, and where
+        /// the area itself is beyond a double (z below -35, an area under 1e-268) the asymptotic series
+        /// Phi(z) = phi(z) / |z| (1 - 1/z^2 + 3/z^4 - 15/z^6 + ...), Abramowitz and Stegun 26.2.12. The logarithm used to be taken
+        /// of an area that had already become 0.
+        /// </summary>
+        private static double LogNormalLowerTail(double z)
+        {
+            if (double.IsNaN(z))
+                return double.NaN;
+            if (z > 0.0)
+                return Log1p(-PDF.alnorm(-z));
+            if (z >= -35.0)
+                return Math.Log(PDF.alnorm(z));
+            return -0.5 * z * z - Math.Log(-z) - LogRoot2Pi + Math.Log(NormalTailSeries(z));
+        }
+
+        /// <summary>1 - 1/z^2 + 3/z^4 - 15/z^6 + ..., for z below -35: Phi(z) is phi(z) / |z| times this, so Phi(z) / phi(z) is this over |z|</summary>
+        private static double NormalTailSeries(double z)
+        {
+            double z2 = z * z, sum = 1.0, term = 1.0;
+            for (int j = 1; j <= 30; j++)
+            {
+                term *= -(2.0 * j - 1.0) / z2;
+                sum += term;
+                if (Math.Abs(term) < 1.0E-17)
+                    break;
+            }
+            return sum;
         }
 
         public static double Qnorm(double p, double mean, double sd, bool lowerTail, bool logP)
         {
-            if (logP)
-                p = Math.Exp(p);
-            if (!lowerTail)
-                p = 1.0 - p;
-            double term = PDF.gauinv(p, out int ifault);
-            if (ifault != 0)
+            double z = StandardNormalQuantile(p, logP);
+            if (z == Constant.MISSING)
                 return Constant.MISSING;
+            // the deviate for an upper tail area is minus the one for the same lower tail area; 1 - p lost a small p altogether
+            if (!lowerTail)
+                z = -z;
             // the quantile of Normal(mean, sd); mean and sd used to be ignored
-            return mean + sd * term;
+            return mean + sd * z;
+        }
+
+        /// <summary>
+        /// The standard normal deviate with lower tail area p, or exp(p) when p is a logarithm, without forming exp(p) or
+        /// 1 - exp(p) where they cannot hold the probability.
+        /// </summary>
+        private static double StandardNormalQuantile(double p, bool logP)
+        {
+            int fault;
+            double z;
+            if (!logP)
+            {
+                z = PDF.gauinv(p, out fault);
+                return fault != 0 ? Constant.MISSING : z;
+            }
+            if (double.IsNaN(p) || p > 0.0 || p == Constant.MISSING || double.IsNegativeInfinity(p))
+                return Constant.MISSING;
+            if (p > -0.6931471805599453)
+            {
+                // a probability above one half: invert the other tail, 1 - exp(p) = -2 sinh(p/2) exp(p/2), which keeps a p very near 0
+                double other = -2.0 * Math.Sinh(p / 2.0) * Math.Exp(p / 2.0);
+                z = PDF.gauinv(other, out fault);
+                return fault != 0 ? Constant.MISSING : -z;
+            }
+            if (p >= -700.0)
+            {
+                z = PDF.gauinv(Math.Exp(p), out fault);
+                return fault != 0 ? Constant.MISSING : z;
+            }
+            // exp(p) is beyond a double: Newton iteration on the logarithm of the tail area, starting where phi(z) / |z| = exp(p)
+            double r = Math.Sqrt(-2.0 * p);
+            if (double.IsInfinity(r))
+                return Constant.MISSING;
+            z = -(r - (Math.Log(r) + LogRoot2Pi) / r);
+            for (int i = 0; i < 30; i++)
+            {
+                // The step is (log Phi(z) - p) Phi(z) / phi(z), and z stays far below -35 here, where the ratio is the tail series
+                // over |z|. Rebuilding the ratio as exp(log Phi + z^2 / 2 + ...) cancels two numbers the size of p, which for a p
+                // beyond about -1e16 left only rounding noise and threw z to infinity.
+                double step = z < -35.0
+                    ? (LogNormalLowerTail(z) - p) * NormalTailSeries(z) / -z
+                    : (LogNormalLowerTail(z) - p) * Math.Exp(LogNormalLowerTail(z) + 0.5 * z * z + LogRoot2Pi);
+                z -= step;
+                if (Math.Abs(step) <= 1.0E-15 * Math.Abs(z))
+                    break;
+            }
+            return double.IsNaN(z) || double.IsInfinity(z) ? Constant.MISSING : z;
         }
 
         public static double Pt(double q, double df, double ncp, bool lowerTail, bool logP)
         {
             double p;
-            if (ncp == Constant.MISSING)
-                p = PDF.tvalp(-q, df); // tvalp is the upper tail area: the lower tail at q is the upper tail at -q
+            if (ncp == Constant.MISSING || ncp == 0.0)
+            {
+                // central t, for any degrees of freedom. tvalp is the upper tail area, so the lower tail at q is the upper tail at
+                // -q; each tail is computed directly and not as 1 minus the other
+                p = lowerTail ? PDF.tvalp(-q, df) : PDF.tvalp(q, df);
+            }
             else
             {
-                p = ExFortran.pnct(q, (int)Math.Floor(df), ncp, out int fault);
-                if (fault != 0)
+                p = NoncentralT(q, df, ncp);
+                if (p == Constant.MISSING)
                     return Constant.MISSING;
+                if (!lowerTail)
+                    p = 1.0 - p;
             }
-            if (!lowerTail)
-                p = 1.0 - p;
             if (logP)
                 p = Math.Log(p);
             return p;
@@ -380,25 +481,193 @@ namespace StatsDirect.Expressions
         {
             if (logP)
                 p = Math.Exp(p);
+            // central t, for any degrees of freedom; tfromp takes an upper tail area, and the quantile for a lower tail area is
+            // minus the one for the same upper tail area
+            // (0.0 - x and x + 0.0, not -x and x: the median would otherwise be the negative zero that is displayed as -0)
+            if (ncp == Constant.MISSING || ncp == 0.0)
+                return lowerTail ? 0.0 - PDF.tfromp(p, df) : PDF.tfromp(p, df) + 0.0;
             if (!lowerTail)
                 p = 1.0 - p;
-            // central t when no non-centrality parameter is given; tfromp takes an upper tail area
-            if (ncp == Constant.MISSING)
-                return -PDF.tfromp(p, df);
-            double q = ExFortran.tnct(p, (int)Math.Floor(df), ncp, out int fault);
-            if (fault != 0)
+            if (HasWholeDegreesOfFreedom(df))
+            {
+                double q = ExFortran.tnct(p, (int)df, ncp, out int fault);
+                return fault != 0 ? Constant.MISSING : q;
+            }
+            return NoncentralTQuantile(p, df, ncp);
+        }
+
+        private static bool HasWholeDegreesOfFreedom(double df)
+        {
+            return df == Math.Floor(df) && df >= 1.0 && df <= int.MaxValue;
+        }
+
+        /// <summary>
+        /// Lower tail area of the non-central t distribution. With whole degrees of freedom this is the routine of the engine, as
+        /// before. That routine takes whole degrees of freedom only, and PT and QT used to round fractional ones down without
+        /// saying so, even for a non-centrality of 0 (PT(1, 2.5, 0) was the value for 2 degrees of freedom). Fractional degrees
+        /// of freedom use the series of Lenth (1989), Algorithm AS 243, Applied Statistics 38:185-189, which holds for any
+        /// positive degrees of freedom, and above a million the normal approximation of Abramowitz and Stegun 26.7.10.
+        /// </summary>
+        private static double NoncentralT(double t, double df, double ncp)
+        {
+            if (double.IsNaN(t) || double.IsNaN(df) || double.IsNaN(ncp) || t == Constant.MISSING || df == Constant.MISSING || df <= 0.0)
                 return Constant.MISSING;
-            return q;
+            if (HasWholeDegreesOfFreedom(df))
+            {
+                double whole = ExFortran.pnct(t, (int)df, ncp, out int wholeFault);
+                return wholeFault != 0 ? Constant.MISSING : whole;
+            }
+            if (double.IsInfinity(t))
+                return t > 0.0 ? 1.0 : 0.0;
+            const int maxTerms = 2000;
+            const double errorBound = 1.0E-15;
+            bool negative = t < 0.0;
+            double del = negative ? -ncp : ncp;
+            double lambda = del * del;
+            // exp(-lambda / 2) starts the series; beyond this it is 0 in a double and the series cannot be summed
+            if (lambda > 1400.0)
+                return Constant.MISSING;
+            // Above a million degrees of freedom the series loses figures (it rests on the difference of two log gammas of size
+            // df ln df) and its first incomplete beta takes a number of terms in proportion to df, so that a single call ran for
+            // minutes. T is then normal to better than 1e-9: Abramowitz and Stegun 26.7.10.
+            if (df > 1.0E6)
+            {
+                double quarter = 1.0 / (4.0 * df);
+                double scale = Math.Sqrt(1.0 + 2.0 * quarter * t * t);
+                if (double.IsInfinity(scale))
+                    return t > 0.0 ? 1.0 : 0.0;
+                return PDF.alnorm((t * (1.0 - quarter) - ncp) / scale);
+            }
+            double tt = t * t;
+            // t * t is beyond a double for |t| above about 1.3e154; x is then 1 to within a double and 1 - x = df / t^2
+            bool beyond = double.IsInfinity(tt);
+            double x = beyond ? 1.0 : tt / (tt + df);
+            double oneMinusX = beyond ? 0.0 : df / (tt + df); // known accurately, which 1 - x formed from x is not once t^2 dwarfs df
+            double tnc = 0.0;
+            if (x > 0.0)
+            {
+                double p = 0.5 * Math.Exp(-0.5 * lambda);
+                double q = 0.79788456080286535588 * p * del; // sqrt(2 / pi)
+                double s = 0.5 - p;
+                double a = 0.5, b = 0.5 * df;
+                double logRxb = beyond ? b * (Math.Log(df) - 2.0 * Math.Log(Math.Abs(t))) : -b * Log1p(tt / df);
+                double rxb = beyond ? Math.Exp(logRxb) : Math.Pow(oneMinusX, b); // (1 - x)^b
+                double albeta = 0.57236494292470008707 + PDF.alogam(b) - PDF.alogam(a + b); // ln(sqrt(pi)) + ln gamma(b) - ln gamma(a + b)
+                // I_x(a, b) = 1 - I_(1-x)(b, a): with heavy tails (few degrees of freedom, a huge t) the answer lies in 1 - x
+                int fault;
+                double xodd = x > 0.5 ? 1.0 - PDF.betain(oneMinusX, b, a, out fault) : PDF.betain(x, a, b, out fault);
+                if (fault != 0)
+                    return Constant.MISSING;
+                double godd = 2.0 * rxb * Math.Exp(a * Math.Log(x) - albeta);
+                double xeven = 1.0 - rxb;
+                double geven = b * x * rxb;
+                // (1 - x)^b falls below a double once (df / 2) ln(1 + t^2 / df) passes about 744, yet with a large non-centrality
+                // the terms it starts grow back to matter some hundreds of steps on: their logarithms are carried then
+                bool carryLogs = rxb < TinyTail;
+                double logGodd = 0.0, logGeven = 0.0;
+                if (carryLogs)
+                {
+                    logGodd = Math.Log(2.0) + logRxb + a * Math.Log(x) - albeta;
+                    logGeven = Math.Log(b * x) + logRxb;
+                    godd = Math.Exp(logGodd);
+                    geven = Math.Exp(logGeven);
+                }
+                tnc = p * xodd + q * xeven;
+                bool converged = false;
+                for (int en = 1; en <= maxTerms; en++)
+                {
+                    a += 1.0;
+                    xodd -= godd;
+                    xeven -= geven;
+                    if (carryLogs)
+                    {
+                        logGodd += Math.Log(x * (a + b - 1.0) / a);
+                        logGeven += Math.Log(x * (a + b - 0.5) / (a + 0.5));
+                        godd = Math.Exp(logGodd);
+                        geven = Math.Exp(logGeven);
+                    }
+                    else
+                    {
+                        godd *= x * (a + b - 1.0) / a;
+                        geven *= x * (a + b - 0.5) / (a + 0.5);
+                    }
+                    p *= lambda / (2.0 * en);
+                    q *= lambda / (2.0 * en + 1.0);
+                    s -= p;
+                    tnc += p * xodd + q * xeven;
+                    if (2.0 * s * (xodd - godd) <= errorBound)
+                    {
+                        converged = true;
+                        break;
+                    }
+                }
+                if (!converged)
+                    return Constant.MISSING;
+            }
+            tnc += PDF.alnorm(-del);
+            if (negative)
+                tnc = 1.0 - tnc;
+            return Math.Min(Math.Max(tnc, 0.0), 1.0);
+        }
+
+        /// <summary>
+        /// The t with lower tail area p under NoncentralT, by bracketing and bisection; the area rises steadily with t. The area
+        /// is good to about 1e-15, so a p (or 1 - p) below 1e-10 cannot be located to more than a few figures and is refused.
+        /// </summary>
+        private static double NoncentralTQuantile(double p, double df, double ncp)
+        {
+            if (double.IsNaN(p) || p < 1.0E-10 || p > 1.0 - 1.0E-10)
+                return Constant.MISSING;
+            double low = ncp - 1.0, high = ncp + 1.0, step = 1.0;
+            for (int i = 0; ; i++)
+            {
+                double area = NoncentralT(low, df, ncp);
+                if (area == Constant.MISSING || i > 1100)
+                    return Constant.MISSING;
+                if (area < p)
+                    break;
+                step *= 2.0;
+                low -= step;
+            }
+            step = 1.0;
+            for (int i = 0; ; i++)
+            {
+                double area = NoncentralT(high, df, ncp);
+                if (area == Constant.MISSING || i > 1100)
+                    return Constant.MISSING;
+                if (area > p)
+                    break;
+                step *= 2.0;
+                high += step;
+            }
+            if (double.IsInfinity(low) || double.IsInfinity(high))
+                return Constant.MISSING;
+            for (int i = 0; i < 2000 && high - low > 1.0E-13 * Math.Max(1.0, Math.Abs(low) + Math.Abs(high)); i++)
+            {
+                double mid = 0.5 * (low + high);
+                double area = NoncentralT(mid, df, ncp);
+                if (area == Constant.MISSING)
+                    return Constant.MISSING;
+                if (area < p)
+                    low = mid;
+                else
+                    high = mid;
+            }
+            return 0.5 * (low + high);
         }
 
         public static double Dpois(double k, double mean, bool logP)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double _, out double _, out double term, out int fault);
+            double events = Math.Floor(k);
+            ExFortran.poisson(mean, (int)events, out double _, out double _, out double term, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
-            if (logP)
-                term = Math.Log(term);
-            return term;
+            if (!logP)
+                return term;
+            // the logarithm of a probability too small for a double comes from the logarithm of the term, not from the 0 it became
+            if (term < TinyTail && events >= 0.0 && mean > 0.0)
+                return LogPoissonTerm(events, mean);
+            return Math.Log(term);
         }
 
         /// <summary>
@@ -461,6 +730,8 @@ namespace StatsDirect.Expressions
         {
             double u = 1.0 + x;
             if (u == 1.0)
+                return x + 0.0; // + 0.0 turns a negative zero, which would be displayed as -0, into zero
+            if (double.IsPositiveInfinity(x))
                 return x;
             // the rounding error made in forming 1 + x is cancelled by dividing by the same (u - 1)
             return Math.Log(u) * x / (u - 1.0);
@@ -602,12 +873,16 @@ namespace StatsDirect.Expressions
 
         public static double Dbinom(double r, double n, double p, bool logP)
         {
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double dterm, out double _, out double _, out int fault);
+            double successes = Math.Floor(r), trials = Math.Floor(n);
+            ExFortran.bino((int)trials, p, (int)successes, out double dterm, out double _, out double _, out int fault);
             if (fault != 0)
                 return Constant.MISSING;
-            if (logP)
-                dterm = Math.Log(dterm);
-            return dterm;
+            if (!logP)
+                return dterm;
+            // the logarithm of a probability too small for a double comes from the logarithm of the term, not from the 0 it became
+            if (dterm < TinyTail && p > 0.0 && p < 1.0 && successes >= 0.0 && successes <= trials)
+                return LogBinomialTerm(successes, trials, p);
+            return Math.Log(dterm);
         }
 
         public static double Pchisq(double q, double df, bool lowerTail, bool logP)
