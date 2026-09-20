@@ -1450,7 +1450,7 @@ namespace StatsDirect.Numerics
                 }
             }
             //  call to incomplete gamma function and claculation of seven term taylor series
-            for (; ; )
+            for (int iteration = 0; ; iteration++)
             {
                 q = ch;
                 p1 = 0.5 * ch;
@@ -1468,6 +1468,12 @@ namespace StatsDirect.Numerics
                 ch += t * (1.0 + 0.5 * t * s1 - b * c * (s1 - b * (s2 - b * (s3 - b * (s4 - b * (s5 - b * s6))))));
                 if (Math.Abs(q / ch - 1.0) <= e)
                     break;
+                // At several million degrees of freedom the rounding in the incomplete gamma moves chi-square by about 1e-12 of
+                // itself, so successive values can stay further apart than e for ever and the loop never ended (0.999 with ten
+                // million degrees of freedom froze the program). The bisection used outside this routine's range of p settles
+                // it. A call that converges, as every ordinary one does within a few steps, returns exactly what it did.
+                if (iteration >= 100)
+                    return ppchir(prob, v, out ifault);
             }
             ret = ch;
             return ret;
