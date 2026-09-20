@@ -948,19 +948,16 @@ namespace StatsDirect.UI
 
         private static void Pval15Into(TextBox txt, double p, bool allowZero)
         {
-            bool shouldReplace = true;
-            try
-            {
-                double current = CdblTxt(txt.Text);
-                if (Math.Abs(p - current) < 1e-14)
-                    shouldReplace = false;
-            }
-            catch (Exception)
-            {
-                shouldReplace = true;
-            }
-            if (shouldReplace)
-                txt.Text = Pval15(p, allowZero);
+            // The box is left alone only when it already shows this value, so that a P typed as 0.050 or 5e-2 is not rewritten.
+            // That is judged on the text that would be written, read back without rounding. Read back to 14 places, as it used to
+            // be, every P below 1e-14 looked the same (3.7e-19 and 1.5e-23 both read as 0), so a second small P was not written
+            // over the first: possible now that a chi-square tail can be that small.
+            string fresh = Pval15(p, allowZero);
+            string shown = txt.Text;
+            bool same = string.Equals(shown, fresh)
+                || (double.TryParse(shown, out double a) && double.TryParse(fresh, out double b) && a == b);
+            if (!same)
+                txt.Text = fresh;
         }
 
         private static string Pval15(double p, bool allowZero)

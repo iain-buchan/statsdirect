@@ -993,7 +993,10 @@ namespace StatsDirect.Numerics
         /// </summary>
         public static double chivalp(double x, double df)
         {
-            double ret = 1.0 - gammad(x / 2.0, df / 2.0, out int ifault);
+            // The upper tail is asked for as such. Taken as 1 minus the lower tail it could not be smaller than about 1e-16:
+            // a chi-square of 80 with 1 degree of freedom gave exactly 0 where the area is 3.7e-19. Where gammad sums the
+            // lower tail (x below the degrees of freedom) the result is the same 1 - sum as before.
+            double ret = gammad(x / 2.0, df / 2.0, true, out int ifault);
             if (ifault != 0)
                 ret = double.NaN;
             return ret;
