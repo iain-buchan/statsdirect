@@ -220,8 +220,40 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double PoissonTail(double mean, double k)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double _, out double _, out int fault);
-            return fault != 0 ? Constant.MISSING : phi;
+            return PoissonAtLeast(Math.Floor(k), mean);
+        }
+
+        /// <summary>
+        /// P(X &gt;= k) for a Poisson variable, computed directly as the lower incomplete gamma ratio P(k, mean), by the identity
+        /// between the Poisson sum and the incomplete gamma integral. The engine's routine returns 1 - P(X &lt;= k) + P(X = k), which
+        /// loses a small upper tail entirely: P(X &gt; 100) with a mean of 2 came out as 0 where it is 3.7e-131.
+        /// </summary>
+        private static double PoissonAtLeast(double k, double mean)
+        {
+            if (double.IsNaN(k) || double.IsNaN(mean) || mean < 0.0 || mean == Constant.MISSING || k == Constant.MISSING)
+                return Constant.MISSING;
+            if (k <= 0.0)
+                return 1.0;
+            if (mean == 0.0)
+                return 0.0;
+            double tail = PDF.gammad(mean, k, false, out int fault);
+            return fault != 0 ? Constant.MISSING : tail;
+        }
+
+        /// <summary>
+        /// P(X &gt;= r) for a binomial variable, computed directly as the incomplete beta ratio I_p(r, n - r + 1), by the identity
+        /// between the binomial sum and the incomplete beta integral, not as 1 - P(X &lt;= r) + P(X = r).
+        /// </summary>
+        private static double BinomialAtLeast(double r, double n, double p)
+        {
+            if (double.IsNaN(r) || double.IsNaN(n) || double.IsNaN(p) || n < 0.0 || p < 0.0 || p > 1.0 || r == Constant.MISSING || n == Constant.MISSING || p == Constant.MISSING)
+                return Constant.MISSING;
+            if (r <= 0.0)
+                return 1.0;
+            if (r > n)
+                return 0.0;
+            double tail = PDF.betain(p, r, n - r + 1.0, out int fault);
+            return fault != 0 ? Constant.MISSING : tail;
         }
 
         /// <summary>
@@ -238,10 +270,10 @@ namespace StatsDirect.Expressions
         public static double InvPoissonTail(double mean, double k)
         {
             double events = Math.Floor(k);
-            ExFortran.poisson(mean, (int)events, out double phi, out double plo, out double _, out int fault);
-            if (fault != 0)
-                return Constant.MISSING;
-            return events >= mean ? phi : plo;
+            if (events >= mean)
+                return PoissonAtLeast(events, mean);
+            ExFortran.poisson(mean, (int)events, out double _, out double plo, out double _, out int fault);
+            return fault != 0 ? Constant.MISSING : plo;
         }
 
         /// <summary>
@@ -279,8 +311,7 @@ namespace StatsDirect.Expressions
         /// <returns></returns>
         public static double BinomialTail(double n, double r, double p)
         {
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double _, out double _, out double dphi, out int fault);
-            return fault != 0 ? Constant.MISSING : dphi;
+            return BinomialAtLeast(Math.Floor(r), Math.Floor(n), p);
         }
 
         public static double Chi2Tail(double df, double q)
@@ -370,49 +401,203 @@ namespace StatsDirect.Expressions
             return term;
         }
 
-        public static double Ppois(double k, double mean, bool lowerTail, bool logP)
+        /// <summary>
+        /// P(X &lt;= k) for a Poisson variable as the upper incomplete gamma ratio Q(k + 1, mean), the other tail of the same
+        /// function that gives PoissonAtLeast, so the two tails sum to 1; 1 for a mean of zero.
+        /// PPOIS and QPOIS share it so that one inverts the other. The engine's summation (POISSON) agrees with it to about
+        /// 1e-11; near 1 with a mean of 10000 that sum is out by 5e-12, which was enough to put QPOIS one count short.
+        /// </summary>
+        private static double PoissonAtMost(double k, double mean)
         {
-            ExFortran.poisson(mean, (int)Math.Floor(k), out double phi, out double plo, out double _, out int fault);
-            if (fault != 0)
+            if (double.IsNaN(k) || double.IsNaN(mean) || mean < 0.0 || mean == Constant.MISSING || k == Constant.MISSING)
                 return Constant.MISSING;
-            double p = lowerTail ? plo : 1.0 - plo; // P(X > k), the complement of the lower tail, as in R; phi is P(X >= k)
-            if (logP)
-                p = Math.Log(p);
-            return p;
+            if (k < 0.0)
+                return 0.0;
+            if (mean == 0.0)
+                return 1.0;
+            double tail = PDF.gammad(mean, k + 1.0, true, out int fault);
+            return fault != 0 ? Constant.MISSING : tail;
         }
 
+        public static double Ppois(double k, double mean, bool lowerTail, bool logP)
+        {
+            // The upper tail is P(X > k) = P(X >= k + 1), and it is computed directly: taking it as 1 - P(X <= k)
+            // lost it altogether once it fell below about 1e-16 (and its logarithm with it).
+            double events = Math.Floor(k);
+            double lower = PoissonAtMost(events, mean), upper = PoissonAtLeast(events + 1.0, mean);
+            if (lower == Constant.MISSING || upper == Constant.MISSING)
+                return Constant.MISSING;
+            if (!logP)
+                return lowerTail ? lower : upper;
+            double smallLog = double.NaN;
+            if (mean > 0.0 && events >= 0.0)
+            {
+                // the logarithm of a tail too small for a double, summed in log space from the probability of the nearest count
+                if (!lowerTail && upper < TinyTail)
+                    smallLog = LogPoissonTerm(events + 1.0, mean) + Math.Log(TailSeries(j => mean / (events + 1.0 + j)));
+                if (lowerTail && lower < TinyTail)
+                    smallLog = LogPoissonTerm(events, mean) + Math.Log(TailSeries(j => j > events ? 0.0 : (events - j + 1.0) / mean));
+            }
+            return LogOfTail(lowerTail ? lower : upper, lowerTail ? upper : lower, smallLog);
+        }
+
+        private const double TinyTail = 1.0E-290;
+
+        /// <summary>
+        /// The logarithm of a tail probability: through log1p of the other tail when the probability is near 1 (where log(1 - tiny)
+        /// would be 0), and from a sum in log space when it is too small for a double.
+        /// </summary>
+        private static double LogOfTail(double tail, double otherTail, double logWhenTiny)
+        {
+            if (tail < TinyTail && !double.IsNaN(logWhenTiny))
+                return logWhenTiny;
+            if (tail > 0.5)
+                return Log1p(-otherTail);
+            return Math.Log(tail);
+        }
+
+        /// <summary>log(1 + x), accurate for small x, where log(1 + x) computed directly loses x altogether</summary>
+        private static double Log1p(double x)
+        {
+            double u = 1.0 + x;
+            if (u == 1.0)
+                return x;
+            // the rounding error made in forming 1 + x is cancelled by dividing by the same (u - 1)
+            return Math.Log(u) * x / (u - 1.0);
+        }
+
+        /// <summary>1 + r1 + r1 r2 + r1 r2 r3 + ..., where ratio(j) is the jth ratio of successive terms (j = 1, 2, ...); stops when a term no longer counts.</summary>
+        private static double TailSeries(Func<int, double> ratio)
+        {
+            double sum = 1.0, term = 1.0;
+            for (int j = 1; j < 100000000; j++)
+            {
+                term *= ratio(j);
+                if (term <= 0.0 || double.IsNaN(term))
+                    break;
+                sum += term;
+                if (term < sum * 1.0E-17)
+                    break;
+            }
+            return sum;
+        }
+
+        private static double LogPoissonTerm(double k, double mean)
+        {
+            return -mean + k * Math.Log(mean) - PDF.alogam(k + 1.0);
+        }
+
+        private static double LogBinomialTerm(double r, double n, double p)
+        {
+            return PDF.alogam(n + 1.0) - PDF.alogam(r + 1.0) - PDF.alogam(n - r + 1.0) + r * Math.Log(p) + (n - r) * Math.Log(1.0 - p);
+        }
+
+        /// <summary>
+        /// The Poisson quantile: the smallest k with P(X &lt;= k) &gt;= p (for the upper tail, the smallest k with
+        /// P(X &gt; k) &lt;= p), 0 for a mean of zero, infinity for a lower tail probability of 1.
+        /// </summary>
+        /// <remarks>
+        /// The guard against rounding when p is exactly a tail value is RELATIVE to p. An absolute slack of 1e-13 was used
+        /// here first, which made every p below 1e-13 return 0. The tail is compared with p on the scale p was given on - upper
+        /// tail with upper tail, logarithm with logarithm - so a small upper tail is not lost in 1 - p, nor a tiny one in exp(p).
+        /// The search brackets and bisects on k, the tail being monotone in k.
+        /// </remarks>
         public static double Qpois(double p, double mean, bool lowerTail, bool logP)
         {
-            if (logP)
-                p = Math.Exp(p);
-            if (!lowerTail)
-                p = 1.0 - p;
-            // The smallest k with P(X <= k) >= p, as R's qpois, by stepping up the engine's own lower tail. poissonNl, used
-            // here before, could never return 0 or 1 (QPOIS(0.05, 2) gave 2).
-            if (double.IsNaN(p) || p < 0.0 || p > 1.0 || mean < 0.0)
+            if (double.IsNaN(p) || double.IsNaN(mean) || mean < 0.0 || p == Constant.MISSING || mean == Constant.MISSING)
                 return Constant.MISSING;
-            if (p == 1.0)
+            if (logP ? p > 0.0 : p < 0.0 || p > 1.0)
+                return Constant.MISSING;
+            if (mean == 0.0)
+                return 0.0;
+            double none = logP ? double.NegativeInfinity : 0.0, all = logP ? 0.0 : 1.0;
+            if (p == (lowerTail ? none : all))
+                return 0.0;
+            if (p == (lowerTail ? all : none))
                 return double.PositiveInfinity;
-            for (int k = 0; k < 100000000; k++)
+
+            // Rounding guard, so that a p which is exactly a tail value gives that count and not the next one. A fixed few
+            // multiples of eps would suit tails good to 1e-15. The tails here carry the rounding of
+            // exp(k ln(mean) - mean - lgamma(k + 1)), about eps times the size of those three parts (3e-11 with a mean of 10000),
+            // and that error is relative to whichever tail is the smaller, the one computed directly; on the log scale it is an
+            // absolute error in the logarithm of a small tail and a relative one in the logarithm of a tail near 1.
+            const double eps = 2.220446049250313E-16;
+            double logMean = Math.Abs(Math.Log(mean));
+            double smallSide = logP ? Math.Min(1.0, Math.Abs(p)) : Math.Min(p, 1.0 - p);
+            // true when k is at or beyond the quantile
+            bool Reached(double k, out bool failed)
             {
-                ExFortran.poisson(mean, k, out double _, out double plo, out double _, out int fault);
-                if (fault != 0)
-                    return Constant.MISSING;
-                if (plo >= p - 1.0E-13) // a little slack, so that a p that is exactly a tail value is not missed through rounding
-                    return k;
+                double tail = Ppois(k, mean, lowerTail, logP);
+                failed = tail == Constant.MISSING || double.IsNaN(tail);
+                double accuracy = 8.0 * eps * (1.0 + mean + (k + 1.0) * logMean + Math.Abs(PDF.alogam(k + 2.0)));
+                double slack = accuracy * smallSide + 8.0 * eps * Math.Abs(p);
+                if (lowerTail)
+                    return tail >= p - slack;
+                // an upper tail is not nudged past certainty, which every k would satisfy
+                if (p + slack >= (logP ? 0.0 : 1.0))
+                    slack = 0.0;
+                return tail <= p + slack;
             }
-            return Constant.MISSING;
+
+            // bracket: low is short of the quantile (or is -1), high has reached it
+            double low = -1.0;
+            double high = Math.Max(1.0, Math.Ceiling(mean));
+            bool failedHere;
+            while (!Reached(high, out failedHere))
+            {
+                if (failedHere || high > 1.0E9)
+                    return Constant.MISSING;
+                low = high;
+                high *= 2.0;
+            }
+            if (failedHere)
+                return Constant.MISSING;
+            while (high - low > 1.0)
+            {
+                double mid = Math.Floor((low + high) / 2.0);
+                if (Reached(mid, out failedHere))
+                    high = mid;
+                else
+                    low = mid;
+                if (failedHere)
+                    return Constant.MISSING;
+            }
+            return high;
         }
 
         public static double Pbinom(double r, double n, double p, bool lowerTail, bool logP)
         {
-            ExFortran.bino((int)Math.Floor(n), p, (int)Math.Floor(r), out double _, out double dplo, out double dphi, out int fault);
-            if (fault != 0)
+            double successes = Math.Floor(r), trials = Math.Floor(n);
+            // P(X > r) = P(X >= r + 1), computed directly (see BinomialAtLeast); 1 - P(X <= r) lost small upper tails
+            double upper = BinomialAtLeast(successes + 1.0, trials, p);
+            if (upper == Constant.MISSING)
                 return Constant.MISSING;
-            double pOut = lowerTail ? dplo : 1.0 - dplo; // P(X > r), as in R; dphi is P(X >= r)
-            if (logP)
-                pOut = Math.Log(pOut);
-            return pOut;
+            double lower;
+            if (successes < 0.0)
+                lower = 0.0;
+            else if (successes >= trials || p == 0.0)
+                lower = 1.0;
+            else if (p == 1.0)
+                lower = 0.0; // fewer than n successes cannot happen; the engine's sum takes log(0) when p is 0 or 1
+            else
+            {
+                ExFortran.bino((int)trials, p, (int)successes, out double _, out lower, out double _, out int fault);
+                if (fault != 0)
+                    return Constant.MISSING;
+            }
+            if (!logP)
+                return lowerTail ? lower : upper;
+            double smallLog = double.NaN;
+            if (p > 0.0 && p < 1.0 && successes >= 0.0)
+            {
+                // the logarithm of a tail too small for a double, summed in log space from the probability of the nearest count
+                double odds = p / (1.0 - p);
+                if (!lowerTail && upper < TinyTail && successes + 1.0 <= trials)
+                    smallLog = LogBinomialTerm(successes + 1.0, trials, p) + Math.Log(TailSeries(j => (trials - successes - j) / (successes + 1.0 + j) * odds));
+                if (lowerTail && lower < TinyTail)
+                    smallLog = LogBinomialTerm(successes, trials, p) + Math.Log(TailSeries(j => (successes - j + 1.0) / (trials - successes + j) / odds));
+            }
+            return LogOfTail(lowerTail ? lower : upper, lowerTail ? upper : lower, smallLog);
         }
 
         public static double Dbinom(double r, double n, double p, bool logP)
@@ -427,7 +612,8 @@ namespace StatsDirect.Expressions
 
         public static double Pchisq(double q, double df, bool lowerTail, bool logP)
         {
-            double p = PDF.chivalp(q, df);
+            // chi-square cannot be negative, so everything lies above a negative q (the engine's routine refuses one)
+            double p = q < 0.0 && df > 0.0 && q != Constant.MISSING ? 1.0 : PDF.chivalp(q, df);
             // chivalp is the upper tail area
             if (lowerTail)
                 p = 1.0 - p;
