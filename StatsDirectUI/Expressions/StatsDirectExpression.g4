@@ -30,12 +30,28 @@ numexpr returns [INode node]
 	;
 	
 mulexpr returns [INode node]
-	: lhs=mulexpr op=mulop rhs=powexpr { $node = new DyadicNode { Left = $lhs.node, Operator = $op.operator, Right = $rhs.node }; }
+	: lhs=mulexpr op=mulop rhs=negexpr { $node = new DyadicNode { Left = $lhs.node, Operator = $op.operator, Right = $rhs.node }; }
+	| negexpr { $node = $negexpr.node; }
+	;
+
+// Unary minus (and plus) on anything: -X1, -PI, -(3+2), -LOG(2), --5.  It binds less tightly than exponentiation and factorial,
+// as the help's priority list says and as in R and Visual Basic: -2^2 is -(2^2) = -4 and -3! is -(3!).
+// Before version 5 a minus sign was only understood as part of a number, so -X1 could not be parsed and -2^2 was (-2)^2.
+negexpr returns [INode node]
+	: MINUS rhs=negexpr { $node = Negate($rhs.node); }
+	| PLUS rhs=negexpr { $node = $rhs.node; }
 	| powexpr { $node = $powexpr.node; }
 	;
 
 powexpr returns [INode node]
-	: lhs=powexpr (CARET | STARSTAR) rhs=factorial { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.Pow, Right = $rhs.node }; }
+	: lhs=powexpr (CARET | STARSTAR) rhs=signedfactorial { $node = new DyadicNode { Left = $lhs.node, Operator = DyadicOperator.Pow, Right = $rhs.node }; }
+	| factorial { $node = $factorial.node; }
+	;
+
+// The exponent may carry its own sign: 4^-2 is 4^(-2) = 0.0625, X1^-X2.
+signedfactorial returns [INode node]
+	: MINUS rhs=signedfactorial { $node = Negate($rhs.node); }
+	| PLUS rhs=signedfactorial { $node = $rhs.node; }
 	| factorial { $node = $factorial.node; }
 	;
 
@@ -45,10 +61,8 @@ factorial returns [INode node]
 	;
 	
 term returns [INode node]
-	: INTEGER { $node = new IntegerNode { Value = int.Parse($INTEGER.text) }; }
-	| MINUS INTEGER { $node = new IntegerNode { Value = 0 - int.Parse($INTEGER.text) }; }
+	: INTEGER { $node = ParseInteger($INTEGER.text); }
 	| FLOAT { $node = new DoubleNode { Value = double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")) }; }
-	| MINUS FLOAT { $node = new DoubleNode { Value = 0.0 - double.Parse($FLOAT.text.Replace("d","e").Replace("D","E")) }; }
 	| STRING { $node = ParseString($STRING.text); }
 	| LPAREN expr RPAREN { $node = $expr.node; }
 	| constant { $node = $constant.node; }
@@ -131,7 +145,9 @@ OR	:	O R;
 PI	:	P I;
 TRUE:	T R U E;
 
-IDENTIFIER: FirstOfIdentifier (MiddleOfIdentifier* LastOfIdentifier)? ;
+// LOG! (log factorial) is the only name with an exclamation mark. It used to be allowed inside any name, so X1! was read as a
+// name and refused; it is now the factorial of X1.
+IDENTIFIER: L O G '!' | FirstOfIdentifier (MiddleOfIdentifier* LastOfIdentifier)? ;
 
 BACKSLASH	: '\\';
 CARET		: '^';
@@ -140,7 +156,7 @@ DOUBLEAMPERSAND: '&&';
 DOUBLEBAR	: '||';
 EXCLAIM		: '!';
 LPAREN		: '(';
-MINUS		: '-';
+MINUS		: '-' | '\u2212';	// U+2212, the typographic minus sign that word processors and web pages use
 PLUS		: '+'; 
 RPAREN		: ')';
 SLASH		: '/';
@@ -148,7 +164,7 @@ STARSTAR	: '*' '*';
 STAR		: '*';
 
 fragment FirstOfIdentifier : 'A'..'Z'|'a'..'z';
-fragment MiddleOfIdentifier: 'A'..'Z'|'a'..'z'|'0'..'9'|'.'|'!';
+fragment MiddleOfIdentifier: 'A'..'Z'|'a'..'z'|'0'..'9'|'.';
 fragment LastOfIdentifier:   'A'..'Z'|'a'..'z'|'0'..'9'|;
 
 fragment A	:	'A'|'a';
@@ -189,6 +205,7 @@ fragment STRINGESCAPE
 	;
 
 WS:     ( ' '
+        | '\u00A0'
         | '\t'
         | '\r'
         | '\n'
@@ -212,3 +229,8 @@ fragment DECIMALSEPARATOR
 	: {Separators == SeparatorStructure.CommaDot || Separators == SeparatorStructure.SpaceDot}? '.'
 	| {Separators == SeparatorStructure.DotComma}? ','
 	;
+
+// Any other character is an error. Without this rule the lexer dropped it without a word, so a typographic minus sign
+// pasted from a document (U+2212, or an en dash) vanished and EXP of minus X1 was evaluated as EXP(X1). No parser rule
+// accepts this token, so the parser reports the character.
+ERRORCHAR : . ;

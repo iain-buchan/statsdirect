@@ -466,6 +466,18 @@ namespace StatsDirect.Expressions
             return PDF.ffromp(df2, df1, 1.0 - p); // ffromp(denominator df, numerator df, upper tail area); p here is a lower tail area
         }
 
+        // Unary minus for the expression evaluator. A missing value, which is a huge negative sentinel, stays missing: a plain
+        // minus sign would turn it into +1.8E308, which nothing downstream recognises as missing.
+        public static int Negate(int value)
+        {
+            return 0 - value;
+        }
+
+        public static double Negate(double value)
+        {
+            return value == Constant.MISSING ? value : 0.0 - value; // 0 - x, not -x: the negative of zero is zero, not the IEEE "-0"
+        }
+
         public static double Idiv(double numerator, double denominator)
         {
             // Integer division: both operands lose their fractions, then so does the quotient. In doubles, because (int) casts

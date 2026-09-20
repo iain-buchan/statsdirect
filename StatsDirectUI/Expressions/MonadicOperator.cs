@@ -3,6 +3,7 @@
     public enum MonadicOperator
     {
         Factorial,
-        Not
+        Not,
+        Negate
     }
 }
