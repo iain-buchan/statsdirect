@@ -1425,7 +1425,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    // Chao's (1987) log-normal interval, as SPECIES::chao1984 computes it in R: the number of classes NOT seen,
+                    // Chao's (1987) log-normal interval: the number of classes NOT seen,
                     // S - s = a^2 / 2b, is treated as log-normal, so the lower limit cannot fall below the s classes observed.
                     // C = exp(z sqrt(ln(1 + var / (S - s)^2))); limits s + (S - s) / C and s + (S - s) C.
                     // A symmetrical normal interval was printed before, which often went below s and could be negative.
@@ -1557,7 +1557,7 @@ namespace StatsDirect.Builtins
                 {
                     outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
                     // Lower side is P(U <= u), for H1 that x tends to be less than y; upper side is P(U >= u). Each includes the
-                    // observed U. Two sided is twice the smaller, as in R's wilcox.test. The smaller tail used to be printed as the
+                    // observed U. Two sided is twice the smaller, at most 1. The smaller tail used to be printed as the
                     // lower side whichever side it was on.
                     double pu;
                     if (xf == 0)
@@ -2645,7 +2645,7 @@ namespace StatsDirect.Builtins
             XKstwo(d1, n1, d2, n2, out double d, out double dp, out double dn);
             outputParameters.AddOutput("d", d);
             // Exact P values conditional on the observed ties (permutation distribution of the
-            // statistic over all relabellings of the pooled sample), as in R's ks.test(exact = TRUE).
+            // statistic over all relabellings of the pooled sample; Schroer and Trenkler, 1995).
             // With no ties this equals the classical exact distribution (ExFortran.ksp2).
             double[] x0 = new double[n1];
             double[] y0 = new double[n2];
@@ -3625,7 +3625,7 @@ namespace StatsDirect.Builtins
             }
 
             // get inequalities (Fisher LSD on ranks) for each pair
-            // Conover (1999), as kwAllPairsConoverTest of PMCMRplus and conover.test do it in R: the variance of the ranks
+            // Conover (1999), Practical Nonparametric Statistics, 3rd edition: the variance of the ranks
             // allows for ties, S2 = (sum of squared ranks - N(N+1)^2/4) / (N - 1), which is N(N+1)/12 when there are none, and the
             // Kruskal-Wallis statistic is the one adjusted for ties. N(N+1)/12 and the unadjusted statistic were used before,
             // ties or not, which made the comparisons slightly conservative with tied data.

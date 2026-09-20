@@ -35,7 +35,7 @@ mulexpr returns [INode node]
 	;
 
 // Unary minus (and plus) on anything: -X1, -PI, -(3+2), -LOG(2), --5.  It binds less tightly than exponentiation and factorial,
-// as the help's priority list says and as in R and Visual Basic: -2^2 is -(2^2) = -4 and -3! is -(3!).
+// as the help's priority list says and as in Visual Basic and in written mathematics: -2^2 is -(2^2) = -4 and -3! is -(3!).
 // Before version 5 a minus sign was only understood as part of a number, so -X1 could not be parsed and -2^2 was (-2)^2.
 negexpr returns [INode node]
 	: MINUS rhs=negexpr { $node = Negate($rhs.node); }

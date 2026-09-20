@@ -962,7 +962,7 @@ namespace StatsDirect.Numerics
                         y = 0.5 * y * y + y;
                 }
                 ret = Math.Sqrt(dn * y);
-                //  Newton polish of Hill's approximation (as R's qt does), where the tail area is resolved well enough
+                //  Newton polish of Hill's approximation, where the tail area is resolved well enough
                 //  by tvalp: not for huge df, where Hill's expansion is already exact to rounding and tvalp is not, nor near t = 0.
                 if (dn <= 2.0e6 && ret >= 0.01 && p > 0.0)
                 {
@@ -1640,7 +1640,7 @@ namespace StatsDirect.Numerics
             double phi = 0.0;
             for (i = n; i >= k; i--) phi += pr[i];
             p1 = phi < plo ? phi : plo;
-            // two sided P: total probability of the counts no more likely than the observed count (relative tolerance as R binom.test)
+            // two sided P: total probability of the counts no more likely than the observed count (the relative tolerance keeps equal probabilities equal despite rounding)
             double z = pr[k] * (1.0 + 1.0e-7);
             p2 = 0.0;
             for (i = 0; i <= n; i++)

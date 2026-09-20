@@ -1064,7 +1064,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("r", r);
             outputParameters.AddOutput("r2", r2 * 100);
             // adjusted R squared can be negative, when the model explains less than its number of parameters would by chance; it is
-            // reported as it is (as R, Stata and SAS do), where earlier versions showed zero. The total sum of squares has N - 1
+            // reported as it is, where earlier versions showed zero. The total sum of squares has N - 1
             // degrees of freedom with an intercept and N without one (tdf), where it is not corrected for the mean.
             r2 = 1.0 - rss / Convert.ToDouble(context.N - context.P) / (context.SSY / Convert.ToDouble(tdf));
             outputParameters.AddOutput("ra2", r2 * 100);

@@ -8,14 +8,14 @@ namespace StatsDirect.Numerics
     /// The null distribution is the permutation distribution of the statistic over all
     /// C(n1+n2, n1) relabellings of the pooled sample. Each relabelling is a lattice path from
     /// (0,0) to (n1,n2); the statistic is the largest |F1 - F2| (or F1 - F2) evaluated at the
-    /// points where the pooled sorted sample changes value. Ties are handled exactly as in
-    /// R's stats::psmirnov (src/library/stats/src/ks.c, psmirnov_exact_ties_upper): the
+    /// points where the pooled sorted sample changes value. Ties are handled as Schroer and
+    /// Trenkler (1995, Computational Statistics and Data Analysis 20:185-202) describe: the
     /// boundary test at lattice position (i, j) is applied only when the (i+j)-th pooled
     /// order statistic differs from the (i+j+1)-th, so that steps taken inside a block of tied
     /// values cannot contribute to the statistic. With no ties every position is tested and
     /// the result is identical to the classical untied exact distribution (ExFortran.ksp2).
     ///
-    /// Numerics: the recursion is the "upper" form of Viehmann (2021) as used by R:
+    /// Numerics: the recursion is the "upper" form of Viehmann (2021, arXiv:2102.08037):
     ///   u(i,j) = 1 if the boundary is hit at (i,j), else i/(i+j) u(i-1,j) + j/(i+j) u(i,j-1),
     /// i.e. u(i,j) is the probability that a uniformly random path to (i,j) has already hit the
     /// boundary. Every value is a convex combination of values in [0,1], so plain doubles cannot
@@ -38,7 +38,7 @@ namespace StatsDirect.Numerics
         }
 
         /// <summary>Computes D, D+ and D- from the two samples, evaluating the ECDF difference only at
-        /// distinct pooled values (the same definition as R's ks.test and StatsDirect's XKstwo).</summary>
+        /// distinct pooled values (the same definition as StatsDirect's XKstwo).</summary>
         public static void Statistics(double[] x, double[] y, out double d, out double dplus, out double dminus)
         {
             int m = x.Length, n = y.Length;
@@ -65,7 +65,6 @@ namespace StatsDirect.Numerics
         /// <summary>
         /// Builds the change mask from the pooled sample: change[k] (k = 1..N-1) is true when the
         /// k-th and (k+1)-th pooled order statistics differ; change[0] = false, change[N] = true.
-        /// This is R's z = c(0L, diff(sort(c(x, y))) != 0, 1L).
         /// </summary>
         public static bool[] ChangeMask(double[] x, double[] y)
         {
@@ -98,7 +97,7 @@ namespace StatsDirect.Numerics
         public static double UpperTail(int m, int n, double q, bool[] change, bool twoSided)
         {
             double md = m, nd = n;
-            // As in R: shift q to the midpoint below the nearest attainable value k/(mn) so that
+            // Shift q to the midpoint below the nearest attainable value k/(mn) so that
             // floating-point rounding cannot turn "equal to q" into "less than q". For an attained
             // statistic k/(mn) this tests >= (k - 0.5)/(mn); for an unattainable q strictly between
             // k/(mn) and (k+1)/(mn) it tests >= (k + 0.5)/(mn), i.e. P(stat >= q) exactly.
