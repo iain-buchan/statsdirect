@@ -62,8 +62,10 @@ namespace StatsDirect.Expressions
 
         private static StringNode ParseString (string rawText)
         {
-            // At present, there are no metacharacters within the string; it's just a case of topping and tailing the quoted string.
-            return new StringNode { Value = rawText.Substring(1, rawText.Length - 2) };
+            // Top and tail the quoted string, and undo the two escapes the lexer admits: \" is a quote and \\ is a backslash.
+            // Inside the token a quote always follows its own backslash, so taking \" first cannot mis-pair.
+            string inner = rawText.Substring(1, rawText.Length - 2);
+            return new StringNode { Value = inner.Replace("\\\"", "\"").Replace("\\\\", "\\") };
         }
     }
 }

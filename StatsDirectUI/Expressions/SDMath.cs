@@ -345,6 +345,8 @@ namespace StatsDirect.Expressions
 
         public static double Ftail(double dfn, double dfd, double q)
         {
+            if (q == Constant.MISSING || dfn == Constant.MISSING || dfd == Constant.MISSING)
+                return Constant.MISSING;
             return PDF.fvalp(q, dfn, dfd);
         }
 
@@ -985,7 +987,9 @@ namespace StatsDirect.Expressions
                 else
                     high = mid;
             }
-            return 0.5 * (low + high);
+            double chiSquare = 0.5 * (low + high);
+            // the answer is given only if the tail area at it comes back as p (beyond about 1e12 degrees of freedom it does not)
+            return Math.Abs(PDF.chivalp(chiSquare, df) - p) <= 1.0E-6 * p ? chiSquare : Constant.MISSING;
         }
 
         public static double Pf(double q, double df1, double df2, bool lowerTail, bool logP)
@@ -996,6 +1000,10 @@ namespace StatsDirect.Expressions
             // altogether (PF(0.001, 40, 10) was 0 where it is 1.1e-44). Beyond F = 1 that argument closes on 1 and loses its
             // figures, and the lower tail is 1 minus the upper, which cannot lose anything there. F cannot be negative, so
             // everything lies above a negative q.
+            // A missing value is a huge negative sentinel, not a number to take a tail area of (QF and INVFTAIL return it when
+            // they give no answer): with 1 degree of freedom it came out as a lower tail of exactly 1.
+            if (q == Constant.MISSING || df1 == Constant.MISSING || df2 == Constant.MISSING)
+                return Constant.MISSING;
             double lower, upper;
             if (q < 0.0 && q != Constant.MISSING && df1 > 0.0 && df2 > 0.0)
             {
@@ -1010,8 +1018,7 @@ namespace StatsDirect.Expressions
                 else
                 {
                     lower = PDF.betain(df1 * q / (df2 + df1 * q), df1 / 2.0, df2 / 2.0, out int fault);
-                    if (fault != 0)
-                        lower = double.NaN;
+                    lower = fault != 0 ? double.NaN : lower + 0.0; // + 0.0: a negative zero q comes back as -0, which would be displayed as -0
                 }
             }
             if (!logP)
@@ -1067,26 +1074,30 @@ namespace StatsDirect.Expressions
         }
 
         /// <summary>
-        /// The F with upper tail area p, by bisection on the logarithm of F over the range of a double: infinity when even
-        /// e^700 leaves more than p above it, 0 when even e^-700 leaves less. An area below the smallest normal double is
-        /// refused: it keeps too few digits to invert.
+        /// The F with upper tail area p, by bisection on the logarithm of F from e^-700 up to the largest F at which the tail
+        /// area can be formed: 0 when even e^-700 leaves less than p above it; infinity when the largest double still leaves
+        /// more (which can be told only with a numerator of 1 degree of freedom or less; otherwise no answer). The answer is
+        /// given only if the tail area at it comes back as p. An area below the smallest normal double is refused: it keeps too
+        /// few digits to invert.
         /// </summary>
         private static double FFromUpperTail(double p, double dfn, double dfd)
         {
             if (double.IsNaN(p) || double.IsNaN(dfn) || double.IsNaN(dfd) || p < Constant.DBL_MIN || p >= 1.0 || dfn <= 0.0 || dfd <= 0.0 || p == Constant.MISSING)
                 return Constant.MISSING;
-            // each tail area takes time in proportion to the degrees of freedom, and some sixty are needed: beyond ten million a
-            // single answer would take minutes, so none is given (a chi-square quantile over its degrees of freedom serves there)
-            if (dfn > 1.0E7 || dfd > 1.0E7)
+            // each tail area takes time in proportion to the degrees of freedom, and some sixty are needed: beyond two million a
+            // single answer would take many seconds, so none is given (a chi-square quantile over its degrees of freedom serves there)
+            if (dfn > 2.0E6 || dfd > 2.0E6)
                 return Constant.MISSING;
-            double low = -700.0, high = 700.0; // ln F: the tail area falls from 1 to 0 across this range
+            // ln F. The top is the largest F at which the tail area can be formed: fvalp takes dfd / (dfd + dfn F), and once dfn F
+            // overflows that is exactly 0 and the bisection would settle on the overflow point. 709.78 is just under ln of the largest double.
+            double low = -700.0, high = 709.78 - Math.Log(Math.Max(1.0, dfn));
             double atLow = PDF.fvalp(Math.Exp(low), dfn, dfd), atHigh = PDF.fvalp(Math.Exp(high), dfn, dfd);
             if (double.IsNaN(atLow) || double.IsNaN(atHigh))
                 return Constant.MISSING;
             if (atLow <= p)
                 return 0.0;
             if (atHigh >= p)
-                return double.PositiveInfinity;
+                return dfn <= 1.0 ? double.PositiveInfinity : Constant.MISSING;
             for (int i = 0; i < 200 && high - low > 1.0E-15 * Math.Max(1.0, Math.Abs(low) + Math.Abs(high)); i++)
             {
                 double mid = 0.5 * (low + high);
@@ -1098,7 +1109,9 @@ namespace StatsDirect.Expressions
                 else
                     high = mid;
             }
-            return Math.Exp(0.5 * (low + high));
+            double f = Math.Exp(0.5 * (low + high));
+            // where the tail area itself jumps (far fewer than one degree of freedom) the bisection settles on the jump: no answer then
+            return Math.Abs(PDF.fvalp(f, dfn, dfd) - p) <= 1.0E-6 * p ? f : Constant.MISSING;
         }
 
         // Unary minus for the expression evaluator. A missing value, which is a huge negative sentinel, stays missing: a plain

@@ -210,7 +210,9 @@ namespace StatsDirect.Expressions
         {
             activeBuilder.Append('"');
             // C# strings embed \ as \\ and " as \"; ensure this is respected or we'll get parse errors or (worse) compilation of arbitrary code.
-            activeBuilder.Append(node.Value.Replace("\"", "\\\"").Replace("\\", "\\\\"));
+            // The backslash first, then the quote. In the other order the backslash just put before a quote was doubled, which
+            // left the quote bare: the text after it was compiled as code.
+            activeBuilder.Append(node.Value.Replace("\\", "\\\\").Replace("\"", "\\\""));
             activeBuilder.Append('"');
         }
 

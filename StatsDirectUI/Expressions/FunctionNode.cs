@@ -7,7 +7,11 @@
 
         public DataType DataType(DataType[] passedVariableTypes)
         {
-            return FunctionRegistry.SoleInstance.FunctionNamed(Name).DataType;
+            FunctionDefinition definition = FunctionRegistry.SoleInstance.FunctionNamed(Name);
+            // the same words as the renderer uses: a mistyped name used to be reported as "Object reference not set to an instance of an object"
+            if (null == definition)
+                throw new System.Exception("No function named '" + Name + "' is known.");
+            return definition.DataType;
         }
 
         public void Accept(IExpressionVisitor visitor)
