@@ -69,7 +69,8 @@ namespace StatsDirect.Builtins
                 rows = 1000000;
             double startval = parameters["startval"].AsDouble;
             string formula = parameters["formula"].AsString;
-            if (formula.Length < 3)
+            // only an empty formula falls back to the default: "-X", "X" or "PI" are formulas too
+            if (formula.Trim().Length == 0)
                 formula = "x+1";
 
             string title = parameters["title"].AsString;
@@ -1165,7 +1166,11 @@ namespace StatsDirect.Builtins
                 for (int inputIndex = 0; inputIndex < inputVariable.Length; inputIndex++)
                 {
                     values[0] = inputVariable.DataAsObject(inputIndex);
-                    bool isMatch = searcher.EvaluateObject<bool>(values);
+                    // A missing numeric cell holds a huge negative sentinel: it matched "X < 0", and a replacement such as -X or ABS(X)
+                    // turned it into +1.8E308, which is no longer recognised as missing. It is passed through untouched, as the other
+                    // worksheet functions do.
+                    bool isMissingNumber = values[0] is double cellValue && (cellValue == Constant.MISSING || double.IsNaN(cellValue));
+                    bool isMatch = !isMissingNumber && searcher.EvaluateObject<bool>(values);
                     if (isMatch)
                     {
                         matches++; // In case counting - faster to just do this than branch and cause a bubble in the CPU pipeline.
