@@ -696,7 +696,8 @@ namespace StatsDirect.Builtins
                 context.N = cnt;
             }
             (context.P, context.M) = x_glin(context, context.P, context.M);
-            return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, false, context.M, dropWarning));
+            // context.DoC, not a literal true: a model fitted without an intercept had its first slope labelled "Intercept"
+            return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, context.DoC, context.N, context.P, false, context.M, dropWarning));
         }
 
 
@@ -957,9 +958,11 @@ namespace StatsDirect.Builtins
             }
             outputParameters.AddInput("context", context.StripForOutput());
             //  For best subset code
-            string[] predictorTitles = new string[p - 2 + 1];
-            for (int i = 2; i <= p; i++)
-                predictorTitles[i - 2] = context.Titles[i];
+            // the predictors are parameters 1 + iq to p: 2 to p after a constant, 1 to p without one (the first was left out)
+            int firstPredictor = DoC ? 2 : 1;
+            string[] predictorTitles = new string[p - firstPredictor + 1];
+            for (int i = firstPredictor; i <= p; i++)
+                predictorTitles[i - firstPredictor] = context.Titles[i];
             outputParameters["predictorTitles"] = FilledParameterFactory.Input(new DataFrame(new StringVariable(predictorTitles)));
             outputParameters["candidatePredictors"] = FilledParameterFactory.Input(x_prep_intermr(context));
             return outputParameters;
@@ -1094,9 +1097,15 @@ namespace StatsDirect.Builtins
             }
             StringVariable valueVariable = (StringVariable)candidatePredictors.Variables[1];
             DoubleVariable oldValueVariable = (DoubleVariable)candidatePredictors.Variables[2];
+            // A blank or non-numeric predictor arrives as MISSING (a huge negative number). Multiplied by a slope it is no longer
+            // recognisable as missing, and the prediction was printed as a number like -9E+307 with infinite limits; the
+            // prediction and its intervals are now missing too, as in the logistic prediction.
+            bool missingPredictor = false;
             for (int i = 1 + iq; i <= context.P; i++)
             {
                 newx[i] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1 - iq]);
+                if (newx[i] == Constant.MISSING || double.IsNaN(newx[i]) || double.IsInfinity(newx[i]))
+                    missingPredictor = true;
                 if (newx[i] != oldValueVariable.Data[i - 1 - iq])
                     lsqmean = false;
             }
@@ -1112,23 +1121,24 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag xParameters = new();
                 xList.Add(xParameters);
-                xParameters.AddOutput("xtitle", context.Titles[i - iq + 1]);
+                // parameter i has title i, with or without a constant (Titles[i - iq + 1] ran off the end without one)
+                xParameters.AddOutput("xtitle", context.Titles[i]);
                 xParameters.AddOutput("x", newx[i]);
             }
             string msg = lsqmean ? "  (least squares mean)" : string.Empty;
             outputParameters.AddOutput("ytitle", context.OutcomeTitle);
-            outputParameters.AddOutput("y", newy);
+            outputParameters.AddOutput("y", missingPredictor ? Constant.MISSING : newy);
             outputParameters.AddOutput("msg", msg);
             double rdf = Convert.ToDouble(context.N - 1 - (context.P - 1));
             double rss = context.SSY - context.SSREG;
             double rms = rss / rdf;
             Regress1.x_ciyp(newx, context.H, context.P, rms, cit, out double cl, out double pl);
             outputParameters.AddOutput("ci_pc", 100 * (1.0 - p0));
-            outputParameters.AddOutput("ci_from", newy - cl);
-            outputParameters.AddOutput("ci_to", newy + cl);
+            outputParameters.AddOutput("ci_from", missingPredictor ? Constant.MISSING : newy - cl);
+            outputParameters.AddOutput("ci_to", missingPredictor ? Constant.MISSING : newy + cl);
             outputParameters.AddOutput("pred_pc", 100 * (1.0 - p0));
-            outputParameters.AddOutput("pred_from", newy - pl);
-            outputParameters.AddOutput("pred_to", newy + pl);
+            outputParameters.AddOutput("pred_from", missingPredictor ? Constant.MISSING : newy - pl);
+            outputParameters.AddOutput("pred_to", missingPredictor ? Constant.MISSING : newy + pl);
             return new StepOutput(outputParameters);
         }
 
@@ -1172,20 +1182,18 @@ namespace StatsDirect.Builtins
         public static StepOutput RptMultipleLinearRegressionParameterDetail(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
-            int iq = 0;
 
             double gamma = parameters["ci"].AsDouble;
             int df = context.N - context.P;
             MathDbl.civ(df, out double cit, gamma, out double p0);
-            if (context.DoC)
-                iq = 1;
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("pc", 100 * (1.0 - p0));
             IList<ParameterBag> vList = new List<ParameterBag>();
             outputParameters.AddOutput("*v", vList);
             for (int i = 1; i <= context.P; i++)
             {
-                string q = i == 1 && context.DoC ? "constant" : context.Titles[i - iq + 1];
+                // parameter i has title i, with or without a constant (Titles[i - iq + 1] ran off the end without one)
+                string q = i == 1 && context.DoC ? "constant" : context.Titles[i];
                 ParameterBag vParameters = new();
                 vList.Add(vParameters);
                 vParameters.AddOutput("label", q);
@@ -1216,7 +1224,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        ti[i] = context.Titles[i - iq + 1];
+                        ti[i] = context.Titles[i];
                         sumv += context.VIF[i];
                     }
                     vif2[i] = context.VIF[i];
@@ -1620,7 +1628,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag selectedParameters = new();
                 selectedList.Add(selectedParameters);
-                selectedParameters.AddOutput("label", context.Titles[keep[j] - iq + 1]);
+                selectedParameters.AddOutput("label", context.Titles[keep[j]]);
             }
             outputParameters.AddOutput("f", maxf);
             outputParameters.AddOutput("r2", maxr2);
@@ -1635,8 +1643,8 @@ namespace StatsDirect.Builtins
             context.X = newX;
             for (int j = 1 + iq; j <= kept; j++)
             {
-                int ix1 = j - iq + 1;
-                int ix2 = keep[j] - iq + 1;
+                int ix1 = j;
+                int ix2 = keep[j];
                 string temp = context.Titles[ix1];
                 context.Titles[ix1] = context.Titles[ix2];
                 context.Titles[ix2] = temp;
@@ -4242,12 +4250,15 @@ namespace StatsDirect.Builtins
             // A blank or non-numeric predictor arrives as MISSING (a huge negative number). The prediction is then missing too:
             // PFromLogit would otherwise turn the resulting logit into a confident 0 or 1.
             bool missingPredictor = false;
+            // The ith predictor sits at i + iq: after the constant when there is one, first when there is not. It was written
+            // to i + 1 whatever the model, so a model without an intercept ran off the end of newx and the prediction stopped
+            // with an error.
             for (int i = 1; i <= p - iq; i++)
             {
-                newx[i + 1] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1]);
-                if (newx[i + 1] == Constant.MISSING || double.IsNaN(newx[i + 1]) || double.IsInfinity(newx[i + 1]))
+                newx[i + iq] = Parsing.Cdbl_Txt(valueVariable.Data[i - 1]);
+                if (newx[i + iq] == Constant.MISSING || double.IsNaN(newx[i + iq]) || double.IsInfinity(newx[i + iq]))
                     missingPredictor = true;
-                if (newx[i + 1] != oldValueVariable.Data[i - 1])
+                if (newx[i + iq] != oldValueVariable.Data[i - 1])
                     lsqmean = false;
             }
             double newy = 0.0;
