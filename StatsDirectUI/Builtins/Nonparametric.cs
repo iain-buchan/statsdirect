@@ -3350,6 +3350,11 @@ namespace StatsDirect.Builtins
             }
             int lx = qty;
 
+            // With every observation the same there is nothing to rank; the report used to give mean ranks of 0 and
+            // T = -3(N + 1), a negative chi-square.
+            if (lx >= 2 && AllTheSame(x, lx))
+                throw new TemplateOperationCancelledException("The Kruskal-Wallis test cannot be calculated when all of the observations are the same.", "Kruskal-Wallis");
+
             double[] w1 = new double[lx + 1];
             double ha = 0;
             double t = 0;
@@ -3516,7 +3521,7 @@ namespace StatsDirect.Builtins
 
             double p = confidence;
 
-            // Issue #19: Extended to accommodate 1-sided (Conover-Inman)
+            // Issue #19: Extended to accommodate 1-sided (Conover-Iman)
             // The output "sided" is used to change which creole file is used.
             int sided = 2;
             if (parameters["sided"].HasData)
@@ -3559,6 +3564,9 @@ namespace StatsDirect.Builtins
                 l[d + 1] = cnt;
             }
             int lx = qty;
+
+            if (lx >= 2 && AllTheSame(x, lx))
+                throw new TemplateOperationCancelledException("Comparisons cannot be calculated when all of the observations are the same.", "Kruskal-Wallis");
 
             double[] w1 = new double[lx + 1];
             double ha = 0;
@@ -3662,7 +3670,7 @@ namespace StatsDirect.Builtins
                 p = 0.05;
             if (p > 1.0 - p)
                 p = 1.0 - p;
-            // updates p as per issue #19 - Norman Grover suggested 1-sided version of Conover-Inman test
+            // updates p as per issue #19 - Norman Grover suggested 1-sided version of Conover-Iman test
             if (sided != 1)
                 p /= 2.0;
             double df = lx - frame.VariableCount;
