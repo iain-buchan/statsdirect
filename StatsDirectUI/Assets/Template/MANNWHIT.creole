@@ -13,7 +13,7 @@ U = @{u:roundu}      U' = @{u_prime:roundu}</p>
 <p>Theta (U'/mn) = @{theta:roundu} <ci>(@{pc0:round1}% CI: @{tll:roundu} to @{tul:roundu})</ci></p>
 
 <block name="noconf">
-<p>confidence interval not calculated if n1 or n2 </p>
+<p>@reason</p>
 </block>
 <block name="conf">
 <p><ci>@{pc:round2}% confidence interval for difference between medians or means:</ci><br />

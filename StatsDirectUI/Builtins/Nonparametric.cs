@@ -1578,19 +1578,27 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("tll", ThetaLl(uprime, n1, n2, gamma));
                 outputParameters.AddOutput("tul", ThetaUl(uprime, n1, n2, gamma));
 
-                if (n1 < 4 || n2 < 4)
+                double lev = 0;
+                int k = 0;
+                bool approx = false;
+                if (n1 >= 4 && n2 >= 4)
+                    XInvu(n2, n1, gamma, ref lev, ref k, out approx);
+
+                if (n1 < 4 || n2 < 4 || k == 0)
                 {
-                    // CI not calculated if n1 or n2 < 4
-                    IList<ParameterBag> noconfList = new List<ParameterBag> { new ParameterBag() };
+                    // K is 0 when even the widest interval, from the smallest to the largest difference, falls short of the
+                    // confidence asked for (4 v 4 at 99%). That used to be printed as a 100% interval with a false upper limit.
+                    ParameterBag noconfParameters = new();
+                    noconfParameters.AddOutput("reason", n1 < 4 || n2 < 4
+                        ? "confidence interval not calculated with fewer than 4 observations in either sample"
+                        : "confidence interval not calculated: the samples are too small for " + Formatting.XRound(gamma * 100, 1) + "% confidence");
+                    IList<ParameterBag> noconfList = new List<ParameterBag> { noconfParameters };
                     outputParameters.AddOutput("*noconf", noconfList);
                     outputParameters.AddOutput("*conf", null);
                 }
                 else
                 {
                     IList<ParameterBag> confList = new List<ParameterBag>();
-                    double lev = 0;
-                    int k = 0;
-                    XInvu(n2, n1, gamma, ref lev, ref k, out bool approx);
                     ParameterBag confParameters = MannWhitneyExactConfidence(host, x, k, n1, n2);
                     confParameters.AddOutput("pc", (1 - lev * 2) * 100);
                     if (approx)
@@ -2132,17 +2140,27 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_u", pu);
             outputParameters.AddOutput("p_2", p2);
 
-            if (n1 < 4)
+            int k = 0;
+            double lev = 0;
+            if (n1 >= 4)
+                Xsrk(n, gamma, out k, out lev);
+
+            if (n1 < 4 || k == 0)
             {
-                //  "CI not calculated if n1 or n2 < 4"
-                IList<ParameterBag> noconfList = new List<ParameterBag> { new ParameterBag() };
+                // K is 0 when even the widest interval, from the smallest to the largest average of two differences, falls
+                // short of the confidence asked for (4 or 5 pairs at 95%). That used to be printed as a 100% interval with
+                // a false upper limit.
+                ParameterBag noconfParameters = new();
+                noconfParameters.AddOutput("reason", n1 < 4
+                    ? "confidence interval not calculated with fewer than 4 non-zero differences"
+                    : "confidence interval not calculated: there are too few pairs for " + Formatting.XRound(gamma * 100, 1) + "% confidence");
+                IList<ParameterBag> noconfList = new List<ParameterBag> { noconfParameters };
                 outputParameters.AddOutput("*noconf", noconfList);
                 outputParameters.AddOutput("*conf", null);
             }
             else
             {
                 IList<ParameterBag> confList = new List<ParameterBag>();
-                Xsrk(n, gamma, out int k, out double lev);
                 ParameterBag confParameters = XSrcon(host, n, k, x, y);
 
                 if (lev != -99)
