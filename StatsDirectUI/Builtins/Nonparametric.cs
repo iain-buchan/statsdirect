@@ -1775,9 +1775,17 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("*ties", hasTies ? OneOutputElement() : null);
 
-            if (Math.Abs(sr) == 1)
+            if (nx < 4)
             {
-                // CI not calculated when rho is 1 or -1.
+                // Fisher's interval divides by the square root of n - 3, so there is none for 3 pairs (it used to be printed as
+                // "-1 to *"); the report already says that the sample is too small.
+                outputParameters.AddOutput("*noci", null);
+                outputParameters.AddOutput("*ci", null);
+            }
+            else if (1.0 - Math.Abs(sr) < 1e-12)
+            {
+                // CI not calculated when rho is 1 or -1. Rho worked out from ranks can miss 1 by a rounding error, which used to
+                // give the interval "1 to 1".
                 outputParameters.AddOutput("*noci", OneOutputElement());
                 outputParameters.AddOutput("*ci", null);
             }
@@ -1850,8 +1858,12 @@ namespace StatsDirect.Builtins
                         if (p1Approximate > 1.0 - p1Approximate)
                             p1Approximate = 1.0 - p1Approximate;
                         double p2Approximate = Math.Min(1.0, 2.0 * p1Approximate);
-                        results2Parameters.AddOutput("p_u", Constant.MISSING);
-                        results2Parameters.AddOutput("p_l", Constant.MISSING);
+                        // p1Approximate is the smaller tail of the t approximation, which lies on the side of the sign of rho. The
+                        // one sided values used to be left out with ties, and were printed as "P = *".
+                        double puApproximate = sr > 0 ? p1Approximate : sr < 0 ? 1.0 - p1Approximate : 0.5;
+                        double plApproximate = sr > 0 ? 1.0 - p1Approximate : sr < 0 ? p1Approximate : 0.5;
+                        results2Parameters.AddOutput("p_u", puApproximate);
+                        results2Parameters.AddOutput("p_l", plApproximate);
                         results2Parameters.AddOutput("p_2", p2Approximate);
                     }
                     else
