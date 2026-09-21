@@ -791,19 +791,17 @@ namespace StatsDirect.Builtins
                 Array.Sort(x, n1 + 1, n2);
                 Array.Sort(x, 1, n1);
 
-                //  Find the largest value in the array (at the upper limit of one of the sorts)...
-                double bigx = x[n1 + n2];
-                if (x[n1] > bigx)
-                    bigx = x[n1];
-                //  ... and set an appropriate scale so that value fits within the range of an Integer.
-                int scaler = 100000;
-                do
-                {
-                    if (bigx * scaler < int.MaxValue / 10.0)
-                        break;
-                    scaler = Convert.ToInt32(scaler / 10);
-                }
-                while (true);
+                //  Find the largest value in size (both samples are sorted, so it is at an end of one of them)...
+                double bigx = Math.Max(Math.Max(Math.Abs(x[1]), Math.Abs(x[n1])), Math.Max(Math.Abs(x[n1 + 1]), Math.Abs(x[n1 + n2])));
+                //  ... and set a scale so that every value fits within the range of an Integer. Only the largest value used to be
+                //  looked at, not the largest in size, so negative values below about -21,000 overflowed and the whole report was
+                //  lost; the scale could not go below 1, so values above about 2e8 gave no interval; and it could not go above
+                //  100000, so very small values gave limits of 0.
+                double scaler = 100000.0;
+                while (bigx * scaler >= int.MaxValue / 10.0)
+                    scaler /= 10.0;
+                while (bigx > 0.0 && bigx * scaler < 1000.0 && scaler < 1e300)
+                    scaler *= 10.0;
                 for (int j = 1; j <= n1; j++)
                     xx[j] = Convert.ToInt32(x[j] * scaler);
                 for (int j = 1; j <= n2; j++)
@@ -2599,6 +2597,10 @@ namespace StatsDirect.Builtins
                         bigx = y[j];
                 }
 
+                // the largest value in size, of the data and of their differences (only the largest value used to be looked at, so
+                // large negative values overflowed)
+                for (int j = 1; j <= size; j++)
+                    bigx = Math.Max(bigx, Math.Max(Math.Max(Math.Abs(x[j]), Math.Abs(y[j])), Math.Abs(x[j] - y[j])));
                 double scaler = 100000;
                 do
                 {
@@ -2607,6 +2609,9 @@ namespace StatsDirect.Builtins
                     scaler /= 10;
                 }
                 while (true);
+                // very small values used to give limits of 0, because the scale could not go above 100000
+                while (bigx > 0.0 && bigx * scaler < 1000.0 && scaler < 1e300)
+                    scaler *= 10;
 
                 long[] xx = new long[size + 1];
                 for (int j = 1; j <= size; j++)
