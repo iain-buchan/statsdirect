@@ -2003,9 +2003,10 @@ namespace StatsDirect.Builtins
                 taulab = 0 != siga || 0 != sigb
                     ? "tau b"
                     : "tau";
+                // the continuity correction moves the score one step towards zero, and leaves a score of zero where it is
                 double kz = s < 0
                     ? (s + 1.0) / Math.Sqrt(varf)
-                    : (s - 1.0) / Math.Sqrt(varf);
+                    : s > 0 ? (s - 1.0) / Math.Sqrt(varf) : 0.0;
                 double pl = PDF.alnorm(kz);
                 ptau = pl < 1.0 - pl
                     ? pl * 2.0
@@ -2816,7 +2817,10 @@ namespace StatsDirect.Builtins
             }
             // With every value of a column the same all pairs are tied, tau b is 0/0 and the variance of the score is zero: the
             // report used to give a continuity corrected z of minus infinity and "P < 0.0001".
-            if (nx >= 2 && (AllTheSame(x, nx) || AllTheSame(y, nx)))
+            // With fewer than two complete pairs (two columns entered in different rows, say) the same false result used to appear.
+            if (nx < 2)
+                throw new TemplateOperationCancelledException("Too few pairs of observations: rank correlation needs at least two rows with a value in both columns.", "Kendall rank correlation");
+            if (AllTheSame(x, nx) || AllTheSame(y, nx))
                 throw new TemplateOperationCancelledException("Rank correlation cannot be calculated when all of the values in a column are the same.", "Kendall rank correlation");
 
             XDokend(host, cit, nx, x, y, ref nxx, out double p, out double q, ref s, ref hn, out double siga, out double sigb, ref varf, ref tau, ref tauLl, ref tauUl, out bool fault);
@@ -2862,10 +2866,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_u", 1.0 - pl);
             outputParameters.AddOutput("p_l", pl);
             outputParameters.AddOutput("p_2", ps * 2.0);
+            // the continuity correction moves the score one step towards zero, and leaves a score of zero where it is (it used to
+            // be moved to -1, which gave a two sided P of 0.73 for a score of exactly 0 with four pairs)
             if (s < 0)
                 kz = (s + 1.0) / Math.Sqrt(varf);
-            else
+            else if (s > 0)
                 kz = (s - 1.0) / Math.Sqrt(varf);
+            else
+                kz = 0.0;
             pl = PDF.alnorm(kz);
             if (pl < 1.0 - pl)
                 ps = pl;
