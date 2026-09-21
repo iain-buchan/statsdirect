@@ -16,7 +16,7 @@
          -test-operations 2.4 s off, 1.4 s on); a few calculation-heavy analyses take slightly longer the first time they run, and the longest calculations
          change by a few per cent either way (hot loops are re-optimised while they run). Results are the same either way. Measure before changing it. -->
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <Version>5.0.0</Version>
+    <Version>5.0.1</Version>
     <AssemblyTitle>StatsDirect</AssemblyTitle>
     <AssemblyDescription>StatsDirect statistical analysis workbench</AssemblyDescription>
     <Company>StatsDirect Limited</Company>

@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.1] 2026-09-22
+
+Version 5.0.1 follows a check of every function on the Nonparametric menu, one at a time, against R and against exact calculations: the help's worked example and a range of other data (ties, missing values, very small and very large samples, values of unusual size, degenerate data) were run through the program's own report and through R, and an independent review then read every changed routine and ran about 190 further cases. The faults found are corrected below; two of them (the slope interval of nonparametric linear regression, at the top of the interval and with more than about 130 pairs) change results for ordinary data. The web help now ends each worked example of the Nonparametric section with R code that reproduces it, and those scripts, the help's examples and the program's reports are checked against one another automatically.
 
 ### Changed
 - Mann-Whitney and Wilcoxon signed ranks reports: K is printed again beside the confidence interval for the difference (K = 134 and K = 14 in the help's examples), as the help describes and as earlier versions did; the interval runs from the Kth smallest to the Kth largest difference (or average of two differences). An approximate K is labelled "(approx)": in the signed ranks test that is from 200 pairs, where K comes from a normal approximation, and above 1000 pairs the confidence level is headed "Approximate", because it is then the level asked for rather than the level achieved
