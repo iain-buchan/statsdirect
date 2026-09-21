@@ -1537,23 +1537,32 @@ namespace StatsDirect.Builtins
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
             DoubleVariable expected = (DoubleVariable)expectedFrame.Variables[0];
 
+            // The same rows as the goodness of fit report uses: a row with a missing cell is left out of both columns. The whole
+            // columns used to be taken here, so that a blank cell stopped the simulation or gave it a cell with a false probability,
+            // while the chi-square it is compared with came from the rows used.
+            if (observed.Length != expected.Length)
+                throw new TemplateOperationCancelledException("The observed and expected columns must have the same number of rows.", "Chi-square goodness of fit test");
+            DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { observed.Data, expected.Data }, 0, observed.Length, 0);
             //  Observed data is grouped frequencies.
-            double[] observedData = observed.Data;
-            //  Expected data may be probabilities or counts; we'll scale them later.
-            double[] expectedData = expected.Data;
+            double[] observedData = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
+            //  Expected data may be probabilities or counts; they are scaled to add up to 1.
+            double[] expectedData = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
 
-            int nx = observed.Length;
+            int nx = observedData.Length;
 
             int[] xn = new int[nx + 1];
             double[] p = new double[nx + 1];
-            double expectedTotal = Math.Round(expected.Sum, 12);
+            double expectedTotal = 0.0;
+            for (int n = 0; n < nx; n++)
+                expectedTotal += expectedData[n];
+            expectedTotal = Math.Round(expectedTotal, 12);
             for (int n = 0; n < nx; n++)
             {
                 xn[n + 1] = Convert.ToInt32(observedData[n]);
                 p[n + 1] = expectedData[n] / expectedTotal;
             }
 
-            ResampleX2Gf(host, xn, p, observed.Length, x2, out int r, iterations, seed, out int actualIterations);
+            ResampleX2Gf(host, xn, p, nx, x2, out int r, iterations, seed, out int actualIterations);
 
             ParameterBag outputParameters = new();
             double exactP = r / (double)actualIterations;
@@ -1668,6 +1677,9 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("names"))
             {
                 StringVariable namesVariable = (StringVariable)parameters["names"].AsDataFrame.Variables[0];
+                // A shorter column of names stopped the analysis with an index out of range, as columns of different lengths did.
+                if (namesVariable.Length != observed.Length)
+                    throw new TemplateOperationCancelledException("The column of category names must have the same number of rows as the observed counts.", cgft);
                 names = Numerics.Utilities.CopyValidRows(namesVariable.Data, copiesRemovingMissingRows.ValidRowsInOriginal, 0, expected.Length, 0, nx);
             }
 
@@ -1691,6 +1703,14 @@ namespace StatsDirect.Builtins
             // Probabilities (adding up to 1 or less) and percentages (adding up to 100) are scaled to the observed total without
             // comment; the help's own example gives the expected distribution as percentages.
             bool expectedIsProbability = expectedTotal <= 1.0 || Math.Abs(expectedTotal - 100.0) < 1e-6;
+            // Expected values that add up to nothing gave a report of asterisks, and negative counts were accepted.
+            if (!(expectedTotal > 0.0) || double.IsInfinity(expectedTotal))
+                throw new TemplateOperationCancelledException("The expected values must add up to more than zero.", cgft);
+            for (int n = 0; n < nx; n++)
+            {
+                if (observedData[n] < 0.0)
+                    throw new TemplateOperationCancelledException("Observed counts cannot be negative.", cgft);
+            }
             for (int n = 0; n < nx; n++)
             {
                 xn[n] = observedData[n];
@@ -1709,7 +1729,8 @@ namespace StatsDirect.Builtins
                     expectedsBelow5 += 1;
             }
             string w2;
-            if (!(expectedIsProbability || Convert.ToInt32(expectedTotal) == Convert.ToInt32(observedTotal)))
+            // compared as numbers: conversion to a 32-bit integer stopped the analysis when a total reached 2,147,483,648
+            if (!(expectedIsProbability || Math.Abs(expectedTotal - observedTotal) < 0.5))
                 w2 = Formatting.WRNCOLON + "total expected not equal to total observed";
             else
                 w2 = string.Empty;
