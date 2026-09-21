@@ -1952,6 +1952,11 @@ namespace StatsDirect.Builtins
             if (rows <= 4)
                 throw new TemplateOperationCancelledException("Too few observations", "Nonparametric Regression");
 
+            // With every predictor value the same no pair of points gives a slope, which used to stop the analysis with an index
+            // out of range.
+            if (AllTheSame(x, rows))
+                throw new TemplateOperationCancelledException("A slope cannot be calculated when all of the predictor values are the same.", "Nonparametric Regression");
+
             // get x and y medians in order to calculate intercepts later
             double[] axo = new double[rows + 1];
             double[] ayo = new double[rows + 1];
@@ -2018,14 +2023,19 @@ namespace StatsDirect.Builtins
                             if (x[i] != x[j])
                             {
                                 cnt++;
+                                // adding zero turns a slope of minus zero, which was printed as "-0", into zero
                                 if (x[i] != Constant.MISSING & y[j] != Constant.MISSING)
-                                    pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
+                                    pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]) + 0.0;
                             }
                         }
                     }
                     Array.Sort(pws, 1, cnt);
+                    // Conover (1999): with N slopes and w the quantile of Kendall's statistic, the limits are the rth smallest
+                    // and the rth largest slope, r = (N - w) / 2 rounded down; the rth largest is the (N + 1 - r)th smallest.
+                    // The (N + w) / 2 th was taken for the upper limit, one ordered slope too low, so the interval was too
+                    // short at the top and its coverage fell below the level asked for (94.6% for a 95% interval with 12 pairs).
                     int ri = (int)Math.Floor(0.5 * (cnt - ix));
-                    int si = Convert.ToInt32(0.5 * (cnt + ix));
+                    int si = cnt + 1 - ri;
                     imdn = 0.5 * (cnt + 1);
                     fiximdn = (int)Math.Floor(imdn);
                     if (imdn < 1)
