@@ -1790,14 +1790,18 @@ namespace StatsDirect.Builtins
                                     if (x[i] != x[j])
                                     {
                                         cnt += 1;
+                                        // adding zero turns a slope of minus zero into zero
                                         if (x[i] != Constant.MISSING && y[j] != Constant.MISSING)
-                                            pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]);
+                                            pws[cnt] = (y[i] - y[j]) / (x[i] - x[j]) + 0.0;
                                     }
                                 }
                             }
                             Array.Sort(pws, 1, cnt);
+                            // The limits are the rth smallest and the rth largest slope (Conover 1999), as in the nonparametric
+                            // linear regression report; the rth largest is the (N + 1 - r)th smallest. The ((N + w) / 2)th was used
+                            // for the upper limit, one ordered slope too low.
                             int ri = (int)Math.Floor(0.5 * Convert.ToDouble(cnt - ix));
-                            int si = Convert.ToInt32(0.5 * Convert.ToDouble(cnt + ix));
+                            int si = cnt + 1 - ri;
                             double imdn = 0.5 * Convert.ToDouble(cnt + 1);
                             if (imdn < 1.0)
                                 imdn = 1.0;
@@ -1807,9 +1811,12 @@ namespace StatsDirect.Builtins
                                 mdn = pws[Convert.ToInt32(imdn)];
                             if (imdn - Math.Floor(imdn) != 0.0)
                                 mdn = pws[(int)Math.Floor(imdn)] + (pws[Convert.ToInt32(Math.Floor(imdn) + 1.0)] - pws[(int)Math.Floor(imdn)]) * (imdn - Math.Floor(imdn));
-                            double lci = pws[ri];
-                            double uci = pws[si];
-                            t = t + " [Median slope (" + Formatting.XRound(gamma * 100, 2) + "% CI)= " + host.RoundU(mdn) + " (" + host.RoundU(lci) + " to " + host.RoundU(uci) + ")]";
+                            // r below 1: too few slopes for an interval at this level of confidence; the limits used to be read from
+                            // outside the ordered slopes
+                            string limits = ri < 1
+                                ? "too few pairs for an interval at this level of confidence"
+                                : host.RoundU(pws[ri]) + " to " + host.RoundU(pws[si]);
+                            t = t + " [Median slope (" + Formatting.XRound(gamma * 100, 2) + "% CI)= " + host.RoundU(mdn) + " (" + limits + ")]";
                             outputVariable.Title = t;
                         }
                         else
