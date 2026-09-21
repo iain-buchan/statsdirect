@@ -11,7 +11,7 @@ T<sub>1</sub> (chi-square) = @{t1:roundu}<br />
 df = @df</p>
 
 <p>After Iman &amp; Davenport (1980):<br />
-T<sub>2</sub> (F) =  @{t2:roundu}<br />
+T<sub>2</sub> (F) = @{t2:roundu}<br />
 <pval>@{p:pval}</pval></p>
 <block name="message">
 

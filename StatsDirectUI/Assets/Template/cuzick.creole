@@ -6,7 +6,7 @@ Observations = @obs<br />
 Order: @order</p>
 
 <table>
-<tr><td>Ez =  @{ez:roundu}</td><td>Var(z) = @{varz:roundu}</td></tr>
+<tr><td>Ez = @{ez:roundu}</td><td>Var(z) = @{varz:roundu}</td></tr>
 <tr><td>T = @{t:roundu}</td><td>ET = @{et:roundu}</td><td>Var(T) = @{vart:roundu}</td></tr>
 <tr><td>z = @{z:roundu}</td></tr>
 </table>
@@ -16,8 +16,8 @@ Order: @order</p>
 <block name="ties">
 
 <p>Corrected for ties:<br />
-VarT = @{varttie:roundu}<br />
-z   = @{ztie:roundu}</p>
+Var(T) = @{varttie:roundu}<br />
+z = @{ztie:roundu}</p>
 
 <p><pval>One sided @{p_1tie:pval}</pval><br />
 <pval>Two sided @{p_2tie:pval}</pval></p>

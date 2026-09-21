@@ -11,7 +11,7 @@ Observations per sample = @obs</p>
 Y-intercept = @{intercept:roundu}</p>
 </block>
 
-<p>Kendall's rank correlation coefficient @taulab =  @{tau:roundu}<br />
+<p>Kendall's rank correlation coefficient @taulab = @{tau:roundu}<br />
 <pval>Two sided (on continuity corrected z) @{p_2:pval}</pval>  (H<sub>1</sub>: any correlation)</p>
 
 <p>@{chart:chart}</p>
