@@ -1652,6 +1652,10 @@ namespace StatsDirect.Builtins
             DataFrame expectedFrame = parameters["expected"].AsDataFrame;
             DoubleVariable expected = (DoubleVariable)expectedFrame.Variables[0];
 
+            // A different number of rows used to stop the analysis with an index out of range.
+            if (observed.Length != expected.Length)
+                throw new TemplateOperationCancelledException("The observed and expected columns must have the same number of rows.", cgft);
+
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { observed.Data, expected.Data }, 0, observed.Length, 0);
             //  Observed data is grouped frequencies.
             double[] observedData = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
@@ -1674,9 +1678,19 @@ namespace StatsDirect.Builtins
 
             double[] xn = new double[nx];
             double[] xe = new double[nx];
-            double observedTotal = observed.Sum;
-            double expectedTotal = expected.Sum;
-            bool expectedIsProbability = expectedTotal <= 1.0;
+            // Totals are over the rows that are used. They used to be over the whole columns, so a row left out because one of
+            // its cells was missing still counted: the expected frequencies then no longer added up to the observed total and
+            // the chi-square was wrong.
+            double observedTotal = 0.0;
+            double expectedTotal = 0.0;
+            for (int n = 0; n < nx; n++)
+            {
+                observedTotal += observedData[n];
+                expectedTotal += expectedData[n];
+            }
+            // Probabilities (adding up to 1 or less) and percentages (adding up to 100) are scaled to the observed total without
+            // comment; the help's own example gives the expected distribution as percentages.
+            bool expectedIsProbability = expectedTotal <= 1.0 || Math.Abs(expectedTotal - 100.0) < 1e-6;
             for (int n = 0; n < nx; n++)
             {
                 xn[n] = observedData[n];
@@ -1690,7 +1704,7 @@ namespace StatsDirect.Builtins
             for (int n = 0; n < nx; n++)
             {
                 if (xe[n] <= 0)
-                    throw new TemplateOperationCancelledException("Can not have expected value < = 0.", cgft);
+                    throw new TemplateOperationCancelledException("Cannot have an expected value of zero or less.", cgft);
                 if (xe[n] < 5)
                     expectedsBelow5 += 1;
             }
