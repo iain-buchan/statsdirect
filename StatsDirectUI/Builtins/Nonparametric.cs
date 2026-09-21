@@ -1961,6 +1961,9 @@ namespace StatsDirect.Builtins
             // out of range.
             if (AllTheSame(x, rows))
                 throw new TemplateOperationCancelledException("A slope cannot be calculated when all of the predictor values are the same.", "Nonparametric Regression");
+            // With every outcome value the same the rank correlation is 0/0 and the chart has no vertical scale.
+            if (AllTheSame(y, rows))
+                throw new TemplateOperationCancelledException("Nonparametric regression cannot be calculated when all of the outcome values are the same.", "Nonparametric Regression");
 
             // get x and y medians in order to calculate intercepts later
             double[] axo = new double[rows + 1];
@@ -2009,6 +2012,7 @@ namespace StatsDirect.Builtins
                     : (1.0 - pl) * 2.0;
             }
 
+            string ciNote = string.Empty;
             // regression
             double p = (1.0 - gamma) / 2.0;
             if (p < 0 || p > 1)
@@ -2051,8 +2055,20 @@ namespace StatsDirect.Builtins
                         mdn = pws[fiximdn];
                     if (imdn - Math.Floor(imdn) != 0)
                         mdn = pws[fiximdn] + (pws[fiximdn + 1] - pws[fiximdn]) * (imdn - Math.Floor(imdn));
-                    lci = pws[ri];
-                    uci = pws[si];
+                    if (ri < 1)
+                    {
+                        // Too few slopes for an interval at this level of confidence (5 pairs at 99%, or fewer slopes because
+                        // of ties in x): r is 0 or less. The limits used to be read from outside the ordered slopes, which
+                        // printed a false limit of 0 or stopped the analysis.
+                        lci = Constant.MISSING;
+                        uci = Constant.MISSING;
+                        ciNote = "  (too few pairs for an interval at this level of confidence)";
+                    }
+                    else
+                    {
+                        lci = pws[ri];
+                        uci = pws[si];
+                    }
                     intercept = ymdn - mdn * xmdn;
                 }
                 else
@@ -2090,6 +2106,7 @@ namespace StatsDirect.Builtins
                 resultsParameters.AddOutput("mdn", mdn);
                 resultsParameters.AddOutput("from", lci);
                 resultsParameters.AddOutput("to", uci);
+                resultsParameters.AddOutput("cinote", ciNote);
                 resultsParameters.AddOutput("intercept", intercept);
             }
 
