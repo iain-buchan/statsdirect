@@ -1877,7 +1877,11 @@ namespace StatsDirect.Builtins
                     resultsParameters.AddOutput("*results", results2List);
                     if (hasTies)
                     {
-                        double p1Approximate = PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - sr * sr), nx - 2);
+                        // With rho of 1 or -1 the t statistic is infinite and its tail area is 0; tvalp gave a missing value there,
+                        // which printed all three P values as "P = *".
+                        double p1Approximate = 1.0 - sr * sr <= 1e-12
+                            ? 0.0
+                            : PDF.tvalp(Math.Abs(sr) * Math.Sqrt(nx - 2) / Math.Sqrt(1.0 - sr * sr), nx - 2);
                         if (p1Approximate > 1.0 - p1Approximate)
                             p1Approximate = 1.0 - p1Approximate;
                         double p2Approximate = Math.Min(1.0, 2.0 * p1Approximate);
