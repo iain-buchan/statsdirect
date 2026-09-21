@@ -467,7 +467,11 @@ namespace StatsDirect.Numerics
                 pu = kendp(ix, nx, ref ifault);
                 if (pu < P)
                     break;
-                if (ix > 1000)
+                // The search used to stop at a score of 1000, so the quantile could never be larger than about 1000. The
+                // quantile grows as n to the power 1.5 and passes 1000 at about 133 pairs for a two sided 95% interval,
+                // after which intervals built on it (the slope in nonparametric regression) became far too narrow.
+                // The largest possible score is n(n - 1)/2.
+                if (ix > Convert.ToDouble(nx) * Convert.ToDouble(nx - 1) / 2.0)
                     break;
             }
             while (true);
