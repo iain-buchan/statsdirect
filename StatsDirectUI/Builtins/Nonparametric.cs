@@ -172,6 +172,37 @@ namespace StatsDirect.Builtins
                     ulId = rxs - 1;
                     capUpper = true;
                 }
+                if (conservative)
+                {
+                    // The conservative option was ignored above 200 observations, although the line was still labelled
+                    // "(conservative)". As for smaller samples, move each limit outwards until no more than (1 - gamma) / 2 lies
+                    // beyond it.
+                    double tailArea = (1.0 - gamma) / 2.0;
+                    while (llId >= 1.0)
+                    {
+                        ExFortran.bino(rx, qc, (int)Math.Floor(llId), out double _, out double below, out double _, out _);
+                        if (below <= tailArea)
+                            break;
+                        llId -= 1.0;
+                    }
+                    if (llId < 1.0)
+                    {
+                        llId = 0.0;
+                        capLower = true;
+                    }
+                    while (ulId + 1.0 < rxs)
+                    {
+                        ExFortran.bino(rx, qc, (int)Math.Floor(ulId), out double _, out double upTo, out double _, out _);
+                        if (upTo >= 1.0 - tailArea)
+                            break;
+                        ulId += 1.0;
+                    }
+                    if (ulId + 1.0 >= rxs)
+                    {
+                        ulId = rxs - 1.0;
+                        capUpper = true;
+                    }
+                }
                 ll = r[(int)Math.Floor(llId) + 1];
                 ul = r[(int)Math.Floor(ulId) + 1];
                 // The limits are the order statistics numbered floor(llId) + 1 and floor(ulId) + 1, so the interval covers the
