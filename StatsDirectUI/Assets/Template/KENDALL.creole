@@ -3,13 +3,13 @@
 
 <p>@sample_1 vs. @sample_2<br />
 Observations per sample = @obs<br />
-Concordant pairs  =  @con<br />
-Discordant pairs  =  @dis<br />
+Concordant pairs = @con<br />
+Discordant pairs = @dis<br />
 Tied pairs = @tie<br />
 Kendall's score = @s   (standard error = @{ses:roundu})<br />
 Gamma = @{gam:roundu}</p>
 
-<p>Kendall's @tb  = @{tau:roundu}<br />
+<p>Kendall's @tb = @{tau:roundu}<br />
 <ci>Approximate @{pc:round2}% CI = @{ll:roundu} to @{ul:roundu}</ci></p>
 
 <p><u>Approximate tests@adj</u></p>
