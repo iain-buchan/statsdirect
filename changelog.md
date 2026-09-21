@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Wilcoxon signed ranks test with more than 200 pairs, where a normal approximation is used: the one sided P values were wrong, because the statistic was divided by the sum of the squared ranks rather than its square root, and the upper side took a lower tail area when the statistic was negative; both came out close to 0.5 (for 201 pairs with a normalised statistic of 1.980751 the lower side P was 0.5005 where 0.9762 is right; with the columns exchanged both sides were 0.4995 where 0.0238 and 0.9762 are right). The two sided P was right, and so was the upper side P when the statistic was positive. The sum of ranks for positive differences was printed under the label "Sum of signed ranks for all differences", and the line for the normalised statistic had a misplaced space when there were ties. The exact test, used for up to 200 pairs, is unchanged
+
 ##[v5.0.0] 2026-09-20
 
 Version 5 follows an independent audit of the calculation layer against R (and more accurate references where R has none), which found 24 defects. A second audit on 19 September 2026, again against R, and the reviews of its fixes found more; they are listed below with the rest. All are corrected here, and each correction was confirmed on the Windows build. Results from the procedures listed below can differ from version 4.

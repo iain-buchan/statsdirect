@@ -2115,15 +2115,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("sample_2", txc);
             outputParameters.AddOutput("non_0", n1);
 
-            if (ned == 0)
-                outputParameters.AddOutput("sum", "Sum of ranks for positive differences = " + host.RoundU(w));
-            else
-                outputParameters.AddOutput("sum", "Sum of signed ranks for all differences = " + host.RoundU(w));
+            // w is the sum of ranks for positive differences whichever way P is found; with more than 200 pairs it used to be
+            // printed as the sum of signed ranks, which it is not.
+            outputParameters.AddOutput("sum", "Sum of ranks for positive differences = " + host.RoundU(w));
 
             string adj = xf != 0 ? " (adjusted for ties)" : string.Empty;
 
-            if (ned != 0)
-                outputParameters.AddOutput("stats", "Normalised statistic " + adj + "= " + host.RoundU(ned));
+            // The normal approximation is used with more than 200 pairs, as in XWilcoxonSignedRanks; a normalised statistic
+            // of exactly zero used to be taken for the exact test.
+            if (n > 200)
+                outputParameters.AddOutput("stats", "Normalised statistic" + adj + " = " + host.RoundU(ned));
             else
                 outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
 
@@ -2231,18 +2232,12 @@ namespace StatsDirect.Builtins
                 }
                 ned = q / Math.Sqrt(var);
 
-                //lower tail P
-                pLower = w == wmax ? 1.0 : PDF.alnorm((q + 1.0) / var);
-
-                //upper tail P
-                if (q > 0.0)
-                    pUpper = 1.0 - PDF.alnorm(ned);
-                else
-                    pUpper = w == 0.0 ? 1.0 : PDF.alnorm((q - 1.0) / var);
-
-                //two tailed P	
-                p2 = PDF.alnorm(ned);
-                p2 = 2.0 * Math.Min(p2, 1.0 - p2);
+                // The three P values follow from the normalised statistic that the report prints (Conover 1999). The one sided
+                // values used to divide by the sum of squared ranks rather than its square root, and the upper side took a
+                // lower tail area when the statistic was negative, so both came out near 0.5.
+                pLower = PDF.alnorm(ned);
+                pUpper = PDF.alnorm(-ned);
+                p2 = Math.Min(1.0, 2.0 * Math.Min(pLower, pUpper));
             }
             else
             {
