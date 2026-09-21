@@ -174,8 +174,13 @@ namespace StatsDirect.Builtins
                 }
                 ll = r[(int)Math.Floor(llId) + 1];
                 ul = r[(int)Math.Floor(ulId) + 1];
-                ExFortran.bino(rx, qc, Convert.ToInt32(ulId - 1.0), out double _, out double ulPlox, out double _, out _);
-                ExFortran.bino(rx, qc, Convert.ToInt32(llId - 1.0), out _, out double llPlox, out _, out fault);
+                // The limits are the order statistics numbered floor(llId) + 1 and floor(ulId) + 1, so the interval covers the
+                // quantile with probability P(Y <= floor(ulId)) - P(Y <= floor(llId)), as in the branch for smaller samples below.
+                // "Id - 1" rounded to the nearest whole number was used here, which is a different term of the binomial
+                // distribution whenever the fraction is under a half: the level reported for 400 values was 95.48% where the
+                // interval printed has 94.54%.
+                ExFortran.bino(rx, qc, (int)Math.Floor(ulId), out double _, out double ulPlox, out double _, out _);
+                ExFortran.bino(rx, qc, (int)Math.Floor(llId), out _, out double llPlox, out _, out fault);
                 cover = (ulPlox - llPlox) * 100.0;
             }
             else
