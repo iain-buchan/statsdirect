@@ -1721,6 +1721,19 @@ namespace StatsDirect.Builtins
             return ThetaTzmin(true, tz2, y2, lp, ln, z, t, m, n);
         }
 
+        /// <summary>
+        /// True when the first n values of a 1-based array are all equal, so that they cannot be ranked against anything.
+        /// </summary>
+        private static bool AllTheSame(double[] values, int n)
+        {
+            for (int i = 2; i <= n; i++)
+            {
+                if (values[i] != values[1])
+                    return false;
+            }
+            return true;
+        }
+
         public static StepOutput RptSpearman(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
@@ -1744,6 +1757,11 @@ namespace StatsDirect.Builtins
             }
             if (nx < 2)
                 return StepOutput.Empty();
+
+            // With every value of a column the same there is nothing to rank and rho is 0/0, which used to stop the analysis
+            // with an arithmetic overflow.
+            if (AllTheSame(prk, nx) || AllTheSame(prk1, nx))
+                throw new TemplateOperationCancelledException("Rank correlation cannot be calculated when all of the values in a column are the same.", "Spearman rank correlation");
 
             double[] rka = new double[nx + 1];
             double[] rkb = new double[nx + 1];
@@ -2764,6 +2782,11 @@ namespace StatsDirect.Builtins
                     y[nx] = v1.Data[n];
                 }
             }
+            // With every value of a column the same all pairs are tied, tau b is 0/0 and the variance of the score is zero: the
+            // report used to give a continuity corrected z of minus infinity and "P < 0.0001".
+            if (nx >= 2 && (AllTheSame(x, nx) || AllTheSame(y, nx)))
+                throw new TemplateOperationCancelledException("Rank correlation cannot be calculated when all of the values in a column are the same.", "Kendall rank correlation");
+
             XDokend(host, cit, nx, x, y, ref nxx, out double p, out double q, ref s, ref hn, out double siga, out double sigb, ref varf, ref tau, ref tauLl, ref tauUl, out bool fault);
             if (fault)
                 throw new TemplateOperationCancelledException();
