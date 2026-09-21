@@ -1602,7 +1602,7 @@ namespace StatsDirect.Builtins
                     ParameterBag confParameters = MannWhitneyExactConfidence(host, x, k, n1, n2);
                     confParameters.AddOutput("pc", (1 - lev * 2) * 100);
                     if (approx)
-                        confParameters.AddOutput("k", k + " (approx) ");
+                        confParameters.AddOutput("k", k + " (approx)");
                     else
                         confParameters.AddOutput("k", k);
                     confList.Add(confParameters);
@@ -2163,16 +2163,11 @@ namespace StatsDirect.Builtins
                 IList<ParameterBag> confList = new List<ParameterBag>();
                 ParameterBag confParameters = XSrcon(host, n, k, x, y);
 
-                if (lev != -99)
-                {
-                    confParameters.AddOutput("pc", Formatting.XRound(lev * 100, 1) + "% confidence interval for difference between population medians:");
-                    confParameters.AddOutput("k", "K = " + k);
-                }
-                else
-                {
-                    confParameters.AddOutput("pc", "Approximate " + Formatting.XRound(gamma * 100, 1) + "% confidence interval");
-                    confParameters.AddOutput("k", "for difference between population medians:");
-                }
+                // Xsrk takes K from a normal approximation from 200 pairs, and above 1000 pairs gives the level asked for rather
+                // than the level achieved. K is printed again (the template had lost it), labelled when it is approximate.
+                string level = n > 1000 ? "Approximate " + Formatting.XRound(gamma * 100, 1) : Formatting.XRound(lev * 100, 1);
+                confParameters.AddOutput("pc", level + "% confidence interval for difference between population medians:");
+                confParameters.AddOutput("k", "K = " + k + (n >= 200 ? " (approx)" : string.Empty));
                 confList.Add(confParameters);
                 outputParameters.AddOutput("*conf", confList);
                 outputParameters.AddOutput("*noconf", null);

@@ -17,6 +17,6 @@ U = @{u:roundu}      U' = @{u_prime:roundu}</p>
 </block>
 <block name="conf">
 <p><ci>@{pc:round2}% confidence interval for difference between medians or means:</ci><br />
-Median difference = @{median:roundu} <ci>(CI: @{from:roundu} to @{to:roundu})</ci></p>
+K = @k   Median difference = @{median:roundu} <ci>(CI: @{from:roundu} to @{to:roundu})</ci></p>
 </block>
 </report>

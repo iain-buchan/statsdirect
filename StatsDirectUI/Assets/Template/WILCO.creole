@@ -14,6 +14,6 @@ Number of non-zero differences ranked = @non_0<br />
 </block>
 <block name="conf">
 <p><ci>@pc</ci><br />
-Median difference = @{med_diff:roundu} (<ci>@{from:roundu} to @{to:roundu}</ci>)</p>
+@k   Median difference = @{med_diff:roundu} (<ci>@{from:roundu} to @{to:roundu}</ci>)</p>
 </block>
 </report>
