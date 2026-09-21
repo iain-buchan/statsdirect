@@ -2192,9 +2192,9 @@ namespace StatsDirect.Builtins
 
             string adj = xf != 0 ? " (adjusted for ties)" : string.Empty;
 
-            // The normal approximation is used with more than 200 pairs, as in XWilcoxonSignedRanks; a normalised statistic
-            // of exactly zero used to be taken for the exact test.
-            if (n > 200)
+            // The normal approximation is used with more than 200 non-zero differences, as in XWilcoxonSignedRanks; a normalised
+            // statistic of exactly zero used to be taken for the exact test.
+            if (n1 > 200)
                 outputParameters.AddOutput("stats", "Normalised statistic" + adj + " = " + host.RoundU(ned));
             else
                 outputParameters.AddOutput("stats", "Exact probability" + adj + ":");
@@ -2293,7 +2293,9 @@ namespace StatsDirect.Builtins
             }
             double wmax = nonzero * (nonzero + 1) / 2.0;
 
-            if (n > 200)
+            // The method depends on the number of differences that are ranked, not on the number of pairs: with many pairs the same
+            // and a handful of differences, n > 200 used to give a normal approximation from as few as five ranks.
+            if (nonzero > 200)
             {
                 //compute the normalized test
                 double var = 0.0;
