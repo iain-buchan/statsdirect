@@ -2907,8 +2907,8 @@ namespace StatsDirect.Numerics
         /// <remarks>programmer: jason c. hsu.  last revision: 05-18-88 by wcs for vector processing</remarks>
         public static double glv(ffunDelegate ffun, int k, double d, double dnu, double sup, double dinfnu, double[] av, double[] bv, double[] cv)
         {
-            const double pbot = 0.000005;
-            const double pup = 0.999995;
+            const double pbot = 1e-10;
+            const double pup = 1.0 - 1e-10;
             double[] pl = new double[49]; // Upper bound 48
             double[] wl = new double[49]; // Upper bound 48
 
@@ -2989,16 +2989,22 @@ namespace StatsDirect.Numerics
             // -------------------------
             double b = Math.Sqrt(0.50 * ppchi2(pbot, dnu, out int ifault));
             double u = sup >= 0.0 ? sup : Math.Sqrt(0.50 * ppchi2(pup, dnu, out ifault));
-            double wid = u - b;
+            //  With few degrees of freedom the integrand changes quickly over a narrow band of s, so the interval is split into panels
+            int panels = dnu < 5.0 ? 16 : 1;
+            double wid = (u - b) / panels;
             double hwid = 0.50 * wid;
             double sum = 0.0;
-            for (int i = 1; i <= 48; i++)
+            for (int panel = 0; panel < panels; panel++)
             {
-                double q = hwid * (1.0 + pl[i]) + b;
-                double s = sr2 * q / rdnu;
-                double vgh = ffun(k, d, s, av, bv, cv);
-                double gama = (dnu - 1.0) * Math.Log(q) - q * q - gdnb2;
-                sum += vgh * Math.Exp(gama) * wid * wl[i];
+                double pb = b + panel * wid;
+                for (int i = 1; i <= 48; i++)
+                {
+                    double q = hwid * (1.0 + pl[i]) + pb;
+                    double s = sr2 * q / rdnu;
+                    double vgh = ffun(k, d, s, av, bv, cv);
+                    double gama = (dnu - 1.0) * Math.Log(q) - q * q - gdnb2;
+                    sum += vgh * Math.Exp(gama) * wid * wl[i];
+                }
             }
             return sum;
         }

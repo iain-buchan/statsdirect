@@ -4,6 +4,8 @@ namespace StatsDirect.Numerics
 {
     public partial class ExFortran
     {
+        //  Residual degrees of freedom above which the residual variance is taken as known in the multiple comparison integrals
+        internal const double SigmaKnownDegreesOfFreedom = 1.0e7;
         ///  <summary>
         ///  ppq2 integrates |q*| for 2-sided MCA inference
         ///  </summary>
@@ -20,11 +22,11 @@ namespace StatsDirect.Numerics
             double[] b = new double[km1 + 1];
             double[] c = new double[km1 + 1];
 
-            const double dinfnu = 360.0;
+            const double dinfnu = SigmaKnownDegreesOfFreedom;
             ifault = 0;
             int k = km1 + 1;
             double dnu = Convert.ToDouble(nu);
-            if (km1 < 1 || nu < 4)
+            if (km1 < 1 || nu < 2)
             {
                 ifault = 7;
                 cc = Constant.MISSING;
@@ -61,11 +63,11 @@ namespace StatsDirect.Numerics
             double[] b = new double[km1 + 1];
             double[] c = new double[km1 + 1];
 
-            const double dinfnu = 360.0;
+            const double dinfnu = SigmaKnownDegreesOfFreedom;
             ifault = 0;
             int k = km1 + 1;
             double dnu = Convert.ToDouble(nu);
-            if (km1 < 1 || nu < 4)
+            if (km1 < 1 || nu < 2)
             {
                 ifault = 7;
                 cc = Constant.MISSING;
@@ -102,7 +104,7 @@ namespace StatsDirect.Numerics
             double[] b = new double[km1 + 1];
             double[] c = new double[km1 + 1];
 
-            const double dinfnu = 360.0;
+            const double dinfnu = SigmaKnownDegreesOfFreedom;
 
             //  initialize default tolerence (eps) on cc
             //  eps=0.20d-05
@@ -116,7 +118,7 @@ namespace StatsDirect.Numerics
             const int itmax = 21;
             int k = km1 + 1;
             double dnu = Convert.ToDouble(nu);
-            if (km1 < 1 || nu < 4)
+            if (km1 < 1 || nu < 2)
             {
                 ifault = 7;
                 d = Constant.MISSING;
@@ -176,7 +178,7 @@ namespace StatsDirect.Numerics
             double[] b = new double[km1 + 1];
             double[] c = new double[km1 + 1];
 
-            const double dinfnu = 3600;
+            const double dinfnu = SigmaKnownDegreesOfFreedom;
 
             //  initialize default tolerence (eps) on cc
             const double eps = 0.0000000002;
@@ -187,7 +189,7 @@ namespace StatsDirect.Numerics
             const double dstop = 0.00000005;
 
             //  initialize default bound on number of iteration (itmax)
-            if (km1 < 1 || nu < 4)
+            if (km1 < 1 || nu < 2)
             {
                 ifault = 7;
                 d = Constant.MISSING;

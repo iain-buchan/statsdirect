@@ -1585,7 +1585,7 @@ namespace StatsDirect.Builtins
 
             ExFortran.dmcc(k, lam, nu, cc, out double d, out int ifault);
             if (ifault != 0)
-                throw new TemplateOperationCancelledException("Fault in calculation", "Dunnett Contrasts");
+                throw new TemplateOperationCancelledException(ifault == 7 ? "Dunnett's method needs at least two residual degrees of freedom." : "Fault in calculation", "Dunnett Contrasts");
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("d", d);
