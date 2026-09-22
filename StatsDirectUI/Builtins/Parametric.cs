@@ -787,10 +787,10 @@ namespace StatsDirect.Builtins
             if (n < 3.0)
                 return;
 
-            // ranks
+            // Blom scores for each position in the ordered sample, as in the published algorithm (Royston 1995) and in R.
+            // Tied values had been given the same score, from their mid-rank, which moved W a little for tied data.
             double[] r = new double[n + 1];
             Array.Sort(q, 1, k);
-            ExFortran.Rank(q, r, 1, k, 1, out double xf);
 
             // normalised coefficients
             double nx = Convert.ToDouble(k);
@@ -803,7 +803,7 @@ namespace StatsDirect.Builtins
             {
                 for (i = 1; i <= k; i++)
                 {
-                    r[i] = PDF.gauinv((r[i] - 0.375) / (nx + 0.25), out int ifault);
+                    r[i] = PDF.gauinv((i - 0.375) / (nx + 0.25), out int ifault);
                     if (ifault != 0)
                         return;
                 }
@@ -935,16 +935,15 @@ namespace StatsDirect.Builtins
                 return;
             }
 
-            // ranks
+            // Blom scores for each position in the ordered sample, as published (Royston 1983); ties were mid-ranked before.
             double[] r = new double[n + 1 ];
             Array.Sort(q, 1, k);
-            ExFortran.Rank(q, r, 1, k, 1, out double xf);
 
             // Shapiro-Francia by Patrick Royston
             double nx = Convert.ToDouble(k);
             for (i = 1; i <= k; i++)
             {
-                r[i] = PDF.gauinv((r[i] - 0.375) / (nx + 0.25), out int ifault);
+                r[i] = PDF.gauinv((i - 0.375) / (nx + 0.25), out int ifault);
                 if (ifault != 0)
                     return;
             }
