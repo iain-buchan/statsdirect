@@ -81,8 +81,11 @@ namespace StatsDirect.UI
                 SpreadsheetGear.Factory.SetSignedLicense(licenseString);
 
                 // Prep a background check for new version, if there is one.  This will tidy up after itself.
+                // The check runs unless the registry value CheckForUpdates is present and zero. Nothing writes that value, so on every
+                // machine it is absent: the helper used to return int.MinValue for an absent value and the check ran, but since it has
+                // returned null for an absent value the test "has a value and it is not zero" skipped the check on every machine.
                 int? checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect4", "Startup", "CheckForUpdates", true);
-                if (checkForUpdatesInt.HasValue && checkForUpdatesInt.Value != 0) // If the value is not there, this returns int.MinValue, which is non-zero; we should check in this case.
+                if (!checkForUpdatesInt.HasValue || checkForUpdatesInt.Value != 0)
                     new frmUpdateCheck(true);
 
                 // Preload and parse XML for operations

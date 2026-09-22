@@ -2949,6 +2949,9 @@ namespace StatsDirect.UI
                 // We're now ready to accept files from other StatsDirect instances.
                 IpcListener.StartListening();
 
+                // A dialog raised by a background task during start-up (a newer version found) is shown after the opening form.
+                SdApplication.SoleInstance.MainWindowIsShown();
+
                 // We may pre-load a document via a FileOpen parameter.  If we don't, show an opening form.
                 if (MdiChildren.Length == 0)
                     SdApplication.SoleInstance.ShowOrQueueDialog(new frmOpening(), null);

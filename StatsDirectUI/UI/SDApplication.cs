@@ -102,6 +102,43 @@ namespace StatsDirect.UI
             ShowDialogOnUiThread(f, postDisplayAction);
         }
 
+        private readonly List<Form> dialogsWaitingForMainWindow = new();
+        private bool mainWindowShown;
+
+        /// <summary>
+        /// Shows a dialog raised by a background task (the check for a new version at start-up) once the main window is on the screen
+        /// and its message loop is running. Safe to call from any thread at any time: a dialog raised before the main window is shown
+        /// waits for it. On the UI thread the dialog goes through ShowOrQueueDialog, so it takes its turn behind the opening dialog.
+        /// </summary>
+        internal void ShowWhenMainWindowShown(Form f)
+        {
+            lock (dialogsWaitingForMainWindow)
+            {
+                if (!mainWindowShown)
+                {
+                    dialogsWaitingForMainWindow.Add(f);
+                    return;
+                }
+            }
+            MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(f, null)));
+        }
+
+        /// <summary>
+        /// Called by the main window when it is first shown: releases any dialog that was waiting for it.
+        /// </summary>
+        internal void MainWindowIsShown()
+        {
+            Form[] waiting;
+            lock (dialogsWaitingForMainWindow)
+            {
+                mainWindowShown = true;
+                waiting = dialogsWaitingForMainWindow.ToArray();
+                dialogsWaitingForMainWindow.Clear();
+            }
+            foreach (Form f in waiting)
+                MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(f, null)));
+        }
+
         internal bool OpenFile()
         {
             return MainWindow.OpenFile();
