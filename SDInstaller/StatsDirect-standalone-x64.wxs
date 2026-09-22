@@ -59,7 +59,7 @@
       <Property Id="ARPCONTACT" Value="support@statsdirect.com" />
       <Property Id="ARPHELPLINK" Value="http://www.statsdirect.com/Support.aspx" />
       <Property Id="ARPURLINFOABOUT" Value="http://www.statsdirect.com/Specifications.aspx" />
-      <Property Id="ARPURLUPDATEINFO" Value="http://www.statsdirect.com/Update.aspx" />
+      <Property Id="ARPURLUPDATEINFO" Value="http://www.statsdirect.com/download.aspx" />
     </UI>
     <!-- Link in the common dialog - usually we'd use a UIRef to WixUI_InstallDir, but we're using Common and referencing the bits we need due to the extra UI referencing above. -->
     <ui:WixUI Id="WixUI_InstallDir" />
