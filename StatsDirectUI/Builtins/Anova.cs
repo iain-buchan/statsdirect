@@ -2035,7 +2035,7 @@ namespace StatsDirect.Builtins
             int ng1 = 0;
             for (int j = 0; j < rows; j++)
             {
-                if (group1DrugData[j] != Constant.MISSING && group1PlaceboData[j] != Constant.MISSING)
+                if (group1DrugData[j] != Constant.MISSING && group1PlaceboData[j] != Constant.MISSING && (!g1bl || group1BaselineData[j] != Constant.MISSING))
                 {
                     ng1 += 1;
                     corrector = g1bl ? group1BaselineData[j] : 0;
@@ -2068,7 +2068,7 @@ namespace StatsDirect.Builtins
             int ng2 = 0;
             for (int j = 0; j < rows; j++)
             {
-                if (group2DrugData[j] != Constant.MISSING & group2PlaceboData[j] != Constant.MISSING)
+                if (group2DrugData[j] != Constant.MISSING && group2PlaceboData[j] != Constant.MISSING && (!g2bl || group2BaselineData[j] != Constant.MISSING))
                 {
                     ng2 += 1;
                     corrector = g2bl ? group2BaselineData[j] : 0;
@@ -2114,6 +2114,19 @@ namespace StatsDirect.Builtins
             double dbar2 = dsum / ng2;
             double pbar2 = psum / ng2;
             ParameterBag outputParameters = new();
+            int skipped = (group1DrugData.Length - ng1) + (group2DrugData.Length - ng2);
+            if (skipped > 0)
+            {
+                IList<ParameterBag> warnList = new List<ParameterBag>();
+                ParameterBag warnParameters = new();
+                warnParameters.AddOutput("warn", "WARNING - " + skipped.ToString() + " subject(s) with a missing value left out");
+                warnList.Add(warnParameters);
+                outputParameters.AddOutput("*warn", warnList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*warn", null);
+            }
             outputParameters.AddOutput("grp1_p1", dbar1);
             outputParameters.AddOutput("grp1_p2", pbar1);
             outputParameters.AddOutput("grp1_diff", difbar1);
