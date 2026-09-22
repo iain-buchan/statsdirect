@@ -1705,7 +1705,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    throw new TemplateOperationCancelledException("zero length group", "Homogeneity of Variance");
+                    throw new TemplateOperationCancelledException("Each group needs at least two observations for the equality of variance tests.", "Homogeneity of Variance");
                 }
             }
 
@@ -1746,11 +1746,8 @@ namespace StatsDirect.Builtins
                 ntot += nx;
                 sumtot += sum;
                 double df = tnx[d] - 1;
-                double var = (sq - sum2[d]) / df;
                 svi += df;
                 svii += 1.0 / df;
-                sbar += var * df;
-                lns += df * Math.Log(var);
             }
             // The following code fragment produces values that are never used.  PJC 2012/04/09
             // cc = ( sumtot * sumtot ) / Convert.ToDouble( ntot ); 
@@ -1762,11 +1759,6 @@ namespace StatsDirect.Builtins
             // dferr = ntot - frame.VariableCount; 
             // msgroup = ssgroup / Convert.ToDouble( dfgroup ); 
             // mserr = sserror / Convert.ToDouble( dferr ); 
-            sbar /= svi;
-            double M = svi * Math.Log(sbar) - lns;
-            long bdf = frame.VariableCount - 1;
-            double C = 1.0 + 1.0 / (3.0 * bdf) * (svii - 1.0 / svi);
-            double x2 = M / C;
             double[] sumMdnDiffs = new double[frame.VariableCount]; //  Force to zeroes
             double[] sum2MdnDiffs = new double[frame.VariableCount]; //  Force to zeroes
             double[] variances = new double[frame.VariableCount]; //  Force to zeroes
@@ -1797,6 +1789,19 @@ namespace StatsDirect.Builtins
                 sum2MdnDiffTot += sum2MdnDiff;
                 variances[d] = sqMeanDiffTot / (tnx[d] - 1.0);
             }
+            //  Bartlett's test from the variances about the group means: a sum of squares less the square of the sum
+            //  loses figures when the values are large compared with their spread
+            for (int d = 0; d < frame.VariableCount; d++)
+            {
+                double df = tnx[d] - 1;
+                sbar += variances[d] * df;
+                lns += df * Math.Log(variances[d]);
+            }
+            sbar /= svi;
+            double M = svi * Math.Log(sbar) - lns;
+            long bdf = frame.VariableCount - 1;
+            double C = 1.0 + 1.0 / (3.0 * bdf) * (svii - 1.0 / svi);
+            double x2 = M / C;
             double[] ws = new double[frame.VariableCount]; //  Force to zeroes
             double wTot = 0;
             double wMeanTot = 0;
