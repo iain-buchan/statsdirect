@@ -556,14 +556,40 @@ namespace StatsDirect.Builtins
                 normality_sk(data, 0, n, out double mean, out double sd, out double skewness, out double kurtosis, out double _, out double b1P, out double _, out double b2P, out double k2, out double k2P);
                 variableParameters.AddOutput("mean", mean);
                 variableParameters.AddOutput("sd", sd);
-                variableParameters.AddOutput("skewness", skewness);
-                variableParameters.AddOutput("kurtosis", kurtosis);
+                if (sd == Constant.MISSING)
+                {
+                    // the fourth moment overflowed (values of size above about 1e75)
+                    variableParameters.AddOutput("skewness", Constant.MISSING);
+                    variableParameters.AddOutput("kurtosis", Constant.MISSING);
+                    variableParameters.AddOutput("k2", "Not calculated: the values are too large");
+                    variableParameters.AddOutput("sw_w", "Not calculated: the values are too large");
+                    variableParameters.AddOutput("sf_w", "Not calculated: the values are too large");
+                    variableParameters.AddOutput("result", "The values are too large for these calculations");
+                    continue;
+                }
+                if (!(sd > 0.0))
+                {
+                    // Every value is the same (or there is only one): no test can be calculated, and the normal plot has no
+                    // scale to draw, which stopped the report with an exception from the chart.
+                    variableParameters.AddOutput("skewness", Constant.MISSING);
+                    variableParameters.AddOutput("kurtosis", Constant.MISSING);
+                    variableParameters.AddOutput("k2", "Not calculated: there is no variation in the sample");
+                    variableParameters.AddOutput("sw_w", "Not calculated: there is no variation in the sample");
+                    variableParameters.AddOutput("sf_w", "Not calculated: there is no variation in the sample");
+                    variableParameters.AddOutput("result", n < 2 ? "Normality cannot be tested: there is only one value" : "Normality cannot be tested: all the values are the same");
+                    continue;
+                }
                 if (n < 8)
                 {
+                    variableParameters.AddOutput("skewness", skewness);
+                    variableParameters.AddOutput("kurtosis", kurtosis);
                     variableParameters.AddOutput("k2", "Not calculated if sample size < 8");
                 }
                 else
                 {
+                    // a comma before each P, as the omnibus test line has
+                    variableParameters.AddOutput("skewness", host.RoundU(skewness) + ",");
+                    variableParameters.AddOutput("kurtosis", host.RoundU(kurtosis) + ",");
                     variableParameters.AddOutput("b1_p", b1P);
                     variableParameters.AddOutput("b2_p", b2P);
                     variableParameters.AddOutput("k2", host.RoundU(k2) + ",");
@@ -615,7 +641,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    variableParameters.AddOutput("result", "Error in calculation");
+                    variableParameters.AddOutput("result", n < 3 ? "Too few observations for the tests (at least 3 are needed)" : "Error in calculation");
                 }
 
                 NormalOptions nOptions = new() { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
