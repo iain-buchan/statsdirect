@@ -26,6 +26,7 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 ### Changed
 - The Tukey and Newman-Keuls tables head their statistic column "q", the Studentized range statistic (the difference divided by the standard error of a mean), rather than "|L/SE(L)|", which is the Scheffe table's statistic and root 2 smaller
 - The grouped one way and two way ANOVA reports (not on the menu) print rounded figures
+- The Tukey, Scheffe and Dunnett tables put a space between a difference and its confidence interval
 ##[v5.0.3] 2026-09-22
 
 ### Fixed

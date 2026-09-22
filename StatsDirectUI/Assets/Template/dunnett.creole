@@ -8,6 +8,6 @@ Pooled standard deviation = @{psd:roundu}</p>
 
 <table>
 <tr><th>Comparison  <subtotal>(n)</subtotal></th><th>Mean difference <ci>(@{pc:round2}% CI)</ci></th><th></th></tr>
-<block name="differences"><tr><td>@level  <subtotal>(@cn)</subtotal></td><td>@{delta:roundu}<ci>(@{lci:roundu}  to  @{uci:roundu})</ci></td><td><pval>@{p:pval}</pval></td></tr></block>
+<block name="differences"><tr><td>@level  <subtotal>(@cn)</subtotal></td><td>@{delta:roundu} <ci>(@{lci:roundu}  to  @{uci:roundu})</ci></td><td><pval>@{p:pval}</pval></td></tr></block>
 </table>
 </report>
