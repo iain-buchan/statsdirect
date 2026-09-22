@@ -128,7 +128,11 @@ namespace StatsDirect.Builtins
 
             DataFrame data = parameters["data"].AsDataFrame;
             DoubleVariable variable = data.Variables[0]as DoubleVariable;
-            if (variable.Data.Length < 8)
+            int present = 0;
+            foreach (double v in variable.Data)
+                if (v != Constant.MISSING)
+                    present++;
+            if (present < 8)
                 throw new TemplateOperationCancelledException("Too few data for this method (minimum 8)", "Reference Range");
 
             bool do_conservative = parameters["do_conservative"].AsBoolean;
@@ -312,7 +316,7 @@ namespace StatsDirect.Builtins
             {
                 double df1 = 2.0 * sum;
                 double chi2;
-                if (sum > 0.9 & sum < 1.1)
+                if (sum == 1.0)
                 {
                     tlower = -Math.Log(al2) / dn;
                 }
@@ -373,16 +377,16 @@ namespace StatsDirect.Builtins
                 sampleParameters.AddOutput("n", nobs);
 
                 int fault = 0;
-                x_poisson(x, nobs, percent2, out double _, out double tlower2, out double tupper2, ref fault);
+                x_poisson(x, nobs, percent2, out double that, out double tlower2, out double tupper2, ref fault);
                 if (fault != 0)
                 {
                     tlower2 = Constant.MISSING;
                     tupper2 = Constant.MISSING;
                 }
-                x_poisson(x, nobs, percent1, out double that, out double tlower1, out double tupper1, ref fault);
+                x_poisson(x, nobs, percent1, out double _, out double tlower1, out double tupper1, ref fault);
                 if (fault != 0)
                 {
-                    that = Constant.MISSING;
+                    // a confidence level of 50% or less gives no one sided interval; the mean was also blanked here
                     tlower1 = Constant.MISSING;
                     tupper1 = Constant.MISSING;
                 }
@@ -1214,7 +1218,12 @@ namespace StatsDirect.Builtins
             }
             double f = var[top] / var[bot];
             P = PDF.fvalp(f, tnx[top] - 1, tnx[bot] - 1);
-            if (P < 0.025)
+            if (double.IsNaN(f) || double.IsInfinity(f) || double.IsNaN(P))
+            {
+                outputParameters.AddOutput("say1", "F test not calculated: a variance is zero or a sample has fewer than two values");
+                outputParameters.AddOutput("say2", string.Empty);
+            }
+            else if (P < 0.025)
             {
                 outputParameters.AddOutput("say1", "TWO SIDED F TEST IS SIGNIFICANT");
                 outputParameters.AddOutput("say2", "USE APPROXIMATE t (UNEQUAL VARIANCES) RESULT or ALTERNATIVELY MANN-WHITNEY");
