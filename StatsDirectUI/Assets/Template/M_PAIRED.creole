@@ -20,6 +20,6 @@ t = @{t:roundu}</p>
 <br />
 <title>Two sample analysis of agreement</title>
 
-<p>@{pc:round2}% Limits of agreement = @{from2:roundu} to @{to2:roundu}</p>
+<p>@{pc:round2}% Limits of agreement = @{from2:roundu} to @{to2:roundu}  @note</p>
 </block>
 </report>

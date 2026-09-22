@@ -1272,11 +1272,13 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pc", 100 * (1.0 - P0));
             outputParameters.AddOutput("from", mean - cit * sem);
             outputParameters.AddOutput("to", mean + cit * sem);
-            double t = sem != 0.0 ? mean / sem : Constant.MISSING;
+            // With no variation in the differences t is infinite (mean not 0) or undefined (mean 0), and P follows: it was
+            // printed as P < 0.0001 for a mean difference of 0 because t had been set to the missing value code instead.
+            double t = mean / sem;
             double power = Power.ptpower(1.0 - GAMMA, mean, sd, nx);
             outputParameters.AddOutput("df", nx - 1);
             outputParameters.AddOutput("t", t);
-            double tstat = sem != 0.0 ? mean / sem : Constant.MISSING;
+            double tstat = t;
             double P = PDF.tvalp(Math.Abs(tstat), degf);
             if (P > 1.0 - P)
                 P = 1.0 - P;
@@ -1291,6 +1293,15 @@ namespace StatsDirect.Builtins
                 twosampleList.Add(twosampleParameters);
                 twosampleParameters.AddOutput("from2", lla);
                 twosampleParameters.AddOutput("to2", ula);
+                if (!(sd > 0.0) || nx < 2)
+                {
+                    // With no spread in the differences the agreement plot has no scale to draw, and it stopped the whole
+                    // report with an exception from the chart.
+                    twosampleParameters.AddOutput("note", "(no plot: the differences do not vary)");
+                    outputParameters.AddOutput("*chart", null);
+                }
+                else
+                {
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
 
@@ -1313,6 +1324,7 @@ namespace StatsDirect.Builtins
                 ParameterBag chartParameters = new();
                 chartList.Add(chartParameters);
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.Ties, new TiesOptions(x, y, nx, lla, ula, GAMMA, v0.Title, v1.Title, mean)));
+                }
             }
             else
             {
