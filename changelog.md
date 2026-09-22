@@ -2,6 +2,13 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[v5.0.3] 2026-09-22
+
+### Fixed
+- The check for a new version at start-up still did not run in 5.0.1 and 5.0.2. The registry helper that reads the CheckForUpdates value returned 0, not "absent", when the value does not exist: in "val is null ? default : (int)val" the default literal takes the type of the other branch, int. Version 5.0.1 corrected the test on the result but not the helper, and that correction was checked by reading the code rather than by running it. This time the path was traced in a running copy: the check runs, and its dialog is shown once the opening dialog has closed. Installed copies of 5.0.1 and 5.0.2 will therefore not announce 5.0.3 by themselves: use Help > Check for Updates
+- The application object was created without thread safety, and the background check reaches it from a thread-pool thread about a second after start, before the main thread does; each could have created its own copy, and a dialog waiting in the copy that lost would never have been shown
+- Exceptions swallowed by the main window's start-up handler, and the steps of the start-up check, are now written to StatsDirect-diagnostics.log in the temporary folder, so that "nothing happened" can be traced
+
 ##[v5.0.2] 2026-09-22
 
 Version 5.0.2 extends the check described under 5.0.1 to the Parametric and Descriptive menus and to the Gini coefficient: each function's worked example and a range of other data were run through the program's own report and through R, and two independent reviews read every changed routine and ran about 300 further cases. The faults found are corrected below; two of them (the BCa interval of the Gini coefficient, and the unpaired t test when the mean is large compared with the spread) change results for data a user could well have. The web help now ends every worked example of the Parametric and Descriptive sections with R code that reproduces it, including the plots the report draws, and three topics that had no worked example (F test, z tests, summary data t tests) have one.
