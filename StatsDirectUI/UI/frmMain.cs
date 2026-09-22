@@ -3584,6 +3584,7 @@ namespace StatsDirect.UI
         /// </summary>
         internal static void EatException(Exception ex)
         {
+            Utilities.DiagnosticLog.Write("exception eaten: " + ex);
         }
 
         private void cutContextMenuItem1_Click(object sender, EventArgs e)

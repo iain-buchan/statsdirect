@@ -48,6 +48,7 @@ namespace StatsDirect.UI
         /// If true, the UI is presently showing a dialog that was submitted using QueueDialog.
         /// </summary>
         private bool showingDialogThatCouldBeQueued;
+        private static readonly object soleInstanceGate = new();
 
         /// <summary>
         /// Returns the single instance of the application, creating it if necessary.
@@ -57,7 +58,14 @@ namespace StatsDirect.UI
             get
             {
                 Contract.Ensures(null != Contract.Result<SdApplication>());
-                return soleInstance ??= new SdApplication();
+                // The check for a new version at start-up reaches this from a thread-pool thread while the main thread may be
+                // creating the instance: without the lock each could create its own, and a dialog waiting in the other one was lost.
+                if (soleInstance is null)
+                {
+                    lock (soleInstanceGate)
+                        soleInstance ??= new SdApplication();
+                }
+                return soleInstance;
             }
         }
 
@@ -112,6 +120,7 @@ namespace StatsDirect.UI
         /// </summary>
         internal void ShowWhenMainWindowShown(Form f)
         {
+            Utilities.DiagnosticLog.Write("ShowWhenMainWindowShown: instance " + GetHashCode() + ", mainWindowShown " + mainWindowShown + ", MainWindow " + (MainWindow is null ? "null" : "set"));
             lock (dialogsWaitingForMainWindow)
             {
                 if (!mainWindowShown)
@@ -135,6 +144,7 @@ namespace StatsDirect.UI
                 waiting = dialogsWaitingForMainWindow.ToArray();
                 dialogsWaitingForMainWindow.Clear();
             }
+            Utilities.DiagnosticLog.Write("MainWindowIsShown: instance " + GetHashCode() + ", waiting dialogs " + waiting.Length);
             foreach (Form f in waiting)
                 MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(f, null)));
         }
@@ -186,7 +196,16 @@ namespace StatsDirect.UI
                 }
                 else
                 {
-                    DialogResult result = f.ShowDialog(MainWindow);
+                    DialogResult result;
+                    try
+                    {
+                        result = f.ShowDialog(MainWindow);
+                    }
+                    catch (Exception ex)
+                    {
+                        Utilities.DiagnosticLog.Write("ShowDialogOnUiThread: " + f.GetType().Name + " threw " + ex);
+                        throw;
+                    }
                     postDisplayAction?.Invoke(f, result);
                     f.Dispose();
                 }

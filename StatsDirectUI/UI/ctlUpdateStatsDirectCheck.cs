@@ -42,6 +42,8 @@ namespace StatsDirect.UI
 
         private void UpdateStatsDirectStatus(object sender, UpdateCheckerEventArgs e)
         {
+            if (e.IsFinal)
+                Utilities.DiagnosticLog.Write("checker status: final " + e.IsFinal + ", newer " + e.NewerVersionAvailable + ", InvokeRequired " + lblStatsDirectStatus.InvokeRequired + ", handle " + IsHandleCreated + ": " + e.Message);
             if (lblStatsDirectStatus.InvokeRequired)
                 lblStatsDirectStatus.Invoke(new MethodInvoker(delegate { FixupUi(e); }));
             else
