@@ -959,7 +959,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
-                tnx[d] = nr;
+                tnx[d] = nr * nm;   //  observations per treatment, for the multiple comparison methods that may follow
                 string title = "Treatment " + (1 + d).ToString();
                 outputFrame.Variables[d] = new DoubleVariable(null, title);
             }
@@ -978,6 +978,16 @@ namespace StatsDirect.Builtins
 
             if (fault != 0)
                 throw new Exception("Invalid calculation");
+
+            if (absconders > 0)
+            {
+                //  A missing repeat observation was replaced by the mean of the others in its cell, so it adds nothing to
+                //  the residual sum of squares and earns no residual (or total) degree of freedom
+                dfres -= absconders;
+                dftot -= absconders;
+                if (dfres < 1)
+                    throw new TemplateOperationCancelledException("Too many missing repeat observations: no residual degrees of freedom remain.", "Replicated Two Way ANOVA");
+            }
 
             double msrow = ssrow / Convert.ToDouble(dfrow);
             double mscol = sscol / Convert.ToDouble(dfcol);
@@ -1021,7 +1031,7 @@ namespace StatsDirect.Builtins
             {
                 IList<ParameterBag> warnList = new List<ParameterBag>();
                 ParameterBag warnParameters = new();
-                warnParameters.AddOutput("warn", "WARNING - " + absconders.ToString() + " missing data - substitution made");
+                warnParameters.AddOutput("warn", "WARNING - " + absconders.ToString() + " missing data - substitution made, residual degrees of freedom reduced by " + absconders.ToString());
                 warnList.Add(warnParameters);
                 outputParameters.AddOutput("*warn", warnList);
             }
