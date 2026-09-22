@@ -2363,8 +2363,113 @@ namespace StatsDirect.Numerics
             return -.05 * f;
         }
 
+        //  Gauss-Legendre rule with 16 points on [-1, 1]: the positive nodes and their weights (the rule is symmetric)
+        private static readonly double[] GaussLegendre16Nodes = { 0.989400934991649932596154173450, 0.944575023073232576077988415535, 0.865631202387831743880467897712, 0.755404408355003033895101194847, 0.617876244402643748446671764049, 0.458016777657227386342419442984, 0.281603550779258913230460501460, 0.0950125098376374401853193354250 };
+        private static readonly double[] GaussLegendre16Weights = { 0.0271524594117540948517805724560, 0.0622535239386478928628438369944, 0.0951585116824927848099251076022, 0.124628971255533872052476282192, 0.149595988816576732081501730547, 0.169156519395002538189312079030, 0.182603415044923588866763667969, 0.189450610455068496285396723208 };
+
+        //  Composite Gauss-Legendre integral of f over [a, b] in equal panels
+        private static double GaussLegendre(Func<double, double> f, double a, double b, int panels)
+        {
+            double width = (b - a) / panels;
+            double half = 0.5 * width;
+            double sum = 0.0;
+            for (int panel = 0; panel < panels; panel++)
+            {
+                double mid = a + (panel + 0.5) * width;
+                for (int i = 0; i < 8; i++)
+                {
+                    double x = half * GaussLegendre16Nodes[i];
+                    sum += GaussLegendre16Weights[i] * (f(mid + x) + f(mid - x));
+                }
+            }
+            return sum * half;
+        }
+
+        //  P(range of k standard normal variates <= w)
+        private static double RangeProbability(double w, int k)
+        {
+            if (w <= 0.0)
+                return 0.0;
+            double root2pi = Math.Sqrt(2.0 * Constant.PI);
+            return k * GaussLegendre(z => Math.Exp(-0.5 * z * z) / root2pi * Math.Pow(alnorm(z + w) - alnorm(z), k - 1), -9.0, 9.0, 8);
+        }
+
+        //  The Studentized range distribution for few residual degrees of freedom, by direct integration over the
+        //  distribution of the residual standard deviation: P(Q <= q) = E[ P(range <= q S) ], S = chi / root df.
+        //  The series routine (qprob) is accurate only to two or three decimals below five degrees of freedom.
+        private static double SmallDfRangeCdf(double q, int k, double df)
+        {
+            if (q <= 0.0)
+                return 0.0;
+            //  Integrate over y = log S, which spreads the small values of S where, for many means and a large q, the
+            //  range probability rises from 0 to 1 within a narrow band; the limits are the chi-square points at 1e-12
+            double ylo = 0.5 * Math.Log(ppchi2(1.0e-12, df, out int _) / df);
+            double yhi = 0.5 * Math.Log(ppchi2(1.0 - 1.0e-12, df, out int _) / df);
+            double logConstant = 0.5 * df * Math.Log(df) - (0.5 * df - 1.0) * Math.Log(2.0) - alogam(0.5 * df);
+            return GaussLegendre(y =>
+            {
+                double s = Math.Exp(y);
+                return Math.Exp(logConstant + df * y - 0.5 * df * s * s) * RangeProbability(q * s, k);
+            }, ylo, yhi, 32);
+        }
+
+        private static double SmallDfRangeQuantile(double p, int k, double df)
+        {
+            //  Bracket the point around the series routine's value (within a few per cent), then the Illinois method
+            int[] ir = new int[4];
+            double guess = cv(p, 1.0, k, df, ir);
+            if (ir[1] != 0 || ir[2] != 0 || ir[3] != 0 || !(guess > 0.0))
+                guess = 10.0;
+            double a = 0.5 * guess;
+            double b = 2.0 * guess;
+            double fa = SmallDfRangeCdf(a, k, df) - p;
+            double fb = SmallDfRangeCdf(b, k, df) - p;
+            while (fa > 0.0 && a > 1.0e-6)
+            {
+                a *= 0.5;
+                fa = SmallDfRangeCdf(a, k, df) - p;
+            }
+            while (fb < 0.0 && b < 1.0e6)
+            {
+                b *= 2.0;
+                fb = SmallDfRangeCdf(b, k, df) - p;
+            }
+            int side = 0;
+            double c = a;
+            for (int i = 0; i < 100 && Math.Abs(b - a) > 1.0e-11 * Math.Max(1.0, Math.Abs(b)); i++)
+            {
+                c = (a * fb - b * fa) / (fb - fa);
+                double fc = SmallDfRangeCdf(c, k, df) - p;
+                if (fc == 0.0)
+                    break;
+                if (fc * fb > 0.0)
+                {
+                    b = c;
+                    fb = fc;
+                    if (side == -1)
+                        fa *= 0.5;
+                    side = -1;
+                }
+                else
+                {
+                    a = c;
+                    fa = fc;
+                    if (side == 1)
+                        fb *= 0.5;
+                    side = 1;
+                }
+            }
+            return c;
+        }
+
         public static double quantsr(double p, double t, double df)
         {
+            if (df < 1.0)
+                return Constant.MISSING;
+            if (t == 2.0)   //  two means: the range is root 2 times |t|, so the point comes exactly from Student's t
+                return Math.Sqrt(2.0) * tfromp2(1.0 - p, df);
+            if (df < 5.0)
+                return SmallDfRangeQuantile(p, (int)Math.Round(t), df);
             int[] ir = new int[4];
             double retval = cv(p, 1.0, t, df, ir);
             for (int i = 1; i <= 3; i++)
@@ -2377,6 +2482,12 @@ namespace StatsDirect.Numerics
 
         public static double probsr(double q, double t, double df)
         {
+            if (df < 1.0)
+                return Constant.MISSING;
+            if (t == 2.0)
+                return 1.0 - 2.0 * tvalp(q / Math.Sqrt(2.0), df);   //  tvalp is the one tail area
+            if (df < 5.0)
+                return SmallDfRangeCdf(q, (int)Math.Round(t), df);
             int[] ir = new int[3];
             double retval = qprob(q, 1.0, t, df, ir);
             for (int i = 1; i <= 2; i++)
