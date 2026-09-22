@@ -414,7 +414,7 @@ namespace StatsDirect.Numerics
                 //  ------------------------------------------------------
                 //  obtain upper bound by sidak's and mixture inequalities
                 //  ------------------------------------------------------
-                cumu = 0.5 + 0.5 * Math.Exp(Math.Log(cc) / k * (k - 1) / 2);
+                cumu = 0.5 + 0.5 * Math.Exp(Math.Log(cc) / (k * (k - 1) / 2));
                 dhall = PDF.gauinv(cumu, out ifault);
             }
             else
@@ -427,7 +427,7 @@ namespace StatsDirect.Numerics
                 //  ----------------------------------------
                 //  obtain upper bound by sidak's inequality
                 //  ----------------------------------------
-                tail = 1.0 - Math.Exp(Math.Log(cc) / k * (k - 1) / 2);
+                tail = 1.0 - Math.Exp(Math.Log(cc) / (k * (k - 1) / 2));
                 dhall = PDF.tfromp2(tail, Convert.ToDouble(nu));
             }
         }

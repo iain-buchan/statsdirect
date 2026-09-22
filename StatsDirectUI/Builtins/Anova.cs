@@ -1234,10 +1234,11 @@ namespace StatsDirect.Builtins
                 dalpha = 0.05;
             double cc = 1.0 - dalpha;
 
-            ExFortran.dmca(k, lam, nu, cc, out double d, out int ifault);
+            int ifault;
             double q = PDF.quantsr(cc, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
             if (q == Constant.MISSING)
                 throw new TemplateOperationCancelledException("Fault in calculation", "Tukey Contrasts");
+            double d = q / Math.Sqrt(2.0); //  Hsu's |q*|, the two-sided critical value for all the pairwise comparisons: with equal correlations, as here, the Studentized range point over root 2
 
             ParameterBag outputParameters = new();
 
