@@ -85,6 +85,7 @@ namespace StatsDirect.UI
                 // machine it is absent: the helper used to return int.MinValue for an absent value and the check ran, but since it has
                 // returned null for an absent value the test "has a value and it is not zero" skipped the check on every machine.
                 int? checkForUpdatesInt = SDRegistry.GetDwordSetting("StatsDirect4", "Startup", "CheckForUpdates", true);
+                Utilities.DiagnosticLog.Write("start-up: CheckForUpdates registry value " + (checkForUpdatesInt.HasValue ? checkForUpdatesInt.Value.ToString() : "absent") + ", program version " + Application.ProductVersion);
                 if (!checkForUpdatesInt.HasValue || checkForUpdatesInt.Value != 0)
                     new frmUpdateCheck(true);
 

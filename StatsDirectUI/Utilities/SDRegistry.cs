@@ -121,7 +121,12 @@ namespace StatsDirect.Utilities
                     appKey = vbKey?.OpenSubKey(app),
                     keyKey = appKey?.OpenSubKey(key);
                 object val = keyKey?.GetValue(valueName);
-                return val is null ? default : (int)val;
+                // "val is null ? default : (int)val" gave 0, not null, for an absent value: in that conditional the default literal takes
+                // the type of the other branch, int. So the start-up check for a new version, which runs unless the value is present and
+                // zero, was still skipped on every machine after 5.0.1 tried to fix it.
+                if (val is null)
+                    return null;
+                return (int)val;
             }
             catch (Exception)
             {
