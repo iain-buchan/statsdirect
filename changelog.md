@@ -2,9 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.2] 2026-09-22
 
-The check of the Nonparametric menu described under 5.0.1 has been extended to the Parametric menu (the t tests, normality tests, Poisson confidence interval and reference range), and the web help now ends each worked example of the Parametric section with R code that reproduces it.
+Version 5.0.2 extends the check described under 5.0.1 to the Parametric and Descriptive menus and to the Gini coefficient: each function's worked example and a range of other data were run through the program's own report and through R, and two independent reviews read every changed routine and ran about 300 further cases. The faults found are corrected below; two of them (the BCa interval of the Gini coefficient, and the unpaired t test when the mean is large compared with the spread) change results for data a user could well have. The web help now ends every worked example of the Parametric and Descriptive sections with R code that reproduces it, including the plots the report draws, and three topics that had no worked example (F test, z tests, summary data t tests) have one.
 
 ### Changed
 - Shapiro-Wilk and Shapiro-Francia tests: the normal score for each ordered value is now taken from its position, as in the published algorithms (Royston 1995 and 1983) and in R; tied values had been given the same score, from their mid-rank. W, V and P change only when there are ties: for the help's example (two values of -0.0363) W is 0.892184 with P = 0.0054 where 0.892516 and 0.0055 were printed, and W' is 0.873427 with P = 0.0034 where 0.873776 and 0.0035 were printed. Without ties nothing changes
