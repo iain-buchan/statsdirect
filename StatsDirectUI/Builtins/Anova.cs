@@ -701,7 +701,14 @@ namespace StatsDirect.Builtins
 
             int dftot = ntot - 1;
             int dfgroup = frame.VariableCount - 1;
-            double sserror = sstot - ssgroup;
+            double sserror = 0;   // within groups, accumulated directly rather than by subtraction from the total
+            for (int d = 0; d < frame.VariableCount; d++)
+            {
+                DoubleVariable v = frame.Variables[d] as DoubleVariable;
+                foreach (double val in v.Data)
+                    if (val != Constant.MISSING)
+                        sserror += (val - mean[d]) * (val - mean[d]);
+            }
             int dferr = ntot - frame.VariableCount;
             double msgroup = ssgroup / dfgroup;
             double mserr = sserror / dferr;
@@ -2278,22 +2285,14 @@ namespace StatsDirect.Builtins
                     sumtot += sum;
                 }
 
-                double gm = sumtot / Convert.ToDouble(ntot);
-                double sstot = 0;
+                double sserror = 0;   // within groups, accumulated directly from the deviations about the group means
                 for (int d = 0; d < frame.VariableCount; d++)
                 {
-                    DoubleVariable v = frame.Variables[d]as DoubleVariable;
+                    DoubleVariable v = frame.Variables[d] as DoubleVariable;
                     foreach (double val in v.Data)
                         if (val != Constant.MISSING)
-                            sstot += (val - gm) * (val - gm);
+                            sserror += (val - mean[d]) * (val - mean[d]);
                 }
-
-                double ssgroup = 0;
-                for (int d = 0; d < frame.VariableCount; d++)
-                    ssgroup += (mean[d] - gm) * (mean[d] - gm) * tnx[d];
-
-                // long dfgroup = frame.VariableCount - 1; Never used.  PJC 2012/04/09.
-                double sserror = sstot - ssgroup;
                 int dferr = ntot - frame.VariableCount;
                 // double msgroup = ssgroup / dfgroup; Never used.  PJC 2012/04/09.
                 double mserr = sserror / Convert.ToDouble(dferr);
