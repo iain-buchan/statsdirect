@@ -4008,6 +4008,29 @@ namespace StatsDirect.Builtins
                 DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { v.Data, weightsData, }, 0, v.Length, 0);
                 double[] rawR = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[0];
                 double[] w = copiesRemovingMissingRows.ArraysWithMissingRowsRemoved[1];
+                // Only positive values are used, as the help says and as the report's count is labelled; zeros had been included
+                // (and re-samples of zeros alone made the bootstrap 0 / 0). They are counted with the observations not used.
+                int positive = 0;
+                for (int i = 0; i < rawR.Length; i++)
+                    if (rawR[i] > 0.0)
+                        positive++;
+                if (positive != rawR.Length)
+                {
+                    double[] rawPositive = new double[positive];
+                    double[] wPositive = new double[positive];
+                    int kept = 0;
+                    for (int i = 0; i < rawR.Length; i++)
+                    {
+                        if (rawR[i] > 0.0)
+                        {
+                            rawPositive[kept] = rawR[i];
+                            wPositive[kept] = w[i];
+                            kept++;
+                        }
+                    }
+                    rawR = rawPositive;
+                    w = wPositive;
+                }
 
                 // Handle the weights by replicating each value the appropriate number of times.  This pre-calculates the required array length, then copies.
                 double vtot = 0;
@@ -4104,42 +4127,38 @@ namespace StatsDirect.Builtins
                     bl = ginib[pick];
                     pick = Convert.ToInt32((boots - 1) * (1.0 - q)) + 1;
                     bu = ginib[pick];
-                    // BC
-                    // BCa
-                    double bgini = 0.0;
+                    // BCa: the acceleration from the jackknife (Efron and Tibshirani 1993, equation 14.15, as the help gives it). Each
+                    // leave-one-out coefficient is calculated on the n - 1 remaining values with their own ranks; the original ranks
+                    // and n had been kept, so those values were wrong, and the cubed differences had the opposite sign to the
+                    // reference, which moved the BCa limits (0.443 to 0.671 for one sample of 20 where 0.484 to 0.711 is right).
+                    double[] jack = new double[rx + 1];
+                    double jackMean = 0.0;
                     for (int i = 1; i <= rx; i++)
                     {
                         sumx = 0.0;
                         sumy = 0.0;
+                        int rank = 0;
                         for (int j = 1; j <= rx; j++)
                         {
                             if (j != i)
                             {
+                                rank++;
                                 sumx += r[j];
-                                sumy += (2 * j - rx - 1) * r[j];
+                                sumy += (2 * rank - rx) * r[j]; // 2 rank - (rx - 1) - 1
                             }
                         }
-                        bgini += sumy / ((rx - 1) * sumx);
+                        jack[i] = sumy / ((rx - 1) * sumx);
+                        jackMean += jack[i];
                     }
-                    bgini /= rx;
+                    jackMean /= rx;
                     double bgini2 = 0;
                     double bgini3 = 0;
                     for (int i = 1; i <= rx; i++)
                     {
-                        sumx = 0.0;
-                        sumy = 0.0;
-                        for (int j = 1; j <= rx; j++)
-                        {
-                            if (j != i)
-                            {
-                                sumx += r[j];
-                                sumy += (2 * j - rx - 1) * r[j];
-                            }
-                        }
-                        bgini2 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 2.0);
-                        bgini3 += Math.Pow(sumy / ((rx - 1) * sumx) - bgini, 3.0);
+                        bgini2 += Math.Pow(jackMean - jack[i], 2.0);
+                        bgini3 += Math.Pow(jackMean - jack[i], 3.0);
                     }
-                    double accel = bgini3 / (6.0 * Math.Pow(bgini2, 1.5));
+                    double accel = bgini2 > 0.0 ? bgini3 / (6.0 * Math.Pow(bgini2, 1.5)) : 0.0;
                     double z0 = ctr / (double)boots;
                     z0 = PDF.gauinv(z0);
                     double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
