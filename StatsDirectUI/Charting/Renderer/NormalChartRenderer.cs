@@ -43,7 +43,7 @@ namespace StatsDirect.Charting.Renderer
                         break;
                     case NormalOptions.ScoreMethod.Blom:
                         //  Blom - Altman p143
-                        x[j] = PDF.gauinv(x[j] / (Convert.ToDouble(nn) + 1.0), out ifault);
+                        x[j] = PDF.gauinv((x[j] - 0.375) / (Convert.ToDouble(nn) + 0.25), out ifault);
                         if (ifault != 0)
                             x[j] = Constant.MISSING;
                         break;
@@ -131,7 +131,7 @@ namespace StatsDirect.Charting.Renderer
                     case NormalOptions.ScoreMethod.Blom:
                         {
                             //  Blom - Altman p143
-                            x[j] = PDF.gauinv(x[j] / (nn + 1.0), out int ifault);
+                            x[j] = PDF.gauinv((x[j] - 0.375) / (nn + 0.25), out int ifault);
                             if (ifault != 0)
                                 x[j] = Constant.MISSING;
                             break;
