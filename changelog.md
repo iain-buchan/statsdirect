@@ -2,7 +2,7 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.4] 2026-09-23
 
 ### Fixed
 - Latin square: the operation listed its report twice, so the analysis appeared twice, and the sums of squares, mean squares and F ratios were printed unrounded
