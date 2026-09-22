@@ -1207,6 +1207,8 @@ namespace StatsDirect.Builtins
             int[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
             double mserr = carrier.Msx;
+            if (carrier.Dferr < 1)
+                throw new TemplateOperationCancelledException("These comparisons need at least one residual degree of freedom.", "Tukey Contrasts");
 
             int k = frame.VariableCount - 1;
             int kn = k + 1;
@@ -1263,8 +1265,9 @@ namespace StatsDirect.Builtins
                         t = 1.0 / Math.Sqrt(tnx[0]) * pse;
                     else
                         t = Math.Sqrt(mserr / 2.0 * (1.0 / tnx[j] + 1.0 / tnx[i]));
-                    // The Shaffer-Holm statistic p 18 Hsu
-                    hold[ctr].Absdelta = Math.Abs(delta / t);
+                    // The Shaffer-Holm statistic p 18 Hsu: the Studentized range statistic |L| / (s / root n), or its Tukey-Kramer form.
+                    // With no residual variation (t = 0) a zero difference gets 0 and any other difference infinity.
+                    hold[ctr].Absdelta = t > 0.0 ? Math.Abs(delta / t) : (delta == 0.0 ? 0.0 : double.PositiveInfinity);
                     // Lci = delta - d * pse * Sqr(1# / tnx(j) + 1# / tnx(i))
                     double lci = delta - t * q;
                     hold[ctr].Ll = lci;
@@ -1273,20 +1276,29 @@ namespace StatsDirect.Builtins
                     hold[ctr].Ul = uci;
                     // Call PPQ2(CLng(k), lam(1), NU, py, delta / (pse * Sqr(1# / tnx(j) + 1# / tnx(i))), ifault)
                     // py = 1# - Abs(py)
-                    double px = PDF.probsr(Math.Abs(delta / t), Convert.ToDouble(k + 1), Convert.ToDouble(nu));
-                    if (px != Constant.MISSING)
+                    double px;
+                    if (t > 0.0)
                     {
-                        px = 1.0 - px;
+                        px = PDF.probsr(hold[ctr].Absdelta, Convert.ToDouble(k + 1), Convert.ToDouble(nu));
+                        if (px != Constant.MISSING)
+                        {
+                            px = 1.0 - px;
+                        }
+                        else
+                        {
+                            ExFortran.ppq2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[j]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
+                            if (ifault == 0)
+                                px = 1.0 - Math.Abs(px);
+                            else
+                                px = Constant.MISSING;
+                        }
                     }
                     else
                     {
-                        ExFortran.ppq2(k, lam, nu, out px, delta / (pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[j]) + 1.0 / Convert.ToDouble(tnx[i]))), out ifault);
-                        if (ifault == 0)
-                            px = 1.0 - Math.Abs(px);
-                        else
-                            px = Constant.MISSING;
+                        px = delta == 0.0 ? 1.0 : 0.0;
                     }
                     hold[ctr].P = px;
+                    hold[ctr].Significant = px != Constant.MISSING && px < dalpha;
                 }
             }
 
@@ -1325,6 +1337,8 @@ namespace StatsDirect.Builtins
             int[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
             double msx = carrier.Msx;
+            if (carrier.Dferr < 1)
+                throw new TemplateOperationCancelledException("These comparisons need at least one residual degree of freedom.", "Scheffe Contrasts");
 
             int kn = frame.VariableCount;
             Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
@@ -1355,9 +1369,11 @@ namespace StatsDirect.Builtins
                     ctr += 1;
                     double DELTA = mean[i] - mean[j];
                     double se = Math.Sqrt(msx * (1.0 / Convert.ToDouble(tnx[i]) + 1.0 / Convert.ToDouble(tnx[j])));
-                    double L = DELTA / se;
+                    //  With no residual variation (se = 0) a zero difference gets 0 and any other difference infinity, as in RptTukey
+                    double L = se > 0.0 ? DELTA / se : (DELTA == 0.0 ? 0.0 : double.PositiveInfinity);
                     double lci = DELTA - crit * se;
                     double uci = DELTA + crit * se;
+                    double pScheffe = se > 0.0 ? PDF.fvalp(L * L / dfn, dfn, dfd) : (DELTA == 0.0 ? 1.0 : 0.0);
                     hold[ctr] = new Contraster
                     {
                         Lab1 = frame.Variables[i].Title,
@@ -1366,7 +1382,8 @@ namespace StatsDirect.Builtins
                         Mean2 = mean[j],
                         Delta = DELTA,
                         Absdelta = Math.Abs(L),
-                        P = PDF.fvalp(L * L / dfn, dfn, dfd),
+                        P = pScheffe,
+                        Significant = pScheffe != Constant.MISSING && pScheffe < palpha,
                         Ll = lci,
                         Ul = uci
                     };
@@ -1426,7 +1443,7 @@ namespace StatsDirect.Builtins
                     contrast2 = new SignificantContrasts { Mean = contraster.Mean2 };
                     contrasts.Add(contraster.Lab2, contrast2);
                 }
-                if (contraster.P != Constant.MISSING && contraster.P < palpha)
+                if (contraster.Significant)
                 {
                     // Significant
                     if (!contrast1.Significant.Contains(contraster.Lab2))
@@ -1456,6 +1473,8 @@ namespace StatsDirect.Builtins
             double[] mean = carrier.Mean;
             double msx = carrier.Msx;
             double dferr = carrier.Dferr;
+            if (carrier.Dferr < 1)
+                throw new TemplateOperationCancelledException("These comparisons need at least one residual degree of freedom.", "Newman-Keuls Contrasts");
 
             int kn = frame.VariableCount;
             Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
@@ -1480,7 +1499,8 @@ namespace StatsDirect.Builtins
                 {
                     ctr += 1;
                     double delta = mean[i] - mean[j];
-                    double q = Math.Abs(delta) / se;
+                    //  With no residual variation a zero difference gets 0 and any other difference infinity, as in RptTukey
+                    double q = msx > 0.0 ? Math.Abs(delta) / se : (delta == 0.0 ? 0.0 : double.PositiveInfinity);
                     hold[ctr] = new Contraster
                     {
                         Lab1 = frame.Variables[i].Title,
@@ -1514,16 +1534,32 @@ namespace StatsDirect.Builtins
                             ibigger += 1;
                     }
                     hold[ctr].Gps = kn - ismaller - ibigger;
+                    hold[ctr].Lo = ismaller + 1;
+                    hold[ctr].Hi = kn - ibigger;
                     // calculate P(q)
-                    double P = 1.0 - PDF.probsr(hold[ctr].Q, Convert.ToDouble(hold[ctr].Gps), dferr);
+                    double P = msx > 0.0 ? 1.0 - PDF.probsr(hold[ctr].Q, Convert.ToDouble(hold[ctr].Gps), dferr) : (delta == 0.0 ? 1.0 : 0.0);
                     hold[ctr].P = P;
+                    hold[ctr].Significant = P != Constant.MISSING && P < palpha;
                 }
             }
+
+            //  The Newman-Keuls step-down: a pair of means inside a wider range of ordered means that is not significant
+            //  is not tested, whatever its own P value, so it is not declared different. Ranges are settled from the
+            //  widest down.
+            for (int span = kn; span >= 2; span--)
+                for (int i = 1; i <= ctr; i++)
+                    if (hold[i].Gps == span)
+                        for (int j = 1; j <= ctr; j++)
+                            if (hold[j].Gps > span && hold[j].Lo <= hold[i].Lo && hold[i].Hi <= hold[j].Hi && !hold[j].Significant)
+                            {
+                                hold[i].NotTested = true;
+                                hold[i].Significant = false;
+                                break;
+                            }
 
             //  sort descending on |diff| between means
             Array.Sort(hold, 1, ctr);
 
-            bool halted = false;
             ParameterBag outputParameters = new();
             IList<ParameterBag> differencesList = new List<ParameterBag>();
             for (int i = 1; i <= ctr; i++)
@@ -1535,11 +1571,8 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("delta", hold[i].Delta);
                 differencesParameters.AddOutput("gps", hold[i].Gps);
                 differencesParameters.AddOutput("t", hold[i].Q);
-                if (!halted & hold[i].P >= palpha)
-                {
-                    halted = true;
-                    differencesParameters.AddOutput("stop_marker", " {stop}");
-                }
+                if (hold[i].NotTested)
+                    differencesParameters.AddOutput("stop_marker", " {not tested}");
                 differencesParameters.AddOutput("p", hold[i].P);
             }
             outputParameters.AddOutput("*differences", differencesList);
@@ -2299,13 +2332,18 @@ namespace StatsDirect.Builtins
             public double P;
             public double Q;
             public long Gps;
+            public bool Significant;   //  declared different at the chosen level (for Newman-Keuls, after the step-down rule)
+            public bool NotTested;     //  Newman-Keuls: inside a wider range of ordered means that is not significant
+            public int Lo;             //  Newman-Keuls: the first and last positions, among the ordered means, that the contrast spans
+            public int Hi;
             public string Lab1;
             public string Lab2;
 
             private int CompareTo(Contraster other)
             {
-                //  Deliberately sorts by *descending* order of ABSDELTA
-                return Math.Sign(other.Absdelta - Absdelta);
+                //  Deliberately sorts by *descending* order of ABSDELTA. CompareTo, unlike Math.Sign of the difference,
+                //  orders infinite and not-a-number statistics (a zero residual mean square) without throwing.
+                return other.Absdelta.CompareTo(Absdelta);
             }
             // interface methods implemented by CompareTo
             int IComparable<Contraster>.CompareTo(Contraster other)
