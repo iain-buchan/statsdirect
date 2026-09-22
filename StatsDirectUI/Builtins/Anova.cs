@@ -1860,7 +1860,7 @@ namespace StatsDirect.Builtins
         {
             //  Get observations into a temporary vector v - precondition: the number of observations is a square
             DataFrame observationFrame = parameters["observations"].AsDataFrame;
-            DoubleVariable observationVariable = observationFrame.Variables[0]as DoubleVariable;
+            DoubleVariable observationVariable = observationFrame.Variables[0] as DoubleVariable ?? throw new TemplateOperationCancelledException("The observations and the three factor codes must be numeric.", "Latin Square");
             int nn = observationVariable.Length;
             double[] v = new double[nn + 1];
             double[] vcx = new double[nn + 1];
@@ -1874,7 +1874,7 @@ namespace StatsDirect.Builtins
 
             //  Get column classes
             DataFrame columnFrame = parameters["column"].AsDataFrame;
-            DoubleVariable columnVariable = columnFrame.Variables[0]as DoubleVariable;
+            DoubleVariable columnVariable = columnFrame.Variables[0] as DoubleVariable ?? throw new TemplateOperationCancelledException("The observations and the three factor codes must be numeric.", "Latin Square");
             for (int i = 1; i <= nn; i++)
             {
                 vcx[i] = columnVariable.Data[i - 1];
@@ -1883,7 +1883,7 @@ namespace StatsDirect.Builtins
 
             // get row classes
             DataFrame rowFrame = parameters["row"].AsDataFrame;
-            DoubleVariable rowVariable = rowFrame.Variables[0]as DoubleVariable;
+            DoubleVariable rowVariable = rowFrame.Variables[0] as DoubleVariable ?? throw new TemplateOperationCancelledException("The observations and the three factor codes must be numeric.", "Latin Square");
             for (int i = 1; i <= nn; i++)
             {
                 vrx[i] = rowVariable.Data[i - 1];
@@ -1892,7 +1892,7 @@ namespace StatsDirect.Builtins
 
             // get treatment/Latin/random classes
             DataFrame treatmentFrame = parameters["treatment"].AsDataFrame;
-            DoubleVariable treatmentVariable = treatmentFrame.Variables[0]as DoubleVariable;
+            DoubleVariable treatmentVariable = treatmentFrame.Variables[0] as DoubleVariable ?? throw new TemplateOperationCancelledException("The observations and the three factor codes must be numeric.", "Latin Square");
             for (int i = 1; i <= nn; i++)
             {
                 vlx[i] = treatmentVariable.Data[i - 1];
@@ -1905,49 +1905,32 @@ namespace StatsDirect.Builtins
             double[] sr = new double[n + 1];
             double[] sc = new double[n + 1];
 
-            // make sure row and column pointers range from 1 to n
-            double vx = 1.0 - MathDbl.vector_min(vcx, 1, n);
-            if (vx != 0.0)
-            {
-                for (int i = 1; i <= nn; i++)
-                {
-                    vcx[i] = vcx[i] + vx;
-                }
-            }
-            vx = 1.0 - MathDbl.vector_min(vrx, 1, n);
-            if (vx != 0.0)
-            {
-                for (int i = 1; i <= nn; i++)
-                {
-                    vrx[i] = vrx[i] + vx;
-                }
-            }
-            // collapse observation vector v into row by col matrix x
+            if (n * n != nn)
+                throw new TemplateOperationCancelledException("A Latin square needs n by n observations.", "Latin Square");
+            if (n < 3)
+                throw new TemplateOperationCancelledException("A Latin square needs at least three rows and columns to leave a residual degree of freedom.", "Latin Square");
+
+            // each factor's codes may be any n distinct values, in any order and any rows: they are ranked to 1..n
+            int[] ri = LatinSquareIndexes(vrx, nn, n, "row");
+            int[] ci = LatinSquareIndexes(vcx, nn, n, "column");
+            int[] ti = LatinSquareIndexes(vlx, nn, n, "treatment");
+
+            // collapse observation vector v into row by col matrix x, get Latin factor totals tx, and check the design
+            int[,] cellCount = new int[n + 1, n + 1];
+            int[,] rowTreatment = new int[n + 1, n + 1];
+            int[,] columnTreatment = new int[n + 1, n + 1];
             for (int i = 1; i <= nn; i++)
             {
-                x[Convert.ToInt32(vrx[i]), Convert.ToInt32(vcx[i])] = v[i];
+                x[ri[i], ci[i]] = v[i];
+                cellCount[ri[i], ci[i]]++;
+                rowTreatment[ri[i], ti[i]]++;
+                columnTreatment[ci[i], ti[i]]++;
+                tx[ti[i]] += v[i];
             }
-
-            // make sure Latin pointers range from 1 to n
-            vx = 1.0 - MathDbl.vector_min(vlx, 1, n);
-            if (vx != 0.0)
-            {
-                for (int i = 1; i <= nn; i++)
-                {
-                    vlx[i] += vx;
-                }
-            }
-            // get Latin factor totals tx
             for (int i = 1; i <= n; i++)
-            {
-                for (int j = 1; j <= nn; j++)
-                {
-                    if (Convert.ToInt64(vlx[j]) == i)
-                    {
-                        tx[i] += v[j];
-                    }
-                }
-            }
+                for (int j = 1; j <= n; j++)
+                    if (cellCount[i, j] != 1 || rowTreatment[i, j] != 1 || columnTreatment[i, j] != 1)
+                        throw new TemplateOperationCancelledException("The design is not a Latin square: each row and column combination must be observed once, and each treatment must occur once in every row and once in every column.", "Latin Square");
 
             double grand = 0;
             for (int i = 1; i <= n; i++)
@@ -2257,6 +2240,26 @@ namespace StatsDirect.Builtins
                 carrier.Tnx = tnx;
             }
             return carrier;
+        }
+
+        /// <summary>
+        /// Rank the codes of one Latin square factor to 1..n, whatever values they are and whatever order they come in.
+        /// </summary>
+        private static int[] LatinSquareIndexes(double[] codes, int nn, int n, string factor)
+        {
+            double[] sorted = new double[nn];
+            Array.Copy(codes, 1, sorted, 0, nn);
+            Array.Sort(sorted);
+            List<double> levels = new();
+            foreach (double code in sorted)
+                if (levels.Count == 0 || levels[levels.Count - 1] != code)
+                    levels.Add(code);
+            if (levels.Count != n)
+                throw new TemplateOperationCancelledException("The " + factor + " factor must have exactly " + n.ToString() + " distinct codes for a " + n.ToString() + " by " + n.ToString() + " Latin square (it has " + levels.Count.ToString() + ").", "Latin Square");
+            int[] index = new int[nn + 1];
+            for (int i = 1; i <= nn; i++)
+                index[i] = levels.BinarySearch(codes[i]) + 1;
+            return index;
         }
 
         private class Contraster : IComparable<Contraster>
