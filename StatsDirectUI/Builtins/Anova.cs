@@ -1223,7 +1223,7 @@ namespace StatsDirect.Builtins
                     nSame = false;
                 lastTnx = tnx[n];
             }
-            int nu = ntot - k - 1;
+            int nu = carrier.Dferr;   //  the residual degrees of freedom of the analysis these comparisons follow (one way, or two way)
             double pse = Math.Sqrt(mserr);
 
             for (int i = 1; i <= k; i++)
@@ -1337,7 +1337,7 @@ namespace StatsDirect.Builtins
                 palpha = 0.05;
 
             double dfn = kn - 1;
-            double dfd = totn - kn;
+            double dfd = carrier.Dferr;   //  the residual degrees of freedom of the analysis these comparisons follow
             double f = PDF.ffromp(dfd, dfn, palpha);
             double crit = Math.Sqrt(dfn * f);
             if (f == Constant.MISSING)
@@ -1567,9 +1567,7 @@ namespace StatsDirect.Builtins
             Contraster[] hold = new Contraster[kn + 2]; //  1-based
             double[] lam = new double[kn];
 
-            int nu = 0;
-            for (int n = 0; n < kn; n++)
-                nu += tnx[n] - 1;
+            int nu = carrier.Dferr;   //  the residual degrees of freedom of the analysis these comparisons follow
             double pse = Math.Sqrt(mserr);
 
             int ctr = 0;
