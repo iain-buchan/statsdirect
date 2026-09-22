@@ -978,8 +978,7 @@ namespace StatsDirect.Builtins
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
             double xm1 = um1;
             double xm2 = um2;
-            if (um1 < um2)
-                Utilities.Utilities.Swap(ref um1, ref um2);
+            // t carries the sign of the difference (sample 1 less sample 2), as the confidence interval does.
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", "* sample 1 from summary");
@@ -1104,14 +1103,10 @@ namespace StatsDirect.Builtins
             Para(data, mean, ss, var, sd, sem, tnx);
             int degf = tnx[0] + tnx[1] - 2;
             MathDbl.civ(degf, out double cit, GAMMA, out double P0);
+            // t carries the sign of the difference (first sample less second), as the confidence interval does; the one sided P is
+            // the tail beyond the observed difference either way. Both t values were made positive by swapping the means here.
             double um1 = mean[0];
             double um2 = mean[1];
-            if (um1 < um2)
-            {
-                double um = um1;
-                um1 = um2;
-                um2 = um;
-            }
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("title_0", data.Variables[0].Title);
             outputParameters.AddOutput("mean_0", mean[0]);
