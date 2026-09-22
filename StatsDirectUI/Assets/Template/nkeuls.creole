@@ -1,7 +1,7 @@
 <report>
 <title>Newman-Keuls multiple comparisons</title>
 <table>
-<tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>|L/SE(L)|</th><th></th></tr>
+<tr><th>Comparison</th><th>Mean difference L</th><th>Separation</th><th>q</th><th></th></tr>
 <block name="differences">
 <tr><td>@cf1 vs. @cf2</td><td>@{delta:roundu}</td><td>@gps</td><td>@{t:roundu}</td><td><pval>@{p:pval}@{stop_marker}</pval></td></tr>
 </block>
