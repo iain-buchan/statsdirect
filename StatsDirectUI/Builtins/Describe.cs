@@ -1298,12 +1298,22 @@ namespace StatsDirect.Builtins
                 for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
                 {
                     SubjectSummary summary = SubjectToSummaryMap[IndexToSubjectMap[subjectIndex]];
+                    // The trapezium rule over the observations the subject has. Summing each time's slice (the observation
+                    // times half the gap between its neighbours) left the whole slice of a missing observation out, which
+                    // underestimated the area; joining the neighbours across the gap is the usual rule and gives the same
+                    // area when nothing is missing.
                     summary.Auc = 0;
+                    double lastTime = Constant.MISSING;
+                    double lastObservation = Constant.MISSING;
                     for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
                     {
-                        double auc = AreasUnderCurve[timeIndex, subjectIndex];
-                        if (auc != Constant.MISSING)
-                            summary.Auc += auc;
+                        double observation = Observations[timeIndex, subjectIndex];
+                        if (observation == Constant.MISSING)
+                            continue;
+                        if (lastObservation != Constant.MISSING)
+                            summary.Auc += (IndexToTimeMap[timeIndex] - lastTime) * (observation + lastObservation) / 2.0;
+                        lastTime = IndexToTimeMap[timeIndex];
+                        lastObservation = observation;
                     }
                     AucN++;
                     AucSum += summary.Auc;
@@ -1316,6 +1326,9 @@ namespace StatsDirect.Builtins
                         int maxIndex = -1;
                         for (int timeIndex = 0; timeIndex < IndexToTimeMap.Length; timeIndex++)
                         {
+                            // a missing observation was taken as the minimum, so "*" was printed for it
+                            if (Observations[timeIndex, subjectIndex] == Constant.MISSING)
+                                continue;
                             summary.MinObservation = Math.Min(summary.MinObservation, Observations[timeIndex, subjectIndex]);
                             if (Observations[timeIndex, subjectIndex] > summary.MaxObservation)
                             {
