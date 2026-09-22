@@ -1139,6 +1139,10 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("f_3", f[2]);
                 outputParameters.AddOutput("p_3", fp[2]);
             }
+            else
+            {
+                throw new TemplateOperationCancelledException("Each subgroup must contain at least one observation, and there must be at least two groups.", "Nested ANOVA");
+            }
 
             //  Add our calculated values for potential later consumption by other functions
             outputParameters.AddInput("ctr", ctr);
