@@ -3891,17 +3891,19 @@ namespace StatsDirect.Builtins
                 double p = PDF.chivalp(x2, df);
                 outputParameters.AddOutput("p", p);
 
-                if (p < confidence)
+                //  The pairwise contrasts are shown only when the overall test rejects at the level the parameter implies
+                //  (it is given as a confidence level, 0.95 for a 5% test)
+                double alphaLevel = confidence;
+                if (alphaLevel == 0)
+                    alphaLevel = 0.05;
+                if (alphaLevel > 1 - alphaLevel)
+                    alphaLevel = 1 - alphaLevel;
+                if (p <= alphaLevel)
                 {
                     IList<ParameterBag> pairwiseList = new List<ParameterBag>();
                     ParameterBag pairwiseParameters = new();
                     pairwiseList.Add(pairwiseParameters);
-                    p = confidence;
-                    if (p == 0)
-                        p = 0.05;
-                    if (p > 1 - p)
-                        p = 1 - p;
-                    p /= 2;
+                    p = alphaLevel / 2;
                     df = nx - frame.VariableCount;
                     double tval = PDF.tfromp(p, df);
                     pairwiseParameters.AddOutput("df", df);
