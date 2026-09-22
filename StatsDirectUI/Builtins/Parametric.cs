@@ -742,13 +742,33 @@ namespace StatsDirect.Builtins
             double xx = (kurtosis - meanb2) / Math.Sqrt(varb2);
             double moment = 6.0 * (nx * nx - 5.0 * nx + 2.0) / ((nx + 7.0) * (nx + 9.0)) * Math.Sqrt(6.0 * (nx + 3.0) * (nx + 5.0) / (nx * (nx - 2.0) * (nx - 3.0)));
             double a = 6.0 + 8.0 / moment * (2.0 / moment + Math.Sqrt(1.0 + 4.0 / Math.Pow(moment, 2.0)));
-            double z_b2 = Math.Abs((1.0 - 2.0 / (9.0 * a) - Math.Pow((1.0 - 2.0 / a) / (1.0 + xx * Math.Sqrt(2.0 / (a - 4.0))), 1.0 / 3.0)) / Math.Sqrt(2.0 / (9.0 * a)));
-            p_b2 = 2.0 - 2.0 * PDF.alnorm(z_b2);
+            // The denominator of the base of the cube root reaches 0 when the sample is much flatter than the approximation
+            // allows for (two point data with n above about 35): z tends to minus infinity as it does, and beyond that the base
+            // is negative and the approximation no longer applies, so P is taken as 0 rather than left undefined.
+            double wh = (1.0 - 2.0 / a) / (1.0 + xx * Math.Sqrt(2.0 / (a - 4.0)));
+            double z_b2 = wh > 0.0
+                ? Math.Abs((1.0 - 2.0 / (9.0 * a) - Math.Pow(wh, 1.0 / 3.0)) / Math.Sqrt(2.0 / (9.0 * a)))
+                : double.PositiveInfinity;
+            p_b2 = wh > 0.0 ? 2.0 - 2.0 * PDF.alnorm(z_b2) : 0.0;
 
             k2 = z_b1 * z_b1 + z_b2 * z_b2;
-            p_k2 = PDF.chivalp(k2, 2.0);
-            // Royston adjustment
-            double zc2 = -PDF.gauinv(Math.Exp(-0.5 * k2), out int ifault);
+            p_k2 = double.IsPositiveInfinity(k2) ? 0.0 : PDF.chivalp(k2, 2.0);
+            // Royston adjustment. The P of the raw K2 is exp(-k2 / 2); its normal deviate is found in log space when that would
+            // underflow (k2 above about 1400), from the asymptotic upper tail Q(z) ~ exp(-z^2 / 2) / (z sqrt(2 pi)), that is
+            // z^2 = k2 - 2 ln z - ln(2 pi); the underflow had left K2 unadjusted (1,780 printed for 17 zeros and 17 ones where
+            // the adjusted value is 1,047). An infinite K2 (from the kurtosis guard above) is left as it is.
+            double zc2 = 0.0;
+            int ifault = double.IsPositiveInfinity(k2) ? 1 : 0;
+            if (ifault == 0 && k2 < 1400.0)
+            {
+                zc2 = -PDF.gauinv(Math.Exp(-0.5 * k2), out ifault);
+            }
+            else if (ifault == 0)
+            {
+                zc2 = Math.Sqrt(k2);
+                for (int it = 0; it < 8; it++)
+                    zc2 = Math.Sqrt(k2 - 2.0 * Math.Log(zc2) - Math.Log(2.0 * Math.PI));
+            }
             if (ifault == 0)
             {
                 double logn = Math.Log(nx);
@@ -771,11 +791,15 @@ namespace StatsDirect.Builtins
                 {
                     z = a2 + b2x * zc2;
                 }
-                double p = 1.0 - PDF.alnorm(z);
-                if (p != 0.0)
+                // ln P of the adjusted deviate, the upper tail asked for directly (1 - alnorm(z) was 0 for z above about 8) and in
+                // log space beyond z = 30, so that the adjusted K2 = -2 ln P is printed even when P is below the smallest double
+                double logP = z < 30.0
+                    ? Math.Log(PDF.alnorm(-z))
+                    : -0.5 * z * z - Math.Log(z) - 0.5 * Math.Log(2.0 * Math.PI) + Math.Log(1.0 - 1.0 / (z * z) + 3.0 / (z * z * z * z));
+                if (!double.IsNaN(logP) && !double.IsPositiveInfinity(logP))
                 {
-                    k2 = -2.0 * Math.Log(p);
-                    p_k2 = p;
+                    k2 = -2.0 * logP;
+                    p_k2 = Math.Exp(logP);
                 }
             }
 
@@ -887,11 +911,9 @@ namespace StatsDirect.Builtins
             double s = 1.0;
             if (k == 3)
             {
-                double sw = Math.Sqrt(w);
-                double ang = 1.5707288 + sw * (-0.2121144 + sw * (0.074261 - 0.0187293 * sw));
-                ang = Constant.PI / 2.0 - ang * Math.Sqrt(1.0 - sw);
+                // the exact arcsine: a polynomial approximation to it moved P by up to 5e-5 and could make it slightly negative
                 double stqr = Math.Asin(Math.Sqrt(0.75));
-                p = 6 / Constant.PI * (ang - stqr);
+                p = Math.Max(0.0, 6.0 / Constant.PI * (Math.Asin(Math.Sqrt(w)) - stqr));
                 z = -PDF.gauinv(p, out int ifault);
                 v = (1.0 - w) / (1 - Math.Pow(Math.Sin(Constant.PI / 12.0 + stqr), 2.0));
             }
