@@ -1195,7 +1195,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", P * 2.0);
             string qx = comparisons + " comparison" + (comparisons == 1 ? string.Empty : "s");
             outputParameters.AddOutput("comp", qx);
-            outputParameters.AddOutput("bonf", 0.05 / comparisons);
+            outputParameters.AddOutput("bonf", (1.0 - GAMMA) / comparisons);
             return new StepOutput(outputParameters);
         }
 
