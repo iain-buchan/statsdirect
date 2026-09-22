@@ -38,19 +38,19 @@ namespace StatsDirect.Builtins
             {
                 int nx = 0;
                 double sum = 0.0;
-                double sumsq = 0.0;
                 foreach (double v in (frame.Variables[d] as DoubleVariable).Data)
                 {
                     if (v != Constant.MISSING)
                     {
                         nx++;
                         sum += v;
-                        sumsq += v * v;
                     }
                 }
                 tnx[d] = nx;
                 mean[d] = sum / Convert.ToDouble(tnx[d]);
-                ss[d] = sumsq - sum * sum / tnx[d];
+                // The sum of squares about the mean is taken from the two-pass loop below. It was formed from the raw sums
+                // (sum of squares less the square of the sum over n), which loses digits when the mean is large compared with
+                // the spread: the unpaired t test on values near 1e8 was wrong and near 1e9 gave t = infinity.
                 double sumsqdev = 0.0;
                 foreach (double v in (frame.Variables[d] as DoubleVariable).Data)
                 {
@@ -64,6 +64,7 @@ namespace StatsDirect.Builtins
                         sumsqdev += (v - mean[d]) * (v - mean[d]);
                     }
                 }
+                ss[d] = sumsqdev;
                 if (sumsqdev == Constant.MISSING)
                     var[d] = Constant.MISSING;
                 else

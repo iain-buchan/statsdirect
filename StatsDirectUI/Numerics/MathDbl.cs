@@ -42,57 +42,50 @@ namespace StatsDirect.Numerics
         /// <remarks></remarks>
         public static double corr(double[] x, double[] y, int lowerBound, int n, bool noMissing)
         {
-            // Return a Pearson correlation coefficient
+            // Return a Pearson correlation coefficient. The sums of squares and products are taken about the means, in a
+            // second pass: formed from the raw sums they lost digits when a mean was large compared with the spread, which
+            // moved the Shapiro-Wilk and Shapiro-Francia statistics for values of about 1e6 or more.
             double sumx = 0.0;
             double sumy = 0.0;
-            double sumxy = 0.0;
-            double sxs = 0.0;
-            double sys = 0.0;
             double nx = 0.0;
-            double sx;
-            double sy;
-            if (noMissing)
+            for (int i = lowerBound; i < n + lowerBound; i++)
             {
-                nx = Convert.ToDouble(n);
-                for (int i = lowerBound; i < n + lowerBound; i++)
+                if (noMissing || (x[i] != Constant.MISSING & y[i] != Constant.MISSING))
                 {
-                    sx = x[i];
-                    sy = y[i];
-                    sumx += sx;
-                    sxs += sx * sx;
-                    sumy += sy;
-                    sys += sy * sy;
-                    sumxy += sx * sy;
-                }
-            }
-            else
-            {
-                for (int i = lowerBound; i < n + lowerBound; i++)
-                {
-                    if (x[i] != Constant.MISSING & y[i] != Constant.MISSING)
-                    {
-                        nx += 1.0;
-                        sx = x[i];
-                        sy = y[i];
-                        sumx += sx;
-                        sxs += sx * sx;
-                        sumy += sy;
-                        sys += sy * sy;
-                        sumxy += sx * sy;
-                    }
+                    nx += 1.0;
+                    sumx += x[i];
+                    sumy += y[i];
                 }
             }
             if (nx < 2.0)
             {
                 return Constant.MISSING;
             }
-            double ssx = sxs - sumx * sumx / nx;
-            double ssy = sys - sumy * sumy / nx;
-            double xy = sumxy - sumx * sumy / nx;
+            double meanx = sumx / nx;
+            double meany = sumy / nx;
+            double ssx = 0.0;
+            double ssy = 0.0;
+            double xy = 0.0;
+            for (int i = lowerBound; i < n + lowerBound; i++)
+            {
+                if (noMissing || (x[i] != Constant.MISSING & y[i] != Constant.MISSING))
+                {
+                    double dx = x[i] - meanx;
+                    double dy = y[i] - meany;
+                    ssx += dx * dx;
+                    ssy += dy * dy;
+                    xy += dx * dy;
+                }
+            }
             double r = xy / Math.Sqrt(ssx * ssy);
-            if (Math.Abs(r) >= 1.0)
+            // rounding can take r just beyond 1 in size; it was set to +1 whichever the sign
+            if (r > 1.0)
             {
                 r = 1.0;
+            }
+            else if (r < -1.0)
+            {
+                r = -1.0;
             }
             return r;
         }
