@@ -11,7 +11,7 @@ slope = @{b:roundu}</p>
 
 <p>Chi<sup>2</sup> (heterogeneity of deviations from model) = @{dev:roundu}  (@df df)  <pval>@{p:pval}</pval></p>
 
-<p>t for slope = @{t_slope:roundu} (@df df_slope)  <pval>@{p_slope:pval}</pval></p>
+<p>t for slope = @{t_slope:roundu} (@df_slope df)  <pval>@{p_slope:pval}</pval></p>
 <block name="warn">
 <p><warn>WARNING: slope not significant</warn></p>
 </block>
