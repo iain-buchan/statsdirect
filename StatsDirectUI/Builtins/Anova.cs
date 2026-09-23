@@ -942,8 +942,9 @@ namespace StatsDirect.Builtins
                 {
                     int adit = 0;
                     double adsum = 0;
-                    IVariable candidate = frame.Variables[n - 1][d]; // There may be many more variables in the frame than are filled in, as it's passed oversized.  Deal with this!
-                    if (candidate != null)
+                    IVariable candidate = frame.Variables[n - 1][d];
+                    if (candidate == null)   //  a block and treatment combination with no rows at all (data selected by group identifiers)
+                        throw new TemplateOperationCancelledException("Invalid data: a few repeat observations can be missing but not whole cells.", "Replicated Two Way ANOVA");
                     {
                         DoubleVariable v = candidate as DoubleVariable;
                         for (int q = 0; q < nm; q++)

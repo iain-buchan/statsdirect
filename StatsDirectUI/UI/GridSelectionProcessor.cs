@@ -943,7 +943,7 @@ namespace StatsDirect.UI
                         }
                         for (int group = 0; group < numberOfGroups; group++)
                             for (int subGroup = 0; subGroup < numberOfSubGroups; subGroup++)
-                                resultFrame.Variables[subGroup][group].TruncateDataToLength(highestCnt);
+                                resultFrame.Variables[subGroup][group]?.TruncateDataToLength(highestCnt);   //  a combination with no rows stays null, for the analysis to refuse
                         resultFrame.Name = " " + dlab + " (data), " + groupVariable.Title + " (group), " + subGroupVariable.Title + " (sub-group)";
                         return resultFrame;
                     }
