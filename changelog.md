@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[v5.0.4] 2026-09-23
+##[v5.0.5] 2026-09-23
+
+Version 5.0.4 was built and signed but not released; everything under it is in 5.0.5, together with the fixes from two further independent audits (analysis of variance; parametric, nonparametric and descriptive methods) made the same night.
 
 ### Fixed
 - Latin square: the operation listed its report twice, so the analysis appeared twice, and the sums of squares, mean squares and F ratios were printed unrounded
