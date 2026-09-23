@@ -466,21 +466,24 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("pop_mean", pm);
                 outputParameters.AddOutput("size", tnx[0]);
                 outputParameters.AddOutput("sd", sd[0]);
-                double statz;
+                //  The standard error of the mean from the population standard deviation when it is given, else from the sample's;
+                //  the statistic and the confidence interval use the same one (the interval had always used the sample's)
+                double se;
                 if (psd == Constant.MISSING || psd == 0.0)
                 {
                     outputParameters.AddOutput("psd", "not known");
-                    statz = (mean[0] - pm) / (sd[0] / Math.Sqrt(tnx[0]));
+                    se = sd[0] / Math.Sqrt(tnx[0]);
                 }
                 else
                 {
                     outputParameters.AddOutput("psd", psd);
-                    statz = (mean[0] - pm) / (psd / Math.Sqrt(tnx[0]));
+                    se = psd / Math.Sqrt(tnx[0]);
                 }
+                double statz = (mean[0] - pm) / se;
                 outputParameters.AddOutput("pc", 100 * (1 - P0));
                 outputParameters.AddOutput("for", pm == 0 ? "for the mean" : "for mean difference");
-                outputParameters.AddOutput("from", mean[0] - pm - cit * sem[0]);
-                outputParameters.AddOutput("to", mean[0] - pm + cit * sem[0]);
+                outputParameters.AddOutput("from", mean[0] - pm - cit * se);
+                outputParameters.AddOutput("to", mean[0] - pm + cit * se);
                 outputParameters.AddOutput("z", statz);
                 double P = 1.0 - PDF.alnorm(Math.Abs(statz));
                 if (P > 1 - P)
