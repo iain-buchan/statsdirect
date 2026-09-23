@@ -1047,20 +1047,19 @@ namespace StatsDirect.UI
                         GroupBox groupBox = null;
                         string prompt = parameter.Prompt(Processor, Context);
 
-                        int controlWidth = 0;
-
                         if (!string.IsNullOrEmpty(prompt))
                         {
-                            // simple scaling for GroupBox and TableLayoutPanel to take account of GroupBox title length in characters
-                            controlWidth = (int)((float)(prompt.Length * 8 * scalingFactor) * 1.05);
                             groupBox = new SDGroupBox
                             {
                                 Tag = parameter,
                                 Padding = new Padding(3, 3, 3, 3),
                                 AutoSize = true,
-                                Width = controlWidth,
                                 Text = prompt
                             };
+                            // A group box that sizes itself to its contents does not count its caption, so a caption longer than the
+                            // buttons was cut short ("Which type of study produced your data?"): the box is at least as wide as the caption
+                            int captionWidth = TextRenderer.MeasureText(prompt, groupBox.Font).Width + 4 * SystemInformation.Border3DSize.Width + groupBox.Padding.Horizontal;
+                            groupBox.MinimumSize = new Size(captionWidth, 0);
                             // Add later so that autosizing can size the contained controls as well
                             //groupBox.BackColor = System.Drawing.Color.FromName("Green"); ;
                         }
