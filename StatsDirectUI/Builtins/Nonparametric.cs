@@ -4119,7 +4119,7 @@ namespace StatsDirect.Builtins
                     double thetasq = 0.0;
                     for (int i = 1; i <= boots; i++)
                         thetasq += Math.Pow(ginib[i] - theta, 2.0);
-                    thetase = Base.SafeSqrt(1.0 / (boots - 1) * thetasq);
+                    thetase = boots > 1 ? Math.Sqrt(thetasq / (boots - 1)) : Constant.MISSING;   //  a sum of squares: zero when every re-sample gives the same coefficient, which is not a fault
                     bias = gini - theta;
                     // sort bootstraps
                     Array.Sort(ginib, 1, boots);
@@ -4169,7 +4169,7 @@ namespace StatsDirect.Builtins
                         //  the BCa interval is not defined (the fault had been ignored and zero used as the correction)
                         bcal = Constant.MISSING;
                         bcau = Constant.MISSING;
-                        bcaNote = " (the BCa interval is not defined: every re-sampled coefficient is on one side of the observed coefficient)";
+                        bcaNote = " (the BCa interval is not defined: no re-sampled coefficient lies below the observed coefficient, or every one does)";
                     }
                     else
                     {
