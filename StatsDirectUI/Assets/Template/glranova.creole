@@ -13,7 +13,7 @@
 
 <table>
 <tr><td>Multiple correlation coefficient</td><td>(R) = @{r:roundu}@r_extra</td></tr>
-<tr><td></td><td>R&#xb2;  = @r2%</td></tr>
+<tr><td></td><td>R&#xb2;  = @{r2:roundu}%</td></tr>
 <tr><td></td><td>Ra&#xb2; = @{ra2:roundu}%</td></tr>
 </table>
 
