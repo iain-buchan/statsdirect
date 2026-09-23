@@ -927,7 +927,7 @@ namespace StatsDirect.Builtins
             int nc = frame.Variables[0].Count;
             int nr = frame.VariableCount;
             int nm = frame.MaxRows;
-            int[] tnx = new int[nc + 1];
+            double[] tnx = new double[nc + 1];
             double[,,] y = new double[nm + 1, nr + 1, nc + 1];
             int absconders = 0;
 
@@ -936,6 +936,8 @@ namespace StatsDirect.Builtins
 
             for (int d = 0; d < nc; d++)
             {
+                int missingInTreatment = 0;
+                double sumOfReciprocals = 0.0;   //  of the cell counts, over the blocks
                 for (int n = 1; n <= nr; n++)
                 {
                     int adit = 0;
@@ -964,9 +966,16 @@ namespace StatsDirect.Builtins
                             double item = v.Data[q] == Constant.MISSING ? spare : v.Data[q];
                             y[q + 1, n, d + 1] = item;
                         }
+                        missingInTreatment += nm - adit;
+                        sumOfReciprocals += 1.0 / adit;
                     }
                 }
-                tnx[d] = nr * nm;   //  observations per treatment, for the multiple comparison methods that may follow
+                //  Observations per treatment, for the multiple comparison methods that may follow. A treatment mean is the average
+                //  of its cell means, so its variance is the residual mean square times the sum over the blocks of 1/(cell count),
+                //  divided by the square of the number of blocks. The methods take the size that gives that variance: blocks squared
+                //  over the sum, which is blocks times repeats when no repeat is missing. A missing repeat is replaced by the mean of
+                //  its cell, which adds no information, so the nominal count would make the intervals too narrow.
+                tnx[d] = missingInTreatment == 0 ? nr * nm : nr * nr / sumOfReciprocals;
                 string title = "Treatment " + (1 + d).ToString();
                 outputFrame.Variables[d] = new DoubleVariable(null, title);
             }
@@ -1054,6 +1063,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("ssgp", sscol);
             outputParameters.AddInput("sstot", sstot);
             outputParameters.AddInput("tnx", tnx);
+            outputParameters.AddInput("equivalent_sizes", absconders > 0);
             outputParameters.AddInput("data", outputFrame);
 
             return new StepOutput(outputParameters);
@@ -1213,7 +1223,7 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.Tnx;
+            double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
             double mserr = carrier.Msx;
             if (carrier.Dferr < 1)
@@ -1225,12 +1235,12 @@ namespace StatsDirect.Builtins
             Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
             bool nSame = true;
-            int ntot = 0;
-            int lastTnx = 0;
+            double ntot = 0;
+            double lastTnx = 0;
             for (int n = 0; n <= k; n++)
             {
                 ntot += tnx[n];
-                if (n > 0 && nSame && tnx[n] != lastTnx)
+                if (n > 0 && nSame && !SameSize(tnx[n], lastTnx))
                     nSame = false;
                 lastTnx = tnx[n];
             }
@@ -1343,7 +1353,7 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.Tnx;
+            double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
             double msx = carrier.Msx;
             if (carrier.Dferr < 1)
@@ -1352,7 +1362,7 @@ namespace StatsDirect.Builtins
             int kn = frame.VariableCount;
             Contraster[] hold = new Contraster[kn * (int)Math.Floor((kn - 1) / 2.0 + 0.5) + 1]; //  1-based
 
-            int totn = 0;
+            double totn = 0;
             for (int n = 0; n < kn; n++)
                 totn += tnx[n];
 
@@ -1478,7 +1488,7 @@ namespace StatsDirect.Builtins
             DataFrame frame = parameters["data"].AsDataFrame;
             double gamma = parameters["gamma"].AsDouble;
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.Tnx;
+            double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
             double msx = carrier.Msx;
             double dferr = carrier.Dferr;
@@ -1492,11 +1502,13 @@ namespace StatsDirect.Builtins
             if (palpha <= 0 || palpha >= 1)
                 palpha = 0.05;
 
-            int qx = 0;
+            double qx = 0;
             for (int n = 0; n < frame.VariableCount; n++)
             {
-                if (n != 0 && tnx[n] != qx)
-                    throw new TemplateOperationCancelledException("All group sizes must be equal for the Newman-Keuls method.", "Newman-Keuls Contrasts");
+                if (n != 0 && !SameSize(tnx[n], qx))
+                    throw new TemplateOperationCancelledException(carrier.EquivalentSizes
+                        ? "All group sizes must be equal for the Newman-Keuls method: after a replicated two way analysis with missing repeat observations the equivalent treatment sizes differ, so use the Tukey-Kramer method instead."
+                        : "All group sizes must be equal for the Newman-Keuls method.", "Newman-Keuls Contrasts");
                 qx = tnx[n];
             }
 
@@ -1596,7 +1608,7 @@ namespace StatsDirect.Builtins
             int[] indexvariable = (int[])parameters["indexvariable"].AsObject;
             int ic = indexvariable[0];
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
-            int[] tnx = carrier.Tnx;
+            double[] tnx = carrier.Tnx;
             double[] mean = carrier.Mean;
             double mserr = carrier.Msx;
 
@@ -1648,7 +1660,7 @@ namespace StatsDirect.Builtins
                         Delta = delta,
                         Absdelta = Math.Abs(delta),
                         Lab1 = frame.Variables[i].Title,
-                        Gps = tnx[i]
+                        N = tnx[i]
                     };
                     double lci = delta - d * pse * Math.Sqrt(1.0 / Convert.ToDouble(tnx[ic]) + 1.0 / Convert.ToDouble(tnx[i]));
                     hold[ctr].Ll = lci;
@@ -1669,7 +1681,7 @@ namespace StatsDirect.Builtins
                 ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("level", hold[i].Lab1);
-                differencesParameters.AddOutput("cn", hold[i].Gps);
+                differencesParameters.AddOutput("cn", hold[i].N);
                 differencesParameters.AddOutput("delta", hold[i].Delta);
                 differencesParameters.AddOutput("lci", hold[i].Ll);
                 differencesParameters.AddOutput("uci", hold[i].Ul);
@@ -2258,7 +2270,8 @@ namespace StatsDirect.Builtins
                 carrier.Dferr = parameters["dfres"].AsInt32;
                 carrier.Mean = (double[])parameters["mean"].AsObject;
                 carrier.Msx = parameters["msres"].AsDouble;
-                carrier.Tnx = (int[])parameters["tnx"].AsObject;
+                carrier.Tnx = parameters["tnx"].AsObject is int[] counts ? Array.ConvertAll(counts, n => (double)n) : (double[])parameters["tnx"].AsObject;
+                carrier.EquivalentSizes = parameters.ContainsKey("equivalent_sizes") && parameters["equivalent_sizes"].AsBoolean;
             }
             else
             {
@@ -2302,10 +2315,15 @@ namespace StatsDirect.Builtins
                 carrier.Dferr = dferr;
                 carrier.Mean = mean;
                 carrier.Msx = mserr;
-                carrier.Tnx = tnx;
+                carrier.Tnx = Array.ConvertAll(tnx, n => (double)n);
             }
             return carrier;
         }
+
+        /// <summary>
+        /// Whether two group sizes are the same: whole numbers compare exactly, equivalent sizes to within rounding.
+        /// </summary>
+        private static bool SameSize(double a, double b) => Math.Abs(a - b) <= 1e-9 * Math.Max(Math.Abs(a), Math.Abs(b));
 
         /// <summary>
         /// Rank the codes of one Latin square factor to 1..n, whatever values they are and whatever order they come in.
@@ -2338,6 +2356,7 @@ namespace StatsDirect.Builtins
             public double P;
             public double Q;
             public long Gps;
+            public double N;           //  Dunnett: the size of the group (its equivalent size after a replicated two way analysis with missing repeats)
             public bool Significant;   //  declared different at the chosen level (for Newman-Keuls, after the step-down rule)
             public bool NotTested;     //  Newman-Keuls: inside a wider range of ordered means that is not significant
             public int Lo;             //  Newman-Keuls: the first and last positions, among the ordered means, that the contrast spans
@@ -2361,7 +2380,8 @@ namespace StatsDirect.Builtins
 
         private class ParameterCarrier
         {
-            public int[] Tnx;
+            public double[] Tnx;   //  group sizes: whole numbers, except the equivalent sizes after a replicated two way analysis with missing repeats
+            public bool EquivalentSizes;   //  the sizes are those equivalent sizes
             public double Msx;
             public double[] Mean;
             public int Dferr;
