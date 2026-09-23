@@ -3671,12 +3671,14 @@ namespace StatsDirect.Builtins
                     {
                         popParameters = new ParameterBag();
                         popList.Add(popParameters);
+                double[] covariance = context.Covariance;
+                static int Packed(int r, int c) => Math.Max(r, c) * (Math.Max(r, c) - 1) / 2 + Math.Min(r, c);   //  the lower triangle, row by row
                         popParameters.AddOutput("pop", labels[l - iq] + " = " + (j - 1).ToString());
                         popParameters.AddOutput("pc", 100 * (1.0 - P0));
                         parList = new List<ParameterBag>();
                         popParameters.AddOutput("*par", parList);
                         if (j == 1)
-                            bx = 1.0 / bx;
+                            bx = 1.0;   //  the covariate's 0 level is the baseline population, so its ratios are the whole study's (they had been divided by the covariate's ratio)
 
                         for (int i = 1; i <= p; i++)
                         {
@@ -3691,8 +3693,14 @@ namespace StatsDirect.Builtins
                                 double uci;
                                 if (rr != Constant.MISSING)
                                 {
-                                    lci = Formatting.SafeExp(b[i] * bx - se[i] * cit * bx);
-                                    uci = Formatting.SafeExp(b[i] * bx + se[i] * cit * bx);
+                                    //  In the covariate's 1 population the ratio is exp(b_i + b_l): the limits shift its log by the standard
+                                    //  error of that sum (the log limits had been multiplied by the covariate's ratio, which is not an interval)
+                                    double variance = j == 2 && covariance != null
+                                        ? covariance[Packed(i, i)] + covariance[Packed(l, l)] + 2.0 * covariance[Packed(i, l)]
+                                        : se[i] * se[i];
+                                    double halfWidth = cit * Math.Sqrt(Math.Max(variance, 0.0));
+                                    lci = Formatting.SafeExp(Math.Log(rr) - halfWidth);
+                                    uci = Formatting.SafeExp(Math.Log(rr) + halfWidth);
                                 }
                                 else
                                 {
