@@ -861,6 +861,8 @@ namespace StatsDirect.Builtins
                     group = (int)groupsVariable.Data[row];
                 groups[group].NoteRowPass2(timesVariable.Data[row], observationsVariable.Data[row], subjectIdsVariable.Data[row]);
             }
+            foreach (TimeSeriesSummaryStore store in groups)
+                store.NoteEndOfPass2();
 
             // Allow the summaries to claculate their values
             foreach (TimeSeriesSummaryStore store in groups)
@@ -1198,6 +1200,7 @@ namespace StatsDirect.Builtins
             /// </summary>
             internal void NoteEndOfPass1(bool addZeroObservationsAtZeroTime)
             {
+                zeroObservationsAtZeroTime = addZeroObservationsAtZeroTime;
                 // If we need to, ensure that there's space for zero time.
                 if (addZeroObservationsAtZeroTime)
                     SortedTimes.Add(0);
@@ -1228,6 +1231,25 @@ namespace StatsDirect.Builtins
                     throw new Exception("Your data contains multiple, non-identical observations for the same subject and time point; time series summary cannot interpret this. Please remove the duplicate(s).");
                 Observations[timeIndex, subjectIndex] = observation;
                 NObservations++;
+            }
+
+            private bool zeroObservationsAtZeroTime;
+
+            /// <summary>
+            /// Second pass complete. If the user asked for observations of zero at time zero, every subject without an observation there
+            /// is given one (time zero was added to the time points, but the observations there had been left missing).
+            /// </summary>
+            internal void NoteEndOfPass2()
+            {
+                if (!zeroObservationsAtZeroTime || !TimeToSummaryMap.ContainsKey(0))
+                    return;
+                int timeIndex = TimeToSummaryMap[0].Index;
+                for (int subjectIndex = 0; subjectIndex < IndexToSubjectMap.Length; subjectIndex++)
+                    if (Observations[timeIndex, subjectIndex] == Constant.MISSING)
+                    {
+                        Observations[timeIndex, subjectIndex] = 0;
+                        NObservations++;
+                    }
             }
 
             /// <summary>
