@@ -2122,6 +2122,7 @@ namespace StatsDirect.Builtins
                 for (int i = 1; i <= context.N; i++)
                     context.X[i, j + 1] = Math.Pow(vX.Data[i - 1], Convert.ToDouble(j));
             if (context.P > deg)
+            context.OutcomeTitle = vY.Title;   //  named at the start of the equation line, as in multiple regression
             {
                 context.Titles[2] = context.Titles[1];
                 context.Titles[1] = context.Titles[0];
