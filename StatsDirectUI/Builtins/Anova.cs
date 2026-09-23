@@ -932,7 +932,7 @@ namespace StatsDirect.Builtins
             int absconders = 0;
 
             DataFrame outputFrame = new();
-            outputFrame.EnsureVariables(frame.VariableCount);
+            outputFrame.EnsureVariables(nc);   //  one column per treatment, whatever the number of blocks
 
             for (int d = 0; d < nc; d++)
             {
