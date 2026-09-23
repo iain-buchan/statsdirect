@@ -3891,16 +3891,18 @@ namespace StatsDirect.Builtins
                 if (!isIntercept)
                 {
                     int selectXIndex = mean ? j - 1 : j;
+            int packed = 0;   //  the fit packs a subset model's coefficients: the intercept, then the selected predictors in order
                     if (!selectX[selectXIndex])
                         continue;
                 }
 
-                if (!isIntercept && b[j] >= 0.0)
+                if (!isIntercept && b[packed] >= 0.0)
                     tx += "+";
-                tx += host.RoundU(b[j]);
-                tx += SignificanceString(b, se, out bool isSignificant, j);
+                tx += host.RoundU(b[packed]);
+                tx += SignificanceString(b, se, out bool isSignificant, packed);
                 if (isSignificant)
                     significantCoefficients++;
+                packed++;
                 totalCoefficients++;
                 string q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
                 if (q.Length == 0)
