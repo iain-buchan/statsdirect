@@ -1645,7 +1645,17 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("d", d);
             outputParameters.AddOutput("psd", pse);
             outputParameters.AddOutput("control", frame.Variables[ic].Title);
-            outputParameters.AddOutput("cn", tnx[ic]);
+            outputParameters.AddOutput("cn", WholeOrEquivalentSize(tnx[ic]));
+            if (carrier.EquivalentSizes)
+            {
+                ParameterBag noteParameters = new();
+                noteParameters.AddOutput("note", "The sizes in brackets are equivalent sizes, because repeat observations were missing from the analysis before.");
+                outputParameters.AddOutput("*sizes_note", new List<ParameterBag> { noteParameters });
+            }
+            else
+            {
+                outputParameters.AddOutput("*sizes_note", null);
+            }
             outputParameters.AddOutput("pc", 100.0 * cc);
 
             ctr = 0;
@@ -1681,7 +1691,7 @@ namespace StatsDirect.Builtins
                 ParameterBag differencesParameters = new();
                 differencesList.Add(differencesParameters);
                 differencesParameters.AddOutput("level", hold[i].Lab1);
-                differencesParameters.AddOutput("cn", hold[i].N);
+                differencesParameters.AddOutput("cn", WholeOrEquivalentSize(hold[i].N));
                 differencesParameters.AddOutput("delta", hold[i].Delta);
                 differencesParameters.AddOutput("lci", hold[i].Ll);
                 differencesParameters.AddOutput("uci", hold[i].Ul);
@@ -2324,6 +2334,11 @@ namespace StatsDirect.Builtins
         /// Whether two group sizes are the same: whole numbers compare exactly, equivalent sizes to within rounding.
         /// </summary>
         private static bool SameSize(double a, double b) => Math.Abs(a - b) <= 1e-9 * Math.Max(Math.Abs(a), Math.Abs(b));
+
+        /// <summary>
+        /// A group size for a report: a whole number as an integer, which prints as it always did, an equivalent size as a double, which the template rounds.
+        /// </summary>
+        private static object WholeOrEquivalentSize(double size) => size == Math.Floor(size) && size <= int.MaxValue ? (object)(int)size : size;
 
         /// <summary>
         /// Rank the codes of one Latin square factor to 1..n, whatever values they are and whatever order they come in.
