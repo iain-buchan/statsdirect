@@ -1507,7 +1507,7 @@ namespace StatsDirect.Builtins
             {
                 if (n != 0 && !SameSize(tnx[n], qx))
                     throw new TemplateOperationCancelledException(carrier.EquivalentSizes
-                        ? "All group sizes must be equal for the Newman-Keuls method: after a replicated two way analysis with missing repeat observations the equivalent treatment sizes differ, so use the Tukey-Kramer method instead."
+                        ? "All group sizes must be equal for the Newman-Keuls method: after a replicated two way analysis with missing repeat observations the equivalent treatment sizes differ, so use Tukey comparisons instead (Tukey-Kramer with unequal sizes)."
                         : "All group sizes must be equal for the Newman-Keuls method.", "Newman-Keuls Contrasts");
                 qx = tnx[n];
             }
