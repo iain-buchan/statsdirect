@@ -2122,13 +2122,13 @@ namespace StatsDirect.Builtins
             context.Titles = new string[context.N + 1];
             context.Titles[0] = vY.Title;
             context.Titles[1] = vX.Title;
+            context.OutcomeTitle = vY.Title;   //  named at the start of the equation line, as in multiple regression
             for (int j = 1; j <= context.N; j++)
                 context.X[j, 1] = 1.0;
             for (int j = 1; j <= deg; j++)
                 for (int i = 1; i <= context.N; i++)
                     context.X[i, j + 1] = Math.Pow(vX.Data[i - 1], Convert.ToDouble(j));
             if (context.P > deg)
-            context.OutcomeTitle = vY.Title;   //  named at the start of the equation line, as in multiple regression
             {
                 context.Titles[2] = context.Titles[1];
                 context.Titles[1] = context.Titles[0];
@@ -2421,7 +2421,8 @@ namespace StatsDirect.Builtins
                 accuracy = 0.01;
             bool grouped = "grouped".Equals(parameters["grouping"].AsString);
             bool shouldCalculateIntercept = parameters["intercept"].AsBoolean;
-            bool hasWeights = parameters["weights"].AsBoolean;
+            //  The weight frame's prompt offers "skip for none", so the option ticked and the selection skipped means no weights
+            bool hasWeights = parameters["weights"].AsBoolean && parameters.ContainsKey("weight") && parameters["weight"] != null;
 
             DoubleVariable responseVariable;
             if (grouped)
@@ -2468,7 +2469,7 @@ namespace StatsDirect.Builtins
             }
             if (hasWeights)
             {
-                DataFrame weightsFrame = parameters["weights"].AsDataFrame;
+                DataFrame weightsFrame = parameters["weight"].AsDataFrame;   //  the frame; "weights" is the option that asks for it
                 DoubleVariable weightsVariable = (DoubleVariable)weightsFrame.Variables[0];
                 // Store the weight Data
                 for (int c = 1; c <= rows; c++)
@@ -2497,12 +2498,16 @@ namespace StatsDirect.Builtins
 
             // stack entries with duplicate covariate patterns
             // IEB July 2009: don't stack missing observations in the response as the subsequent dropper won't work
+            //  Rows are merged only when their prior weights are equal (the merged row keeps that weight); a row whose weight is blank is left alone and dropped below with the missing-data message
+            bool[] merged = new bool[rows + 1];
             int cutrows = 0;
             for (int i = 1; i < rows; i++)
             {
+                if (merged[i] || tr[i] == Constant.MISSING || tw[i] == Constant.MISSING)
+                    continue;
                 for (int j = i + 1; j <= rows; j++)
                 {
-                    if (tw[j] == 1.0 && tr[j] != Constant.MISSING)
+                    if (!merged[j] && tr[j] != Constant.MISSING && tw[j] == tw[i])
                     {
                         bool snap = true;
                         for (int k = 0; k < prd; k++)
@@ -2517,13 +2522,13 @@ namespace StatsDirect.Builtins
                         {
                             tt[i] += tt[j];
                             tr[i] += tr[j];
-                            tw[j] = Constant.MISSING;
+                            merged[j] = true;
                             cutrows += 1;
                         }
                     }
                 }
             }
-            //  At this point we have merged rows where there are duplicate covariate patterns, and all other rows have MISSING in the weights.  There are rows - cutrows valid rows in the arrays, but they could be anywhere!
+            //  At this point we have merged rows where there are duplicate covariate patterns, and the rows merged away are flagged.  There are rows - cutrows valid rows in the arrays, but they could be anywhere!
             int newrows = rows - cutrows;
             //  Copy down the remaining observations
             //  0 = tt = total observations
@@ -2533,7 +2538,7 @@ namespace StatsDirect.Builtins
             int targetRow = 1;
             for (int sourceRow = 1; sourceRow <= rows; sourceRow++)
             {
-                if (tw[sourceRow] != Constant.MISSING)
+                if (!merged[sourceRow])
                 {
                     //  This row is valid; if necessary, copy it down to our current target row
                     if (sourceRow != targetRow)
@@ -2550,7 +2555,7 @@ namespace StatsDirect.Builtins
             Debug.Assert(targetRow == newrows + 1);
             //  At this point, tt, tr, tw and pt contain valid data from row 1 to row newrows inclusive
 
-            bool useWeights = false; int rank = 0; int df = 0;
+            bool useWeights = hasWeights; int rank = 0; int df = 0;   //  the weights had never reached the fit
             double devx; double llx;
             const int maxit = 200;
             int records = newrows;
@@ -2843,7 +2848,7 @@ namespace StatsDirect.Builtins
                 double pp = fvl[i] / t[i];
                 double ww = useWeights ? wt[i] : 1.0;
                 if (pp != 0.0)
-                    ll = ww * ll + y[i] * Math.Log(pp) + ww * (t[i] - y[i]) * Math.Log(1.0 - pp);
+                    ll += ww * (y[i] * Math.Log(pp) + (t[i] - y[i]) * Math.Log(1.0 - pp));   //  each row's contribution weighted (the running total had been multiplied by the weight)
             }
             return ll;
         }
@@ -3460,7 +3465,7 @@ namespace StatsDirect.Builtins
             if (idf > 0)
             {
                 x2 = 0.0;
-                int ntot = 0;
+                double ntot = 0;
                 double pp;
                 for (i = 1; i <= n; i++)
                 {
@@ -3468,7 +3473,7 @@ namespace StatsDirect.Builtins
                     double ww = weight ? wt[i] : 1;
                     if (pp != 0.0)
                         x2 += Math.Pow((y[i] - t[i] * pp) * Math.Sqrt(ww), 2.0) / (t[i] * pp * (1.0 - pp));
-                    ntot += Convert.ToInt32(t[i]);
+                    ntot += t[i] * ww;
                 }
                 ll = x_loglik_l(weight, n, wt, y, t, fvl);
                 double[] obs = new double[10 + 1];
@@ -3477,14 +3482,16 @@ namespace StatsDirect.Builtins
                 Tri[] z = new Tri[n + 1];
                 for (i = 1; i <= n; i++)
                 {
+                    //  The prior weights count as frequencies in the Hosmer-Lemeshow groups, as they do in the Pearson chi-square above
+                    double ww = weight ? wt[i] : 1;
                     pp = fvl[i] / t[i];
                     z[i].D = pp;
-                    z[i].R = y[i];
-                    z[i].S = t[i];
+                    z[i].R = y[i] * ww;
+                    z[i].S = t[i] * ww;
                 }
                 Array.Sort(z, 1, n, new TriByDAscending());
                 int ctr = 1;
-                double ndiv = Convert.ToDouble(ntot) / 10.0;
+                double ndiv = ntot / 10.0;
                 double ncut = Math.Floor(ndiv);
                 double ncum = 0;
                 for (i = 1; i <= n; i++)
@@ -3664,6 +3671,8 @@ namespace StatsDirect.Builtins
                     }
                 }
                 int l = (int)nsel[selectedIndex];
+                double[] covariance = context.Covariance;
+                static int Packed(int r, int c) => Math.Max(r, c) * (Math.Max(r, c) - 1) / 2 + Math.Min(r, c);   //  the lower triangle, row by row
                 for (int j = 2; j >= 1; j--)
                 {
                     double bx = Formatting.SafeExp(b[l]);
@@ -3671,8 +3680,6 @@ namespace StatsDirect.Builtins
                     {
                         popParameters = new ParameterBag();
                         popList.Add(popParameters);
-                double[] covariance = context.Covariance;
-                static int Packed(int r, int c) => Math.Max(r, c) * (Math.Max(r, c) - 1) / 2 + Math.Min(r, c);   //  the lower triangle, row by row
                         popParameters.AddOutput("pop", labels[l - iq] + " = " + (j - 1).ToString());
                         popParameters.AddOutput("pc", 100 * (1.0 - P0));
                         parList = new List<ParameterBag>();
@@ -3884,6 +3891,7 @@ namespace StatsDirect.Builtins
             tx += " = ";
             int significantCoefficients = 0;
             int totalCoefficients = 0;
+            int packed = 0;   //  the fit packs a subset model's coefficients: the intercept, then the selected predictors in order
             for (int j = 1; j <= p; j++)
             {
                 bool isIntercept = mean && j == 1;
@@ -3891,10 +3899,10 @@ namespace StatsDirect.Builtins
                 if (!isIntercept)
                 {
                     int selectXIndex = mean ? j - 1 : j;
-            int packed = 0;   //  the fit packs a subset model's coefficients: the intercept, then the selected predictors in order
                     if (!selectX[selectXIndex])
                         continue;
                 }
+                packed++;
 
                 if (!isIntercept && b[packed] >= 0.0)
                     tx += "+";
@@ -3902,7 +3910,6 @@ namespace StatsDirect.Builtins
                 tx += SignificanceString(b, se, out bool isSignificant, packed);
                 if (isSignificant)
                     significantCoefficients++;
-                packed++;
                 totalCoefficients++;
                 string q = mean ? (j > 1 ? label[j - 1] : " ") : label[j];
                 if (q.Length == 0)
@@ -4567,7 +4574,7 @@ namespace StatsDirect.Builtins
                 tol = 0.01;
 
             bool ptime = "true".Equals(parameters["has-exposure"].AsString);
-            bool weighted = parameters["weights"].AsBoolean;
+            bool weighted = parameters["weights"].AsBoolean && parameters.ContainsKey("weight") && parameters["weight"] != null;
             bool intercept = parameters["intercept"].AsBoolean;
 
             DataFrame responseFrame = parameters["response"].AsDataFrame;
@@ -4579,10 +4586,12 @@ namespace StatsDirect.Builtins
             for (int c = 1; c <= rows; c++)
                 y[c] = responseVariable.Data[c - 1];
 
+            string exposureTitle = "exposure";
             if (ptime)
             {
                 DataFrame exposureFrame = parameters["exposure"].AsDataFrame;
                 DoubleVariable exposureVariable = (DoubleVariable)exposureFrame.Variables[0];
+                exposureTitle = exposureVariable.Title;
                 for (int c = 1; c <= rows; c++)
                     t[c] = exposureVariable.Data[c - 1];
             }
@@ -4602,12 +4611,10 @@ namespace StatsDirect.Builtins
             for (int c = 1; c <= prd; c++)
             {
                 DoubleVariable v = (DoubleVariable)predictorsFrame.Variables[c - 1];
-            string exposureTitle = "exposure";
                 for (int r = 1; r <= rows; r++)
                 {
                     x[r, c] = v.Data[r - 1];
                     if (x[r, c] == Constant.MISSING)
-                exposureTitle = exposureVariable.Title;
                         weight[r] = Constant.MISSING;
                 }
             }
