@@ -819,6 +819,14 @@ namespace StatsDirect.Builtins
                 groupsVariable = (ClassifierVariable)parameters["groups"].AsDataFrame.Variables[0];
             double ci = parameters["ci"].AsDouble;
             bool addZeroObservationsAtZeroTime = parameters.ContainsKey("addZeroObservationAtZeroTime") && parameters["addZeroObservationAtZeroTime"] != null && parameters["addZeroObservationAtZeroTime"].IsBoolean && parameters["addZeroObservationAtZeroTime"].AsBoolean;
+            //  The question is asked only when no observation time is zero; keep to that here too, so that a real time zero row is never overwritten or counted twice
+            if (addZeroObservationsAtZeroTime)
+                foreach (double time in timesVariable.Data)
+                    if (time == 0)
+                    {
+                        addZeroObservationsAtZeroTime = false;
+                        break;
+                    }
             // Bootstrap variables
             bool doBootstrap = parameters.ContainsKey("doExactP") && parameters["doExactP"] != null && parameters["doExactP"].IsBoolean && parameters["doExactP"].AsBoolean;
             MersenneTwister mt;
