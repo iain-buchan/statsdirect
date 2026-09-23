@@ -139,7 +139,7 @@ namespace StatsDirect.Builtins
             double tsy = 0; double tsx = 0; double grandcpr = 0;
             double grandbit = 0;
             double residssq = 0; double t;
-            double syy = 0; double sxx = 0; double sxy = 0; double tn = 0; double tnx = 0;
+            double syy = 0; double sxx = 0; double sxy = 0; double tn = 0;
 
             GroupedCovarianceData groupedCovarianceData = (GroupedCovarianceData)parameters["gcd"].AsObject;
             double[] a = groupedCovarianceData.a;
@@ -159,6 +159,7 @@ namespace StatsDirect.Builtins
             double[] ymean = groupedCovarianceData.ymean;
 
             double mx0 = parameters["mx0-prompted"].AsDouble;
+            double[] tnyg = new double[k + 1];   //  observations in each group: with Y replicates, every replicate counts
 
             bool hasYReplicates = maxReplicates > 1;
 
@@ -213,7 +214,7 @@ namespace StatsDirect.Builtins
                 tsx += sx;
                 tsy += sy;
                 tn += tny;
-                tnx += nxi[g];
+                tnyg[g] = tny;
             }
             // mean xmean as basline mean x for later corrected y means - now acquired between our preprocess and this operation
             // double mx0 = grandx / grandn;
@@ -296,13 +297,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("uc_with_yy", syyw);
             outputParameters.AddOutput("uc_with_xy", sxyw);
             outputParameters.AddOutput("uc_with_xx", sxxw);
-            outputParameters.AddOutput("uc_with_df", tnx - k);
+            outputParameters.AddOutput("uc_with_df", Convert.ToInt32(grandn) - k);
             outputParameters.AddOutput("uc_tot_yy", syyt);
             outputParameters.AddOutput("uc_tot_xy", sxyt);
             outputParameters.AddOutput("uc_tot_xx", sxxt);
-            outputParameters.AddOutput("uc_tot_df", tnx - 1);
+            outputParameters.AddOutput("uc_tot_df", Convert.ToInt32(grandn) - 1);
             // Corrected
-            double crWithDf = tnx - k - 1;
+            //  The sums of squares and products are over every observation (with Y replicates, every replicate), so the degrees of
+            //  freedom count the observations too; they had counted the x levels, which with replicates left the residual mean square
+            //  about ten times too large and every test and standard error below it wrong
+            double crWithDf = grandn - k - 1;
             vr = cssb / (k - 1) / (cssw / crWithDf);
             p = PDF.fvalp(vr, k - 1, crWithDf);
             outputParameters.AddOutput("cr_bet_ssq", cssb);
@@ -313,7 +317,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("cr_with_df", crWithDf);
             outputParameters.AddOutput("cr_with_msq", cssw / crWithDf);
             outputParameters.AddOutput("cr_tot_ssq", csst);
-            outputParameters.AddOutput("cr_tot_df", tnx - 2);
+            outputParameters.AddOutput("cr_tot_df", Convert.ToInt32(grandn) - 2);
             q = p <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("p", p);
             double bs = sxyw / sxxw;
@@ -325,7 +329,7 @@ namespace StatsDirect.Builtins
                 ParameterBag cmyParameters = new();
                 cmyList.Add(cmyParameters);
                 double cmy = ymean[g] + bs * (mx0 - xmean[g]);
-                double secmy = Math.Sqrt(cssw / crWithDf * (1.0 / nxi[g] + (mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw));
+                double secmy = Math.Sqrt(cssw / crWithDf * (1.0 / tnyg[g] + (mx0 - xmean[g]) * (mx0 - xmean[g]) / sxxw));
                 cmyParameters.AddOutput("y", cmy);
                 cmyParameters.AddOutput("res", secmy);
             }
@@ -353,13 +357,13 @@ namespace StatsDirect.Builtins
                     sepParameters.AddOutput("lab1", bnam[g]);
                     sepParameters.AddOutput("lab2", bnam[j]);
                     sepParameters.AddOutput("sep", t);
-                    double zz = cit * Math.Sqrt(cssw / crWithDf * (1.0 / nxi[g] + 1.0 / nxi[j] + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
+                    double zz = cit * Math.Sqrt(cssw / crWithDf * (1.0 / tnyg[g] + 1.0 / tnyg[j] + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
                     sepParameters.AddOutput("pc", (1 - p0) * 100);
                     sepParameters.AddOutput("fromSep", t - zz);
                     sepParameters.AddOutput("toSep", t + zz);
-                    t /= Math.Sqrt(cssw / crWithDf * (1.0 / Convert.ToDouble(nxi[g]) + (1.0 / nxi[j]) + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
+                    t /= Math.Sqrt(cssw / crWithDf * (1.0 / tnyg[g] + 1.0 / tnyg[j] + (xmean[g] - xmean[j]) * (xmean[g] - xmean[j]) / sxxw));
                     sepParameters.AddOutput("t", t);
-                    sepParameters.AddOutput("df", tnx - k - 1);
+                    sepParameters.AddOutput("df", Convert.ToInt32(grandn) - k - 1);
                     p = PDF.tvalp(Math.Abs(t), crWithDf);
                     if (p > 1.0 - p)
                         p = 1.0 - p;
