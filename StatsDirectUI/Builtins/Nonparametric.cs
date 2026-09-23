@@ -4094,8 +4094,8 @@ namespace StatsDirect.Builtins
                     }
                     ginib[i] = sumy / (rx * sumx);
                     theta += ginib[i];
-                    if (ginib[i] <= gini)
-                        ctr++;
+                    if (ginib[i] < gini)
+                        ctr++;   //  for the bias correction: the re-sampled coefficients below the observed one, ties excluded
                     if (i % bootsDivisor == 0)
                     {
                         if (progress.Update(i / (double)boots))
@@ -4111,6 +4111,7 @@ namespace StatsDirect.Builtins
                 double bias;
                 double bcal;
                 double bcau;
+                string bcaNote = string.Empty;
                 if (ok)
                 {
                     // get bias and bootstrap variance
@@ -4161,14 +4162,24 @@ namespace StatsDirect.Builtins
                         bgini3 += Math.Pow(jackMean - jack[i], 3.0);
                     }
                     double accel = bgini2 > 0.0 ? bgini3 / (6.0 * Math.Pow(bgini2, 1.5)) : 0.0;
-                    double z0 = ctr / (double)boots;
-                    z0 = PDF.gauinv(z0);
-                    double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
-                    double p2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p1) + 1;
-                    bcal = ginib[pick];
-                    pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p2) + 1;
-                    bcau = ginib[pick];
+                    double z0 = PDF.gauinv(ctr / (double)boots, out int z0Fault);
+                    if (z0Fault != 0)
+                    {
+                        //  Every re-sampled coefficient is on one side of the observed one, so the bias correction is infinite and
+                        //  the BCa interval is not defined (the fault had been ignored and zero used as the correction)
+                        bcal = Constant.MISSING;
+                        bcau = Constant.MISSING;
+                        bcaNote = " (the BCa interval is not defined: every re-sampled coefficient is on one side of the observed coefficient)";
+                    }
+                    else
+                    {
+                        double p1 = PDF.alnorm(z0 + (z0 - cit) / (1.0 - accel * (z0 - cit)));
+                        double p2 = PDF.alnorm(z0 + (z0 + cit) / (1.0 - accel * (z0 + cit)));
+                        pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p1) + 1;
+                        bcal = ginib[pick];
+                        pick = Convert.ToInt32(Convert.ToDouble(boots - 1) * p2) + 1;
+                        bcau = ginib[pick];
+                    }
                 }
                 else
                 {
@@ -4185,9 +4196,9 @@ namespace StatsDirect.Builtins
                 varParameters.AddOutput("ti", v.Title);
                 varParameters.AddOutput("n", rx);
                 if (rawR.Length != v.Length)
-                    varParameters.AddOutput("msg", "(note " + (v.Length - rawR.Length) + " other observation(s) not used)");
+                    varParameters.AddOutput("msg", "(note " + (v.Length - rawR.Length) + " other observation(s) not used)" + bcaNote);
                 else
-                    varParameters.AddOutput("msg", string.Empty);
+                    varParameters.AddOutput("msg", bcaNote.TrimStart());
                 varParameters.AddOutput("cv", cv);
                 varParameters.AddOutput("boots", boots);
                 varParameters.AddOutput("bias", bias);
@@ -4202,10 +4213,10 @@ namespace StatsDirect.Builtins
 
                 double unbias = rx / (rx - 1.0);
                 varParameters.AddOutput("gini-unbiased", gini * unbias);
-                varParameters.AddOutput("from-unbiased", bl * unbias);
-                varParameters.AddOutput("to-unbiased", bu * unbias);
-                varParameters.AddOutput("BCafrom-unbiased", bcal * unbias);
-                varParameters.AddOutput("BCato-unbiased", bcau * unbias);
+                varParameters.AddOutput("from-unbiased", bl == Constant.MISSING ? Constant.MISSING : bl * unbias);
+                varParameters.AddOutput("to-unbiased", bu == Constant.MISSING ? Constant.MISSING : bu * unbias);
+                varParameters.AddOutput("BCafrom-unbiased", bcal == Constant.MISSING ? Constant.MISSING : bcal * unbias);
+                varParameters.AddOutput("BCato-unbiased", bcau == Constant.MISSING ? Constant.MISSING : bcau * unbias);
 
                 //  In the single-variable case, plot as well.  Only evaluate on the first time through, to prevent us removing placeholders multiple times!
                 if (k == 0)
