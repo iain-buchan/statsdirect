@@ -224,7 +224,13 @@ namespace StatsDirect.Builtins
                         P = 1.0 - P;
                     P = 2.0 * P;
                     ciParameters.AddOutput("p", P);
-                    ciParameters.AddOutput("pwr", Formatting.pwr(Power.rpower(0.0, r, context.NX, context.P0), context.P0));
+                    //  Power of the test of r at the chosen level: Fisher's z, as the sample size routine for a correlation uses it. The
+                    //  routine used before applied Hotelling's correction to z twice and scaled by root(n - 1), so its power disagreed with
+                    //  the sample size routine for the same r and n
+                    double zsig = PDF.gauinv(1.0 - context.P0 / 2.0);
+                    double zr = Math.Abs(0.5 * Math.Log((1.0 + r) / (1.0 - r))) * Math.Sqrt(context.NX - 3.0);
+                    double power = Math.Abs(r) < 1.0 && context.NX > 3 ? PDF.alnorm(zr - zsig) + PDF.alnorm(-zr - zsig) : Constant.MISSING;
+                    ciParameters.AddOutput("pwr", Formatting.pwr(power, context.P0));
                     string x = "Correlation coefficient is ";
                     if (P > 0.05)
                         x += "not ";
