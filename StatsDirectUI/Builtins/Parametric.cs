@@ -107,9 +107,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("f", f);
             double P = PDF.fvalp(f, tnx[top] - 1, tnx[bot] - 1);
             outputParameters.AddOutput("p_1", P);
-            if (P > 0.5)
-                P = 0.5;
-            outputParameters.AddOutput("p_2", P * 2);
+            //  Two sided: twice the smaller tail. With the larger variance on top the upper tail is usually the smaller, but not
+            //  always when the degrees of freedom differ, and capping it at 0.5 printed P = 1 then.
+            outputParameters.AddOutput("p_2", 2.0 * Math.Min(P, 1.0 - P));
             return new StepOutput(outputParameters);
         }
 

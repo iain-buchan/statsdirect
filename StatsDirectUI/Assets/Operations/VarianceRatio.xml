@@ -43,8 +43,8 @@
         outputParameters.AddOutput("f", host.RoundU(f))
         P = PDF.fvalp(f, CDbl(tnx(top) - 1), CDbl(tnx(bot) - 1))
         outputParameters.AddOutput("p_1", host.pval(P))
-        If P > 0.5 Then P = 0.5
-        outputParameters.AddOutput("p_2", host.pval(P * 2))
+        ' Two sided: twice the smaller tail (the upper tail is not always the smaller when the degrees of freedom differ)
+        outputParameters.AddOutput("p_2", host.pval(2.0 * Math.Min(P, 1.0 - P)))
         ' If Err.Number <> 0 Then host.Error(Formatting.ERRCOLON & Err.Description, "Variance")
         Return outputParameters
     End Function
