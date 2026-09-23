@@ -25,6 +25,7 @@
         <name>popsd</name>
         <prompt>Enter population standard deviation (leave blank if not known)</prompt>
         <cancel-skips-parameter>true</cancel-skips-parameter>
+        <minimum-value>0</minimum-value>
       </double>
     </parameters>
     <builtin function-name="rptZSingle" />

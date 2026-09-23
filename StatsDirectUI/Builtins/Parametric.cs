@@ -458,6 +458,8 @@ namespace StatsDirect.Builtins
                 double psd = parameters.ContainsKey("popsd") && parameters["popsd"] != null
                     ? parameters["popsd"].AsDouble
                     : Constant.MISSING;
+                if (psd != Constant.MISSING && psd < 0.0)
+                    throw new TemplateOperationCancelledException("The population standard deviation must be positive; leave it blank if it is not known.", "Single Sample z Test");
                 MathDbl.civ(0, out double cit, GAMMA, out double P0);
                 Para(Data, mean, ss, var, sd, sem, tnx);
                 ParameterBag outputParameters = new();
