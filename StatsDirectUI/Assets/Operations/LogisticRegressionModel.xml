@@ -18,8 +18,8 @@ Schwarz information criterion = @{sch:roundu}</p>
 
 <p>Deviance with no covariates = @{devx:roundu}<br />
 Deviance (likelihood ratio) chi-square = @{x2dev:roundu}   df = @x2df   <pval>@{x2p:pval}</pval><br />
-Pseudo (McFadden) R-square = @{r2:roundu}<br />
-Pseudo (likelihood ratio index) R-square = @{r2i:roundu}</p>
+Pseudo (deviance based) R-square = @{r2:roundu}<br />
+Pseudo (McFadden, likelihood ratio index) R-square = @{r2i:roundu}</p>
 
 <p>Pearson chi-square goodness of fit = @{x2:roundu}   df = @idf   <pval>@{p:pval}</pval><br />
 Deviance goodness of fit = @{dev_good:roundu}   df = @df_good   <pval>@{p_good:pval}</pval><br />
