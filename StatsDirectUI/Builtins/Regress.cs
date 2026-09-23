@@ -4586,10 +4586,12 @@ namespace StatsDirect.Builtins
             for (int c = 1; c <= prd; c++)
             {
                 DoubleVariable v = (DoubleVariable)predictorsFrame.Variables[c - 1];
+            string exposureTitle = "exposure";
                 for (int r = 1; r <= rows; r++)
                 {
                     x[r, c] = v.Data[r - 1];
                     if (x[r, c] == Constant.MISSING)
+                exposureTitle = exposureVariable.Title;
                         weight[r] = Constant.MISSING;
                 }
             }
@@ -4794,11 +4796,7 @@ namespace StatsDirect.Builtins
                 : "Y";
             if (use_offset)
             {
-                tx += " [offset log(";
-                tx += labels[1].Length > 0
-                    ? labels[1]
-                    : "exposure";
-                tx += ")]";
+                tx += " [offset log(" + (exposureTitle.Length > 0 ? exposureTitle : "exposure") + ")]";   //  the exposure variable (the first predictor had been named here)
             }
             tx += " = ";
             for (int j = 1; j <= p; j++)
