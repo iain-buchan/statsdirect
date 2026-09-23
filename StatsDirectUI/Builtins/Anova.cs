@@ -1171,6 +1171,8 @@ namespace StatsDirect.Builtins
             int comparisons = parameters["comparisons"].AsInt32;
 
             ParameterCarrier carrier = FindOrCalculateParameters(parameters);
+            if (carrier.Dferr < 1)
+                throw new TemplateOperationCancelledException("These comparisons need at least one residual degree of freedom.", "Bonferroni Comparisons");
 
             if (comparisons < 1)
                 comparisons = 1;
