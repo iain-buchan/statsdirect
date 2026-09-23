@@ -911,10 +911,10 @@ namespace StatsDirect.Builtins
                             outputParameters.AddOutput("methodName", "user defined");
                             break;
                         case 2:
-                            outputParameters.AddOutput("methodName", "1-[(i-j)/(1-k)]?");
+                            outputParameters.AddOutput("methodName", "1-[(i-j)/(k-1)]\u00b2");
                             break;
                         default:
-                            outputParameters.AddOutput("methodName", "1-abs(i-j)/(1-k)");
+                            outputParameters.AddOutput("methodName", "1-abs(i-j)/(k-1)");
                             break;
                     }
 
@@ -1004,7 +1004,7 @@ namespace StatsDirect.Builtins
 
                     // Gwet's AC1
                     outputParameters.AddOutput("gama", gama);
-                    outputParameters.AddOutput("gamapc", gama * 100.0);
+                    outputParameters.AddOutput("gamapc", po * 100.0);
                     outputParameters.AddOutput("segama", segama);
                     outputParameters.AddOutput("gamacil", gamacil);
                     outputParameters.AddOutput("gamaciu", gamaciu);

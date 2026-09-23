@@ -21,8 +21,8 @@
           <must-request>true</must-request>
           <default-value>1</default-value>
           <options>
-            <option value="1">linear: 1-abs(i-j)/(1-k)</option>
-            <option value="2">quadratic: 1-[(i-j)/(1-k)]&#178;</option>
+            <option value="1">linear: 1-abs(i-j)/(k-1)</option>
+            <option value="2">quadratic: 1-[(i-j)/(k-1)]&#178;</option>
             <option value="3">user defined</option>
           </options>
         </option>
