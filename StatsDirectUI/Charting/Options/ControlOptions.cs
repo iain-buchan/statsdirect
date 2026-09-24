@@ -19,6 +19,8 @@ namespace StatsDirect.Charting
         public double LowerControlLimit { get; set; } = Constant.MISSING;
         public double UpperControlLimit { get; set; } = Constant.MISSING;
         public int ObservationsToUse { get; set; }
+        // The number of plottable observations, from which ObservationsToUse is chosen
+        public int ObservationCount { get; set; }
         public int RightHandDecimalPlaces { get; set; }
 
         public override bool ShowControlOptions => true;

@@ -495,7 +495,7 @@ namespace StatsDirect.UI
             ControlOptions controlOptions = (ControlOptions) options;
 
             cboKObs.Items.Clear();
-            for (int i = controlOptions.ObservationsToUse; i >= 3; --i)
+            for (int i = Math.Max(controlOptions.ObservationCount, controlOptions.ObservationsToUse); i >= 3; --i)
                 cboKObs.Items.Add(i.ToString());
             cboKObs.SelectedItem = controlOptions.ObservationsToUse.ToString();
 

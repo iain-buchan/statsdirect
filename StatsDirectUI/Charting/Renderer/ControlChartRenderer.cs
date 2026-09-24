@@ -81,7 +81,8 @@ namespace StatsDirect.Charting.Renderer
             }
             else
             {
-                if (kobs != rows)
+                // A mean and SD given by the user stand whatever number of observations was chosen before them
+                if (!cOptions.HasUserSpecifiedMeanAndSD && kobs != rows)
                 {
                     MathDbl.MeanSD(ydat, ref kobs, out ymean, out ysd);
                 }
@@ -189,7 +190,8 @@ namespace StatsDirect.Charting.Renderer
             }
             else
             {
-                if (kobs != rows)
+                // A mean and SD given by the user stand whatever number of observations was chosen before them
+                if (!cOptions.HasUserSpecifiedMeanAndSD && kobs != rows)
                 {
                     MathDbl.MeanSD(ydat, ref kobs, out ymean, out ysd);
                     restricted = true;
@@ -279,7 +281,7 @@ namespace StatsDirect.Charting.Renderer
                     y1 = ToCanvasY(cOptions.UpperControlLimit);
                     DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
                     DrawStringLegendLC(Math.Round(cOptions.UpperControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
-                    y1 = ToCanvasY(ymean - ysd * 3.0);
+                    y1 = ToCanvasY(cOptions.LowerControlLimit);
                     DrawLineInCanvasCoordinates(redPen, XAxisCanvas, y1, x1, y1);
                     DrawStringLegendLC(Math.Round(cOptions.LowerControlLimit, rhDp) + " (ctrl)", x1 + RHS_LABEL_GAP, y1);
                     DrawStringLegendL("External:", x1 + RHS_LABEL_GAP, YAxisCanvas + YExtCanvas);

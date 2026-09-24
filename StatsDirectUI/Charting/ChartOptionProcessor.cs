@@ -547,6 +547,7 @@ namespace StatsDirect.Charting
             }
             rows = ctr;
 
+            controlOptions.ObservationCount = rows;
             controlOptions.ObservationsToUse = rows;
 
             controlOptions.YAxisTitle = definition.YSeries[0].Title;

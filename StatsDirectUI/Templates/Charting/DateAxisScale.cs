@@ -78,7 +78,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddHours(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString()));
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern)));
                     candidate = candidate.AddHours(1);
                 }
             }
@@ -90,7 +90,7 @@ namespace StatsDirect.Templates
                     candidate = candidate.AddDays(1);
                 while (candidate <= maximumScaleDate)
                 {
-                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString()));
+                    tics.Add(new Tic(candidate.ToOADate(), candidate.ToString(CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern)));
                     candidate = candidate.AddDays(1);
                 }
             }
