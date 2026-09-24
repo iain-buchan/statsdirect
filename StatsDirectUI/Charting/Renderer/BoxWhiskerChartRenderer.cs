@@ -136,8 +136,10 @@ namespace StatsDirect.Charting.Renderer
                 yBottom = yctr - halfWhiskerHeight;
 
                 //  Left-hand fences
-                bool gatedInnerL = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[0] < innerFenceL && innerFenceL < boxL;
-                bool gatedOuterL = s.Data[0] < outerFenceL && outerFenceL < boxL;
+                //  A fence gates the whisker when it is in use and a value lies beyond it.  A fence in use coincides with the box edge when the interquartile
+                //  range is zero; a fence not in use is set to the box edge or to zero, and must not gate.
+                bool gatedInnerL = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && bwOptions.UseInnerFence && s.Data[0] < innerFenceL;
+                bool gatedOuterL = (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary || bwOptions.UseOuterFence) && s.Data[0] < outerFenceL;
 
                 // double outerFenceLX = ToCanvasX(gatedOuterL ? outerFenceL : s.Data[ 0 ]);
 
@@ -226,8 +228,8 @@ namespace StatsDirect.Charting.Renderer
                 }
 
                 //  Right-hand fences
-                bool gatedInnerR = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[^1] > innerFenceR && innerFenceR > boxR;
-                bool gatedOuterR = s.Data[^1] > outerFenceR && outerFenceR > boxR;
+                bool gatedInnerR = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && bwOptions.UseInnerFence && s.Data[^1] > innerFenceR;
+                bool gatedOuterR = (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary || bwOptions.UseOuterFence) && s.Data[^1] > outerFenceR;
 
                 // double outerFenceRX = ToCanvasX(gatedOuterR ? outerFenceR : s.Data[ s.Data.Length - 1 ]);
 
@@ -396,8 +398,9 @@ namespace StatsDirect.Charting.Renderer
                 xl = xc - halfWhiskerWidth;
 
                 //  Left-hand fences
-                bool gatedInnerB = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[0] < innerFenceB && innerFenceB < boxB;
-                bool gatedOuterB = s.Data[0] < outerFenceB && outerFenceB < boxB;
+                //  A fence gates the whisker when it is in use and a value lies beyond it (see the horizontal plot).
+                bool gatedInnerB = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && bwOptions.UseInnerFence && s.Data[0] < innerFenceB;
+                bool gatedOuterB = (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary || bwOptions.UseOuterFence) && s.Data[0] < outerFenceB;
 
                 // double outerFenceBY = ToCanvasY(gatedOuterB ? outerFenceB : s.Data[ 0 ]);
 
@@ -490,8 +493,8 @@ namespace StatsDirect.Charting.Renderer
                             DrawMarkerInCanvasCoordinates(xc, ToCanvasY(s.Data[r]), 2 * OUTLIER_RADIUS, MarkerShape.Circle, true, blackPen);
 
                 //  Right-hand fences
-                bool gatedInnerT = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && s.Data[^1] > innerFenceT && innerFenceT > boxT;
-                bool gatedOuterT = s.Data[^1] > outerFenceT && outerFenceT > boxT;
+                bool gatedInnerT = bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary && bwOptions.Method != BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary && bwOptions.UseInnerFence && s.Data[^1] > innerFenceT;
+                bool gatedOuterT = (bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary || bwOptions.UseOuterFence) && s.Data[^1] > outerFenceT;
 
                 // double outerFenceTY = ToCanvasY(gatedOuterT ? outerFenceT : s.Data[ s.Data.Length - 1 ]);
 
@@ -612,7 +615,7 @@ namespace StatsDirect.Charting.Renderer
             // Draw the scale
             LayoutChartAndDrawAxes(Definition.ChartOptions.Title,
                 new AxisDefinition(bwOptions.XAxisTitle, AxisMode.Scale, Definition.ScaleParameters.X.ScaleType),
-                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = seriesToUse.Select(s => s.Title).ToList() },
+                new AxisDefinition(null, AxisMode.Series, Definition.ScaleParameters.Y.ScaleType) { Labels = seriesToUse.Select(s => s.Title).Reverse().ToList() },
                 false, false);
             DivY = seriesToUse.Count + 1;
             OffY = AsciiYTxt;
@@ -627,93 +630,66 @@ namespace StatsDirect.Charting.Renderer
                 TextCanvas[0] = bwOptions.XAxisTitle;
             }
 
+            bool fencesAreCentiles = bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.SevenNumberSummary || bwOptions.Method == BoxWhiskerOptions.BoxWhiskerMethod.BowleySummary;
+
             // work through the columns
             for (int c = 0; c < seriesToUse.Count; c++)
             {
                 DoubleSeries s = (DoubleSeries)seriesToUse[c];
-                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double _, out double _, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double _, out bool _);
+                PlotBoxWhiskerCalc(s, bwOptions.Method, p, out double mdn, out double q1, out double q3, out double innerFenceL, out double innerFenceR, bwOptions.UseInnerFence, out double outerFenceL, out double outerFenceR, bwOptions.UseOuterFence, out double _, out bool _);
 
-                bool gatedl;
-                int xl;
-                if (s.Data[0] < outerFenceL && outerFenceL < q1)
-                {
-                    xl = ToAsciiX(outerFenceL);
-                    gatedl = true;
-                }
-                else
-                {
-                    xl = ToAsciiX(s.Data[0]);
-                    gatedl = false;
-                }
+                //  As in the graphical plot, a fence gates the whisker when it is in use and a value lies beyond it: the whisker then ends with a bar at
+                //  the innermost such fence, and the values beyond it are points: "o" beyond the inner fence, "." beyond the outer fence.
+                bool gatedInnerL = !fencesAreCentiles && bwOptions.UseInnerFence && s.Data[0] < innerFenceL;
+                bool gatedOuterL = (fencesAreCentiles || bwOptions.UseOuterFence) && s.Data[0] < outerFenceL;
+                int xl = ToAsciiX(gatedInnerL ? innerFenceL : gatedOuterL ? outerFenceL : s.Data[0]);
 
-                bool gatedr;
-                int xr;
-                if (s.Data[^1] > outerFenceR && outerFenceR > q3)
-                {
-                    xr = ToAsciiX(outerFenceR);
-                    gatedr = true;
-                }
-                else
-                {
-                    xr = ToAsciiX(s.Data[^1]);
-                    gatedr = false;
-                }
+                bool gatedInnerR = !fencesAreCentiles && bwOptions.UseInnerFence && s.Data[^1] > innerFenceR;
+                bool gatedOuterR = (fencesAreCentiles || bwOptions.UseOuterFence) && s.Data[^1] > outerFenceR;
+                int xr = ToAsciiX(gatedInnerR ? innerFenceR : gatedOuterR ? outerFenceR : s.Data[^1]);
 
                 int xm = ToAsciiX(mdn);
 
                 int lq = ToAsciiX(q1);
                 int uq = ToAsciiX(q3);
 
-                // Plot it
-                int y2 = 3 + c * 2;
+                // Plot it, the first column selected on the top row as in the graphical plot (the rows are written from the bottom up)
+                int y2 = 3 + (seriesToUse.Count - 1 - c) * 2;
                 WriteAsciiYX(y2, lq, new string('.', uq - lq));
+
+                //  The whisker strings run from the whisker end to the quartile column inclusive, so "[" and "]" sit on the quartile columns
+                int l = lq - xl + 1;
+                if (l < 2)
+                    l = 2;
+                WriteAsciiYX(y2, xl, (gatedInnerL || gatedOuterL ? "|" : ">") + new string('-', l - 2) + "[");
+                if (gatedInnerL || gatedOuterL)
+                {
+                    for (int r = 0; r < s.Data.Length; r++)
+                    {
+                        if (gatedOuterL && s.Data[r] < outerFenceL)
+                            WriteAsciiYX(y2, ToAsciiX(s.Data[r]), ".");
+                        else if (gatedInnerL && s.Data[r] < innerFenceL)
+                            WriteAsciiYX(y2, ToAsciiX(s.Data[r]), "o");
+                    }
+                }
+
+                l = xr - uq + 1;
+                if (l < 2)
+                    l = 2;
+                WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + (gatedInnerR || gatedOuterR ? "|" : "<"));
+                if (gatedInnerR || gatedOuterR)
+                {
+                    for (int r = 0; r < s.Data.Length; r++)
+                    {
+                        if (gatedOuterR && s.Data[r] > outerFenceR)
+                            WriteAsciiYX(y2, ToAsciiX(s.Data[r]), ".");
+                        else if (gatedInnerR && s.Data[r] > innerFenceR)
+                            WriteAsciiYX(y2, ToAsciiX(s.Data[r]), "o");
+                    }
+                }
+
+                //  The median last, so that it shows when it shares a column with a quartile
                 WriteAsciiYX(y2, xm, "*");
-
-                if (gatedl)
-                {
-                    int l = lq - xl;
-                    if (l < 2)
-                        l = 2;
-                    WriteAsciiYX(y2, xl, "|" + new string('-', l - 2) + "[");
-                    for (int r = 0; r < s.Data.Length; r++)
-                    {
-                        if (s.Data[r] < outerFenceL)
-                        {
-                            int x1 = ToAsciiX(s.Data[r]);
-                            WriteAsciiYX(y2, x1, ".");
-                        }
-                    }
-                }
-                else
-                {
-                    int l = lq - xl;
-                    if (l < 2)
-                        l = 2;
-                    WriteAsciiYX(y2, xl, ">" + new string('-', l - 2) + "[");
-                }
-
-                if (gatedr)
-                {
-                    int l = xr - uq;
-                    if (l < 2)
-                        l = 2;
-                    WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "|");
-                    for (int r = 0; r < s.Data.Length; r++)
-                    {
-                        if (s.Data[r] > outerFenceR)
-                        {
-                            int x1 = ToAsciiX(s.Data[r]);
-                            WriteAsciiYX(y2, x1, ".");
-                        }
-                    }
-                }
-                else
-                {
-                    int l = xr - uq;
-                    if (l < 2)
-                        l = 2;
-                    WriteAsciiYX(y2, uq, "]" + new string('-', l - 2) + "<");
-                }
             }
             return new ParameterBag();
         }
