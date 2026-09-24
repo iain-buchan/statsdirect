@@ -1041,21 +1041,23 @@ namespace StatsDirect.Numerics
         }
 
         /// <summary>
-        /// 
+        /// Koopman (1984) score confidence limits for the ratio of two binomial proportions, (tp / column1total) / (fp / column2total)
         /// </summary>
-        /// <param name="fp"></param>
-        /// <param name="tp"></param>
-        /// <param name="column2total"></param>
-        /// <param name="column1total"></param>
-        /// <param name="zc"></param>
-        /// <param name="thetal"></param>
-        /// <param name="thetau"></param>
-        /// <remarks>agrees with Agresti's algorithm at http://web.stat.ufl.edu/~aa/cda/R/two_sample/R2/</remarks>
+        /// <param name="fp">events in the denominator group</param>
+        /// <param name="tp">events in the numerator group</param>
+        /// <param name="column2total">size of the denominator group</param>
+        /// <param name="column1total">size of the numerator group</param>
+        /// <param name="zc">the normal deviate of the confidence level</param>
+        /// <param name="thetal">lower limit</param>
+        /// <param name="thetau">upper limit</param>
+        /// <remarks>the score statistic is taken in the form (p1 - theta p0) / sqrt(p1~ q1~ / n1 + theta^2 p0~ q0~ / n0), which is Koopman's chi-square
+        /// wherever the constrained estimates lie inside (0, 1) and stays finite where one of them is 1, so a group in which every subject has the event
+        /// needs no adjustment of its total; the limits are then the reciprocals of the limits for the ratio the other way up</remarks>
         public static void lr_ci(double fp, double tp, double column2total, double column1total, double zc, out double thetal, out double thetau)
         {
             double lastz = 0;
 
-            if (fp == 0.0 && tp == 0.0 || fp == column2total && tp == column1total)
+            if (fp == 0.0 && tp == 0.0)
             {
                 thetal = 0.0;
                 thetau = double.PositiveInfinity;
@@ -1065,19 +1067,18 @@ namespace StatsDirect.Numerics
                 double x0 = fp;
                 double x1 = tp;
                 double n0 = column2total;
-                if (n0 == x0)
-                {
-                    n0 += 0.5;
-                }
                 double n1 = column1total;
-                if (n1 == x1)
-                {
-                    n1 += 0.5;
-                }
                 if (n1 == 0.0 | n0 == 0.0)
                 {
                     thetal = Constant.MISSING;
                     thetau = Constant.MISSING;
+                    return;
+                }
+                if (x0 == n0 && x1 == n1)
+                {
+                    // every subject of both groups has the event: the score equation has closed-form roots either side of 1
+                    thetal = n1 / (n1 + zc * zc);
+                    thetau = (n0 + zc * zc) / n0;
                     return;
                 }
                 double P0 = x0 / n0;
@@ -1133,7 +1134,7 @@ namespace StatsDirect.Numerics
                     {
                         if (cnt < 5000)
                         {
-                            thetau = theta2;
+                            thetau = lr_refine(theta2, za2, N, n0, n1, x0, x1);
                         }
                         else
                         {
@@ -1144,7 +1145,7 @@ namespace StatsDirect.Numerics
                     {
                         if (cnt < 5000)
                         {
-                            thetal = theta2;
+                            thetal = lr_refine(theta2, za2, N, n0, n1, x0, x1);
                         }
                         else
                         {
@@ -1153,6 +1154,62 @@ namespace StatsDirect.Numerics
                     }
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Refines a score limit from the secant search, which stops when the score z is within 1e-7 of its critical value and so leaves a wide limit
+        /// accurate to about seven significant figures, by bisection on log theta until theta itself is resolved; theta is returned unchanged when
+        /// the score does not change sign about it
+        /// </summary>
+        private static double lr_refine(double theta, double za2, double N, double n0, double n1, double x0, double x1)
+        {
+            double f(double t)
+            {
+                double z = lr_z(ref t, out _, out _, out _, ref N, ref n0, ref n1, ref x0, ref x1);
+                return z == Constant.MISSING ? double.NaN : z - za2;
+            }
+            double lo = theta;
+            double hi = theta;
+            double flo = 0.0;
+            double fhi = 0.0;
+            bool bracketed = false;
+            for (double delta = 0.000001; delta <= 1.0 && !bracketed; delta *= 10.0)
+            {
+                lo = theta * Math.Exp(-delta);
+                hi = theta * Math.Exp(delta);
+                flo = f(lo);
+                fhi = f(hi);
+                bracketed = flo * fhi < 0.0;
+            }
+            if (!bracketed)
+            {
+                return theta;
+            }
+            for (int k = 0; k < 200; k++)
+            {
+                double mid = Math.Sqrt(lo) * Math.Sqrt(hi);
+                if (mid <= lo || mid >= hi)
+                {
+                    break;
+                }
+                double fmid = f(mid);
+                if (double.IsNaN(fmid))
+                {
+                    break;
+                }
+                if (fmid * flo <= 0.0)
+                {
+                    hi = mid;
+                    fhi = fmid;
+                }
+                else
+                {
+                    lo = mid;
+                    flo = fmid;
+                }
+            }
+            return Math.Abs(flo) <= Math.Abs(fhi) ? lo : hi;
         }
 
 
@@ -1178,40 +1235,35 @@ namespace StatsDirect.Numerics
         }
 
 
-        // TRANSMISSINGCOMMENT: Method lr_ptilde
+        /// <summary>
+        /// The constrained maximum likelihood estimate of the denominator proportion p0 given p1 = theta p0: the smaller root of a p^2 + b p + C = 0 is the
+        /// stationary point of the profile likelihood, and the maximum is on the boundary p0 = 1 or p0 = 1 / theta when that root lies beyond it, as it
+        /// does over part of the range when every subject of a group has the event
+        /// </summary>
         public static double lr_ptilde(double theta, double a, double b, double C)
         {
-            double pest1 = (-b + Math.Sqrt(b * b - 4.0 * a * C)) / 2.0 / a;
-            double pest2 = (-b - Math.Sqrt(b * b - 4.0 * a * C)) / 2.0 / a;
-            if (pest1 > 1.0 | pest1 < 0.0)
-                return pest2;
-            if (pest2 > 1.0 | pest2 < 0.0)
-                return pest1;
-            if (pest1 * theta > 1.0 | pest1 * theta < 0.0)
-                return pest2;
-            return pest1;
+            double root = 2.0 * C / (-b + Math.Sqrt(Math.Max(0.0, b * b - 4.0 * a * C)));
+            return Math.Min(root, Math.Min(1.0, 1.0 / theta));
         }
 
 
-        // TRANSMISSINGCOMMENT: Method lr_z
+        /// <summary>
+        /// The score z for the ratio theta: (p1 - theta p0) / sqrt(p1~ q1~ / n1 + theta^2 p0~ q0~ / n0) with the constrained estimates p0~ and p1~ = theta p0~,
+        /// which is the square root of Koopman's chi-square wherever those estimates lie inside (0, 1) and stays finite where one of them is 1
+        /// </summary>
         public static double lr_z(ref double thetahat, out double a, out double b, out double C, ref double N, ref double n0, ref double n1, ref double x0, ref double x1)
         {
-            double vtilde = 0;
-
             a = N * thetahat;
             b = -((x0 + n1) * thetahat + x1 + n0);
             C = x0 + x1;
             double p0tilde = lr_ptilde(thetahat, a, b, C);
             double p1tilde = p0tilde * thetahat;
-            double q0tilde = 1.0 - p0tilde;
-            double q1tilde = 1.0 - p1tilde;
-            if (p0tilde == 0.0 || q1tilde == 0.0 || vtilde < 0.0)
+            double vtilde = p1tilde * (1.0 - p1tilde) / n1 + thetahat * thetahat * p0tilde * (1.0 - p0tilde) / n0;
+            if (!(vtilde > 0.0))
             {
                 return Constant.MISSING;
             }
-            double utilde = q0tilde / (n0 * p0tilde) + q1tilde / (n1 * p1tilde);
-            vtilde = 1.0 / utilde;
-            return (x1 - n1 * p1tilde) / q1tilde / Math.Sqrt(vtilde);
+            return (x1 / n1 - thetahat * x0 / n0) / Math.Sqrt(vtilde);
         }
 
         ///  <summary>
