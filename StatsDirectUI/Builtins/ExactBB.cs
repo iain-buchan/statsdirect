@@ -370,6 +370,9 @@ namespace StatsDirect.Builtins
         //   Last mod 20/5/2001
 
         private const int MAXDEGREE = 1000000; // Max degree of a polynomial
+        // Relative tolerance for "no more probable than the observed table" in the two sided P value: the coefficients come from a
+        // recurrence, so a table exactly as probable as the observed one (its mirror image) can differ from it by a rounding error
+        private const double PROBABILITY_TOLERANCE = 1.0e-7;
 
         /// <summary>
         /// Data for one "unique" 2x2 table
@@ -650,7 +653,7 @@ namespace StatsDirect.Builtins
 
             if (UseLogScale)
             {
-                p[degP] = Math.Log(c1) * Math.Log(Convert.ToDouble(degP));
+                p[degP] = Convert.ToDouble(degP) * Math.Log(c1);
                 for (int i = degP - 1; i >= 0; i--)
                 {
                     p[i] = p[i + 1] + Math.Log(c0) + Math.Log(Convert.ToDouble(i + 1)) - (Math.Log(c1) + Math.Log(Convert.ToDouble(degP - i)));
@@ -862,8 +865,10 @@ namespace StatsDirect.Builtins
         private void CalcExactPVals(out double fishP1, out double fishP2, out double midP1, out double midP2, ref int ierr)
         {
             int diff = sumA - minSumA;
+            // A table counts as no more probable than the observed one when its coefficient is within PROBABILITY_TOLERANCE of it
+            double noMoreProbable = UseLogScale ? polyDenominator[diff] + Math.Log(1.0 + PROBABILITY_TOLERANCE) : polyDenominator[diff] * (1.0 + PROBABILITY_TOLERANCE);
             double upTail = polyDenominator[degDenominator];
-            double upZ = polyDenominator[degDenominator] <= polyDenominator[diff] ? polyDenominator[degDenominator] : 0.0;
+            double upZ = polyDenominator[degDenominator] <= noMoreProbable ? polyDenominator[degDenominator] : 0.0;
             double loZ = 0.0;
 
             if (UseLogScale)
@@ -871,14 +876,14 @@ namespace StatsDirect.Builtins
                 for (int i = degDenominator - 1; i >= diff; i--)
                 {
                     upTail = SumLog(upTail, polyDenominator[i]);
-                    if (polyDenominator[i] <= polyDenominator[diff])
+                    if (polyDenominator[i] <= noMoreProbable)
                         upZ = SumLog(upZ, polyDenominator[i]);
                 }
                 double denom = upTail;
                 for (int i = diff - 1; i >= 0; i--)
                 {
                     denom = SumLog(denom, polyDenominator[i]);
-                    if (polyDenominator[i] <= polyDenominator[diff])
+                    if (polyDenominator[i] <= noMoreProbable)
                         loZ = SumLog(loZ, polyDenominator[i]);
                 }
                 double upFishPVal = ZExp(upTail - denom, ref ierr);
@@ -895,14 +900,14 @@ namespace StatsDirect.Builtins
                 for (int i = degDenominator - 1; i >= diff; i--)
                 {
                     upTail += polyDenominator[i];
-                    if (polyDenominator[i] <= polyDenominator[diff])
+                    if (polyDenominator[i] <= noMoreProbable)
                         upZ += polyDenominator[i];
                 }
                 double denom = upTail;
                 for (int i = diff - 1; i >= 0; i--)
                 {
                     denom += polyDenominator[i];
-                    if (polyDenominator[i] <= polyDenominator[diff])
+                    if (polyDenominator[i] <= noMoreProbable)
                         loZ += polyDenominator[i];
                 }
                 if (denom == 0)
@@ -1153,11 +1158,15 @@ namespace StatsDirect.Builtins
 
         public static double OddsRatio(double diseasedExposed, double healthyExposed, double diseasedNotExposed, double healthyNotExposed)
         {
-            if (diseasedExposed == 0 || healthyNotExposed == 0)
+            double ad = diseasedExposed * healthyNotExposed;
+            double bc = healthyExposed * diseasedNotExposed;
+            if (ad == 0 && bc == 0)
+                return Constant.MISSING; // an empty row or column: 0/0 is undefined
+            if (ad == 0)
                 return 0;
-            if (healthyExposed == 0 || diseasedNotExposed == 0)
+            if (bc == 0)
                 return double.PositiveInfinity;
-            return diseasedExposed * healthyNotExposed / (healthyExposed * diseasedNotExposed);
+            return ad / bc;
         }
     }
 }
