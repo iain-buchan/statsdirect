@@ -775,7 +775,7 @@ namespace StatsDirect.Numerics
 
 
         ///  <summary>
-        ///  cumulative poisson distribution
+        ///  cumulative poisson distribution: phi = P(X &gt;= k), plo = P(X &lt;= k), term = P(X = k)
         ///  </summary>
         ///  <param name="xlam"></param>
         ///  <param name="k"></param>
@@ -788,8 +788,8 @@ namespace StatsDirect.Numerics
         {
             term = ppoiseq(k, xlam);
             plo = ppoisle(k, xlam);
-            phi = 1.0 - plo + term;
-            ifault = term == Constant.MISSING || plo == Constant.MISSING ? 1 : 0;
+            phi = ppoisge(k, xlam);
+            ifault = term == Constant.MISSING || plo == Constant.MISSING || phi == Constant.MISSING ? 1 : 0;
         }
 
 
@@ -1000,7 +1000,14 @@ namespace StatsDirect.Numerics
         ///  <param name="k"></param>
         ///  <param name="theta"></param>
         ///  <returns></returns>
-        ///  <remarks></remarks>
+        ///  <remarks>
+        ///  Up to k = 22 the factorial is exact in a double and the product exp(-theta) theta^k / k! is right to a few
+        ///  units in the last place. Beyond that the term is formed as exp(-e(k) - d(k, theta)) / sqrt(2 pi k), where
+        ///  e(k) = log k! - (k + 1/2) log k + k - log sqrt(2 pi) is Stirling's series, whose neglected term is below
+        ///  1e-17 from k = 23, and d(k, theta) = k log(k / theta) + theta - k is summed as a series in
+        ///  (k - theta) / (k + theta) when the two are close. Formed as exp(k log theta - theta - log k!) the term lost a
+        ///  figure for every power of ten in theta, the three parts being large and nearly cancelling.
+        ///  </remarks>
         public static double ppoiseq(int k, double theta)
         {
             if (theta <= 0.0)
@@ -1011,10 +1018,54 @@ namespace StatsDirect.Numerics
             {
                 return 0.0;
             }
+            if (k == 0)
+            {
+                return Math.Exp(-theta);
+            }
             double smexe = Math.Log(Constant.DBL_MIN);
-            double temp = theta + PDF.alogam(Convert.ToDouble(k + 1));
-            double ex = -1.0 * temp + k * Math.Log(theta);
-            return ex >= smexe ? Math.Exp(ex) : 0.0;
+            if (k <= 22)
+            {
+                double factorial = 1.0;
+                for (int j = 2; j <= k; j++)
+                {
+                    factorial *= j;
+                }
+                if (theta <= 700.0)
+                {
+                    return Math.Exp(-theta) * Math.Pow(theta, k) / factorial;
+                }
+                //  a mean above 700 leaves so few events a probability below 1e-260, for which the logarithmic form will do
+                double ex = k * Math.Log(theta) - theta - Math.Log(factorial);
+                return ex >= smexe ? Math.Exp(ex) : 0.0;
+            }
+            double x = k;
+            double r = 1.0 / (x * x);
+            double stirling = (1.0 / 12.0 - (1.0 / 360.0 - (1.0 / 1260.0 - (1.0 / 1680.0 - r / 1188.0) * r) * r) * r) / x;
+            double d;
+            if (Math.Abs(x - theta) < 0.1 * (x + theta))
+            {
+                //  k log(k / theta) + theta - k = (k - theta) v + 2k (v^3 / 3 + v^5 / 5 + ...), v = (k - theta) / (k + theta)
+                double v = (x - theta) / (x + theta);
+                double v2 = v * v;
+                double power = 2.0 * x * v;
+                d = (x - theta) * v;
+                for (int j = 3; ; j += 2)
+                {
+                    power *= v2;
+                    double next = d + power / j;
+                    if (next == d)
+                    {
+                        break;
+                    }
+                    d = next;
+                }
+            }
+            else
+            {
+                d = x * Math.Log(x / theta) + theta - x;
+            }
+            double lg = -stirling - d;
+            return lg >= smexe ? Math.Exp(lg) / Math.Sqrt(2.0 * Constant.PI * x) : 0.0;
         }
 
 
@@ -1024,7 +1075,10 @@ namespace StatsDirect.Numerics
         ///  <param name="k"></param>
         ///  <param name="theta"></param>
         ///  <returns></returns>
-        ///  <remarks></remarks>
+        ///  <remarks>
+        ///  The smaller tail is summed and the larger taken as its complement, so that neither loses the figures the
+        ///  other carries
+        ///  </remarks>
         public static double ppoisle(int k, double theta)
         {
             if (theta <= 0.0)
@@ -1035,119 +1089,54 @@ namespace StatsDirect.Numerics
             {
                 return 0.0;
             }
-            int k1 = k + 1;
-            const double eps = Constant.EPSILON;
-            const double sml = 2 * Constant.DBL_MIN;
-            double alnsml = Math.Log(sml);
-            //  Lambda = 0, special
-            double pe;
-            if (theta <= eps)
+            return k < theta ? PoissonTail(k, theta, false) : 1.0 - PoissonTail(k + 1, theta, true);
+        }
+
+
+        ///  <summary>
+        ///  probability that a poisson random variable &gt;= k with mean theta
+        ///  </summary>
+        ///  <param name="k"></param>
+        ///  <param name="theta"></param>
+        ///  <returns></returns>
+        public static double ppoisge(int k, double theta)
+        {
+            if (theta <= 0.0)
             {
-                pe = 1.0;
+                return Constant.MISSING;
             }
-            else
+            if (k <= 0)
             {
-                //  prep forward calc
-                double x = theta;
-                double y = 1.0;
-                int jj = 1;
-                double p1 = -theta;
-                int icnt = (int)Math.Floor(p1 / alnsml);
-                p1 -= icnt * alnsml;
-                p1 = Math.Exp(p1);
-                //  prep backward calc
-                double x2 = k;
-                double y2 = theta;
-                double g = x2 * Math.Log(y2);
-                double h = k1;
-                h = PDF.alogam(h);
-                double p2 = -y2 + g - h;
-                int kcnt = (int)Math.Floor(p2 / alnsml);
-                p2 -= kcnt * alnsml;
-                p2 = Math.Exp(p2);
-                g = 1.0;
-                h = 1.0;
-                if (icnt == 0)
-                {
-                    g = 1.0 - p1;
-                }
-                if (kcnt == 0)
-                {
-                    h = 1.0 - p2;
-                }
-                pe = 0.0;
-                //  work out which end to calculate from
-                do
-                {
-                    int j = icnt - kcnt;
-                    if (j > 0.0 || j == 0.0 && p1 <= p2)
-                    {
-                        //  forward
-                        //  no need to scale, just store term
-                        if (icnt == 0)
-                        {
-                            pe += p1;
-                        }
-                        if (jj != k1)
-                        {
-                            //  next term (recursion)
-                            p1 = p1 * x / y;
-                            if (p1 >= h)
-                            {
-                                //  scale
-                                double temp = p1 * sml;
-                                if (temp != 0.0)
-                                {
-                                    p1 = temp;
-                                    icnt -= 1;
-                                }
-                            }
-                            jj += 1;
-                            y += 1.0;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        //  backward
-                        //  no need to scale, just store term
-                        if (kcnt == 0)
-                        {
-                            pe += p2;
-                        }
-                        if (jj != k1)
-                        {
-                            //  next term (recursion)
-                            p2 = p2 * x2 / y2;
-                            if (p2 >= g)
-                            {
-                                //  scale
-                                double temp = p2 * sml;
-                                if (temp != 0.0)
-                                {
-                                    p2 = temp;
-                                    kcnt -= 1;
-                                }
-                            }
-                            k1 -= 1;
-                            x2 -= 1.0;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-                while (true);
+                return 1.0;
             }
-            if (pe > 1.0)
+            return k < theta ? 1.0 - PoissonTail(k - 1, theta, false) : PoissonTail(k, theta, true);
+        }
+
+
+        ///  <summary>
+        ///  the sum of the terms from k outwards, upwards or downwards, while they still count
+        ///  </summary>
+        ///  <remarks>
+        ///  Each term is formed on its own: the recursion from one term to the next added a rounding error at every
+        ///  step, which over hundreds of terms reached the thirteenth place. The rounding of the running sum is carried
+        ///  in a correction, so that the order and number of the terms do not tell either.
+        ///  </remarks>
+        private static double PoissonTail(int k, double theta, bool upwards)
+        {
+            double sum = 0.0;
+            double correction = 0.0;
+            for (int j = k; j >= 0 && j < int.MaxValue; j += upwards ? 1 : -1)
             {
-                pe = 1.0;
+                double term = ppoiseq(j, theta);
+                if (term <= sum * 1.0e-20)
+                {
+                    break;
+                }
+                double total = sum + term;
+                correction += sum >= term ? (sum - total) + term : (term - total) + sum;
+                sum = total;
             }
-            return pe;
+            return Math.Min(sum + correction, 1.0);
         }
 
 

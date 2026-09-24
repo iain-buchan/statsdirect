@@ -471,16 +471,24 @@ namespace StatsDirect.Numerics
             do
             {
                 ix -= 1;
+                // A score of 0, 1 or 2 is as possible an answer as any other: 1 is the largest score whose upper tail is
+                // at least 0.5 with 10 pairs (exactly half the orderings), and 0 with 4 or 20 pairs. The search used to
+                // stop at 3 and report a fault. It still stops at 0, since tau is taken from 0 to 1.
+                if (ix < 0)
+                {
+                    ifault = 1;
+                    break;
+                }
+                // The score has the parity of n(n - 1)/2. Below 51 pairs kendp takes an impossible score as the next
+                // possible one, so this skip changes nothing; above 50 its Edgeworth series does not, and gave a score
+                // of 307 for the 2.5% point with 60 pairs, where the largest possible score is 306.
+                if ((ix + nx * (nx - 1) / 2) % 2 != 0)
+                    continue;
                 ifault = 0;
                 pu = kendp(ix, nx, ref ifault);
                 if (ifault == 0 & (pu > P || Math.Abs(pu - P) < 0.00000000000001))
                 {
                     taufrompReturn = Convert.ToDouble(ix) / (Convert.ToDouble(nx) * Convert.ToDouble(nx - 1) / 2.0);
-                    break;
-                }
-                if (ix < 3)
-                {
-                    ifault = 1;
                     break;
                 }
             }

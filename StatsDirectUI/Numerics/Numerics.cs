@@ -633,6 +633,19 @@ namespace StatsDirect.Numerics
         /// </remarks>
         public static double betain(double x, double p, double q, out int ifault)
         {
+            return betain(x, 1.0 - x, p, q, out ifault);
+        }
+
+        /// <summary>
+        /// the incomplete beta function ratio with the complement of x, cx, supplied by the caller
+        /// </summary>
+        /// <remarks>
+        /// For x within rounding of 1 the complement formed as 1 - x carries only the figures left after x was
+        /// rounded, and the tail is computed from the complement, so a caller that knows it to full precision
+        /// (as the F and t tails do) passes it. Otherwise as betain(x, p, q).
+        /// </remarks>
+        public static double betain(double x, double cx, double p, double q, out int ifault)
+        {
             bool index;
             double xx, pp, qq;
 
@@ -647,16 +660,15 @@ namespace StatsDirect.Numerics
             if (double.IsNaN(p) || double.IsNaN(q) || p <= 0.0 || q <= 0.0)
                 return ret;
             ifault = 2;
-            if (double.IsNaN(x) || x < 0.0 || x > 1.0)
+            if (double.IsNaN(x) || x < 0.0 || x > 1.0 || double.IsNaN(cx) || cx < 0.0 || cx > 1.0)
                 return ret;
             ifault = 0;
-            if (x == 0.0 || x == 1.0)
+            if (x == 0.0 || cx == 0.0)
                 return ret;
 
             //     change tail if necessary and determine s
 
             double psq = p + q;
-            double cx = 1.0 - x;
             if (p < psq * x)
             {
                 xx = cx;
@@ -849,11 +861,16 @@ namespace StatsDirect.Numerics
         }
 
         /// <summary>
-        /// Lower tail area for F (variance ratio)
+        /// Upper tail area for F (variance ratio): P(F > f)
         /// </summary>
         public static double fvalp(double f, double dfn, double dfd)
         {
-            double ret = betain(dfd / (dfd + dfn * f), dfd / 2.0, dfn / 2.0, out int fault);
+            // The point dfd / (dfd + dfn f) and its complement dfn f / (dfd + dfn f) are each formed directly. Taken as
+            // 1 minus the point, the complement, which sets the tail for a small f (a t near zero), was only as accurate
+            // as the rounding of the point: P(t > 0.0001) on 30 degrees of freedom was off in the twelfth place, and a
+            // t below about 1e-8 gave exactly 0.5.
+            double denominator = dfd + dfn * f;
+            double ret = betain(dfd / denominator, double.IsInfinity(f) ? 1.0 : dfn * f / denominator, dfd / 2.0, dfn / 2.0, out int fault);
             if (fault != 0)
                 ret = double.NaN;
             return ret;
@@ -2407,7 +2424,11 @@ namespace StatsDirect.Numerics
 
         //  The Studentized range distribution for few residual degrees of freedom, by direct integration over the
         //  distribution of the residual standard deviation: P(Q <= q) = E[ P(range <= q S) ], S = chi / root df.
-        //  The series routine (qprob) is accurate only to two or three decimals below five degrees of freedom.
+        //  The series routine (qprob) is accurate only to two or three decimals below five degrees of freedom, and in
+        //  the far tail with many means only to five or six until the degrees of freedom are about twice the number of
+        //  means (the 99.9% point of 8 means on 8 degrees of freedom was 10.63184 where 10.63182 is right, of 20 means
+        //  on 12 degrees of freedom 10.05457 for 10.05458); this integration agrees with independent quadrature to
+        //  about ten decimals throughout.
         private static double SmallDfRangeCdf(double q, int k, double df)
         {
             if (q <= 0.0)
@@ -2426,13 +2447,16 @@ namespace StatsDirect.Numerics
 
         private static double SmallDfRangeQuantile(double p, int k, double df)
         {
-            //  Bracket the point around the series routine's value (within a few per cent), then the Illinois method
+            //  Bracket the point around the series routine's value (within a few per cent, and within a thousandth
+            //  from five degrees of freedom), then the Illinois method; each evaluation of the integral costs about
+            //  a twentieth of a second, so the bracket is kept close where the series has given a value
             int[] ir = new int[4];
             double guess = cv(p, 1.0, k, df, ir);
-            if (ir[1] != 0 || ir[2] != 0 || ir[3] != 0 || !(guess > 0.0))
+            bool guessed = ir[1] == 0 && ir[2] == 0 && ir[3] == 0 && guess > 0.0;
+            if (!guessed)
                 guess = 10.0;
-            double a = 0.5 * guess;
-            double b = 2.0 * guess;
+            double a = guessed ? 0.95 * guess : 0.5 * guess;
+            double b = guessed ? 1.05 * guess : 2.0 * guess;
             double fa = SmallDfRangeCdf(a, k, df) - p;
             double fb = SmallDfRangeCdf(b, k, df) - p;
             while (fa > 0.0 && a > 1.0e-6)
@@ -2451,7 +2475,7 @@ namespace StatsDirect.Numerics
             {
                 c = (a * fb - b * fa) / (fb - fa);
                 double fc = SmallDfRangeCdf(c, k, df) - p;
-                if (fc == 0.0)
+                if (Math.Abs(fc) < 1.0e-13)   //  within the integral's own accuracy: closing the bracket further gains nothing
                     break;
                 if (fc * fb > 0.0)
                 {
@@ -2473,13 +2497,21 @@ namespace StatsDirect.Numerics
             return c;
         }
 
+        //  Whether the direct integration is used in place of the series routine: below eight residual degrees of
+        //  freedom, or below twice the number of means, where the series is not accurate to seven decimals in the far
+        //  tail (see SmallDfRangeCdf); the integration costs about a twentieth of a second an evaluation
+        private static bool UseRangeIntegration(double t, double df)
+        {
+            return df < 8.0 || df < 2.0 * t;
+        }
+
         public static double quantsr(double p, double t, double df)
         {
             if (df < 1.0)
                 return Constant.MISSING;
             if (t == 2.0)   //  two means: the range is root 2 times |t|, so the point comes exactly from Student's t
                 return Math.Sqrt(2.0) * tfromp2(1.0 - p, df);
-            if (df < 5.0)
+            if (UseRangeIntegration(t, df))
                 return SmallDfRangeQuantile(p, (int)Math.Round(t), df);
             int[] ir = new int[4];
             double retval = cv(p, 1.0, t, df, ir);
@@ -2497,7 +2529,7 @@ namespace StatsDirect.Numerics
                 return Constant.MISSING;
             if (t == 2.0)
                 return 1.0 - 2.0 * tvalp(q / Math.Sqrt(2.0), df);   //  tvalp is the one tail area
-            if (df < 5.0)
+            if (UseRangeIntegration(t, df))
                 return SmallDfRangeCdf(q, (int)Math.Round(t), df);
             int[] ir = new int[3];
             double retval = qprob(q, 1.0, t, df, ir);
