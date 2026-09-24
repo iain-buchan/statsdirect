@@ -144,6 +144,7 @@ namespace StatsDirect.Builtins
             Array.Copy(x, transTemp3, Math.Min(x.Length, transTemp3.Length));
             x = transTemp3;
             bool ok = false;
+            bool anyEvents = false;
             double dead = 0;
             for (int r = 0; r < rows; r++)
             {
@@ -153,10 +154,16 @@ namespace StatsDirect.Builtins
                 if (x[ik] > 1)
                     ok = true;
                 if (x[ik] > 0)
+                {
+                    anyEvents = true;
                     x[ik] = 0;
+                }
                 else if (x[ik] <= 0)
                     x[ik] = 1;
             }
+            // the partial likelihood is a product over the event times, so without an event there is nothing to fit
+            if (!anyEvents)
+                throw new TemplateOperationCancelledException("There are no events (every observation is censored), so a Cox regression model cannot be fitted.", "Cox Regression");
             int ifrq;
             // use the frequency variable if data are grouped
             if (ok)
@@ -332,7 +339,8 @@ namespace StatsDirect.Builtins
             }
             ColumnData[] CDAT1 = new ColumnData[ncoef + 1];
             double[,,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
-            double[,] ARR2 = new double[nobs + 1, 10 + 1];
+            // column 0 of rows 0 to 4 holds n, the number of coefficients, the two log likelihoods and the number of events, so there are at least five rows
+            double[,] ARR2 = new double[Math.Max(nobs, 4) + 1, 10 + 1];
             for (int i = 1; i <= ncoef; i++)
             {
                 ARR3[1, i, 1] = coef[i, 1];
@@ -2169,11 +2177,13 @@ namespace StatsDirect.Builtins
                 }
                 // .exb must be sorted in reverse order for risk_theta to start with the correct value when d>1
                 double risk_theta = 0.0;
+                int atRisk = 0;
                 for (int j = i; j <= iobs; j++)
                 {
                     if (z[i].Stratum != z[j].Stratum)
                         break;
                     risk_theta += z[j].Exb;
+                    atRisk++;
                 }
                 bool erra = false;
                 double alpha_i;
@@ -2182,6 +2192,12 @@ namespace StatsDirect.Builtins
                 {
                     alpha_i = 1.0;
                     alpha_ix = alpha_i;
+                }
+                else if (dead == atRisk)
+                {
+                    // everyone still at risk dies at this time: the product-limit survival falls to 0 (the tied-death equation has no root in (0, 1))
+                    alpha_i = 0.0;
+                    alpha_ix = Math.Exp(-dead / risk_theta);
                 }
                 else if (dead == 1.0)
                 {
@@ -2436,11 +2452,13 @@ namespace StatsDirect.Builtins
                 }
                 // .exb must be sorted in reverse order for risk_theta to start with the correct value when d>1
                 double risk_theta = 0.0;
+                int atRisk = 0;
                 for (int j = i; j <= iobs; j++)
                 {
                     if (z[i].Stratum != z[j].Stratum)
                         break;
                     risk_theta += z[j].Exb;
+                    atRisk++;
                 }
                 bool erra = false;
                 double alpha_i;
@@ -2449,6 +2467,12 @@ namespace StatsDirect.Builtins
                 {
                     alpha_i = 1.0;
                     alpha_ix = alpha_i;
+                }
+                else if (dead == atRisk)
+                {
+                    // everyone still at risk dies at this time: the product-limit survival falls to 0 (the tied-death equation has no root in (0, 1))
+                    alpha_i = 0.0;
+                    alpha_ix = Math.Exp(-dead / risk_theta);
                 }
                 else if (dead == 1.0)
                 {
