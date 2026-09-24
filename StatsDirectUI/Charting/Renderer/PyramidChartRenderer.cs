@@ -73,9 +73,11 @@ namespace StatsDirect.Charting.Renderer
             int nmale = males.Length;
             double maxmale = males.Max;
 
+            //  A row with a missing count is left out; row[] keeps each drawn row's position in the data so that its label goes with it.
             int nfemale = 0;
             double[] female;
             double[] male;
+            int[] row = new int[nmale];
             double maxfemale = 0;
             PyramidMode mode;
             if (pOptions.FemaleFrame != null)
@@ -93,6 +95,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         female[nfemale] = females.Data[r];
                         male[nfemale] = males.Data[r];
+                        row[nfemale] = r;
                         nfemale += 1;
                     }
                 }
@@ -110,6 +113,7 @@ namespace StatsDirect.Charting.Renderer
                     {
                         female[nfemale] = males.Data[r] / 2.0;
                         male[nfemale] = males.Data[r] / 2.0;
+                        row[nfemale] = r;
                         nfemale += 1;
                     }
                 }
@@ -117,22 +121,14 @@ namespace StatsDirect.Charting.Renderer
                 mode = PyramidMode.Totals;
             }
 
-            string[] title = new string[nmale + 1];
+            //  The label of each drawn row: none when the labels were skipped, "group n" (n the row's position in the data) for a blank label.
+            string[] title = new string[nmale];
+            Array.Fill(title, "");
             if (pOptions.LabelFrame != null)
             {
                 StringVariable labels = (StringVariable)pOptions.LabelFrame.Variables[0];
-                int i;
-                for (i = labels.Length - 1; i >= 0; i--)
-                {
-                    if (labels.Data[i] != null && labels.Data[i].Length > 0)
-                        break;
-                }
-                int lastrow = i;
-                if (lastrow == nmale - 1)
-                {
-                    for (i = 0; i <= lastrow; i++)
-                        title[i] = MakeTitle(labels.Data[i], "group " + (i + 1));
-                }
+                for (int i = 0; i < nmale; i++)
+                    title[i] = MakeTitle(row[i] < labels.Length ? labels.Data[row[i]] : null, "group " + (row[i] + 1));
             }
 
             double tmax = maxfemale > maxmale ? maxfemale : maxmale;
@@ -141,6 +137,8 @@ namespace StatsDirect.Charting.Renderer
             double scaleMax = tmx;
             if (scaleMax < tmax)
                 scaleMax = tmax;
+            if (scaleMax <= 0)
+                scaleMax = 1;   // counts that are all zero: an empty pyramid rather than a division by zero
 
             BrushDescriptor maleBrush = null;
             if (pOptions.MarkerTypes.Count >= 1)
@@ -165,8 +163,8 @@ namespace StatsDirect.Charting.Renderer
 
             DrawTitle(pOptions.Title);
 
-            double ystep = YExtCanvas / nmale;
-            if (title[0].Length > 0)
+            double ystep = nmale > 0 ? YExtCanvas / nmale : 0;   // no rows (every count missing): nothing to draw but the frame
+            if (pOptions.LabelFrame != null)
             {
                 for (int i = 0; i < nmale; i++)
                 {

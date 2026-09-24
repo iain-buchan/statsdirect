@@ -59,9 +59,14 @@ namespace StatsDirect.Charting
                 maxRow = Math.Max(maxRow, (v as DoubleVariable).Max);
             }
 
-            //  Work out a reasonable axis value
-            IAxisScale axisScale = AxisScalerFactory.AxisScalerFor(ScaleType.Linear).QAxis(0, 0, maxRow, false, false);
-            ScaleMaximum = axisScale.MaximumScaleValue;
+            //  Work out a reasonable axis value; counts that are all zero make an empty pyramid on a scale of 0 to 1 (the axis scaler has no scale for 0 to 0).
+            if (maxRow > 0)
+            {
+                IAxisScale axisScale = AxisScalerFactory.AxisScalerFor(ScaleType.Linear).QAxis(0, 0, maxRow, false, false);
+                ScaleMaximum = axisScale.MaximumScaleValue;
+            }
+            else
+                ScaleMaximum = 1;
         }
 
         public override bool UsesChartTitle => true;
