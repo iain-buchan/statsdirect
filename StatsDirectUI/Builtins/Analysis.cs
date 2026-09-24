@@ -333,8 +333,6 @@ namespace StatsDirect.Builtins
                 }
                 while (n1 > Convert.ToDouble(q));
 
-                double e1 = p * r / (double)n;
-
                 if (fault != 0)
                     return Constant.MISSING;
                 double[] f1 = new double[p + 2];
@@ -378,47 +376,12 @@ namespace StatsDirect.Builtins
                 }
 
                 a1 = a + 1;
-                h = 1.00000000000001 * h1[a1];
-                // The tail holding the observed table, that table counting half, plus the tables of the other tail no more probable than
-                // the observed one, the nearest of those counting half. The other tail stops short of the observed table: when that
-                // table is the most probable every table qualifies and the scan must not run through it to the far end.
-                if (a > e1)
-                {
-
-                    g = g1[a1] - h1[a1] / 2.0;
-                    f = 0.0;
-                    for (j = 1; j < a1; j++)
-                    {
-                        if (h1[j] > h)
-                            break;
-                        f = f1[j] - h1[j] / 2.0;
-                    }
-
-                    /* g2 is never used.  PJC 2012/04/09.
-                    double g2 = 2.0 * g; 
-                    if ( g2 > 1.0 )
-                        g2 = 1.0; 
-                     */
-                }
-                else
-                {
-
-                    f = f1[a1] - h1[a1] / 2.0;
-                    g = 0.0;
-                    for (j = a2; j > a1; j--)
-                    {
-                        if (h1[j] > h)
-                            break;
-                        g = g1[j] - h1[j] / 2.0;
-                    }
-                    /* f2 is never used.  PJC 2012/04/09.
-                    double f2 = 2.0 * f; 
-                    if ( f2 > 1.0 )
-                        f2 = 1.0; 
-                     */
-                }
-
-                double z = f + g;
+                // The two sided mid-P is twice the smaller of the two one sided mid-P values (the central convention, as the
+                // Fisher's exact test report prints it), each tail's mid-P being its cumulative probability up to and including
+                // the observed table less half the probability of that table
+                double lowerMidP = f1[a1] - h1[a1] / 2.0;
+                double upperMidP = g1[a1] - h1[a1] / 2.0;
+                double z = 2.0 * Math.Min(lowerMidP, upperMidP);
                 if (z > 1.0)
                     z = 1.0;
                 return z;
