@@ -101,7 +101,12 @@ namespace StatsDirect.Builtins
             int capacity = 0;
             for (int i = 0; i < groups; i++)
             {
-                groupCapacities[i] = (int)capacitiesVariable.Data[i];
+                double value = capacitiesVariable.Data[i];
+                if (value < 0.0 || value != Math.Floor(value))
+                {
+                    throw new TemplateOperationCancelledException("capacity of group " + (i + 1) + " must be a whole number of places, zero or more", pg);
+                }
+                groupCapacities[i] = (int)value;
                 capacity += groupCapacities[i];
             }
             DataFrame preferencesFrame = parameters["preferences"].AsDataFrame;
@@ -114,15 +119,22 @@ namespace StatsDirect.Builtins
                 for (int j = 1; j <= subjects; j++)
                 {
                     double value = preferencesVariable.Data[j - 1];
-                    x[i, j] = (int)value;
                     if (value == Constant.MISSING)
                     {
                         // #1328: Repeat the first preference if a subject doesn't express all preferences.
                         x[i, j] = x[1, j];
                     }
-                    else if (x[i, j] < 1 || x[i, j] > groups)
+                    else if (value != Math.Floor(value))
                     {
-                        throw new TemplateOperationCancelledException("invalid preference in group " + i + " at row " + j, pg);
+                        throw new TemplateOperationCancelledException("preference " + i + " at row " + j + " is not a whole number (a group number)", pg);
+                    }
+                    else
+                    {
+                        x[i, j] = (int)value;
+                        if (x[i, j] < 1 || x[i, j] > groups)
+                        {
+                            throw new TemplateOperationCancelledException("invalid preference in group " + i + " at row " + j, pg);
+                        }
                     }
                 }
             }

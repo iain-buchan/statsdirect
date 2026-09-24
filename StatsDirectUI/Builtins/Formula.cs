@@ -9,18 +9,19 @@ namespace StatsDirect.Builtins
 {
     public static class Formula
     {
-        private struct TwoLng : IComparable<TwoLng>
-        {
-            public int Id;
-            public int Rx;
-
-            private int CompareTo(TwoLng other) => Id.CompareTo(other.Id);
-
-            // interface methods implemented by CompareTo
-            int IComparable<TwoLng>.CompareTo(TwoLng other) => CompareTo(other);
-        }
-
         private const string BigErr = "(err: number too big)";
+
+        /// <summary>
+        /// Puts x[low] to x[high] inclusive into a random order in which every order is equally likely (a Fisher-Yates shuffle), taking random numbers from mt.
+        /// </summary>
+        private static void Shuffle(MersenneTwister mt, int[] x, int low, int high)
+        {
+            for (int j = high; j > low; j--)
+            {
+                int k = low + (int)Math.Floor((j - low + 1) * mt.NextDouble());
+                (x[j], x[k]) = (x[k], x[j]);
+            }
+        }
 
         private static int AutoSeed(ParameterBag parameters)
         {
@@ -35,8 +36,8 @@ namespace StatsDirect.Builtins
             int seed = AutoSeed(parameters);
             MersenneTwister mt = new(seed);
             int n = parameters["n"].AsInt32;
-            if (n < 4)
-                n = 4;
+            if (n < 2)
+                throw new InvalidDataException("At least two subjects are needed");
             int blockSize = -1;
             if (parameters.ContainsKey("b"))
                 blockSize = parameters["b"].AsInt32;
@@ -57,7 +58,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("n_out", n);
             outputParameters.AddOutput("t_out", t);
 
-            TwoLng[] x;
+            // the treatment of each subject, 1-based
+            int[] rx = new int[n + 1];
             int ctr;
             if (!blockSizeIsRandom)
             {
@@ -68,15 +70,13 @@ namespace StatsDirect.Builtins
                     outputParameters.AddOutput("*blockSizeWarn", new List<ParameterBag>() { new ParameterBag("warning", new FilledStringParameter(FilledParameterDirection.Output, warning)) });
                 }
 
-                int bks = (int)Math.Floor((double)n / blockSize);
                 if (blockSize / (double)t != Math.Floor(blockSize / (double)t))
                     throw new InvalidDataException("Block size must be divisible by the number of treatments");
 
-                x = new TwoLng[blockSize * bks + 1];
                 ctr = 0;
                 do
                 {
-                    // curtail the random block size selection if we are at the end of the allocation space
+                    // curtail the block size if we are at the end of the allocation space
                     int bs = n - ctr < blockSize ? n - ctr : blockSize;
 
                     // for each block allocate the block pattern as treatments in alphanumeric order
@@ -85,14 +85,11 @@ namespace StatsDirect.Builtins
                         for (int i = 1; i <= t; i++)
                         {
                             ctr += 1;
-                            x[ctr].Rx = i;
+                            rx[ctr] = i;
                         }
                     }
-                    // randomise the order of the block pattern by allocating an order number at random for each element then bubble sort the array
-                    int high = ctr;
-                    int low = ctr - bs + 1;
-                    for (int j = high; j >= low; j--)
-                        x[j].Id = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
+                    // randomise the order of the block pattern: every order of the block is equally likely
+                    Shuffle(mt, rx, ctr - bs + 1, ctr);
 
                     // exit the loop if all subjects have been allocated a block
                     if (ctr >= n)
@@ -106,13 +103,9 @@ namespace StatsDirect.Builtins
                 // RANDOM BLOCK SIZE
                 int minBlockMult = 2;
                 int maxBlockMult = 4;
-                //  allocate a two-element array: treatment element & subject/order element
-                x = new TwoLng[n + 1];
                 ctr = 0;
-                int bks = 0;
                 do
                 {
-                    bks += 1;
                     // allocate at random a block size of between 'low' and 'high' times the number of treatment groups
                     int bs;
                     if (n - ctr < maxBlockMult * t)
@@ -131,25 +124,19 @@ namespace StatsDirect.Builtins
                         for (int i = 1; i <= t; i++)
                         {
                             ctr += 1;
-                            x[ctr].Rx = i;
+                            rx[ctr] = i;
                         }
                     }
-                    // randomise the order of the block pattern by allocating an order number at random for each element then bubble sort the array
-                    int high = ctr;
-                    int low = ctr - bs + 1;
-                    for (int j = high; j >= low; j--)
-                        x[j].Id = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
+                    // randomise the order of the block pattern: every order of the block is equally likely
+                    Shuffle(mt, rx, ctr - bs + 1, ctr);
 
                     // exit the loop if all subjects have been allocated a block
                     if (ctr >= n)
                         break;
                 }
                 while (true);
-                outputParameters.AddOutput("b", "random between " + minBlockMult * t + " and " + maxBlockMult * t);
+                outputParameters.AddOutput("b_out", "random between " + minBlockMult * t + " and " + maxBlockMult * t);
             }
-
-            //  sort the id numbers within blocks
-            Array.Sort(x, 1, ctr);
 
             List<ParameterBag> subjectsList = new();
             outputParameters.AddOutput("*subjects", subjectsList);
@@ -158,7 +145,7 @@ namespace StatsDirect.Builtins
                 ParameterBag subjectsParameters = new();
                 subjectsList.Add(subjectsParameters);
                 subjectsParameters.AddOutput("id", i);
-                subjectsParameters.AddOutput("rx", new string(Convert.ToChar(64 + x[i].Rx), 1));
+                subjectsParameters.AddOutput("rx", new string(Convert.ToChar(64 + rx[i]), 1));
             }
             return new StepOutput(outputParameters);
         }
@@ -457,7 +444,7 @@ namespace StatsDirect.Builtins
             MersenneTwister mt = new(seed);
             const int low = 1;
             int high = parameters["high"].AsInt32;
-            if (high >= 2 && high % high / 2 == 0)
+            if (high >= 2 && high % 2 == 0)
             {
                 int dimit = Math.Abs(high - low) + 1;
                 int[] rand = new int[dimit + 1 /* VB to C# conversion */ ];
@@ -465,11 +452,8 @@ namespace StatsDirect.Builtins
                 int[] brand = new int[(int)Math.Floor((double)dimit / 2) + 1 ];
                 for (int N = low; N <= high; N++)
                     rand[N] = N;
-                for (int N = low; N <= high; N++)
-                {
-                    int nrp = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
-                    (rand[nrp], rand[N]) = (rand[N], rand[nrp]);
-                }
+                // every order of the subjects is equally likely, so every split into two groups is equally likely
+                Shuffle(mt, rand, low, high);
                 int halfHigh = Convert.ToInt32(high / 2);
                 for (int N = low; N <= halfHigh; N++)
                 {
@@ -492,7 +476,7 @@ namespace StatsDirect.Builtins
                 }
                 return new StepOutput(outputParameters);
             }
-            throw new InvalidDataException();
+            throw new InvalidDataException("The number of subjects must be even, so that the two groups are of equal size");
         }
 
         public static StepOutput RptRandomXY(ParameterBag parameters)
@@ -503,34 +487,27 @@ namespace StatsDirect.Builtins
             int high = parameters["high"].AsInt32;
             if (low > high)
                 (high, low) = (low, high);
-            if (low >= 0 & high >= 1)
-            {
-                int[] rand = new int[high + 2 ];
-                for (int N = low; N <= high; N++)
-                    rand[N] = N;
-                for (int tn = 1; tn <= 3; tn++)
-                {
-                    for (int N = low; N <= high; N++)
-                    {
-                        int nrp = (int)Math.Floor((high - low + 1) * mt.NextDouble() + low);
-                        (rand[nrp], rand[N]) = (rand[N], rand[nrp]);
-                    }
-                }
+            if ((long)high - low + 1 > int.MaxValue - 1)
+                throw new InvalidDataException("The series is too long to randomise");
+            // the numbers low to high, 0-based, in a random order in which every order is equally likely
+            int count = high - low + 1;
+            int[] rand = new int[count];
+            for (int i = 0; i < count; i++)
+                rand[i] = low + i;
+            Shuffle(mt, rand, 0, count - 1);
 
-                ParameterBag outputParameters = new();
-                // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
-                List<ParameterBag> allocationsList = new();
-                outputParameters.AddOutput("*allocations", allocationsList);
-                for (int N = low; N <= high; N++)
-                {
-                    ParameterBag allocationsParameters = new();
-                    allocationsList.Add(allocationsParameters);
-                    allocationsParameters.AddOutput("index", N.ToString("#####"));
-                    allocationsParameters.AddOutput("random", rand[N]);
-                }
-                return new StepOutput(outputParameters);
+            ParameterBag outputParameters = new();
+            // outputParameters.AddOutput("seed", seed); Not required as input seed is preserved in output
+            List<ParameterBag> allocationsList = new();
+            outputParameters.AddOutput("*allocations", allocationsList);
+            for (int i = 0; i < count; i++)
+            {
+                ParameterBag allocationsParameters = new();
+                allocationsList.Add(allocationsParameters);
+                allocationsParameters.AddOutput("index", (low + i).ToString());
+                allocationsParameters.AddOutput("random", rand[i]);
             }
-            throw new InvalidDataException();
+            return new StepOutput(outputParameters);
         }
 
         public static StepOutput RptSizeIndCase(ParameterBag parameters)
