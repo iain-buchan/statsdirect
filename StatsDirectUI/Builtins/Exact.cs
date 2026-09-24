@@ -32,39 +32,30 @@ namespace StatsDirect.Builtins
             if (r > n / 2.0)
                 r = n - r;
 
-            double f = Math.Pow(0.5, n);
             outputParameters.AddOutput("sample", n);
             outputParameters.AddOutput("sample_1", acr);
-            if (f > 0.0)
-            {
-                double p = f;
-                if (r != 0.0)
-                {
-                    for (long i = 1; i <= Convert.ToInt64(r); i++)
-                    {
-                        f *= (n - i + 1.0) / Convert.ToDouble(i);
-                        p += f;
-                    }
-                }
-                double p2 = 2.0 * p;
-                if (p2 > 1.0)
-                    p2 = 1.0;
 
-                List<ParameterBag> exactList = new();
-                outputParameters.AddOutput("*exact", exactList);
-                ParameterBag exactParameters = new();
-                exactList.Add(exactParameters);
-                exactParameters.AddOutput("prob_2", p2);
-                exactParameters.AddOutput("prob_1", p);
-                outputParameters.AddOutput("*large", null);
-            }
-            else
+            // The lower tail P(X <= r) is summed from its largest term, P(X = r), downwards until the terms no longer count, so that it
+            // is available for any n: a sum started from 0.5^n underflows to zero above n = 1074
+            long k = Convert.ToInt64(r);
+            double f = Math.Exp(PDF.alogam(n + 1.0) - PDF.alogam(k + 1.0) - PDF.alogam(n - k + 1.0) - n * Math.Log(2.0));
+            double p = f;
+            for (long i = k; i >= 1 && f > p * Constant.EPSNEG; i--)
             {
-                outputParameters.AddOutput("*exact", null);
-                List<ParameterBag> largeList = new();
-                outputParameters.AddOutput("*large", largeList);
-                largeList.Add(new ParameterBag());
+                f *= Convert.ToDouble(i) / (n - i + 1.0);
+                p += f;
             }
+            double p2 = 2.0 * p;
+            if (p2 > 1.0)
+                p2 = 1.0;
+
+            List<ParameterBag> exactList = new();
+            outputParameters.AddOutput("*exact", exactList);
+            ParameterBag exactParameters = new();
+            exactList.Add(exactParameters);
+            exactParameters.AddOutput("prob_2", p2);
+            exactParameters.AddOutput("prob_1", p);
+            outputParameters.AddOutput("*large", null);
 
             double d = Math.Abs(n / 2.0 - r) - 0.5;
             double x9;
@@ -176,23 +167,14 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*row", rowList);
             if (fault != 0)
             {
-                Tables.Fisherp(a, b, c, d, out double zP1, out double ptwo, out fault);
-                outputParameters.AddOutput("tail_1", string.Empty);
-                if (fault != 0)
-                {
-                    outputParameters.AddOutput("p_1", "err");
-                    outputParameters.AddOutput("p_1d", "err");
-                    outputParameters.AddOutput("p_2", "err");
-                }
-                else
-                {
-                    outputParameters.AddOutput("p_1", zP1);
-                    outputParameters.AddOutput("p_1d", zP1 * 2.0);
-                    outputParameters.AddOutput("p_2", ptwo);
-                }
-                const string x = "not possible, use Monte Carlo";
-                outputParameters.AddOutput("mid_p", x);
-                outputParameters.AddOutput("mid_p_2", x);
+                // Too large a table to tabulate: the P values are found without it
+                Tables.FisherLarge(a, b, c, d, e1, out string tail1, out double p1, out double p2, out double midP1);
+                outputParameters.AddOutput("tail_1", tail1);
+                outputParameters.AddOutput("p_1", p1);
+                outputParameters.AddOutput("p_1d", Math.Min(p1 * 2.0, 1.0));
+                outputParameters.AddOutput("p_2", p2);
+                outputParameters.AddOutput("mid_p", midP1);
+                outputParameters.AddOutput("mid_p_2", Math.Min(midP1 * 2.0, 1.0));
             }
             else
             {
@@ -214,9 +196,9 @@ namespace StatsDirect.Builtins
                 ParameterBag rowParameters = new();
                 rowList.Add(rowParameters);
                 rowParameters.AddOutput("a", a1);
-                rowParameters.AddOutput("lower", Formatting.pr15(g));
+                rowParameters.AddOutput("lower", Formatting.pr15(f));
                 rowParameters.AddOutput("ind_p", Formatting.pr15(h));
-                rowParameters.AddOutput("upper", Formatting.pr15(f));
+                rowParameters.AddOutput("upper", Formatting.pr15(g));
                 int a2;
                 do
                 {
@@ -370,7 +352,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("chi", x2);
             outputParameters.AddOutput("chi_p", PDF.chivalp(x2, 1.0));
 
-            x2 = Math.Abs(bb - bc) - 1.0;
+            x2 = Math.Max(Math.Abs(bb - bc) - 1.0, 0.0);   // the continuity correction cannot take the difference past zero
             double n = bb + bc;
             x2 = x2 * x2 / n;
             outputParameters.AddOutput("yates_chi", x2);
@@ -402,10 +384,15 @@ namespace StatsDirect.Builtins
 
             if (bc > bb)
             {
-                if (ll != Constant.MISSING)
-                    ll = 1.0 / ll;
-                if (ul != Constant.MISSING)
-                    ul = 1.0 / ul;
+                // R' = b/c is the reciprocal of r/s, so its limits are the reciprocals of these the other way round; a missing upper limit
+                // is infinity, whose reciprocal is zero
+                double t = ll;
+                ll = ul != Constant.MISSING
+                    ? 1.0 / ul
+                    : 0.0;
+                ul = t != Constant.MISSING
+                    ? 1.0 / t
+                    : Constant.MISSING;
             }
             if (ll != Constant.MISSING && ul != Constant.MISSING)
             {
@@ -475,17 +462,14 @@ namespace StatsDirect.Builtins
         public static StepOutput RptRatePoissonCI(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
+            if (cco <= 0.0 || cco >= 1.0)
+                cco = 0.95;
             double alpha = 1.0 - cco;
-            if (alpha <= 0.0 || alpha >= 1.0)
-                alpha = 0.05;
 
             double revents = parameters["revents"].AsDouble;
             double tar = parameters["tar"].AsDouble;
             if (tar <= 0.0)
-            {
-                tar = 1.0;
-                parameters["tar"] = FilledParameterFactory.Input(1.0);
-            }
+                throw new TemplateOperationCancelledException("The time at risk must be greater than zero", "Poisson rate confidence interval");
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("events", revents);

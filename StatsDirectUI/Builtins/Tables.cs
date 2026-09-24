@@ -88,29 +88,19 @@ namespace StatsDirect.Builtins
                 n1 -= 1.0;
             }
             while (n1 > Convert.ToDouble(q));
-            double e1 = Convert.ToDouble(p * r) / Convert.ToDouble(n);
+            double e1 = Convert.ToDouble(p) * Convert.ToDouble(r) / Convert.ToDouble(n);   // as doubles: the product of two totals can exceed an int
             outputParameters.AddOutput("exp_a", e1);
             if (fault != 0)
             {
-                Fisherp(a, b, c, d, out double zPone, out double ptwo, out fault);
-                outputParameters.AddOutput("tail_1", string.Empty);
-                if (fault != 0)
-                {
-                    outputParameters.AddOutput("p_1", "err");
-                    outputParameters.AddOutput("p_1d", "err");
-                    outputParameters.AddOutput("tail_2", string.Empty);
-                    outputParameters.AddOutput("p_2", "err");
-                }
-                else
-                {
-                    outputParameters.AddOutput("p_1", zPone);
-                    outputParameters.AddOutput("p_1d", zPone * 2.0);
-                    outputParameters.AddOutput("tail_2", string.Empty);
-                    outputParameters.AddOutput("p_2", ptwo);
-                }
-                const string x = "not possible, use Monte Carlo";
-                outputParameters.AddOutput("mid_p", x);
-                outputParameters.AddOutput("mid_p_2", x);
+                // Too large a table to tabulate: the P values are found without it
+                FisherLarge(a, b, c, d, e1, out string tail1, out double p1, out double p2, out double midP1);
+                outputParameters.AddOutput("tail_1", tail1);
+                outputParameters.AddOutput("p_1", p1);
+                outputParameters.AddOutput("p_1d", Math.Min(p1 * 2.0, 1.0));
+                outputParameters.AddOutput("tail_2", "(by summation)");
+                outputParameters.AddOutput("p_2", p2);
+                outputParameters.AddOutput("mid_p", midP1);
+                outputParameters.AddOutput("mid_p_2", Math.Min(midP1 * 2.0, 1.0));
             }
             else
             {
@@ -200,8 +190,56 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// Fisher's exact test P values for an arranged 2 by 2 table (a &lt;= d, b &lt;= c) too large for its hypergeometric distribution to be
+        /// tabulated: each probability is formed from the log gamma function, so no term need be representable relative to the smallest
+        /// </summary>
+        /// <param name="e1">expectation of a</param>
+        /// <param name="tail1">the tail summed for the one sided P</param>
+        /// <param name="p1">one sided P</param>
+        /// <param name="p2">two sided P by summation of the tables no more probable than the observed one</param>
+        /// <param name="midP">one sided mid-P</param>
+        public static void FisherLarge(int a, int b, int c, int d, double e1, out string tail1, out double p1, out double p2, out double midP)
+        {
+            int p = a + b;
+            int q = c + d;
+            int r = a + c;
+            int n = p + q;
+            double lnTables = LogChoose(n, r);
+            double observed = Math.Exp(LogChoose(p, a) + LogChoose(q, r - a) - lnTables);
+            // The mirror image of a table has the same probability, which the log gamma function reproduces only to about nine figures
+            double limit = observed * (1.0 + 1.0E-7);
+            double lower = 0.0;
+            double upper = 0.0;
+            p2 = 0.0;
+            for (int k = 0; k <= Math.Min(p, r); k++)
+            {
+                double term = Math.Exp(LogChoose(p, k) + LogChoose(q, r - k) - lnTables);
+                if (k <= a)
+                    lower += term;
+                if (k >= a)
+                    upper += term;
+                if (term <= limit)
+                    p2 += term;
+            }
+            if (a > e1)
+            {
+                tail1 = "(upper tail)";
+                p1 = Math.Min(upper, 1.0);
+            }
+            else
+            {
+                tail1 = "(lower tail)";
+                p1 = Math.Min(lower, 1.0);
+            }
+            p2 = Math.Min(p2, 1.0);
+            midP = p1 - observed / 2.0;
+        }
+
+        private static double LogChoose(int n, int k) => PDF.alogam(n + 1.0) - PDF.alogam(k + 1.0) - PDF.alogam(n - k + 1.0);
+
         ///  <summary>
-        ///  
+        ///
         ///  </summary>
         ///  <param name="frame">One classifier variable per rater, one row of data per subject.</param>
         ///  <param name="poscat"></param>
