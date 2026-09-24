@@ -391,6 +391,32 @@ namespace StatsDirect.Numerics
         }
 
         /// <summary>
+        /// Natural log of the complete beta function B(a, b) for positive a and b. When the larger argument is 10 or more the
+        /// Stirling forms are combined algebraically with the d9lgmc corrections (the SLATEC DLBETA method), which keeps the
+        /// significant figures that alogam(a) + alogam(b) - alogam(a + b) loses when the arguments are large: the three
+        /// terms are then of order (a + b) log(a + b) and their difference is small, so a subtraction of rounded values
+        /// costs about 16 - log10(a + b) figures. Below 10 the direct form is exact enough.
+        /// </summary>
+        public static double LogBeta(double a, double b)
+        {
+            if (!(a > 0.0) || !(b > 0.0) || double.IsInfinity(a) || double.IsInfinity(b))
+                return double.NaN;
+            double p = Math.Min(a, b);
+            double q = Math.Max(a, b);
+            if (q < 10.0)
+                return alogam(p) + alogam(q) - alogam(p + q);
+            double sum = p + q;
+            double correction = d9lgmc(q) - d9lgmc(sum);
+            if (p < 10.0)
+            {
+                //  log Gamma(q) - log Gamma(p + q) from the Stirling forms: p - p log(p + q) + (q - 1/2) log(q / (p + q)) + corrections
+                return alogam(p) + correction + p - p * Math.Log(sum) + (q - 0.5) * Base.log1p(-p / sum);
+            }
+            //  both arguments large: (p - 1/2) log(p / (p + q)) + q log(q / (p + q)) - log(q) / 2 + log sqrt(2 pi) + corrections
+            return (p - 0.5) * Math.Log(p / sum) + q * Base.log1p(-p / sum) - 0.5 * Math.Log(q) + Constant.SQ2PIL + d9lgmc(p) + correction;
+        }
+
+        /// <summary>
         /// compute the log gamma correction factor for x .ge. 10. so that
         /// dlog (dgamma(x)) = dlog(dsqrt(2*pi)) + (x-.5)*dlog(x) - x + d9lgmc(x)
         /// </summary>
@@ -718,7 +744,7 @@ namespace StatsDirect.Numerics
 
             //        calculate result
 
-            double beta = alogam(p) + alogam(q) - alogam(p + q);
+            double beta = LogBeta(p, q);
             ret = ret * Math.Exp(pp * Math.Log(xx) + (qq - 1.0) * Math.Log(cx) - beta) / pp;
             if (index)
                 ret = 1.0 - ret;
@@ -1608,7 +1634,7 @@ namespace StatsDirect.Numerics
             for (i = 0; i <= k; i++)
             {
                 double xi = i;
-                term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                term = -Math.Log(xn1) - LogBeta(xi + 1.0, xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
                 if (term > sml) plo += Math.Exp(term);
             }
             if (term > sml) term = Math.Exp(term);
@@ -1668,7 +1694,7 @@ namespace StatsDirect.Numerics
             for (i = 0; i <= n; i++)
             {
                 xi = i;
-                double term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                double term = -Math.Log(xn1) - LogBeta(xi + 1.0, xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
                 pr[i] = term > sml ? Math.Exp(term) : 0.0;
             }
             // tails summed from the smallest terms
@@ -1738,7 +1764,7 @@ namespace StatsDirect.Numerics
             for (i = 0; i <= k; i++)
             {
                 double xi = i;
-                term = alogam(xn1) - alogam(xi + 1.0) - alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
+                term = -Math.Log(xn1) - LogBeta(xi + 1.0, xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
                 if (term > sml) plo += Math.Exp(term);
             }
             if (term > sml) term = Math.Exp(term);
