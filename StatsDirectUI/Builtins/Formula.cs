@@ -1047,9 +1047,10 @@ namespace StatsDirect.Builtins
         private static double x_tpower(bool unpaired, double alpha, double delta, double sd, double m, double n) => unpaired ? Power.tstpower(alpha, delta, sd, n, x_controls(m, n) / n) : Power.ptpower(alpha, delta, sd, n);
 
         /// <summary>
-        /// the number of controls for n experimental subjects at m controls per subject: a whole number, and at least one
+        /// the number of controls for n experimental subjects at m controls per subject: a whole number, and at least one. The product is
+        /// rounded before the ceiling is taken: 1.1 x 50 is 55.000000000000007 in floating point, and a whole-number design must not gain a control
         /// </summary>
-        private static double x_controls(double m, double n) => Math.Ceiling(m * n);
+        private static double x_controls(double m, double n) => Math.Ceiling(Math.Round(m * n, 9));
 
         /// <summary>
         /// smallest integer sample size (per experimental group if unpaired) whose two sided non-central t power reaches the target, searched from the approximation n0
