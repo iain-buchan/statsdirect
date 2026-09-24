@@ -1,7 +1,7 @@
 <report>
 <title>False result probabilities</title>
 
-<p>For an overall case rate of @population per ten thousand population tested:</p>
+<p>For an overall case rate of @{population:roundu} per ten thousand population tested:</p>
 
 <p>Test SENSITIVITY = @{sensitive:roundu}%<br />
 Probability of a FALSE POSITIVE result = <pval>@{positive:roundu}</pval></p>

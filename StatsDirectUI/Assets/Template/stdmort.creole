@@ -3,7 +3,7 @@
 <table>
 <tr><th>Reference rate</th><th>Observed person-time</th><th>Expected deaths</th><th></th></tr>
 <block name="groups"><tr><td>@{group:roundu}</td><td>@observed</td><td>@{expected:roundu}</td><td>@lb</td></tr></block>
-<tr><td></td><td></td><td>Total = @total</td><td></td></tr>
+<tr><td></td><td></td><td>Total = @{total:roundu}</td><td></td></tr>
 </table>
 
 <p>Standardized Mortality Ratio (SMR) = @{ratio:roundu}<br />

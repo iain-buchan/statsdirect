@@ -19,10 +19,10 @@ power = @{power:roundu}</p>
 <block name="reduction">
 
 <p>Reduction in sample size, relative to paired design,<br />
-when using @controls controls per case = @reduction</p>
+when using @controls controls per case = @{reduction:roundu}</p>
 </block>
 <block name="assumptions">
 
-<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</warn></p>
+<p><warn>NB: Assumptions of this calculation may cause over estimation of sample size when power is low. However, true power associated with @cases cases will be no less than @{no_less:roundu} and no greater than @{no_greater:roundu}.</warn></p>
 </block>
 </report>

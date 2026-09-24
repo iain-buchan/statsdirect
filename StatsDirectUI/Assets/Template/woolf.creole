@@ -32,7 +32,7 @@ Chi&#xb2; = @{chi_2:roundu}  Chi = @{chi:roundu} <pval>@{chi_p:pval}</pval><br /
 <br />
 <block name="combined_no_haldane">
 <p><b>For combined tables without Haldane correction:</b><br />
-Number of Tables = @tables<br />
+Number of tables = @tables<br />
 Mean log odds ratio = @{mean:roundu} giving odds ratio = @{odds:roundu}<br />
 Variance of mean log odds ratio = @{var:roundu}  standard error = @{se:roundu}<br />
 <ci>Approximate @{pc:round2}% CI for mean log odds ratio = @{ci_from:roundu} to @{ci_to:roundu}</ci><br />

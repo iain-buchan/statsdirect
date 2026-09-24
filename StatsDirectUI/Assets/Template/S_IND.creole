@@ -14,7 +14,7 @@ N = @case case subjects and @controls controls</p>
 N = @case_corr case subjects and @controls_corr controls</p>
 <block name="assumptions">
 
-<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.</warn><br />
-<warn>However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</warn></p>
+<p><warn>NB: Assumptions of this calculation may cause over estimation of sample size when power is low.</warn><br />
+<warn>However, true power associated with @cases cases will be no less than @{no_less:roundu} and no greater than @{no_greater:roundu}.</warn></p>
 </block>
 </report>

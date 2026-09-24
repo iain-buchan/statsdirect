@@ -29,9 +29,9 @@ Pooled rate ratio = @{eor:roundu}<br />
 </block>
 
 <p><u>Non-combinability of studies</u><br />
-Cohran Q = @{qc:roundu}  (df = @df) <pval>@{xp:pval}</pval><br />
+Cochran Q = @{qc:roundu}  (df = @df) <pval>@{xp:pval}</pval><br />
 Moment-based estimate of between studies variance = @{tausq:roundu}<br />
-I<sub>2</sub> (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1}% to @{ulisq:round1}%</ci>) </p>
+I&#xb2; (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1}% to @{ulisq:round1}%</ci>) </p>
 
 <p><u>Random effects (DerSimonian-Laird)</u><br />
 Pooled IRR = @{dsirr:roundu} (<ci>@{pc:round2}% CI = @{dsll:roundu} to @{dsul:roundu}</ci>)<br />
@@ -39,7 +39,7 @@ Z (test IRR differs from 1) = @{dz:roundu}  <pval>@{dp:pval}</pval></p>
 <block name="egger">
 
 <p><u>Bias indicators</u><br />
-Begg-Mazumdar: Kendall's @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
+Begg-Mazumdar: Kendall's tau = @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
 Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 </report>

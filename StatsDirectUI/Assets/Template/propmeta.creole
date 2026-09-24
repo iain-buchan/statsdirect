@@ -24,14 +24,14 @@ Pooled proportion = @{rmh:roundu} (<ci>@{pc:round2}% CI = @{from:roundu} to @{to
 <p><u>Non-combinability of studies</u><br />
 Cochran Q = @{qc:roundu}  (df = @df)  <pval>@{xp:pval}</pval><br />
 Moment-based estimate of between studies variance = @{tausq:roundu}<br />
-I<sub>2</sub> (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1}% to @{ulisq:round1}%</ci>) </p>
+I&#xb2; (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1}% to @{ulisq:round1}%</ci>) </p>
 
 <p><u>Random effects (DerSimonian-Laird)</u><br />
 Pooled proportion = @{dspr:roundu} (<ci>@{pc:round2}% CI = @{from_ds:roundu} to @{to_ds:roundu}</ci>)</p>
 
 <p><u>Bias indicators</u></p>
 <block name="egger">
-<p>Begg-Mazumdar: Kendall's @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
+<p>Begg-Mazumdar: Kendall's tau = @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
 Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 <block name="harbord">

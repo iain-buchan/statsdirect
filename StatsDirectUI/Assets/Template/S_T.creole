@@ -10,12 +10,12 @@ Standard deviation = @{sd:roundu}
 </p>
 <block name="controls"><p>Controls per experimental subject @con_per</p></block>
 
-<p>Estimated minimum sample size = @size <block name="pairs">pairs</block><block name="subjects"> experimental subjects and @con_tot controls.</block></p>
+<p>Estimated minimum sample size = @size <block name="pairs">pairs</block><block name="subjects">experimental subjects and @con_tot controls.</block></p>
 
-<p>Degrees of freedom = @df</p>
+<p>Degrees of freedom = @{df:roundu}</p>
 <block name="assumptions">
 
-<p>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.<br />
-However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</p>
+<p>NB: Assumptions of this calculation may cause over estimation of sample size when power is low.<br />
+However, true power associated with @cases cases will be no less than @{no_less:roundu} and no greater than @{no_greater:roundu}.</p>
 </block>
 </report>

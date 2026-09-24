@@ -12,6 +12,6 @@ power = @{power:roundu}</p>
 <p>Estimated minimum sample size = @size experimental subjects and @controls controls</p>
 <block name="assumptions">
 
-<p><warn>NB:Assumptions of this calculation may cause over estimation of sample size when power is low.  However, true power associated with @cases cases will be no less than @no_less and no greater than @no_greater.</warn></p>
+<p><warn>NB: Assumptions of this calculation may cause over estimation of sample size when power is low. However, true power associated with @cases cases will be no less than @{no_less:roundu} and no greater than @{no_greater:roundu}.</warn></p>
 </block>
 </report>
