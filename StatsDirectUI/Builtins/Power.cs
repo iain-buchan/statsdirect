@@ -177,7 +177,8 @@ namespace StatsDirect.Builtins
             double dx;
 
             const int jmax = 400;
-            double xacc = 0.000002 * Math.Min( P0, 1.0 - P0 ); 
+            // absolute tolerance in beta: the power is printed to two decimals of a percentage, and P0 may be 0 or 1
+            const double xacc = 0.0000000001;
             // bisection, the root of a function func known to lie between x1 and x2
             double fmid = fisherss( x2, alpha, P1, P0, N, M ); 
             double f = fisherss( x1, alpha, P1, P0, N, M ); 
