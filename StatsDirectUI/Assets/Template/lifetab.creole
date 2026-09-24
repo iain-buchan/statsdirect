@@ -9,4 +9,5 @@
 <tr><th>Interval</th><th>P(survival)</th><th>Survivors (l<sub>x</sub>%)</th><th>SD of l<sub>x</sub>%</th><th><ci>@{pc:round2}% CI for l<sub>x</sub>%</ci></th></tr>
 <block name="survival"><tr><td>@int</td><td>@{p:roundu}</td><td>@{lx:roundu}</td><td>@{var:roundu}</td><td><ci>@{lci:roundu}  to  @{uci:roundu}</ci></td></tr></block>
 </table>
+<block name="note"><p>@note</p></block>
 </report>

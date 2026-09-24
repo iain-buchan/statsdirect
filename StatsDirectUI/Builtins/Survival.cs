@@ -2027,20 +2027,15 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptFollowUpLifetableCalculateNatst(ParameterBag parameters)
         {
-            DataFrame deathsFrame = parameters["deaths"].AsDataFrame;
-            DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
+            DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0] as DoubleVariable;
+            DoubleVariable deathsVariable = parameters["deaths"].AsDataFrame.Variables[0] as DoubleVariable;
+            DoubleVariable withdrawalsVariable = parameters["withdrawals"].AsDataFrame.Variables[0] as DoubleVariable;
 
+            // the least number alive at the start: the deaths and withdrawals of the rows the table uses, those with a value in all three columns
             double natst = 0.0;
-            foreach (double d in deathsVariable.Data)
-                if (d != Constant.MISSING)
-                    natst += d;
-
-            DataFrame withdrawalsFrame = parameters["withdrawals"].AsDataFrame;
-            DoubleVariable withdrawalsVariable = withdrawalsFrame.Variables[0]as DoubleVariable;
-
-            foreach (double w in withdrawalsVariable.Data)
-                if (w != Constant.MISSING)
-                    natst += w;
+            for (int r = 0; r < timesVariable.Length; r++)
+                if (timesVariable.Data[r] != Constant.MISSING && deathsVariable.Data[r] != Constant.MISSING && withdrawalsVariable.Data[r] != Constant.MISSING)
+                    natst += deathsVariable.Data[r] + withdrawalsVariable.Data[r];
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("natst-min", natst);
@@ -2116,6 +2111,19 @@ namespace StatsDirect.Builtins
             d = dd;
             w = ww;
             ParameterBag outputParameters = new();
+            // the report says how many rows were left out for a blank cell
+            if (nx < rows)
+            {
+                IList<ParameterBag> noteList = new List<ParameterBag>();
+                ParameterBag noteParameters = new();
+                noteParameters.AddOutput("note", rows - nx == 1 ? "1 row with a blank cell was left out" : (rows - nx).ToString() + " rows with a blank cell were left out");
+                noteList.Add(noteParameters);
+                outputParameters.AddOutput("*note", noteList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*note", null);
+            }
             double cump = 1.0;
             double var1 = 0.0;
             double natr = natst;
