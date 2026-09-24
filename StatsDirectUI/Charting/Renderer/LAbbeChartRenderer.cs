@@ -39,7 +39,7 @@ namespace StatsDirect.Charting.Renderer
                     x[i] = options.o[i, 2] / (options.o[i, 2] + options.o[i, 4]);
                 w[i] = options.o[i, 1] + options.o[i, 2] + options.o[i, 3] + options.o[i, 4];
             }
-            PlotXYZ(x, y, w, 1, options.k, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, ChartPreferences.MarkerTypes[0], options.rmh);
+            PlotXYZ(x, y, w, 1, options.k, "control percent", "experimental percent", "L'Abbe plot (symbol size represents sample size)", false, 0, ChartPreferences.MarkerTypes[0], options.rmh, options.isOddsRatio);
             return new ParameterBag();
         }
     }

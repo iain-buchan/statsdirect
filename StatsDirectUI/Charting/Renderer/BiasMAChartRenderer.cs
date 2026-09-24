@@ -71,6 +71,13 @@ namespace StatsDirect.Charting.Renderer
             Layout.Range dataRangeY = GetMinMaxArray(y, ScaleType.Linear);
             DataMinY = dataRangeY.Min;
             DataMaxY = dataRangeY.Max;
+            if (options.diagonal)
+            {
+                // The Peto O-E vs. V plot: the pooled line passes through the origin, so both axes include it
+                DataMinX = Math.Min(DataMinX, 0);
+                DataMinY = Math.Min(DataMinY, 0);
+                DataMaxY = Math.Max(DataMaxY, 0);
+            }
             double pool = options.xform switch
             {
                 Transformation.Log => Math.Log(options.rmh),
@@ -199,8 +206,13 @@ namespace StatsDirect.Charting.Renderer
                 }
             }
 
-            if (options.diagonal)
-                DrawLineInChartCoordinates(GrBlack, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
+            if (options.diagonal && options.rmh > 0 && options.rmh != Constant.MISSING)
+            {
+                // The Peto O-E vs. V plot: the pooled log odds ratio is the sum of O - E over the sum of V, so the studies scatter about the line through
+                // the origin with that slope. The corner-to-corner diagonal of the axis box used to be drawn instead.
+                double slope = Math.Log(options.rmh);
+                MaybeDrawLineInChartCoordinates(axisScales, GrBlack, axisScales.X.MinimumScaleValue, slope * axisScales.X.MinimumScaleValue, axisScales.X.MaximumScaleValue, slope * axisScales.X.MaximumScaleValue);
+            }
             EndVectorPlot();
             return new ParameterBag();
         }
@@ -211,16 +223,12 @@ namespace StatsDirect.Charting.Renderer
             y[0] = Constant.MISSING;
             if (xtxt == "Peto weights")
             {
+                // Observed minus expected against its variance V; yw holds O - E for each study (the reciprocal used to be plotted)
                 ytx = "Observed-Expected";
                 title = "Peto O-E vs. V plot";
                 plotMethod = 2;
                 for (int r = 1; r <= rows; r++)
-                {
-                    if (yw[r] == 0.0 || yw[r] == Constant.MISSING)
-                        y[r] = Constant.MISSING;
-                    else
-                        y[r] = 1.0 / yw[r];
-                }
+                    y[r] = yw[r];
                 reverse = false;
                 return;
             }

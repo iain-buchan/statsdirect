@@ -213,16 +213,27 @@ namespace StatsDirect.Charting.Renderer
                             false, true);
 
                         string mask = "G12";
+                        //  A mid-point label ends four columns right of the axis line, so one of more than four characters would run over the line: the
+                        //  labels, bars and ruler are moved right by the excess of the widest label.
+                        string[] midpointLabels = new string[descriptor.Bins];
+                        int labelShift = 0;
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
-                            int barLength = Convert.ToInt32(descriptor.Counts[c] * proportionScaler / DataMaxY * 60);
-                            WriteAsciiYX(c + AsciiYTxt, AsciiXTxt + 5, new string('=', barLength));
+                            midpointLabels[c] = ((descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0).ToString(mask);
+                            labelShift = Math.Max(labelShift, midpointLabels[c].Length - 4);
+                        }
+                        int barStart = AsciiXTxt + 5 + labelShift;
+                        for (int c = 0; c < descriptor.Bins; c++)
+                        {
+                            //  The bar is scaled as the ruler beneath it is, so that its end reads the count off the ruler. It used to be scaled to the
+                            //  largest count, which is the ruler's end only when that count is a neat axis value.
+                            int barLength = ToAsciiX(descriptor.Counts[c] * proportionScaler) - ToAsciiX(0);
+                            WriteAsciiYX(c + AsciiYTxt, barStart, new string('=', barLength));
                             if (descriptor.Counts[c] > 0 && barLength == 0)
-                                WriteAsciiYX(c + AsciiYTxt, AsciiXTxt + 5, ":");
+                                WriteAsciiYX(c + AsciiYTxt, barStart, ":");
 
-                            double midpoint = (descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0;
-                            string buf = midpoint.ToString(mask);
-                            WriteAsciiYX(c + AsciiYTxt, AsciiXTxt - buf.Length + 4, buf);
+                            string buf = midpointLabels[c];
+                            WriteAsciiYX(c + AsciiYTxt, AsciiXTxt - buf.Length + 4 + labelShift, buf);
 
                             buf = descriptor.Counts[c].ToString(CultureInfo.InvariantCulture);
                             WriteAsciiYX(c + AsciiYTxt, 1, buf);
@@ -230,11 +241,12 @@ namespace StatsDirect.Charting.Renderer
 
                         WriteAsciiYX(0, AsciiXTxt, options.HistoSeriesOptions[seriesIndex].XAxisTitle);
 
-                        WriteAsciiYX(descriptor.Bins + AsciiYTxt, 16, "Mid-points");
+                        WriteAsciiYX(descriptor.Bins + AsciiYTxt, 16 + labelShift, "Mid-points");
                         WriteAsciiYX(descriptor.Bins + AsciiYTxt, 1, "Counts");
-                        TextCanvas[2] = string.Concat("     ", TextCanvas[2].AsSpan(0, Math.Min(TextCanvas[2].Length, 85)));
-                        TextCanvas[1] = string.Concat("     ", TextCanvas[1].AsSpan(0, Math.Min(TextCanvas[1].Length, 85)));
-                        TextCanvas[0] = string.Concat("     ", TextCanvas[0].AsSpan(0, Math.Min(TextCanvas[0].Length, 85)));
+                        string rulerShift = new(' ', 5 + labelShift);
+                        TextCanvas[2] = string.Concat(rulerShift, TextCanvas[2].AsSpan(0, Math.Min(TextCanvas[2].Length, 85)));
+                        TextCanvas[1] = string.Concat(rulerShift, TextCanvas[1].AsSpan(0, Math.Min(TextCanvas[1].Length, 85)));
+                        TextCanvas[0] = string.Concat(rulerShift, TextCanvas[0].AsSpan(0, Math.Min(TextCanvas[0].Length, 85)));
 
                         //  Save this plot
                         for (int i = TextCanvas.Length - 1; i >= 0; i--)

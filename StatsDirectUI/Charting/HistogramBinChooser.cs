@@ -220,6 +220,11 @@ namespace StatsDirect.Charting
             double minimumDataValue = sortedData[0];
             double maximumDataValue = sortedData[length - 1];
 
+            //  A single value, or all values equal: one bin of width 2 centred on the value, holding every value. The search below works on a grid of zero
+            //  width, then trims its empty bins away until none is left and the plot fails with an index error.
+            if (maximumDataValue == minimumDataValue)
+                return new BinsDescriptor { Edges = new[] { minimumDataValue - 1, minimumDataValue + 1 }, Counts = new[] { length } };
+
             //  Work out how many bins we should have at maximum: between 7 and 20, depending on the number of samples
             int maxBins = Convert.ToInt32(Math.Pow(length, 0.88) / 4.0);
             maxBins = Constrain(maxBins, 7, 20);

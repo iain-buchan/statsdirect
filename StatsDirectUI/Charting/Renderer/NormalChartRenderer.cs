@@ -49,7 +49,9 @@ namespace StatsDirect.Charting.Renderer
                         break;
                     case NormalOptions.ScoreMethod.ExpectedNormalOrder:
                         //  expected normal order
-                        x[j] = PDF.expnos(Convert.ToInt32(x[j]), nn);
+                        // A tied value has a mid-rank ending in .5: it takes the mean of the two neighbouring expected order statistics, as the normal scores transform
+                        // does. Rounding the mid-rank to a whole rank gave the tie group the score of the rank above or below it.
+                        x[j] = 0.5 * (PDF.expnos((int)Math.Floor(x[j]), nn) + PDF.expnos((int)Math.Ceiling(x[j]), nn));
                         break;
                     default:
                         throw new Exception("Unexpected score method");
@@ -138,7 +140,9 @@ namespace StatsDirect.Charting.Renderer
                         }
                     case NormalOptions.ScoreMethod.ExpectedNormalOrder:
                         //  expected normal order
-                        x[j] = PDF.expnos(Convert.ToInt32(x[j]), nn);
+                        // A tied value has a mid-rank ending in .5: it takes the mean of the two neighbouring expected order statistics, as the normal scores transform
+                        // does. Rounding the mid-rank to a whole rank gave the tie group the score of the rank above or below it.
+                        x[j] = 0.5 * (PDF.expnos((int)Math.Floor(x[j]), nn) + PDF.expnos((int)Math.Ceiling(x[j]), nn));
                         break;
                     default:
                         throw new Exception("Unexpected score method");

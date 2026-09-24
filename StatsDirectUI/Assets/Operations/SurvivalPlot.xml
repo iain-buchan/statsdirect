@@ -73,7 +73,8 @@
               <mode>NumericReplaceMissing</mode>
               <min-columns>1</min-columns>
               <max-columns>1</max-columns>
-              <!-- TODO: If more than one series is present, and the user enters CIs for earlier ones but cancels for later ones, this will still be requested. -->
+              <!-- Asked only when this group's lower limit was given: requires-parameter is checked against the parameters filled in this pass of the
+                   iteration, so cancelling the lower limit of a later group skips its upper limit whatever earlier groups gave. -->
               <clear-selection-first>true</clear-selection-first>
               <append-to-frame>ydatu</append-to-frame>
             </frame>

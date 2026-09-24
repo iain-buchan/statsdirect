@@ -131,6 +131,21 @@ namespace StatsDirect.Charting.Renderer
                                                               bOptions.ForcedFillStyle);
             }
 
+            //  The chart options control fills the marker types before the plot; a caller that gives none (the frequency bar chart, or a run without the
+            //  control) gets one per series from the series descriptors, as the rotated stacked chart does above. Without them the legend failed and the
+            //  labels series was taken for a numeric one.
+            if (null == bOptions.MarkerTypes || bOptions.MarkerTypes.Count < 1)
+            {
+                if (bOptions.SeriesOptions.Count < seriesToUse.Count)
+                {
+                    bOptions.SeriesOptions.Clear();
+                    bOptions.SetMarkers(seriesToUse);
+                }
+                bOptions.MarkerTypes = MarkersFromDescriptors(bOptions.SeriesOptions, bOptions.ShouldForceIsFilled,
+                                                              bOptions.ForcedIsFilled, bOptions.ShouldForceFillStyle,
+                                                              bOptions.ForcedFillStyle);
+            }
+
             //  Sort out the axes for different chart types
             if (bOptions.Stacked)
             {

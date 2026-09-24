@@ -1021,16 +1021,20 @@ namespace StatsDirect.Charting.Renderer
         /// <param name="chartValue"></param>
         /// <param name="scaleType"></param>
         /// <returns></returns>
-        protected float Transform(double chartValue, ScaleType scaleType)
+        /// <remarks>
+        /// In double precision: a single-precision value has a resolution of 1 at 1e7, so data whose magnitude dwarfs their range (10000000.1 to 10000000.9)
+        /// all mapped to the same one or two canvas positions and their bars and ticks collapsed.
+        /// </remarks>
+        protected double Transform(double chartValue, ScaleType scaleType)
         {
             switch (scaleType)
             {
                 case ScaleType.Log10:
-                    return chartValue > 0 ? (float)Math.Log10(chartValue) : 0;
+                    return chartValue > 0 ? Math.Log10(chartValue) : 0;
                 case ScaleType.LogNatural:
-                    return chartValue > 0 ? (float)(Math.Log(chartValue) / Log2) : 0;
+                    return chartValue > 0 ? Math.Log(chartValue) / Log2 : 0;
                 default:
-                    return (float)chartValue;
+                    return chartValue;
             }
         }
 
@@ -1523,6 +1527,12 @@ namespace StatsDirect.Charting.Renderer
             switch (TextCanvas[chartY][chartX])
             {
                 case ' ':
+                // A point whose cell lies on an axis line (a value at the scale minimum rounds to the axis row or column) is drawn over the axis character;
+                // it used to be left out, so it was missing from the plot however many points shared the cell.
+                case '|':
+                case '+':
+                case '-':
+                case '/':
                     WriteAsciiYX(chartY, chartX, "*");
                     break;
                 case '*':
@@ -1531,9 +1541,8 @@ namespace StatsDirect.Charting.Renderer
                 case '9':
                     WriteAsciiYX(chartY, chartX, "X");
                     break;
-                case '|':
-                case '+':
-                case '-':
+                case 'X':
+                    // Ten or more points: X stays X
                     return;
                 default:
                     // Must be numeric; add 1

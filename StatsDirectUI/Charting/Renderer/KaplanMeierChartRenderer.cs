@@ -1,6 +1,7 @@
 ﻿using StatsDirect.Charting.Scales;
 using StatsDirect.Templates;
 using System;
+using System.Globalization;
 
 namespace StatsDirect.Charting.Renderer
 {
@@ -66,6 +67,24 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
+            //  No point at all (the hazard of a group whose only subject died, or the log hazard of a group with no death) overflowed the axis layout.
+            if (DataMaxX < DataMinX || DataMaxY < DataMinY)
+                throw new Exception("No points to plot: the " + options.YAxisTitle.ToLower(CultureInfo.CurrentCulture) + " values are not defined for these data");
+            //  A group with a single death has one hazard value throughout (equal but for the last bits of -log S), and one or two subjects can give a
+            //  single time: no axis can be made from a range of zero, so the range is widened by a tenth of the value (by 1 for a value of 0) and the
+            //  chart drawn.
+            if (IsZeroRange(DataMinX, DataMaxX))
+            {
+                double widening = DataMaxX == 0 ? 1 : 0.1 * Math.Abs(DataMaxX);
+                DataMinX -= widening;
+                DataMaxX += widening;
+            }
+            if (IsZeroRange(DataMinY, DataMaxY))
+            {
+                double widening = DataMaxY == 0 ? 1 : 0.1 * Math.Abs(DataMaxY);
+                DataMinY -= widening;
+                DataMaxY += widening;
+            }
             AxisScales axisScales = LayoutChartAndDrawAxes(options.Title,
                 new AxisDefinition(options.XAxisTitle, AxisMode.Scale, ScaleType.Linear),
                 new AxisDefinition(options.YAxisTitle, AxisMode.Scale, ScaleType.Linear),
@@ -117,6 +136,14 @@ namespace StatsDirect.Charting.Renderer
                 DrawLegend(legend);
             EndVectorPlot();
             return new ParameterBag();
+        }
+
+        /// <summary>
+        /// True when the range is zero, or so small beside the values' magnitude that no axis can be made from it.
+        /// </summary>
+        private static bool IsZeroRange(double minimum, double maximum)
+        {
+            return maximum - minimum <= 1e-9 * Math.Max(Math.Abs(minimum), Math.Abs(maximum));
         }
     }
 }

@@ -13,7 +13,9 @@ namespace StatsDirect.Charting.Renderer
         {
         }
 
-        protected void PlotXYZ(double[] x, double[] y, double[] z, int lowerBound, int rows, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, MarkerType markerType, double? labbePool = default)
+        /// <param name="labbePool">For a L'Abbe plot, the pooled odds ratio or relative risk whose locus is drawn as the dashed line</param>
+        /// <param name="labbePoolIsOddsRatio">True when labbePool is an odds ratio, false when it is a relative risk</param>
+        protected void PlotXYZ(double[] x, double[] y, double[] z, int lowerBound, int rows, string xtxt, string ytxt, string title, bool zPlot, DataMinMax minMaxY, MarkerType markerType, double? labbePool = default, bool labbePoolIsOddsRatio = false)
         {
             StartVectorPlot();
             double rmh = 0;
@@ -95,23 +97,54 @@ namespace StatsDirect.Charting.Renderer
             {
                 // null effect diagonal
                 DrawLineInChartCoordinates(GrBlack, axisScales.X.MinimumScaleValue, axisScales.Y.MinimumScaleValue, axisScales.X.MaximumScaleValue, axisScales.Y.MaximumScaleValue);
-                // pooled event rate
-                double x1;
-                double y1;
-                if (rmh >= 1)
+                // pooled effect
+                PenDescriptor pooledPen = GetLinePen(ChartPreferences.MarkerTypes[10], false);
+                if (labbePoolIsOddsRatio)
                 {
-                    y1 = ToCanvasY(axisScales.Y.MaximumScaleValue);
-                    x1 = ToCanvasX(axisScales.Y.MaximumScaleValue / rmh);
+                    // The locus of a constant odds ratio is the curve y = rmh x / (1 - x + rmh x), with the rates as fractions; it used to be drawn as the
+                    // line through the origin of slope rmh, which is the locus of a constant relative risk.
+                    const int segments = 100;
+                    double xMin = axisScales.X.MinimumScaleValue;
+                    double xMax = axisScales.X.MaximumScaleValue;
+                    double xPrevious = xMin;
+                    double yPrevious = OddsRatioLocus(xMin, rmh);
+                    for (int segment = 1; segment <= segments; segment++)
+                    {
+                        double xNext = xMin + (xMax - xMin) * segment / segments;
+                        double yNext = OddsRatioLocus(xNext, rmh);
+                        MaybeDrawLineInChartCoordinates(axisScales, pooledPen, xPrevious, yPrevious, xNext, yNext);
+                        xPrevious = xNext;
+                        yPrevious = yNext;
+                    }
                 }
                 else
                 {
-                    x1 = ToCanvasX(axisScales.X.MaximumScaleValue);
-                    y1 = ToCanvasY(rmh * axisScales.X.MaximumScaleValue);
+                    // The locus of a constant relative risk: the line through the origin of slope rmh
+                    double x1;
+                    double y1;
+                    if (rmh >= 1)
+                    {
+                        y1 = ToCanvasY(axisScales.Y.MaximumScaleValue);
+                        x1 = ToCanvasX(axisScales.Y.MaximumScaleValue / rmh);
+                    }
+                    else
+                    {
+                        x1 = ToCanvasX(axisScales.X.MaximumScaleValue);
+                        y1 = ToCanvasY(rmh * axisScales.X.MaximumScaleValue);
+                    }
+                    DrawLineInCanvasCoordinates(pooledPen, ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
                 }
-                DrawLineInCanvasCoordinates(GetLinePen(ChartPreferences.MarkerTypes[10], false), ToCanvasX(axisScales.X.MinimumScaleValue), ToCanvasY(axisScales.Y.MinimumScaleValue), x1, y1);
             }
             EndVectorPlot();
         }
 
+        /// <summary>
+        /// The experimental event rate, in percent, at which a study with control event rate controlPercent has the odds ratio oddsRatio.
+        /// </summary>
+        private static double OddsRatioLocus(double controlPercent, double oddsRatio)
+        {
+            double p = controlPercent / 100.0;
+            return 100.0 * oddsRatio * p / (1.0 - p + oddsRatio * p);
+        }
     }
 }
