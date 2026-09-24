@@ -106,6 +106,9 @@
           <frame>
             <name>ll_y</name>
             <prompt>="Select LOWER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture)</prompt>
+            <validators>
+              <validator><name>NoMissingData</name></validator>
+            </validators>
             <mode>NumericReplaceMissing</mode>
             <same-length-as>y</same-length-as>
             <min-columns>1</min-columns>
@@ -120,6 +123,9 @@
               <frame>
                 <name>ul_y</name>
                 <prompt>="Select UPPER CONFIDENCE LIMIT for " + parameters["stat_in"].AsString.ToLower(CultureInfo.CurrentCulture)</prompt>
+                <validators>
+                  <validator><name>NoMissingData</name></validator>
+                </validators>
                 <mode>NumericReplaceMissing</mode>
                 <same-length-as>y</same-length-as>
                 <min-columns>1</min-columns>

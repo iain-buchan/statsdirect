@@ -30,13 +30,13 @@ Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:rou
 </block>
 
 <p><u>Schmidt-Hunter</u><br />
-Weighted mean correlation (95% CI): @{wmr:roundu} (<ci>@{wmr_lcl:roundu} to @{wmr_ucl:roundu}</ci>)<br />
+Weighted mean correlation (@{pc:round2}% CI): @{wmr:roundu} (<ci>@{wmr_lcl:roundu} to @{wmr_ucl:roundu}</ci>)<br />
 Z (test correlation differs from 0) = @{wmr_z:roundu} <pval>@{wmr_p:pval}</pval></p>
 
 <p>Observed variance across studies: @{var_r:roundu}<br />
 Variance due to sampling error: @{var_e:roundu}<br />
 Variance in the population correlations: @{var_p:roundu}<br />
-95% Credibility interval for weighted mean correlation: @{wmr_crll:roundu} to @{wmr_crul:roundu}</p>
+@{pc:round2}% Credibility interval for weighted mean correlation: @{wmr_crll:roundu} to @{wmr_crul:roundu}</p>
 
 <p>Indicators of homogeneity/heterogeneity:</p>
 <table>

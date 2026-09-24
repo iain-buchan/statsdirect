@@ -16,8 +16,6 @@ namespace StatsDirect.Builtins
     {
         public static StepOutput RptPetoMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
-            double rmh = 0;
-
             double cco = parameters["gamma"].AsDouble;
             if (cco <= 0)
                 cco = 0.95;
@@ -91,13 +89,16 @@ namespace StatsDirect.Builtins
                     {
                         odr[i] = Math.Exp(oe[i] / v);
                         odz[i] = oe[i] / Math.Sqrt(v);
-                        odrv[i] = v;
+                        odrv[i] = 1.0 / v; // variance of the log odds ratio (O - E) / V
                         odrl[i] = Math.Exp((oe[i] - cit * Math.Sqrt(v)) / v);
                         odru[i] = Math.Exp((oe[i] + cit * Math.Sqrt(v)) / v);
                     }
                     else
                     {
+                        // an empty arm (or an empty outcome) gives V = 0: the table has no log odds ratio and is excluded
+                        included[i] = false;
                         odr[i] = Constant.MISSING;
+                        odrv[i] = Constant.MISSING;
                         odrl[i] = Constant.MISSING;
                         odru[i] = Constant.MISSING;
                         odz[i] = Constant.MISSING;
@@ -105,8 +106,10 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
+                    included[i] = false;
                     odr[i] = Constant.MISSING;
                     odw[i] = Constant.MISSING;
+                    odrv[i] = Constant.MISSING;
                     odrl[i] = Constant.MISSING;
                     odru[i] = Constant.MISSING;
                     odz[i] = Constant.MISSING;
@@ -132,7 +135,7 @@ namespace StatsDirect.Builtins
             int realk = 0;
             for (int i = 1; i <= k; i++)
             {
-                if (IncludeTable(o, i))
+                if (included[i])
                 {
                     realk++;
                     double lori = oe[i] / odw[i];
@@ -241,7 +244,7 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, rmh)));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.LAbbe, new LAbbeOptions(k, o, por)));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
@@ -1772,7 +1775,8 @@ namespace StatsDirect.Builtins
                         tbl[i].IsInformative = (a[i] * pt1[i] != 0.0) | (b[i] * pt2[i] != 0.0);
                     }
                     bool useLogScale = false;
-                    new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
+                    // person-time data: the conditional distribution of a given a + b is binomial with the person-times as its odds
+                    new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type3, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 }
                 else
                 {
@@ -1828,7 +1832,12 @@ namespace StatsDirect.Builtins
                         ? 100 * dsw[i] / Formatting.dsum(dsw, 1)
                         : Constant.MISSING);
                 irParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
-                if (mode == MetaIncidenceRateMode.Difference)
+                if (rkr[i] == Constant.MISSING)
+                {
+                    irParameters.AddOutput("yi", Constant.MISSING);
+                    irParameters.AddOutput("vi", Constant.MISSING);
+                }
+                else if (mode == MetaIncidenceRateMode.Difference)
                 {
                     irParameters.AddOutput("yi", rkr[i]);
                     irParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, false));
@@ -1873,8 +1882,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            // Call isquare(qc, k, cit, isq, llisq, ulisq)
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, Convert.ToInt32(realk), cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -2298,7 +2306,8 @@ namespace StatsDirect.Builtins
                     odr[i] = a * d / (b * c);
                     if (host.Preferences.MetaExact)
                     {
-                        OddsRatioCI(host, cco, a, b, c, d, out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
+                        // the conditional exact limits are those of the observed table: a zero cell gives a limit of 0 or infinity
+                        OddsRatioCI(host, cco, o[i, 1], o[i, 2], o[i, 3], o[i, 4], out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
                     }
                     else
                     {
@@ -2357,7 +2366,9 @@ namespace StatsDirect.Builtins
                     double qda = 1.0 - rmh;
                     double qdb = m2 - n1 + (m1 + n1) * rmh;
                     double qdc = -m1 * n1 * rmh;
-                    double ea = (-qdb + Math.Sqrt(Math.Pow(qdb, 2.0) - 4.0 * qda * qdc)) / (2.0 * qda);
+                    double ea = qda == 0.0
+                        ? -qdc / qdb // a pooled odds ratio of exactly 1 leaves the linear term only: the fitted a is (a + b)(a + c) / n
+                        : (-qdb + Math.Sqrt(Math.Pow(qdb, 2.0) - 4.0 * qda * qdc)) / (2.0 * qda);
                     // give the rest of the expected table e.g. Breslow & Day P 144
                     double varea = 1.0 / (1.0 / ea + 1.0 / (n1 - ea) + 1.0 / (m1 - ea) + 1.0 / (n0 - m1 + ea));
                     bd += (a - ea) * (a - ea) / varea;
@@ -2600,8 +2611,8 @@ namespace StatsDirect.Builtins
             realk = 0.0;
             for (int i = 1; i <= k; i++)
             {
-                // irr and ci for stratum
-                if (a[i] + b[i] <= 0.0 || b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
+                // irr and ci for stratum: a stratum with no events in either arm has no finite log rate ratio and is not pooled
+                if (a[i] <= 0.0 || b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
                 {
                     rkr[i] = Constant.MISSING;
                     rkw[i] = Constant.MISSING;
@@ -2748,10 +2759,12 @@ namespace StatsDirect.Builtins
 
                 for (int i = 0; i < rawRows; i++)
                 {
-                    if (llY[i] == Constant.MISSING)
-                        llY[i] = 0.0;
-                    if (ulY[i] == Constant.MISSING && useRatio)
-                        ulY[i] = 1.0;
+                    if (llY[i] == Constant.MISSING || ulY[i] == Constant.MISSING)
+                    {
+                        // a study with a blank confidence limit has no standard error: it is left out with the other incomplete rows
+                        seY[i] = Constant.MISSING;
+                        continue;
+                    }
                     if (llY[i] > ulY[i])
                         Utilities.Utilities.Swap(ref llY[i], ref ulY[i]);
                     if (useRatio)
@@ -2904,7 +2917,7 @@ namespace StatsDirect.Builtins
                 studiesParameters.AddOutput("to", ulY[i]);
                 studiesParameters.AddOutput("wt", 100 * wt[i] / Formatting.dsum(wt, 1));
                 studiesParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
-                studiesParameters.AddOutput("standardized_effect", y[i]); // TODO: Correct?  Is re-using se correct?
+                studiesParameters.AddOutput("standardized_effect", useRatio ? Math.Log(y[i]) : y[i]); // the statistic on the scale of its standard error and weight
                 studiesParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
             }
 
@@ -3004,8 +3017,8 @@ namespace StatsDirect.Builtins
             {
                 y[i] = rVariable.Data[i - 1];
                 pg[i] = CorrelationRowType.Study;
-                if (y[i] < -1.0 || y[i] > 1.0)
-                    throw new Exception($"r({i}) must be between -1 and 1");
+                if (y[i] <= -1.0 || y[i] >= 1.0)
+                    throw new Exception($"r({i}) must be between -1 and 1 exclusive: a correlation of exactly 1 or -1 has no finite Fisher z");
             }
             // pooled indicator for last element - needed by plot_cp
             pg[k + 1] = CorrelationRowType.Pooled;
@@ -3019,8 +3032,8 @@ namespace StatsDirect.Builtins
             for (i = 1; i <= k; i++)
             {
                 double sampleSize = nVariable.Data[i - 1];
-                if (sampleSize < 3)
-                    throw new Exception($"All values of n must be at least 3. n({i}) is less than 3");
+                if (sampleSize <= 3)
+                    throw new Exception($"All values of n must be greater than 3 (the variance of Fisher's z is 1/(n - 3)). n({i}) is not");
 
                 ss[i] = sampleSize;
                 seY[i] = Math.Sqrt(1 / (sampleSize - 3));
