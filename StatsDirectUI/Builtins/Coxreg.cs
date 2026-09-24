@@ -378,7 +378,8 @@ namespace StatsDirect.Builtins
             ldcoef = 1;
             for (int i = icov + 1; i <= icov + nobs; i++)
                 x[i] = 1.0;
-            indef[1] = 3;
+            // the dummy variable is in the first covariate column: column 3, or 4 when grouped data put a frequency column before it
+            indef[1] = icov / nobs + 1;
             igrp = new int[nobs + 1];
             ccase = new double[nobs + 1, 6 + 1];
             coef = new double[ldcoef + 1, 4 + 1];
@@ -2372,8 +2373,10 @@ namespace StatsDirect.Builtins
                 for (int i = 1; i <= iobs; i++)
                 {
                     double surv = Math.Pow(z[i].S, Math.Exp(Convert.ToDouble(z[i].Id) * ARR3[1, groupid, 1]));
-                    xp[i] = Math.Log(z[i].Time);
-                    yp[i] = -Math.Log(-Math.Log(surv));
+                    // -ln(-ln S) is not finite at S = 0 (everyone still at risk died at that time) or at S = 1: the point is left out
+                    double y = -Math.Log(-Math.Log(surv));
+                    xp[i] = double.IsFinite(y) ? Math.Log(z[i].Time) : Constant.MISSING;
+                    yp[i] = double.IsFinite(y) ? y : Constant.MISSING;
                     if (i > 1 && z[i].Id != z[i - 1].Id)
                         igp++;
                     gn[igp]++;
