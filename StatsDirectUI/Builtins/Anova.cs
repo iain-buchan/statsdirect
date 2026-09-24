@@ -399,7 +399,8 @@ namespace StatsDirect.Builtins
             }
             else if (ps == Constant.MISSING || fault || siga != 0 || sigb != 0)
             {
-                double kzc = (Math.Abs(s) - 1.0) / Math.Sqrt(varf);
+                //  the continuity correction moves |S| towards zero, never past it, so a score of zero keeps P = 1
+                double kzc = Math.Max(0.0, Math.Abs(s) - 1.0) / Math.Sqrt(varf);
                 double pvs = 1.0 - PDF.alnorm(kzc);
                 if (pvs > 1.0 - pvs)
                     pvs = 1.0 - pvs;

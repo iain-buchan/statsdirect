@@ -710,11 +710,44 @@ namespace StatsDirect.Numerics
             return Math.Exp(-el + ek * Math.Log(el) - gl);
         }
 
+        /// <summary>
+        /// Regularised incomplete gamma function P(a, x): the series in x below a + 1, and above it the continued fraction for the
+        /// upper tail Q(a, x) = 1 - P(a, x) (modified Lentz), since the series' terms grow past the largest double before they fall when x is far above a
+        /// </summary>
         private static double gamf(double x, double a)
         {
-            double gl = PDF.alogam(a + 1.0);
             if (double.IsNaN(x)||double.IsNaN(a)) // IEB 18 Jul 18: prevent a loop if x is NaN
                 return Constant.MISSING;
+            if (x >= a + 1.0)
+            {
+                double gla = PDF.alogam(a);
+                if (gla == Constant.MISSING)
+                    return Constant.MISSING;
+                const double tiny = 1.0e-300;
+                double b = x + 1.0 - a;
+                double c = 1.0 / tiny;
+                double d = 1.0 / b;
+                double h = d;
+                for (int i = 1; i <= 10000; i++)
+                {
+                    double an = -i * (i - a);
+                    b += 2.0;
+                    d = an * d + b;
+                    if (Math.Abs(d) < tiny)
+                        d = tiny;
+                    c = b + an / c;
+                    if (Math.Abs(c) < tiny)
+                        c = tiny;
+                    d = 1.0 / d;
+                    double del = d * c;
+                    h *= del;
+                    if (Math.Abs(del - 1.0) < Constant.EPSILON)
+                        break;
+                }
+                return 1.0 - Math.Exp(-x + a * Math.Log(x) - gla) * h;
+            }
+
+            double gl = PDF.alogam(a + 1.0);
             if (gl == Constant.MISSING)
                 return Constant.MISSING;
 

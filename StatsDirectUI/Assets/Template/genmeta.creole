@@ -23,7 +23,7 @@ I<sub>2</sub> (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:
 Z (test @stat) = @{dz:roundu}  <pval>@{dp:pval}</pval></p>
 <block name="bias">
 <subtitle>Bias indicators</subtitle>
-<p>Begg-Mazumdar: Kendall's @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}</pval><br />
+<p>Begg-Mazumdar: Kendall's @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
 Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>
 </report>

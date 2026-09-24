@@ -290,8 +290,12 @@ namespace StatsDirect.Builtins
                     nx++;
 
             double tau = Constant.MISSING; double p2 = Constant.MISSING;
+            bool isLowPower = false;
             double[] seb = null; double[] bd = null;
             double rdf = 0; double rss = 0;
+            //  Egger's regression of the standardised effect on precision has no answer when every study has the same precision (the predictor is
+            //  constant) or when the line fits every study exactly (no residual variance, so no standard error or P)
+            bool eggerComputable = false;
 
             bool tooFewStrata = nx < 4;
             if (!tooFewStrata)
@@ -380,7 +384,7 @@ namespace StatsDirect.Builtins
                     double vt = var[i] - 1.0 / sumwt;
                     ts[i] = (tt[i] - sumwtt / sumwt) / Math.Sqrt(vt);
                 }
-                Anova.XAgreeKendall(host, ts, var, 1, ref nx, out tau, out p2, out bool isLowPower, out bool isTauB);
+                Anova.XAgreeKendall(host, ts, var, 1, ref nx, out tau, out p2, out isLowPower, out bool isTauB);
 
                 // setup regression call
                 seb = new double[P + 1];
@@ -406,7 +410,16 @@ namespace StatsDirect.Builtins
                 int iwtcol = indep + 1;
                 int irank = 0; int nrmiss = 0; int ifault = 0;
                 Regress1.glsqr(0, incep, 0, nx, indep + iwt + 1, xx, -indep, idum, -1, idum, 0, iwtcol, bd, r, D, ref irank, ref rdf, ref rss, ref nrmiss, xMin, xMax, wk, ref ifault);
-                if (ifault == 0)
+                double minPrecision = double.MaxValue; double maxPrecision = double.MinValue; double sumysq = 0.0;
+                for (int i = 1; i <= nx; i++)
+                {
+                    minPrecision = Math.Min(minPrecision, x[i, 2]);
+                    maxPrecision = Math.Max(maxPrecision, x[i, 2]);
+                    sumysq += y[i] * y[i];
+                }
+                //  precisions that agree to a relative 1e-12 are the same (they are computed from the limits), and a residual sum of squares below that fraction of the sum of squares is a perfect fit
+                eggerComputable = ifault == 0 && irank == P && rdf > 0 && maxPrecision - minPrecision > 1e-12 * maxPrecision && rss > 1e-12 * sumysq;
+                if (eggerComputable)
                 {
                     double[,] covb = new double[P + 1, P + 1];
                     Regress1.rcovarb(P, r, 1.0, covb, ref ifault);
@@ -420,7 +433,7 @@ namespace StatsDirect.Builtins
             //  cco and cit above recover each study's standard error from its limits, so they stay at the level of the analysis; only Egger's own interval uses the bias test level
             double biasCco = BiasTestConfidenceLevel(cco);
             double a, prob, cla, cua;
-            if (!tooFewStrata)
+            if (!tooFewStrata && eggerComputable)
             {
                 MathDbl.civ(nx - P, out double citt, biasCco, out double _);
                 Debug.Assert(null != seb);
@@ -451,6 +464,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("tau", tau);
             }
             outputParameters.AddOutput("p2", p2);
+            //  Kendall's test has low power below eleven studies (Begg & Mazumdar 1994); the note follows the P value
+            outputParameters.AddOutput("low_power_warn", !tooFewStrata && isLowPower && tau != Constant.MISSING && !double.IsNaN(tau) ? " (low power)" : string.Empty);
 
             if (tooFewStrata)
             {
@@ -908,7 +923,8 @@ namespace StatsDirect.Builtins
                 double[] ucig = new double[k + 1];
                 double[] rkw = new double[k + 1];
                 double[] rkx = new double[k + 1];
-                Debug.Assert(null != es);
+                //  with g given there are no standard deviations
+                Debug.Assert(gotg || null != es);
                 bool poolok = k > 1;
                 if (!gotg)
                 {
@@ -3576,7 +3592,8 @@ namespace StatsDirect.Builtins
                 proportionsParameters.AddOutput("to_y", ulY[i]);
                 proportionsParameters.AddOutput("wt", 100 * wt[i] / Formatting.dsum(wt, 1));
                 proportionsParameters.AddOutput("dwt", 100 * dswt[i] / Formatting.dsum(dswt, 1));
-                proportionsParameters.AddOutput("yi", y[i]);
+                //  the standardised effect is the Freeman-Tukey transform, on the scale of the variance beside it and of the pooling (y[i] now holds the proportion for the charts)
+                proportionsParameters.AddOutput("yi", ArcsineP(sr[i], sn[i]));
                 proportionsParameters.AddOutput("vi", seY[i] * seY[i]);
                 if (hasUserSuppliedLabels)
                     tmp = title[i] + tmp;
@@ -3784,10 +3801,13 @@ namespace StatsDirect.Builtins
             double yInt = sumy / realk - slope * (sumx / realk);
             double ssreg = xy * xy / ssx;
             double ssres = ssy - ssreg;
-            double bias = yInt;
+            //  As with the Begg-Mazumdar and Egger tests, nothing is reported below four studies (the help says more than three are needed), nor when
+            //  every study has the same precision (no slope) or the line fits every study exactly (no residual variance, so no standard error or P)
+            bool notReported = realk < 4 || !(ssx > 1e-12 * sxs) || !(ssres > 1e-12 * sys);
+            double bias = notReported ? Constant.MISSING : yInt;
             double ll; double ul;
             double se = 0;
-            if (realk > 2 & ssres >= 0.0)
+            if (!notReported & ssres >= 0.0)
             {
                 double mnsqr = ssres / (realk - 2);
                 se = Math.Sqrt(mnsqr * (1.0 / realk + Math.Pow(sumx / realk, 2.0) / ssx));
@@ -3800,11 +3820,19 @@ namespace StatsDirect.Builtins
                 ll = Constant.MISSING;
                 ul = Constant.MISSING;
             }
-            double t = bias / se;
-            double p2 = PDF.tvalp(Math.Abs(t), realk - 2);
-            if (p2 > 1.0 - p2)
-                p2 = 1.0 - p2;
-            p2 = 2.0 * p2;
+            double p2;
+            if (notReported)
+            {
+                p2 = Constant.MISSING;
+            }
+            else
+            {
+                double t = bias / se;
+                p2 = PDF.tvalp(Math.Abs(t), realk - 2);
+                if (p2 > 1.0 - p2)
+                    p2 = 1.0 - p2;
+                p2 = 2.0 * p2;
+            }
             outputParameters.AddOutput("a", bias);
             outputParameters.AddOutput("pc_harbord", 100.0 * ncco);
             outputParameters.AddOutput("cl", ll);
@@ -3815,9 +3843,7 @@ namespace StatsDirect.Builtins
         public static void IsquareNcc(IPreferences host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
         {
             double SElnH;
-            double minLbNc;
             int ierr = 0;
-            double lbI2H; double ubI2H;
 
             double df = Convert.ToDouble(k - 1);
             double dk = Convert.ToDouble(k);
@@ -3826,7 +3852,8 @@ namespace StatsDirect.Builtins
             ll = Constant.MISSING;
             ul = Constant.MISSING;
 
-            if (q < 0)
+            //  A Q that could not be computed (not a number, or infinite from a study with an infinite variance) leaves every figure missing
+            if (q < 0 || double.IsNaN(q) || double.IsInfinity(q))
                 return;
 
             // Calculate I-squared even with only one degree of freedom.
@@ -3835,115 +3862,109 @@ namespace StatsDirect.Builtins
             i2 = Math.Max(0.0, 100.0 * (q - df) / q);
             if (df < 2)
                 return;
-            if (cco < 0.1 || cco > 0.99)
+            //  The interval is given at whatever level the analysis uses; it used to be withheld above 99%
+            if (cco <= 0.0 || cco >= 1.0)
                 return;
 
-            double level = 100.0 * cco;
-            double levelci = level * 0.005 + 0.5;
+            double levelci = 1.0 - (1.0 - cco) / 2.0;
             double clevelci = 1.0 - levelci;
 
-            double h2 = q / df;
-            double i22 = Math.Max(0.0, (h2 - 1.0) / h2);
-            if (Math.Sqrt(h2) < 1.0)
-            {
-                h2 = 1.0;
-            }
+            //  H^2 = Q/df, truncated at 1 where Q < df
+            double h2 = Math.Max(1.0, q / df);
 
             //  CI for H (Higgins & Thompson, 2002 Stat in Med)
             if (q > k)
                 SElnH = 0.5 * ((Math.Log(q) - Math.Log(df)) / (Math.Sqrt(2.0 * q) - Math.Sqrt(2.0 * dk - 3.0)));
             else
                 SElnH = Math.Sqrt(1.0 / (2.0 * (dk - 2.0)) * (1.0 - 1.0 / (3.0 * Math.Pow(dk - 2.0, 2.0))));
-            // double LB_H_III = Math.Exp( Math.Log( Math.Sqrt( H2 ) ) - cit * SElnH ); 
-            // double UB_H_III = Math.Exp( Math.Log( Math.Sqrt( H2 ) ) + cit * SElnH ); 
-            // if ( LB_H_III < 1.0 )
-            // { 
-            // LB_H_III = 1.0; 
-            // } 
-            //  CI for H (P 1550 Higgins & Thompson)
-            // double LB_I2_HT = Math.Max( 0.0, ( Math.Pow( LB_H_III, 2.0 ) - 1.0 ) / Math.Pow( LB_H_III, 2.0 ) ); 
-            // double UB_I2_HT = ( Math.Pow( UB_H_III, 2.0 ) - 1.0 ) / Math.Pow( UB_H_III, 2.0 ); 
 
-            //  CI interval for I2 based var(logH), formula not indicated in (Higgins & Thompson, 2002 Stat in Med)
-            double varI2 = 4.0 * Math.Pow(SElnH, 2.0) / Math.Exp(4.0 * Math.Log(Math.Sqrt(h2)));
-            double lbI2 = i22 - cit * Math.Sqrt(varI2);
-            double ubI2 = i22 + cit * Math.Sqrt(varI2);
-            if (lbI2 < 0.0)
-                lbI2 = 0.0;
-            if (ubI2 > 1.0)
-                ubI2 = 1.0;
-            ll = 100.0 * lbI2;
-            ul = 100.0 * ubI2;
+            //  Test-based interval for H, exp(ln H -/+ z SE(ln H)) with H at least 1, converted to I2 = (H^2 - 1)/H^2 (Higgins & Thompson 2002, p 1550);
+            //  this is the interval when the exact option is off. It replaces a symmetric interval on I2 itself with variance 4 SE(ln H)^2 / H^4, which is not in that paper
+            double lbH2 = Math.Pow(Math.Max(1.0, Math.Exp(Math.Log(Math.Sqrt(h2)) - cit * SElnH)), 2.0);
+            double ubH2 = Math.Pow(Math.Exp(Math.Log(Math.Sqrt(h2)) + cit * SElnH), 2.0);
+            ll = 100.0 * (lbH2 - 1.0) / lbH2;
+            ul = 100.0 * (ubH2 - 1.0) / ubH2;
 
             if (!host.Preferences.MetaExact)
                 return;
 
             //  Iterative solution to seek CI for non-centrality parameter (and then for H and I2)
-            //  non-centrality (nc) parameter = (Q-df)
+            //  Q is taken as non-central chi-square with df degrees of freedom and non-centrality parameter lambda, estimated by Q - df. Each limit for lambda
+            //  is the value at which the distribution function evaluated at the observed Q equals the tail probability: the lower limit where P(chi2 <= Q) is
+            //  1 - alpha/2 and the upper where it is alpha/2 (Hedges & Pigott 2001; Higgins & Thompson 2002, section 4.2). H^2 = (df + lambda)/df, so
+            //  I2 = lambda/(df + lambda). The limits used to be the alpha/2 and 1 - alpha/2 quantiles of the distribution with lambda held at Q - df, divided
+            //  by df as if each were a Q, which is not a confidence interval for lambda.
             double nc = Math.Max(0.0, q - df);
-            double endp = nc + 1000.0;
 
-            //  check if Q < df , in this case no need to seek the lower bound
-            if (q < df)
-            {
-                minLbNc = 0.0;
-            }
-            else
-            {
-                minLbNc = IsquareBrentRoot(0, endp, nc, df, clevelci, ref ierr);
-                if (ierr != 0)
-                    minLbNc = Constant.MISSING;
-            }
+            double minLbNc = IsquareNoncentrality(q, df, nc, levelci, ref ierr);
+            if (ierr != 0)
+                minLbNc = Constant.MISSING;
 
-            double minUbNc = IsquareBrentRoot(0, endp, nc, df, levelci, ref ierr);
+            double minUbNc = IsquareNoncentrality(q, df, nc, clevelci, ref ierr);
             if (ierr != 0)
                 minUbNc = Constant.MISSING;
 
-            //  transform lower bound for non-centrality parameter (Q-df) in lower bound for H and I2
-            if (minLbNc != Constant.MISSING)
-            {
-                double lbHH = Math.Max(1.0, Math.Sqrt(minLbNc / df));
-                lbI2H = Math.Max(0.0, (Math.Pow(lbHH, 2.0) - 1.0) / Math.Pow(lbHH, 2.0));
-            }
-            else
-            {
-                // LB_H_H = Constant.MISSING; 
-                lbI2H = Constant.MISSING;
-            }
-
-            if (minUbNc != Constant.MISSING)
-            {
-                double ubHH = Math.Sqrt(minUbNc / df);
-                ubI2H = (Math.Pow(ubHH, 2.0) - 1.0) / Math.Pow(ubHH, 2.0);
-            }
-            else
-            {
-                // UB_H_H = Constant.MISSING; 
-                ubI2H = Constant.MISSING;
-            }
-
             // if all goes well - assign the Higgins non-central chi-square interval as the result
-            if (lbI2H == Constant.MISSING)
+            if (minLbNc == Constant.MISSING)
                 ll = Constant.MISSING;
             else
-                ll = 100.0 * lbI2H;
-            if (ubI2H == Constant.MISSING)
+                ll = 100.0 * minLbNc / (df + minLbNc);
+            if (minUbNc == Constant.MISSING)
                 ul = Constant.MISSING;
             else
-                ul = 100.0 * ubI2H;
+                ul = 100.0 * minUbNc / (df + minUbNc);
         }
 
         /// <summary>
-        /// Brent alternative to Pegasus method for root finding - can be faster when high precision demanded
+        /// The non-centrality parameter at which the non-central chi-square distribution function evaluated at q equals prob; the function falls as the
+        /// parameter rises, so the answer is 0 when the central distribution function at q is already at or below prob
+        /// </summary>
+        /// <param name="q">observed Q</param>
+        /// <param name="df">degrees of freedom</param>
+        /// <param name="nc">the point estimate of the non-centrality parameter, from which the search interval is built</param>
+        /// <param name="prob">the value the distribution function is to take at q</param>
+        /// <param name="ierr">0 if a root was found</param>
+        private static double IsquareNoncentrality(double q, double df, double nc, double prob, ref int ierr)
+        {
+            ierr = 0;
+            double f0 = ExFortran.nchi2(df, 0.0, q);
+            if (f0 == Constant.MISSING)
+            {
+                ierr = 1;
+                return 0;
+            }
+            if (f0 <= prob)
+                return 0;
+            //  widen the search interval until the distribution function at its far end has fallen below prob
+            double endp = nc + 1000.0;
+            for (int i = 0; i < 40; i++)
+            {
+                double fe = ExFortran.nchi2(df, endp, q);
+                if (fe == Constant.MISSING)
+                {
+                    ierr = 1;
+                    return 0;
+                }
+                if (fe < prob)
+                    return IsquareBrentRoot(0, endp, q, df, prob, ref ierr);
+                endp *= 2.0;
+            }
+            ierr = 1;
+            return 0;
+        }
+
+        /// <summary>
+        /// Brent alternative to Pegasus method for root finding - can be faster when high precision demanded:
+        /// the non-centrality parameter in [xl, xu] at which the non-central chi-square distribution function evaluated at q equals clev
         /// </summary>
         /// <param name="xl">lower bound of search interval</param>
         /// <param name="xu">upper bound of search interval</param>
-        /// <param name="nc"></param>
+        /// <param name="qobs">the value at which the distribution function is evaluated</param>
         /// <param name="df"></param>
         /// <param name="clev"></param>
         /// <param name="ierr"></param>
         /// <returns></returns>
-        private static double IsquareBrentRoot(double xl, double xu, double nc, double df, double clev, ref int ierr)
+        private static double IsquareBrentRoot(double xl, double xu, double qobs, double df, double clev, ref int ierr)
         {
             double d = 0;
             const double tolerance = 0.000001;
@@ -3953,14 +3974,16 @@ namespace StatsDirect.Builtins
             double a = xl;
             double b = xu;
 
-            double fa = ExFortran.nchi2(df, nc, a) - clev;
+            double fa = ExFortran.nchi2(df, a, qobs) - clev;
             if (fa == Constant.MISSING)
             {
+                ierr = 1;
                 return 0;
             }
-            double fb = ExFortran.nchi2(df, nc, b) - clev;
+            double fb = ExFortran.nchi2(df, b, qobs) - clev;
             if (fb == Constant.MISSING)
             {
+                ierr = 1;
                 return 0;
             }
 
@@ -4072,9 +4095,10 @@ namespace StatsDirect.Builtins
                     }
                 }
 
-                fb = ExFortran.nchi2(df, nc, b) - clev;
+                fb = ExFortran.nchi2(df, b, qobs) - clev;
                 if (fb == Constant.MISSING)
                 {
+                    ierr = 1;
                     return 0;
                 }
             }
