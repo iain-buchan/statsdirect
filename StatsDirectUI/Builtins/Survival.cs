@@ -346,9 +346,10 @@ namespace StatsDirect.Builtins
                 double stk = 0;
                 double tk = 0;
                 int lastk = 0;
+                // a row holds every observation at its time, so the last death may share its row with censored observations
                 for (i = last; i >= 1; i--)
                 {
-                    if (cen[i] == 0)
+                    if (dead[i, lap] > 0)
                     {
                         tk = stime[i, lap];
                         stk = s[i, lap];
@@ -357,23 +358,19 @@ namespace StatsDirect.Builtins
                     }
                 }
                 double tl = stime[last, lap];
-                // get mean survival time mu
-                double mu = 1.0 * stime[1, lap];
-                for (i = 1; i < lastk; i++)
-                    mu += s[i, lap] * (stime[i + 1, lap] - stime[i, lap]);
-                if (tk != tl)
-                    mu += stk * (tl - tk);
-                //  are there both censored and uncensored at tk?
-                bool lastCen = false;
-                for (i = lastk; i >= 1; i--)
+                // get mean survival time mu: the area under the curve to the largest time, which with no deaths is that time
+                double mu;
+                if (lastk > 0)
                 {
-                    if (stime[i, lap] != tk)
-                        break;
-                    if (cen[i] == 1)
-                    {
-                        lastCen = true;
-                        break;
-                    }
+                    mu = 1.0 * stime[1, lap];
+                    for (i = 1; i < lastk; i++)
+                        mu += s[i, lap] * (stime[i + 1, lap] - stime[i, lap]);
+                    if (tk != tl)
+                        mu += stk * (tl - tk);
+                }
+                else
+                {
+                    mu = tl;
                 }
                 //  get variance of mu
                 double vmu = 0;
@@ -384,15 +381,16 @@ namespace StatsDirect.Builtins
                     int l;
                     for (l = i; l < lastk; l++)
                         asq += s[l, lap] * (stime[l + 1, lap] - stime[l, lap]);
-                    if (!lastCen)
-                        asq += stk * (tl - tk);
+                    asq += stk * (tl - tk);
                     asq *= asq;
                     double denom = nat[i] * (nat[i] - dead[i, lap]);
                     if (denom != 0.0)
                         vmu += asq * dead[i, lap] / denom;
                     totdead += dead[i, lap];
                 }
-                if (tl != tk)
+                if (lastk == 0)
+                    groupParameters.AddOutput("lim", "[limit: " + host.RoundU(tl) + ", no deaths] ");
+                else if (tl != tk)
                     groupParameters.AddOutput("lim", "[limit: " + host.RoundU(tl) + " on " + host.RoundU(tk) + "] ");
                 else
                     groupParameters.AddOutput("lim", string.Empty);
@@ -613,8 +611,8 @@ namespace StatsDirect.Builtins
                 }
             }
             emo = x[j];
-            // median e
-            emd = x[rows];
+            // median e: beyond the table (infinite) when half of the cohort is still alive at the start of the open interval
+            emd = double.PositiveInfinity;
             for (int i = 2; i <= rows; i++)
             {
                 if (sl[i] - 50000.0 <= 0.0)
@@ -673,12 +671,21 @@ namespace StatsDirect.Builtins
             a[rows] = Constant.MISSING;
         }
 
+        private static string LifetabAge(double age)
+        {
+            return age == Math.Floor(age) ? Convert.ToInt32(age).ToString() : Formatting.XUnrounded(age);
+        }
+
         private static string LifetabInterval(int i, int rows, double[] x)
         {
-            int j = i == 1 ? 0 : 1;
-            if (i < rows)
-                return Convert.ToInt32(x[i]).ToString() + " to " + Convert.ToInt32(x[i + 1] - j).ToString();
-            return Convert.ToInt32(x[i]).ToString() + " up";
+            if (i == rows)
+                return LifetabAge(x[i]) + " up";
+            // an interval of whole years after the first is labelled by its first and last year ("1 to 4"); the first interval,
+            // and any interval that does not start and end at whole years, by its two ends ("0 to 1", "0.5 to 1")
+            double end = x[i + 1];
+            if (i > 1 && x[i] == Math.Floor(x[i]) && end == Math.Floor(end))
+                end -= 1;
+            return LifetabAge(x[i]) + " to " + LifetabAge(end);
         }
 
         private static void Plest(ParameterBag groupParameters, double[,] stime, int[] nat, int[,] dead, int[] cen, double[,] h, double[,] s, double[] vh, double[] vs, int nx, int lap)
@@ -706,7 +713,8 @@ namespace StatsDirect.Builtins
                 s[j, lap] = s0;
                 if (s0 > 0.0)
                 {
-                    h[j, lap] = -Math.Log(s0);
+                    // -log(1) is a negative zero, which would print as -0
+                    h[j, lap] = s0 == 1.0 ? 0.0 : -Math.Log(s0);
                     vs[j] = s0 * s0 * var;
                     vh[j] = var;
                 }
@@ -1044,17 +1052,13 @@ namespace StatsDirect.Builtins
                     ? 0.0
                     : (ees[1, k] - ees[2, k]) / Math.Sqrt(nt);
                 int ipoint = (int)Math.Floor((double)k * (k + 1) / 2);
-                if (sigma[ipoint] == 0)
-                {
-                    ifault = 3;
-                    return;
-                }
-                nruniv[k] = wlt[k] / Math.Sqrt(sigma[ipoint]);
                 repeatsParameters.AddOutput("time", k);
                 repeatsParameters.AddOutput("fail_1", d[1, k]);
                 repeatsParameters.AddOutput("fail_2", d[2, k]);
                 repeatsParameters.AddOutput("t", wlt[k]);
-                if (wlt[k] == 0.0)
+                // a repeat with no difference, or with no variance (no failures, or one subject per group), has no test of its own;
+                // the multivariate tests take the generalised inverse of the covariance matrix
+                if (wlt[k] == 0.0 || sigma[ipoint] <= 0.0)
                 {
                     repeatsParameters.AddOutput("var", Constant.MISSING);
                     repeatsParameters.AddOutput("chi", Constant.MISSING);
@@ -1062,6 +1066,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
+                    nruniv[k] = wlt[k] / Math.Sqrt(sigma[ipoint]);
                     repeatsParameters.AddOutput("var", sigma[ipoint]);
                     repeatsParameters.AddOutput("chi", Math.Pow(nruniv[k], 2.0));
                     repeatsParameters.AddOutput("p", PDF.chivalp(Math.Pow(nruniv[k], 2.0), 1.0));
@@ -1090,7 +1095,7 @@ namespace StatsDirect.Builtins
                     sigsum += 2.0 * sigma[ipoint];
                 }
             }
-            double nrstoc = tsum / Math.Sqrt(sigsum);
+            double nrstoc = sigsum > 0.0 ? tsum / Math.Sqrt(sigsum) : Constant.MISSING;
             outputParameters.AddOutput("title_multi",
                 method == 1
                     ? "Multivariate Generalised Wilcoxon (Gehan)"
@@ -1124,13 +1129,27 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("rep", nr);
             outputParameters.AddOutput("stat", chiomb);
-            outputParameters.AddOutput("p_omnibus", PDF.chivalp(chiomb, nr));
+            // the omnibus statistic is a quadratic form in the generalised inverse, so its degrees of freedom are the rank
+            int rank = nr - nullty;
+            outputParameters.AddOutput("p_omnibus", rank > 0 ? PDF.chivalp(chiomb, rank) : Constant.MISSING);
+            if (nullty > 0)
+            {
+                IList<ParameterBag> singularList = new List<ParameterBag>();
+                outputParameters.AddOutput("*singular", singularList);
+                ParameterBag singularParameters = new();
+                singularList.Add(singularParameters);
+                singularParameters.AddOutput("rank", rank);
+            }
+            else
+            {
+                outputParameters.AddOutput("*singular", null);
+            }
             outputParameters.AddOutput("z", nrstoc);
-            double p = 1.0 - PDF.alnorm(Math.Abs(nrstoc));
+            double p = nrstoc == Constant.MISSING ? Constant.MISSING : 1.0 - PDF.alnorm(Math.Abs(nrstoc));
             if (p > 1.0 - p)
                 p = 1.0 - p;
             outputParameters.AddOutput("p_1", p);
-            outputParameters.AddOutput("p_2", p * 2.0);
+            outputParameters.AddOutput("p_2", p == Constant.MISSING ? Constant.MISSING : p * 2.0);
         }
 
         ///  <summary>
@@ -1395,7 +1414,7 @@ namespace StatsDirect.Builtins
             double[] g = new double[rows + 1];
             for (int r = 1; r <= rows; r++)
                 g[r] = gidVariable.Data[r - 1] + 1;
-            double[] groupIds = new double[rows];
+            double[] groupIds = new double[rows + 1];   // filled from 1: every row may be its own group
             int igot = 0;
             for (int r = 1; r <= rows; r++)
             {
@@ -1449,7 +1468,7 @@ namespace StatsDirect.Builtins
             double[] g = new double[rows + 1];
             for (int r = 1; r <= rows; r++)
                 g[r] = gidVariable.Data[r - 1] + 1;
-            groupIds = new double[rows];
+            groupIds = new double[rows + 1];   // filled from 1: every row may be its own group
             int igot = 0;
             for (int r = 1; r <= rows; r++)
             {
@@ -1702,6 +1721,14 @@ namespace StatsDirect.Builtins
 
             bool saveDetails = parameters["save"].AsBoolean;
 
+            // a death rate too high for its interval (a n M > 1) would give a probability of dying above 1 and a negative cohort
+            AbridgedLifetableBasics(rows, d, p, a, sl, rm, r, q, dd, yl, t, e);
+            for (int i = 1; i < rows; i++)
+            {
+                if (q[i] > 1.0)
+                    throw new TemplateOperationCancelledException("The probability of dying in the interval " + LifetabInterval(i, rows, x) + " would be greater than 1: check its deaths, population and length.", "Abridged life table");
+            }
+
             // simulation
             double[] dsim = new double[rows + 1 ];
             double[] esim = new double[simits + 1 ];
@@ -1724,12 +1751,13 @@ namespace StatsDirect.Builtins
                     emdsim[j] = emd;
                 }
             }
+            // the limits at the chosen level
             Array.Sort(esim, 1, simits);
-            double esimll = MathDbl.QuantileFromSorted(esim, simits, 0.05);
-            double esimul = MathDbl.QuantileFromSorted(esim, simits, 0.95);
+            double esimll = MathDbl.QuantileFromSorted(esim, simits, p0);
+            double esimul = MathDbl.QuantileFromSorted(esim, simits, 1.0 - p0);
             Array.Sort(emdsim, 1, simits);
-            double emdsimll = MathDbl.QuantileFromSorted(emdsim, simits, 0.05);
-            double emdsimul = MathDbl.QuantileFromSorted(emdsim, simits, 0.95);
+            double emdsimll = MathDbl.QuantileFromSorted(emdsim, simits, p0);
+            double emdsimul = MathDbl.QuantileFromSorted(emdsim, simits, 1.0 - p0);
 
             // basic stats for abridged life table
             AbridgedLifetableBasics(rows, d, p, a, sl, rm, r, q, dd, yl, t, e);
@@ -1875,10 +1903,18 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*util", null);
             }
 
-            outputParameters.AddOutput("med", emd);
+            // a median beyond the table is printed as more than the start of the open interval (two infinite order statistics interpolate to NaN)
+            void AddMedian(string name, double value)
+            {
+                if (double.IsPositiveInfinity(value) || double.IsNaN(value))
+                    outputParameters.AddOutput(name, "more than " + LifetabAge(x[rows]));
+                else
+                    outputParameters.AddOutput(name, value);
+            }
+            AddMedian("med", emd);
             outputParameters.AddOutput("its", simits);
-            outputParameters.AddOutput("med_lci", emdsimll);
-            outputParameters.AddOutput("med_uci", emdsimul);
+            AddMedian("med_lci", emdsimll);
+            AddMedian("med_uci", emdsimul);
 
             outputParameters.AddOutput("elb", e[1]);
             {
@@ -1939,13 +1975,7 @@ namespace StatsDirect.Builtins
 
                 for (int i = 1; i <= rows; i++)
                 {
-                    int j = i == 1 ? 0 : 1;
-                    string xx;
-                    if (i < rows)
-                        xx = Convert.ToInt32(x[i]).ToString() + " to " + Convert.ToInt32(x[i + 1] - j).ToString();
-                    else
-                        xx = Convert.ToInt32(x[i]).ToString() + " up";
-                    intervalVariable.SetData(i - 1, xx);
+                    intervalVariable.SetData(i - 1, LifetabInterval(i, rows, x));
                     qHatVariable.SetData(i - 1, q[i]);
                     varQVariable.SetData(i - 1, vq[i]);
                     double lci, uci;
@@ -2051,39 +2081,40 @@ namespace StatsDirect.Builtins
 
             double natst = parameters["natst"].AsDouble;
 
-            Trisvar[] qx = new Trisvar[rows + 1 ];
+            // The rows with a value in all three columns, in order of their (whole) starting times; the counts are kept as entered
+            double[] tm = new double[rows + 1];
+            int[] row = new int[rows + 1];
             int nx = 0;
             for (int j = 1; j <= rows; j++)
             {
                 if (t[j] != Constant.MISSING && d[j] != Constant.MISSING && w[j] != Constant.MISSING)
                 {
                     nx++;
-                    qx[j] = new Trisvar { Tm = Math.Floor(t[j]), Gp = Convert.ToInt32(w[j]), Cs = Convert.ToInt32(d[j]) };
+                    tm[nx] = Math.Floor(t[j]);
+                    row[nx] = j;
                 }
             }
-            Array.Sort(qx, 1, nx, new TrisvarByTm());
-            t = new double[nx + 1];
-            d = new double[nx + 1];
-            w = new double[nx + 1];
+            if (nx == 0)
+                throw new TemplateOperationCancelledException("There are no rows with a time, a number of deaths and a number withdrawn.", "Follow-up life table");
+            Array.Sort(tm, row, 1, nx);
+            // Rows with the same starting time, including the last row, are one interval
+            double[] tt = new double[nx + 1];
+            double[] dd = new double[nx + 1];
+            double[] ww = new double[nx + 1];
             int nt = 0;
             for (int j = 1; j <= nx; j++)
             {
-                int k;
-                for (k = j + 1; k <= nx; k++)
+                if (j == 1 || tm[j] != tm[j - 1])
                 {
-                    if (qx[k].Tm != qx[j].Tm || k == nx)
-                        break;
+                    nt++;
+                    tt[nt] = tm[j];
                 }
-                int cnt = k - j;
-                nt++;
-                t[nt] = qx[j].Tm;
-                for (k = 1; k <= cnt; k++)
-                {
-                    w[nt] += qx[j + k - 1].Gp;
-                    d[nt] += qx[j + k - 1].Cs;
-                }
-                j = j + cnt - 1;
+                dd[nt] += d[row[j]];
+                ww[nt] += w[row[j]];
             }
+            t = tt;
+            d = dd;
+            w = ww;
             ParameterBag outputParameters = new();
             double cump = 1.0;
             double var1 = 0.0;
@@ -2135,8 +2166,9 @@ namespace StatsDirect.Builtins
 
             ParameterBag survivalParameters = new();
             survivalList.Add(survivalParameters);
-            survivalParameters.AddOutput("int", Convert.ToInt32(t[1]) + " to " + Convert.ToInt32(t[2]));
-            survivalParameters.AddOutput("p", xp[1]);
+            // with a single interval the table has only the open interval
+            survivalParameters.AddOutput("int", nt > 1 ? Convert.ToInt32(t[1]) + " to " + Convert.ToInt32(t[2]) : Convert.ToInt32(t[1]) + " up");
+            survivalParameters.AddOutput("p", nt > 1 ? xp[1] : Constant.MISSING);
             survivalParameters.AddOutput("lx", 100.0);
             survivalParameters.AddOutput("var", Constant.MISSING);
             survivalParameters.AddOutput("lci", Constant.MISSING);
@@ -2150,9 +2182,9 @@ namespace StatsDirect.Builtins
                 double uc;
                 if (var > 0.0)
                 {
-                    double s = Math.Sqrt(var);
-                    s /= -cump * Math.Log(cump);
-                    sd = 100.0 * s;
+                    // the SD of lx% is Greenwood's; the limits are on the log(-log) scale
+                    sd = 100.0 * Math.Sqrt(var);
+                    double s = Math.Sqrt(var) / (-cump * Math.Log(cump));
                     lc = 100.0 * Math.Pow(cump, Math.Exp(cit * s));
                     uc = 100.0 * Math.Pow(cump, Math.Exp(-cit * s));
                 }
@@ -2642,7 +2674,7 @@ namespace StatsDirect.Builtins
                                 double rk = tesum[k] <= 0 ? Constant.MISSING : tdg[k] / tesum[k];
                                 double ru;
                                 double rl;
-                                if (rr != Constant.MISSING && rk != 0)
+                                if (rr != Constant.MISSING && rk != Constant.MISSING && rr > 0 && rk > 0)
                                 {
                                     rr /= rk;
                                     rl = Math.Exp(Math.Log(rr) - cit * Math.Sqrt(1.0 / tesum[j] + 1.0 / tesum[k]));
@@ -2650,7 +2682,11 @@ namespace StatsDirect.Builtins
                                 }
                                 else
                                 {
-                                    rr = Constant.MISSING;
+                                    // with no deaths in one group the ratio is 0 or infinite and has no interval on the log scale
+                                    if (rr != Constant.MISSING && rk != Constant.MISSING && rr + rk > 0)
+                                        rr = rr > 0 ? double.PositiveInfinity : 0.0;
+                                    else
+                                        rr = Constant.MISSING;
                                     ru = Constant.MISSING;
                                     rl = Constant.MISSING;
                                 }

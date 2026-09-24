@@ -30,6 +30,9 @@
 
 <p>repeat times = @rep<br />
 chi-square omnibus statistic = @{stat:roundu}  <pval>@{p_omnibus:pval}</pval></p>
+<block name="singular">
+<p>The covariance matrix is singular, so the omnibus statistic uses its generalised inverse and its rank as the degrees of freedom: rank = @rank</p>
+</block>
 
 <p>stochastic ordering z = @{z:roundu}  <pval>one sided @{p_1:pval},  two sided @{p_2:pval}</pval></p>
 </block>
