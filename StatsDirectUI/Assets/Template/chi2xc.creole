@@ -16,7 +16,9 @@
 <block name="z">
 
 <p>Chi&#xb2; for linear trend = @{chi_lin:roundu}  |Chi| = @{chi_1df:roundu} (1 DF)  <pval>@{chi_lin_p:pval}</pval></p>
+<block name="non">
 
 <p>Remaining Chi&#xb2; (non-linearity) = @{chi_non:roundu} (@df DF)  <pval>@{chi_non_p:pval}</pval></p>
+</block>
 </block>
 </report>

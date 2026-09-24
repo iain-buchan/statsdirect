@@ -131,22 +131,9 @@ namespace StatsDirect.Builtins
                 //bool useLogScale = false;
                 //new ExactBB().Exact22K(host, 1, 1, tabl, cco, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
                 OddsRatioCMLE(host, cco, a, b, c, d, out double _, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr);
-                if (ierr != 0)
-                //{
-                // eor = Constant.MISSING; 
-                //    ulf = Constant.MISSING;
-                //    llf = Constant.MISSING;
-                //    ulm = Constant.MISSING;
-                //    llm = Constant.MISSING;
-                //    p1F = Constant.MISSING;
-                //    p2F = Constant.MISSING;
-                //    p1M = Constant.MISSING;
-                //    p2M = Constant.MISSING;
-                // }
-                //else
-                {
+                // The odds ratio block carries the exact P values, so the Fisher's exact test block is only needed when this routine fails
+                if (ierr == 0)
                     doneExact = true;
-                }
                 oddsParameters.AddOutput("ci", cco * 100.0);
                 oddsParameters.AddOutput("llf", llf);
                 oddsParameters.AddOutput("ulf", ulf);
@@ -199,6 +186,8 @@ namespace StatsDirect.Builtins
             if (z == Chi2ByNTrend.WithTrend)
                 datV2 = (DoubleVariable)datFrame.Variables[2];
             int rows = datFrame.MaxRows;
+            if (rows < 2)
+                throw new TemplateOperationCancelledException("At least two rows (groups) are needed for a 2 by k table.", "Chi-square test (2 by k)");
             double[] f = new double[rows + 1];
             double[] g = new double[rows + 1];
             double[] h = new double[rows + 1];
@@ -302,14 +291,24 @@ namespace StatsDirect.Builtins
 
                 zParameters.AddOutput("chi_lin", x2);
                 outputParameters.AddInput("x2_lin", x2); //  For use with follow-on functions
-                zParameters.AddOutput("chi_1df", x1);
+                zParameters.AddOutput("chi_1df", Math.Abs(x1));
                 zParameters.AddOutput("chi_lin_p", PDF.chivalp(x2, n2));
 
-                x2 = c - x2;
-                n2 = rows - 2;
-                zParameters.AddOutput("chi_non", x2);
-                zParameters.AddOutput("df", n2);
-                zParameters.AddOutput("chi_non_p", PDF.chivalp(x2, n2));
+                // The remaining (non-linearity) chi-square has k - 2 degrees of freedom, so there is none with two rows
+                List<ParameterBag> nonList = new();
+                zParameters.AddOutput("*non", nonList);
+                if (rows > 2)
+                {
+                    x2 = c - x2;
+                    if (Math.Abs(x2) < 100.0 * Constant.EPSILON * c)
+                        x2 = 0; // the trend accounts for the whole chi-square: a residue of rounding only
+                    n2 = rows - 2;
+                    ParameterBag nonParameters = new();
+                    nonList.Add(nonParameters);
+                    nonParameters.AddOutput("chi_non", x2);
+                    nonParameters.AddOutput("df", n2);
+                    nonParameters.AddOutput("chi_non_p", PDF.chivalp(x2, n2));
+                }
             }
 
             return new StepOutput(outputParameters);
