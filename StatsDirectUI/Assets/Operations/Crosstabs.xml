@@ -40,8 +40,9 @@
           </parameters>
       </iftrue>
     </test>
+    <builtin function-name="rptCrosstabsPreprocess" />
     <test>
-      <condition>=parameters.ContainsKey("c3")</condition>
+      <condition>=parameters["strat"].AsBoolean</condition>
       <iffalse>
           <parameters>
             <boolean>
@@ -121,7 +122,6 @@
         <name>cco</name>
       </confidence-interval>
     </parameters>
-    <builtin function-name="rptCrosstabsPreprocess" />
     <test>
       <condition>=parameters["strat"].AsBoolean</condition>
       <iftrue>

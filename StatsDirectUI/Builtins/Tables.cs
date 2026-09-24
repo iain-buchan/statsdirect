@@ -3429,17 +3429,16 @@ namespace StatsDirect.Builtins
             }
             if (irowsc == 0 & (itype == 2 | itype == 3) & ic >= 2)
             {
-                i = 2;
-                do
+                // Scores that are all equal give a zero covariance, so the statistic is undefined
+                aleqal = true;
+                for (i = 2; i <= ic; i++)
                 {
                     if (rowscr[1] != rowscr[i])
                     {
                         aleqal = false;
                         break;
                     }
-                    if (i < ic)
-                        i++;
-                } while (true);
+                }
                 if (aleqal)
                 {
                     ierr = 10;
@@ -3453,18 +3452,15 @@ namespace StatsDirect.Builtins
             }
             if (icolsc == 0 & itype == 3 & ir >= 2)
             {
-                i = 2;
-                do
+                aleqal = true;
+                for (i = 2; i <= ir; i++)
                 {
                     if (colscr[1] != colscr[i])
                     {
                         aleqal = false;
                         break;
                     }
-                    if (i < ir)
-                        i++;
                 }
-                while (true);
                 if (aleqal)
                 {
                     ierr = 12;
@@ -6150,10 +6146,8 @@ namespace StatsDirect.Builtins
             return sp;
         }
 
-        private static void WoolfStratum(ParameterBag outputParameters, bool showIntermediates, double a1, double b1, double c1, double d1, double vs, double cit, out double y, out double w)
+        private static void WoolfStratum(ParameterBag outputParameters, bool showIntermediates, double a1, double b1, double c1, double d1, double vs, double cit, double cco, out double y, out double w)
         {
-            double cco = 0;
-
             double x = a1 * d1 / (b1 * c1);
             y = Math.Log(x);
             double e = Math.Sqrt(vs);
@@ -6259,6 +6253,11 @@ namespace StatsDirect.Builtins
                     tableParameters.AddOutput("yates_chi_2", x2);
                     tableParameters.AddOutput("yates_chi", x1);
                     tableParameters.AddOutput("yates_chi_p", PDF.chivalp(x2, n2));
+                    // A zero column total leaves the chi-square statistics undefined (0/0), printed as missing: say why
+                    List<ParameterBag> warnZeroColumnList = new();
+                    tableParameters.AddOutput("*warn_zero_column", warnZeroColumnList);
+                    if (r <= 0.0 || s <= 0.0)
+                        warnZeroColumnList.Add(new ParameterBag());
                 }
                 double w;
                 double y;
@@ -6284,7 +6283,7 @@ namespace StatsDirect.Builtins
                     c1 = c;
                     d1 = d;
                     vs = 1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d;
-                    WoolfStratum(noHaldaneParameters, showIntermediates, a1, b1, c1, d1, vs, cit, out y, out w);
+                    WoolfStratum(noHaldaneParameters, showIntermediates, a1, b1, c1, d1, vs, cit, cco, out y, out w);
                     n1X += 1.0;
                     w1X += w;
                     t1X += w * y;
@@ -6310,7 +6309,7 @@ namespace StatsDirect.Builtins
                 List<ParameterBag> haldaneList = new();
                 tableParameters.AddOutput("*haldane", haldaneList);
                 haldaneList.Add(haldaneParameters);
-                WoolfStratum(haldaneParameters, showIntermediates, a1, b1, c1, d1, vs, cit, out y, out w);
+                WoolfStratum(haldaneParameters, showIntermediates, a1, b1, c1, d1, vs, cit, cco, out y, out w);
                 n1 += 1.0;
                 w1 += w;
                 t1 += w * y;
@@ -6402,7 +6401,7 @@ namespace StatsDirect.Builtins
         public static StepOutput RptChiWoolfWorksheet(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
-            if (cco <= 0)
+            if (cco <= 0.0 || cco >= 1.0)
                 cco = 0.95;
             double p = (1.0 - cco) / 2.0;
             double cit = PDF.gauinv(1.0 - p);

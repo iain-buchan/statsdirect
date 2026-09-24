@@ -7,6 +7,7 @@ Percentages:  A = @{pc_a:roundu} C = @{pc_c:roundu} Total = @{pc_t:roundu}</p>
 <block name="warn_small"><p><warn>WARNING: SMALL EXPECTED FREQUENCIES, CHECK BY EXACT METHODS</warn></p></block>
 <p>Uncorrected Chi&#xb2; = @{table_chi_2:roundu} Chi = @{table_chi:roundu}<br />
 Yates' corrected Chi&#xb2; = @{yates_chi_2:roundu} Chi = @{yates_chi:roundu} <pval>@{yates_chi_p:pval}</pval></p>
+<block name="warn_zero_column"><p><warn>CHI-SQUARE NOT COMPUTABLE: A COLUMN TOTAL IS ZERO</warn></p></block>
 
 <block name="no_haldane">
 <p><b>Without Haldane Correction:</b><br />

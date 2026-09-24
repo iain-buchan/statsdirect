@@ -29,7 +29,7 @@ namespace StatsDirect.UI
             count1 = parameters["ycats"].AsInt32;
             count2 = parameters["xcats"].AsInt32;
             double[] values1 = parameters.ContainsKey("values1") && ((double[])parameters["values1"].AsObject).Length == count1 ? (double[])parameters["values1"].AsObject : null;
-            double[] values2 = parameters.ContainsKey("values2") && ((double[])parameters["values2"].AsObject).Length == count1 ? (double[])parameters["values2"].AsObject : null;
+            double[] values2 = parameters.ContainsKey("values2") && ((double[])parameters["values2"].AsObject).Length == count2 ? (double[])parameters["values2"].AsObject : null;
             gridScores.RowCount = Math.Max(count1, count2);
             for (int i = 0; i < count1; i++)
                 gridScores[0, i].Value = (null == values1 ? i + 1 : values1[i]).ToString();
