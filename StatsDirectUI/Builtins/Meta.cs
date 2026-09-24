@@ -155,7 +155,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("b", o[i, 2]);
                 inputsParameters.AddOutput("c", o[i, 3]);
                 inputsParameters.AddOutput("d", o[i, 4]);
-                inputsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
+                inputsParameters.AddOutput("lb", included[i] ? GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title) : "* (excluded)");
             }
 
             outputParameters.AddOutput("pc", cco * 100);
@@ -169,12 +169,12 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("st", i);
                 oddsParameters.AddOutput("oe", oe[i]);
                 oddsParameters.AddOutput("or", odr[i]);
-                oddsParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
+                oddsParameters.AddOutput("yi", included[i] ? Math.Log(odr[i]) : Constant.MISSING);
                 oddsParameters.AddOutput("vi", odrv[i]);
                 oddsParameters.AddOutput("lci", odrl[i]);
                 oddsParameters.AddOutput("uci", odru[i]);
                 oddsParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
-                oddsParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
+                oddsParameters.AddOutput("lb", included[i] ? GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title) : "* (excluded)");
             }
 
             IList<ParameterBag> zList = new List<ParameterBag>();
@@ -197,7 +197,7 @@ namespace StatsDirect.Builtins
                 {
                     zParameters.AddOutput("p", Formatting.ASTERISK);
                 }
-                zParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title));
+                zParameters.AddOutput("lb", included[i] ? GetMetaLabel(host, o, i, hasUserSuppliedLabels, allFalse, title) : "* (excluded)");
             }
 
             outputParameters.AddOutput("por", por);
@@ -2306,8 +2306,17 @@ namespace StatsDirect.Builtins
                     odr[i] = a * d / (b * c);
                     if (host.Preferences.MetaExact)
                     {
-                        // the conditional exact limits are those of the observed table: a zero cell gives a limit of 0 or infinity
-                        OddsRatioCI(host, cco, o[i, 1], o[i, 2], o[i, 3], o[i, 4], out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
+                        // the conditional exact limits are those of the observed table: a zero cell gives a limit of 0 or infinity, and an
+                        // empty arm (no exposed subjects, or no controls) the uninformative limits 0 to infinity
+                        if (o[i, 1] + o[i, 3] == 0.0 || o[i, 2] + o[i, 4] == 0.0)
+                        {
+                            odrl[i] = 0.0;
+                            odru[i] = double.PositiveInfinity;
+                            lerr[i] = false;
+                            uerr[i] = false;
+                        }
+                        else
+                            OddsRatioCI(host, cco, o[i, 1], o[i, 2], o[i, 3], o[i, 4], out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
                     }
                     else
                     {
@@ -2611,7 +2620,7 @@ namespace StatsDirect.Builtins
             realk = 0.0;
             for (int i = 1; i <= k; i++)
             {
-                // irr and ci for stratum: a stratum with no events in either arm has no finite log rate ratio and is not pooled
+                // irr and ci for stratum: a stratum with no events in the exposed or in the non-exposed group has no finite log rate ratio and is not pooled
                 if (a[i] <= 0.0 || b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
                 {
                     rkr[i] = Constant.MISSING;
@@ -2627,27 +2636,11 @@ namespace StatsDirect.Builtins
                     double ir1 = a[i] / pt1[i];
                     double ir2 = b[i] / pt2[i];
                     double p = cco + (1.0 - cco) / 2.0;
-                    double f;
-                    if (a[i] == 0.0)
-                    {
-                        rkrl[i] = 0.0;
-                    }
-                    else
-                    {
-                        f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
-                        rkrl[i] = pt2[i] / pt1[i] * (a[i] / (b[i] + 1.0)) * (1.0 / f);
-                    }
-                    if (b[i] == 0.0)
-                    {
-                        rkru[i] = Constant.MISSING;
-                        rkr[i] = Constant.MISSING;
-                    }
-                    else
-                    {
-                        f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
-                        rkru[i] = pt2[i] / pt1[i] * ((a[i] + 1.0) / b[i]) * f;
-                        rkr[i] = ir1 / ir2;
-                    }
+                    double f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
+                    rkrl[i] = pt2[i] / pt1[i] * (a[i] / (b[i] + 1.0)) * (1.0 / f);
+                    f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
+                    rkru[i] = pt2[i] / pt1[i] * ((a[i] + 1.0) / b[i]) * f;
+                    rkr[i] = ir1 / ir2;
                     // pooled incidence rate ratio
                     // vark = 1# / a(i) + 1# / b(i) - as expressed in Lau paper on AZT
                     rkw[i] = a[i] * b[i] / (a[i] + b[i]);
@@ -3875,7 +3868,7 @@ namespace StatsDirect.Builtins
             i2 = Math.Max(0.0, 100.0 * (q - df) / q);
             if (df < 2)
                 return;
-            //  The interval is given at whatever level the analysis uses; it used to be withheld above 99%
+            //  The interval is given at whatever level the analysis uses
             if (cco <= 0.0 || cco >= 1.0)
                 return;
 
@@ -3892,7 +3885,7 @@ namespace StatsDirect.Builtins
                 SElnH = Math.Sqrt(1.0 / (2.0 * (dk - 2.0)) * (1.0 - 1.0 / (3.0 * Math.Pow(dk - 2.0, 2.0))));
 
             //  Test-based interval for H, exp(ln H -/+ z SE(ln H)) with H at least 1, converted to I2 = (H^2 - 1)/H^2 (Higgins & Thompson 2002, p 1550);
-            //  this is the interval when the exact option is off. It replaces a symmetric interval on I2 itself with variance 4 SE(ln H)^2 / H^4, which is not in that paper
+            //  this is the interval when the exact option is off
             double lbH2 = Math.Pow(Math.Max(1.0, Math.Exp(Math.Log(Math.Sqrt(h2)) - cit * SElnH)), 2.0);
             double ubH2 = Math.Pow(Math.Exp(Math.Log(Math.Sqrt(h2)) + cit * SElnH), 2.0);
             ll = 100.0 * (lbH2 - 1.0) / lbH2;
@@ -3905,8 +3898,7 @@ namespace StatsDirect.Builtins
             //  Q is taken as non-central chi-square with df degrees of freedom and non-centrality parameter lambda, estimated by Q - df. Each limit for lambda
             //  is the value at which the distribution function evaluated at the observed Q equals the tail probability: the lower limit where P(chi2 <= Q) is
             //  1 - alpha/2 and the upper where it is alpha/2 (Hedges & Pigott 2001; Higgins & Thompson 2002, section 4.2). H^2 = (df + lambda)/df, so
-            //  I2 = lambda/(df + lambda). The limits used to be the alpha/2 and 1 - alpha/2 quantiles of the distribution with lambda held at Q - df, divided
-            //  by df as if each were a Q, which is not a confidence interval for lambda.
+            //  I2 = lambda/(df + lambda).
             double nc = Math.Max(0.0, q - df);
 
             double minLbNc = IsquareNoncentrality(q, df, nc, levelci, ref ierr);

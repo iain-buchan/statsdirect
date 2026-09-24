@@ -674,9 +674,12 @@ namespace StatsDirect.Numerics
                 sum += termf;
                 double error = remain * gamkf;
                 remain -= poikf;
+                //  The sum also ends when the Poisson weights have fallen below 1e-17 (on both sides of the mode while the backward
+                //  terms are still being taken): with a large non-centrality parameter the mode k exceeds the iteration limit, and the
+                //  terms more than a few hundred away from it contribute nothing to the sum.
                 if (i > k)
                 {
-                    if (error <= 0.000000000001 || i > 5000)
+                    if (error <= 0.000000000001 || poikf < 1e-17 || i > 5000)
                         break;
                 }
                 else
@@ -687,7 +690,7 @@ namespace StatsDirect.Numerics
                     double termb = gamkb * poikb;
                     sum += termb;
                     remain -= poikb;
-                    if (remain <= 0.000000000001 || i > 5000)
+                    if (remain <= 0.000000000001 || (poikf < 1e-17 && poikb < 1e-17) || i > 5000)
                     {
                         break;
                     }
