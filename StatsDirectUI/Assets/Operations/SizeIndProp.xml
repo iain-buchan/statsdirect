@@ -17,7 +17,7 @@
           <default-value>prop</default-value>
           <options>
             <option value="prop">Two Proportions</option>
-            <option value="or">Odds Ratio</option>
+            <option value="or">Relative Risk</option>
           </options>
         </option>
         <double>

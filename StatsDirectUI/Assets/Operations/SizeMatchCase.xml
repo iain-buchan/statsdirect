@@ -25,7 +25,8 @@
           <name>m</name>
           <prompt>Number of controls per case</prompt>
           <must-request>true</must-request>
-          <minimum-value>0</minimum-value>
+          <minimum-value>1</minimum-value>
+          <maximum-value>1000</maximum-value>
           <default-value>1</default-value>
         </double>
         <confidence-interval>

@@ -171,11 +171,15 @@ namespace StatsDirect.Builtins
             double r1 = parameters["r1"].AsDouble;
             if (p >= 1.0 || p < 0.000001)
                 p = 0.8;
-            if (a >= 1.0 || p < 0.000001)
-                p = 0.05;
+            if (a >= 1.0 || a < 0.000001)
+                a = 0.05;
 
-            if (r0 < 0.0 || r0 > 1.0 || r1 <= 0.0 || r1 >= 1.0)
-                throw new InvalidDataException();
+            const string caption = "Sample size for correlation study";
+            // Fisher's z is infinite at a coefficient of 1
+            if (r0 < 0.0 || r0 >= 1.0 || r1 <= 0.0 || r1 >= 1.0)
+                throw new TemplateOperationCancelledException("The correlation coefficient under the null hypothesis must be at least 0 and less than 1, and under the alternative hypothesis greater than 0 and less than 1.", caption);
+            if (r0 == r1)
+                throw new TemplateOperationCancelledException("The correlation coefficients under the null and alternative hypotheses must differ.", caption);
 
             double xsig = a / 2.0;
             double zsig = PDF.gauinv(1.0 - xsig, out int flt);
@@ -248,12 +252,11 @@ namespace StatsDirect.Builtins
             }
             if (ct > 0.0 && et > 0.0 && power > 0.0 && power < 1.0 && alpha > 0.0 && alpha < 1.0 && hr != 1.0 && hr > 0.0 && !double.IsInfinity(hr) && at >= 0.0 && fut >= 0.0 && at + fut > 0.0)
             {
-                if (at == 0.0)
-                    at = fut * 0.00004;
                 if (M <= 0.0)
                     M = 1;
                 double avt = (ct + et) / 2.0;
-                double pa = (1.0 - Math.Exp(-Math.Log(2.0) * at / avt)) / (Math.Log(2.0) * at / avt);
+                // with no accrual period every subject is followed for the whole study
+                double pa = at == 0.0 ? 1.0 : (1.0 - Math.Exp(-Math.Log(2.0) * at / avt)) / (Math.Log(2.0) * at / avt);
                 double P = 1.0 - pa * Math.Exp(-Math.Log(2.0) * fut / avt);
                 double zalpha = zcvalue(alpha / 2.0);
                 double zbeta = zcvalue(beta);
@@ -556,6 +559,11 @@ namespace StatsDirect.Builtins
             if (p1 < 0.0)
                 p1 = 0.0;
             double M = parameters["m"].AsDouble;
+            const string caption = "Sample size for independent case-control study";
+            if (M <= 0.0)
+                throw new TemplateOperationCancelledException("The number of controls per case must be greater than 0.", caption);
+            if (p1 == p0)
+                throw new TemplateOperationCancelledException("The probabilities of exposure in cases and in controls must differ: an odds ratio of 1, or a probability of exposure in controls of 0 or 1, gives no effect to detect.", caption);
             if (p1 != p0 && M > 0)
             {
                 double N;
@@ -636,6 +644,11 @@ namespace StatsDirect.Builtins
             if (P1 < 0.0)
                 P1 = 0.0;
             double M = parameters["m"].AsDouble;
+            const string caption = "Sample size for independent cohort study";
+            if (M <= 0.0)
+                throw new TemplateOperationCancelledException("The number of controls per experimental subject must be greater than 0.", caption);
+            if (P1 == P0)
+                throw new TemplateOperationCancelledException("The probabilities of the event in experimental subjects and in controls must differ: a relative risk of 1, or a probability in controls of 0 or 1, gives no effect to detect.", caption);
             if (P1 != P0 && M > 0)
             {
                 double N;
@@ -694,7 +707,20 @@ namespace StatsDirect.Builtins
             double p0 = parameters["p0"].AsDouble;
             double ps = parameters["ps"].AsDouble;
             double M = parameters["m"].AsDouble;
+            const string caption = "Sample size for matched case-control study";
+            if (M < 1.0)
+                throw new TemplateOperationCancelledException("There must be at least one control per case.", caption);
+            if (M > 1000.0)
+                throw new TemplateOperationCancelledException("The number of controls per case must not exceed 1000.", caption);
+            if (p0 <= 0.0 || p0 >= 1.0)
+                throw new TemplateOperationCancelledException("The probability of exposure in controls must be greater than 0 and less than 1.", caption);
+            if (ps == 1.0)
+                throw new TemplateOperationCancelledException("An odds ratio of 1 gives no effect to detect: the odds ratio must differ from 1.", caption);
             ssize(alpha, beta, ph, p0, M, ps, out double N, out double FM, out double sigmar, out int fault);
+            if (fault == 2)
+                throw new TemplateOperationCancelledException("The odds ratio must be greater than 0.", caption);
+            if (fault == 1)
+                throw new TemplateOperationCancelledException("A correlation of " + ph.ToString() + " between the exposures of a case and its control is not possible with this probability of exposure and odds ratio: a cell of the paired table would have a probability below 0 or above 1. Try a value nearer 0.", caption);
 
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("corr", ph);
@@ -735,16 +761,12 @@ namespace StatsDirect.Builtins
         {
             double P1;
             double N = 0;
-            const string caption = "Comparision of proportions for paired cohort study";
+            const string caption = "Comparison of proportions for paired cohort study";
 
             double power = parameters["p"].AsDouble;
             double alpha = parameters["a"].AsDouble;
             double BETA = 1.0 - power;
             double P0 = parameters["p0"].AsDouble;
-            if (P0 > 1.0)
-                P0 = 1.0;
-            if (P0 < 0.0)
-                P0 = 0.0;
             double ph = parameters["ph"].AsDouble;
             bool hasRr = "rr".Equals(parameters["er-or-rr"].AsString);
             if (hasRr)
@@ -756,10 +778,15 @@ namespace StatsDirect.Builtins
             {
                 P1 = parameters["p1"].AsDouble;
             }
-            if (P1 > 1.0)
-                P1 = 1.0;
-            if (P1 < 0.0)
-                P1 = 0.0;
+            // a rate of 0 or 1 leaves no discordant pairs on one side, so the calculation has no answer whatever the correlation
+            if (P0 <= 0.0 || P0 >= 1.0)
+                throw new TemplateOperationCancelledException("The event rate in the control group must be greater than 0 and less than 1.", caption);
+            if (P1 <= 0.0 || P1 >= 1.0)
+                throw new TemplateOperationCancelledException("The event rate in the experimental group" + (hasRr ? " (the relative risk times the control group rate)" : string.Empty) + " must be greater than 0 and less than 1.", caption);
+            if (P1 == P0)
+                throw new TemplateOperationCancelledException("The event rates in the two groups must differ.", caption);
+            if (ph <= -1.0 || ph >= 1.0)
+                throw new TemplateOperationCancelledException("The correlation coefficient must be greater than -1 and less than 1.", caption);
             if (P1 != P0 && ph > -1.0 && ph < 1.0)
             {
                 ParameterBag outputParameters = new();
@@ -880,7 +907,8 @@ namespace StatsDirect.Builtins
             while (true);
             if (M > 1)
             {
-                FM = Convert.ToDouble(Convert.ToInt64(nm)) / Convert.ToDouble(Convert.ToInt64(n1));
+                // the ratio of the two sample sizes as they are reported, each rounded up to a whole number of cases
+                FM = N / (Math.Floor(n1) + 1.0);
             }
             else
             {
@@ -901,8 +929,8 @@ namespace StatsDirect.Builtins
             double sd = parameters["sd"].AsDouble;
             if (P >= 1.0 || P < 0.000001)
                 P = 0.8;
-            if (a >= 1.0 || P < 0.000001)
-                P = 0.05;
+            if (a >= 1.0 || a < 0.000001)
+                a = 0.05;
             double k = D / sd;
             bool ok = true;
             const double omega = 0.0001;
@@ -953,6 +981,9 @@ namespace StatsDirect.Builtins
             if (fault == 0)
             {
                 double xza = cit;
+                // outside 0 to 100% the variance p(1 - p) is negative, and at 0% or 100% there is nothing to estimate
+                if (P <= 0.0 || P >= 100.0)
+                    throw new TemplateOperationCancelledException("The rate at which the characteristic occurs must be greater than 0% and less than 100%.", "Sample size for a population survey");
                 P /= 100.0;
                 xd /= 100.0;
                 if (xd <= 0.0 | ps <= 0.0)
@@ -985,8 +1016,8 @@ namespace StatsDirect.Builtins
             double M = parameters["m"].AsDouble;
             if (P >= 1 || P < 0.000001)
                 P = 0.8;
-            if (a >= 1 || P < 0.000001)
-                P = 0.05;
+            if (a >= 1 || a < 0.000001)
+                a = 0.05;
 
             double k = D / sd;
             bool ok = true;
@@ -1028,11 +1059,20 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("cases", N);
             outputParameters.AddOutput("no_less", ll);
-            outputParameters.AddOutput("no_greater", ul);
+            // the upper bound, power + alpha / 2, is a probability
+            outputParameters.AddOutput("no_greater", Math.Min(ul, 1.0));
             return outputParameters;
         }
 
-        private static double x_tpower(bool unpaired, double alpha, double delta, double sd, double m, double n) => unpaired ? Power.tstpower(alpha, delta, sd, n, m) : Power.ptpower(alpha, delta, sd, n);
+        /// <summary>
+        /// two sided power of the t test with n pairs, or with n experimental subjects and the whole number of controls the report gives them
+        /// </summary>
+        private static double x_tpower(bool unpaired, double alpha, double delta, double sd, double m, double n) => unpaired ? Power.tstpower(alpha, delta, sd, n, x_controls(m, n) / n) : Power.ptpower(alpha, delta, sd, n);
+
+        /// <summary>
+        /// the number of controls for n experimental subjects at m controls per subject: a whole number, and at least one
+        /// </summary>
+        private static double x_controls(double m, double n) => Math.Ceiling(m * n);
 
         /// <summary>
         /// smallest integer sample size (per experimental group if unpaired) whose two sided non-central t power reaches the target, searched from the approximation n0
@@ -1079,7 +1119,8 @@ namespace StatsDirect.Builtins
                 ParameterBag controlsParameters = new();
                 controlsList.Add(controlsParameters);
                 controlsParameters.AddOutput("con_per", m);
-                df = n * (m + 1) - 2.0;
+                // the degrees of freedom of the design reported: n subjects and a whole number of controls
+                df = n + x_controls(m, n) - 2.0;
             }
             outputParameters.AddOutput("size", n);
 
@@ -1091,7 +1132,7 @@ namespace StatsDirect.Builtins
             {
                 ParameterBag subjectsParameters = new();
                 subjectsList.Add(subjectsParameters);
-                subjectsParameters.AddOutput("con_tot", Math.Floor(m * n));
+                subjectsParameters.AddOutput("con_tot", x_controls(m, n));
             }
             else
             {
@@ -1103,7 +1144,19 @@ namespace StatsDirect.Builtins
             List<ParameterBag> assumptionsList = new();
             outputParameters.AddOutput("*assumptions", assumptionsList);
             if (ierr == 0 & 2.0 * ta + tb <= 3.1)
-                assumptionsList.Add(x_disclaim(1.0 - b, 1.0 - b + alpha / 2.0, n));
+            {
+                // the bounds on the true power are those of the approximate formula; the size reported is the smallest whose power from
+                // the non-central t distribution reaches the target, and never below 2, so at that floor its power can exceed the upper bound
+                double ll = 1.0 - b;
+                double ul = 1.0 - b + alpha / 2.0;
+                double pw = n < int.MaxValue ? x_tpower(unpaired, alpha, delta, sd, m, n) : Constant.MISSING;
+                if (pw != Constant.MISSING)
+                {
+                    ll = Math.Min(ll, pw);
+                    ul = Math.Max(ul, pw);
+                }
+                assumptionsList.Add(x_disclaim(ll, ul, n));
+            }
         }
     }
 }
