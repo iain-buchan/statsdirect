@@ -1393,17 +1393,25 @@ namespace StatsDirect.Numerics
         ///
         ///     available via the statlib archive, at http://lib.stat.cmu.edu/apstat/
         /// </remarks>
-        public static double ppchi2(double prob, double v, out int ifault)
+        public static double ppchi2(double prob, double v, out int ifault) => ppchi2(prob, v, false, out ifault);
+
+        /// <summary>
+        ///     chi-square percentage point for a lower tail area prob or, when upper is true, for an upper tail area prob:
+        ///     the tail given is the one solved for, since 1 - prob formed in double precision keeps of a small prob only the
+        ///     figures beyond its leading zeros (an upper tail of 5e-7 with 1 degree of freedom gave 25.2638207260669 for
+        ///     25.2638207259082)
+        /// </summary>
+        public static double ppchi2(double prob, double v, bool upper, out int ifault)
         {
             const double e = 0.5e-12, aa = 0.6931471805;
             double ch, q, p1, p2, t, a;
             //  after defining accuracy and ln(2), test arguments and initialize
-            double p = prob;
+            double p = upper ? 1.0 - prob : prob;   // the lower tail area, for the tests and the starting approximations
             double ret = -1.0;
             ifault = 1;
             if (p < 0.000002 || p > 0.999998)
             {
-                ret = ppchir(prob, v, out ifault);
+                ret = ppchir(prob, v, upper, out ifault);
                 return ret;
             }
             if (v <= 0.0) 
@@ -1454,7 +1462,7 @@ namespace StatsDirect.Numerics
             {
                 q = ch;
                 p1 = 0.5 * ch;
-                p2 = p - gammad(p1, xx, out ifault);
+                p2 = upper ? gammad(p1, xx, true, out ifault) - prob : p - gammad(p1, xx, out ifault);
                 if (ifault != 0) return ret;
                 t = p2 * Math.Exp(xx * aa + g + p1 - c * Math.Log(ch));
                 double b = t / ch;
@@ -1473,18 +1481,18 @@ namespace StatsDirect.Numerics
                 // million degrees of freedom froze the program). The bisection used outside this routine's range of p settles
                 // it. A call that converges, as every ordinary one does within a few steps, returns exactly what it did.
                 if (iteration >= 100)
-                    return ppchir(prob, v, out ifault);
+                    return ppchir(prob, v, upper, out ifault);
             }
             ret = ch;
             return ret;
         }
 
         /// <summary>
-        ///     chi-square percentage point for p outside the range of AS 91:
-        ///     the tail with the smaller probability is bracketed from a Wilson and Hilferty
+        ///     chi-square percentage point for p outside the range of AS 91 (p is a lower tail area, or an upper tail area
+        ///     when upperGiven is true): the tail with the smaller probability is bracketed from a Wilson and Hilferty
         ///     start (or the small chi-square approximation) and the root is found by bisection
         /// </summary>
-        private static double ppchir(double p, double df, out int ifault)
+        private static double ppchir(double p, double df, bool upperGiven, out int ifault)
         {
             const double eps = 10.0 * Constant.DBL_LRS;
             const int maxit = 2200;
@@ -1492,16 +1500,19 @@ namespace StatsDirect.Numerics
             if (p <= 0.0 | p >= 1.0 | double.IsNaN(p)) return double.NaN;
             ifault = 2;
             if (df <= 0.0 | double.IsNaN(df)) return double.NaN;
-            bool upper = p > 0.5;
-            double q = upper ? 1.0 - p : p;
+            //  the smaller tail is the one bracketed, and it is taken as given, not as 1 - the other, when it is the tail given
+            double lower = upperGiven ? 1.0 - p : p;
+            double upperArea = upperGiven ? p : 1.0 - p;
+            bool upper = upperArea < 0.5;
+            double q = upper ? upperArea : lower;
             //  f(x) = sgn * (tail(x) - q) increases with x
             double sgn = upper ? -1.0 : 1.0;
-            double xint = gauinv(p, out ifault);
+            double xint = upperGiven ? -gauinv(p, out ifault) : gauinv(p, out ifault);
             if (ifault != 0) return double.NaN;
             double x0 = 2.0 / (9.0 * df);
             double x1 = df * Math.Pow(1.0 - x0 + xint * Math.Sqrt(x0), 3.0);
             if (!(x1 > 0.0))
-                x1 = 2.0 * Math.Exp((Math.Log(p) + alogam(0.5 * df + 1.0)) * 2.0 / df);
+                x1 = 2.0 * Math.Exp((Math.Log(lower) + alogam(0.5 * df + 1.0)) * 2.0 / df);
             if (!(x1 > 0.0))
                 x1 = Constant.DBL_MIN;
             double f1 = ppchirf(x1, df, upper, q, sgn, out ifault);

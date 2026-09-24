@@ -604,7 +604,7 @@ namespace StatsDirect.Numerics
         //       END
 
         ///  <summary>
-        ///  cumulative and point binomial distribution
+        ///  cumulative and point binomial distribution: term = P(X = k), plo = P(X &lt;= k), phi = P(X &gt;= k)
         ///  </summary>
         ///  <param name="n"></param>
         ///  <param name="p"></param>
@@ -613,48 +613,76 @@ namespace StatsDirect.Numerics
         ///  <param name="plo"></param>
         ///  <param name="phi"></param>
         ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <remarks>
+        ///  Each probability is taken relative to that of the most probable count: the ratios are carried down and up from the mode by
+        ///  the recurrence between the probabilities of neighbouring counts, and the point term and the two tails are each divided by
+        ///  the sum over all n + 1 counts, which is 1. So every figure is as accurate as a few multiplications, where the sum of
+        ///  exp(log-gamma) terms this replaces was accurate only to about n x 1e-16 (0.246093750000001 for 252/1024), and each tail
+        ///  is summed as itself, where 1 - P(X &lt;= k) + P(X = k) lost a small upper tail (9.1e-13 for 0.25^20 = 9.09e-13). The
+        ///  three sums are compensated so that the many small terms of a large n keep their figures.
+        ///  </remarks>
         public static void bino(int n, double p, int k, out double term, out double plo, out double phi, out int ifault)
         {
             term = Constant.MISSING;
+            plo = Constant.MISSING;
+            phi = Constant.MISSING;
             if (p < 0.0 || p > 1.0)
             {
                 ifault = 1;
-                plo = Constant.MISSING;
-                phi = Constant.MISSING;
                 return;
             }
             if (n < k)
             {
                 ifault = 2;
-                plo = Constant.MISSING;
-                phi = Constant.MISSING;
                 return;
             }
             ifault = 0;
-            double sml = Math.Log(Constant.DBL_MIN);
-            double xn = Convert.ToDouble(n);
-            // double xk = Convert.ToDouble( k ); 
-            plo = 0.0;
-            double xn1 = xn + 1.0;
-            for (int i = 0; i <= k; i++)
+            if (p == 0.0 || p == 1.0)
             {
-                double xi = Convert.ToDouble(i);
-                term = PDF.alogam(xn1) - PDF.alogam(xi + 1.0) - PDF.alogam(xn1 - xi) + xi * Math.Log(p) + (xn - xi) * Math.Log(1.0 - p);
-                if (term > sml)
-                {
-                    plo += Math.Exp(term);
-                }
+                // every trial has the same outcome, so all the probability is on one count
+                int certain = p == 0.0 ? 0 : n;
+                term = k == certain ? 1.0 : 0.0;
+                plo = k >= certain ? 1.0 : 0.0;
+                phi = k <= certain ? 1.0 : 0.0;
+                return;
             }
-            if (term > sml)
+            double q = 1.0 - p;
+            int mode = Math.Min(n, (int)Math.Floor((n + 1) * p));
+            double atK = 0.0, lower = 0.0, upper = 0.0, total = 0.0, lowerLost = 0.0, upperLost = 0.0, totalLost = 0.0;
+            static void Add(ref double sum, ref double lost, double x)
             {
-                term = Math.Exp(term);
+                double y = x - lost;
+                double t = sum + y;
+                lost = t - sum - y;
+                sum = t;
             }
-            if (term < 0.0)
+            void Count(int i, double ratio)
             {
-                term = 0.0;
+                Add(ref total, ref totalLost, ratio);
+                if (i <= k)
+                    Add(ref lower, ref lowerLost, ratio);
+                if (i >= k)
+                    Add(ref upper, ref upperLost, ratio);
+                if (i == k)
+                    atK = ratio;
             }
-            phi = 1.0 - plo + term;
+            Count(mode, 1.0);
+            // a ratio that has underflowed to 0 ends its pass: every count beyond is less probable still
+            double r = 1.0;
+            for (int i = mode; i > 0 && r > 0.0; i--)
+            {
+                r *= i * q / ((n - i + 1) * p);
+                Count(i - 1, r);
+            }
+            r = 1.0;
+            for (int i = mode; i < n && r > 0.0; i++)
+            {
+                r *= (n - i) * p / ((i + 1) * q);
+                Count(i + 1, r);
+            }
+            term = atK / total;
+            plo = lower / total;
+            phi = upper / total;
         }
 
 

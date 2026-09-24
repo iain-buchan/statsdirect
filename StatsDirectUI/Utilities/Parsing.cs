@@ -18,7 +18,9 @@ namespace StatsDirect.Utilities
                 s = s.Replace('D', 'E');
                 s = s.Replace('d', 'e');
             }
-            return double.TryParse(s, out double result) ? Math.Round(result, 14) : Constant.MISSING;
+            // The nearest double to the text as typed. Rounded to 14 decimal places, as it used to be, a P below 5e-15 became 0
+            // and the fifteenth figure of anything typed to 15 was tidied away.
+            return double.TryParse(s, out double result) ? result : Constant.MISSING;
         }
 
         public static int Cint_Txt(string s)

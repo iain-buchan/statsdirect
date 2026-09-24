@@ -285,16 +285,8 @@ namespace StatsDirect.UI
                             txtDf2.Text = Convert.ToInt32((1.0 - rh) * (n * (Math.Pow(n, 2) - 1)) / 6).ToString();
                         PFromX();
                     }
-                    else // Kendall
-                    {
-                        n = Convert.ToInt32(df);
-                        double tau = CdblTxt(txtPdf.Text);
-                        if (n < 4 || tau < 0.0 || tau > 1.0)
-                            txtDf2.Text = Formatting.ERRR;
-                        else
-                            txtDf2.Text = Convert.ToInt32(tau * (n * (n - 1) / 2.0)).ToString();
+                    else // Kendall: the range check and S are PFromKendall's, the same whichever box is filled
                         PFromX();
-                    }
                 }
                 else // Not rho, not Kendall
                 {
@@ -320,7 +312,8 @@ namespace StatsDirect.UI
                 if (selectedTest != DistributionType.Poisson && selectedTest != DistributionType.NonCentralT)
                 {
                     int df = Parsing.Cint_Txt(txtDf2.Text);
-                    if (selectedTest != DistributionType.Binomial)
+                    // degrees of freedom and a number of samples start at 1; a number of successes or Kendall's S can be 0, and S negative
+                    if (selectedTest != DistributionType.Binomial && selectedTest != DistributionType.Kendall)
                     {
                         if (df < 1)
                             df = 1;
@@ -503,18 +496,21 @@ namespace StatsDirect.UI
 
         private void PFromKendall()
         {
-            double rh = 0;
             int ix = 0;
             double pu = 0;
             int fault = 0;
             int nx = Parsing.Cint_Txt(txtDf.Text);
-            double tau;
+            // The same range whichever box is filled: at least two observations, so that there are pairs; S within the n(n - 1)/2
+            // pairs, so tau within -1 to 1. The tau box used to test a variable that was never set, and an S below 1 became 1.
+            double pairs = nx * (nx - 1) / 2.0;
+            bool inRange = nx >= 2;
             if (txtPdf.Text.Length > 0)
             {
-                tau = CdblTxt(txtPdf.Text);
-                if (nx > 0 & rh <= 1)
+                double tau = CdblTxt(txtPdf.Text);
+                inRange = inRange && tau >= -1.0 && tau <= 1.0;
+                if (inRange)
                 {
-                    ix = Convert.ToInt32(tau * (nx * (nx - 1) / 2.0));
+                    ix = Convert.ToInt32(tau * pairs);
                     txtDf2.Text = ix.ToString();
                 }
                 else
@@ -523,10 +519,11 @@ namespace StatsDirect.UI
             else
             {
                 ix = Parsing.Cint_Txt(txtDf2.Text);
-                tau = ix / (nx * (nx - 1) / 2.0);
-                Xval15Into(txtPdf, tau);
+                inRange = inRange && ix >= -pairs && ix <= pairs;
+                if (inRange)
+                    Xval15Into(txtPdf, ix / pairs);
             }
-            if (txtDf2.Text == Formatting.ERRR || nx < 1)
+            if (!inRange)
                 fault = -1;
             else
                 pu = MathDbl.kendp(ix, nx, ref fault);
@@ -639,22 +636,24 @@ namespace StatsDirect.UI
             Pval15Into(txtUp, pu, true);
             double pl = 1.0 - pu;
             Pval15Into(txtLp, pl, true);
-            if (pu > pl)
-                pu = pl;
-            pu = 2.0 * CdblTxt(Pval15(pu, true));
-            Pval15Into(txt2p, pu, true);
+            // twice the smaller tail itself, not twice the tail as displayed and read back
+            double p2 = 2.0 * Math.Min(pu, pl);
+            Pval15Into(txt2p, p2, true);
             lastCalculationAsString = "P(t " + txtPdf.Text.Trim() + ", df " + txtDf.Text.Trim() + ") = " + txtUp.Text.Trim() + " upper, " + txtLp.Text.Trim() + " lower, " + txt2p.Text.Trim() + " two sided";
         }
 
         private void PFromZ()
         {
-            double pl = PDF.alnorm(CdblTxt(txtPdf.Text));
-            double pu = 1.0 - pl;
+            double z = CdblTxt(txtPdf.Text);
+            double pl = PDF.alnorm(z);
+            // the upper tail is the lower tail of -z: as 1 - pl it kept nothing of a tail below 1e-16 (z of 9 printed 0)
+            double pu = PDF.alnorm(-z);
             Pval15Into(txtUp, pu, true);
             Pval15Into(txtLp, pl, true);
-            double p = CdblTxt(pu < pl ? Pval15(pu, true) : Pval15(pl, true));
-            Pval15Into(txt2p, 2.0 * p, true);
-            lastCalculationAsString = "P(z " + txtPdf.Text.Trim() + ") = " + Pval15(pu, true) + " upper,  " + Pval15(pl, true) + " lower,  " + Pval15(2.0 * p, true) + " two sided";
+            // twice the smaller tail itself, not twice the tail as displayed and read back
+            double p2 = 2.0 * Math.Min(pu, pl);
+            Pval15Into(txt2p, p2, true);
+            lastCalculationAsString = "P(z " + txtPdf.Text.Trim() + ") = " + Pval15(pu, true) + " upper,  " + Pval15(pl, true) + " lower,  " + Pval15(p2, true) + " two sided";
         }
 
         private void SetVisibility()
@@ -756,13 +755,14 @@ namespace StatsDirect.UI
 
         private void XFromP(double P, int idx)
         {
-            if (pnlDf.Visible && CdblTxt(txtDf.Text) < 1)
+            // degrees of freedom below 1 are taken as 1; the Poisson count of events can be 0
+            if (pnlDf.Visible && selectedTest != DistributionType.Poisson && CdblTxt(txtDf.Text) < 1)
                 txtDf.Text = "1";
 
             switch (selectedTest)
             {
                 case DistributionType.Z:
-                    ZFromP(P);
+                    ZFromP(P, idx);
                     break;
                 case DistributionType.T:
                     TFromP(P);
@@ -771,14 +771,14 @@ namespace StatsDirect.UI
                     FFromP(P);
                     break;
                 case DistributionType.ChiSq:
-                    ChiSqFromP(P);
+                    ChiSqFromP(P, idx);
                     break;
                 case DistributionType.Q:
                     QFromP(P);
                     break;
                 case DistributionType.Poisson:
                     InvPoisson(idx, P, Parsing.Cint_Txt(txtDf.Text));
-                    lastCalculationAsString = "Poisson mean(P of " + txtDf.Text.Trim() + " events " + Pval15(CdblTxt(txtLp.Text), true) + ", fewer " + Pval15(CdblTxt(txtUp.Text), true) + ", more " + Pval15(CdblTxt(txt2p.Text), true) + ") = " + txtDf2.Text.Trim();
+                    lastCalculationAsString = "Poisson mean(P of " + txtDf.Text.Trim() + " events " + Pval15(CdblTxt(txtLp.Text), true) + ", more " + Pval15(CdblTxt(txtUp.Text), true) + ", fewer " + Pval15(CdblTxt(txt2p.Text), true) + ") = " + txtDf2.Text.Trim();
                     break;
                 case DistributionType.Kendall:
                     KendallFromP(P);
@@ -836,9 +836,16 @@ namespace StatsDirect.UI
             lastCalculationAsString = "Q(upper P " + Formatting.XRound(P, 7) + ", df " + txtDf.Text.Trim() + ", samples " + txtDf2.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
-        private void ChiSqFromP(double P)
+        private void ChiSqFromP(double P, int idx)
         {
-            double x = PDF.ppchi2(CdblTxt(txtLp.Text), CdblTxt(txtDf.Text), out int fault);
+            // An upper tail P is solved for as itself. Through the lower tail box, which holds 1 - P formed in double precision, a
+            // small P lost figures (5e-7 with 1 degree of freedom gave 25.2638207260669 for 25.2638207259082).
+            double x;
+            int fault;
+            if (idx == 1)
+                x = PDF.ppchi2(CdblTxt(txtLp.Text), CdblTxt(txtDf.Text), out fault);
+            else
+                x = PDF.ppchi2(P, CdblTxt(txtDf.Text), true, out fault);
             Xval15Into(txtPdf, x, fault != 0);
             lastCalculationAsString = "chi-sq(upper P " + Pval15(P, true) + ", df " + txtDf.Text.Trim() + ") = " +
                                       txtPdf.Text.Trim();
@@ -859,9 +866,17 @@ namespace StatsDirect.UI
             lastCalculationAsString = "t(upper P " + Pval15(P, true) + ", df " + txtDf.Text.Trim() + ") = " + txtPdf.Text.Trim();
         }
 
-        private void ZFromP(double P)
+        private void ZFromP(double P, int idx)
         {
-            double x = PDF.gauinv(CdblTxt(txtLp.Text), out int fault);
+            // gauinv takes a lower tail area. An upper or two sided P is inverted by symmetry, as minus the deviate of its own
+            // value: through the lower tail box, which holds 1 - P formed in double precision, a P of 1e-14 gave 7.65073 for
+            // 7.65063. (0.0 - keeps the deviate of a P of 0.5 at +0.)
+            double x;
+            int fault;
+            if (idx == 1)
+                x = PDF.gauinv(CdblTxt(txtLp.Text), out fault);
+            else
+                x = 0.0 - PDF.gauinv(P, out fault);
             Xval15Into(txtPdf, x, fault != 0);
             lastCalculationAsString = "z(upper P " + Pval15(P, true) + ") = " + txtPdf.Text.Trim();
         }
@@ -876,7 +891,23 @@ namespace StatsDirect.UI
             double plo = 0;
             double phi = 0;
 
-            if (nl > 100000)
+            if (nl == 0)
+            {
+                // The routine grows its search bracket by nl, so with no events it never leaves the origin (it returned a mean of
+                // 1e-16 for any P). The probability of no events is exp(-mean), so the mean at which 0 or fewer events has
+                // probability P is -ln P; 0 or more events has probability 1 whatever the mean, so that inverse is refused.
+                if (idx == 3 && P > 0.0 && P <= 1.0)
+                {
+                    xmid = -Math.Log(P);
+                    trm = P;
+                    plo = P;
+                    phi = 1.0;
+                    ifault = 0;
+                }
+                else
+                    ifault = 1;
+            }
+            else if (nl > 100000)
             {
                 if (SdApplication.SoleInstance.Query("This calculation can take a long time with large numbers.\r\n\r\nDo you wish to continue?", "StatsDirect Poisson Inverse"))
                     ExFortran.poissoni(idx, P, out xmid, out trm, out phi, out plo, nl, out ifault);
@@ -966,8 +997,9 @@ namespace StatsDirect.UI
                 return Formatting.ERRR;
             if (!allowZero && p < 1e-15)
                 return MINIMAL;
-            if (p < Constant.EPSNEG)
-                return p.ToString();
+            // a tail too small for 15 decimal places is shown to 15 significant figures (it used to print as the raw double)
+            if (p < 1e-15)
+                return p.ToString("G15");
             if (p >= 0.999999999999999)
                 return "1";
             return Formatting.XRound(p, 15);
