@@ -97,6 +97,10 @@ namespace StatsDirect.Charting.Renderer
 
             ScaleHeight(k);
 
+            // A linear axis (a summary statistic that is not a ratio, such as a risk or mean difference) must reach the smallest
+            // value even when it is negative; the log axis scales from the smallest value greater than zero.
+            bool isLinearScale = ScaleType.Linear == Definition.ScaleParameters.X.ScaleType;
+
             int kok = 0;
             DataMaxX = double.NegativeInfinity;
             DataMinX = double.PositiveInfinity;
@@ -115,7 +119,7 @@ namespace StatsDirect.Charting.Renderer
                     kok++;
                     if (fOptions.OddsRatios[i] > DataMaxX)
                         DataMaxX = fOptions.OddsRatios[i];
-                    if (fOptions.OddsRatios[i] < DataMinX && fOptions.OddsRatios[i] > 0)
+                    if (fOptions.OddsRatios[i] < DataMinX)
                         DataMinX = fOptions.OddsRatios[i];
                     if (fOptions.OddsRatios[i] > 0 && fOptions.OddsRatios[i] < DataMinGreaterThanZeroX)
                         DataMinGreaterThanZeroX = fOptions.OddsRatios[i];
@@ -125,12 +129,15 @@ namespace StatsDirect.Charting.Renderer
                         fOptions.OddsRatioLcis[i] = fOptions.OddsRatioUcis[i];
                         fOptions.OddsRatioUcis[i] = tmp;
                     }
+                    // A blank limit is unbounded: it is drawn with an arrow and labelled with the bound of the scale, which for a ratio is 0 below
                     if (fOptions.OddsRatioLcis[i] == Constant.MISSING)
-                        fOptions.OddsRatioLcis[i] = double.NegativeInfinity;
+                        fOptions.OddsRatioLcis[i] = isLinearScale ? double.NegativeInfinity : 0;
                     if (fOptions.OddsRatioUcis[i] == Constant.MISSING)
                         fOptions.OddsRatioUcis[i] = double.PositiveInfinity;
-                    if (fOptions.OddsRatioLcis[i] < DataMinX && fOptions.OddsRatioLcis[i] > 0 && !double.IsInfinity(fOptions.OddsRatioLcis[i]))
+                    if (fOptions.OddsRatioLcis[i] < DataMinX && !double.IsInfinity(fOptions.OddsRatioLcis[i]))
                         DataMinX = fOptions.OddsRatioLcis[i];
+                    if (fOptions.OddsRatioLcis[i] > 0 && fOptions.OddsRatioLcis[i] < DataMinGreaterThanZeroX && !double.IsInfinity(fOptions.OddsRatioLcis[i]))
+                        DataMinGreaterThanZeroX = fOptions.OddsRatioLcis[i];
                     if (fOptions.OddsRatioUcis[i] > DataMaxX && !double.IsInfinity(fOptions.OddsRatioUcis[i]))
                         DataMaxX = fOptions.OddsRatioUcis[i];
                 }
@@ -146,12 +153,12 @@ namespace StatsDirect.Charting.Renderer
                 if (Math.Abs(fOptions.OddsRatioUcis[i]) < absmin && fOptions.OddsRatioUcis[i] != 0.0 && !double.IsInfinity(fOptions.OddsRatioUcis[i]))
                     absmin = Math.Abs(fOptions.OddsRatioUcis[i]);
             }
-            DataMinGreaterThanZeroX = DataMinX;
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
 
             // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
-            bool shouldDrawLine = DataMinX <= 0 || null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue;
+            // Without a marker line value the line is the line of no effect at 0 of a linear axis whose data reach it.
+            bool shouldDrawLine = isLinearScale && DataMinX <= 0 || null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue;
             double lineX = null != Definition && Definition.HasScaleParameters && Definition.ScaleParameters.X.MarkerLineValue.HasValue ? Definition.ScaleParameters.X.MarkerLineValue.Value : 0;
             if (shouldDrawLine)
             {
