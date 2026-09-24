@@ -2264,18 +2264,21 @@ namespace StatsDirect.Builtins
             if (ierr != 0)
             {
                 x21 = Constant.MISSING;
+                df1 = Constant.MISSING;
                 p1 = Constant.MISSING;
             }
             Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 2, out double x22, out double df2, out double p2, out ierr);
             if (ierr != 0)
             {
                 x22 = Constant.MISSING;
+                df2 = Constant.MISSING;
                 p2 = Constant.MISSING;
             }
             Gencmh(istrata, irows, icols, tbl, rowScore, colScore, 1, out double x23, out double df3, out double p3, out ierr);
             if (ierr != 0)
             {
                 x23 = Constant.MISSING;
+                df3 = Constant.MISSING;
                 p3 = Constant.MISSING;
             }
             //  note transposition of row and column scores
