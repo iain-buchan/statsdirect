@@ -129,9 +129,9 @@ namespace StatsDirect.Charting.Renderer
                         fOptions.OddsRatioLcis[i] = fOptions.OddsRatioUcis[i];
                         fOptions.OddsRatioUcis[i] = tmp;
                     }
-                    // A blank limit is unbounded: it is drawn with an arrow and labelled with the bound of the scale, which for a ratio is 0 below
+                    // A blank limit is unbounded: it is drawn with an arrow, and its label is the bound of the scale (LowerLimitLabel below)
                     if (fOptions.OddsRatioLcis[i] == Constant.MISSING)
-                        fOptions.OddsRatioLcis[i] = isLinearScale ? double.NegativeInfinity : 0;
+                        fOptions.OddsRatioLcis[i] = double.NegativeInfinity;
                     if (fOptions.OddsRatioUcis[i] == Constant.MISSING)
                         fOptions.OddsRatioUcis[i] = double.PositiveInfinity;
                     if (fOptions.OddsRatioLcis[i] < DataMinX && !double.IsInfinity(fOptions.OddsRatioLcis[i]))
@@ -155,6 +155,10 @@ namespace StatsDirect.Charting.Renderer
             }
 
             int decimalPlaces = fOptions.EffectSizeAndIntervalDecimalPlaces;
+
+            // A blank lower limit is unbounded and drawn with an arrow; its label is the bound of the scale, 0 on a ratio (log) axis. The stored
+            // value stays -infinity whatever the scale, since the chart options dialog can change the scale after the limits are filled.
+            string LowerLimitLabel(int i) => Formatting.RoundMeta(!isLinearScale && double.IsNegativeInfinity(fOptions.OddsRatioLcis[i]) ? 0 : fOptions.OddsRatioLcis[i], absmin, decimalPlaces);
 
             // Determine whether to draw a vertical line and, if so, where; ensure it is within our scale.
             // Without a marker line value the line is the line of no effect at 0 of a linear axis whose data reach it.
@@ -187,7 +191,7 @@ namespace StatsDirect.Charting.Renderer
                     double titleWidth = LegendWidthInCanvasCoordinates(fOptions.Titles[i]);
                     if (titleWidth > xtra)
                         xtra = titleWidth;
-                    string rhs = Formatting.RoundMeta(fOptions.OddsRatios[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(fOptions.OddsRatioLcis[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(fOptions.OddsRatioUcis[i], absmin, decimalPlaces) + ")";
+                    string rhs = Formatting.RoundMeta(fOptions.OddsRatios[i], absmin, decimalPlaces) + " (" + LowerLimitLabel(i) + ", " + Formatting.RoundMeta(fOptions.OddsRatioUcis[i], absmin, decimalPlaces) + ")";
                     double rhsWidth = LegendWidthInCanvasCoordinates(rhs);
                     if (rhsWidth > rgap)
                         rgap = rhsWidth;
@@ -272,7 +276,7 @@ namespace StatsDirect.Charting.Renderer
 
                     }
                     AxisDrawStringAtAngleRM(fOptions.Titles[i], XAxisCanvas - 15, yc, Definition.ScaleParameters.Y.LabelDirection);
-                    DrawStringLabel(Formatting.RoundMeta(fOptions.OddsRatios[i], absmin, decimalPlaces) + " (" + Formatting.RoundMeta(fOptions.OddsRatioLcis[i], absmin, decimalPlaces) + ", " + Formatting.RoundMeta(fOptions.OddsRatioUcis[i], absmin, decimalPlaces) + ")", XAxisCanvas + XExtCanvas + 10, yc, StringAlignment.Near, StringAlignment.Center);
+                    DrawStringLabel(Formatting.RoundMeta(fOptions.OddsRatios[i], absmin, decimalPlaces) + " (" + LowerLimitLabel(i) + ", " + Formatting.RoundMeta(fOptions.OddsRatioUcis[i], absmin, decimalPlaces) + ")", XAxisCanvas + XExtCanvas + 10, yc, StringAlignment.Near, StringAlignment.Center);
                 }
             }
 

@@ -67,6 +67,9 @@ namespace StatsDirect.Charting.Renderer
                 DataMaxY = 1;
                 DataMinY = 0;
             }
+            //  The hazard plot's line starts at H = 0, so its axis includes 0
+            if (options.PlotMode == KaplanMeierPlotMode.Hazard)
+                DataMinY = Math.Min(DataMinY, 0);
             //  No point at all (the hazard of a group whose only subject died, or the log hazard of a group with no death) overflowed the axis layout.
             if (DataMaxX < DataMinX || DataMaxY < DataMinY)
                 throw new Exception("No points to plot: the " + options.YAxisTitle.ToLower(CultureInfo.CurrentCulture) + " values are not defined for these data");

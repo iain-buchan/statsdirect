@@ -214,13 +214,14 @@ namespace StatsDirect.Charting.Renderer
 
                         string mask = "G12";
                         //  A mid-point label ends four columns right of the axis line, so one of more than four characters would run over the line: the
-                        //  labels, bars and ruler are moved right by the excess of the widest label.
+                        //  labels, bars and ruler are moved right by the excess of the widest label, plus one so that a space separates it from the line.
                         string[] midpointLabels = new string[descriptor.Bins];
                         int labelShift = 0;
                         for (int c = 0; c < descriptor.Bins; c++)
                         {
                             midpointLabels[c] = ((descriptor.Edges[c] + descriptor.Edges[c + 1]) / 2.0).ToString(mask);
-                            labelShift = Math.Max(labelShift, midpointLabels[c].Length - 4);
+                            if (midpointLabels[c].Length > 4)
+                                labelShift = Math.Max(labelShift, midpointLabels[c].Length - 3);
                         }
                         int barStart = AsciiXTxt + 5 + labelShift;
                         for (int c = 0; c < descriptor.Bins; c++)
