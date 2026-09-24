@@ -9,6 +9,11 @@
           <name>data</name>
           <must-request>true</must-request>
           <type>rr-index</type>
+          <validators>
+            <validator><name>NoMissingData</name></validator>
+            <validator><name>TwoColumns</name></validator>
+            <validator><name>NonNegative</name></validator>
+          </validators>
         </special>
         <option>
           <name>nunit</name>
@@ -29,12 +34,13 @@
             <option value="100000000">per 100,000,000</option>
           </options>
         </option>
-        <double>
+        <integer>
           <name>dead</name>
           <prompt>Number of deaths observed in index population or sample</prompt>
           <must-request>true</must-request>
           <column>2</column>
-        </double>
+          <minimum-value>0</minimum-value>
+        </integer>
         <confidence-interval>
           <name>cco</name>
           <must-request>true</must-request>
@@ -43,6 +49,11 @@
   	<builtin function-name="rptRateSMR" />
     <report type="application/x-statsdirect-creole" filename="stdmort.creole" />
 	</steps>
+  <custom-validators>
+    <custom-validator name="TwoColumns" language="CSharp">
+      return (parameters[parameter.Name].IsDataFrame &amp;&amp; parameters[parameter.Name].AsDataFrame.VariableCount == 2) ? null : "Enter the reference rate and the index person-time for every stratum";
+    </custom-validator>
+  </custom-validators>
   <suggested-operations>
     <suggested-operation>RateSmrScreen</suggested-operation>
   </suggested-operations>

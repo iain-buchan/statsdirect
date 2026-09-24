@@ -810,9 +810,9 @@ namespace StatsDirect.Builtins
             {
                 DataFrame strataFrame = parameters[parameterName].AsDataFrame;
                 StringVariable strataVariable = (StringVariable)strataFrame.Variables[0];
-                if (extraElementsAtEnd > 0)
+                if (extraElementsAtEnd > 0 || strataVariable.Data.Length < expectedRows)
                 {
-                    // Allocate a new array to hold the extra rows
+                    // Allocate a new array to hold the extra rows, or the rows beyond a label column shorter than the data
                     title = new string[expectedRows + extraElementsAtEnd];
                     Array.Copy(strataVariable.Data, title, strataVariable.Data.Length);
                 }
@@ -823,7 +823,7 @@ namespace StatsDirect.Builtins
                 }
                 for (int i = 0; i < expectedRows; i++)
                 {
-                    string buf = strataVariable.Data[i].Trim();
+                    string buf = i < strataVariable.Data.Length ? strataVariable.Data[i].Trim() : string.Empty;
                     if (buf.Length > 0)
                     {
                         if (buf.Length > 50)

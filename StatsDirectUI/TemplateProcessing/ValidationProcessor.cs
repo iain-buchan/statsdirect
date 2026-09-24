@@ -113,7 +113,7 @@ namespace StatsDirect.TemplateProcessing
                 if (xn <= 0)
                     return ValidationResult.Invalid("Person-time must be greater than zero");
                 if (xy > xn)
-                    return ValidationResult.Invalid("Number of events must be greater then person-time, do not scale person-time");
+                    return ValidationResult.Invalid("The number of events must not exceed the person-time (do not scale the person-time)");
             }
 
             if (refntot <= 0.0)

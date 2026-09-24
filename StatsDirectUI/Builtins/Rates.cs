@@ -59,10 +59,24 @@ namespace StatsDirect.Builtins
             if (cco > 1.0 || cco < 0.0)
                 cco = 0.95;
 
-            DataFrame ratesFrame = parameters["rates"].AsDataFrame;
-            DoubleVariable ratesVariable = (DoubleVariable) ratesFrame.Variables[0];
-            DataFrame timesFrame = parameters["times"].AsDataFrame;
-            DoubleVariable timesVariable = (DoubleVariable) timesFrame.Variables[0];
+            DoubleVariable ratesVariable;
+            DoubleVariable timesVariable;
+            if (parameters.ContainsKey("data"))
+            {
+                // The screen form gives both columns in one grid: reference rate, index person-time
+                DataFrame dataFrame = parameters["data"].AsDataFrame;
+                if (dataFrame.VariableCount < 2)
+                    throw new InvalidDataException("Enter the reference rate and the index person-time for every stratum");
+                ratesVariable = (DoubleVariable) dataFrame.Variables[0];
+                timesVariable = (DoubleVariable) dataFrame.Variables[1];
+            }
+            else
+            {
+                DataFrame ratesFrame = parameters["rates"].AsDataFrame;
+                ratesVariable = (DoubleVariable) ratesFrame.Variables[0];
+                DataFrame timesFrame = parameters["times"].AsDataFrame;
+                timesVariable = (DoubleVariable) timesFrame.Variables[0];
+            }
             int rawRows = ratesVariable.Length;
 
             DoubleArraysAndBooleans copiesRemovingMissingRows = Numerics.Utilities.RemoveMissingRows(new[] { ratesVariable.Data, timesVariable.Data }, 0, rawRows, 1);
@@ -86,7 +100,7 @@ namespace StatsDirect.Builtins
 
             title = Numerics.Utilities.CopyValidRows(title, copiesRemovingMissingRows.ValidRowsInOriginal, 0, rawRows, 1, rows);
 
-            double dead = parameters["dead"].AsDouble;
+            double dead = parameters["dead"].AsInt32;
 
             ParameterBag outputParameters = new();
             List<ParameterBag> groupsList = new();
@@ -162,8 +176,10 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= rows; i++)
             {
                 ntot += idxn[i];
+                if (idxn[i] <= 0.0)
+                    throw new InvalidDataException("Person-time must be greater than zero");
                 if (idxy[i] > idxn[i])
-                    throw new InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
+                    throw new InvalidDataException("The number of events must not exceed the person-time (do not scale the person-time)");
             }
             double refntot = 0.0;
             for (int i = 1; i <= rows; i++)
@@ -235,7 +251,8 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
             // Binomial approx CI - see Armitage
-            double ser = bino_var > 0.0 ? Math.Sqrt(bino_var) : Constant.MISSING;
+            // A zero variance (no events, or every stratum rate 1) gives a zero standard error and limits equal to the rate
+            double ser = bino_var >= 0.0 ? Math.Sqrt(bino_var) : Constant.MISSING;
             outputParameters.AddOutput("ser_any", nunit * ser);
             xl = stdr - cit * ser;
             xu = stdr + cit * ser;
@@ -243,7 +260,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to_any", nunit * xu);
 
             // Poisson approx CI
-            ser = pois_var > 0.0 ? Math.Sqrt(pois_var) : Constant.MISSING;
+            ser = pois_var >= 0.0 ? Math.Sqrt(pois_var) : Constant.MISSING;
             outputParameters.AddOutput("ser_small", nunit * ser);
 
             xl = stdr - cit * ser;
@@ -261,8 +278,8 @@ namespace StatsDirect.Builtins
                 xu = stdr + Math.Sqrt(pois_var / events) * (xu - events);
             else
                 xu = Constant.MISSING;
-            outputParameters.AddOutput("from_dobson", nunit * xl);
-            outputParameters.AddOutput("to_dobson", nunit * xu);
+            outputParameters.AddOutput("from_dobson", xl == Constant.MISSING ? xl : nunit * xl);
+            outputParameters.AddOutput("to_dobson", xu == Constant.MISSING ? xu : nunit * xu);
 
             return new StepOutput(outputParameters);
         }
@@ -640,8 +657,8 @@ namespace StatsDirect.Builtins
             pg[k + 2] = CorrelationRowType.Pooled;
 
             rkr[k + 2] = srr;
-            rkrl[k + 2] = srrl;
-            rkru[k + 2] = srru;
+            rkrl[k + 2] = model == 1 ? srrl : srrl_bino;
+            rkru[k + 2] = model == 1 ? srru : srru_bino;
             rkw[k + 2] = Constant.MISSING;
             rkw[k + 1] = Constant.MISSING;
             title[k + 2] = "Standardized";

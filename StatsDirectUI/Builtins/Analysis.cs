@@ -50,7 +50,7 @@ namespace StatsDirect.Builtins
                 refn[j] = rf;
                 refntot += rf;
                 if (xy > xn)
-                    throw new InvalidDataException("Number of events must be greater then person-time, do not scale person-time");
+                    throw new InvalidDataException("The number of events must not exceed the person-time (do not scale the person-time)");
             }
 
             if (refntot <= 0.0)
@@ -118,7 +118,8 @@ namespace StatsDirect.Builtins
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0, out int fault);
 
             // Binomial approx CI - see Armitage
-            double ser = binoVar > 0.0 ? Math.Sqrt(binoVar) : Constant.MISSING;
+            // A zero variance (no events, or every stratum rate 1) gives a zero standard error and limits equal to the rate
+            double ser = binoVar >= 0.0 ? Math.Sqrt(binoVar) : Constant.MISSING;
             outputParameters.AddOutput("ser_any", ser * nunit);
 
             if (fault != 0)
@@ -135,7 +136,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("to_any", xu * nunit);
 
             // Poisson approx CI
-            ser = poisVar > 0.0 ? Math.Sqrt(poisVar) : Constant.MISSING;
+            ser = poisVar >= 0.0 ? Math.Sqrt(poisVar) : Constant.MISSING;
             outputParameters.AddOutput("ser_small", ser * nunit);
             if (fault != 0)
             {
@@ -160,8 +161,8 @@ namespace StatsDirect.Builtins
                 xu = stdr + Math.Sqrt(poisVar / revents) * (xu - revents);
             else
                 xu = Constant.MISSING;
-            outputParameters.AddOutput("from_dobson", xl * nunit);
-            outputParameters.AddOutput("to_dobson", xu * nunit);
+            outputParameters.AddOutput("from_dobson", xl == Constant.MISSING ? xl : xl * nunit);
+            outputParameters.AddOutput("to_dobson", xu == Constant.MISSING ? xu : xu * nunit);
             return new StepOutput(outputParameters);
         }
 
