@@ -196,9 +196,9 @@ namespace StatsDirect.Builtins
                 ParameterBag rowParameters = new();
                 rowList.Add(rowParameters);
                 rowParameters.AddOutput("a", a1);
-                rowParameters.AddOutput("lower", Formatting.pr15(f));
-                rowParameters.AddOutput("ind_p", Formatting.pr15(h));
-                rowParameters.AddOutput("upper", Formatting.pr15(g));
+                rowParameters.AddOutput("lower", Formatting.pr14(f));
+                rowParameters.AddOutput("ind_p", Formatting.pr14(h));
+                rowParameters.AddOutput("upper", Formatting.pr14(g));
                 int a2;
                 do
                 {
@@ -229,9 +229,9 @@ namespace StatsDirect.Builtins
                     rowParameters = new ParameterBag();
                     rowList.Add(rowParameters);
                     rowParameters.AddOutput("a", j - 1);
-                    rowParameters.AddOutput("lower", Formatting.pr15(f1[j]));
-                    rowParameters.AddOutput("ind_p", Formatting.pr15(h1[j]));
-                    rowParameters.AddOutput("upper", Formatting.pr15(g1[j]));
+                    rowParameters.AddOutput("lower", Formatting.pr14(f1[j]));
+                    rowParameters.AddOutput("ind_p", Formatting.pr14(h1[j]));
+                    rowParameters.AddOutput("upper", Formatting.pr14(g1[j]));
                 }
 
                 a1 = a + 1;

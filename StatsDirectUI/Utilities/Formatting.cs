@@ -236,7 +236,8 @@ namespace StatsDirect.Utilities
             return Math.Ceiling(Math.Round(x, 9)).ToString(CultureInfo.CurrentCulture);
         }
 
-        public static string pr15(double q) => q.ToString(q < Constant.EPSNEG ? "#.##########E+000" : "0.000000000000000");
+        /// <summary>A probability to 14 decimal places, the last place of 15 not being reliable in a running sum of hypergeometric terms (tiny values in exponent form)</summary>
+        public static string pr14(double q) => q.ToString(q < Constant.EPSNEG ? "#.##########E+000" : "0.00000000000000");
 
         /// <summary>
         /// Try to return a relatively short path.
