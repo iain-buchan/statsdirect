@@ -16,9 +16,9 @@ Non-exposed incidence rate = @{ir2:roundu}</p>
 <p>chi-square = @{xmh:roundu}  <pval>@{p:pval}</pval></p>
 
 <p>Rate ratio = @{irr:roundu}</p>
-<block name="exact">
 <p><ci>exact @{pc:round2}% confidence interval = @{irr_from:roundu} to  @{irr_to:roundu}</ci></p>
 
+<block name="exact">
 <p>Conditional maximum likelihood estimate of rate ratio = @{eor:roundu}<br />
 <ci>Exact Fisher @{pc:round2}% confidence interval = @{llf:roundu} to  @{ulf:roundu}</ci><br />
 <pval>Exact Fisher one sided @{p1f:pval}, two sided @{p2f:pval}</pval><br />

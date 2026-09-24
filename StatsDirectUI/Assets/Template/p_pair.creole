@@ -1,7 +1,7 @@
 <report>
 <title>Paired proportions</title>
 
-<p>Total = @{n:round2},  both = @{r:round2},  first only = @{s:round2},  second only = @{t:round2}<br />
+<p>Total = @{n_out:round2},  both = @{r_out:round2},  first only = @{s_out:round2},  second only = @{t_out:round2}<br />
 Proportion 1 = @{prop_1:roundu}<br />
 Proportion 2 = @{prop_2:roundu}<br />
 Proportion difference = @{prop_diff:roundu}</p>
@@ -16,8 +16,8 @@ Proportion difference = @{prop_diff:roundu}</p>
 <block name="approx">
 <p><warn>Numbers too large for exact test</warn><br />
 Standard normal deviate z = @{z:roundu}<br />
-Approximate two sided @p_2<br />
-Approximate one sided @p_1</p>
+<pval>Approximate two sided @{p_2:pval}</pval><br />
+<pval>Approximate one sided @{p_1:pval}</pval></p>
 </block>
 
 <p><ci>@qcl @{pc:round2}% confidence interval for the proportion difference:</ci><br />

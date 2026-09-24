@@ -5,30 +5,30 @@
   <help chm-id="1249" />
   <steps>
       <parameters>
-        <double>
+        <integer>
           <name>n</name>
           <prompt>TOTAL number in study</prompt>
           <must-request>true</must-request>
           <minimum-value>1</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>r</name>
           <prompt>Number responding in BOTH categories</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>s</name>
           <prompt>Number responding in FIRST category only</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>t</name>
           <prompt>Number responding in SECOND category only</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
+        </integer>
         <confidence-interval>
           <name>cco</name>
           <must-request>true</must-request>

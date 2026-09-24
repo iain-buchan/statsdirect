@@ -22,6 +22,12 @@ namespace StatsDirect.Templates
 
         public override int AsInt32 => Data;
 
+        /// <summary>
+        /// A whole number read where a double is wanted, so that a count declared integer in an operation serves a builtin that
+        /// takes it as a double.
+        /// </summary>
+        public override double AsDouble => Data;
+
         public override object AsObject => Data;
 
         public override bool IsInt32 => true;

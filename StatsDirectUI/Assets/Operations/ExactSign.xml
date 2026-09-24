@@ -5,18 +5,18 @@
   <help chm-id="1111" />
   <steps>
       <parameters>
-        <double>
+        <integer>
           <name>n</name>
           <prompt>Total observations in your sample</prompt>
           <must-request>true</must-request>
           <minimum-value>1</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>r</name>
           <prompt>Subjects with study characteristic</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
+        </integer>
         <confidence-interval>
           <must-request>true</must-request>
           <name>cco</name>

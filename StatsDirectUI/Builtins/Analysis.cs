@@ -180,6 +180,10 @@ namespace StatsDirect.Builtins
 
             if (a + b <= 0.0 || pt1 <= 0.0 || pt2 <= 0.0)
                 throw new InvalidDataException();
+            // The conditional analysis is of whole numbers of cases; a fraction would be rounded there and the two parts of the report
+            // would then describe different data
+            if (doCml && (a != Math.Floor(a) || b != Math.Floor(b)))
+                throw new InvalidDataException("The conditional maximum likelihood analysis needs whole numbers of cases: enter whole numbers or leave that analysis unticked");
 
             double ir1 = a / pt1;
             double ir2 = b / pt2;
@@ -374,12 +378,15 @@ namespace StatsDirect.Builtins
 
                 a1 = a + 1;
                 h = 1.00000000000001 * h1[a1];
+                // The tail holding the observed table, that table counting half, plus the tables of the other tail no more probable than
+                // the observed one, the nearest of those counting half. The other tail stops short of the observed table: when that
+                // table is the most probable every table qualifies and the scan must not run through it to the far end.
                 if (a > e1)
                 {
 
                     g = g1[a1] - h1[a1] / 2.0;
                     f = 0.0;
-                    for (j = 1; j <= a2; j++)
+                    for (j = 1; j < a1; j++)
                     {
                         if (h1[j] > h)
                             break;
@@ -397,7 +404,7 @@ namespace StatsDirect.Builtins
 
                     f = f1[a1] - h1[a1] / 2.0;
                     g = 0.0;
-                    for (j = a2; j >= 1; j--)
+                    for (j = a2; j > a1; j--)
                     {
                         if (h1[j] > h)
                             break;
@@ -565,7 +572,30 @@ namespace StatsDirect.Builtins
 
         private static string XBenHarm(IFormatting host, double x, bool roundup)
         {
-            return (roundup ? Formatting.RoundUp(Math.Abs(x)) : host.RoundU(Math.Abs(x))) + (x < 0 ? "_harm" : "_benefit");
+            // An undefined NNT has no direction; an infinite one is printed as such on the rounded line too
+            if (x == Constant.MISSING || double.IsNaN(x))
+                return Formatting.ASTERISK;
+            return (roundup && double.IsFinite(x) ? Formatting.RoundUp(Math.Abs(x)) : host.RoundU(Math.Abs(x))) + (x < 0 ? "_harm" : "_benefit");
+        }
+
+        /// <summary>
+        /// An NNT of the form 1 / (factor * measure): infinite when the denominator is 0, undefined when the relative measure is
+        /// missing or infinite (a relative risk with no events, or none, in a group).
+        /// </summary>
+        private static double XNntFrom(double factor, double measure)
+        {
+            if (measure == Constant.MISSING || !double.IsFinite(measure))
+                return Constant.MISSING;
+            double d = factor * measure;
+            return d != 0.0 ? 1.0 / d : double.PositiveInfinity;
+        }
+
+        private static double XNntFromOddsRatio(double brr, double oddsRatio)
+        {
+            if (oddsRatio == Constant.MISSING || !double.IsFinite(oddsRatio))
+                return Constant.MISSING;
+            double d = (1.0 - brr) * brr * (1.0 - oddsRatio);
+            return d != 0.0 ? (1.0 - brr * (1.0 - oddsRatio)) / d : double.PositiveInfinity;
         }
 
         private static void XNnSwap(ref double nnl, ref double nnu)
@@ -766,15 +796,15 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("specific_from_pc", pil != Constant.MISSING ? 100.0 * pil : Constant.MISSING);
             outputParameters.AddOutput("specific_to_pc", piu != Constant.MISSING ? 100.0 * piu : Constant.MISSING);
 
-            // + likelihood ratio with CI
+            // + likelihood ratio with CI: 0 when no diseased subject tests positive, infinite when no disease-free subject does
             double lrpos;
             double zc = 1.0 - (1.0 - cco) / 2.0;
             // fault = 0; 
             zc = PDF.gauinv(zc);
-            if (b + d > 0.0 && a + c > 0.0 && b > 0.0 && ptld > 0.0)
+            if (b + d > 0.0 && a + c > 0.0 && (a > 0.0 || b > 0.0))
             {
                 double abpos = b / (b + d);
-                lrpos = sensi / abpos;
+                lrpos = b > 0.0 ? sensi / abpos : double.PositiveInfinity;
             }
             else
             {
@@ -785,12 +815,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lr_pos_from", thetal);
             outputParameters.AddOutput("lr_pos_to", thetau);
 
-            // - likelihood ratio with CI
+            // - likelihood ratio with CI: 0 when no diseased subject tests negative, infinite when no disease-free subject does
             double lrneg;
-            if (b + d > 0.0 && a + c > 0.0 && speci > 0.0 && ptlnd > 0.0)
+            if (b + d > 0.0 && a + c > 0.0 && (c > 0.0 || d > 0.0))
             {
                 double presneg = c / (a + c);
-                lrneg = presneg / speci;
+                lrneg = d > 0.0 ? presneg / speci : double.PositiveInfinity;
             }
             else
             {
@@ -801,8 +831,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("lr_neg_from", thetal);
             outputParameters.AddOutput("lr_neg_to", thetau);
 
-            // diagnostic odds ratio
-            double odr = b * c > 0.0 && a * d > 0.0 ? a * d / (b * c) : Constant.MISSING;
+            // diagnostic odds ratio: 0 or infinite with one empty cell, undefined with an empty cell on each diagonal
+            double odr = b * c > 0.0 && a * d > 0.0
+                ? a * d / (b * c)
+                : b * c > 0.0 ? 0.0 : a * d > 0.0 ? double.PositiveInfinity : Constant.MISSING;
             outputParameters.AddOutput("odr", odr);
 
             OddsRatioCMLE(host, cco, a, b, c, d, out double eor, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
@@ -815,13 +847,18 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptMiscFalseResult(ParameterBag parameters)
         {
+            // A sensitivity or false positive rate of exactly 0 or 1 is a legitimate (perfect or useless) test; only both 0 or both 1
+            // leave a probability undefined, and that is printed as such
             double pt = parameters["pt"].AsDouble;
-            if (Math.Abs(pt - 0.5) >= 0.5)
-                throw new InvalidDataException();
+            if (pt < 0.0 || pt > 1.0)
+                throw new InvalidDataException("Sensitivity must be between 0 and 1");
             double pf = parameters["pf"].AsDouble;
-            if (Math.Abs(pf - 0.5) >= 0.5)
-                throw new InvalidDataException();
+            if (pf < 0.0 || pf > 1.0)
+                throw new InvalidDataException("1 - specificity must be between 0 and 1");
 
+            // The case rate is 1 in n, so n below 1 would be a prevalence above 1
+            if (parameters["pd"].AsDouble < 1.0)
+                throw new InvalidDataException("The population case rate is 1 in n, so n must be at least 1");
             double pd = 1.0 / parameters["pd"].AsDouble;
 
             ParameterBag outputParameters = new();
@@ -1028,11 +1065,11 @@ namespace StatsDirect.Builtins
             double c2Tot = 0;
             for (int i = 1; i <= rows; i++)
             {
+                c1[i] = datV0.Data[i - 1];
+                c2[i] = datV1.Data[i - 1];
                 if (c1[i] < 0 || c2[i] < 0 || c1[i] == Constant.MISSING || c2[i] == Constant.MISSING)
                     throw new InvalidDataException("All values must be >= 0");
 
-                c1[i] = datV0.Data[i - 1];
-                c2[i] = datV1.Data[i - 1];
                 c1Tot += c1[i];
                 c2Tot += c2[i];
             }
@@ -1146,7 +1183,8 @@ namespace StatsDirect.Builtins
                 rrel = rreu;
                 rreu = tmp;
             }
-            double rre = pc != 0 ? pt / pc : double.PositiveInfinity;
+            // Infinite with events among the treated only; undefined (0 / 0) with none in either group
+            double rre = pc != 0 ? pt / pc : pt != 0 ? double.PositiveInfinity : Constant.MISSING;
             outputParameters.AddOutput("rre", rre);
             outputParameters.AddOutput("rre_from", rrel);
             outputParameters.AddOutput("rre_to", rreu);
@@ -1166,7 +1204,7 @@ namespace StatsDirect.Builtins
                 rrnel = rrneu;
                 rrneu = tmp;
             }
-            double rrne = pc != 1.0 ? (1.0 - pt) / (1.0 - pc) : double.PositiveInfinity;
+            double rrne = pc != 1.0 ? (1.0 - pt) / (1.0 - pc) : pt != 1.0 ? double.PositiveInfinity : Constant.MISSING;
             outputParameters.AddOutput("rrne", rrne);
             outputParameters.AddOutput("rrne_from", rrnel);
             outputParameters.AddOutput("rrne_to", rrneu);
@@ -1180,7 +1218,8 @@ namespace StatsDirect.Builtins
             //tabl[1].Informative = (t1 * t4 != 0) || (t2 * t3 != 0);
             //bool useLogScale = false;
             //new ExactBB().Exact22K(host,1, 1, tabl, zl, ref eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
-            double oor = OddsRatio(t1, t2, t3, t4);
+            // 0 / 0 (no events in either group, or every subject with the event) has no odds ratio
+            double oor = t1 * t4 == 0.0 && t2 * t3 == 0.0 ? Constant.MISSING : OddsRatio(t1, t2, t3, t4);
             OddsRatioCMLE(host, zl, t1, t2, t3, t4, out double _, out double llf, out double ulf, out double _, out double _, out double _, out double _, out double _, out double _, out int _);
             //if (ierr != 0)
             //    eor = Constant.MISSING;
@@ -1189,7 +1228,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("oor_from", llf);
             outputParameters.AddOutput("oor_to", ulf);
 
-            double rrr = pc != 0.0 ? (pc - pt) / pc : 0.0;
+            // 1 - the relative risk: minus infinity when only the treated have events, undefined when neither group has any
+            double rrr = pc != 0.0 ? (pc - pt) / pc : pt != 0.0 ? double.NegativeInfinity : Constant.MISSING;
             double rrrl = rrel != Constant.MISSING ? 1.0 - rrel : Constant.MISSING;
             double rrru = rreu != Constant.MISSING ? 1.0 - rreu : Constant.MISSING;
             if (rrrl > rrru)
@@ -1243,9 +1283,10 @@ namespace StatsDirect.Builtins
                 adjustedList.Add(adjustedParameters);
                 double brr = parameters["brr"].AsDouble;
                 string brt;
-                if (brr < 0.0 | brr > 1.0)
+                // An expected risk of 1 to 100 is read as a percentage (1 is 1%, not certainty), and the report says so
+                if (brr < 0.0 | brr >= 1.0)
                 {
-                    if (brr > 1.0 & brr < 100.0)
+                    if (brr >= 1.0 & brr <= 100.0)
                     {
                         brr /= 100.0;
                         brt = "(from percentage) ";
@@ -1281,12 +1322,9 @@ namespace StatsDirect.Builtins
                 // <--
 
                 // NNT_risk ratio of event
-                double d = brr * rrr;
-                nnt = d != 0.0 ? 1.0 / d : double.PositiveInfinity;
-                d = brr * rrrl;
-                nnl = d != 0.0 ? 1.0 / d : double.PositiveInfinity;
-                d = brr * rrru;
-                nnu = d != 0.0 ? 1.0 / d : double.PositiveInfinity;
+                nnt = XNntFrom(brr, rrr);
+                nnl = XNntFrom(brr, rrrl);
+                nnu = XNntFrom(brr, rrru);
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
@@ -1300,18 +1338,9 @@ namespace StatsDirect.Builtins
 
                 // NNT_risk ratio of no event
                 // Sally Hollis pointed out not (1-brr) * (1-rrr) as given by Jon Deeks
-                d = (1.0 - brr) * (rrne - 1.0);
-                nnt = d != 0.0
-                    ? 1.0 / d
-                    : double.PositiveInfinity;
-                d = (1.0 - brr) * (rrnel - 1.0);
-                nnl = d != 0.0
-                    ? 1.0 / d
-                    : double.PositiveInfinity;
-                d = (1.0 - brr) * (rrneu - 1.0);
-                nnu = d != 0.0
-                    ? 1.0 / d
-                    : double.PositiveInfinity;
+                nnt = XNntFrom(1.0 - brr, rrne == Constant.MISSING ? rrne : rrne - 1.0);
+                nnl = XNntFrom(1.0 - brr, rrnel == Constant.MISSING ? rrnel : rrnel - 1.0);
+                nnu = XNntFrom(1.0 - brr, rrneu == Constant.MISSING ? rrneu : rrneu - 1.0);
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
@@ -1323,19 +1352,10 @@ namespace StatsDirect.Builtins
                 adjustedParameters.AddOutput("rrn_treat_round_to", XBenHarm(host, nnu, true));
                 // <--
 
-                // NNT_odds ratio
-                d = (1.0 - brr) * brr * (1.0 - oor);
-                nnt = d != 0.0 
-                    ? (1.0 - brr * (1.0 - oor)) / d
-                    : double.PositiveInfinity;
-                d = (1.0 - brr) * brr * (1.0 - llf);
-                nnl = d != 0.0
-                    ? (1.0 - brr * (1.0 - llf)) / d
-                    : double.PositiveInfinity;
-                d = (1.0 - brr) * brr * (1.0 - ulf);
-                nnu = d != 0.0
-                    ? (1.0 - brr * (1.0 - ulf)) / d
-                    : double.PositiveInfinity;
+                // NNT_odds ratio: undefined when the odds ratio, or the limit, is missing or infinite
+                nnt = XNntFromOddsRatio(brr, oor);
+                nnl = XNntFromOddsRatio(brr, llf);
+                nnu = XNntFromOddsRatio(brr, ulf);
                 // Jan 02 change to benefit/harm notation
                 // Altman DG. Confidence intervals for the number needed to treat. BMJ 1998;317:1309-12
                 XNnSwap(ref nnl, ref nnu);
@@ -1384,20 +1404,36 @@ namespace StatsDirect.Builtins
             bool dofish = true;
             double power = Power.fishpower(1.0 - gamma, a, b, n1, n2, ref dofish);
 
+            MathDbl.lr_ci(b, a, b + d, a + c, zp, out double ll, out double ul);
+
             //  only calculate PAR for RR > 1 because -ve PAR is meaningless
             double parUl;
             double parLl;
             double par;
+            bool peEntered = false;
             if (rr > 1.0)
             {
                 if (parameters.ContainsKey("pe") && null != parameters["pe"] && parameters["pe"].HasData)
                     pe = parameters["pe"].AsDouble;
                 if (pe == Constant.MISSING || pe < 0.0 || pe > 1.0)
                     pe = (a + c) / n;
+                else
+                    peEntered = true;
                 par = pe * (rr - 1.0) / (1.0 + pe * (rr - 1.0));
-                double varPar = b * n / (Math.Pow(m1, 3.0) * Math.Pow(n2, 3.0)) * (a * d * (n - b) + b * b * c);
-                parLl = par - zp * Math.Sqrt(varPar);
-                parUl = par + zp * Math.Sqrt(varPar);
+                if (peEntered)
+                {
+                    // With the population exposure given, the relative risk is the only estimate in the PAR, so its Koopman limits
+                    // carry through the PAR formula; Walter's variance below is that of the PAR estimated from the cohort, whose
+                    // exposure is then part of the sampling error
+                    parLl = pe * (ll - 1.0) / (1.0 + pe * (ll - 1.0));
+                    parUl = double.IsInfinity(ul) ? (pe > 0.0 ? 1.0 : 0.0) : pe * (ul - 1.0) / (1.0 + pe * (ul - 1.0));
+                }
+                else
+                {
+                    double varPar = b * n / (Math.Pow(m1, 3.0) * Math.Pow(n2, 3.0)) * (a * d * (n - b) + b * b * c);
+                    parLl = par - zp * Math.Sqrt(varPar);
+                    parUl = par + zp * Math.Sqrt(varPar);
+                }
             }
             else
             {
@@ -1409,7 +1445,6 @@ namespace StatsDirect.Builtins
             if (fault == 0)
             {
                 ParameterBag outputParameters = new();
-                MathDbl.lr_ci(b, a, b + d, a + c, zp, out double ll, out double ul);
                 outputParameters.AddOutput("a_out", a);
                 outputParameters.AddOutput("b_out", b);
                 outputParameters.AddOutput("c_out", c);
@@ -1432,7 +1467,9 @@ namespace StatsDirect.Builtins
                     ParameterBag exposureParameters = new();
                     exposureList.Add(exposureParameters);
                     exposureParameters.AddOutput("pe", pe * 100.0);
+                    exposureParameters.AddOutput("pe_note", peEntered ? " (as entered)" : string.Empty);
                     exposureParameters.AddOutput("par", par * 100.0);
+                    exposureParameters.AddOutput("method", peEntered ? "from the Koopman limits of the risk ratio" : "Walter");
                     exposureParameters.AddOutput("walter_from", parLl * 100.0);
                     exposureParameters.AddOutput("walter_to", parUl * 100.0);
                 }
@@ -1469,6 +1506,10 @@ namespace StatsDirect.Builtins
             double p3 = (s - t) / n;
 
             ParameterBag outputParameters = new();
+            outputParameters.AddOutput("n_out", n);
+            outputParameters.AddOutput("r_out", r);
+            outputParameters.AddOutput("s_out", s);
+            outputParameters.AddOutput("t_out", t);
             outputParameters.AddOutput("prop_1", p1);
             outputParameters.AddOutput("prop_2", p2);
             outputParameters.AddOutput("prop_diff", p3);
@@ -1531,6 +1572,9 @@ namespace StatsDirect.Builtins
                 else
                     z = d / Math.Sqrt(nx / 4);
                 approxParameters.AddOutput("z", z);
+                double pz = 1.0 - PDF.alnorm(z);
+                approxParameters.AddOutput("p_1", pz);
+                approxParameters.AddOutput("p_2", Math.Min(1.0, 2.0 * pz));
             }
 
             // Following snippet is only used if calculating qcl according to commented-out code below.  PJC 2012/04/09.
@@ -1578,11 +1622,7 @@ namespace StatsDirect.Builtins
             double n = parameters["n"].AsDouble;
             double r = parameters["r"].AsDouble;
             if (r > n)
-            {
-                double tmp = r;
-                r = n;
-                n = tmp;
-            }
+                throw new InvalidDataException("The number responding can not be more than the total number of observations");
 
             if (n <= 0)
                 throw new InvalidDataException();
@@ -1682,22 +1722,14 @@ namespace StatsDirect.Builtins
             double r1 = parameters["r1"].AsDouble;
 
             if (r1 > n1)
-            {
-                double rTmp = r1;
-                r1 = n1;
-                n1 = rTmp;
-            }
+                throw new InvalidDataException("The number responding in group 1 can not be more than its total");
             if (n1 <= 0)
                 throw new InvalidDataException();
 
             double n2 = parameters["n2"].AsDouble;
             double r2 = parameters["r2"].AsDouble;
             if (r2 > n2)
-            {
-                double rTmp = r2;
-                r2 = n2;
-                n2 = rTmp;
-            }
+                throw new InvalidDataException("The number responding in group 2 can not be more than its total");
 
             if (n2 <= 0)
                 throw new InvalidDataException();

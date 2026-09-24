@@ -220,11 +220,12 @@ namespace StatsDirect.Utilities
             return txt.Substring(0, spaces);
         }
 
+        /// <summary>
+        /// x rounded up to a whole number; a value that is whole to within floating-point noise (to nine places) is its own rounding.
+        /// </summary>
         public static string RoundUp(double x)
         {
-            return x < 0
-                ? ((int)x).ToString()
-                : ((int)x + 1).ToString();
+            return Math.Ceiling(Math.Round(x, 9)).ToString(CultureInfo.CurrentCulture);
         }
 
         public static string pr15(double q) => q.ToString(q < Constant.EPSNEG ? "#.##########E+000" : "0.000000000000000");

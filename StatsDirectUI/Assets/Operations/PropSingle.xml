@@ -5,18 +5,18 @@
   <help chm-id="1251" />
   <steps>
       <parameters>
-        <double>
+        <integer>
           <name>n</name>
           <prompt>Total number of observations</prompt>
           <must-request>true</must-request>
           <minimum-value>1</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>r</name>
           <prompt>Number responding</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
+        </integer>
         <double>
           <name>qpi</name>
           <prompt>Probability of success on each trial</prompt>

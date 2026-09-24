@@ -23,7 +23,7 @@
           <name>pd</name>
           <prompt>Enter n where the population case rate for the condition is 1/n</prompt>
           <must-request>true</must-request>
-          <minimum-value>0</minimum-value>
+          <minimum-value>1</minimum-value>
         </double>
       </parameters>
   	<builtin function-name="rptMiscFalseResult" />

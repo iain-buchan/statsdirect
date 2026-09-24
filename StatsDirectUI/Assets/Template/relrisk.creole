@@ -15,8 +15,8 @@ Approximate power @pwr</p>
 <ci>Approximate (Miettinen) @{pc:round2}% confidence interval = @{miettinen_from:roundu} to @{miettinen_to:roundu}</ci></p>
 <block name="exposure">
 
-<p>Population exposure % = @{pe:roundu}<br />
+<p>Population exposure % = @{pe:roundu}@pe_note<br />
 Population attributable risk % = @{par:roundu}<br />
-<ci>Approximate (Walter) @{pc:round2}% confidence interval = @{walter_from:roundu} to @{walter_to:roundu}</ci></p>
+<ci>Approximate (@method) @{pc:round2}% confidence interval = @{walter_from:roundu} to @{walter_to:roundu}</ci></p>
 </block>
 </report>
