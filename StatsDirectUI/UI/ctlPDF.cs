@@ -896,9 +896,10 @@ namespace StatsDirect.UI
                 // The routine grows its search bracket by nl, so with no events it never leaves the origin (it returned a mean of
                 // 1e-16 for any P). The probability of no events is exp(-mean), so the mean at which 0 or fewer events has
                 // probability P is -ln P; 0 or more events has probability 1 whatever the mean, so that inverse is refused.
+                // (0.0 - keeps the mean of a P of 1 at +0.)
                 if (idx == 3 && P > 0.0 && P <= 1.0)
                 {
-                    xmid = -Math.Log(P);
+                    xmid = 0.0 - Math.Log(P);
                     trm = P;
                     plo = P;
                     phi = 1.0;
