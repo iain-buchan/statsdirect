@@ -706,13 +706,13 @@ namespace StatsDirect.Builtins
             k2 = Constant.MISSING;
             p_k2 = Constant.MISSING;
 
-            // The values are taken relative to the first present one and the sums are compensated: a large common offset
-            // (readings near 1e8 spread over 1) otherwise costs the deviations their figures, and the skewness P of such a sample
-            // was off in the sixth figure. Missing values are left out.
+            // The values are taken relative to the first present one and scaled by their widest difference, and the sums are
+            // compensated: a large common offset (readings near 1e8 spread over 1) otherwise costs the deviations their figures,
+            // and the skewness P of such a sample was off in the sixth figure; values alternating between -1e307 and 1e307
+            // overflowed the sum. Missing values are left out.
             double nx = 0.0;
             double origin = 0.0;
-            double sum = 0.0;
-            double lost = 0.0;
+            double span = 0.0;
             int i;
             for (i = lowerBound; i < n + lowerBound; i++)
             {
@@ -721,27 +721,49 @@ namespace StatsDirect.Builtins
                 if (nx == 0.0)
                     origin = x[i];
                 nx += 1.0;
-                Accumulate(x[i] - origin, ref sum, ref lost);
+                span = Math.Max(span, Math.Abs(x[i] - origin));
             }
-            double shiftedMean = (sum + lost) / nx;
+            if (nx < 2.0)
+            {
+                // one value, or none: its mean and no spread; the report shows the standard deviation as *
+                mean = nx == 1.0 ? origin : double.NaN;
+                sd = double.NaN;
+                return;
+            }
+            if (double.IsInfinity(span))
+            {
+                // a difference beyond the largest double: the report says the values are too large
+                mean = double.NaN;
+                return;
+            }
+            if (span == 0.0)
+            {
+                // every value the same: there is no variation to test
+                mean = origin;
+                sd = 0.0;
+                return;
+            }
+            double sum = 0.0;
+            double lost = 0.0;
+            for (i = lowerBound; i < n + lowerBound; i++)
+            {
+                if (x[i] == Constant.MISSING)
+                    continue;
+                Accumulate((x[i] - origin) / span, ref sum, ref lost);
+            }
             // A second pass about the provisional mean: when the first value lies far from the mean the shifted mean is large and
             // its rounding would be carried into every deviation; about the provisional mean the residual is small and exact.
-            double centre = origin + shiftedMean;
+            double centre = origin + span * ((sum + lost) / nx);
             sum = 0.0;
             lost = 0.0;
             for (i = lowerBound; i < n + lowerBound; i++)
             {
                 if (x[i] == Constant.MISSING)
                     continue;
-                Accumulate(x[i] - centre, ref sum, ref lost);
+                Accumulate((x[i] - centre) / span, ref sum, ref lost);
             }
-            double residual = (sum + lost) / nx;
+            double residual = span * ((sum + lost) / nx);
             mean = centre + residual;
-            if (nx < 2.0)
-            {
-                sd = double.NaN;   // as before: one value has no spread, and the report shows it as *
-                return;
-            }
             // moments of deviation from the mean - agrees with R moments package whereas Stata seems to have a rounding error at 7 or so significant digits.
             // The deviations are scaled by the largest before they are raised to powers: wide data (1e75 and above) overflowed the
             // fourth moment, and narrow data overflowed the kurtosis (a spread of 1e-80) or underflowed the cubes (1e-150); the
@@ -753,10 +775,10 @@ namespace StatsDirect.Builtins
                     continue;
                 scale = Math.Max(scale, Math.Abs((x[i] - centre) - residual));
             }
-            if (!(scale > 0.0) || double.IsInfinity(scale))
+            if (!(scale > 0.0))
             {
-                // every value the same: there is no variation to test; or a difference beyond the largest double
-                sd = double.IsInfinity(scale) ? Constant.MISSING : 0.0;
+                // the values differ by less than the mean's last figure: no variation to test
+                sd = 0.0;
                 return;
             }
             double m2 = 0.0;
