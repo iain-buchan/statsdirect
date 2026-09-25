@@ -96,6 +96,36 @@ Near(PDF.FQuantile(.3, double.PositiveInfinity, double.PositiveInfinity), 1, "F(
 Near(PDF.FQuantile(0, double.PositiveInfinity, double.PositiveInfinity, true), 0, "F(infinity, infinity) lower endpoint");
 Near(PDF.tfromp(0, double.PositiveInfinity), double.PositiveInfinity, "t(infinity) upper endpoint");
 
+// Far out with infinite degrees of freedom: a log tail near the largest double, a small shape's tail, and quantiles inverted from
+// the incomplete gamma function (F on 2 and infinity has the upper tail exp(-f) exactly).
+Near(PDF.FProbability(1e308, 2, double.PositiveInfinity, false, true), -1e308, "F(2, infinity) log tail at the largest F", 1e-15);
+Near(PDF.TProbability(1.5e154, double.PositiveInfinity, false, true), -1.125e308, "t(infinity) log tail at a huge t", 1e-14);
+Near(PDF.FProbability(1e308, 2, 2e-20, true), 7.552479105020470e-18, "F on a small shape, lower tail", 1e-12);
+Near(IncompleteBeta708.FromLogit(1e-20, 1, -1000).Upper, 1e-17, "small shape upper tail", 1e-12);
+Near(PDF.FQuantile(-1e12, 2, double.PositiveInfinity, false, true), 1e12, "F(2, infinity) far quantile", 1e-15);
+Near(PDF.FQuantile(-1e12, double.PositiveInfinity, 2, true, true), 1e-12, "F(infinity, 2) far quantile", 1e-15);
+double tFar = PDF.TQuantile(-1e12, double.PositiveInfinity, false, true);
+Near(PDF.TProbability(tFar, double.PositiveInfinity, false, true), -1e12, "t(infinity) far quantile round trip", 1e-15);
+
+// The chi-square and gamma routines are the F on the same degrees of freedom and an infinite denominator: chi-square on 2 has
+// the upper tail exp(-x / 2), gamma with shape 1 the lower tail 1 - exp(-x).
+foreach (double x in new[] { .5, 20, 1400 })
+{
+    Near(PDF.chivalp(x, 2), Math.Exp(-x / 2), "chi-square(2) upper tail", 1e-14);
+    Near(PDF.gammad(x, 1, out int gammaFault), -MathSupport.Expm1(-x), "gamma(1) lower tail", 1e-14);
+    Check(gammaFault == 0, "gamma(1) status");
+}
+foreach (double p in new[] { 1e-300, .025, .5, .999 })
+{
+    Near(PDF.ppchi2(p, 2, out int chiFault), -2 * MathSupport.Log1p(-p), "chi-square(2) quantile", 1e-12);
+    Check(chiFault == 0, "chi-square(2) quantile status");
+    Near(PDF.ppchi2(p, 2, true, out chiFault), -2 * Math.Log(p), "chi-square(2) upper quantile", 1e-12);
+}
+Near(PDF.chivalp(1e12, 1e12), 0.49999981193680548, "chi-square at a million million degrees of freedom", 1e-12);
+Check(double.IsNaN(PDF.chivalp(-1, 2)), "chi-square of a negative value");
+PDF.gammad(1, 0, out int badShape);
+Check(badShape == 1, "gamma with a zero shape");
+
 // Endpoints and faults are deliberately tested separately from convergence.
 Near(PDF.ffromp(30, 2, 0), double.PositiveInfinity, "F zero upper probability");
 Near(PDF.ffromp(30, 2, 1), 0, "F unit upper probability");

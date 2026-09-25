@@ -81,13 +81,45 @@ public static partial class PDF
     }
 
     /// <summary>The upper tail of F(dfn, infinity) far above 1: the chi-square on dfn above dfn f, from the incomplete gamma function</summary>
-    private static BetaTails GammaTailAbove(double dfn, double f)
+    private static BetaTails GammaTailAbove(double dfn, double f) => GammaTailAboveAt(dfn, dfn / 2 * f);
+
+    /// <summary>The same, at z = dfn f / 2, formed by the caller so that it does not overflow before it must</summary>
+    private static BetaTails GammaTailAboveAt(double dfn, double z)
     {
-        double z = dfn * f / 2;
         if (double.IsPositiveInfinity(z))
             return new(0, 1, double.NegativeInfinity, 0, 0, "endpoint");
         double logUpper = MathSupport.GammaUpper(dfn / 2, z).LogQ;
         return new(Math.Exp(logUpper), -MathSupport.Expm1(logUpper), logUpper, MathSupport.Log1mExp(logUpper), 0, "gamma tail");
+    }
+
+    /// <summary>
+    /// The z at which the logarithm of the upper incomplete gamma ratio Q(a, z) is logTarget, by Newton's method in z from a
+    /// start close to it (the answer for the substitute for infinity): the slope of log Q in z is minus z^(a - 1) e^-z over
+    /// Gamma(a) Q(a, z).
+    /// </summary>
+    private static double GammaTailInverse(double a, double logTarget, double zStart)
+    {
+        double z = zStart;
+        for (int i = 0; i < 30; i++)
+        {
+            var gamma = MathSupport.GammaUpper(a, z);
+            double step = (gamma.LogQ - logTarget) / -Math.Exp((a - 1) * Math.Log(z) - gamma.LogScaledUpper);
+            if (!(z - step > 0) || !double.IsFinite(step))
+                return z;
+            z -= step;
+            if (Math.Abs(step) <= 4 * MathSupport.Eps * z)
+                break;
+        }
+        return z;
+    }
+
+    /// <summary>The logarithm of the upper (or lower) tail wanted, from a probability given for the lower or upper tail as itself or as a logarithm</summary>
+    private static double LogTail(double p, bool lowerTail, bool logProbability, bool upper)
+    {
+        double logP = IncompleteBeta708.ProbabilityLog(p, logProbability);
+        if (lowerTail != upper)
+            return logP;
+        return logProbability ? MathSupport.Log1mExp(logP) : MathSupport.Log1p(-p);
     }
     // + 0.0: the logarithm of a tail near 1 is log1p of minus the other tail, which for an other tail too small to register is
     // a negative zero that would be displayed as -0
@@ -144,11 +176,12 @@ public static partial class PDF
 
     public static double FQuantile(double p, double dfn, double dfd, bool lowerTail = false, bool logProbability = false)
     {
-        if (double.IsPositiveInfinity(dfn) && double.IsPositiveInfinity(dfd))
+        bool numeratorInfinite = double.IsPositiveInfinity(dfn), denominatorInfinite = double.IsPositiveInfinity(dfd);
+        if (numeratorInfinite && denominatorInfinite)
             return PointMassQuantile(p, lowerTail, logProbability);
-        if (double.IsPositiveInfinity(dfn))
+        if (numeratorInfinite)
             dfn = InfiniteDf(dfd);
-        else if (double.IsPositiveInfinity(dfd))
+        else if (denominatorInfinite)
             dfd = InfiniteDf(dfn);
         if (!ValidShape(dfn / 2) || !ValidShape(dfd / 2))
             return double.NaN;
@@ -157,13 +190,18 @@ public static partial class PDF
             var beta = IncompleteBeta708.Inverse(dfd / 2, dfn / 2, p, !lowerTail, logProbability);
             // F = (dfd / dfn) (y / x) from the coordinates themselves while both are normal doubles and the quotient is finite:
             // the exponential of the logarithms loses a few figures at large degrees of freedom
+            double f = double.NaN;
             if (beta.X >= Constant.DBL_MIN && beta.Y >= Constant.DBL_MIN)
-            {
-                double f = dfd / dfn * (beta.Y / beta.X);
-                if (double.IsFinite(f))
-                    return f;
-            }
-            return Math.Exp(Math.Log(dfd) - Math.Log(dfn) + beta.LogY - beta.LogX);
+                f = dfd / dfn * (beta.Y / beta.X);
+            if (!double.IsFinite(f))
+                f = Math.Exp(Math.Log(dfd) - Math.Log(dfn) + beta.LogY - beta.LogX);
+            // far beyond the range where the substitute stands for infinity, the quantile is inverted from the incomplete
+            // gamma function itself, from the substitute's answer as the start
+            if (denominatorInfinite && f > FarAbove && double.IsFinite(f))
+                f = 2 / dfn * GammaTailInverse(dfn / 2, LogTail(p, lowerTail, logProbability, true), dfn / 2 * f);
+            else if (numeratorInfinite && f < FarBelow && f > 0)
+                f = dfd / 2 / GammaTailInverse(dfd / 2, LogTail(p, lowerTail, logProbability, false), dfd / 2 / f);
+            return f;
         }
         catch (Exception e) when (e is ArgumentOutOfRangeException || e is ArithmeticException) { return double.NaN; }
     }
@@ -202,11 +240,11 @@ public static partial class PDF
             ? new(1, 0, 0, double.NegativeInfinity, 0, "endpoint")
             : new(0, 1, double.NegativeInfinity, 0, 0, "endpoint");
         double tt = t * t;
-        // the F on 1 and df at t squared (with infinite df, the endpoint where t squared has overflowed, and otherwise FTails'
-        // substitute for infinity or, above t squared = 1e3, the incomplete gamma function); the logarithmic form where t
-        // squared has overflowed or underflowed with finite df
+        // the F on 1 and df at t squared: with infinite df, FTails' substitute for infinity or, above t squared = 1e3, the
+        // incomplete gamma function at half t squared, formed as (t / 2) t where t squared itself has overflowed; the
+        // logarithmic form where t squared has overflowed or underflowed with finite df
         var beta = double.IsFinite(tt) && (tt > 0 || infinite) ? FTails(tt, 1, df)
-            : infinite ? new BetaTails(0, 1, double.NegativeInfinity, 0, 0, "endpoint")
+            : infinite ? GammaTailAboveAt(1, Math.Abs(t) / 2 * Math.Abs(t))
             : IncompleteBeta708.FromLogit(df / 2, .5, Math.Log(df) - 2 * Math.Log(Math.Abs(t)));
         double logSmall = beta.LogLower - LogTwo;
         double small = Math.Exp(logSmall), large = -MathSupport.Expm1(logSmall), logLarge = MathSupport.Log1mExp(logSmall);
@@ -228,7 +266,8 @@ public static partial class PDF
 
     public static double TQuantile(double p, double df, bool lowerTail = false, bool logProbability = false)
     {
-        if (double.IsPositiveInfinity(df))
+        bool infinite = double.IsPositiveInfinity(df);
+        if (infinite)
             df = InfiniteDf(1);
         if (!ValidShape(df / 2))
             return double.NaN;
@@ -245,6 +284,10 @@ public static partial class PDF
             // t = sqrt(df y / x) from the coordinates themselves while both are normal doubles and the quotient is finite, as for F
             double ratio = beta.X >= Constant.DBL_MIN && beta.Y >= Constant.DBL_MIN ? df * beta.Y / beta.X : double.PositiveInfinity;
             double t = double.IsFinite(ratio) ? Math.Sqrt(ratio) : Math.Exp(.5 * (Math.Log(df) + beta.LogY - beta.LogX));
+            // far beyond the range where the substitute stands for infinity, from the incomplete gamma function itself: the two
+            // tails together are Q(1/2, t squared / 2)
+            if (infinite && t > 0 && double.IsFinite(t) && t / 2 * t > FarAbove)
+                t = Math.Sqrt(GammaTailInverse(.5, logSmall + LogTwo, t / 2 * t)) * 1.4142135623730951;
             if (negative != lowerTail)
                 t = -t;
             return t + 0.0;
@@ -261,5 +304,60 @@ public static partial class PDF
         return p > 0 && p < Constant.DBL_MIN
             ? TQuantile(Math.Log(p) - LogTwo, df, false, true)
             : TQuantile(p / 2, df);
+    }
+
+    // The chi-square and gamma distributions, as the F on the same degrees of freedom and an infinite denominator, with the
+    // argument orders and fault codes of the routines they replace.
+    /// <summary>
+    /// upper tail area of the chi-square distribution: the F on df and an infinite number of degrees of freedom at x / df,
+    /// which keeps every figure at any number of degrees of freedom
+    /// </summary>
+    public static double chivalp(double x, double df)
+    {
+        if (x < 0.0 || double.IsNaN(x))
+            return double.NaN;
+        return FProbability(x / df, df, double.PositiveInfinity);
+    }
+
+    /// <summary>
+    /// tail area of the gamma distribution
+    /// </summary>
+    public static double gammad(double x, double p, out int ifault)
+    {
+        return gammad(x, p, false, out ifault);
+    }
+
+    /// <summary>
+    /// lower tail area of the gamma distribution with shape p at x, or the upper tail if upper is true: the chi-square on
+    /// 2p at 2x, which is the F on 2p and an infinite number of degrees of freedom at x / p. ifault 1 for an invalid argument.
+    /// </summary>
+    public static double gammad(double x, double p, bool upper, out int ifault)
+    {
+        ifault = 1;
+        if (p <= 0.0 || x < 0.0 || double.IsNaN(x) || double.IsNaN(p))
+            return 0.0;
+        double ret = FProbability(x / p, 2.0 * p, double.PositiveInfinity, !upper);
+        if (double.IsNaN(ret))
+            return 0.0;
+        ifault = 0;
+        return ret;
+    }
+
+    /// <summary>
+    /// chi-square percentage point for a lower tail area prob or, when upper is true, for an upper tail area prob: v times
+    /// the F quantile on v and an infinite number of degrees of freedom, which keeps every figure at any number of degrees
+    /// of freedom and at any tail area. ifault 1 for an invalid argument or no answer.
+    /// </summary>
+    public static double ppchi2(double prob, double v, out int ifault) => ppchi2(prob, v, false, out ifault);
+    public static double ppchi2(double prob, double v, bool upper, out int ifault)
+    {
+        ifault = 1;
+        if (!(prob >= 0.0 && prob <= 1.0) || !(v > 0.0))
+            return -1.0;
+        double ret = v * FQuantile(prob, v, double.PositiveInfinity, !upper);
+        if (double.IsNaN(ret))
+            return -1.0;
+        ifault = 0;
+        return ret;
     }
 }

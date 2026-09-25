@@ -97,6 +97,19 @@ internal static class MathSupport
         double v = 1 / x, t = v * v;
         return v * (1.0 / 12 + t * (-1.0 / 360 + t * (1.0 / 1260 + t * (-1.0 / 1680 + t * (1.0 / 1188 + t * (-691.0 / 360360 + t * (1.0 / 156 + t * (-3617.0 / 122400 + t * (43867.0 / 244188)))))))));
     }
+    private static readonly double[] StirlingCoefficients = { 1.0 / 12, -1.0 / 360, 1.0 / 1260, -1.0 / 1680, 1.0 / 1188, -691.0 / 360360, 1.0 / 156, -3617.0 / 122400, 43867.0 / 244188 };
+    // Stirling's correction at x less that at x + d, for a d that may be far smaller than x (the difference of the two
+    // evaluations was lost to rounding once x + d rounded to x): term by term, c x^-n (1 - (1 + d / x)^-n) for n = 1, 3, 5, ...
+    internal static double StirlingDifference(double x, double d)
+    {
+        double logRatio = Log1p(d / x), power = 1 / x, sum = 0;
+        for (int k = 0; k < StirlingCoefficients.Length; k++)
+        {
+            sum += StirlingCoefficients[k] * power * -Expm1(-(2 * k + 1) * logRatio);
+            power /= x * x;
+        }
+        return sum;
+    }
     internal static double LogGamma(double x)
     {
         if (!(x > 0) || !double.IsFinite(x))
@@ -127,7 +140,7 @@ internal static class MathSupport
         sum.Add(-a * Math.Log(b));
         sum.Add(-b * Log1pMinusX(h));
         sum.Add(-(a - 0.5) * Log1p(h));
-        sum.Add(StirlingCorrection(b) - StirlingCorrection(b + a));
+        sum.Add(StirlingDifference(b, a));
         return sum.Value;
     }
     internal static double LogBeta(double a, double b)
@@ -147,7 +160,8 @@ internal static class MathSupport
     // log(a B(a, b)), which is small when a is: for a small a through log Gamma(1 + a) and the ratio of gammas, so that it is
     // not the difference of log B(a, b) and log a, which then agree to their first figures and leave the rest to rounding;
     // otherwise plainly, the ratio of gammas for a larger a being a sum of many logarithms that costs figures
-    internal static double LogShapeBeta(double a, double b) => a < .1 ? LogGamma1p(a) + LogGammaRatio(b, a) : LogBeta(a, b) + Math.Log(a);
+    internal static double LogShapeBeta(double a, double b)
+        => b == 1 ? 0 : a == 1 ? -Math.Log(b) : a < .1 ? LogGamma1p(a) + LogGammaRatio(b, a) : LogBeta(a, b) + Math.Log(a);
     internal static double DifferenceProducts(double a, double b, double c, double d)
     {
         double p = a * b, q = c * d;

@@ -889,106 +889,18 @@ namespace StatsDirect.Expressions
 
         public static double Pchisq(double q, double df, bool lowerTail, bool logP)
         {
-            // Each tail is computed as itself: the lower tail used to be 1 minus the upper, which lost a small one altogether
-            // (PCHISQ(5, 100) was 0 where it is 2.2e-46). Chi-square cannot be negative, so everything lies above a negative q
-            // (the engine's routine refuses one).
-            double lower, upper;
-            if (q < 0.0 && df > 0.0 && q != Constant.MISSING)
-            {
-                lower = 0.0;
-                upper = 1.0;
-            }
-            else
-            {
-                upper = PDF.chivalp(q, df);
-                lower = PDF.gammad(q / 2.0, df / 2.0, false, out int fault);
-                if (fault != 0)
-                    lower = double.NaN;
-            }
-            if (!logP)
-                return lowerTail ? lower : upper;
-            double tail = lowerTail ? lower : upper;
-            double smallLog = double.NaN;
-            if (tail < TinyTail && q > 0.0 && df > 0.0)
-                smallLog = lowerTail ? LogGammaLowerTail(df / 2.0, q / 2.0) : LogGammaUpperTail(df / 2.0, q / 2.0);
-            return LogOfTail(tail, lowerTail ? upper : lower, smallLog);
-        }
-
-        /// <summary>
-        /// log of the lower incomplete gamma ratio P(a, x) from its series x^a e^-x / gamma(a + 1) (1 + x / (a + 1) + x^2 / ((a + 1)(a + 2)) + ...),
-        /// for a tail too small for a double (x far below a)
-        /// </summary>
-        private static double LogGammaLowerTail(double a, double x)
-        {
-            return a * Math.Log(x) - x - PDF.alogam(a + 1.0) + Math.Log(TailSeries(j => x / (a + j)));
-        }
-
-        /// <summary>
-        /// log of the upper incomplete gamma ratio Q(a, x) from x^(a - 1) e^-x / gamma(a) (1 + (a - 1) / x + (a - 1)(a - 2) / x^2 + ...),
-        /// Abramowitz and Stegun 6.5.32, for a tail too small for a double (x beyond a). The terms fall while k is below a + x,
-        /// and change sign once k passes a; for a whole number a the series ends and is exact.
-        /// </summary>
-        private static double LogGammaUpperTail(double a, double x)
-        {
-            double sum = 1.0, term = 1.0;
-            for (int k = 1; k < 1000000; k++)
-            {
-                double next = term * (a - k) / x;
-                if (next == 0.0 || Math.Abs(next) > Math.Abs(term))
-                    break;
-                term = next;
-                sum += term;
-                if (Math.Abs(term) < 1.0E-17 * Math.Abs(sum))
-                    break;
-            }
-            return (a - 1.0) * Math.Log(x) - x - PDF.alogam(a) + Math.Log(sum);
+            // the F on df and an infinite number of degrees of freedom at q / df: each tail directly, its logarithm too, at
+            // any number of degrees of freedom (the old routine lost figures from about 10,000: PCHISQ(1e12, 1e12) was 0.4986)
+            if (q == Constant.MISSING || df == Constant.MISSING)
+                return Constant.MISSING;
+            return PDF.FProbability(q / df, df, double.PositiveInfinity, lowerTail, logP);
         }
 
         public static double Qchisq(double p, double df, bool lowerTail, bool logP)
         {
-            if (logP)
-                p = Math.Exp(p);
-            // a small upper tail area cannot survive 1 - p (INVCHI2TAIL(1, 1e-20) gave no answer): it is inverted as an upper tail
-            if (!lowerTail && p < 1.0E-6)
-                return ChiSquareFromUpperTail(p, df);
-            if (!lowerTail)
-                p = 1.0 - p;
-            double result = PDF.ppchi2(p, df, out int fault);
-            return fault != 0 ? Constant.MISSING : result;
-        }
-
-        /// <summary>The chi-square with upper tail area p, by bracketing and bisection on the upper tail itself; for a small p.</summary>
-        private static double ChiSquareFromUpperTail(double p, double df)
-        {
-            // an area below the smallest normal double is refused: the tail is cut to 0 there, so every such area would give the
-            // chi-square for 2.2e-308, and a subnormal area (the exp of a log p below -708.4) keeps too few digits to invert
-            if (double.IsNaN(p) || double.IsNaN(df) || p < Constant.DBL_MIN || p >= 1.0 || df <= 0.0 || p == Constant.MISSING || df == Constant.MISSING)
+            if (p == Constant.MISSING || df == Constant.MISSING)
                 return Constant.MISSING;
-            double low = 0.0, high = df + 10.0;
-            for (int i = 0; ; i++)
-            {
-                double area = PDF.chivalp(high, df);
-                if (double.IsNaN(area) || i > 1100)
-                    return Constant.MISSING;
-                if (area < p)
-                    break;
-                low = high;
-                high *= 2.0;
-            }
-            for (int i = 0; i < 2000 && high - low > 1.0E-15 * high; i++)
-            {
-                double mid = 0.5 * (low + high);
-                double area = PDF.chivalp(mid, df);
-                if (double.IsNaN(area))
-                    return Constant.MISSING;
-                if (area > p)
-                    low = mid;
-                else
-                    high = mid;
-            }
-            double chiSquare = 0.5 * (low + high);
-            // the answer is given only if the tail area at it comes back as p (beyond about 1e12 degrees of freedom it does not)
-            return Math.Abs(PDF.chivalp(chiSquare, df) - p) <= 1.0E-6 * p ? chiSquare : Constant.MISSING;
+            return df * PDF.FQuantile(p, df, double.PositiveInfinity, lowerTail, logP);
         }
 
         public static double Pf(double q, double df1, double df2, bool lowerTail, bool logP)
