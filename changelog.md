@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.7] 2026-09-25
+
+The F distribution tail at extreme arguments, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
 
 ### Fixed
 - Test workbook: the population pyramid columns of the Graphics worksheet (UK Mid-98 Age Bands, Males, Females, Persons) lacked the 5-9 and 10-14 age bands; they are replaced by the Office for National Statistics mid-2024 estimates for the United Kingdom in all 19 five-year bands, in thousands (UK Mid-2024 Age Bands, Males, Females, Persons), and the help's population pyramid example follows them
