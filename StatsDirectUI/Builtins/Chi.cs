@@ -243,7 +243,15 @@ namespace StatsDirect.Builtins
                 rowParameters.AddOutput("obs_fail", b1);
                 rowParameters.AddOutput("obs_tot", t1);
                 rowParameters.AddOutput("obs_pc", 100 * a1 / t1);
-                rowParameters.AddOutput("score", s1);
+                // the Score column is printed only when the scores are used, in the test for linear trend
+                IList<ParameterBag> scoreList = new List<ParameterBag>();
+                if (z != Chi2ByNTrend.WithoutTrend)
+                {
+                    ParameterBag scoreParameters = new();
+                    scoreParameters.AddOutput("score", s1);
+                    scoreList.Add(scoreParameters);
+                }
+                rowParameters.AddOutput("*score", scoreList);
 
                 rowParameters.AddOutput("exp_succ", e1);
                 rowParameters.AddOutput("exp_fail", e2);
@@ -253,6 +261,10 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tot_fail", b);
             outputParameters.AddOutput("tot_tot", t);
             outputParameters.AddOutput("tot_pc", 100 * a / t);
+            IList<ParameterBag> scoreHeadList = new List<ParameterBag>();
+            if (z != Chi2ByNTrend.WithoutTrend)
+                scoreHeadList.Add(new ParameterBag());
+            outputParameters.AddOutput("*scoreHead", scoreHeadList);
 
             List<ParameterBag> warnList = new();
             outputParameters.AddOutput("*warn", warnList);
@@ -518,6 +530,8 @@ namespace StatsDirect.Builtins
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             Meta.ModMetabias(host, harbordParameters, o, k, cco, 1);
+            if (!biasReported)
+                harbordList.Clear();
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -530,8 +544,6 @@ namespace StatsDirect.Builtins
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-            if (!biasReported)
-                harbordList.Clear();
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return new StepOutput(outputParameters);
