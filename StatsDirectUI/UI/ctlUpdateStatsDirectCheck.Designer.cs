@@ -43,7 +43,7 @@
             this.cmdUpdateStatsDirect.Name = "cmdUpdateStatsDirect";
             this.cmdUpdateStatsDirect.Size = new System.Drawing.Size(246, 23);
             this.cmdUpdateStatsDirect.TabIndex = 0;
-            this.cmdUpdateStatsDirect.Text = "&Close StatsDirect and update";
+            this.cmdUpdateStatsDirect.Text = "&Download and update";
             this.cmdUpdateStatsDirect.UseVisualStyleBackColor = true;
             this.cmdUpdateStatsDirect.Visible = false;
             this.cmdUpdateStatsDirect.Click += new System.EventHandler(this.button1_Click);

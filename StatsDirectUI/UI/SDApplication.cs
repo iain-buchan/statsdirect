@@ -176,6 +176,7 @@ namespace StatsDirect.UI
 
         internal void Run()
         {
+            UpdateInstaller.DeleteOldDownloads();
             Application.Run(MainWindow);
         }
 
@@ -237,13 +238,26 @@ namespace StatsDirect.UI
         /// </summary>
         internal void Shutdown()
         {
-            if (ClosingForUpgrade)
-                FetchTheUpgrade();
-        }
-
-        public static void FetchTheUpgrade()
-        {
-            Process.Start(new ProcessStartInfo("http://www.statsdirect.com/download/StatsDirectSetup.exe") { UseShellExecute = true });
+            if (pendingUpgrade == null)
+                return;
+            try
+            {
+                // frmMain exits the process immediately after Shutdown returns. Launch synchronously,
+                // with the download already complete and all unsaved-work prompts already accepted.
+                pendingUpgrade.Start();
+            }
+            catch (Exception ex)
+            {
+                DiagnosticLog.Write("Installer launch failed: " + ex);
+                MessageBox.Show("StatsDirect closed, but the installer could not be started.\r\n\r\n" +
+                    ex.Message + "\r\n\r\nPlease reopen StatsDirect to try again, or download the installer from https://www.statsdirect.com.",
+                    "StatsDirect update", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                pendingUpgrade.Dispose();
+                pendingUpgrade = null;
+            }
         }
 
         /// <summary>
@@ -1197,17 +1211,34 @@ namespace StatsDirect.UI
             ShowOrQueueDialog(new frmUpdateCheck(false), null);
         }
 
-        internal void CloseAndUpdate()
+        private UpdateInstaller pendingUpgrade;
+
+        internal void CloseAndUpdate(IWin32Window owner)
         {
-            if (null == MainWindow)
+            if (ClosingForUpgrade)
+                return;
+            using var download = new frmDownloadUpdate();
+            if (download.ShowDialog(owner) != DialogResult.OK)
+                return;
+
+            using UpdateInstaller installer = download.Installer;
+            pendingUpgrade = installer;
+            ClosingForUpgrade = true;
+            try
             {
-                FetchTheUpgrade();
-                Application.Exit();
+                if (null == MainWindow)
+                {
+                    installer.Start();
+                    Application.Exit();
+                }
+                else
+                    MainWindow.Close();
             }
-            else
+            finally
             {
-                ClosingForUpgrade = true;
-                MainWindow.Close();
+                // A cancelled save prompt must not arrange an update on a later, ordinary exit.
+                pendingUpgrade = null;
+                ClosingForUpgrade = false;
             }
         }
 

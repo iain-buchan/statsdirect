@@ -19,11 +19,11 @@ namespace StatsDirect.UI
             StopCheck();
             try
             {
-                SdApplication.SoleInstance.CloseAndUpdate();
+                SdApplication.SoleInstance.CloseAndUpdate(FindForm());
             }
             catch (Exception ex)
             {
-                SdApplication.SoleInstance.FriendlyError("Couldn't launch Web browser to fetch StatsDirect update", ex, false);
+                SdApplication.SoleInstance.FriendlyError("Couldn't start the StatsDirect update", ex, false);
             }
         }
 
