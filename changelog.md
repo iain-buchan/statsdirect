@@ -2,6 +2,12 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Test workbook: the population pyramid columns of the Graphics worksheet (UK Mid-98 Age Bands, Males, Females, Persons) lacked the 5-9 and 10-14 age bands; they are replaced by the Office for National Statistics mid-2024 estimates for the United Kingdom in all 19 five-year bands, in thousands (UK Mid-2024 Age Bands, Males, Females, Persons), and the help's population pyramid example follows them
+- F distribution: an F so large that the product of the numerator degrees of freedom and F overflows gave an upper tail of 0 since 5.0.6 (and an undefined value before); the tail is not 0 when the denominator degrees of freedom are small (7.9e-155 for F = 1e308 on 30 and 1 degrees of freedom, 3.5e-16 on 5 and 0.1). The reciprocal ratio dfd / (dfn F) is now formed directly for a ratio above 1, so every F up to the largest double gives its tail
+
 ##[v5.0.6] 2026-09-25
 
 Everything found while R code sections were added to every worked example in the help: the fixes from independent checks of 135 examples against R, the report formatting, and two boundary cases from a further independent review.
