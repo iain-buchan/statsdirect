@@ -36,10 +36,13 @@ I&#xb2; (inconsistency) = @{isq:round1}% (<ci>@{pc1:round1}% CI = @{llisq:round1
 <p><u>Random effects (DerSimonian-Laird)</u><br />
 Pooled IRR = @{dsirr:roundu} (<ci>@{pc:round2}% CI = @{dsll:roundu} to @{dsul:roundu}</ci>)<br />
 Z (test IRR differs from 1) = @{dz:roundu}  <pval>@{dp:pval}</pval></p>
+<p><u>Bias indicators</u></p>
 <block name="egger">
 
-<p><u>Bias indicators</u><br />
-Begg-Mazumdar: Kendall's tau = @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
+<p>Begg-Mazumdar: Kendall's tau = @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
 Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
+</block>
+<block name="fewStrata">
+<p>Bias indicators need more than three studies with an estimate</p>
 </block>
 </report>

@@ -39,6 +39,9 @@ Chi<sup>2</sup> (test relative risk differs from 1) = @{dsx2:roundu}  (df = @df_
 <p>Begg-Mazumdar: Kendall's tau = @{tau:roundu}@{warnTooFewStrata}  <pval>@{p2:pval}@{low_power_warn}</pval><br />
 Egger: bias = @{a:roundu} (<ci>@{pc_egger:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>
+<block name="fewStrata">
+<p>Bias indicators need more than three studies with an estimate</p>
+</block>
 <block name="harbord">
 <p>Harbord-Egger: bias = @{a:roundu} (<ci>@{pc_harbord:round2}% CI = @{cl:roundu} to @{cu:roundu}</ci>)  <pval>@{p:pval}</pval></p>
 </block>

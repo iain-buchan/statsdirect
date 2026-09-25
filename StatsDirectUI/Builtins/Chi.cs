@@ -483,11 +483,11 @@ namespace StatsDirect.Builtins
                 cmlParameters.AddOutput("p2m", p2M);
             }
 
-            outputParameters.AddOutput("bd", bd);
+            outputParameters.AddOutput("bd", realk > 1 ? bd : 0.0);
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(bd, realk - 1));
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -510,7 +510,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            bool biasReported = Meta.Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            Meta.FewStrata(outputParameters, eggerList, biasReported);
 
             List<ParameterBag> harbordList = new();
             outputParameters.AddOutput("*harbord", harbordList);
@@ -529,6 +530,8 @@ namespace StatsDirect.Builtins
 
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
+            if (!biasReported)
+                harbordList.Clear();
                 chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MH, new MHOptions(1, k, dswt, title, dsor, dsll, dsul, cco, odr, odrl, odru, lerr, uerr, included, "Odds ratio meta-analysis plot [random effects]", 1, "odds ratio")));
             }
             return new StepOutput(outputParameters);

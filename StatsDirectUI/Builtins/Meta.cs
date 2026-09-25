@@ -210,7 +210,7 @@ namespace StatsDirect.Builtins
                 pz = 1.0 - pz;
             outputParameters.AddOutput("p_z", 2.0 * pz);
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
             IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
@@ -223,13 +223,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, odr, odrl, odru, k, ref cco, Transformation.Log);
+            bool biasReported = Metabias(host, eggerParameters, odr, odrl, odru, k, ref cco, Transformation.Log);
+            FewStrata(outputParameters, eggerList, biasReported);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 1);
+            if (!biasReported)
+                harbordList.Clear();
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -271,7 +274,22 @@ namespace StatsDirect.Builtins
             return level > 0.0 && level < 1.0 ? level : 0.9;
         }
 
-        public static void Metabias(IProgressBarHost host, ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
+        /// <summary>
+        /// The bias indicator lines are printed only when they were given; otherwise their list is emptied and a one-element list carries
+        /// the sentence that says the indicators need more than three studies
+        /// </summary>
+        internal static void FewStrata(ParameterBag outputParameters, IList<ParameterBag> biasList, bool reported)
+        {
+            IList<ParameterBag> fewList = new List<ParameterBag>();
+            if (!reported)
+            {
+                biasList.Clear();
+                fewList.Add(new ParameterBag());
+            }
+            outputParameters.AddOutput("*fewStrata", fewList);
+        }
+
+        public static bool Metabias(IProgressBarHost host, ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
         {
             double cit;
             if (cco > 0)
@@ -486,6 +504,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("cl", cla);
             outputParameters.AddOutput("cu", cua);
             outputParameters.AddOutput("p", prob);
+            return !tooFewStrata;
         }
 
         public static StepOutput RptRiskDifferenceMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
@@ -599,7 +618,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", 1);
             outputParameters.AddOutput("xp", PDF.chivalp(x2Rmh, 1.0));
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df_cochran", k - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -620,7 +639,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, Transformation.None);
+            bool biasReported = Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, Transformation.None);
+            FewStrata(outputParameters, eggerList, biasReported);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -743,7 +763,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df", 1);
             outputParameters.AddOutput("xp", PDF.chivalp(x2Rmh, 1.0));
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -767,13 +787,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
+            bool biasReported = Metabias(host, eggerParameters, rkr, axll, axul, k, ref cco, Transformation.Log);
+            FewStrata(outputParameters, eggerList, biasReported);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 2);
+            if (!biasReported)
+                harbordList.Clear();
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -1085,7 +1108,7 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("to", dplusul);
                     poolOkParameters.AddOutput("z", dplusz);
                     poolOkParameters.AddOutput("p", MathDbl.zvalp2(dplusz));
-                    poolOkParameters.AddOutput("qc", qc);
+                    poolOkParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
                     poolOkParameters.AddOutput("df", k - 1);
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
                     poolOkParameters.AddOutput("tausq", tausq);
@@ -1117,7 +1140,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*egger", eggerList);
                 ParameterBag eggerParameters = new();
                 eggerList.Add(eggerParameters);
-                Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
+                bool biasReported = Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
+                FewStrata(outputParameters, eggerList, biasReported);
 
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
@@ -1249,7 +1273,7 @@ namespace StatsDirect.Builtins
                     poolOkParameters.AddOutput("to", dplusul);
                     poolOkParameters.AddOutput("z", dplusz);
                     poolOkParameters.AddOutput("p", MathDbl.zvalp2(dplusz));
-                    poolOkParameters.AddOutput("qc", qc);
+                    poolOkParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
                     poolOkParameters.AddOutput("df", k - 1);
                     poolOkParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
                     poolOkParameters.AddOutput("tausq", tausq);
@@ -1269,7 +1293,8 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*egger", eggerList);
                 ParameterBag eggerParameters = new();
                 eggerList.Add(eggerParameters);
-                Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
+                bool biasReported = Metabias(host, eggerParameters, d, lcid, ucid, k, ref cco, Transformation.None);
+                FewStrata(outputParameters, eggerList, biasReported);
 
                 IList<ParameterBag> chartList = new List<ParameterBag>();
                 outputParameters.AddOutput("*chart", chartList);
@@ -1878,7 +1903,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -1905,7 +1930,8 @@ namespace StatsDirect.Builtins
             Transformation xform = Transformation.None;
             if (mode != MetaIncidenceRateMode.Difference)
                 xform = Transformation.Log;
-            Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
+            bool biasReported = Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
+            FewStrata(outputParameters, eggerList, biasReported);
 
             double[] ptt = new double[k + 1];
             for (int i = 1; i <= k; i++)
@@ -2135,11 +2161,11 @@ namespace StatsDirect.Builtins
                 cmlParameters.AddOutput("p2m", p2M);
             }
 
-            outputParameters.AddOutput("bd", bd);
+            outputParameters.AddOutput("bd", realk > 1 ? bd : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", realk - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(bd, realk - 1));
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -2163,13 +2189,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            bool biasReported = Metabias(host, eggerParameters, odr, axll, axul, k, ref cco, Transformation.Log);
+            FewStrata(outputParameters, eggerList, biasReported);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 1);
+            if (!biasReported)
+                harbordList.Clear();
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2923,7 +2952,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("z", zrmh);
             outputParameters.AddOutput("p_fixed", MathDbl.zvalp2(zrmh));
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -2949,7 +2978,8 @@ namespace StatsDirect.Builtins
             Transformation xform = Transformation.None;
             if (useRatio)
                 xform = Transformation.Log;
-            Metabias(host, biasParameters, y, llY, ulY, k, ref cco, xform);
+            bool biasReported = Metabias(host, biasParameters, y, llY, ulY, k, ref cco, xform);
+            FewStrata(outputParameters, biasList, biasReported);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -3186,7 +3216,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("z", zrmh);
             outputParameters.AddOutput("p_fixed", MathDbl.zvalp2(zrmh));
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -3225,7 +3255,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*bias", biasList);
             ParameterBag biasParameters = new();
             biasList.Add(biasParameters);
-            Metabias(host, biasParameters, y, llY, ulY, k, ref cco, Transformation.Z);
+            bool biasReported = Metabias(host, biasParameters, y, llY, ulY, k, ref cco, Transformation.Z);
+            FewStrata(outputParameters, biasList, biasReported);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -3612,7 +3643,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("from", llrmh);
             outputParameters.AddOutput("to", ulrmh);
 
-            outputParameters.AddOutput("qc", qc);
+            outputParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
             outputParameters.AddOutput("df", k - 1);
             outputParameters.AddOutput("xp", PDF.chivalp(qc, k - 1));
             outputParameters.AddOutput("tausq", tausq);
@@ -3630,13 +3661,16 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            Metabias(host, eggerParameters, y, llY, ulY, k, ref cco, Transformation.None);
+            bool biasReported = Metabias(host, eggerParameters, y, llY, ulY, k, ref cco, Transformation.None);
+            FewStrata(outputParameters, eggerList, biasReported);
 
             IList<ParameterBag> harbordList = new List<ParameterBag>();
             outputParameters.AddOutput("*harbord", harbordList);
             ParameterBag harbordParameters = new();
             harbordList.Add(harbordParameters);
             ModMetabias(host, harbordParameters, o, k, cco, 3);
+            if (!biasReported)
+                harbordList.Clear();
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -3866,15 +3900,16 @@ namespace StatsDirect.Builtins
             if (df < 1)
                 return;
             i2 = Math.Max(0.0, 100.0 * (q - df) / q);
-            if (df < 2)
-                return;
             //  The interval is given at whatever level the analysis uses
             if (cco <= 0.0 || cco >= 1.0)
                 return;
-
+            //  With one degree of freedom (two studies) the test-based interval has no standard error; the exact interval is still given
+            if (df < 2 && !host.Preferences.MetaExact)
+                return;
             double levelci = 1.0 - (1.0 - cco) / 2.0;
             double clevelci = 1.0 - levelci;
-
+            if (df >= 2)
+            {
             //  H^2 = Q/df, truncated at 1 where Q < df
             double h2 = Math.Max(1.0, q / df);
 
@@ -3890,6 +3925,7 @@ namespace StatsDirect.Builtins
             double ubH2 = Math.Pow(Math.Exp(Math.Log(Math.Sqrt(h2)) + cit * SElnH), 2.0);
             ll = 100.0 * (lbH2 - 1.0) / lbH2;
             ul = 100.0 * (ubH2 - 1.0) / ubH2;
+            }
 
             if (!host.Preferences.MetaExact)
                 return;
