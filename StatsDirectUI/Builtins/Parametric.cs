@@ -682,6 +682,17 @@ namespace StatsDirect.Builtins
         ///  D'Agostino RB, Belanger A, D'Agostino RB Jr. A suggestion for using powerful and informative tests of normality. American Statistician 1990;44(4):316-321.
         ///  Royston JP. Comment on sg3.4 and an improved D'Agostino test. sg3.5. Stata Technical Bulletin 1991;3:23-24.
         ///  </remarks>
+        /// <summary>
+        /// Adds a value to a running sum, keeping in lost what the addition rounded away (Neumaier's compensation); the sum
+        /// is sum + lost when the terms are done
+        /// </summary>
+        private static void Accumulate(double value, ref double sum, ref double lost)
+        {
+            double next = sum + value;
+            lost += Math.Abs(sum) >= Math.Abs(value) ? (sum - next) + value : (value - next) + sum;
+            sum = next;
+        }
+
         public static void normality_sk(double[] x, int lowerBound, int n, out double mean, out double sd, out double skewness, out double kurtosis, out double sqrtb1, out double p_b1, out double b2, out double p_b2, out double k2, out double p_k2)
         {
             // set on error exit values first
@@ -695,45 +706,85 @@ namespace StatsDirect.Builtins
             k2 = Constant.MISSING;
             p_k2 = Constant.MISSING;
 
-            // basic sums
+            // The values are taken relative to the first present one and the sums are compensated: a large common offset
+            // (readings near 1e8 spread over 1) otherwise costs the deviations their figures, and the skewness P of such a sample
+            // was off in the sixth figure. Missing values are left out.
             double nx = 0.0;
+            double origin = 0.0;
             double sum = 0.0;
+            double lost = 0.0;
             int i;
             for (i = lowerBound; i < n + lowerBound; i++)
             {
-                if (x[i] != Constant.MISSING)
-                {
-                    nx += 1.0;
-                    sum += x[i];
-                }
+                if (x[i] == Constant.MISSING)
+                    continue;
+                if (nx == 0.0)
+                    origin = x[i];
+                nx += 1.0;
+                Accumulate(x[i] - origin, ref sum, ref lost);
             }
-            mean = sum / nx;
-
-            // moments of deviation from the mean - agrees with R moments package whereas Stata seems to have a rounding error at 7 or so significant digits
-            double m1 = 0.0;
+            double shiftedMean = (sum + lost) / nx;
+            // A second pass about the provisional mean: when the first value lies far from the mean the shifted mean is large and
+            // its rounding would be carried into every deviation; about the provisional mean the residual is small and exact.
+            double centre = origin + shiftedMean;
+            sum = 0.0;
+            lost = 0.0;
+            for (i = lowerBound; i < n + lowerBound; i++)
+            {
+                if (x[i] == Constant.MISSING)
+                    continue;
+                Accumulate(x[i] - centre, ref sum, ref lost);
+            }
+            double residual = (sum + lost) / nx;
+            mean = centre + residual;
+            if (nx < 2.0)
+            {
+                sd = double.NaN;   // as before: one value has no spread, and the report shows it as *
+                return;
+            }
+            // moments of deviation from the mean - agrees with R moments package whereas Stata seems to have a rounding error at 7 or so significant digits.
+            // The deviations are scaled by the largest before they are raised to powers: wide data (1e75 and above) overflowed the
+            // fourth moment, and narrow data overflowed the kurtosis (a spread of 1e-80) or underflowed the cubes (1e-150); the
+            // ratios that make the skewness and kurtosis do not depend on the scale.
+            double scale = 0.0;
+            for (i = lowerBound; i < n + lowerBound; i++)
+            {
+                if (x[i] == Constant.MISSING)
+                    continue;
+                scale = Math.Max(scale, Math.Abs((x[i] - centre) - residual));
+            }
+            if (!(scale > 0.0) || double.IsInfinity(scale))
+            {
+                // every value the same: there is no variation to test; or a difference beyond the largest double
+                sd = double.IsInfinity(scale) ? Constant.MISSING : 0.0;
+                return;
+            }
             double m2 = 0.0;
             double m3 = 0.0;
             double m4 = 0.0;
-            // bool toobig = false; 
+            double lost2 = 0.0;
+            double lost3 = 0.0;
+            double lost4 = 0.0;
             for (i = lowerBound; i < n + lowerBound; i++)
             {
-                double s = x[i] - mean;
-                m2 += Math.Pow(s, 2.0);
-                m3 += Math.Pow(s, 3.0);
-                m4 += Math.Pow(s, 4.0);
-                if (m4 > 1.0E+300)
-                    return;
+                if (x[i] == Constant.MISSING)
+                    continue;
+                double u = ((x[i] - centre) - residual) / scale;
+                double u2 = u * u;
+                Accumulate(u2, ref m2, ref lost2);
+                Accumulate(u2 * u, ref m3, ref lost3);
+                Accumulate(u2 * u2, ref m4, ref lost4);
             }
-            double var = (m2 - m1 * 2.0 / nx) / (nx - 1.0);
-            sd = Math.Sqrt(var);
-            if (var == 0.0)
-                return;
+            m2 += lost2;
+            m3 += lost3;
+            m4 += lost4;
+            sd = scale * Math.Sqrt(m2 / (nx - 1.0));
             m2 /= nx;
             m3 /= nx;
             m4 /= nx;
             skewness = m3 * Math.Pow(m2, -1.5);
             kurtosis = m4 * Math.Pow(m2, -2.0);
-            if (n < 8)
+            if (nx < 8.0)
                 return;
 
             // tests of skewness, kurtosis and omnibus k2
@@ -744,7 +795,8 @@ namespace StatsDirect.Builtins
             double delta = 1.0 / Math.Sqrt(Math.Log(Math.Sqrt(w2)));
             double alpha = Math.Sqrt(2.0 / (w2 - 1.0));
             double z_b1 = Math.Abs(delta * Math.Log(y / alpha + Math.Sqrt(Math.Pow(y / alpha, 2.0) + 1.0)));
-            p_b1 = 2.0 - 2.0 * PDF.alnorm(z_b1);
+            // the upper tail asked for directly: 2 - 2 alnorm(z) lost its figures for a small P and was 0 below about 1e-16
+            p_b1 = 2.0 * PDF.alnorm(-z_b1);
 
             b2 = 3.0 * (nx - 1.0) / (nx + 1.0) + (nx - 2.0) * (nx - 3.0) / ((nx + 1.0) * (nx - 1.0)) * kurtosis;
             double meanb2 = 3.0 * (nx - 1.0) / (nx + 1.0);
@@ -759,7 +811,7 @@ namespace StatsDirect.Builtins
             double z_b2 = wh > 0.0
                 ? Math.Abs((1.0 - 2.0 / (9.0 * a) - Math.Pow(wh, 1.0 / 3.0)) / Math.Sqrt(2.0 / (9.0 * a)))
                 : double.PositiveInfinity;
-            p_b2 = wh > 0.0 ? 2.0 - 2.0 * PDF.alnorm(z_b2) : 0.0;
+            p_b2 = wh > 0.0 ? 2.0 * PDF.alnorm(-z_b2) : 0.0;
 
             k2 = z_b1 * z_b1 + z_b2 * z_b2;
             p_k2 = double.IsPositiveInfinity(k2) ? 0.0 : PDF.chivalp(k2, 2.0);
