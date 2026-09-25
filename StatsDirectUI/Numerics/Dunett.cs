@@ -1013,13 +1013,18 @@ namespace StatsDirect.Numerics
         ///  </remarks>
         public static double ppoiseq(int k, double theta)
         {
-            if (theta <= 0.0)
+            if (theta < 0.0 || double.IsNaN(theta))
             {
                 return Constant.MISSING;
             }
             if (k < 0)
             {
                 return 0.0;
+            }
+            // a mean of 0 is the degenerate distribution with all its probability at 0 events
+            if (theta == 0.0)
+            {
+                return k == 0 ? 1.0 : 0.0;
             }
             if (k == 0)
             {
@@ -1084,13 +1089,17 @@ namespace StatsDirect.Numerics
         ///  </remarks>
         public static double ppoisle(int k, double theta)
         {
-            if (theta <= 0.0)
+            if (theta < 0.0 || double.IsNaN(theta))
             {
                 return Constant.MISSING;
             }
             if (k < 0)
             {
                 return 0.0;
+            }
+            if (theta == 0.0)
+            {
+                return 1.0;
             }
             return k < theta ? PoissonTail(k, theta, false) : 1.0 - PoissonTail(k + 1, theta, true);
         }
@@ -1104,13 +1113,17 @@ namespace StatsDirect.Numerics
         ///  <returns></returns>
         public static double ppoisge(int k, double theta)
         {
-            if (theta <= 0.0)
+            if (theta < 0.0 || double.IsNaN(theta))
             {
                 return Constant.MISSING;
             }
             if (k <= 0)
             {
                 return 1.0;
+            }
+            if (theta == 0.0)
+            {
+                return 0.0;
             }
             return k < theta ? 1.0 - PoissonTail(k - 1, theta, false) : PoissonTail(k, theta, true);
         }
