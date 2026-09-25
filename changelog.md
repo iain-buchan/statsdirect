@@ -2,11 +2,6 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
-
-### Fixed
-- Normality tests: the Shapiro-Wilk and Shapiro-Francia statistics take the ordered values to the unit interval before the correlation with the scores (W does not depend on location or scale), so values near the largest double no longer overflow them; and a P value that could not be calculated is left out of the conclusion, which said "No non-normality detected" for 100 values alternating between -1e307 and 1e307 where W = 0.636401 and P < 0.0001
-
 ##[v5.0.7] 2026-09-25
 
 The F distribution tail at extreme arguments, the normality tests' moments and P values, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
@@ -16,6 +11,7 @@ The F distribution tail at extreme arguments, the normality tests' moments and P
 - F distribution: an F so large that the product of the numerator degrees of freedom and F overflows gave an upper tail of 0 since 5.0.6 (and an undefined value before); the tail is not 0 when the denominator degrees of freedom are small (7.9e-155 for F = 1e308 on 30 and 1 degrees of freedom, 3.5e-16 on 5 and 0.1). The reciprocal ratio dfd / (dfn F) is now formed directly for a ratio above 1, so every F up to the largest double gives its tail
 - Normality tests: the mean and the central moments behind the skewness and kurtosis tests are formed from the values taken relative to the first one and then about the provisional mean, with compensated sums, and the deviations are scaled before they are raised to powers. A sample with a large common offset (readings near 100,000,000 spread over 1) lost figures in the deviations from its mean, and the skewness test's P was off in the sixth figure (0.519622 where 0.519624 is right); values of 1e75 and above overflowed the fourth moment and were refused as too large, a spread of 1e-80 overflowed the kurtosis and a spread of 1e-150 underflowed the cubes, so that a normal sample was reported as unlikely to be normal. The P values of the skewness and kurtosis tests are formed from the upper tail directly: a P below about 1e-16 printed as 0, and one of 1e-8 was off in the ninth figure. Ordinary samples are unchanged
 - Normality tests: values alternating between -1e307 and 1e307 overflowed the sum behind the mean, and the report then said that all the values were the same. The values are scaled by their widest difference before the mean is formed, so any sample whose differences the program can hold is tested, and only a difference beyond the largest double is refused as too large
+- Normality tests: the Shapiro-Wilk and Shapiro-Francia statistics take the ordered values to the unit interval before the correlation with the scores (W does not depend on location or scale), so values near the largest double no longer overflow them; and a P value that could not be calculated is left out of the conclusion, which said "No non-normality detected" for 100 values alternating between -1e307 and 1e307 where W = 0.636401 and P < 0.0001
 
 ##[v5.0.6] 2026-09-25
 
