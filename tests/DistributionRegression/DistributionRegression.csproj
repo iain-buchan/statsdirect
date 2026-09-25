@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../StatsDirectUI/Numerics/BetaDistributions.cs" Link="Production/BetaDistributions.cs" />
+    <Compile Include="../../StatsDirectUI/Numerics/BetaInverse.cs" Link="Production/BetaInverse.cs" />
+    <Compile Include="../../StatsDirectUI/Numerics/SpecialFunctions/*.cs" Link="Production/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

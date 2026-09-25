@@ -210,12 +210,13 @@ namespace StatsDirect.Expressions
 
         public static double TTail(double df, double q)
         {
-            return PDF.tvalp(q, df);
+            // the upper tail, through PT, which handles a missing value and infinite degrees of freedom
+            return Pt(q, df, Constant.MISSING, false, false);
         }
 
         public static double InvTTail(double df, double p)
         {
-            return PDF.tfromp(p, df);
+            return Qt(p, df, Constant.MISSING, false, false);
         }
 
         /// <summary>
@@ -345,9 +346,8 @@ namespace StatsDirect.Expressions
 
         public static double Ftail(double dfn, double dfd, double q)
         {
-            if (q == Constant.MISSING || dfn == Constant.MISSING || dfd == Constant.MISSING)
-                return Constant.MISSING;
-            return PDF.fvalp(q, dfn, dfd);
+            // the upper tail, through PF, which handles a missing value, a negative F and infinite degrees of freedom
+            return Pf(q, dfn, dfd, false, false);
         }
 
         public static double InvFtail(double dfn, double dfd, double p)
@@ -463,9 +463,9 @@ namespace StatsDirect.Expressions
             double p;
             if (ncp == Constant.MISSING || ncp == 0.0)
             {
-                // central t, for any degrees of freedom. tvalp is the upper tail area, so the lower tail at q is the upper tail at
-                // -q; each tail is computed directly and not as 1 minus the other
-                p = lowerTail ? PDF.tvalp(-q, df) : PDF.tvalp(q, df);
+                if (q == Constant.MISSING || df == Constant.MISSING)
+                    return Constant.MISSING;
+                return PDF.TProbability(q, df, lowerTail, logP);
             }
             else
             {
@@ -482,13 +482,12 @@ namespace StatsDirect.Expressions
 
         public static double Qt(double p, double df, double ncp, bool lowerTail, bool logP)
         {
+            if (p == Constant.MISSING || df == Constant.MISSING)
+                return Constant.MISSING;
+            if (ncp == Constant.MISSING || ncp == 0.0)
+                return PDF.TQuantile(p, df, lowerTail, logP);
             if (logP)
                 p = Math.Exp(p);
-            // central t, for any degrees of freedom; tfromp takes an upper tail area, and the quantile for a lower tail area is
-            // minus the one for the same upper tail area
-            // (0.0 - x and x + 0.0, not -x and x: the median would otherwise be the negative zero that is displayed as -0)
-            if (ncp == Constant.MISSING || ncp == 0.0)
-                return lowerTail ? 0.0 - PDF.tfromp(p, df) : PDF.tfromp(p, df) + 0.0;
             if (!lowerTail)
                 p = 1.0 - p;
             if (HasWholeDegreesOfFreedom(df))
@@ -994,124 +993,16 @@ namespace StatsDirect.Expressions
 
         public static double Pf(double q, double df1, double df2, bool lowerTail, bool logP)
         {
-            // fvalp is the upper tail area, I_x(df2 / 2, df1 / 2) at x = df2 / (df2 + df1 q), an argument formed without
-            // subtraction. Up to F = 1 the lower tail is the same function with the arguments exchanged at
-            // df1 q / (df2 + df1 q), also formed without subtraction; taken as 1 minus the upper tail it lost a small lower tail
-            // altogether (PF(0.001, 40, 10) was 0 where it is 1.1e-44). Beyond F = 1 that argument closes on 1 and loses its
-            // figures, and the lower tail is 1 minus the upper, which cannot lose anything there. F cannot be negative, so
-            // everything lies above a negative q.
-            // A missing value is a huge negative sentinel, not a number to take a tail area of (QF and INVFTAIL return it when
-            // they give no answer): with 1 degree of freedom it came out as a lower tail of exactly 1.
             if (q == Constant.MISSING || df1 == Constant.MISSING || df2 == Constant.MISSING)
                 return Constant.MISSING;
-            double lower, upper;
-            if (q < 0.0 && q != Constant.MISSING && df1 > 0.0 && df2 > 0.0)
-            {
-                lower = 0.0;
-                upper = 1.0;
-            }
-            else
-            {
-                upper = PDF.fvalp(q, df1, df2);
-                if (q > 1.0)
-                    lower = 1.0 - upper;
-                else
-                {
-                    lower = PDF.betain(df1 * q / (df2 + df1 * q), df1 / 2.0, df2 / 2.0, out int fault);
-                    lower = fault != 0 ? double.NaN : lower + 0.0; // + 0.0: a negative zero q comes back as -0, which would be displayed as -0
-                }
-            }
-            if (!logP)
-                return lowerTail ? lower : upper;
-            return LogOfTail(lowerTail ? lower : upper, lowerTail ? upper : lower, double.NaN);
+            return PDF.FProbability(q, df1, df2, lowerTail, logP);
         }
 
         public static double Qf(double p, double df1, double df2, bool lowerTail, bool logP)
         {
-            if (logP)
-                p = Math.Exp(p);
-            // A small tail area (below 1e-6) is inverted as itself: turned into the other tail and back it was lost, and the
-            // engine routine loses accuracy there and then gives no answer. A small lower tail area is the upper tail area of
-            // 1 / F with the degrees of freedom exchanged.
-            if (p > 0.0 && p < 1.0E-6)
-                return lowerTail ? Reciprocal(FFromUpperTail(p, df2, df1)) : FFromUpperTail(p, df1, df2);
-            // Otherwise the engine routine, ffromp(denominator df, numerator df, upper tail area), as before - but its answer is
-            // kept only if the tail area at it comes back as asked. For some arguments it does not: a lower tail area of 1.1e-6
-            // with 1 and 1000 degrees of freedom gave a negative F, and an upper tail area of 0.0005 with 1 and 1e8 gave 3.34
-            // where F is 12.12. Those are inverted directly. An area of 0 or 1, or arguments the routine refuses, are left to it.
-            double upper = lowerTail ? 1.0 - p : p, lower = lowerTail ? p : 1.0 - p;
-            double f = PDF.ffromp(df2, df1, upper);
-            if (!(upper > 0.0 && upper < 1.0 && df1 > 0.0 && df2 > 0.0))
-                return f;
-            if (FGivesTail(f, upper, lower, df1, df2))
-                return f;
-            double direct = upper <= lower ? FFromUpperTail(upper, df1, df2) : Reciprocal(FFromUpperTail(lower, df2, df1));
-            if (direct != Constant.MISSING)
-                return direct;
-            return Constant.MISSING;
-        }
-
-        private static double Reciprocal(double f)
-        {
-            return f == Constant.MISSING ? Constant.MISSING : 1.0 / f;
-        }
-
-        /// <summary>true when the smaller of the two tail areas at f is the one asked for, to 9 figures</summary>
-        private static bool FGivesTail(double f, double upper, double lower, double dfn, double dfd)
-        {
-            if (!(f > 0.0) || double.IsInfinity(f))
-                return false;
-            double want = Math.Min(upper, lower), got;
-            if (upper <= lower)
-                got = PDF.fvalp(f, dfn, dfd);
-            else
-            {
-                got = PDF.betain(dfn * f / (dfd + dfn * f), dfn / 2.0, dfd / 2.0, out int fault);
-                if (fault != 0)
-                    return false;
-            }
-            return Math.Abs(got - want) <= 1.0E-9 * want;
-        }
-
-        /// <summary>
-        /// The F with upper tail area p, by bisection on the logarithm of F from e^-700 up to the largest F at which the tail
-        /// area can be formed: 0 when even e^-700 leaves less than p above it; infinity when the largest double still leaves
-        /// more (which can be told only with a numerator of 1 degree of freedom or less; otherwise no answer). The answer is
-        /// given only if the tail area at it comes back as p. An area below the smallest normal double is refused: it keeps too
-        /// few digits to invert.
-        /// </summary>
-        private static double FFromUpperTail(double p, double dfn, double dfd)
-        {
-            if (double.IsNaN(p) || double.IsNaN(dfn) || double.IsNaN(dfd) || p < Constant.DBL_MIN || p >= 1.0 || dfn <= 0.0 || dfd <= 0.0 || p == Constant.MISSING)
+            if (p == Constant.MISSING || df1 == Constant.MISSING || df2 == Constant.MISSING)
                 return Constant.MISSING;
-            // each tail area takes time in proportion to the degrees of freedom, and some sixty are needed: beyond two million a
-            // single answer would take many seconds, so none is given (a chi-square quantile over its degrees of freedom serves there)
-            if (dfn > 2.0E6 || dfd > 2.0E6)
-                return Constant.MISSING;
-            // ln F. The top is the largest F at which the tail area can be formed: fvalp takes dfd / (dfd + dfn F), and once dfn F
-            // overflows that is exactly 0 and the bisection would settle on the overflow point. 709.78 is just under ln of the largest double.
-            double low = -700.0, high = 709.78 - Math.Log(Math.Max(1.0, dfn));
-            double atLow = PDF.fvalp(Math.Exp(low), dfn, dfd), atHigh = PDF.fvalp(Math.Exp(high), dfn, dfd);
-            if (double.IsNaN(atLow) || double.IsNaN(atHigh))
-                return Constant.MISSING;
-            if (atLow <= p)
-                return 0.0;
-            if (atHigh >= p)
-                return dfn <= 1.0 ? double.PositiveInfinity : Constant.MISSING;
-            for (int i = 0; i < 200 && high - low > 1.0E-15 * Math.Max(1.0, Math.Abs(low) + Math.Abs(high)); i++)
-            {
-                double mid = 0.5 * (low + high);
-                double area = PDF.fvalp(Math.Exp(mid), dfn, dfd);
-                if (double.IsNaN(area))
-                    return Constant.MISSING;
-                if (area > p)
-                    low = mid;
-                else
-                    high = mid;
-            }
-            double f = Math.Exp(0.5 * (low + high));
-            // where the tail area itself jumps (far fewer than one degree of freedom) the bisection settles on the jump: no answer then
-            return Math.Abs(PDF.fvalp(f, dfn, dfd) - p) <= 1.0E-6 * p ? f : Constant.MISSING;
+            return PDF.FQuantile(p, df1, df2, lowerTail, logP);
         }
 
         // Unary minus for the expression evaluator. A missing value, which is a huge negative sentinel, stays missing: a plain
