@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Normality tests: the Shapiro-Wilk and Shapiro-Francia statistics take the ordered values to the unit interval before the correlation with the scores (W does not depend on location or scale), so values near the largest double no longer overflow them; and a P value that could not be calculated is left out of the conclusion, which said "No non-normality detected" for 100 values alternating between -1e307 and 1e307 where W = 0.636401 and P < 0.0001
+
 ##[v5.0.7] 2026-09-25
 
 The F distribution tail at extreme arguments, the normality tests' moments and P values, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
