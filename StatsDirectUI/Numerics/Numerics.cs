@@ -895,11 +895,23 @@ namespace StatsDirect.Numerics
             // 1 minus the point, the complement, which sets the tail for a small f (a t near zero), was only as accurate
             // as the rounding of the point: P(t > 0.0001) on 30 degrees of freedom was off in the twelfth place, and a
             // t below about 1e-8 gave exactly 0.5.
-            // Both are formed from the ratio r = dfn f / dfd, so that an f near the largest double, whose product with dfn
-            // overflows, gives the tail 0 rather than an undefined value.
+            // Both are formed from the ratio r = dfn f / dfd while that is at most 1, and otherwise from its reciprocal
+            // s = dfd / (dfn f), formed as (dfd / dfn) / f so that an f near the largest double, whose product with dfn
+            // overflows, still gives its tail (7.9e-155 for F = 1e308 on 30 and 1 degrees of freedom) and not 0 or an
+            // undefined value.
             double r = dfn / dfd * f;
-            double x = double.IsInfinity(r) ? 0.0 : 1.0 / (1.0 + r);
-            double cx = double.IsInfinity(r) ? 1.0 : r / (1.0 + r);
+            double x, cx;
+            if (r <= 1.0)
+            {
+                x = 1.0 / (1.0 + r);
+                cx = r / (1.0 + r);
+            }
+            else
+            {
+                double s = dfd / dfn / f;
+                x = s / (1.0 + s);
+                cx = 1.0 / (1.0 + s);
+            }
             double ret = betain(x, cx, dfd / 2.0, dfn / 2.0, out int fault);
             if (fault != 0)
                 ret = double.NaN;
