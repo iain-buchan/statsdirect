@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Chi-square tail areas and percentage points, everywhere they are used (the calculator's PCHISQ and QCHISQ, the chi-square tests, the exact Poisson limits): computed as the F on the same degrees of freedom and an infinite denominator, so that they keep every figure at any number of degrees of freedom and at any tail area, where the old routines lost figures from about 10,000 degrees of freedom (PCHISQ(1e12, 1e12) gave 0.4986 where 0.5000 is right) and QCHISQ gave no answer for an upper tail area below the smallest normal double or a log probability below -708. With an infinite number of degrees of freedom, the tail of an F or t so far out that its logarithm is near the largest double no longer overflows (the log upper tail of F = 1e308 on 2 and infinite degrees of freedom is -1e308, not minus infinity), a quantile that far out is inverted from the incomplete gamma function exactly (the F on 2 and infinite degrees of freedom for a log upper tail of -1e12 is 1e12, where 1e12 + 5000 was given), and a very small shape keeps its figures (the lower tail of F = 1e308 on 2 and 2e-20 degrees of freedom was 7.552476E-18 where 7.552479E-18 is right)
+
 ##[v5.0.8] 2026-09-25
 
 Student's t, F and the incomplete beta ratio computed by the methods of DiDonato and Morris, right at extreme probabilities and degrees of freedom, with the chi-square and normal limits at infinite degrees of freedom.
