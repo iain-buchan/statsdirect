@@ -151,8 +151,21 @@ namespace StatsDirect.UI
             {
                 if (!double.TryParse(Output.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double expectedValue))
                     throw new Exception($"Operation {OperationName}, output {Output.Name}: Couldn't parse {Output.Value} as a double");
-                if (expectedValue != victim.Data)
+                if (!Agree(victim.Data, expectedValue))
                     throw new Exception($"Operation {OperationName}, output {Output.Name}: Expected {Output.Value} , got {victim.Data}");
+            }
+
+            /// <summary>
+            /// Two doubles agree when they are equal (so equal infinities and signed zeros pass) or, both being finite, within
+            /// one part in 1e12 of the larger. There is no absolute allowance, so a tiny probability is not taken for 0.
+            /// </summary>
+            private static bool Agree(double actual, double expected)
+            {
+                if (actual == expected)
+                    return true;
+                if (!double.IsFinite(actual) || !double.IsFinite(expected))
+                    return false;
+                return Math.Abs(actual - expected) <= 1e-12 * Math.Max(Math.Abs(actual), Math.Abs(expected));
             }
 
             void IFilledParameterVisitor.Visit(FilledInt32Parameter victim)
