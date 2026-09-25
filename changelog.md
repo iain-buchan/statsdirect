@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.6] 2026-09-25
+
+Everything found while R code sections were added to every worked example in the help: the fixes from independent checks of 135 examples against R, the report formatting, and two boundary cases from a further independent review.
 
 ### Fixed
 - Grouped linear regression with covariance analysis, with Y replicates: the covariance table's sums of squares were over every replicate but its degrees of freedom counted the dose levels, and the standard errors of the corrected means and line separations divided by the levels per group instead of the observations, so the residual mean square was about ten times too large and every test and interval in that part of the report was wrong (the help's vitamin D example found no separation between the preparations where there is a highly significant one; the same sum of squares was printed with 75 and with 8 degrees of freedom in one report). With one observation per x value nothing changes
