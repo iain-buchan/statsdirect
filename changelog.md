@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Normality tests: values alternating between -1e307 and 1e307 overflowed the sum behind the mean, and the report then said that all the values were the same. The values are scaled by their widest difference before the mean is formed, so any sample whose differences the program can hold is tested, and only a difference beyond the largest double is refused as too large
+
 ##[v5.0.7] 2026-09-25
 
 The F distribution tail at extreme arguments, the normality tests' moments and P values, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
