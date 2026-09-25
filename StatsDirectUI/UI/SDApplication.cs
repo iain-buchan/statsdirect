@@ -110,7 +110,7 @@ namespace StatsDirect.UI
             ShowDialogOnUiThread(f, postDisplayAction);
         }
 
-        private readonly List<Form> dialogsWaitingForMainWindow = new();
+        private readonly List<DialogAndAction> dialogsWaitingForMainWindow = new();
         private bool mainWindowShown;
 
         /// <summary>
@@ -118,18 +118,18 @@ namespace StatsDirect.UI
         /// and its message loop is running. Safe to call from any thread at any time: a dialog raised before the main window is shown
         /// waits for it. On the UI thread the dialog goes through ShowOrQueueDialog, so it takes its turn behind the opening dialog.
         /// </summary>
-        internal void ShowWhenMainWindowShown(Form f)
+        internal void ShowWhenMainWindowShown(Form f, Action<Form, DialogResult> postDisplayAction = null)
         {
             Utilities.DiagnosticLog.Write("ShowWhenMainWindowShown: instance " + GetHashCode() + ", mainWindowShown " + mainWindowShown + ", MainWindow " + (MainWindow is null ? "null" : "set"));
             lock (dialogsWaitingForMainWindow)
             {
                 if (!mainWindowShown)
                 {
-                    dialogsWaitingForMainWindow.Add(f);
+                    dialogsWaitingForMainWindow.Add(new DialogAndAction(f, postDisplayAction));
                     return;
                 }
             }
-            MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(f, null)));
+            MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(f, postDisplayAction)));
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace StatsDirect.UI
         /// </summary>
         internal void MainWindowIsShown()
         {
-            Form[] waiting;
+            DialogAndAction[] waiting;
             lock (dialogsWaitingForMainWindow)
             {
                 mainWindowShown = true;
@@ -145,8 +145,8 @@ namespace StatsDirect.UI
                 dialogsWaitingForMainWindow.Clear();
             }
             Utilities.DiagnosticLog.Write("MainWindowIsShown: instance " + GetHashCode() + ", waiting dialogs " + waiting.Length);
-            foreach (Form f in waiting)
-                MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(f, null)));
+            foreach (DialogAndAction dialog in waiting)
+                MainWindow.BeginInvoke(new Action(() => ShowOrQueueDialog(dialog.Form, dialog.PostCloseAction)));
         }
 
         internal bool OpenFile()
@@ -1208,7 +1208,24 @@ namespace StatsDirect.UI
 
         public void CheckForUpdates()
         {
-            ShowOrQueueDialog(new frmUpdateCheck(false), null);
+            ShowOrQueueDialog(new frmUpdateCheck(false), UpdateCheckClosed);
+        }
+
+        internal void UpdateCheckClosed(Form dialog, DialogResult result)
+        {
+            // ShowDialog has returned and re-enabled the main window. Release the old dialog's
+            // window before showing the download dialog, owned by the main window instead.
+            dialog.Dispose();
+            if (result != DialogResult.OK)
+                return;
+            try
+            {
+                CloseAndUpdate(MainWindow);
+            }
+            catch (Exception ex)
+            {
+                FriendlyError("Couldn't start the StatsDirect update", ex, false);
+            }
         }
 
         private UpdateInstaller pendingUpgrade;

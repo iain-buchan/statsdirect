@@ -17,14 +17,9 @@ namespace StatsDirect.UI
         private void button1_Click(object sender, EventArgs e)
         {
             StopCheck();
-            try
-            {
-                SdApplication.SoleInstance.CloseAndUpdate(FindForm());
-            }
-            catch (Exception ex)
-            {
-                SdApplication.SoleInstance.FriendlyError("Couldn't start the StatsDirect update", ex, false);
-            }
+            // Let the modal update-check dialog finish before opening the download dialog.
+            // Its always-on-top window would otherwise cover the next window and save prompts.
+            FindForm().DialogResult = DialogResult.OK;
         }
 
         public void StopCheck()

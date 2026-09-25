@@ -25,7 +25,14 @@ namespace StatsDirect.UI
             // on the UI thread. The dialog is shown once the main window is on the screen and pumping messages; showing it from
             // here put a form on the wrong thread.
             StartPosition = FormStartPosition.CenterScreen;
-            SdApplication.SoleInstance.ShowWhenMainWindowShown(this);
+            SdApplication.SoleInstance.ShowWhenMainWindowShown(this, SdApplication.SoleInstance.UpdateCheckClosed);
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            ctlUpdateStatsDirectCheck1.StopCheck();
+            ctlUpdateRCheck1.StopCheck();
+            base.OnFormClosed(e);
         }
 
         private void cmdClose_Click(object sender, EventArgs e)
