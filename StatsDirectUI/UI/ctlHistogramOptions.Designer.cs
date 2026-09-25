@@ -312,7 +312,7 @@ namespace StatsDirect.UI
             this.cboBinChoiceMethod.FormattingEnabled = true;
             this.cboBinChoiceMethod.Items.AddRange(new object[] {
             "Doane",
-            "Freedman-Daconis",
+            "Freedman-Diaconis",
             "Shimazaki-Shinomoto",
             "Stata",
             "StatsDirect Mid-point",

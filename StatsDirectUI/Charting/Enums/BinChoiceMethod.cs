@@ -4,7 +4,7 @@
     {
         NotSet = 0,
         Doane = 1,
-        FreedmanDaconis = 2,
+        FreedmanDiaconis = 2,
         Stata = 3,
         Sturges = 4,
         Shimazaki = 5,

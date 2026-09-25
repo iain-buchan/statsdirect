@@ -296,8 +296,8 @@ namespace StatsDirect.UI
         {
             switch (binChoiceMethod)
             {
-                case BinChoiceMethod.FreedmanDaconis:
-                    return "Freedman-Daconis";
+                case BinChoiceMethod.FreedmanDiaconis:
+                    return "Freedman-Diaconis";
                 case BinChoiceMethod.Shimazaki:
                     return "Shimazaki-Shinomoto";
                 case BinChoiceMethod.OldStatsDirect:
@@ -317,8 +317,8 @@ namespace StatsDirect.UI
                 return binChoiceMethod;
             if ("Shimazaki-Shinomoto".Equals(displayString))
                 return BinChoiceMethod.Shimazaki;
-            if ("Freedman-Daconis".Equals(displayString))
-                return BinChoiceMethod.FreedmanDaconis;
+            if ("Freedman-Diaconis".Equals(displayString))
+                return BinChoiceMethod.FreedmanDiaconis;
             if ("StatsDirect Mid-point".Equals(displayString))
                 return BinChoiceMethod.OldStatsDirect;
             return BinChoiceMethod.NotSet;

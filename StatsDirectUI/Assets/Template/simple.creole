@@ -7,7 +7,7 @@
 <p>Standard Error of slope = @{slope_err:roundu}<br />
 <ci>@{se_pc:round2}% CI for population value of slope = @{se_from:roundu} to @{se_to:roundu}</ci></p>
 
-<p>Correlation coefficient (r) = @{se_r:roundu} (r<sub>2</sub> = @{se_r2:roundu})</p>
+<p>Correlation coefficient (r) = @{se_r:roundu} (r&#xb2; = @{se_r2:roundu})</p>
 
 <block name="ci">
 <p><ci>@{ci_pc:round1}% CI for r (Fisher's z transformed) = @{ci_from:roundu} to @{ci_to:roundu}</ci></p>

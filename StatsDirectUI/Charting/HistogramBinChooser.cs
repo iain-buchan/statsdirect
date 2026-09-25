@@ -13,8 +13,8 @@ namespace StatsDirect.Charting
             {
                 case BinChoiceMethod.Doane:
                     return ChooseBinsDoane(sortedX, length);
-                case BinChoiceMethod.FreedmanDaconis:
-                    return ChooseBinsFreedmanDaconis(sortedX, length);
+                case BinChoiceMethod.FreedmanDiaconis:
+                    return ChooseBinsFreedmanDiaconis(sortedX, length);
                 case BinChoiceMethod.OldStatsDirect:
                     return ChooseBinsOldStatsDirect(sortedX, length);
                 case BinChoiceMethod.Shimazaki:
@@ -34,7 +34,7 @@ namespace StatsDirect.Charting
             return Math.Log(x) / Math.Log(2);
         }
 
-        private static BinsDescriptor ChooseBinsFreedmanDaconis(double[] sortedX, int length)
+        private static BinsDescriptor ChooseBinsFreedmanDiaconis(double[] sortedX, int length)
         {
             Summary sx = new();
             sx.FullSummaryFromX(sortedX, length, null, 0.95, 5, 95, 1);

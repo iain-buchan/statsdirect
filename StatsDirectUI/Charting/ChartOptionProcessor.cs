@@ -491,7 +491,7 @@ namespace StatsDirect.Charting
                     !ChartPreferences.DefaultRequestScaleLimits,
                 Title = null == dataName
                     ? "Error bar plot"
-                    : "Error bar plot plot from " + dataName,
+                    : "Error bar plot from " + dataName,
                 Series = allSeries,
                 SeriesTitles = new string[ydatFrame.VariableCount],
                 YAxisTitle = ydatFrame.Variables[0].Title,

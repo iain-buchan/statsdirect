@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
 	<name>MiscDiagnostic</name>
-  <friendly-name lang="en-GB">Dignostic test performance analysis</friendly-name>
+  <friendly-name lang="en-GB">Diagnostic test performance analysis</friendly-name>
   <help chm-id="1215" />
   <steps>
       <parameters>

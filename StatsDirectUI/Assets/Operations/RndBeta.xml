@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <operation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.statsdirect.com/schemas/Operation.xsd">
 	<name>RndBeta</name>
-  <friendly-name lang="en-GB">Random numbers: beta</friendly-name>
+  <friendly-name lang="en-GB">Random numbers: Beta</friendly-name>
   <help chm-id="1258" />
   <steps>
       <parameters>
