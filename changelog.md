@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Normality tests: the mean and the central moments behind the skewness and kurtosis tests are formed from the values taken relative to the first one and then about the provisional mean, with compensated sums, and the deviations are scaled before they are raised to powers. A sample with a large common offset (readings near 100,000,000 spread over 1) lost figures in the deviations from its mean, and the skewness test's P was off in the sixth figure (0.519622 where 0.519624 is right); values of 1e75 and above overflowed the fourth moment and were refused as too large, a spread of 1e-80 overflowed the kurtosis and a spread of 1e-150 underflowed the cubes, so that a normal sample was reported as unlikely to be normal. The P values of the skewness and kurtosis tests are formed from the upper tail directly: a P below about 1e-16 printed as 0, and one of 1e-8 was off in the ninth figure. Ordinary samples are unchanged
+
 ##[v5.0.7] 2026-09-25
 
 The F distribution tail at extreme arguments, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
