@@ -636,9 +636,10 @@ namespace StatsDirect.Builtins
                 }
 
                 double pmin = Constant.MISSING;
-                if (sw_p != Constant.MISSING)
+                // a P that could not be calculated is no evidence either way: it is left out, and with none the result says so
+                if (sw_p != Constant.MISSING && !double.IsNaN(sw_p))
                     pmin = sw_p;
-                if (sf_p != Constant.MISSING && sf_p < pmin)
+                if (sf_p != Constant.MISSING && !double.IsNaN(sf_p) && (pmin == Constant.MISSING || sf_p < pmin))
                     pmin = sf_p;
                 if (pmin != Constant.MISSING)
                 {
@@ -651,7 +652,7 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    variableParameters.AddOutput("result", n < 3 ? "Too few observations for the tests (at least 3 are needed)" : "Error in calculation");
+                    variableParameters.AddOutput("result", n < 3 ? "Too few observations for the tests (at least 3 are needed)" : "The tests could not be calculated for these values");
                 }
 
                 NormalOptions nOptions = new() { ShouldScaleZ = true, Method = NormalOptions.ScoreMethod.Blom };
@@ -925,6 +926,15 @@ namespace StatsDirect.Builtins
             // Tied values had been given the same score, from their mid-rank, which moved W a little for tied data.
             double[] r = new double[n + 1];
             Array.Sort(q, 1, k);
+            // The ordered values are taken to the unit interval: W is a squared correlation, which does not depend on their location
+            // or scale, and values near the largest double overflowed the sums of squares. A range beyond the largest double, or
+            // no range at all, leaves the test uncalculated.
+            double range = q[k] - q[1];
+            if (!(range > 0.0) || double.IsInfinity(range))
+                return;
+            double lowest = q[1];
+            for (i = 1; i <= k; i++)
+                q[i] = (q[i] - lowest) / range;
 
             // normalised coefficients
             double nx = Convert.ToDouble(k);
@@ -1070,6 +1080,15 @@ namespace StatsDirect.Builtins
             // Blom scores for each position in the ordered sample, as published (Royston 1983); ties were mid-ranked before.
             double[] r = new double[n + 1 ];
             Array.Sort(q, 1, k);
+            // The ordered values are taken to the unit interval: W is a squared correlation, which does not depend on their location
+            // or scale, and values near the largest double overflowed the sums of squares. A range beyond the largest double, or
+            // no range at all, leaves the test uncalculated.
+            double range = q[k] - q[1];
+            if (!(range > 0.0) || double.IsInfinity(range))
+                return;
+            double lowest = q[1];
+            for (i = 1; i <= k; i++)
+                q[i] = (q[i] - lowest) / range;
 
             // Shapiro-Francia by Patrick Royston
             double nx = Convert.ToDouble(k);
