@@ -213,7 +213,7 @@ namespace StatsDirect.Builtins
             if (nunit == 1.0)
                 outputParameters.AddOutput("units", "1 unit");
             else
-                outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
+                outputParameters.AddOutput("units", nunit.ToString("0") + " units");
             List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
             for (int j = 1; j <= rows; j++)
@@ -604,7 +604,7 @@ namespace StatsDirect.Builtins
             if (nunit == 1.0)
                 outputParameters.AddOutput("units", "1 unit");
             else
-                outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
+                outputParameters.AddOutput("units", nunit.ToString("0") + " units");
 
             outputParameters.AddOutput("cre", cre * nunit);
             outputParameters.AddOutput("cre_from", crel * nunit);

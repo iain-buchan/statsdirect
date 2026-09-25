@@ -36,17 +36,24 @@ namespace StatsDirect.Utilities
             {
                 return ERRR;
             }
-            if (0.0 != amount && (Math.Abs(amount) < Math.Pow(10, -places) || Math.Abs(amount) > 1e8))
+            // a zero, including a negative zero, is 0; a value too small for the places, or beyond the 15 figures a double holds exactly
+            // as a whole number, is shown in exponent form
+            if (0.0 == amount)
+                return "0";
+            if (Math.Abs(amount) < Math.Pow(10, -places) || Math.Abs(amount) > 1e15)
                 return amount.ToString("E");
             if (places >= 15)
             {
                 // A custom format string rounds to 15 significant digits before it applies the places, so a value shown to 15 places
                 // was rounded twice and its last figure could be off by one (0.024997895148220484 printed as 0.024997895148221). The
                 // fixed-point format rounds the value itself, once; the places are held to 15 significant figures, all a double carries.
-                int decimals = Math.Min(places, 15 - (Math.Abs(amount) < 1.0 ? 0 : (int)Math.Floor(Math.Log10(Math.Abs(amount))) + 1));
-                return amount.ToString("N" + decimals).TrimEnd('0').TrimEnd(DecimalSeparator.ToCharArray());
+                int decimals = Math.Max(0, Math.Min(places, 15 - (Math.Abs(amount) < 1.0 ? 0 : (int)Math.Floor(Math.Log10(Math.Abs(amount))) + 1)));
+                string fixedPoint = amount.ToString("F" + decimals);
+                // trailing zeros are trimmed only after a decimal point: a whole number of 14 or more digits keeps its zeros
+                return fixedPoint.Contains(DecimalSeparator) ? fixedPoint.TrimEnd('0').TrimEnd(DecimalSeparator.ToCharArray()) : fixedPoint;
             }
-            return amount.ToString("#,##0." + new string('#', places));
+            // no thousands separators: the raw values printed beside rounded ones have none, and neither do the worksheet and the calculator
+            return amount.ToString("0." + new string('#', places));
         }
 
         public static string XUnrounded(double amount)

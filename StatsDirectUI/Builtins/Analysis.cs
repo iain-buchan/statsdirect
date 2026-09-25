@@ -77,7 +77,7 @@ namespace StatsDirect.Builtins
             if (nunit == 1.0)
                 outputParameters.AddOutput("units", "1 unit");
             else
-                outputParameters.AddOutput("units", nunit.ToString("#,##0") + " units");
+                outputParameters.AddOutput("units", nunit.ToString("0") + " units");
 
             List<ParameterBag> inputsList = new();
             outputParameters.AddOutput("*inputs", inputsList);
