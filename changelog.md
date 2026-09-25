@@ -2,19 +2,14 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
-
-### Fixed
-- Normality tests: the mean and the central moments behind the skewness and kurtosis tests are formed from the values taken relative to the first one and then about the provisional mean, with compensated sums, and the deviations are scaled before they are raised to powers. A sample with a large common offset (readings near 100,000,000 spread over 1) lost figures in the deviations from its mean, and the skewness test's P was off in the sixth figure (0.519622 where 0.519624 is right); values of 1e75 and above overflowed the fourth moment and were refused as too large, a spread of 1e-80 overflowed the kurtosis and a spread of 1e-150 underflowed the cubes, so that a normal sample was reported as unlikely to be normal. The P values of the skewness and kurtosis tests are formed from the upper tail directly: a P below about 1e-16 printed as 0, and one of 1e-8 was off in the ninth figure. Ordinary samples are unchanged
-
 ##[v5.0.7] 2026-09-25
 
-The F distribution tail at extreme arguments, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
+The F distribution tail at extreme arguments, the normality tests' moments and P values, and the test workbook's population pyramid columns brought up to the mid-2024 estimates in every age band.
 
 ### Fixed
 - Test workbook: the population pyramid columns of the Graphics worksheet (UK Mid-98 Age Bands, Males, Females, Persons) lacked the 5-9 and 10-14 age bands; they are replaced by the Office for National Statistics mid-2024 estimates for the United Kingdom in all 19 five-year bands, in thousands (UK Mid-2024 Age Bands, Males, Females, Persons), and the help's population pyramid example follows them
 - F distribution: an F so large that the product of the numerator degrees of freedom and F overflows gave an upper tail of 0 since 5.0.6 (and an undefined value before); the tail is not 0 when the denominator degrees of freedom are small (7.9e-155 for F = 1e308 on 30 and 1 degrees of freedom, 3.5e-16 on 5 and 0.1). The reciprocal ratio dfd / (dfn F) is now formed directly for a ratio above 1, so every F up to the largest double gives its tail
-
+- Normality tests: the mean and the central moments behind the skewness and kurtosis tests are formed from the values taken relative to the first one and then about the provisional mean, with compensated sums, and the deviations are scaled before they are raised to powers. A sample with a large common offset (readings near 100,000,000 spread over 1) lost figures in the deviations from its mean, and the skewness test's P was off in the sixth figure (0.519622 where 0.519624 is right); values of 1e75 and above overflowed the fourth moment and were refused as too large, a spread of 1e-80 overflowed the kurtosis and a spread of 1e-150 underflowed the cubes, so that a normal sample was reported as unlikely to be normal. The P values of the skewness and kurtosis tests are formed from the upper tail directly: a P below about 1e-16 printed as 0, and one of 1e-8 was off in the ninth figure. Ordinary samples are unchanged
 ##[v5.0.6] 2026-09-25
 
 Everything found while R code sections were added to every worked example in the help: the fixes from independent checks of 135 examples against R, the report formatting, and two boundary cases from a further independent review.
