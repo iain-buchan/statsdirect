@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.9] 2026-09-26
+
+The Excel link add-in retired, and its copies removed from users' machines by the installer and at start-up.
 
 ### Removed
 - The Excel link add-in (a StatsDirect menu in Excel that sent a copy of the open workbook to StatsDirect) retired, with its first-run prompt and its On/Off switch in Setup Tools: open the workbook with File_Open, or copy and paste, instead
