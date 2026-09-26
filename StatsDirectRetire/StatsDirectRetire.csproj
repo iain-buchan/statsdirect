@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- The installer's helper that retires StatsDirect 4 setups which cannot remove themselves: see OldSetupRetirer.cs.  StatsDirectUI copies its output beside
+  <!-- The installer's helper that retires StatsDirect 4 setups which cannot remove themselves (OldSetupRetirer.cs) and the Excel link add-in (ExcelAddInRetirer.cs).  StatsDirectUI copies its output beside
        StatsDirect.exe, from where the installer packages it and runs it with the dotnet host.  There is deliberately no .exe of its own: see the custom action
        RetireOldSetups in SDInstaller. -->
   <PropertyGroup>

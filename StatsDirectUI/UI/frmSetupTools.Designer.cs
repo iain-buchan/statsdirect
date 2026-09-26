@@ -33,9 +33,6 @@
             this.grid = new System.Windows.Forms.DataGridView();
             this.App = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Path = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.rdoExcelOn = new System.Windows.Forms.RadioButton();
-            this.rdoExcelOff = new System.Windows.Forms.RadioButton();
-            this.lblExcelLink = new System.Windows.Forms.Label();
             this.cmdDefaultTools = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.grid)).BeginInit();
             this.SuspendLayout();
@@ -89,37 +86,6 @@
             this.Path.Name = "Path";
             this.Path.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
-            // rdoExcelOn
-            // 
-            this.rdoExcelOn.AutoSize = true;
-            this.rdoExcelOn.Location = new System.Drawing.Point(73, 16);
-            this.rdoExcelOn.Name = "rdoExcelOn";
-            this.rdoExcelOn.Size = new System.Drawing.Size(39, 17);
-            this.rdoExcelOn.TabIndex = 4;
-            this.rdoExcelOn.TabStop = true;
-            this.rdoExcelOn.Text = "On";
-            this.rdoExcelOn.UseVisualStyleBackColor = true;
-            // 
-            // rdoExcelOff
-            // 
-            this.rdoExcelOff.AutoSize = true;
-            this.rdoExcelOff.Location = new System.Drawing.Point(118, 16);
-            this.rdoExcelOff.Name = "rdoExcelOff";
-            this.rdoExcelOff.Size = new System.Drawing.Size(39, 17);
-            this.rdoExcelOff.TabIndex = 5;
-            this.rdoExcelOff.TabStop = true;
-            this.rdoExcelOff.Text = "Off";
-            this.rdoExcelOff.UseVisualStyleBackColor = true;
-            // 
-            // lblExcelLink
-            // 
-            this.lblExcelLink.AutoSize = true;
-            this.lblExcelLink.Location = new System.Drawing.Point(12, 18);
-            this.lblExcelLink.Name = "lblExcelLink";
-            this.lblExcelLink.Size = new System.Drawing.Size(55, 13);
-            this.lblExcelLink.TabIndex = 6;
-            this.lblExcelLink.Text = "Excel link:";
-            // 
             // cmdDefaultTools
             // 
             this.cmdDefaultTools.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -139,9 +105,6 @@
             this.CancelButton = this.cmdCancel;
             this.ClientSize = new System.Drawing.Size(469, 356);
             this.Controls.Add(this.cmdDefaultTools);
-            this.Controls.Add(this.lblExcelLink);
-            this.Controls.Add(this.rdoExcelOff);
-            this.Controls.Add(this.rdoExcelOn);
             this.Controls.Add(this.grid);
             this.Controls.Add(this.cmdOK);
             this.Controls.Add(this.cmdCancel);
@@ -153,7 +116,6 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Setup Tools";
-            this.Load += new System.EventHandler(this.frmSetupTools_Load);
             ((System.ComponentModel.ISupportInitialize)(this.grid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -167,9 +129,6 @@
         private System.Windows.Forms.DataGridView grid;
         private System.Windows.Forms.DataGridViewTextBoxColumn App;
         private System.Windows.Forms.DataGridViewTextBoxColumn Path;
-        private System.Windows.Forms.RadioButton rdoExcelOn;
-        private System.Windows.Forms.RadioButton rdoExcelOff;
-        private System.Windows.Forms.Label lblExcelLink;
         private System.Windows.Forms.Button cmdDefaultTools;
     }
 }

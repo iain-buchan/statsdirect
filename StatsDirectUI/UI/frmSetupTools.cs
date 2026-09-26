@@ -10,11 +10,6 @@ namespace StatsDirect.UI
 {
     public partial class frmSetupTools : Form
     {
-        /// <summary>
-        /// Checking add-in status is very expensive, so we cache it.
-        /// </summary>
-        private bool addInWasEnabledAtLoad;
-
         public frmSetupTools()
         {
             InitializeComponent();
@@ -90,19 +85,6 @@ namespace StatsDirect.UI
             Properties.Settings.Default.ToolsPrograms = paths;
             Properties.Settings.Default.Save();
 
-            // Get rid of any old add-in that might still be hanging around
-            ExcelAddInManager.UninstallOldAddIn();
-            if (addInWasEnabledAtLoad && rdoExcelOff.Checked)
-                ExcelAddInManager.UninstallAddIn();
-            else if (rdoExcelOn.Checked && !addInWasEnabledAtLoad)
-                ExcelAddInManager.InstallAddIn();
-        }
-
-        private void frmSetupTools_Load(object sender, EventArgs e)
-        {
-            addInWasEnabledAtLoad = ExcelAddInManager.IsAddInInstalled();
-            rdoExcelOn.Checked = addInWasEnabledAtLoad;
-            rdoExcelOff.Checked = !addInWasEnabledAtLoad;
         }
 
         private void cmdDefaultTools_Click(object sender, EventArgs e)

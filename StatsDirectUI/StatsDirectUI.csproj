@@ -36,6 +36,7 @@
     <SpreadsheetGearLicenseString>$(SPREADSHEETGEAR_LICENSE_STRING)</SpreadsheetGearLicenseString>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../StatsDirectRetire/ExcelAddInRetirer.cs" Link="Setup/ExcelAddInRetirer.cs" />
     <AssemblyAttribute Include="StatsDirect.UI.SpreadsheetGearLicenseAttribute">
       <_Parameter1>$(SpreadsheetGearLicenseString)</_Parameter1>
     </AssemblyAttribute>
@@ -77,8 +78,8 @@
   <ItemGroup>
     <!-- Assets/WebHelp is a superseded copy of the web help that nothing in the program opens (Help uses STATSDIRECT.chm), and the mapping workbook is a
          note for whoever maintains the help; neither belongs on users' machines. Nor do the build records that MadCap Flare leaves beside STATSDIRECT.chm
-         when it publishes the help here (Data/*.output, *.log.zip). -->
-    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/WebHelp/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip">
+         when it publishes the help here (Data/*.output, *.log.zip), or the retired Excel link. -->
+    <ContentWithTargetPath Include="Assets/**" Exclude="Assets/WebHelp/**;Assets/Excel/**;Assets/SD Help ID to File Name Mapping.xlsx;Assets/Data/*.output;Assets/*.log.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>

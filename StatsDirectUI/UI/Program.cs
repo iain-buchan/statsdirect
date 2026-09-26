@@ -92,7 +92,7 @@ namespace StatsDirect.UI
                 // Preload and parse XML for operations
                 Templates.TemplateFactory.LoadOperationsAsync();
 
-                CheckExcelAddIn();
+                StatsDirect.Setup.ExcelAddInRetirer.RunCurrentUser();
                 SetupInitialFiles();
 
                 // Preload a report, to ensure all the report libraries are ready to go.
@@ -294,37 +294,6 @@ namespace StatsDirect.UI
             return path;
         }
 
-        static void CheckExcelAddIn()
-        {
-            // Install the registry settings if not already present.
-            const string app = "ExcelStatsDirect4Link";
-            const string key = "Paths";
-            string helpPath = SDRegistry.GetStringSetting(app, key, "Help", false);
-            string appPath = Path.GetDirectoryName(Application.ExecutablePath);
-            if (null != appPath)
-            {
-                // Save if changed or nonexistent
-                if (!appPath.Equals(helpPath))
-                    SDRegistry.SaveSetting(app, key, "Help", appPath);
-            }
-
-            // If this is the first run with Excel in place, ask the user if they want to enable SD Excel integration
-            bool entriesInPlace = null != helpPath;
-            if (!entriesInPlace)
-            {
-                bool excelInstalled = ExcelAddInManager.IsExcelInstalled();
-                if (!excelInstalled)
-                    return;
-
-                if (DialogResult.Yes ==
-                    MessageBox.Show(
-                        "StatsDirect Excel integration allows you to\r\nstart StatsDirect to process an Excel spreadsheet.\r\n\r\nWould you like to enable this integration?\r\nYou can turn it on and off from the StatsDirect Tools menu.",
-                        "StatsDirect", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1))
-                {
-                    ExcelAddInManager.InstallAddIn();
-                }
-            }
-        }
     }
 
     /// <summary>

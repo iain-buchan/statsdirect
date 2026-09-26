@@ -184,7 +184,7 @@ namespace StatsDirect.UI
                 mnuMain.Items.Insert(mnuMain.Items.Count - 3, userDefinedMenuItem);
             }
 
-            // #844: Templates can be loaded with windows open (for example from the Excel add-in).  Make sure that menus are set up for the active window if there is one.
+            // #844: Templates can be loaded with windows open (the Excel link add-in did that, before it was retired).  Make sure that menus are set up for the active window if there is one.
             if (ActiveMdiChild is StatsDirectForm)
                 SdApplication.SoleInstance.NoteFormActivated((WindowInformation)ActiveMdiChild.Tag);
             else

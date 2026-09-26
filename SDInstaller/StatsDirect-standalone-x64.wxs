@@ -40,10 +40,12 @@
          "You must install .NET" dialog and hold the installation for ever; and a new file cannot be an older build that ignores the errand and starts the
          whole application, as StatsDirect.exe can when StatsDirect was running during the upgrade and its files are only replaced at the next restart.
          If dotnet.exe is not there, nothing is retired and the installation carries on. -->
+    <!-- The helper also retires the Excel link add-in (ExcelAddInRetirer.cs) from the local user profiles and the shared Office folders, on an installation,
+         upgrade or repair; it never starts Excel, and while Excel is running leaves the retirement to StatsDirect's next start-up. -->
     <CustomAction Id="RetireOldSetups" Directory="INSTALLLOCATION" ExeCommand="&quot;[ProgramFiles64Folder]dotnet\dotnet.exe&quot; &quot;[INSTALLLOCATION]StatsDirectRetire.dll&quot;" Execute="deferred" Impersonate="no" Return="ignore" />
     <InstallExecuteSequence>
       <RemoveExistingProducts Before="InstallInitialize"></RemoveExistingProducts>
-      <Custom Action="RetireOldSetups" Before="InstallFinalize" Condition="NOT Installed" />
+      <Custom Action="RetireOldSetups" Before="InstallFinalize" Condition="NOT REMOVE~=&quot;ALL&quot;" />
     </InstallExecuteSequence>
 
     <!-- User interface and license -->
@@ -109,6 +111,8 @@
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\sanity-check-results.txt" />
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\test-operations-results.txt" />
           <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\*.pdb" />
+          <!-- The retired Excel link add-in, should an output folder from an earlier build still hold it. -->
+          <Exclude Files="$(var.StatsDirectUI.TargetDir)\**\StatsDirect*ExcelLink.xl*" />
         </Files>
       </Directory>
     </StandardDirectory>
