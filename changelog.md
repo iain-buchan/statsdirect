@@ -2,6 +2,12 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Removed
+- The Excel link add-in (a StatsDirect menu in Excel that sent a copy of the open workbook to StatsDirect) retired, with its first-run prompt and its On/Off switch in Setup Tools: open the workbook with File_Open, or copy and paste, instead
+- The old add-in's copies removed: by the installer, on an installation, upgrade or repair, from the Excel start-up and add-in folders of the local user profiles and from the shared Office folders; and by StatsDirect at start-up, from the current user's Excel start-up folders, start-up registrations and add-in list, together with StatsDirect's own settings for the link. Nothing else in Excel is touched, Excel is never started or closed, and while Excel is open the removal waits for a later start of StatsDirect
+
 ##[v5.0.8] 2026-09-25
 
 Student's t, F and the incomplete beta ratio computed by the methods of DiDonato and Morris, right at extreme probabilities and degrees of freedom, with the chi-square and normal limits at infinite degrees of freedom, the chi-square tail areas and percentage points through the same routines, and the update downloaded within the program.
