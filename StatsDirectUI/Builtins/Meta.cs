@@ -3441,7 +3441,9 @@ namespace StatsDirect.Builtins
             {
                 double nt = a + c;
                 double nc = b + d;
-                if (nt > 0.0 && b * c > 0.0)  // IEB 18 Jul 18: force Cochran correction if odds ratio would cause divide by zero - needs reporting properly not just labelled as preference method
+                // the correction of each group is in proportion to the size of the group: both are above nothing when both groups
+                // have subjects, and no cell of the corrected table is then nothing
+                if (nt > 0.0 && nc > 0.0)
                 {
                     double r = nc / nt;
                     bx = b + r / (r + 1.0);
