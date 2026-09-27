@@ -49,12 +49,11 @@ internal static partial class Program
                 if (s.time == time && s.dead) dead[s.group]++;
             }
             double n = risk.Sum(), d = dead.Sum();
-            // The weight of Peto and Prentice is defined for times without ties: each death multiplies the estimate of the proportion
-            // surviving by m / (m + 1), m being the number at risk just before it, and the weight of a death is the estimate after it.
-            // The deaths of a time are taken here one after another, and the weight of the time is that of the first of them
-            double afterFirst = d > 0 ? survivor * n / (n + 1) : survivor;
+            // The weight of Peto and Prentice is the estimate of the proportion surviving the time: the product, over the times up to and
+            // with it, of 1 - d / (n + 1).  That is what comes of taking the deaths of a time one after another, each multiplying the
+            // estimate by m / (m + 1), m being the number at risk just before it: the estimate is worked out here in that way
             for (int i = 0; i < d; i++) survivor *= (n - i) / (n - i + 1);
-            double w = weight switch { 0 => 1, 1 => afterFirst, 2 => n / (total + 1), _ => Math.Sqrt(n) };
+            double w = weight switch { 0 => 1, 1 => survivor, 2 => n / (total + 1), _ => Math.Sqrt(n) };
             for (int g = 0; g < groups; g++)
             {
                 t.Observed[g] += dead[g];

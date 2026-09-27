@@ -166,8 +166,13 @@ internal static partial class Program
             Say(double.IsInfinity(t.Median) ? median is string text && text.StartsWith("more than") : median is double value && Math.Abs(value - t.Median) <= 1e-9 * t.Median, title + $": median ({median})");
             if (weights != null)
             {
+                // the adjusted expectation at the start of an interval: the years lived in that interval and in each of those after it,
+                // each times the weight of its interval, over the number alive at the start of the interval
                 List<ParameterBag> adjusted = Rows(Rows(o, "*util")[0], "*adjusted");
-                Check(title + ": expectations of life weighted", Enumerable.Range(0, n).Max(i => Relative(adjusted[i]["eh"].AsDouble, weights[i] * t.Expectation[i])), 1e-12);
+                double[] expected = Enumerable.Range(0, n).Select(i => Enumerable.Range(i, n - i).Sum(j => weights[j] * t.Years[j]) / t.Alive[i]).ToArray();
+                Check(title + ": expectations of life adjusted by the weights", Enumerable.Range(0, n).Max(i => Relative(adjusted[i]["eh"].AsDouble, expected[i])), 1e-12);
+                double[] savedAdjusted = ((DoubleVariable)o["results"].AsDataFrame.Variables[14]).Data;
+                Check(title + ": saved adjusted expectations", Enumerable.Range(0, n).Max(i => Relative(savedAdjusted[i], expected[i])), 1e-12);
             }
             if (variances)
             {
@@ -258,6 +263,67 @@ internal static partial class Program
             double[] weights = set % 3 == 1 ? Enumerable.Range(0, n).Select(i => 1 - 0.03 * i).ToArray() : null;
             AbridgedCase($"set {set}: {n} intervals{(fraction != null ? ", fractions given" : "")}{(weights != null ? ", weights" : "")}{(set % 4 == 0 ? ", an interval without a death" : "")}, populations in {(set % 2 == 0 ? "thousands" : "hundreds of thousands")}", lengths, population, deaths, fraction, weights, new[] { 0.95, 0.9, 0.99 }[set % 3], random);
         }
+        AbridgedWeights(random);
         LifeTableLimits();
+    }
+
+    // The expectation of life adjusted by weights, for weights whose answer is known from the table itself: with every weight 1 it is the
+    // expectation of life; with a weight of 1 up to an age and of nothing after it, it is the years lived before that age by those alive
+    // at the start of the interval, over their number; with a weight in one interval only, that weight times the years lived in it
+    private static void AbridgedWeights(System.Random random)
+    {
+        Console.WriteLine();
+        Console.WriteLine("Abridged life table: the expectation of life adjusted by weights");
+        double[] lengths = { 1, 4, 5, 5, 10, 10, 10, 10, 10, 10 };
+        int n = lengths.Length + 1;
+        double[] population = new double[n], deaths = new double[n];
+        double age = 0;
+        for (int i = 0; i < n; i++)
+        {
+            double middle = age + (i < n - 1 ? lengths[i] / 2 : 5);
+            population[i] = Math.Round(50000 * (i < n - 1 ? lengths[i] : 8) * (0.7 + 0.6 * random.NextDouble()));
+            deaths[i] = Math.Max(1, Math.Round(population[i] * ((i == 0 ? 0.004 : 0.0002) + 0.00003 * Math.Exp(0.095 * middle))));
+            if (i < n - 1) age += lengths[i];
+        }
+        double[] a = Enumerable.Range(0, n - 1).Select(i => i == 0 ? 0.1 : i == 1 ? 0.4 : 0.5).ToArray();
+        Abridged t = AbridgedTable(lengths, population, deaths, a);
+        (double[] adjusted, double[] expectation) Run(double[] weights)
+        {
+            ParameterBag bag = new();
+            bag.AddInput("gamma", 0.95);
+            bag.AddInput("intervals", new DataFrame(new DoubleVariable((double[])lengths.Clone(), "Length")));
+            bag.AddInput("population", new DataFrame(new DoubleVariable((double[])population.Clone(), "Population")));
+            bag.AddInput("deaths", new DataFrame(new DoubleVariable((double[])deaths.Clone(), "Deaths")));
+            bag.AddInput("weights", new DataFrame(new DoubleVariable((double[])weights.Clone(), "Healthy")));
+            bag.AddInput("iterations", "3000");
+            bag.AddInput("save", false);
+            ParameterBag o = Survival.RptAbridgedLifetable(new PlainWithProgress(), bag).ParameterBag;
+            return (Rows(Rows(o, "*util")[0], "*adjusted").Select(r => r["eh"].AsDouble).ToArray(), Rows(o, "*expectation").Select(r => r["e"].AsDouble).ToArray());
+        }
+        int before = failures;
+        try
+        {
+            var ones = Run(Enumerable.Repeat(1.0, n).ToArray());
+            Check("every weight 1: the adjusted expectation is the expectation of life", Enumerable.Range(0, n).Max(i => Relative(ones.adjusted[i], ones.expectation[i]) + Relative(ones.adjusted[i], t.Expectation[i])), 1e-12);
+            var none = Run(Enumerable.Repeat(0.0, n).ToArray());
+            Check("every weight nothing: the adjusted expectation is nothing", none.adjusted.Max(Math.Abs), 0);
+            for (int k = 1; k < n; k++)
+            {
+                // a weight of 1 in the intervals before interval k (counted from 0) and of nothing from it on
+                var early = Run(Enumerable.Range(0, n).Select(i => i < k ? 1.0 : 0.0).ToArray());
+                double worst = 0;
+                for (int i = 0; i < n; i++)
+                    worst = Math.Max(worst, Relative(early.adjusted[i], i < k ? (t.Beyond[i] - t.Beyond[k]) / t.Alive[i] : 0));
+                Check($"a weight of 1 before the age of {t.Start[k]} and of nothing after: the years lived before that age, over the number alive", worst, 1e-12);
+                // a weight in interval k only
+                var one = Run(Enumerable.Range(0, n).Select(i => i == k ? 0.6 : 0.0).ToArray());
+                worst = 0;
+                for (int i = 0; i < n; i++)
+                    worst = Math.Max(worst, Relative(one.adjusted[i], i <= k ? 0.6 * t.Years[k] / t.Alive[i] : 0));
+                Check($"a weight of 0.6 in the interval from the age of {t.Start[k]} only: 0.6 of the years lived in it, over the number alive", worst, 1e-12);
+            }
+        }
+        catch (Exception ex) { checks++; failures++; Console.WriteLine("FAIL  the expectation of life adjusted by weights: " + Message(ex)); }
+        if (failures == before) Console.WriteLine("ok    weights whose answer is known from the table");
     }
 }

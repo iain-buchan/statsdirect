@@ -15,6 +15,7 @@ internal static partial class Program
     {
         public double Time; public int Risk, Dead, Censored; public double S, VarS, H, VarH; public System.Numerics.BigInteger Top, Bottom;
         public bool HalfOrLess => 2 * Top <= Bottom;
+        public bool ExactlyHalf => 2 * Top == Bottom;
     }
 
     // the product-limit estimate of one group, from the definitions
@@ -99,27 +100,38 @@ internal static partial class Program
                 Check(name + ": standard error of S", worstSe, 1e-12);
                 Check(name + ": H and its standard error", worstH, 1e-12);
 
-                // the median: the first time at which S is a half or less
+                // the median: the first time at which S is a half or less; where S is exactly a half from that time to the next time of
+                // death, the middle of the two times
                 Step median = steps.FirstOrDefault(e => e.HalfOrLess);
+                double middle = median == null ? M : median.Time;
+                if (median != null && median.ExactlyHalf)
+                {
+                    Step next = steps.FirstOrDefault(e => e.Time > median.Time && e.Dead > 0);
+                    if (next != null) middle = (median.Time + next.Time) / 2;
+                }
                 string printed = given[g]["med"].AsString;
-                Say(median == null ? printed == "can not estimate" : Math.Abs(double.Parse(printed) - median.Time) <= 1e-9 * Math.Max(1, median.Time), name + $": median ({printed}; S there {(median == null ? 0 : median.S):R}, the first time with S a half or less {(median == null ? "none" : median.Time.ToString())})");
+                Say(median == null ? printed == "can not estimate" : Math.Abs(double.Parse(printed) - middle) <= 1e-9 * Math.Max(1, middle), name + $": median ({printed}; S is first a half or less at {(median == null ? "no time" : median.Time.ToString())}{(median != null && median.ExactlyHalf ? ", where it is exactly a half" : "")})");
                 // the interval from the slope of the curve at the median: the variance of S at the median over the square of the slope, which
                 // is taken between the last time at which S is a half plus a margin or more and the first at which it is a half less the
-                // margin or less; the margin is 1 less the confidence level
-                double margin = 1 - gamma;
+                // margin or less; the margin is 0.05 at every confidence level
+                double margin = 0.05;
                 int lowerAt = steps.FindIndex(e => 2 * e.Top * 1000000 <= e.Bottom * (System.Numerics.BigInteger)Math.Round((1 - 2 * margin) * 1000000));
                 int upperAt = steps.FindLastIndex(e => 2 * e.Top * 1000000 >= e.Bottom * (System.Numerics.BigInteger)Math.Round((1 + 2 * margin) * 1000000));
                 if (median != null && median.VarS != M && lowerAt >= 0 && upperAt >= 0 && steps[lowerAt].Time != steps[upperAt].Time)
                 {
                     double slope = (steps[upperAt].S - steps[lowerAt].S) / (steps[lowerAt].Time - steps[upperAt].Time), se = Math.Sqrt(median.VarS) / Math.Abs(slope);
-                    Check(name + ": limits of the median from the slope of the curve", Relative(given[g]["all"].AsDouble, median.Time - z * se) + Relative(given[g]["aul"].AsDouble, median.Time + z * se), 1e-9);
+                    Check(name + ": limits of the median from the slope of the curve", Relative(given[g]["all"].AsDouble, middle - z * se) + Relative(given[g]["aul"].AsDouble, middle + z * se), 1e-9);
                 }
                 else Say(given[g]["all"].AsDouble == M && given[g]["aul"].AsDouble == M, name + ": no limits of the median from the slope of the curve");
-                // the interval of Brookmeyer and Crowley
+                // the interval of Brookmeyer and Crowley: the times at which S does not differ from a half by more than z standard errors,
+                // and on to the time of death next after the last of them; no upper limit if there is no such time of death, or if nobody
+                // is left after it, when S has no standard error.  A limit that is not reached is given as infinite
                 var within = steps.Where(e => e.VarS != M && e.VarS > 0 && Math.Abs(e.S - 0.5) / Math.Sqrt(e.VarS) <= z).ToList();
-                double lower = within.Count > 0 ? within.First().Time : median == null ? M : double.NegativeInfinity;
-                double upper = within.Count > 0 && median != null ? within.Last().Time : median == null ? M : double.PositiveInfinity;
-                Check(name + ": Brookmeyer-Crowley limits", Same(given[g]["bll"].AsDouble, lower) + Same(given[g]["bul"].AsDouble, upper), 0);
+                Step after = within.Count > 0 ? steps.FirstOrDefault(e => e.Time > within.Last().Time && e.Dead > 0) : null;
+                bool reached = median != null || within.Count > 0;
+                double lower = within.Count > 0 ? within.First().Time : reached ? double.NegativeInfinity : M;
+                double upper = after != null && after.VarS != M ? after.Time : reached ? double.PositiveInfinity : M;
+                Check(name + $": Brookmeyer-Crowley limits ({Shown(given[g]["bll"].AsDouble)} to {Shown(given[g]["bul"].AsDouble)}; from the definition {Shown(lower)} to {Shown(upper)})", Same(given[g]["bll"].AsDouble, lower) + Same(given[g]["bul"].AsDouble, upper), 0);
 
                 // the mean: the area under S from 0 to the greatest time; its variance from the areas beyond each time with a death
                 Step lastDeath = steps.LastOrDefault(e => e.Dead > 0);
@@ -178,6 +190,34 @@ internal static partial class Program
     private static double Same(double given, double expected) =>
         given == expected || (double.IsFinite(expected) && double.IsFinite(given) && given != M && Math.Abs(given - expected) <= 1e-9 * Math.Max(1, Math.Abs(expected))) ? 0 : 1;
 
+    private static string Shown(double value) => value == M ? "none" : value.ToString("G10");
+
+    // the median and the limits of Brookmeyer and Crowley against R's, for sets of records that a script drew and put through R
+    // (KaplanMeierBenchmarks.cs).  Where R gives no limit the program prints infinity, or nothing if there is neither a median nor a limit
+    private static void KaplanBenchmarks()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Kaplan-Meier: the median and its limits against R's");
+        int before = failures;
+        for (int b = 0; b < Benchmarks.Length; b++)
+        {
+            Benchmark e = Benchmarks[b];
+            string name = $"benchmark {b + 1} ({e.Time.Length} records, {e.Level:P0})";
+            try
+            {
+                List<Life> records = e.Time.Select((t, i) => new Life(t, e.Code[i], "a")).ToList();
+                ParameterBag given = Rows(Survival.RptKaplan(new Plain(), KaplanInputs(records, e.Level, false, false)).ParameterBag, "*group")[0];
+                string printed = given["med"].AsString;
+                Say(e.Median == M ? printed == "can not estimate" : printed != "can not estimate" && Same(double.Parse(printed), e.Median) == 0, name + $": median ({printed}; R's {Shown(e.Median)})");
+                bool reached = e.Median != M || e.Lower != M;
+                double lower = e.Lower != M ? e.Lower : reached ? double.NegativeInfinity : M, upper = e.Upper != M ? e.Upper : reached ? double.PositiveInfinity : M;
+                Check(name + $": limits ({Shown(given["bll"].AsDouble)} to {Shown(given["bul"].AsDouble)}; R's {Shown(e.Lower)} to {Shown(e.Upper)})", Same(given["bll"].AsDouble, lower) + Same(given["bul"].AsDouble, upper), 0);
+            }
+            catch (Exception ex) { checks++; failures++; Console.WriteLine("FAIL  " + name + ": " + Message(ex)); }
+        }
+        if (failures == before) Console.WriteLine($"ok    {Benchmarks.Length} sets");
+    }
+
     private static List<Life> SurvivalData(System.Random random, int n, string[] groups, bool ties, bool frequencies, double censoring)
     {
         List<Life> records = new();
@@ -235,5 +275,18 @@ internal static partial class Program
         KaplanCase("every subject at the same time", Enumerable.Range(1, 6).Select(i => new Life(3, i % 2, "a")).ToList(), 0.95, false);
         KaplanCase("the last subject censored after the last death", new List<Life> { new(1, 1, "a"), new(2, 1, "a"), new(3, 0, "a"), new(5, 1, "a"), new(9, 0, "a") }, 0.95, false);
         KaplanCase("a time of nothing", new List<Life> { new(0, 1, "a"), new(0, 0, "a"), new(2, 1, "a"), new(3, 1, "a") }, 0.95, false);
+
+        // S exactly a half from one time to the next time of death: the median is the middle of the two
+        Console.WriteLine();
+        Console.WriteLine("Kaplan-Meier: a survival proportion of exactly a half");
+        foreach (int n in new[] { 2, 4, 6, 10, 14, 22, 30, 50, 98, 200 })
+        {
+            KaplanCase($"{n} subjects, none censored", Enumerable.Range(1, n).Select(i => new Life(i * 1.25, 1, "a")).ToList(), 0.95, false);
+            KaplanCase($"{n} subjects, none censored, a censored time between the two middle times", Enumerable.Range(1, n).Select(i => new Life(i * 1.25, 1, "a")).Append(new Life(n / 2 * 1.25 + 0.5, 0, "a")).Append(new Life(0.5, 0, "a")).ToList(), 0.95, false);
+        }
+        KaplanCase("half dead and the rest censored later: S is a half to the end", new List<Life> { new(1, 1, "a"), new(2, 1, "a"), new(3, 1, "a"), new(4, 0, "a"), new(5, 0, "a"), new(6, 0, "a") }, 0.95, false);
+        KaplanCase("S a half by censoring and deaths together", new List<Life> { new(1, 0, "a"), new(2, 1, "a"), new(3, 0, "a"), new(4, 1, "a"), new(7, 1, "a"), new(9, 1, "a") }, 0.95, false);
+
+        KaplanBenchmarks();
     }
 }
