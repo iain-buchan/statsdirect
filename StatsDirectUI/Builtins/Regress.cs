@@ -2370,7 +2370,7 @@ namespace StatsDirect.Builtins
                 if (x > xMax)
                     xMax = x;
                 if (x < xMin)
-                    xMax = x;
+                    xMin = x;
             }
             if (y > yMax || y < yMin)
                 throw new TemplateOperationCancelledException("Y must lie within the fitted curve (" + host.RoundU(yMin) + " to " + host.RoundU(yMax) + ")", "Polynomial Interpolation");
