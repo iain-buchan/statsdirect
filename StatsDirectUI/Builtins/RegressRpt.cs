@@ -1138,7 +1138,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                int kk = 1;
+                int kk = idap;
                 int jx = kx;
                 for (int j = 1; j <= n; j++)
                 {
