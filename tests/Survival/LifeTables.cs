@@ -132,7 +132,9 @@ internal static partial class Program
             bag.AddInput("deaths", new DataFrame(new DoubleVariable((double[])deaths.Clone(), "Deaths")));
             if (fraction != null) bag.AddInput("fractions", new DataFrame(new DoubleVariable((double[])fraction.Clone(), "Fraction")));
             if (weights != null) bag.AddInput("weights", new DataFrame(new DoubleVariable((double[])weights.Clone(), "Healthy")));
-            bag.AddInput("iterations", "20000");
+            // the program draws afresh at each run: with a hundred thousand tables on each side the limits of two simulations differ by
+            // a few hundredths of a standard error, even at 99 per cent, and the tolerance of 0.2 is many times that
+            bag.AddInput("iterations", "100000");
             bag.AddInput("save", true);
             ParameterBag o = Survival.RptAbridgedLifetable(new PlainWithProgress(), bag).ParameterBag;
             double z = NormalQuantile(1 - (1 - gamma) / 2);
@@ -177,7 +179,7 @@ internal static partial class Program
             if (variances)
             {
                 // the limits by simulation, against limits from a simulation made here: deaths drawn from the Poisson distribution
-                double[] drawn = new double[20000], medians = new double[20000];
+                double[] drawn = new double[100000], medians = new double[100000];
                 for (int s = 0; s < drawn.Length; s++)
                 {
                     double[] d = deaths.Select(v => Poisson(random, v)).ToArray();
@@ -210,9 +212,21 @@ internal static partial class Program
     {
         if (mean > 50)
         {
-            // the normal distribution with the mean and variance of the Poisson, rounded: near enough for deaths in their hundreds
-            double u = Math.Sqrt(-2 * Math.Log(1 - random.NextDouble())) * Math.Cos(2 * Math.PI * random.NextDouble());
-            return Math.Max(0, Math.Round(mean + Math.Sqrt(mean) * u));
+            // Draws from the Poisson distribution itself, by rejection from a curve that lies over it (the transformed rejection method):
+            // a normal distribution in its place gives limits that are a little out where the deaths are in their tens and hundreds,
+            // because the Poisson distribution is skew
+            double root = Math.Sqrt(mean), log = Math.Log(mean);
+            double b = 0.931 + 2.53 * root, a = -0.059 + 0.02483 * b;
+            double inverse = 1.1239 + 1.1328 / (b - 3.4), v0 = 0.9277 - 3.6224 / (b - 2);
+            while (true)
+            {
+                double u = random.NextDouble() - 0.5, v = random.NextDouble();
+                double us = 0.5 - Math.Abs(u);
+                double count = Math.Floor((2 * a / us + b) * u + mean + 0.43);
+                if (us >= 0.07 && v <= v0) return count;
+                if (count < 0 || (us < 0.013 && v > us)) continue;
+                if (Math.Log(v) + Math.Log(inverse) - Math.Log(a / (us * us) + b) <= -mean + count * log - LogGamma(count + 1)) return count;
+            }
         }
         double limit = Math.Exp(-mean), product = random.NextDouble();
         int k = 0;
