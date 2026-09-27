@@ -1188,8 +1188,8 @@ namespace StatsDirect.Builtins
                     rkx[i] = n;
                     if (en[i] > 0 & cn[i] > 0 & cs[i] > 0)
                     {
-                        double spool = ((en[i] - 1.0) * Math.Pow(es[i], 2.0) + (cn[i] - 1.0) * Math.Pow(cs[i], 2.0)) / (en[i] + cn[i] - 2.0);
-                        double sed = Math.Sqrt(spool * (1.0 / en[i] + 1.0 / cn[i]));
+                        // the standard error of the difference is from the variance of each group, as the weights of the pooling are
+                        double sed = Math.Sqrt(Math.Pow(es[i], 2.0) / en[i] + Math.Pow(cs[i], 2.0) / cn[i]);
                         d[i] = em[i] - cm[i];
                         lcid[i] = d[i] - cit * sed;
                         ucid[i] = d[i] + cit * sed;
