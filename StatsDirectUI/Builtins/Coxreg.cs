@@ -10,8 +10,30 @@ using System.Globalization;
 
 namespace StatsDirect.Builtins
 {
+    /// <summary>
+    /// Cox (proportional hazards) regression: the fit, its report, and the reports that follow it.
+    /// </summary>
+    /// <remarks>
+    /// The model is that the hazard of a subject with predictors z is h0(t) exp(z'b).  The baseline hazard h0 is left unspecified, and each stratum
+    /// has its own.  The coefficients b are those that make the partial likelihood greatest.  The partial likelihood is a product over the events:
+    /// for each, the probability that the event was that of the subject who had it and not of another who was at risk at that time in the same
+    /// stratum, which is exp(z'b) of the subject over the sum of exp(z'b) of those at risk.  Those at risk at a time are the subjects whose own
+    /// times are no earlier.  When d subjects have events at the same time each of the d is given the same sum, that of all who were at risk at
+    /// that time (Breslow's approximation).
+    ///
+    /// RptCoxRegression reads the data and makes the report.  coxreg, coxest and coxiter check the data, put them in order and iterate; CoxHessian
+    /// makes one pass over the data for the log likelihood, its gradient and its matrix of second derivatives, and solves for the step.  The
+    /// reports that follow a regression (the baseline survival and cumulative hazard, the residuals, the hazard ratios, the model analysis and the
+    /// plots) work from the arrays that RptCoxRegression passes on.
+    ///
+    /// The arrays of the numerical routines are used from element 1.
+    /// </remarks>
     public static class Coxreg
     {
+        /// <summary>
+        /// Orders records by stratum, then by time, then by hazard ratio from the greatest down: the order in which the baseline survival and
+        /// cumulative hazard are worked out.
+        /// </summary>
         private class CoxpByStratumTimeThenExb : IComparer<CoxP>
         {
             private static int Compare(CoxP x, CoxP y)
@@ -41,6 +63,7 @@ namespace StatsDirect.Builtins
             int IComparer<CoxP>.Compare(CoxP x, CoxP y) => Compare(x, y);
         }
 
+        /// <summary>Orders records by stratum, then by time: the order of the plots that have a line for each stratum.</summary>
         private class CoxpByStratumThenTime : IComparer<CoxP>
         {
             private static int Compare(CoxP x, CoxP y)
@@ -58,6 +81,7 @@ namespace StatsDirect.Builtins
             int IComparer<CoxP>.Compare(CoxP x, CoxP y) => Compare(x, y);
         }
 
+        /// <summary>Orders records by group, then by time: the order of the plots that have a line for each value of a binary predictor.</summary>
         private class CoxpByIdThenTm : IComparer<CoxP>
         {
             private static int Compare(CoxP x, CoxP y)
@@ -76,6 +100,7 @@ namespace StatsDirect.Builtins
 
         }
 
+        /// <summary>Puts records back in the order in which they were given.</summary>
         private class CoxpByIndex : IComparer<CoxP>
         {
             private static int Compare(CoxP x, CoxP y) => x.Index - y.Index;
@@ -84,6 +109,7 @@ namespace StatsDirect.Builtins
             int IComparer<CoxP>.Compare(CoxP x, CoxP y) => Compare(x, y);
         }
 
+        /// <summary>Orders records by time alone.</summary>
         private class CoxpByTm : IComparer<CoxP>
         {
             private static int Compare(CoxP x, CoxP y) => x.Time.CompareTo(y.Time);
@@ -125,6 +151,10 @@ namespace StatsDirect.Builtins
             return variable;
         }
 
+        /// <summary>
+        /// Looks for a time that is zero or negative.  If there is one, the amount that would have to be added to every time to make the least
+        /// of them 1 is given as timesAdjustment, and the operation asks whether to add it.
+        /// </summary>
         public static StepOutput RptCoxRegressionPreprocess(ParameterBag parameters)
         {
             DataFrame timesFrame = parameters["times"].AsDataFrame;
@@ -141,6 +171,34 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The report of a Cox regression: the coefficients with their z and P values, and the likelihood ratio chi-square of the model.
+        /// </summary>
+        /// <remarks>
+        /// The data are put into one array, x, a column at a time: the times, the censoring codes, the frequencies if there are any, the predictors,
+        /// and the strata if there are any.  irt, icen, ifrq and istrat are the numbers of those columns (0 for one that is absent), and indef holds
+        /// those of the predictors.  Element r of column c is x[rows * (c - 1) + r].
+        ///
+        /// The event code that was selected is 0 for a censored record and 1 for an event; a code above 1 is a number of subjects, all with the
+        /// event, the time and the predictors of the record.  The censoring code that the fit is given is the other way round: 0 for an event and
+        /// 1 for a censored record.  If any code is above 1 there is a column of frequencies, in which every other record has 1.
+        ///
+        /// The fit is made twice.  The second fit, with a single predictor that is 1 for everybody, gives the log likelihood of no effect at all,
+        /// from which the likelihood ratio chi-square of the model is taken.
+        ///
+        /// What is passed on to the reports that follow:
+        ///     ARR2[0..5, 0]  the number of records, the number of coefficients, the log likelihood, the log likelihood of no effect, the number
+        ///                    of events, and the degrees of freedom (the coefficients less those of predictors that were dropped)
+        ///     ARR2[i, 1..5]  for record i, what the fit leaves in columns 1 to 5 of caze (see coxiter): the survival of a subject at the means
+        ///                    of the predictors, the leverage, the residual, the cumulative hazard of that subject, and the proportionality
+        ///                    constant
+        ///     ARR2[i, 6]     its time;  ARR2[i, 7]  1 if it had the event and 0 if it was censored
+        ///     ARR2[i, 9]     its stratum, as the fit numbered the strata;  ARR2[i, 10]  its hazard ratio, exp(z'b)
+        ///     ARR2[i, 11]    the number of subjects that it stands for
+        ///     ARR3[1, j, 1..3]  for coefficient j, its estimate, its standard error and their ratio z
+        ///     CDAT1[j]       the title of predictor j, and its two values if it is binary
+        ///     holdx[i, j]    predictor j of record i, centred if it was centred for the fit
+        /// </remarks>
         public static StepOutput RptCoxRegression(ParameterBag parameters)
         {
             // We don't have a clean way in the operation code to fail an operation if a user answers "no" to a question - in this case, whether they want to apply a calculated adjustment.
@@ -151,6 +209,7 @@ namespace StatsDirect.Builtins
             // A record in which the time, the event code, a predictor or the stratum is missing is left out of the regression and of everything
             // that follows it.  recordOf gives the row, counted from 0, of each record that is kept.
             int[] recordOf = CompleteRecords(parameters, out int records);
+            // ic counts the columns of x as they are added, and ik the elements
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = (DoubleVariable)timesFrame.Variables[0];
@@ -180,6 +239,8 @@ namespace StatsDirect.Builtins
             double[] transTemp3 = new double[rows * ic + 1];
             Array.Copy(x, transTemp3, Math.Min(x.Length, transTemp3.Length));
             x = transTemp3;
+            // The event codes are turned into censoring codes: 0 for an event, 1 for a censored record.  dead is the number of events, and ok is set
+            // if any code is above 1, which makes a column of frequencies necessary.
             bool ok = false;
             bool anyEvents = false;
             double dead = 0;
@@ -237,6 +298,7 @@ namespace StatsDirect.Builtins
                 double[] transTemp5 = new double[rows * (ic + ncov) + 1];
                 Array.Copy(x, transTemp5, Math.Min(x.Length, transTemp5.Length));
                 x = transTemp5;
+                // icov is the number of elements of x before the first predictor
                 indef = new int[ncov + 1];
                 icov = ik;
                 for (int c = 0; c < predictorsFrame.VariableCount; c++)
@@ -317,6 +379,8 @@ namespace StatsDirect.Builtins
 
             int nCol = ic;
 
+            // The fit allows an effect to be the product of several columns.  Here every effect is one predictor: nef effects, of nvef[i] = 1 column
+            // each, the columns being listed in indef.
             int nef = ncov;
             if (nef < 1)
                 throw new TemplateOperationCancelledException();
@@ -324,6 +388,8 @@ namespace StatsDirect.Builtins
             for (int r = 1; r <= nef; r++)
                 nvef[r] = 1;
 
+            // ifix would be the column of a term with a fixed coefficient of 1 and itie = 1 would say that the records are already in order;
+            // neither is used.  No more than maxit iterations are made.
             double eps = parameters["accuracy"].AsDouble;
             int ifix = 0;
             int itie = 0;
@@ -335,6 +401,8 @@ namespace StatsDirect.Builtins
             int nobs = rows;
             int ldcoef = nef;
 
+            // A predictor that is not binary has its mean taken away, if that was asked for.  The coefficients are the same either way; what changes
+            // is the subject to whom the baseline survival and hazard belong, who has each centred predictor at its mean and not at 0.
             if (centre)
             {
                 for (int i = 1; i <= nef; i++)
@@ -434,6 +502,7 @@ namespace StatsDirect.Builtins
             ncov = 1;
             // int ldcov = 1; Never used.  PJC 2012/04/09.
             ldcoef = 1;
+            // the first predictor's column is filled with ones, and is the only predictor of the second fit
             for (int i = icov + 1; i <= icov + nobs; i++)
                 x[i] = 1.0;
             // the dummy variable is in the first covariate column: column 3, or 4 when grouped data put a frequency column before it
@@ -447,6 +516,7 @@ namespace StatsDirect.Builtins
             coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             ARR2[3, 0] = algl;
 
+            // What the plots can be split by: the strata if there are any, otherwise any one of the binary predictors, or nothing
             List<string> subgroups = new();
             if (istrat > 0)
             {
@@ -470,6 +540,7 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new();
             outputParameters.AddOutput("n", subjects);
             outputParameters.AddOutput("d", ARR2[4, 0]);
+            // The likelihood ratio chi-square: twice the rise in the log likelihood from that of no effect
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
             outputParameters.AddOutput("x2", x2dev);
             outputParameters.AddOutput("df", ARR2[5, 0]);
@@ -508,18 +579,20 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Generate regressors
         ///  </summary>
-        ///  <param name="nCol"></param>
-        ///  <param name="x"></param>
-        ///  <param name="ix1"></param>
-        ///  <param name="nef"></param>
-        ///  <param name="nvef"></param>
-        ///  <param name="indef"></param>
-        ///  <param name="idummy"></param>
-        ///  <param name="nreg"></param>
-        ///  <param name="reg"></param>
-        ///  <param name="nrmiss"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="nCol">The number of columns of the data.</param>
+        ///  <param name="x">The data, a record at a time.</param>
+        ///  <param name="ix1">The place in x of the first column of the record.</param>
+        ///  <param name="nef">The number of effects.</param>
+        ///  <param name="nvef">For each effect, the number of columns of which it is the product.</param>
+        ///  <param name="indef">The columns of the first effect, then those of the second, and so on.</param>
+        ///  <param name="idummy">Less than 0 to count the regressors and do no more.</param>
+        ///  <param name="nreg">On return, the number of regressors.</param>
+        ///  <param name="reg">On return, the regressors of the record: for each effect the product of its columns, or the missing value.</param>
+        ///  <param name="nrmiss">On return, 1 if any column of any effect is missing in the record, and otherwise 0.</param>
+        ///  <param name="ifault">On return 2 if an effect has no columns, and 3 if a column is out of range; otherwise as it was.</param>
+        ///  <remarks>
+        ///  In this program every effect is a single column, so that the regressors of a record are its predictors.
+        ///  </remarks>
         private static void genregs(int nCol, double[] x, int ix1, int nef, int[] nvef, int[] indef, int idummy, ref int nreg, double[] reg, ref int nrmiss, ref int ifault)
         {
             int lindef = 0;
@@ -592,6 +665,13 @@ namespace StatsDirect.Builtins
             nrmiss += misval;
         }
 
+        /// <summary>
+        /// Checks the dimensions and the columns of the effects, counts the coefficients, makes the working arrays and calls coxest.
+        /// </summary>
+        /// <remarks>
+        /// The arguments are those of coxest.  Faults: 1 and 2 if x or caze has too few rows; 5 if an effect has no columns; 6 if a column of an
+        /// effect is out of range; 10 if there are no coefficients; 11 and 12 if cov or coef is too small; otherwise those of coxest.
+        /// </remarks>
         private static void coxreg(int nRow, int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
         {
             int i;
@@ -653,6 +733,41 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// ESTIMATES FOR PARAMETERS IN PROPORTIONAL HAZARDS MODEL
         /// </summary>
+        /// <param name="nRow">The number of records.</param>
+        /// <param name="nCol">The number of columns of x.</param>
+        /// <param name="x">The data, a column at a time, as RptCoxRegression makes them.  They are rearranged for the fit and put back after it.</param>
+        /// <param name="ldx">The number of rows that x has, which must be at least nRow.</param>
+        /// <param name="irt">The column of the times.</param>
+        /// <param name="IFRQ">The column of the frequencies, or 0.</param>
+        /// <param name="ifix">The column of a term with a fixed coefficient of 1, or 0.</param>
+        /// <param name="icen">The column of the censoring codes: 0 for an event, 1 for a censored record.</param>
+        /// <param name="istrat">The column of the strata, or 0.</param>
+        /// <param name="maxit">The most iterations that may be made.</param>
+        /// <param name="eps">The fit has converged when the log likelihood changes by no more than eps of itself.</param>
+        /// <param name="ratio">The ratio for the splitting of a stratum (see CoxHessian), or -1 for none.</param>
+        /// <param name="nef">The number of effects;  nvef  the number of columns of each;  indef  those columns (see genregs).</param>
+        /// <param name="itie">1 if the records are already in order, from the latest time to the earliest within each stratum.</param>
+        /// <param name="ncoef">On return, the number of coefficients.</param>
+        /// <param name="coef">On return, for coefficient j: coef[j, 1] its estimate, coef[j, 2] its standard error, coef[j, 3] their ratio.</param>
+        /// <param name="algl">On return, the log likelihood.</param>
+        /// <param name="cov">On return, the covariance matrix of the coefficients.</param>
+        /// <param name="xmean">On return, the mean of each regressor.</param>
+        /// <param name="caze">On return, the figures for each record (see coxiter).</param>
+        /// <param name="GR">Working space: the gradient, and then the step.</param>
+        /// <param name="igrp">On return, the number of the stratum of each record, or -1 for a record that was left out.</param>
+        /// <param name="nrmiss">On return, the number of records that were left out.</param>
+        /// <param name="ifault">
+        /// On return 0 if all is well.  1 and 2 if x or caze has too few rows; 3 if eps is negative; 4 if ratio is negative and not -1; 6 and 7 if
+        /// an effect has no columns or a column that is out of range; 10 if a censoring code is out of range (which is looked at only when there
+        /// is a fixed term); 14 if there are no coefficients; 15 if a frequency is negative, or coef is
+        /// too small; 16 if cov is too small, or the records were said to be in order and are not; otherwise the faults of coxiter.
+        /// </param>
+        /// <remarks>
+        /// The records are looked over, the data are rearranged so that the columns of a record lie together (the routines that follow take a
+        /// record at a time), and the order in which the records are to be taken is found: iptr lists them by stratum and, within a stratum, from
+        /// the latest time to the earliest, a censored record before an event of the same time.  Taken in that order, the records met so far in a
+        /// stratum are at every step the ones that are at risk at the time that has been reached.
+        /// </remarks>
         private static void coxest(int nRow, int nCol, ref double[] x, int ldx, int irt, int IFRQ, int ifix, int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
         smg, ref double[] smh, ref int[] iptr, ref int[] idt, ref int ifault)
         {
@@ -696,6 +811,9 @@ namespace StatsDirect.Builtins
             }
             if (ifault != 0)
                 return;
+            // A record whose frequency is missing or zero is marked, with -1 in igrp, to be left out.  The checks of the fixed term, the censoring
+            // code and the time are made only when there is a fixed term: RptCoxRegression, which has none, leaves out the records with a missing
+            // value before it calls the fit.
             int mc = (icen - 1) * ldx;
             int mf = (IFRQ - 1) * ldx;
             int ms = (istrat - 1) * ldx;
@@ -769,9 +887,14 @@ namespace StatsDirect.Builtins
             if (ifault > 0)
                 return;
 
+            // From here column c of record k is x[c + (k - 1) * nCol]
             MatrixTranspose1D(ldx, nCol, x, out ifault);
             if (itie != 1)
             {
+                // The records are sorted by stratum, then by time, then by censoring code.  The sort is from the least up, so the times and the
+                // codes have their signs changed for it, and changed back after it, to have the latest time first and, at one time, the censored
+                // records (code 1) before the events (code 0).  The records themselves stay where they are: iptr[1] is the record to take first,
+                // iptr[2] the next, and so on.
                 int nkey = 0;
                 if (istrat > 0)
                 {
@@ -798,6 +921,8 @@ namespace StatsDirect.Builtins
             }
             else
             {
+                // The records are said to be in order already.  They are taken as they come, after a check that within each stratum no time is
+                // later than the one before it.
                 mr = irt - nCol;
                 ms = istrat - nCol;
                 double xxg;
@@ -868,14 +993,45 @@ namespace StatsDirect.Builtins
                 return;
 
             MatrixTranspose1D(nCol, ldx, x, out ifault);
+            // x is a column at a time again, as it was given
         }
 
+        /// <summary>
+        /// The iterations of the fit, and the figures that are worked out for each record once it has converged.
+        /// </summary>
+        /// <remarks>
+        /// The arguments are those of coxest, with its working arrays.  x is a record at a time here.  iptr is the order in which the records are
+        /// taken (see coxest); its elements nobs + 1 to nobs + ncoef are set here, to 1 for a regressor that varies within a stratum and to 0 for
+        /// one that does not.  idt is set here: the last of the records that have events at one time in one stratum is given their number, and
+        /// every other record 0.
+        ///
+        /// Faults: 1 if the frequencies add up to nothing; 2 if fewer than two records can be used; 3 if the log likelihood still falls when no
+        /// more than 1/512 of the step is taken; 5 if the iterations run out; 100 and above from CoxHessian.
+        ///
+        /// The iteration is Newton's.  CoxHessian gives, at the coefficients of the moment, the log likelihood and the step to take from them.
+        /// The step is tried whole.  If the log likelihood falls by more than eps of itself the step is halved, and halved again, until it does
+        /// not.  The fit has converged when the log likelihood changes by no more than eps of itself.  The coefficients start at 0.
+        ///
+        /// On return, for record k:
+        ///     caze[k, 1]  exp(-caze[k, 4]): the survival, at the time of the record, of a subject whose predictors are at their means
+        ///     caze[k, 2]  for a record with an event its leverage, d'Vd, where d is what its regressors differ by from their mean over those at
+        ///                 risk at its time, each of them weighted by its hazard, and V is the covariance matrix of the coefficients; for a
+        ///                 censored record the missing value
+        ///     caze[k, 3]  caze[k, 4] caze[k, 5]: the cumulative hazard of the record itself at its time, which is its Cox-Snell residual
+        ///     caze[k, 4]  the cumulative hazard, at the time of the record, of a subject whose predictors are at their means: the sum, over the
+        ///                 times with events up to then, of the number of events over the sum of caze[ , 5] for those at risk
+        ///     caze[k, 5]  the proportionality constant exp((z - m)'b): the hazard of the record relative to that of a subject at the means m
+        ///     caze[k, 6]  exp(z'b): its hazard relative to that of a subject whose predictors are all 0
+        /// While the work is going on the columns of caze hold other things, which are said where they are used.
+        /// </remarks>
         private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int istrat, int maxit, double eps, double ratio, int nef, int[] nvef, int[] indef, int itie, ref /* yes, really */ int ncoef, double[,] coef, ref double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, int[] igrp, ref int nrmiss, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, ref int ifault)
         {
             //   NEWTON-RAPHSON ITERATIONS
             double[] smd = new double[1 + 1];
             for (int i = 1; i <= ncoef; i++)
                 xmean[i] = 0.0;
+            // The means of the regressors, a record counting as many times as its frequency, and the numbers of the strata: igrp[k] becomes the
+            // number of the stratum of record k, from 1 in the order in which the strata are met, or -1 if a regressor of the record is missing
             int nob1 = 0;
             double smfrq = 0.0;
             double strato = 1.23457E-27;
@@ -930,6 +1086,9 @@ namespace StatsDirect.Builtins
             }
             for (int i = 1; i <= ncoef; i++)
                 xmean[i] = 1.0 / smfrq * xmean[i];
+            // idt marks the times with events.  The records that have events at one time in one stratum lie together in the order; dt, igr and icncd
+            // are the time, the stratum and the censoring code of the run of records that is being counted, itdt is the count, and j1 is the record
+            // before the one in hand.  When a run of events ends, its last record is given the count.
             for (int i = 1; i <= nobs; i++)
                 idt[i] = 0;
             int icncd; int icnn;
@@ -972,6 +1131,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
+                // records that were given in order are taken to have no ties: every event is a time of its own
                 icnn = 0;
                 for (int i = 1; i <= nobs; i++)
                 {
@@ -984,6 +1144,9 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            // Which regressors vary.  smg holds the regressors of the first record of the stratum, and iptr[nobs + j] is set to 1 when a later
+            // record of the same stratum is found to differ from it in regressor j.  A regressor that is the same throughout every stratum tells
+            // nothing, and CoxHessian leaves it out.  The search ends as soon as every regressor has been found to vary.
             bool ihess = false;
             icncd = ncoef;
             igr = 0;
@@ -1025,12 +1188,16 @@ namespace StatsDirect.Builtins
                 }
             }
             icncd = icnn;
+            // The log likelihood at the starting values, and the first step.  ihess is not yet set: until the iterations are near the maximum the
+            // matrix of second derivatives is replaced by one that is quicker to form (see CoxHessian).
             CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 1, ihess, out double alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out bool change, zero, ref ifault);
             if (ifault != 0)
                 return;
             double div;
             int iter; for (iter = 1; iter <= maxit; iter++)
             {
+                // coef[ , 1] holds the coefficients, coef[ , 3] the step from them that CoxHessian has just given, and coef[ , 2] the coefficients
+                // that are tried.  crit1, the size of the step beside that of the coefficients, is worked out but not used.
                 for (ii = 1; ii <= ncoef; ii++)
                     coef[ii, 3] = GR[ii];
                 double crit1 = 0.0;
@@ -1039,6 +1206,9 @@ namespace StatsDirect.Builtins
                     double t = Math.Abs(coef[i, 1]);
                     crit1 = Math.Max(crit1, t > 1.0 ? Math.Abs(coef[i, 3] / coef[i, 1]) : Math.Abs(coef[i, 3]));
                 }
+                // div is the part of the step that is taken: all of it, then a half, a quarter and so on for as long as the log likelihood at the
+                // coefficients tried is lower than it was by more than eps of itself.  crit is the change in the log likelihood as a proportion
+                // of the log likelihood.
                 div = 1.0;
                 double crit;
                 do
@@ -1074,6 +1244,7 @@ namespace StatsDirect.Builtins
                     // We broke out of an inner loop, but need to break out of the outer one as well in this fault case
                     break;
                 }
+                // near enough to the maximum for the matrix of second derivatives itself to be used from now on
                 if (crit < 0.1)
                     ihess = true;
                 for (ii = 1; ii <= ncoef; ii++)
@@ -1088,6 +1259,14 @@ namespace StatsDirect.Builtins
             // a fit that has not converged is reported as that: what follows is for a fit that has
             if (ifault != 0)
                 return;
+            // What follows, down to the next call of CoxHessian, is done only if CoxHessian split a stratum during the iterations (see the note on
+            // splitting there).  A regressor may then have next to nothing left to vary by within the strata as they now stand.  To find out, the
+            // linear predictor z'b of each record, less its mean in the stratum, is regressed by least squares on the regressors, less theirs
+            // (glsqr1, a record at a time), which leaves in cov the triangular factor of that regression.  A regressor whose diagonal element of
+            // the factor is less than 0.0001 of its standard deviation over all the records has its row and column of cov cleared, and zero is
+            // set, which tells CoxHessian to leave out a regressor whose coefficient is 0.  The coefficients of the regression are not kept.
+            // caze is used as working space: for regressor j, caze[j, 1] is its sum in the stratum, and caze[j, 2] and caze[j, 3] its sum of
+            // squares and its sum over all the records, which become its standard deviation.
             double zdot;
             int irank; int kk; if (strat)
             {
@@ -1224,15 +1403,23 @@ namespace StatsDirect.Builtins
                         coef[ii, 1] = coef[ii, 2];
                 }
             }
+            // The last pass, at the coefficients that were found, with the matrix of second derivatives itself.  It leaves in cov the triangular
+            // factor R of that matrix, and in column 1 of caze the proportionality constant of each record.
             CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 1, true, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out change, zero, ref ifault);
             if (ifault != 0)
                 return;
+            // The proportionality constants are moved to column 5, and columns 1 to 4 are made ready for the figures of each record
             for (ii = 1; ii <= nobs; ii++)
                 caze[ii, 5] = caze[ii, 1];
             igr = 0;
             for (int i = 1; i <= 4; i++)
                 for (ii = 1; ii <= nobs; ii++)
                     caze[ii, i] = Constant.MISSING;
+            // The figures of each record.  The records are taken in the other direction now, from the earliest time of a stratum to the latest.
+            // At the start of a stratum smu is the sum of the proportionality constants of all its records, each times its frequency, and smg the
+            // like sum of their regressors less the means: the sums for those at risk at the earliest time.  As the times are passed, the records
+            // that are no longer at risk are taken out of both.  smd[1] is the cumulative hazard so far.  Until a record's own figures are worked
+            // out, column 2 of caze holds its frequency and column 4 its censoring code.
             icnn = 0;
             for (int i = nobs; i >= 1; i--)
             {
@@ -1268,6 +1455,7 @@ namespace StatsDirect.Builtins
                     }
                     if (icen > 0)
                         icnn = Convert.ToInt32(x[icen + (k - 1) * nCol]);
+                    // A censored record: it leaves those at risk, and its figures are those of the latest time with events that is not after its own
                     if (icnn == 1)
                     {
                         smu -= caze[k, 2] * caze[k, 5];
@@ -1282,6 +1470,9 @@ namespace StatsDirect.Builtins
                         caze[k, 3] = smd[1] * caze[k, 5];
                         caze[k, 4] = smd[1];
                     }
+                    // The first to be met of the records with events at this time, which is the one that carries their number.  xfd is the number
+                    // of events, by frequency, and tmps the sum of their proportionality constants.  The cumulative hazard rises by the number of
+                    // events over the sum for those at risk.
                     else if (idt[k] > 0)
                     {
                         ii = i + 1;
@@ -1303,6 +1494,10 @@ namespace StatsDirect.Builtins
                         for (j = 1; j <= ncoef; j++)
                             smh[j] = 0.0;
                         j1 = idt[k];
+                        // Each of the records with events at this time in turn.  OBS becomes d, what its regressors differ by from smg / smu, their
+                        // mean over those at risk weighted by the hazards; a regressor that was left out of the fit is given 0.  With R'R the
+                        // matrix of second derivatives, R'y = d is solved for y, and y'y is d'Vd, the leverage.  smh gathers the sums for the
+                        // records that leave those at risk at this time.
                         for (j = 1; j <= j1; j++)
                         {
                             caze[k, 1] = Math.Exp(-smd[1]);
@@ -1344,6 +1539,8 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            // The covariance matrix of the coefficients is the inverse of the matrix of second derivatives, and is made from R.  The standard errors
+            // are the square roots of its diagonal.  A regressor that was left out has a row and column of zeros, and so a standard error of 0.
             Regress1.rcovarb(ncoef, cov, 1.0, cov, ref ifault);
             for (int i = 1; i <= ncoef; i++)
             {
@@ -1355,38 +1552,64 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  COMPUTE HESSIAN, GRADIENT, AND PARAMETER UPDATES
         ///  </summary>
-        ///  <param name="nobs"></param>
-        ///  <param name="nCol"></param>
-        ///  <param name="x"></param>
-        ///  <param name="irt"></param>
-        ///  <param name="IFRQ"></param>
-        ///  <param name="ifix"></param>
-        ///  <param name="icen"></param>
-        ///  <param name="ratio"></param>
-        ///  <param name="nef"></param>
-        ///  <param name="nvef"></param>
-        ///  <param name="indef"></param>
-        ///  <param name="ncoef"></param>
-        ///  <param name="coef"></param>
-        ///  <param name="icoef"></param>
-        ///  <param name="ihess"></param>
-        ///  <param name="algl"></param>
-        ///  <param name="cov"></param>
+        ///  <param name="nobs">The number of records.</param>
+        ///  <param name="nCol">The number of columns of x.</param>
+        ///  <param name="x">The data, a record at a time.</param>
+        ///  <param name="irt">The column of the times.</param>
+        ///  <param name="IFRQ">The column of the frequencies, or 0.</param>
+        ///  <param name="ifix">The column of a term with a fixed coefficient of 1, or 0.</param>
+        ///  <param name="icen">The column of the censoring codes: 0 for an event, 1 for a censored record.</param>
+        ///  <param name="ratio">The ratio for the splitting of a stratum, or -1 for none.</param>
+        ///  <param name="nef">The number of effects.</param>
+        ///  <param name="nvef">The number of columns of each effect.</param>
+        ///  <param name="indef">The columns of the effects.</param>
+        ///  <param name="ncoef">The number of coefficients.</param>
+        ///  <param name="coef">The coefficients, in column icoef.</param>
+        ///  <param name="icoef">The column of coef to use: 1 for the coefficients as they stand, 2 for those that are being tried.</param>
+        ///  <param name="ihess">Set for the matrix of second derivatives itself; not set for the one that is quicker to form.</param>
+        ///  <param name="algl">On return, the log likelihood.</param>
+        ///  <param name="cov">On return, in its upper triangle, the triangular factor R of the matrix: R'R is the matrix.</param>
         ///  <param name="ldcov">No longer used now that MXFAC is never called inside here.</param>
-        ///  <param name="xmean"></param>
-        ///  <param name="caze"></param>
-        ///  <param name="ldcase"></param>
-        ///  <param name="GR"></param>
-        ///  <param name="OBS"></param>
-        ///  <param name="smg"></param>
-        ///  <param name="smh"></param>
-        ///  <param name="iptr"></param>
-        ///  <param name="idt"></param>
-        ///  <param name="igrp"></param>
-        ///  <param name="change"></param>
-        ///  <param name="Zero"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="xmean">The means of the regressors.</param>
+        ///  <param name="caze">On return caze[k, 1] is exp((z - m)'b) for record k, and caze[k, 6] is exp(z'b); columns 2 to 4 are working space.</param>
+        ///  <param name="ldcase">Not used.</param>
+        ///  <param name="GR">On return, the step: the solution s of R'R s = g, where g is the gradient.</param>
+        ///  <param name="OBS">Working space: the regressors of a record.</param>
+        ///  <param name="smg">Working space: the sum of u (z - m) over those at risk.</param>
+        ///  <param name="smh">Working space: the sum of u (z - m)(z - m)' over those at risk, its upper triangle, a column at a time.</param>
+        ///  <param name="iptr">The order in which the records are taken, and then for each regressor 1 if it varies (see coxiter).</param>
+        ///  <param name="idt">The marks of the times with events (see coxiter).</param>
+        ///  <param name="igrp">The stratum of each record, or -1 for a record that is left out.  A stratum that is split is renumbered here.</param>
+        ///  <param name="change">On return, true if a stratum was split.</param>
+        ///  <param name="Zero">If set, a regressor whose coefficient is 0 is left out.</param>
+        ///  <param name="ifault">
+        ///  On return 100 if the matrix cannot be factorised, with the number of the first regressor whose row of it adds up to nothing added to
+        ///  the 100 if there is one; the faults of mxinv2; otherwise as it was.  If it is not 0 on entry, nothing is factorised and 100 is returned.
+        ///  </param>
+        ///  <remarks>
+        ///  One pass over the data, at the coefficients b in column icoef of coef.  For each record u = exp((z - m)'b), where m holds the means of
+        ///  the regressors: to take the means away changes nothing in the log likelihood, the gradient or the matrix, and keeps the numbers
+        ///  small.  (z - m)'b is held between -30 and 30 before its exponential is taken.  The records are taken in the order of iptr, in which
+        ///  the records met so far in a stratum are the ones at risk, and three sums are kept over them, each record counting as many times as
+        ///  its frequency: smu, of u; smg, of u (z - m); and smh, of u (z - m)(z - m)'.  At a time with d events, in records with regressors
+        ///  z1 to zd,
+        ///      the log likelihood gains   (z1 - m)'b + ... + (zd - m)'b  -  d ln(smu)
+        ///      the gradient gains         (z1 - m) + ... + (zd - m)  -  d smg / smu
+        ///      the matrix gains           d (smh / smu  -  (smg / smu)(smg / smu)')
+        ///  The matrix is that of the second derivatives of the log likelihood with its sign changed, and is used if ihess is set.  If it is not,
+        ///  the matrix gains instead e1 e1' + ... + ed ed', where e = (z - m) - smg / smu is what the regressors of the record with the event
+        ///  differ by from their mean over those at risk.  That needs no smh, and serves until the iterations are near the maximum.
+        ///
+        ///  The matrix is then factorised as R'R (CholeskiFactor) and R'R s = g is solved for the step s, in two stages (mxinv2).  A regressor
+        ///  that does not vary within any stratum, or that the factorisation finds to be determined by the regressors before it, is left out:
+        ///  its element of the gradient and its row and column of the matrix are cleared, and its element of the step is 0.
+        ///
+        ///  Splitting.  If ratio is not -1, each stratum is looked over for a time that divides it: one at which every event at that time and
+        ///  before it has a proportionality constant more than ratio times the greatest among the records after it.  The records of the earlier
+        ///  part (its events, and the censored records whose constants are as great) are then made a stratum of their own, and the pass is made
+        ///  again.  The constants are read from column 5 of caze.  During the iterations that column is filled only when there is a fixed term
+        ///  (ifix above 0); without one, as in this program, it holds zeros until the fit is over, and no stratum is split.
+        ///  </remarks>
         private static void CoxHessian(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, double ratio, int nef, int[] nvef, int[] indef, int ncoef, double[,] coef, int icoef, bool ihess, out double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, int[] igrp, out bool change, bool Zero, ref int ifault)
         {
             int irank = 0;
@@ -1400,6 +1623,7 @@ namespace StatsDirect.Builtins
             change = false;
             do
             {
+                // the matrix, of which only the upper triangle is formed, the gradient and the log likelihood start at nothing
                 int igr = 0;
                 for (int i = 1; i <= ncoef; i++)
                     for (int ii = 1; ii <= i; ii++)
@@ -1412,6 +1636,7 @@ namespace StatsDirect.Builtins
                     int k = iptr[i];
                     if (igrp[k] >= 0)
                     {
+                        // a new stratum: nobody is at risk yet
                         if (igrp[k] != igr)
                         {
                             for (int iq = 1; iq <= ncoef; iq++)
@@ -1436,6 +1661,7 @@ namespace StatsDirect.Builtins
                             }
                             double xx = xfix + zdot;
                             double xx_base = xfix + zdot_base;
+                            // a record with an event: its own part of the gradient and of the log likelihood
                             if (icnn == 0)
                             {
                                 for (int iq = 1; iq <= ncoef; iq++)
@@ -1456,6 +1682,7 @@ namespace StatsDirect.Builtins
                             {
                                 caze[k, 6] = Math.Exp(xx_base);
                             }
+                            // the record joins those at risk
                             smu += xfrq * u;
                             for (int iq = 1; iq <= ncoef; iq++)
                                 smg[iq] = smg[iq] + xfrq * u * OBS[iq];
@@ -1469,6 +1696,9 @@ namespace StatsDirect.Builtins
                                         smh[ii + (j - 1) * ncoef] = smh[ii + (j - 1) * ncoef] + OBS[ii] * xtmp;
                                 }
                             }
+                            // The last of the records with events at this time: everybody who is at risk at this time has now been met.  Each of
+                            // the jj records with events is taken in turn, this one first and then those before it in the order, for the part
+                            // that the sums over those at risk play in the log likelihood, the gradient and the matrix.
                             if (idt[k] > 0)
                             {
                                 int M = i;
@@ -1521,6 +1751,8 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
+                // Splitting (see the remarks): column 2 of caze becomes the greatest constant so far in the stratum, and column 3 the least
+                // among the events from here on
                 igr = 0;
                 bool strat = false;
                 if (ratio != -1.0)
@@ -1633,6 +1865,7 @@ namespace StatsDirect.Builtins
                     break;
             }
             while (true);
+            // a regressor that does not vary within any stratum is left out
             for (int i = 1; i <= ncoef; i++)
             {
                 if (iptr[nobs + i] == 0 || (Zero && (coef[i, icoef] == 0.0)))
@@ -1664,6 +1897,7 @@ namespace StatsDirect.Builtins
                 }
                 return;
             }
+            // so is a regressor that varies, but that the factorisation has found to be determined by the regressors before it
             for (int i = 1; i <= ncoef; i++)
             {
                 if (cov[i, i] == 0.0 & iptr[nobs + i] == 1)
@@ -1675,6 +1909,7 @@ namespace StatsDirect.Builtins
                         cov[i, ii] = 0.0;
                 }
             }
+            // R'y = g is solved for y, and then R s = y for the step s
             Regress1.mxinv2(ncoef, cov, GR, true, true, false, cov, out irank, ref ifault);
             if (ifault != 0)
                 return;
@@ -1682,9 +1917,9 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  
+        ///  Whether a variable takes two values and no more.
         ///  </summary>
-        ///  <param name="Variable"></param>
+        ///  <param name="Variable">The variable.</param>
         ///  <param name="cd">A ColumnData structure whose Groups field is filled in with the groups if the variable is binary, and ignored otherwise</param>
         ///  <returns></returns>
         ///  <remarks>TODO: This used to set bins to 1 if only 1 bin, 99 if >2 bins.  Was this ever used?</remarks>
@@ -1731,13 +1966,23 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  upper triangular factorization of a positive real definite symmetric matrix by Choleski square root method
         ///  </summary>
-        ///  <param name="n"></param>
-        ///  <param name="a"></param>
-        ///  <param name="r"></param>
-        ///  <param name="tol"></param>
-        ///  <param name="irank"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="n">The order of the matrix.</param>
+        ///  <param name="a">The matrix, of which the upper triangle is read.</param>
+        ///  <param name="r">On return R, upper triangular with zeros below the diagonal: R'R is the matrix.  It may be the same array as a.</param>
+        ///  <param name="tol">A diagonal element of R whose square is no more than tol of the element of the matrix that it came from is taken as 0.</param>
+        ///  <param name="irank">On return, the number of diagonal elements of R that are not 0.</param>
+        ///  <param name="ifault">
+        ///  On entry not 0, nothing is done.  On return 1 if tol is not between 0 and 1, and 2 if the matrix is not one that such a factor can
+        ///  be found for: the square of a diagonal element comes out below 0, or an element beside a diagonal element of 0 is not itself next to 0.
+        ///  </param>
+        ///  <remarks>
+        ///  R is formed a column at a time: element (k, j) is what is left of element (k, j) of the matrix, when the products of the elements of
+        ///  columns k and j above row k have been taken from it, divided by the diagonal element of column k; and the square of the diagonal
+        ///  element of column j is what is left of the diagonal element of the matrix when the squares of the elements above it have been taken
+        ///  from it.  LAPACK's DPOTRF does this for a matrix that is positive definite, and stops at a diagonal element that is not above 0.  This
+        ///  routine goes on: a diagonal element of 0 belongs to a regressor that is determined by those before it, whose row of R is left as
+        ///  zeros, so that the solution has 0 for it (see mxinv2 in Regress1.cs).
+        ///  </remarks>
         private static void CholeskiFactor(int n, double[,] a, double[,] r, double tol, ref int irank, ref int ifault)
         {
             // check tolerance
@@ -1752,6 +1997,7 @@ namespace StatsDirect.Builtins
                     r[ii, j] = a[ii, j];
 
             // decompose by Choleski's square root method
+            // s gathers the squares of the elements of column j above the diagonal, and x is the allowance for an element that should be 0
             int info = 0;
             irank = 0;
             for (int j = 1; j <= n; j++)
@@ -1772,6 +2018,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
+                        // the diagonal element of column k is 0, and the whole of its row must be
                         if (info == 0)
                         {
                             if (Math.Abs(t) > x * EuclideanNorm(k - 1, r))
@@ -1810,10 +2057,13 @@ namespace StatsDirect.Builtins
         ///  euclidean norm of a vector in a matrix
         ///  = sqr(x'*x)
         ///  </summary>
-        ///  <param name="idx"></param>
-        ///  <param name="x"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
+        ///  <param name="idx">The number of elements.</param>
+        ///  <param name="x">The matrix: the vector is the first idx elements of its column idx + 1.</param>
+        ///  <returns>The square root of the sum of the squares of the elements.</returns>
+        ///  <remarks>
+        ///  The elements are scaled by the largest of them as the sum is formed, so that the squares cannot overflow; the BLAS routine DNRM2 is of
+        ///  this kind.
+        ///  </remarks>
         private static double EuclideanNorm(int idx, double[,] x)
         {
             double norm;
@@ -1856,9 +2106,12 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  GET QUOTIENT U/D
         ///  </summary>
-        ///  <param name="u"></param>
-        ///  <param name="d"></param>
-        ///  <remarks></remarks>
+        ///  <param name="u">The numerator.</param>
+        ///  <param name="d">The denominator.</param>
+        ///  <remarks>
+        ///  The quotient is the missing value if either is missing, or if both are 0.  A quotient too great to be held is given as the greatest
+        ///  number that can be, with its sign, and one too small as 0.
+        ///  </remarks>
         private static double UOverD(double u, double d)
         {
             if (u == Constant.MISSING || d == Constant.MISSING)
@@ -1886,6 +2139,16 @@ namespace StatsDirect.Builtins
             return 0.0;
         }
 
+        /// <summary>
+        /// Picks out of a record its time, its frequency, its censoring code and the other quantities that have columns of their own.
+        /// </summary>
+        /// <param name="x">The data, a record at a time.</param>
+        /// <param name="ix1">The number of elements of x before the record.</param>
+        /// <remarks>
+        /// irt, ilt, IFRQ, ifix, ipar and icen are the columns of the time, a second time, the frequency, the fixed term, a parameter and the
+        /// censoring code, or 0 for one that there is not, which is then given as 0 (the frequency and the parameter as 1).  nrmiss is the number
+        /// of them that are missing in the record.  This program has columns for the time, the censoring code and, sometimes, the frequency.
+        /// </remarks>
         private static void coxvars(double[] x, int ix1, int irt, int ilt, int IFRQ, int ifix, int ipar, int icen, out double xrt, out double xlt, out double xfrq, out double xfix, out double xpar, out double xcen, out int nrmiss)
         {
             //  GET SPECIAL VARIABLES
@@ -1952,6 +2215,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Transposes, in place, a matrix of m rows and n columns that is held a column at a time, from element 1 of a: the data held a column
+        /// at a time become the data held a record at a time, and the other way about.
+        /// </summary>
+        /// <remarks>
+        /// To transpose in place is to send each element to the place of another, which sends the elements round in loops.  Each loop is
+        /// followed with its companion, the loop of the places counted from the other end; move records the places that have been dealt with.
+        /// ifault is 3 if the search for a loop not yet followed runs out.
+        /// </remarks>
         private static void MatrixTranspose1D(int m, int n, double[] a, out int ifault)
         {
             //      adapted from CACM Algorithm 380 - in situ transpose of a rectangular matrix
@@ -2257,16 +2529,22 @@ namespace StatsDirect.Builtins
             return istrata;
         }
 
+        /// <summary>The baseline survival and cumulative hazard at each time with an event, as a report.</summary>
         public static StepOutput RptCoxBaselineToReport(ParameterBag parameters)
         {
             return RptCoxBaseline(parameters, false, string.Empty, false);
         }
 
+        /// <summary>The baseline survival and cumulative hazard at the time of each record, and its hazard ratio, saved to the worksheet.</summary>
         public static StepOutput RptCoxBaselineToWorksheet(ParameterBag parameters)
         {
             return RptCoxBaseline(parameters, false, string.Empty, true);
         }
 
+        /// <summary>
+        /// The plots of survival and of cumulative hazard against time, with a line for each stratum or for each value of the binary predictor
+        /// that was chosen, or a single line.
+        /// </summary>
         public static StepOutput RptCoxHazardPlots(ParameterBag parameters)
         {
             bool[] selectedGroups = (bool[])parameters["group"].AsObject;
@@ -2283,6 +2561,18 @@ namespace StatsDirect.Builtins
             return StepOutput.Empty();
         }
 
+        /// <summary>
+        /// The baseline survival and cumulative hazard, for the report, for the worksheet or for the plots.
+        /// </summary>
+        /// <param name="parameters">What RptCoxRegression passed on.</param>
+        /// <param name="plot">True to make the plots.</param>
+        /// <param name="groupVar">For the plots: "Strata", the title of a binary predictor, or "None".</param>
+        /// <param name="createGrid">True to save the figures to the worksheet.</param>
+        /// <remarks>
+        /// The baseline is a subject whose predictors are all 0, which for a predictor that was centred is its mean.  The report has a row for
+        /// each time at which there is an event, stratum by stratum, and gives with it the hazard ratio of the record that has the greatest
+        /// among those with events at that time.
+        /// </remarks>
         private static StepOutput RptCoxBaseline(ParameterBag parameters, bool plot, string groupVar, bool createGrid)
         {
             int i;
@@ -2370,6 +2660,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Makes the plots of survival and of cumulative hazard and, when they are split by a binary predictor, the plot of -ln(-ln(survival))
+        /// against ln(time), in which the lines of the two groups run side by side if their hazards are proportional.
+        /// </summary>
+        /// <remarks>
+        /// When the plots are split by a binary predictor, the survival of a group is the baseline survival to the power exp(b v), where v is
+        /// the value that the predictor has in the group and b is its coefficient.
+        /// </remarks>
         private static void CoxPlot(ParameterBag parameters, CoxP[] z, int iobs, int istrata, string groupVar, ParameterBag outputParameters)
         {
             int igroups;
@@ -2494,6 +2792,16 @@ namespace StatsDirect.Builtins
             return Math.Sign(rm) * Math.Sqrt(Math.Max(0.0, -2.0 * (rm + logTerm)));
         }
 
+        /// <summary>
+        /// The residuals: plots of the deviance residuals against time and against the rank of time and, if it is asked for, the residuals and
+        /// diagnostics of each record saved to the worksheet.
+        /// </summary>
+        /// <remarks>
+        /// With H the baseline cumulative hazard at the time of a record and r its hazard ratio, its Cox-Snell residual is r H, the cumulative
+        /// hazard of the record itself; its martingale residual is 1 for an event, or 0 for a censored record, less the Cox-Snell residual; and
+        /// its deviance residual is the martingale residual made more nearly symmetrical about 0 (see DevianceResidual).  The leverage, the
+        /// proportionality constant and the residual that is saved as Cox-Oakes are those that the fit worked out (see coxiter).
+        /// </remarks>
         public static StepOutput RptCoxResiduals(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
@@ -2584,6 +2892,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The hazard ratio of each predictor, exp(b), with its confidence interval, exp(b - c se) to exp(b + c se), where c is the normal
+        /// deviate for the confidence that was asked for; and the coefficients with their standard errors.
+        /// </summary>
         public static StepOutput RptCoxHazardRatios(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
@@ -2623,6 +2935,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The log likelihood with no covariates and with those of the model, and the likelihood ratio chi-square, which is twice the difference,
+        /// with as many degrees of freedom as there are predictors in the model.
+        /// </summary>
         public static StepOutput RptCoxModelAnalysis(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
