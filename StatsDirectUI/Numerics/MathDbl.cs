@@ -257,7 +257,8 @@ namespace StatsDirect.Numerics
                 return 0.0;
 
             double djs = Math.Floor(dix);
-            if (djs != 2.0 * (djs / 2.0))
+            // S is always even: an odd value stands for the even number above it
+            if (djs != 2.0 * Math.Floor(djs / 2.0))
                 djs += 1.0;
             double b = 1.0 / Convert.ToDouble(N);
             double x = (6.0 * (djs - 1.0) * b / (1.0 / (b * b) - 1.0) - 1.0) * Math.Sqrt(1.0 / b - 1.0);

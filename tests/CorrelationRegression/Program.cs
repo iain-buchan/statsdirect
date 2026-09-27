@@ -14,7 +14,7 @@ internal sealed class NoProgress : IProgressBarHost, IProgressBar
     public void Dispose() { }
 }
 
-internal static class Program
+internal static partial class Program
 {
     private const double M = double.MinValue;
     private static int failures, checks;
@@ -327,6 +327,8 @@ internal static class Program
         double[] x6 = Line(0, 1, 20, out double[] y6);
         LeastSquares("y about 1e9", x6, y6.Select(v => v + 1e9).ToArray());
         Console.WriteLine($"least squares: {checks - before} checks, {failures - failed} failed");
+        SpearmanDistribution();
+        KendallDistribution();
 
         Console.WriteLine(failures == 0 ? $"ALL {checks} CHECKS PASS" : $"{failures} OF {checks} CHECKS FAILED");
         return failures == 0 ? 0 : 1;

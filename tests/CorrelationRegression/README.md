@@ -13,4 +13,6 @@ Forty sets of data, with and without ties and missing values and at three levels
 
 The least squares fit of simple linear regression is compared with sums taken in decimal arithmetic, for data whose values are large beside their spread (years, dates as day numbers, times in seconds) as well as for data that start at 0.
 
+`RankDistributions.cs` compares the program's distributions of Spearman's statistic and of Kendall's score, without ties, with the count of every ordering, at every value of the statistic. They should agree exactly up to the number of pairs for which the program counts the orderings itself (10 for Spearman's statistic, 50 for Kendall's score); beyond that the program uses a series, which should be within 0.0005 of the count for Spearman's statistic and within 0.00001 for Kendall's score.
+
 The run is the same every time. The exit code is 0 if every check passes.
