@@ -341,10 +341,16 @@ namespace StatsDirect.Builtins
                 {
                     if (xd[i - 1].Groups == null || xd[i - 1].Groups.Count > 2)
                     {
+                        // the mean over the subjects: a record counts as many times as the subjects it stands for
                         double xbar = 0;
+                        double inMean = 0;
                         for (int r = 1; r <= rows; r++)
-                            xbar += holdx[r, i];
-                        xbar /= rows;
+                        {
+                            double frequency = ifrq > 0 ? x[rows * (ifrq - 1) + r] : 1.0;
+                            xbar += frequency * holdx[r, i];
+                            inMean += frequency;
+                        }
+                        xbar /= inMean;
                         for (int r = 1; r <= rows; r++)
                         {
                             holdx[r, i] = holdx[r, i] - xbar;
@@ -377,7 +383,7 @@ namespace StatsDirect.Builtins
             double[,,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
             // column 0 of rows 0 to 5 holds n, the number of coefficients, the two log likelihoods, the number of events and the degrees of freedom,
             // so there are at least six rows
-            double[,] ARR2 = new double[Math.Max(nobs, 5) + 1, 10 + 1];
+            double[,] ARR2 = new double[Math.Max(nobs, 5) + 1, 11 + 1];
             for (int i = 1; i <= ncoef; i++)
             {
                 ARR3[1, i, 1] = coef[i, 1];
@@ -386,6 +392,7 @@ namespace StatsDirect.Builtins
                 CDAT1[i] = xd[i - 1];
             }
 
+            double subjects = 0.0;
             for (int i = 1; i <= nobs; i++)
             {
                 ARR2[i, 1] = ccase[i, 1];
@@ -402,6 +409,9 @@ namespace StatsDirect.Builtins
                 // leave 8 for later assignment of plotting group
                 ARR2[i, 9] = igrp[i];
                 ARR2[i, 10] = ccase[i, 6];
+                // the number of subjects that the record stands for
+                ARR2[i, 11] = ifrq > 0 ? x[nobs * (ifrq - 1) + i] : 1.0;
+                subjects += ARR2[i, 11];
             }
             ARR2[0, 0] = nobs;
             ARR2[1, 0] = ncoef;
@@ -454,7 +464,7 @@ namespace StatsDirect.Builtins
             }
 
             ParameterBag outputParameters = new();
-            outputParameters.AddOutput("n", ARR2[0, 0]);
+            outputParameters.AddOutput("n", subjects);
             outputParameters.AddOutput("d", ARR2[4, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
             outputParameters.AddOutput("x2", x2dev);
@@ -2099,42 +2109,144 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  solve for alpha by Newton Raphson iteration - see Kalbfleisch and Prentice P293
         ///  </summary>
-        ///  <param name="dead"></param>
-        ///  <param name="dead_theta"></param>
-        ///  <param name="risk_theta"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
-        private static double AlphaSolve(double dead, double[] dead_theta, double risk_theta)
+        ///  <param name="dead_theta">The hazard ratio of each record with an event at the time.</param>
+        ///  <param name="dead_frequency">The number of subjects that each of those records stands for.</param>
+        ///  <param name="dead">The number of deaths: the sum of dead_frequency.</param>
+        ///  <param name="risk_theta">The sum of the hazard ratios of the subjects at risk.</param>
+        ///  <returns>alpha, or the missing value if it was not found in 300 iterations.</returns>
+        ///  <remarks>
+        ///  The iteration is on h = -ln(alpha), which is the rise in the cumulative hazard at this time.  The sum over the deaths of
+        ///  theta / (1 - exp(-theta h)) falls as h rises and is convex, and it is no less than dead / h, so that at h = dead / risk_theta it is
+        ///  no less than risk_theta: from there the iteration climbs to the root without passing it, and alpha is never more than exp(-h).
+        ///  Carried out on alpha itself, as it was, the iteration failed when few were left at risk beside those who died.
+        ///  </remarks>
+        private static double AlphaSolve(List<double> dead_theta, List<double> dead_frequency, double dead, double risk_theta)
         {
-            const double tol = 0.0000001;
-            double alpha = Math.Exp(-dead / risk_theta);
-            int iter = 0;
+            const double tol = 0.000000001;
+            double h = dead / risk_theta;
+            double stp = double.MaxValue;
 
-            do
+            for (int iter = 0; iter < 300; iter++)
             {
+                // once exp(-h) is nothing beside 1, so is alpha
+                if (Math.Exp(-h) < 1.0E-16)
+                    return Math.Exp(-h);
                 double gi = 0.0;
                 double gi1 = 0.0;
-                int i;
-                for (i = 1; i <= Convert.ToInt32(dead); i++)
+                for (int i = 0; i < dead_theta.Count; i++)
                 {
-                    double xii = Math.Pow(alpha, dead_theta[i]);
-                    gi += dead_theta[i] / (1.0 - xii);
-                    gi1 += xii * Math.Pow(dead_theta[i], 2.0) / (alpha * Math.Pow(1.0 - xii, 2.0));
+                    double xii = Math.Exp(-dead_theta[i] * h);
+                    gi += dead_frequency[i] * dead_theta[i] / (1.0 - xii);
+                    gi1 += dead_frequency[i] * xii * Math.Pow(dead_theta[i] / (1.0 - xii), 2.0);
                 }
-                double stp = (gi - risk_theta) / gi1;
-                alpha -= stp;
-                if (Math.Abs(stp) <= tol)
-                {
+                double next = (gi - risk_theta) / gi1;
+                if (double.IsNaN(next) || double.IsInfinity(next) || h + next <= 0.0)
                     break;
-                }
-                iter += 1;
-                if (iter > 300)
-                {
-                    break;
-                }
+                stp = next;
+                h += stp;
+                // the step is small beside h, or the change that it makes to alpha is nothing beside 1
+                if (Math.Abs(stp) <= tol * Math.Max(1.0, h) || Math.Exp(-h) * Math.Abs(stp) <= 1.0E-12)
+                    return Math.Exp(-h);
             }
-            while (true);
-            return iter < 300 ? alpha : Constant.MISSING;
+            // where the sum is almost level, rounding in it can keep the steps from becoming as small as that: if the last was small all the
+            // same, h is as good as the arithmetic allows
+            return Math.Abs(stp) <= 0.00001 * Math.Max(1.0, h) ? Math.Exp(-h) : Constant.MISSING;
+        }
+
+        /// <summary>
+        /// The baseline survival and the baseline cumulative hazard at the time of each record, put into S and H of the records.
+        /// </summary>
+        /// <param name="z">The records, from element 1.  On return they are in order of stratum, then time, then hazard ratio from the greatest down.</param>
+        /// <param name="iobs">The number of records.</param>
+        /// <returns>The number of strata.</returns>
+        private static int BaselineSurvivalAndHazard(CoxP[] z, int iobs)
+        {
+            Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
+            int lastStratum = z[1].Stratum;
+            double alpha_product = 1.0;
+            double alpha_productx = 1.0;
+            int istrata = 1;
+
+            for (int i = 1; i <= iobs; i++)
+            {
+                if (z[i].Stratum != lastStratum)
+                {
+                    //  new stratum
+                    alpha_product = 1.0;
+                    alpha_productx = 1.0;
+                    lastStratum = z[i].Stratum;
+                    istrata += 1;
+                }
+                // the records at this time, iinc of them; of those with an event, the hazard ratios and the numbers of subjects they stand for
+                double watch_time = z[i].Time;
+                List<double> dead_theta = new();
+                List<double> dead_frequency = new();
+                double dead = 0.0;
+                int iinc = 0;
+                for (int j = i; j <= iobs; j++)
+                {
+                    if (z[i].Stratum != z[j].Stratum)
+                        break;
+                    if (z[j].Time != watch_time)
+                        break;
+                    if (z[j].Censor != 0.0)
+                    {
+                        dead += z[j].Frequency;
+                        dead_theta.Add(z[j].Exb);
+                        dead_frequency.Add(z[j].Frequency);
+                    }
+                    iinc += 1;
+                }
+                // those at risk are the records of the stratum from here on, which have this time or a later one
+                double risk_theta = 0.0;
+                double atRisk = 0.0;
+                for (int j = i; j <= iobs; j++)
+                {
+                    if (z[i].Stratum != z[j].Stratum)
+                        break;
+                    risk_theta += z[j].Frequency * z[j].Exb;
+                    atRisk += z[j].Frequency;
+                }
+                bool erra = false;
+                double alpha_i;
+                double alpha_ix;
+                if (dead == 0.0)
+                {
+                    alpha_i = 1.0;
+                    alpha_ix = alpha_i;
+                }
+                else if (dead == atRisk)
+                {
+                    // everyone still at risk dies at this time: the product-limit survival falls to 0 (the tied-death equation has no root in (0, 1))
+                    alpha_i = 0.0;
+                    alpha_ix = Math.Exp(-dead / risk_theta);
+                }
+                else if (dead == 1.0)
+                {
+                    // one death: the hazard ratio is that of the subject who died, who need not be the first of the records at this time
+                    alpha_i = Math.Pow(1.0 - dead_theta[0] / risk_theta, 1.0 / dead_theta[0]);
+                    alpha_ix = Math.Exp(-dead / risk_theta);
+                }
+                else
+                {
+                    alpha_ix = Math.Exp(-dead / risk_theta);
+                    alpha_i = AlphaSolve(dead_theta, dead_frequency, dead, risk_theta);
+                    erra = alpha_i == Constant.MISSING;
+                }
+                //  use a non-iterative solution for the hazard - see Stata manual
+                alpha_productx *= alpha_ix;
+                if (erra == false)
+                {
+                    alpha_product *= alpha_i;
+                    for (int j = i; j < i + iinc; j++)
+                    {
+                        z[j].S = alpha_product;
+                        z[j].H = -Math.Log(alpha_productx);
+                    }
+                }
+                i += iinc - 1;
+            }
+            return istrata;
         }
 
         public static StepOutput RptCoxBaselineToReport(ParameterBag parameters)
@@ -2185,115 +2297,28 @@ namespace StatsDirect.Builtins
                     S = ARR2[i, 1],
                     H = ARR2[i, 4],
                     Exb = ARR2[i, 10],
+                    Frequency = ARR2[i, 11],
                     Index = i
                 };
             }
 
-            Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
-            // int istart = 1; 
-            int lastStratum = z[1].Stratum;
-            double alpha_product = 1.0;
-            double alpha_productx = 1.0;
-            int istrata = 1;
-
-            for (i = 1; i <= iobs; i++)
-            {
-                if (z[i].Stratum != lastStratum)
-                {
-                    //  new stratum
-                    alpha_product = 1.0;
-                    alpha_productx = 1.0;
-                    lastStratum = z[i].Stratum;
-                    istrata += 1;
-                }
-                watch_time = z[i].Time;
-                double[] dead_theta = new double[30 + 1];
-                double dead = 0.0;
-                int iinc = 0;
-                for (int j = i; j <= iobs; j++)
-                {
-                    if (z[i].Stratum != z[j].Stratum)
-                        break;
-                    if (z[j].Time != watch_time)
-                        break;
-                    if (z[j].Censor != 0.0)
-                    {
-                        dead += 1.0;
-                        Array transTemp0 = dead_theta;
-                        if (dead > transTemp0.GetUpperBound(0))
-                        {
-                            // create temp variable for copying values 
-                            double[] transTemp7 = new double[Convert.ToInt32(dead) + 1];
-                            Array.Copy(dead_theta, transTemp7, Math.Min(dead_theta.Length, transTemp7.Length));
-                            dead_theta = transTemp7;
-                        }
-                        dead_theta[Convert.ToInt32(dead)] = z[j].Exb;
-                    }
-                    iinc += 1;
-                }
-                // .exb must be sorted in reverse order for risk_theta to start with the correct value when d>1
-                double risk_theta = 0.0;
-                int atRisk = 0;
-                for (int j = i; j <= iobs; j++)
-                {
-                    if (z[i].Stratum != z[j].Stratum)
-                        break;
-                    risk_theta += z[j].Exb;
-                    atRisk++;
-                }
-                bool erra = false;
-                double alpha_i;
-                double alpha_ix;
-                if (dead == 0.0)
-                {
-                    alpha_i = 1.0;
-                    alpha_ix = alpha_i;
-                }
-                else if (dead == atRisk)
-                {
-                    // everyone still at risk dies at this time: the product-limit survival falls to 0 (the tied-death equation has no root in (0, 1))
-                    alpha_i = 0.0;
-                    alpha_ix = Math.Exp(-dead / risk_theta);
-                }
-                else if (dead == 1.0)
-                {
-                    alpha_i = Math.Pow(1.0 - z[i].Exb / risk_theta, 1.0 / z[i].Exb);
-                    alpha_ix = Math.Exp(-dead / risk_theta);
-                }
-                else
-                {
-                    alpha_ix = Math.Exp(-dead / risk_theta);
-                    alpha_i = AlphaSolve(dead, dead_theta, risk_theta);
-                    erra = alpha_i == Constant.MISSING;
-                }
-                alpha_product *= alpha_i;
-                //  use a non-iterative solution for the hazard - see Stata manual
-                alpha_productx *= alpha_ix;
-                if (erra == false)
-                {
-                    for (int j = i; j <= i + iinc; j++)
-                    {
-                        if (z[j] == null)
-                            z[j] = new CoxP();
-                        z[j].S = alpha_product;
-                        z[j].H = -Math.Log(alpha_productx);
-                    }
-                }
-                i = i + iinc - 1;
-            }
+            int istrata = BaselineSurvivalAndHazard(z, iobs);
 
             ParameterBag outputParameters = new();
             if (!plot)
             {
                 // write to report in time-sorted order
                 watch_time = Constant.MISSING;
+                int watchStratum = 0;
                 IList<ParameterBag> timeList = new List<ParameterBag>();
                 outputParameters.AddOutput("*time", timeList);
                 for (i = 1; i <= iobs; i++)
                 {
-                    if (z[i].Censor != 0.0 & watch_time != z[i].Time)
+                    // a row for each time with an event, in each stratum
+                    if (z[i].Censor != 0.0 & (watch_time != z[i].Time || watchStratum != z[i].Stratum))
                     {
                         watch_time = z[i].Time;
+                        watchStratum = z[i].Stratum;
                         ParameterBag timeParameters = new();
                         timeList.Add(timeParameters);
                         timeParameters.AddOutput("time", z[i].Time);
@@ -2448,10 +2473,6 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptCoxResiduals(ParameterBag parameters)
         {
-            int istrata = 0;
-            int lastStratum = 0;
-            double alpha_product = 0; double alpha_productx = 0;
-
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
 
             bool save = parameters["save"].AsBoolean;
@@ -2471,96 +2492,12 @@ namespace StatsDirect.Builtins
                     H = ARR2[i, 4],
                     //  baseline sum(exp(bz))
                     Exb = ARR2[i, 10],
+                    Frequency = ARR2[i, 11],
                     Index = i
                 };
             }
 
-            Array.Sort(z, 1, iobs, new CoxpByStratumTimeThenExb());
-
-            for (int i = 1; i <= iobs; i++)
-            {
-                if (z[i].Stratum != lastStratum)
-                {
-                    //  new stratum
-                    alpha_product = 1.0;
-                    alpha_productx = 1.0;
-                    lastStratum = z[i].Stratum;
-                    istrata += 1;
-                }
-                double watch_time = z[i].Time;
-                double[] dead_theta = new double[30 + 1];
-                double dead = 0.0;
-                int iinc = 0;
-                for (int j = i; j <= iobs; j++)
-                {
-                    if (z[i].Stratum != z[j].Stratum)
-                        break;
-                    if (z[j].Time != watch_time)
-                        break;
-                    if (z[j].Censor != 0.0)
-                    {
-                        dead += 1.0;
-                        if (dead > dead_theta.GetUpperBound(0))
-                        {
-                            // create temp variable for copying values 
-                            double[] transTemp8 = new double[Convert.ToInt32(dead) + 1];
-                            Array.Copy(dead_theta, transTemp8, Math.Min(dead_theta.Length, transTemp8.Length));
-                            dead_theta = transTemp8;
-                        }
-                        dead_theta[Convert.ToInt32(dead)] = z[j].Exb;
-                    }
-                    iinc += 1;
-                }
-                // .exb must be sorted in reverse order for risk_theta to start with the correct value when d>1
-                double risk_theta = 0.0;
-                int atRisk = 0;
-                for (int j = i; j <= iobs; j++)
-                {
-                    if (z[i].Stratum != z[j].Stratum)
-                        break;
-                    risk_theta += z[j].Exb;
-                    atRisk++;
-                }
-                bool erra = false;
-                double alpha_i;
-                double alpha_ix;
-                if (dead == 0.0)
-                {
-                    alpha_i = 1.0;
-                    alpha_ix = alpha_i;
-                }
-                else if (dead == atRisk)
-                {
-                    // everyone still at risk dies at this time: the product-limit survival falls to 0 (the tied-death equation has no root in (0, 1))
-                    alpha_i = 0.0;
-                    alpha_ix = Math.Exp(-dead / risk_theta);
-                }
-                else if (dead == 1.0)
-                {
-                    alpha_i = Math.Pow(1.0 - z[i].Exb / risk_theta, 1.0 / z[i].Exb);
-                    alpha_ix = Math.Exp(-dead / risk_theta);
-                }
-                else
-                {
-                    alpha_ix = Math.Exp(-dead / risk_theta);
-                    alpha_i = AlphaSolve(dead, dead_theta, risk_theta);
-                    erra = alpha_i == Constant.MISSING;
-                }
-                alpha_product *= alpha_i;
-                //  use a non-iterative solution for the hazard - see Stata manual
-                alpha_productx *= alpha_ix;
-                if (erra == false)
-                {
-                    for (int j = i; j <= i + iinc; j++)
-                    {
-                        if (z[j] == null)
-                            z[j] = new CoxP();
-                        z[j].S = alpha_product;
-                        z[j].H = -Math.Log(alpha_productx);
-                    }
-                }
-                i += iinc - 1;
-            }
+            BaselineSurvivalAndHazard(z, iobs);
 
             int ictr = 0;
             double[] xp = new double[iobs];
