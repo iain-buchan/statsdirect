@@ -1937,12 +1937,18 @@ namespace StatsDirect.Builtins
             double dsul; double dsll; double tausq;
             int ierr; double realk;
 
+            // The number that is added to the events of both groups of a study without an event in one of its groups: that of the
+            // preference if it is a number between 0 and 1, otherwise a half (the treatment arm correction is of the sizes of groups)
+            double cc = host.Preferences.MetaCC > 0.0 && host.Preferences.MetaCC < 1.0 ? host.Preferences.MetaCC : 0.5;
+            bool[] cced = new bool[k + 1];
             if (mode == MetaIncidenceRateMode.Difference)
-                IrdMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsird, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
+                IrdMeta(k, a, b, pt1, pt2, cc, cced, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsird, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
             else
-                IrrMeta(k, a, b, pt1, pt2, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsirr, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
+                IrrMeta(k, a, b, pt1, pt2, cc, cced, out rmh, out ll, out ul, out zrmh, ref cit, ref cco, rkr, rkw, dsw, rkrl, rkru, lerr, uerr, out qc, out dsirr, out dz, out dsll, out dsul, out realk, out tausq, out ierr);
             if (ierr == -1)
                 throw new InvalidDataException();
+            if (realk == 0.0)
+                throw new TemplateOperationCancelledException("None of the studies can be pooled: each of them has no events, or a group with no person-time.", mode == MetaIncidenceRateMode.Difference ? "Incidence rate difference meta-analysis" : "Incidence rate ratio meta-analysis");
 
             double p2M = 0; double p1M = 0; double p2F = 0; double p1F = 0; double llm = 0; double ulm = 0; double llf = 0; double ulf = 0; double eor = 0;
             if (mode == MetaIncidenceRateMode.Ratio)
@@ -1996,7 +2002,13 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("pt1", pt1[i]);
                 inputsParameters.AddOutput("b", b[i]);
                 inputsParameters.AddOutput("pt2", pt2[i]);
-                inputsParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
+                // a study that is left out is marked, and so is one that has the continuity correction, as in the other reports
+                string label = hasUserSuppliedLabels ? title[i] : string.Empty;
+                if (rkr[i] == Constant.MISSING)
+                    label = "* (excluded)";
+                else if (cced[i])
+                    label += " [CC = " + cc.ToString() + "]";
+                inputsParameters.AddOutput("lb", label);
             }
 
             IList<ParameterBag> irList = new List<ParameterBag>();
@@ -2017,7 +2029,7 @@ namespace StatsDirect.Builtins
                     dsw[i] != Constant.MISSING
                         ? 100 * dsw[i] / Formatting.dsum(dsw, 1)
                         : Constant.MISSING);
-                irParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
+                irParameters.AddOutput("lb", rkr[i] == Constant.MISSING ? "* (excluded)" : hasUserSuppliedLabels ? title[i] : string.Empty);
                 if (rkr[i] == Constant.MISSING)
                 {
                     irParameters.AddOutput("yi", Constant.MISSING);
@@ -2093,7 +2105,7 @@ namespace StatsDirect.Builtins
                 xform = Transformation.Log;
             // The bias indicators take the standard error of each study from limits that are the estimate plus and minus a multiple of
             // it: those of the rate difference are such limits; for the rate ratio, whose limits in the report are exact, they are
-            // made here from the standard error of its logarithm, the root of 1 / a + 1 / b
+            // made here from the standard error of its logarithm, the root of 1 over the weight of the study
             double[] wll = rkrl;
             double[] wul = rkru;
             if (mode == MetaIncidenceRateMode.Ratio)
@@ -2109,7 +2121,7 @@ namespace StatsDirect.Builtins
                     }
                     else
                     {
-                        double se = Math.Sqrt(1.0 / a[i] + 1.0 / b[i]);
+                        double se = Math.Sqrt(1.0 / rkw[i]);
                         wll[i] = Math.Exp(Math.Log(rkr[i]) - cit * se);
                         wul[i] = Math.Exp(Math.Log(rkr[i]) + cit * se);
                     }
@@ -2762,9 +2774,13 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// The incidence rate difference of each study, a / t1 - b / t2, with the variance a / t1^2 + b / t2^2, pooled as the summary of
-        /// the class describes.  A study without an event in either group, or without person-time in a group, is left out.
+        /// the class describes.  A study without an event in one of its groups has the continuity correction cc added to a and to b
+        /// in its variance; its difference is from the events as they are.  A study without an event in either group, or without
+        /// person-time in a group, is left out.
         /// </summary>
-        private static void IrdMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
+        /// <param name="cc">The continuity correction.</param>
+        /// <param name="cced">On return, whether each study had the continuity correction.</param>
+        private static void IrdMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, double cc, bool[] cced, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
         {
             double sumwt = 0.0;
             double sumwi = 0.0;
@@ -2787,8 +2803,12 @@ namespace StatsDirect.Builtins
                     double ir1 = a[i] / pt1[i];
                     double ir2 = b[i] / pt2[i];
                     double ird = ir1 - ir2;
+                    // without an event in one of the groups the events of both have the correction, for the variance alone
+                    cced[i] = a[i] <= 0.0 || b[i] <= 0.0;
+                    double ac = cced[i] ? a[i] + cc : a[i];
+                    double bc = cced[i] ? b[i] + cc : b[i];
                     // the limits of the study are from the variance that its weight is made from
-                    double vark = a[i] / (pt1[i] * pt1[i]) + b[i] / (pt2[i] * pt2[i]);
+                    double vark = ac / (pt1[i] * pt1[i]) + bc / (pt2[i] * pt2[i]);
                     rkrl[i] = ird - cit * Math.Sqrt(vark);
                     rkru[i] = ird + cit * Math.Sqrt(vark);
                     rkr[i] = ird;
@@ -2864,18 +2884,22 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// The incidence rate ratio of each study, (a / t1) / (b / t2), pooled on the scale of its logarithm, whose variance is
         /// 1 / a + 1 / b, as the summary of the class describes.  The limits of each study are exact: those of the binomial proportion
-        /// a of a + b, by the F distribution, put on the scale of the rate ratio.  A study without an event in one of its groups,
-        /// or without person-time in a group, is left out.
+        /// a of a + b, by the F distribution, put on the scale of the rate ratio.  A study without an event in one of its groups has
+        /// the continuity correction cc added to a and to b, in its rate ratio and in its variance; its exact limits are from the
+        /// events as they are, and one of them is 0 or infinity.  A study without an event in either group, or without person-time
+        /// in a group, is left out.
         /// </summary>
-        private static void IrrMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
+        /// <param name="cc">The continuity correction.</param>
+        /// <param name="cced">On return, whether each study had the continuity correction.</param>
+        private static void IrrMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, double cc, bool[] cced, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
         {
             double sumwt = 0.0;
             double sumwi = 0.0;
             realk = 0.0;
             for (int i = 1; i <= k; i++)
             {
-                // irr and ci for stratum: a stratum with no events in the exposed or in the non-exposed group has no finite log rate ratio and is not pooled
-                if (a[i] <= 0.0 || b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
+                // irr and ci for stratum: a stratum with no events in either group tells nothing of the rate ratio and is not pooled
+                if (a[i] + b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
                 {
                     rkr[i] = Constant.MISSING;
                     rkw[i] = Constant.MISSING;
@@ -2887,17 +2911,37 @@ namespace StatsDirect.Builtins
                 else
                 {
                     realk += 1.0;
-                    double ir1 = a[i] / pt1[i];
-                    double ir2 = b[i] / pt2[i];
                     double p = cco + (1.0 - cco) / 2.0;
-                    double f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
-                    rkrl[i] = pt2[i] / pt1[i] * (a[i] / (b[i] + 1.0)) * (1.0 / f);
-                    f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
-                    rkru[i] = pt2[i] / pt1[i] * ((a[i] + 1.0) / b[i]) * f;
-                    rkr[i] = ir1 / ir2;
+                    // the exact limits are from the events as they are: without an event in the first group the lower limit is 0,
+                    // and without one in the second there is no upper limit
+                    if (a[i] <= 0.0)
+                    {
+                        rkrl[i] = 0.0;
+                    }
+                    else
+                    {
+                        double f = PDF.ffromp(2.0 * a[i], 2.0 * (b[i] + 1.0), 1.0 - p);
+                        rkrl[i] = pt2[i] / pt1[i] * (a[i] / (b[i] + 1.0)) * (1.0 / f);
+                    }
+                    if (b[i] <= 0.0)
+                    {
+                        rkru[i] = double.PositiveInfinity;
+                    }
+                    else
+                    {
+                        double f = PDF.ffromp(2.0 * b[i], 2.0 * (a[i] + 1.0), 1.0 - p);
+                        rkru[i] = pt2[i] / pt1[i] * ((a[i] + 1.0) / b[i]) * f;
+                    }
+                    lerr[i] = false;
+                    uerr[i] = false;
+                    // without an event in one of the groups the events of both have the correction
+                    cced[i] = a[i] <= 0.0 || b[i] <= 0.0;
+                    double ac = cced[i] ? a[i] + cc : a[i];
+                    double bc = cced[i] ? b[i] + cc : b[i];
+                    rkr[i] = ac / pt1[i] / (bc / pt2[i]);
                     // pooled incidence rate ratio
                     // vark = 1# / a(i) + 1# / b(i) - as expressed in Lau paper on AZT
-                    rkw[i] = a[i] * b[i] / (a[i] + b[i]);
+                    rkw[i] = ac * bc / (ac + bc);
                     sumwt += rkw[i];
                     if (rkr[i] > 0)
                         sumwi += rkw[i] * Math.Log(rkr[i]);
