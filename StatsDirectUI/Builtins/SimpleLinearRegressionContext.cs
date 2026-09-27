@@ -9,6 +9,20 @@ namespace StatsDirect.Builtins
     [Serializable]
     public class SimpleLinearRegressionContext
     {
+        // What the fit leaves in the properties (CalculateLeastSquaresMethod), with mx and my the means of x and y:
+        //     NX          the number of points
+        //     SumX        the sum of x
+        //     SSX, SSY    the sums of squares about the means: the sum of (x - mx)^2, and of (y - my)^2
+        //     SDX         the standard deviation of x: sqrt(SSX / (NX - 1))
+        //     Slope       the sum of (x - mx)(y - my) over SSX;  YIntercept  my - Slope mx, so that the line passes through the means
+        //     R           the correlation coefficient: the sum of (x - mx)(y - my) over sqrt(SSX SSY)
+        //     SSREG       the sum of squares that the line accounts for: the square of the sum of (x - mx)(y - my), over SSX
+        //     MS          the residual mean square: (SSY - SSREG) / (NX - 2);  SeEst  its square root, or the missing value if it is not above 0
+        // and from CalcRcia:
+        //     DF          the degrees of freedom of the residual mean square: NX - 2
+        //     CIT, PERT   the deviate of Student's t on DF degrees of freedom for the confidence that was asked for
+        //     P0          1 less the confidence
+        // A and G are set by the reports that use them.
         public double[] X { get; private set; }
         public double[] Y { get; private set; }
         private bool calculated;
@@ -75,6 +89,9 @@ namespace StatsDirect.Builtins
                 Y[i] = function.Invoke(Y[i]);
         }
 
+        /// <summary>
+        /// Fits the line of y on x by least squares.  The fit is made once: a second call does nothing.
+        /// </summary>
         public void CalculateLeastSquaresMethod()
         {
             if (calculated)
@@ -124,6 +141,10 @@ namespace StatsDirect.Builtins
             return this;
         }
 
+        /// <summary>
+        /// Sets the degrees of freedom and the deviate of Student's t for a confidence interval.
+        /// </summary>
+        /// <param name="regressionGamma">The confidence, as a proportion.</param>
         public void CalcRcia(double regressionGamma)
         {
             // Either this will have data, or CalculateLeastSquaresMethod() will have been run and NX will have been set.
