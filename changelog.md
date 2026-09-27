@@ -23,6 +23,14 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 - Simple linear regression, and the other analyses that fit a line by least squares (the normal plots among them): the sums of squares and products are formed about the means, which keeps the slope, the correlation coefficient and the residual mean square accurate when the values are large beside their spread. With x in seconds since 1970 and a minute apart, the slope had been 0.3% out and the residual mean square thousands of times too large; dates as day numbers lost the seventh figure of the residual mean square
 - Nonparametric linear regression with more than 46,341 pairs of observations: the report gives the rank correlation and says that the slope cannot be calculated, as it does for any number of pairs above 2,000. For some numbers of pairs it had stopped with an arithmetic overflow
 
+### Changed
+- Cox regression: when a predictor separates the subjects who had the event early from the rest, its coefficient has no finite estimate. The fit is now completed, with a warning that the coefficient may be infinite; the other coefficients and the likelihood ratio test stand, and the figures are those that R gives by Breslow's approximation at the same precision. Such data had given a very large coefficient without a warning, or had stopped the analysis with a message about convergence or a singular matrix, depending on the data
+- Cox regression: the iterations use the matrix of second derivatives throughout. At a precision of 0.0000001 the coefficients are nearer to the values that make the likelihood greatest (in 400 sets of data the greatest error fell from 0.00004 to 0.0000008), so a figure may differ in its sixth decimal place from the one given before
+- Cox regression: the precision of the estimates that the dialog box offers is 0.000000001, which is the default of R; it was 0.0000001, which could leave the sixth decimal place of a printed figure one out. In 400 sets of data the greatest error of a coefficient is now 0.000000007, and the fit takes no longer
+
+### Removed
+- Cox regression no longer asks for a splitting ratio. The ratio had no effect: the splitting of strata that it was for did not take place, whatever the ratio, so no result changes
+
 ##[v5.0.9] 2026-09-26
 
 The Excel link add-in retired, and its copies removed from users' machines by the installer and at start-up.
