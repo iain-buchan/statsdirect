@@ -21,4 +21,6 @@ There are eleven sets that are fixed and sixty that are made at random from a fi
 
 `OtherChecks.cs` checks that a predictor which does not vary, or which is determined by others, is dropped wherever it stands among the predictors; the iteration for the baseline survival at a time with tied events, on 200,000 sets of hazard ratios; the limit on the iterations of the fit; the figures of a record that the fit itself leaves out; and what is said when a fit cannot converge.
 
+`InfiniteCoefficient.cs` checks what is done when a predictor separates the subjects who had the event early from the rest, so that its coefficient has no finite estimate: the fit should end with a warning that names the predictor, and the other coefficients and the log likelihood should be those of the model in which the predictor makes strata, which is what the likelihood tends to. It also checks that a predictor which puts every event in order, so that the fit cannot converge, is said not to have converged; and that at the default precision the coefficients of 150 ordinary sets of data are within 0.000005 of those that make the likelihood greatest, with no warning of an infinite coefficient.
+
 The run is the same every time. The exit code is 0 if every check passes.

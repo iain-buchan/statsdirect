@@ -14,6 +14,8 @@ internal static partial class Program
         IterationLimit();
         RecordsLeftOutByTheFit();
         NotConverged();
+        InfiniteCoefficient();
+        DefaultPrecision();
     }
 
     private static ParameterBag Regression(double[] time, double[] code, double[][] columns, double accuracy)

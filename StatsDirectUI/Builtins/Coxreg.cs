@@ -493,6 +493,25 @@ namespace StatsDirect.Builtins
                 if (coef[i, 2] == 0.0)
                     droppedPredictors.Add(xd[i - 1].Title);
             ARR2[5, 0] = ncoef - droppedPredictors.Count;
+            // A coefficient may be infinite: the log likelihood has stopped rising, and yet one more iteration would have moved the coefficient by
+            // an amount that is not small: not beside the precision, not beside the coefficient itself, and enough to move the logarithm of the
+            // hazard ratio between the least and the greatest value of the predictor by a half or more.  That is what happens when a predictor
+            // separates the subjects who had the event early from the rest: the likelihood goes on rising, by less and less, as the coefficient
+            // grows without limit, and every iteration adds about as much to the coefficient as the one before.
+            List<string> unboundedPredictors = new();
+            for (int i = 1; i <= ncoef; i++)
+            {
+                double least = double.MaxValue;
+                double greatest = double.MinValue;
+                for (int r = 1; r <= rows; r++)
+                {
+                    least = Math.Min(least, holdx[r, i]);
+                    greatest = Math.Max(greatest, holdx[r, i]);
+                }
+                double step = Math.Abs(GR[i]);
+                if (coef[i, 2] != 0.0 && step > eps && step > Math.Sqrt(eps) * Math.Abs(coef[i, 1]) && step * (greatest - least) > 0.5)
+                    unboundedPredictors.Add(xd[i - 1].Title);
+            }
 
             // run a second time with a dummy var = 1 to get LL(0)
             nef = 1;
@@ -548,6 +567,8 @@ namespace StatsDirect.Builtins
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, (records - rows).ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup.")));
             if (droppedPredictors.Count > 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, string.Join(", ", droppedPredictors) + " dropped from the model because " + (droppedPredictors.Count > 1 ? "they do" : "it does") + " not vary or " + (droppedPredictors.Count > 1 ? "are" : "is") + " determined by other variable(s) included.")));
+            if (unboundedPredictors.Count > 0)
+                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, "the coefficient of " + string.Join(", ", unboundedPredictors) + " may be infinite: the log likelihood converged while the coefficient was still growing, as it does when a predictor separates the subjects who had the event early from the rest. The coefficient, its standard error and its P value should not be relied upon; the other coefficients and the likelihood ratio test stand.")));
             IList<ParameterBag> predList = new List<ParameterBag>();
             outputParameters.AddOutput("*pred", predList);
             for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
@@ -749,7 +770,7 @@ namespace StatsDirect.Builtins
         /// <param name="cov">On return, the covariance matrix of the coefficients.</param>
         /// <param name="xmean">On return, the mean of each regressor.</param>
         /// <param name="caze">On return, the figures for each record (see coxiter).</param>
-        /// <param name="GR">Working space: the gradient, and then the step.</param>
+        /// <param name="GR">On return, the step that one more iteration would have taken.</param>
         /// <param name="igrp">On return, the number of the stratum of each record, or -1 for a record that was left out.</param>
         /// <param name="nrmiss">On return, the number of records that were left out.</param>
         /// <param name="ifault">
@@ -1140,7 +1161,6 @@ namespace StatsDirect.Builtins
             // Which regressors vary.  smg holds the regressors of the first record of the stratum, and iptr[nobs + j] is set to 1 when a later
             // record of the same stratum is found to differ from it in regressor j.  A regressor that is the same throughout every stratum tells
             // nothing, and CoxHessian leaves it out.  The search ends as soon as every regressor has been found to vary.
-            bool ihess = false;
             icncd = ncoef;
             igr = 0;
             icnn = 0;
@@ -1180,9 +1200,8 @@ namespace StatsDirect.Builtins
                 }
             }
             icncd = icnn;
-            // The log likelihood at the starting values, and the first step.  ihess is not yet set: until the iterations are near the maximum the
-            // matrix of second derivatives is replaced by one that is quicker to form (see CoxHessian).
-            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 1, ihess, out double alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
+            // The log likelihood at the starting values, and the first step
+            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 1, out double alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
             if (ifault != 0)
                 return;
             double div;
@@ -1207,7 +1226,7 @@ namespace StatsDirect.Builtins
                 {
                     for (int i = 1; i <= ncoef; i++)
                         coef[i, 2] = coef[i, 1] + div * coef[i, 3];
-                    CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 2, ihess, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
+                    CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 2, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
                     if (ifault != 0)
                         return;
                     crit = algl - alglo;
@@ -1234,9 +1253,6 @@ namespace StatsDirect.Builtins
                     // We broke out of an inner loop, but need to break out of the outer one as well in this fault case
                     break;
                 }
-                // near enough to the maximum for the matrix of second derivatives itself to be used from now on
-                if (crit < 0.1)
-                    ihess = true;
                 for (ii = 1; ii <= ncoef; ii++)
                     coef[ii, 1] = coef[ii, 2];
                 alglo = algl;
@@ -1251,9 +1267,9 @@ namespace StatsDirect.Builtins
                 return;
             double zdot;
             int irank; int kk;
-            // The last pass, at the coefficients that were found, with the matrix of second derivatives itself.  It leaves in cov the triangular
-            // factor R of that matrix, and in column 1 of caze the proportionality constant of each record.
-            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 1, true, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
+            // The last pass, at the coefficients that were found.  It leaves in cov the triangular factor R of the matrix of second derivatives,
+            // in column 1 of caze the proportionality constant of each record, and in GR the step that one more iteration would have taken.
+            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 1, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
             if (ifault != 0)
                 return;
             // The proportionality constants are moved to column 5, and columns 1 to 4 are made ready for the figures of each record
@@ -1413,7 +1429,6 @@ namespace StatsDirect.Builtins
         ///  <param name="ncoef">The number of coefficients.</param>
         ///  <param name="coef">The coefficients, in column icoef.</param>
         ///  <param name="icoef">The column of coef to use: 1 for the coefficients as they stand, 2 for those that are being tried.</param>
-        ///  <param name="ihess">Set for the matrix of second derivatives itself; not set for the one that is quicker to form.</param>
         ///  <param name="algl">On return, the log likelihood.</param>
         ///  <param name="cov">On return, in its upper triangle, the triangular factor R of the matrix: R'R is the matrix.</param>
         ///  <param name="ldcov">No longer used now that MXFAC is never called inside here.</param>
@@ -1441,15 +1456,13 @@ namespace StatsDirect.Builtins
         ///      the log likelihood gains   (z1 - m)'b + ... + (zd - m)'b  -  d ln(smu)
         ///      the gradient gains         (z1 - m) + ... + (zd - m)  -  d smg / smu
         ///      the matrix gains           d (smh / smu  -  (smg / smu)(smg / smu)')
-        ///  The matrix is that of the second derivatives of the log likelihood with its sign changed, and is used if ihess is set.  If it is not,
-        ///  the matrix gains instead e1 e1' + ... + ed ed', where e = (z - m) - smg / smu is what the regressors of the record with the event
-        ///  differ by from their mean over those at risk.  That needs no smh, and serves until the iterations are near the maximum.
+        ///  The matrix is that of the second derivatives of the log likelihood with its sign changed.
         ///
         ///  The matrix is then factorised as R'R (CholeskiFactor) and R'R s = g is solved for the step s, in two stages (mxinv2).  A regressor
         ///  that does not vary within any stratum, or that the factorisation finds to be determined by the regressors before it, is left out:
         ///  its element of the gradient and its row and column of the matrix are cleared, and its element of the step is 0.
         ///  </remarks>
-        private static void CoxHessian(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int nef, int[] nvef, int[] indef, int ncoef, double[,] coef, int icoef, bool ihess, out double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, int[] igrp, ref int ifault)
+        private static void CoxHessian(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int nef, int[] nvef, int[] indef, int ncoef, double[,] coef, int icoef, out double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, int[] igrp, ref int ifault)
         {
             int irank = 0;
             int ncoef1 = 0;
@@ -1521,14 +1534,11 @@ namespace StatsDirect.Builtins
                         for (int iq = 1; iq <= ncoef; iq++)
                             smg[iq] = smg[iq] + xfrq * u * OBS[iq];
                         double xtmp;
-                        if (ihess)
+                        for (int j = 1; j <= ncoef; j++)
                         {
-                            for (int j = 1; j <= ncoef; j++)
-                            {
-                                xtmp = xfrq * u * OBS[j];
-                                for (int ii = 1; ii <= j; ii++)
-                                    smh[ii + (j - 1) * ncoef] = smh[ii + (j - 1) * ncoef] + OBS[ii] * xtmp;
-                            }
+                            xtmp = xfrq * u * OBS[j];
+                            for (int ii = 1; ii <= j; ii++)
+                                smh[ii + (j - 1) * ncoef] = smh[ii + (j - 1) * ncoef] + OBS[ii] * xtmp;
                         }
                         // The last of the records with events at this time: everybody who is at risk at this time has now been met.  Each of
                         // the jj records with events is taken in turn, this one first and then those before it in the order, for the part
@@ -1542,30 +1552,17 @@ namespace StatsDirect.Builtins
                                 algl -= xfrq * Math.Log(smu);
                                 for (int iq = 1; iq <= ncoef; iq++)
                                     GR[iq] = GR[iq] + -xfrq / smu * smg[iq];
-                                if (!ihess)
+                                double tmp = xfrq / smu;
+                                for (int L = 1; L <= ncoef; L++)
                                 {
-                                    for (int iq = 1; iq <= ncoef; iq++)
-                                        OBS[iq] = OBS[iq] + -1.0 / smu * smg[iq];
-                                    for (int L = 1; L <= ncoef; L++)
+                                    xtmp = -tmp * smg[L] / smu;
+                                    for (int ii = 1; ii <= L; ii++)
                                     {
-                                        xtmp = xfrq * OBS[L];
-                                        for (int ii = 1; ii <= L; ii++)
-                                            cov[ii, L] = cov[ii, L] + OBS[ii] * xtmp;
+                                        cov[ii, L] = cov[ii, L] + smh[ii + (L - 1) * ncoef] * tmp;
+                                        cov[ii, L] = cov[ii, L] + smg[ii] * xtmp;
                                     }
                                 }
-                                else
-                                {
-                                    double tmp = xfrq / smu;
-                                    for (int L = 1; L <= ncoef; L++)
-                                    {
-                                        xtmp = -tmp * smg[L] / smu;
-                                        for (int ii = 1; ii <= L; ii++)
-                                        {
-                                            cov[ii, L] = cov[ii, L] + smh[ii + (L - 1) * ncoef] * tmp;
-                                            cov[ii, L] = cov[ii, L] + smg[ii] * xtmp;
-                                        }
-                                    }
-                                }
+                                // the next of the records with events at this time, of which the frequency is wanted
                                 if (j != jj)
                                 {
                                     do
