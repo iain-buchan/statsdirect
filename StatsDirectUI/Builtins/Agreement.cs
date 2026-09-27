@@ -206,17 +206,20 @@ namespace StatsDirect.Builtins
 
             double dr = r1 - r2;
             double dm = mu1 - mu2;
-            double e1 = mu1 / (1.0 - r1);
-            double e2 = mu2 / (1.0 - r2);
+            //  the delta that was observed in each group: R is 1 - delta / mean, so delta is mean (1 - R)
+            double d1 = mu1 * (1.0 - r1);
+            double d2 = mu2 * (1.0 - r2);
             double vard = (Math.Pow(mu1, 2.0) * var2 + Math.Pow(mu2, 2.0) * var1) / (Math.Pow(mu1, 2.0) * Math.Pow(mu2, 2.0));
             double sig1 = Math.Sqrt(var1);
             double sig2 = Math.Sqrt(var2);
             double sigd = Math.Sqrt(vard);
             double gamd = (Math.Pow(mu1, 3.0) * Math.Pow(sig2, 3.0) * gam2 - Math.Pow(mu2, 3.0) * Math.Pow(sig1, 3.0) * gam1) / (Math.Pow(mu1, 3.0) * Math.Pow(mu2, 3.0) * Math.Pow(sigd, 3.0));
             double t = dr / sigd;
-            double p1 = Pgamt((mu1 - e1) / sig1, gam1);
-            double p2 = Pgamt((mu2 - e2) / sig2, gam2);
-            double pd = Pgamt(t, gamd);
+            double p1 = Pgamt((d1 - mu1) / sig1, gam1);
+            double p2 = Pgamt((d2 - mu2) / sig2, gam2);
+            //  two sided: twice the lesser of the two tails.  The upper tail at t is the lower tail at -t of the distribution with the
+            //  skewness of the other sign
+            double pd = Math.Min(1.0, 2.0 * Math.Min(Pgamt(t, gamd), Pgamt(-t, -gamd)));
 
             ParameterBag outputParameters = new();
 
@@ -234,7 +237,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("gamd", gamd);
             outputParameters.AddOutput("p1", p1);
             outputParameters.AddOutput("p2", p2);
-            outputParameters.AddOutput("pd", pd * 2.0);
+            outputParameters.AddOutput("pd", pd);
             return new StepOutput(outputParameters);
         }
 
