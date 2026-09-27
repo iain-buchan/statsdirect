@@ -277,14 +277,16 @@ namespace StatsDirect.Builtins
                 int iup = 0;
                 double area = 1.0 - gamma;
                 const double p = 0.5;
+                // S is a product of fractions: where it should be exactly a half, rounding can leave it a little to either side
+                const double fuzz = 1.0E-12;
                 int i;
                 for (i = 1; i <= cnx[lap]; i++)
                 {
-                    if (s[i, lap] <= p && i < imed)
+                    if (s[i, lap] <= p + fuzz && i < imed)
                         imed = i;
-                    if (s[i, lap] <= p - area && i < ilp)
+                    if (s[i, lap] <= p - area + fuzz && i < ilp)
                         ilp = i;
-                    if (s[i, lap] >= p + area && i > iup)
+                    if (s[i, lap] >= p + area - fuzz && i > iup)
                         iup = i;
                 }
                 if (imed == biglong)
@@ -325,7 +327,7 @@ namespace StatsDirect.Builtins
                 int ilcl = biglong;
                 for (i = 1; i <= cnx[lap]; i++)
                 {
-                    if (s[i, lap] <= 0.5 && imed == 0)
+                    if (s[i, lap] <= 0.5 + fuzz && imed == 0)
                         imed = i;
                     if (vs[i] != Constant.MISSING && vs[i] > 0.0)
                     {
