@@ -1926,13 +1926,15 @@ namespace StatsDirect.Builtins
         /// observed as its mean, the table is made again, and the limits are the quantiles of what comes out.  The limits by
         /// simulation allow for the uncertainty of the death rate of the open interval, which the limits by formula do not, and are
         /// the wider for it; the draws are not the same from one run to the next.
+        /// With weights there is also the adjusted expectation of life: at the start of an interval, the sum over that interval and
+        /// those after it of the weight of each interval times the years lived in it, over the number alive at the start.
         /// </summary>
         /// <param name="host">The preferences, and where progress is shown.</param>
         /// <param name="parameters">"intervals": the lengths of the intervals but the last, which is open; "population" and "deaths": a
         /// row for every interval, the open one among them; "fractions" (may be left out): the fraction of each interval that those who
         /// die in it live through, which if left out is a half, but 0.1 for a first interval of no more than 1 year and 0.4 for a
-        /// second of no more than 5; "weights" (may be left out): a weight for each interval, by which the expectation of life at its
-        /// start is multiplied; "gamma", the confidence level; "iterations", the number of tables to simulate, 3000 at the least;
+        /// second of no more than 5; "weights" (may be left out): a weight for each interval, by which the years lived in it are
+        /// multiplied; "gamma", the confidence level; "iterations", the number of tables to simulate, 3000 at the least;
         /// "save", whether the table is to be saved.</param>
         public static StepOutput RptAbridgedLifetable(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
@@ -2183,7 +2185,11 @@ namespace StatsDirect.Builtins
                 expectationParameters.AddOutput("uci", uci);
             }
 
-            // healthy life expectancy
+            // healthy life expectancy: the years lived in each interval are multiplied by the weight of the interval, and th has the
+            // sum of them over an interval and those after it, as t has the sum of the years themselves
+            double[] th = new double[rows + 2];
+            for (int i = rows; i >= 1; i--)
+                th[i] = th[i + 1] + u[i] * yl[i];
             if (util)
             {
                 IList<ParameterBag> utilList = new List<ParameterBag>();
@@ -2202,7 +2208,7 @@ namespace StatsDirect.Builtins
                     if (sl[i] == 0.0 || sl[i] == Constant.MISSING)
                         eh = Constant.MISSING;
                     else
-                        eh = u[i] * t[i] / sl[i];
+                        eh = th[i] / sl[i];
                     adjustedParameters.AddOutput("eh", eh);
                 }
             }
@@ -2324,7 +2330,7 @@ namespace StatsDirect.Builtins
                         if (sl[i] == 0.0 || sl[i] == Constant.MISSING)
                             eh = Constant.MISSING;
                         else
-                            eh = u[i] * t[i] / sl[i];
+                            eh = th[i] / sl[i];
                         aEVariable.SetData(i - 1, eh);
                     }
                 }
