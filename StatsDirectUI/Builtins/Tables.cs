@@ -330,7 +330,8 @@ namespace StatsDirect.Builtins
                 if (maxcat[i - 1].Title == maxcat[i].Title)
                     maxcat[i - 1].Title = string.Empty;
             SortName(xcats + ycats, maxcat, lowerBound);
-            int g = 1;
+            // the list is used from the place after the last label that was struck out, or from its start when none was
+            int g = lowerBound;
             for (int i = xcats + ycats - 1 + lowerBound; i >= lowerBound; i--)
             {
                 if (string.IsNullOrEmpty(maxcat[i].Title))
@@ -350,14 +351,15 @@ namespace StatsDirect.Builtins
             ycat = newYcat;
             for (int i = lowerBound; i < maxcats + lowerBound; i++)
             {
-                if (xcat[i].Title != maxcat[g + i - lowerBound].Title)
+                // a place at the end of a lengthened list holds nothing until it is filled here
+                if (xcat[i] == null || xcat[i].Title != maxcat[g + i - lowerBound].Title)
                 {
                     //  Shuffle the end of the array up
                     for (int j = maxcats - 2 + lowerBound; j >= i; j--)
                         xcat[j + 1] = xcat[j];
                     xcat[i] = new Namevar(maxcat[g + i - lowerBound].Title, -Constant.MISSING); // AUDIT FIX: new entry, not a shared object
                 }
-                if (ycat[i].Title != maxcat[g + i - lowerBound].Title)
+                if (ycat[i] == null || ycat[i].Title != maxcat[g + i - lowerBound].Title)
                 {
                     for (int j = maxcats - 2 + lowerBound; j >= i; j--)
                         ycat[j + 1] = ycat[j];
