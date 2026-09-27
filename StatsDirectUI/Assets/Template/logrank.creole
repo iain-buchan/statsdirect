@@ -50,4 +50,5 @@ Hazard Ratio = @{hr:roundu}<br />
 
 </block>
 </block>
+<block name="note"><p>@note</p></block>
 </report>

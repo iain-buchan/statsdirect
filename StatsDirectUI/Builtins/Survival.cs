@@ -1612,7 +1612,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
-                    if (c[r] < 0)
+                    // a blank code is left as it is, so that its record is left out
+                    if (c[r] < 0 && c[r] != Constant.MISSING)
                         c[r] = 0;
                     ctr++;
                     arr2[0, ctr] = g[r];
@@ -2240,6 +2241,23 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new();
             IList<ParameterBag> outerList = new List<ParameterBag>();
             outputParameters.AddOutput("*outer", outerList);
+            // the report says how many records were left out for a blank cell: each has one row of arr2, as its code is not above 1
+            int leftOut = 0;
+            for (int j = 1; j <= nt; j++)
+                if (arr2[0, j] == Constant.MISSING || arr2[1, j] == Constant.MISSING || arr2[2, j] == Constant.MISSING || (strata != 0 && arr2[3, j] == Constant.MISSING))
+                    leftOut++;
+            if (leftOut > 0)
+            {
+                IList<ParameterBag> noteList = new List<ParameterBag>();
+                ParameterBag noteParameters = new();
+                noteParameters.AddOutput("note", leftOut == 1 ? "1 record with a blank cell was left out" : leftOut.ToString() + " records with a blank cell were left out");
+                noteList.Add(noteParameters);
+                outputParameters.AddOutput("*note", noteList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*note", null);
+            }
             double[] tesum = new double[groups + 1];
             int[] tdg = new int[groups + 1];
             Trisvar[] q = new Trisvar[nt + 2];
