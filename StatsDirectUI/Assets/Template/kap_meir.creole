@@ -16,4 +16,5 @@
 
 <p>Mean survival time <ci>(@{pc:round2}% CI)</ci> @lim= @{mu:roundu}  <ci>(@{ll:roundu} to @{ul:roundu})</ci></p>
 </block>
+<block name="note"><p>@note</p></block>
 </report>

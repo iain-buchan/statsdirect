@@ -85,93 +85,90 @@ namespace StatsDirect.Builtins
             DoubleVariable deathsVariable = deathsFrame.Variables[0]as DoubleVariable;
             cd[2] = new ColumnData { Title = deathsVariable.Title };
             double[] d = new double[rows + 1 ];
-            int extra = 0;
             for (int r = 1; r <= rows; r++)
-            {
                 d[r] = deathsVariable.Data[r - 1];
-                if (d[r] > 1)
-                    extra += Convert.ToInt32(d[r]) - 1;
-            }
 
-            int groups;
-            double[] g;
+            // Store the group data: the value of a record is that of its group in the list of groups
             string gid;
-            string[] groupLabels;
-            double[] gpid;
+            ClassifierVariable groupsVariable = null;
+            double[] g = new double[rows + 1 ];
             if (parameters.ContainsKey("groups") && parameters["groups"] != null)
             {
                 DataFrame groupsFrame = parameters["groups"].AsDataFrame;
-                ClassifierVariable groupsVariable = groupsFrame.Variables[0] as ClassifierVariable;
-                groupLabels = new string[groupsVariable.GroupCount + 1 ];
-                for (int j = 1; j <= groupsVariable.GroupCount; j++)
-                    groupLabels[j] = groupsVariable.Groups[j - 1].Label;
+                groupsVariable = groupsFrame.Variables[0] as ClassifierVariable;
                 gid = groupsVariable.Title;
-                int zbase = 0;
-                foreach (double v in groupsVariable.Data)
-                {
-                    if (v == 0)
-                    {
-                        zbase = 1;
-                        break;
-                    }
-                }
-                // Store the group data
                 cd[0] = new ColumnData { Title = groupsVariable.Title };
-                g = new double[rows + 1 ];
                 for (int r = 1; r <= rows; r++)
-                    g[r] = groupsVariable.Data[r - 1] + zbase;
-                gpid = new double[0 + 1 ];
-                int igot = 0;
-                for (int r = 1; r <= rows; r++)
-                {
-                    double temp = g[r];
-                    if (temp != Constant.MISSING)
-                    {
-                        bool ok = true;
-                        for (int j = 1; j <= igot; j++)
-                        {
-                            if (temp == gpid[j])
-                            {
-                                ok = false;
-                                break;
-                            }
-                        }
-                        if (ok)
-                        {
-                            igot++;
-                            // create temp variable for copying values 
-                            double[] gpidCopy = new double[igot + 1 ];
-                            Array.Copy(gpid, gpidCopy, gpid.Length);
-                            gpid = gpidCopy;
-                            gpid[igot] = temp;
-                        }
-                    }
-                }
-                groups = igot;
-                for (int r = 1; r <= rows; r++)
-                {
-                    for (int j = 1; j <= groups; j++)
-                    {
-                        if (gpid[j] == g[r])
-                        {
-                            g[r] = j;
-                            break;
-                        }
-                    }
-                }
+                    g[r] = groupsVariable.Data[r - 1];
             }
             else
             {
                 //  one group
                 cd[0] = new ColumnData { Rows = rows };
-                g = new double[rows + 1 ];
-                for (int r = 1; r <= rows; r++)
-                    g[r] = 1;
-                groups = 1;
                 gid = string.Empty;
-                groupLabels = new string[1 + 1];
-                gpid = new double[1 + 1];
             }
+
+            // A record with a blank time, death/event code or group is left out
+            int complete = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                if (t[r] != Constant.MISSING && d[r] != Constant.MISSING && g[r] != Constant.MISSING)
+                {
+                    complete++;
+                    t[complete] = t[r];
+                    d[complete] = d[r];
+                    g[complete] = g[r];
+                }
+            }
+            int leftOut = rows - complete;
+            rows = complete;
+            if (rows == 0)
+                throw new TemplateOperationCancelledException("There are no records with a time and a death/event code" + (gid.Length > 0 ? " and a group." : "."), "Kaplan-Meier");
+
+            // The groups are numbered from 1 in the order in which they are first met, and each keeps the label of its own group
+            double[] gpid = new double[rows + 1];
+            int groups = 0;
+            for (int r = 1; r <= rows; r++)
+            {
+                int number = 0;
+                for (int j = 1; j <= groups; j++)
+                {
+                    if (g[r] == gpid[j])
+                    {
+                        number = j;
+                        break;
+                    }
+                }
+                if (number == 0)
+                {
+                    groups++;
+                    gpid[groups] = g[r];
+                    number = groups;
+                }
+                g[r] = number;
+            }
+            string[] groupLabels = new string[groups + 1];
+            if (groupsVariable != null)
+            {
+                for (int j = 1; j <= groups; j++)
+                {
+                    foreach (Group group in groupsVariable.Groups)
+                    {
+                        if (group.Id == gpid[j])
+                        {
+                            groupLabels[j] = group.Label;
+                            break;
+                        }
+                    }
+                    groupLabels[j] ??= groupsVariable.Groups[Convert.ToInt32(gpid[j])].Label;
+                }
+            }
+
+            // a code above 1 is that number of deaths, each of which is given a record of its own
+            int extra = 0;
+            for (int r = 1; r <= rows; r++)
+                if (d[r] > 1)
+                    extra += Convert.ToInt32(d[r]) - 1;
 
             // Put the data back into the Public array
             double[,] arr2 = new double[2 + 1, rows + extra + 1];
@@ -230,6 +227,19 @@ namespace StatsDirect.Builtins
             ParameterBag outputParameters = new();
             IList<ParameterBag> groupList = new List<ParameterBag>();
             outputParameters.AddOutput("*group", groupList);
+            // the report says how many records were left out for a blank cell
+            if (leftOut > 0)
+            {
+                IList<ParameterBag> noteList = new List<ParameterBag>();
+                ParameterBag noteParameters = new();
+                noteParameters.AddOutput("note", leftOut == 1 ? "1 record with a blank cell was left out" : leftOut.ToString() + " records with a blank cell were left out");
+                noteList.Add(noteParameters);
+                outputParameters.AddOutput("*note", noteList);
+            }
+            else
+            {
+                outputParameters.AddOutput("*note", null);
+            }
             DataFrame resultsFrame = new();
             for (int lap = 1; lap <= groups; lap++)
             {
@@ -252,7 +262,7 @@ namespace StatsDirect.Builtins
                     groupParameters.AddOutput("*grp", grpList);
                     ParameterBag grpParameters = new();
                     grpList.Add(grpParameters);
-                    grpParameters.AddOutput("grp", gid + " = " + groupLabels[Convert.ToInt32(gpid[lap])]);
+                    grpParameters.AddOutput("grp", gid + " = " + groupLabels[lap]);
                 }
                 cnx[lap] = nx;
                 double[] vh = new double[nx + 1];
