@@ -446,77 +446,21 @@ namespace StatsDirect.Builtins
         ///  <return>probability of the test statistic</return>
         private static double Pgamt(double t, double gam)
         {
-            double w;
+            //  with next to no skewness the distribution is the normal distribution: the gamma distribution that stands for it would
+            //  have a shape too great for t to be told from its mean
+            if (Math.Abs(gam) < 1.0E-07)
+                return PDF.alnorm(t);
 
-            const double zero = 0.0;
-            double pi = 4.0 * Math.Atan(1.0);
-            if (Math.Abs(gam) >= 0.01)
-            {
-
-                double r = 2.0 / Math.Abs(gam);
-                double d = r * r;
-                for (int i = 1; i <= 9; i++)
-                    d *= (r * r + i);
-                double f = r * r + 10.0;
-                double u = (2.0 * f - 1.0) * Math.Log(f) / 2.0 - f + Math.Log(2.0 * pi) / 2.0 - Math.Log(d) + 1.0 / (12.0 * f) - 1.0 / (360.0 * f * f * f);
-                const double g1 = 0.045;
-                const double g2 = 0.09;
-                const double g3 = 0.015;
-                double h1 = zero;
-                double h2 = zero;
-                double a = r * r - 1.0;
-                double b = r * r * (Math.Log(r) - 1.0) - u;
-                w = -1.99 / gam;
-                double y;
-                double h0;
-                double h3;
-                double h4;
-                double x;
-                if (gam >= zero)
-                {
-
-                    if (t < w)
-                        return zero;
-                    x = t;
-                    y = t + 9.0;
-                    for (int i = 1; i <= 99; i++)
-                    {
-                        h1 += Math.Exp(a * Math.Log(r + x + g1 * (2.0 * i - 1.0)) - r * (x + g1 * (2.0 * i - 1.0)) + b);
-                        h2 += Math.Exp(a * Math.Log(r + x + g2 * i) - r * (x + g2 * i) + b);
-                    }
-                    h0 = Math.Exp(a * Math.Log(r + x) - r * x + b);
-                    h3 = Math.Exp(a * Math.Log(r + y) - r * y + b);
-                    h4 = Math.Exp(a * Math.Log(r + x + g1 * 199.0) - r * (x + g1 * 199.0) + b);
-                    return 1.0 - g3 * (h0 + (h1 + h4) * 4.0 + 2.0 * h2 + h3);
-
-                }
-
-                if (t > w)
-                    return 1.0;
-                x = t - 9.0;
-                y = t;
-                for (int i = 1; i <= 99; i++)
-                {
-                    h1 += Math.Exp(a * Math.Log(r - x - g1 * (2.0 * i - 1.0)) + r * (x + g1 * (2.0 * i - 1.0)) + b);
-                    h2 += Math.Exp(a * Math.Log(r - x - g2 * i) + r * (x + g2 * i) + b);
-                }
-                h0 = Math.Exp(a * Math.Log(r - x) + r * x + b);
-                h3 = Math.Exp(a * Math.Log(r - y) + r * y + b);
-                h4 = Math.Exp(a * Math.Log(r - x - g1 * 199.0) + r * (x + g1 * 199.0) + b);
-                return g3 * (h0 + (h1 + h4) * 4.0 + 2.0 * h2 + h3);
-            }
-
-            const double e1 = 0.31938153;
-            const double e2 = -0.356563782;
-            const double e3 = 1.781477937;
-            const double e4 = -1.821255978;
-            const double e5 = 1.330274429;
-            const double h = 0.2316419;
-            w = 1.0 / (h * Math.Abs(t) + 1.0);
-            double prob = ((((e5 * w + e4) * w + e3) * w + e2) * w + e1) * w * Math.Exp(-t * t / 2.0) / Math.Sqrt(pi * 2.0);
-            if (t > zero)
-                prob = 1.0 - prob;
-            return prob;
+            //  the distribution with mean 0, variance 1 and skewness gam is that of (G - shape) / r when gam is positive and of
+            //  (shape - G) / r when it is negative, G having the gamma distribution with the shape r squared, r being 2 / |gam|
+            double r = 2.0 / Math.Abs(gam);
+            double shape = r * r;
+            double x = gam > 0.0 ? shape + r * t : shape - r * t;
+            //  beyond the end of the distribution, which has no values below -r when gam is positive and none above r when it is negative
+            if (x <= 0.0)
+                return gam > 0.0 ? 0.0 : 1.0;
+            //  the lower tail of G when gam is positive, and the upper tail when it is negative
+            return PDF.gammad(x, shape, gam < 0.0, out int _);
         }
 
         ///  <summary>
