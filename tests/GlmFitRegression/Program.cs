@@ -4,7 +4,7 @@
 using System.Reflection;
 using StatsDirect.Builtins;
 
-internal static class Program
+internal static partial class Program
 {
     private static int failures;
     private const BindingFlags Any = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
@@ -70,6 +70,7 @@ internal static class Program
         Fit("logistic, prior weights (some 2, one 0)", true, 3, new[] { false, true, true, true }, false, new double[] { 0, 1, 2, 1, 1, 2, 0, 1, 1, 2, 1, 1, 1, 2, 1, 1 });
         Fit("Poisson, constant and 3 predictors", true, 3, new[] { false, true, true, true }, true, null);
         Fit("Poisson, prior weights (some 2, one 0)", true, 3, new[] { false, true, true, true }, true, new double[] { 0, 1, 2, 1, 1, 2, 0, 1, 1, 2, 1, 1, 1, 2, 1, 1 });
+        LinearRegressionChecks();
         Console.WriteLine(failures == 0 ? "ALL CHECKS PASS" : failures + " CHECK(S) FAILED");
         return failures == 0 ? 0 : 1;
     }
