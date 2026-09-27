@@ -159,12 +159,15 @@ internal static partial class Program
         Check(title + ": agreement printed with AC1 is the agreement observed", Math.Abs(Convert.ToDouble(report["gamapc"].AsObject) - 100 * po), 0.005);
 
         // Maxwell's test of the marginal totals, and McNemar's test generalised
+        // (from the counts themselves, which are whole numbers, so that a matrix without an inverse is seen to have none)
         double[] d = new double[k];
         double[,] v = new double[k, k];
         for (int i = 0; i < k; i++)
         {
-            d[i] = n * (r[i] - c[i]);
-            for (int j = 0; j < k; j++) v[i, j] = i == j ? n * (r[i] + c[i]) - 2 * o[i, i] : -(o[i, j] + o[j, i]);
+            double row = 0, column = 0;
+            for (int j = 0; j < k; j++) { row += o[i, j]; column += o[j, i]; }
+            d[i] = row - column;
+            for (int j = 0; j < k; j++) v[i, j] = i == j ? row + column - 2 * o[i, i] : -(o[i, j] + o[j, i]);
         }
         double[,] x = Solve(v, k - 1, d, out bool singular);
         if (!singular)
@@ -173,6 +176,17 @@ internal static partial class Program
             for (int i = 0; i < k - 1; i++) chi += d[i] * x[i, 0];
             Check(title + ": Maxwell's chi-square", Relative(report["x2"].AsDouble, chi), 1e-8);
             Check(title + ": its P", Math.Abs(report["pmaxwell"].AsDouble - ChiSquareUpper(chi, k - 1)), 1e-7);
+        }
+        else
+        {
+            // the categories fall into groups between which the raters never disagree: the quadratic form in the generalised inverse
+            double chi = MaxwellReference(o, out int rank);
+            if (rank == 0) Say(report["x2"].AsDouble == M && report["pmaxwell"].AsDouble == M, title + ": no Maxwell's test when the raters never disagree");
+            else
+            {
+                Check(title + ": Maxwell's chi-square, the categories being in groups", Relative(report["x2"].AsDouble, chi), 1e-8);
+                Check(title + ": its degrees of freedom and P", Math.Abs(Convert.ToDouble(report["df"].AsObject) - rank) + Math.Abs(report["pmaxwell"].AsDouble - ChiSquareUpper(chi, rank)), 1e-7);
+            }
         }
         double bowker = 0; int emptyPairs = 0;
         for (int i = 0; i < k - 1; i++) for (int j = i + 1; j < k; j++) { if (o[i, j] + o[j, i] > 0) bowker += Math.Pow(o[i, j] - o[j, i], 2) / (o[i, j] + o[j, i]); else emptyPairs++; }
@@ -281,6 +295,8 @@ internal static partial class Program
         }
         Console.WriteLine($"      ({sparse} of the tables had a pair of categories in which nobody was put)");
 
+        KappaBoundary();
+        MaxwellGroups();
         ManyRaters();
         FromColumns();
         Symmetrise();
