@@ -9,6 +9,9 @@ using StatsDirect.Utilities;
 
 namespace StatsDirect.Builtins
 {
+    /// <summary>
+    /// The least and the greatest x and y of a plot.
+    /// </summary>
     [Serializable]
     public class MinMax
     {
@@ -18,6 +21,14 @@ namespace StatsDirect.Builtins
         public double MaxY;
     }
 
+    /// <summary>
+    /// The data of a grouped regression, and what has been worked out from them, as they are passed from one report to the next.
+    /// </summary>
+    /// <remarks>
+    /// There are k groups.  Group g has nxi[g] levels of x, which are xt[g, level]; at each level there are ny[g, level] values of y, which are
+    /// y[g, level, replicate].  a and b are the intercept and slope of the line of each group, xmean and ymean its means, and rssx the reciprocal of
+    /// its sum of squares of x about its mean.  Everything is counted from 1.
+    /// </remarks>
     [Serializable]
     public class GroupedCovarianceData
     {
@@ -42,6 +53,14 @@ namespace StatsDirect.Builtins
 
     public static class RegressRpt
     {
+        /// <summary>
+        /// The regression of y on x when there are several y at each x, with a test of whether the relation is a straight line.
+        /// </summary>
+        /// <remarks>
+        /// The sum of squares of y about its mean is split three ways: the regression on x, with 1 degree of freedom; the deviations of the means at
+        /// each x from the line, with two fewer degrees of freedom than there are levels of x; and the residual, which is the variation of the y about
+        /// the mean at their own x.  The regression, and the deviations from the line, are each tested against the residual mean square.
+        /// </remarks>
         public static StepOutput RptGroupedLinearity(ParameterBag parameters)
         {
             DataFrame predictorFrame = parameters["predictor"].AsDataFrame;
@@ -71,6 +90,8 @@ namespace StatsDirect.Builtins
                 ssx += v.Length * x[j] * x[j];
                 sxy += x[j] * ysum;
             }
+            // The sums of squares of y: in all, about the grand mean; within the levels of x, which is the residual; for the regression on x; and what
+            // is left, for the deviations of the means at each x from the line
             double totssq = totssy - totsy * totsy / totny;
             double rsdssq = totssy - tntot;
             double regssq = (sxy - sx * totsy / totny) * (sxy - sx * totsy / totny) / (ssx - sx * sx / totny);
@@ -104,6 +125,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The mean of x over every observation of every group, which is offered as the x at which the corrected means of y are to be compared.
+        /// </summary>
         public static StepOutput RptGroupedCovariancePreprocess(ParameterBag parameters)
         {
             double grandn = 0; double grandx = 0;
@@ -133,6 +157,17 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Regression in several groups: a line for each, the comparison of their slopes, and the analysis of covariance.
+        /// </summary>
+        /// <remarks>
+        /// For each group the line y = a + b x is fitted by least squares.  The residual about the separate lines has two degrees of freedom fewer
+        /// for each group than there are observations.  Against it are tested the slope that is common to the groups, and the differences between
+        /// the slopes, which is the test of whether the lines are parallel; the slopes are also compared two at a time.
+        /// The analysis of covariance then takes the lines to be parallel, with the slope bs that is found within groups.  The mean of y of each group
+        /// is corrected to a common x, mx0: ymean + bs (mx0 - xmean).  The corrected means are tested for equality, and the vertical distances between
+        /// the lines are given two at a time, with their confidence intervals.
+        /// </remarks>
         public static StepOutput RptGroupedCovariance(ParameterBag parameters)
         {
             double gtxx = 0; double gtxy = 0; double gtyy = 0; double grandn = 0; double grandx = 0; double grandsqx = 0; double grandsqy = 0;
@@ -223,6 +258,8 @@ namespace StatsDirect.Builtins
             //     throw new TemplateOperationCancelledException();
 
             ParameterBag outputParameters = new();
+            // The sum of squares for a slope common to the groups; that for the differences between the slopes of the groups, which is what the separate
+            // slopes account for beyond the common one; and the residual mean square about the separate lines
             double comssq = grandcpr * grandcpr / grandsqx;
             double btwnssq = grandbit - comssq;
             double residmsq = residssq / (grandn - 2 * k);
@@ -277,6 +314,9 @@ namespace StatsDirect.Builtins
                     slopeParameters.AddOutput("p", p * 2.0);
                 }
             }
+            // The sums of squares and products between the groups (b), in all (t) and within the groups (w).  The corrected sums of squares are those
+            // of y about a line: csst about one line for all the observations, and cssw about parallel lines through the means of the groups.  Their
+            // difference, cssb, is the sum of squares between the corrected means.
             double syyb = syy - tsy * tsy / tn;
             double sxxb = sxx - tsx * tsx / tn;
             double sxyb = sxy - tsx * tsy / tn;
@@ -320,6 +360,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("cr_tot_df", Convert.ToInt32(grandn) - 2);
             q = p <= 0.05 ? "NOT " : string.Empty;
             outputParameters.AddOutput("p", p);
+            // The slope within groups, by which the mean of y of each group is corrected to the x that was chosen
             double bs = sxyw / sxxw;
             outputParameters.AddOutput("x_mean", mx0);
             IList<ParameterBag> cmyList = new List<ParameterBag>();

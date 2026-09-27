@@ -119,6 +119,9 @@ namespace StatsDirect.Builtins
             throw new Exception("Expected to find a context parameter and didn't");
         }
 
+        /// <summary>
+        /// The y that the fitted line gives for a chosen x.
+        /// </summary>
         public static StepOutput RptInterpolateXY(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -132,6 +135,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The x at which the fitted line gives a chosen y: (y - intercept) / slope.
+        /// </summary>
         public static StepOutput RptInterpolateYX(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -145,6 +151,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The analysis of variance of a simple linear regression.
+        /// </summary>
+        /// <remarks>
+        /// The sum of squares of y about its mean is split into the part that the line accounts for, with 1 degree of freedom, and the residual, with
+        /// n - 2.  F is the ratio of their mean squares.  The output called r is the proportion of the sum of squares accounted for, which is r squared.
+        /// </remarks>
         public static StepOutput RptRanv(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -168,6 +181,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The report of a simple linear regression and correlation.
+        /// </summary>
+        /// <remarks>
+        /// The line is fitted by least squares (SimpleLinearRegressionContext).  Reported with it: the standard error and confidence interval of the
+        /// slope; the correlation coefficient r, with a confidence interval by Fisher's z transformation when there are more than three records; the t
+        /// test of r against zero, on n - 2 degrees of freedom; and the power of that test.  With a perfect correlation only r is reported.
+        /// </remarks>
         public static StepOutput RptSimpleLinearRegression(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -190,6 +211,7 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("*se", seList);
                 ParameterBag seParameters = new();
                 seList.Add(seParameters);
+                // The standard error of the slope, s / sqrt(SSX): SDX sqrt(n - 1) is the square root of the sum of squares of x about its mean
                 double seb = context.SeEst / (context.SDX * Math.Sqrt(context.NX - 1));
                 seParameters.AddOutput("slope_err", seb);
                 seParameters.AddOutput("se_pc", 100 * (1.0 - context.P0));
@@ -205,6 +227,7 @@ namespace StatsDirect.Builtins
                     ciList.Add(ciParameters);
                     double GAMMA = 1.0 - context.P0 / 2.0;
                     double rcit = PDF.gauinv(GAMMA);
+                    // Fisher's z = atanh(r), whose standard error is 1 / sqrt(n - 3).  The limits of z are taken back to limits of r by tanh.
                     double fz = 0.5 * Math.Log((1.0 + context.R) / (1.0 - context.R));
                     double fz1 = fz - rcit / Math.Sqrt(context.NX - 3);
                     double fz2 = fz + rcit / Math.Sqrt(context.NX - 3);
@@ -216,6 +239,7 @@ namespace StatsDirect.Builtins
                     // double af = 1; 
                     int df = context.NX - 2;
                     double r = context.R;
+                    // t = r sqrt((n - 2) / (1 - r^2))
                     double st = r * Math.Sqrt(Math.Abs(df / (1.0 - r * r)));
                     ciParameters.AddOutput("df", df);
                     ciParameters.AddOutput("tdf", st);
@@ -257,6 +281,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// What the plot of the fitted line needs: the slope, the intercept and the titles.
+        /// </summary>
         public static StepOutput PlotSimpleLinearRegression(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -269,6 +296,12 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The residual plots of a simple linear regression: the residuals against the fitted values and against the predictor, and a normal plot.
+        /// </summary>
+        /// <remarks>
+        /// The normal plot sets each residual against its van der Waerden score: the normal deviate for rank / (n + 1).
+        /// </remarks>
         public static StepOutput PlotResidualsSimple(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
@@ -319,6 +352,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Plot the fitted line with the prediction interval for a single new observation.
+        /// </summary>
         public static StepOutput PlotPredictionInterval(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
@@ -331,6 +367,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// For a chosen x: the fitted y, with the confidence interval of the mean of y there and the prediction interval for a single new observation.
+        /// </summary>
         public static StepOutput RptCiMeanY(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -338,6 +377,7 @@ namespace StatsDirect.Builtins
             double reggamma = parameters["reggamma"].AsDouble;
             context.CalcRcia(reggamma);
             double xa = parameters["xa"].AsDouble;
+            // The standard error of the mean of y at xa: s sqrt(1 / n + (xa - mean of x)^2 / SSX)
             double sey = Math.Sqrt(context.MS * (1.0 / nx + Math.Pow(xa - context.SumX / nx, 2.0) / context.SSX));
             double ya = context.Slope * xa + context.YIntercept;
             double pcon = ya + sey * context.PERT;
@@ -351,6 +391,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("pci", 100 * (1.0 - context.P0));
             outputParameters.AddOutput("fromi", ncon);
             outputParameters.AddOutput("toi", pcon);
+            // and of a single new observation there, which has the residual variance as well
             double spred = Math.Sqrt(context.MS * (1.0 + (1.0 / nx + Math.Pow(xa - context.SumX / nx, 2.0) / context.SSX)));
             pcon = ya + spred * context.PERT;
             ncon = ya - spred * context.PERT;
@@ -361,6 +402,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Three columns for the worksheet: the fitted y of each record, and the upper and lower confidence limits of the mean of y at its x.
+        /// </summary>
         public static StepOutput CalcSimpleLinearRegressionCi(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
@@ -396,6 +440,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Principal components from the correlation matrix: see CalcPrincipal.
+        /// </summary>
         public static StepOutput RptPrincipalComponentsRegressionCorrelation(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -403,6 +450,9 @@ namespace StatsDirect.Builtins
             return CalcPrincipal(frame, out double[,] _, out double[,] _, out double[,] _, out double[,] _, 1, out int _, out int _, correctForReversal);
         }
 
+        /// <summary>
+        /// Principal components from the covariance matrix: see CalcPrincipal.
+        /// </summary>
         public static StepOutput RptPrincipalComponentsRegressionCovariance(ParameterBag parameters)
         {
             DataFrame frame = parameters["data"].AsDataFrame;
@@ -411,8 +461,14 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  
+        ///  The principal components of a set of variables: the eigenvalues of their correlation or covariance matrix, with the proportion of the total
+        ///  that each accounts for.
         ///  </summary>
+        ///  <remarks>
+        ///  Records with a missing value are left out.  The data are returned in x as x[variable, record].  The analysis is made twice.  The first
+        ///  shows which variables run against the rest, by the sign of their correlation with the scores on the first component (XPscore1Corr); those
+        ///  variables have their signs reversed, if correctForReversal is set, and the analysis is made again on the data as they then are.
+        ///  </remarks>
         /// <param name="frame"></param>
         /// <param name="x">Set to...</param>
         ///  <param name="xc">Set to...</param>
@@ -523,8 +579,14 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  
+        ///  The covariance matrix xc and the correlation matrix xr of the variables, and the eigenvalues w and eigenvectors v of the one that irv chooses
+        ///  (1 for the correlation matrix, otherwise the covariance matrix).
         ///  </summary>
+        ///  <remarks>
+        ///  The eigenvalues and eigenvectors are taken from a singular value decomposition: for a symmetric matrix with no negative eigenvalue the
+        ///  singular values are the eigenvalues, and the columns of V the eigenvectors.  A value less than the rounding unit times the largest is set to
+        ///  zero.  The values are then put in descending order, with their vectors.
+        ///  </remarks>
         ///  <param name="n"></param>
         ///  <param name="nx"></param>
         ///  <param name="x"></param>
@@ -579,6 +641,13 @@ namespace StatsDirect.Builtins
             Regress1.X_Eigsrt(w, v, n);
         }
 
+        /// <summary>
+        /// For each variable, whether it correlates negatively with the scores on the first principal component.
+        /// </summary>
+        /// <remarks>
+        /// The score of a record is the sum of the products of the first eigenvector with its values, which are standardised first if it was the
+        /// correlation matrix that was analysed (irv 1).  The caller reverses the sign of the variables for which negcorr is not set.
+        /// </remarks>
         private static void XPscore1Corr(int n, int nx, double[,] x, double[,] v, int irv, bool[] negcorr)
         {
             double[] av = null; double[] sd = null;
@@ -620,6 +689,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The report of a multiple linear regression.
+        /// </summary>
+        /// <remarks>
+        /// Reads the outcome, the predictors and the weights, if there are any; leaves out the records in which any of them is missing, with a
+        /// warning, and refuses a weight that is negative; fits the model (x_glin) and lays out the coefficients (MakeMultipleRegressionOutput).
+        /// The design matrix is context.X, as
+        /// X[record, parameter], with a column of ones first if a constant is fitted.  What the later reports need is kept in the context.
+        /// </remarks>
         public static StepOutput RptMultipleLinearRegression(ParameterBag parameters)
         {
             DataFrame outcomeFrame = parameters["outcome"].AsDataFrame;
@@ -712,6 +790,17 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Fits the linear model that is held in the context, and leaves there what the reports need.
+        /// </summary>
+        /// <remarks>
+        /// The fit is made by glsqr, which rotates the records into a triangle R one at a time.  If glsqr drops predictors that add nothing to the
+        /// others, they are named in a warning and the fit is made again without them.  If glsqr fails, the fit is made by singular value
+        /// decomposition (x_glin_svd), with a warning.
+        /// Left in the context: the coefficients B and their standard errors Se; the variance inflation factors VIF; H, the inverse of X'WX; the
+        /// fitted values FV and the residuals R; and the sums of squares for regression and in total, SSREG and SSY.  Returned: the number of
+        /// parameters that were fitted, and the fault.
+        /// </remarks>
         private static (int P, int ifault) x_glin(MultipleLinearRegressionContext context, int P, int ifault)
         {
             int incep; int indep; int irank = 0;
@@ -843,6 +932,8 @@ namespace StatsDirect.Builtins
             double[,] covb = new double[P + 1, P + 1];
             context.VIF = new double[P + 1];
             // variance inflation
+            // For predictor j, the sum of squares of its column about the constant, which is the sum of the squares of column j of R below the row of
+            // the constant, times element (j, j) of the inverse of X'WX.  For the constant itself, the sum of squares of its column times its element.
             if (incep == 1 && r[1, 1] > 0.0)
                 context.VIF[1] = Math.Pow(r[1, 1], 2.0);
             for (int j = incep + 1; j <= P; j++)
@@ -872,6 +963,7 @@ namespace StatsDirect.Builtins
                 context.FV[i] = s;
                 context.R[i] = context.Y[i] - s;
             }
+            // The sum of squares for regression: the squared length of R b, without the row of the constant
             context.SSREG = 0.0;
             for (int i = 1; i <= P - incep; i++)
             {
@@ -886,6 +978,14 @@ namespace StatsDirect.Builtins
             return (P, ifault);
         }
 
+        /// <summary>
+        /// Lays out the coefficients of a linear model, and the equation.
+        /// </summary>
+        /// <remarks>
+        /// Each coefficient is given with t, its ratio to its standard error, the two-sided P of t on the residual degrees of freedom, and, but for
+        /// the constant, the partial correlation of its predictor with the outcome, t / sqrt(t^2 + residual degrees of freedom).  The titles of the
+        /// predictors and their values for a prediction (x_prep_intermr) are passed on for the reports that follow.
+        /// </remarks>
         private static ParameterBag MakeMultipleRegressionOutput(MultipleLinearRegressionContext context, double[] seb, double[] bd, bool DoC, int nx, int p, bool pol, int errcode, string dropWarning)
         {
             double rdf = nx - p;
@@ -979,6 +1079,15 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// The fit of the linear model by singular value decomposition, which is used when glsqr has failed.
+        /// </summary>
+        /// <remarks>
+        /// X_SVGO gives the coefficients, the fitted values and the residuals, and X_SVDVRD the inverse of X'WX, from which the standard errors are
+        /// taken with the residual mean square.  The weight of a record is 1 / sig^2.  The sums of squares are taken about ym, the weighted mean of y,
+        /// when there is a constant: as written, the total is the sum of the squares of (weight times y) less ym, and that for regression is the sum
+        /// of the squares of the fitted values less ym; the residual sum of squares is the difference of the two.
+        /// </remarks>
         private static (double bss, double ctss, double[] yfit, int ifault) x_glin_svd(double[] yd, double[] sig, double[,] xd, double[] SEB, double[] bd, double[,] xtxi, double[] er, bool DoC, int nx, int P)
         {
             double[] yfit = new double[nx + 1];
@@ -1026,12 +1135,21 @@ namespace StatsDirect.Builtins
             return (bss, ctss, yfit, ifault);
         }
 
+        /// <summary>
+        /// The analysis of variance of a multiple linear regression, with R squared and the Durbin-Watson statistic.
+        /// </summary>
+        /// <remarks>
+        /// From the sums of squares that x_glin left in the context.  With a single predictor the multiple correlation is given the sign of the slope
+        /// and a confidence interval by Fisher's z transformation.  Adjusted R squared is 1 less the ratio of the residual mean square to the mean
+        /// square of y.
+        /// </remarks>
         public static StepOutput RptMultipleLinearRegressionAnova(IFormatting host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
             double ci = parameters["ci"].AsDouble;
 
             double rdf = context.N - context.P;
+            // A degree of freedom for regression for each parameter but the constant
             double bdf = context.P == 1 || context.DoC == false ? context.P : context.P - 1;
             double bms = context.SSREG / bdf;
             double rss = context.SSY - context.SSREG;
@@ -1087,6 +1205,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// For chosen values of the predictors: the fitted y, the confidence interval of its mean and the prediction interval for a new observation.
+        /// </summary>
+        /// <remarks>
+        /// The half widths of the intervals are from x_ciyp.  The values offered at first are the means of the predictors, or a half for a predictor
+        /// that takes two values only; if they are left as they are the result is marked as the least squares mean.
+        /// </remarks>
         public static StepOutput RptMultipleLinearRegressionPrediction(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1153,6 +1278,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The residual plots of a multiple linear regression: the residuals against the fitted values and against each predictor, and a normal plot
+        /// against van der Waerden scores.
+        /// </summary>
         public static StepOutput PlotMultipleLinearRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1190,6 +1319,11 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// More about the coefficients: their standard errors and confidence intervals, and the variance inflation factors of the predictors, largest
+        /// first, each with its reciprocal and with an asterisk if it is above 20.  The factors are not to be had when the fit was made by singular value
+        /// decomposition.
+        /// </summary>
         public static StepOutput RptMultipleLinearRegressionParameterDetail(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1319,6 +1453,10 @@ namespace StatsDirect.Builtins
             return outerList;
         }
 
+        /// <summary>
+        /// Two matrices for the worksheet: the inverse of X'WX, and the variance-covariance matrix of the coefficients, which is that inverse times the
+        /// residual mean square.
+        /// </summary>
         public static StepOutput RptXxi(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1360,6 +1498,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The residuals and the measures of influence of each record.
+        /// </summary>
+        /// <remarks>
+        /// For each record: the leverage h = w x'(X'WX)^-1 x; the standard error of its fitted value; the studentised residual, the residual over its
+        /// own standard error; the jackknife residual, which takes the residual standard deviation from the fit without the record; Cook's distance;
+        /// and DFIT.  A record is marked where a measure is beyond its critical value.  The measures can be saved to the worksheet.
+        /// </remarks>
         public static StepOutput RptMultipleLinearRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1370,6 +1516,8 @@ namespace StatsDirect.Builtins
 
             // Check if we need to save the data
             double alpha = 1.0 - ci;
+            // The critical values: for leverage three times its mean, p / n; for the studentised and jackknife residuals, quantiles of Student's t; for
+            // Cook's distance a quantile of F; for DFIT 2 sqrt(p / n)
             double hicrit = Math.Min(3.0 * (double)context.P / context.N, 0.99);
             double srcrit = PDF.tfromp(alpha / 2.0, context.N - context.P);
             double jackcrit = PDF.tfromp(alpha / 2.0, context.N - context.P - 1);
@@ -1408,6 +1556,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
+                    // The variance of the residual is rms (1 - h) / w.  SI is the residual standard deviation of the fit without the record, which
+                    // is found from the fit with it: the residual sum of squares loses (w r)^2 / (1 - h), and a degree of freedom.
                     double varer = (1.0 - hi[i]) / wt;
                     double SI = Math.Sqrt((wt * (context.N - context.P) * rms - Math.Pow(wt * context.R[i], 2.0) / (1.0 - hi[i])) / (rdf - 1.0));
                     //  jackknife (SAS calls it rstudent) - see Kleinbaum
@@ -1514,6 +1664,15 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Chooses the best subset of the predictors, and reports the regression on it.
+        /// </summary>
+        /// <remarks>
+        /// Every subset of the parameters that holds the constant and the predictors that were chosen to be kept is fitted, the subsets of one size
+        /// before those of the next.  The best is the one with the largest variance ratio F, or the one with the least Mallows' Cp, as the selector
+        /// asks.  preds holds the subset that is being tried, as the numbers of its parameters in ascending order, and is stepped on to the next
+        /// subset of its size as the digits of a counter are.  The model is then fitted again with the subset that was kept.
+        /// </remarks>
         public static StepOutput RptMultipleLinearRegressionBestSubset(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1593,6 +1752,7 @@ namespace StatsDirect.Builtins
                             double rms = (context.SSY - context.SSREG) / rdf;
                             double f = bms / rms;
                             double r2 = context.SSREG / context.SSY;
+                            // Mallows' Cp as it is used here: the residual sum of squares over the residual mean square of the full model, less n - 2 (j + 1)
                             double cp = (context.SSY - context.SSREG) / rmsorig - (context.N - 2 * (j + 1));
                             bool isBetter = shouldUseMaximumF ? f > maxf : cp <= mincp;
                             if (isBetter)
@@ -1673,6 +1833,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Whether the subset preds[1..j] holds every one of the parameters that have to be kept, force[1..forced].
+        /// </summary>
         private static bool x_forceinc(int forced, int[] force, int j, int[] preds)
         {
             if (forced > 0)
@@ -1688,6 +1851,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The table of values that is offered for a prediction: for each predictor its mean, or a half if it takes no more than two values.
+        /// </summary>
         private static DataFrame x_prep_intermr(MultipleLinearRegressionContext context)
         {
             int iq = context.DoC ? 1 : 0;
@@ -1736,6 +1902,9 @@ namespace StatsDirect.Builtins
             return frame;
         }
 
+        /// <summary>
+        /// The coefficients of the principal components: the eigenvectors, a column for each component and a row for each variable.
+        /// </summary>
         public static StepOutput RptPrincipalComponentsRegressionCoefficients(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1768,6 +1937,15 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Cronbach's alpha, for the items as they are and for the items standardised, with alpha when each item in turn is dropped.
+        /// </summary>
+        /// <remarks>
+        /// For the items as they are, alpha = k / (k - 1) (1 - sum of the variances of the items / variance of their total), k being the number of
+        /// items.  For the items standardised, alpha = k rbar / (1 + (k - 1) rbar), rbar being the mean of the correlations between them.  The lower
+        /// confidence limit is one-sided, from a quantile of F.  The data are x[item, record]; row 0 is used for the total.  An item is marked if alpha
+        /// rises by more than 0.1 when it is dropped.
+        /// </remarks>
         public static StepOutput RptCronbach(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1905,6 +2083,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The scores of each record on the principal components: the sums of the products of each eigenvector with the values of the record, which
+        /// are standardised first if it was the correlation matrix that was analysed.
+        /// </summary>
         public static StepOutput RptPrincipalComponentsRegressionScores(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1962,6 +2144,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The covariance matrix and the correlation matrix of the variables.
+        /// </summary>
         public static StepOutput RptPrincipalComponentsRegressionMatrix(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = GetMultipleLinearRegressionContext(parameters);
@@ -1998,6 +2183,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Three curves, each fitted by simple linear regression after a transformation that makes it a straight line.
+        /// </summary>
+        /// <remarks>
+        /// Model 0, exponential: y = a exp(g x), by log y on x.  Model 1, geometric: y = a x^g, by log y on log x.  Model 2, hyperbolic:
+        /// y = x / (a + g x), by 1 / y on 1 / x, where a is the slope of the line and g its intercept.  The least squares are those of the transformed
+        /// values, not of y itself.
+        /// </remarks>
         public static StepOutput RptLinearizedEstimates(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -2047,6 +2240,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The y that the fitted curve gives for a chosen x: see RptLinearizedEstimates for the three models.
+        /// </summary>
         public static StepOutput RptLinearizedEstimateInterpolation(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContext(parameters);
@@ -2079,6 +2275,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The plot of the data with the fitted curve.
+        /// </summary>
         public static StepOutput RptLinearizedEstimatePlot(ParameterBag parameters)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
@@ -2095,6 +2294,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Polynomial regression of the degree chosen: the multiple linear regression of y on x, x^2 and so on, with a constant.
+        /// </summary>
+        /// <remarks>CalcPoly makes the design matrix, with the records in ascending order of x; the fit and the report are those of multiple linear regression.</remarks>
         public static StepOutput RptPolynomialRegression(ParameterBag parameters)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
@@ -2152,6 +2355,9 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// For a chosen x: the y of the fitted polynomial, with the confidence interval of its mean and the prediction interval for a new observation.
+        /// </summary>
         public static StepOutput RptPolynomialRegressionInterpolation(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -2196,6 +2402,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Three plots of the fitted polynomial: alone, with the confidence interval of the fit, and with the prediction interval.
+        /// </summary>
         public static StepOutput RptPolynomialRegressionPlot(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -2211,6 +2420,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// One plot of the fitted polynomial: mode 0 the curve alone, 1 with the confidence interval of the fit, 2 with the prediction interval.
+        /// </summary>
         private static IRenderable PlotPoly(ParameterBag parameters, int mode, double[,] xtxi, double[] bd, double rss, int nx, int P)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
@@ -2237,6 +2449,9 @@ namespace StatsDirect.Builtins
             return ChartRendererFactory.PrepForLater(ChartType.PolynomialRegression, new PolynomialRegressionOptions(title, mode, xtxi, bd, rss, nx, P, gamma, vX.Title, vY.Title), new DoubleSeries(vX.Data, vX.Title), new DoubleSeries(vY.Data, vY.Title));
         }
 
+        /// <summary>
+        /// The area under the fitted polynomial, between the first x and the last, and the area under the data themselves by the trapezoidal rule.
+        /// </summary>
         public static StepOutput RptAreaUnderCurve(IFormatting host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -2259,6 +2474,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The integral of a polynomial from a to b, by Romberg's method.
+        /// </summary>
+        /// <remarks>
+        /// The trapezoidal rule is refined a stage at a time, each stage with twice the panels of the one before (trapzd).  From the fifth stage on, the
+        /// results of the last five stages are taken as points on a curve of the result against the square of the width of a panel, and the curve is
+        /// read at a width of zero (polint).  h holds the squares of the widths, as multiples of the first: each is a quarter of the one before.  The
+        /// integral has converged when the last correction made by polint is within 100 rounding units of the result.  Five stages are enough for a
+        /// polynomial of degree 7 or less.  False is returned if 16 stages have not been enough, or polint has failed.
+        /// </remarks>
         private static bool x_qromb(double a, double b, ref double ss, double[] bd, int p)
         {
             double ds = 0;
@@ -2289,6 +2514,9 @@ namespace StatsDirect.Builtins
             return j < jmax;
         }
 
+        /// <summary>
+        /// The area under the data by the trapezoidal rule: for each pair of neighbouring records, the mean of their y times the distance between their x.
+        /// </summary>
         private static double x_giabaldi(int nx, double[] y, double[] x)
         {
             double ss = 0.0;
@@ -2297,6 +2525,10 @@ namespace StatsDirect.Builtins
             return ss;
         }
 
+        /// <summary>
+        /// Four columns for the worksheet: for each record the fitted y, its standard error, and the half widths of the confidence interval and of the
+        /// prediction interval.
+        /// </summary>
         public static StepOutput RptPolynomialRegressionConfidence(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -2344,6 +2576,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The x at which the fitted polynomial takes a chosen y, found by search.
+        /// </summary>
+        /// <remarks>
+        /// y has to lie within the range of the fitted values.  x is stepped up from the least x, by a tenth of the range of x at first, until the
+        /// curve comes within reach of y; the step is then cut to a tenth and the search taken up again from one step back, and so on until the step
+        /// is below ten rounding units.  Where the curve takes the value more than once, the x that is found is the first from the left.
+        /// </remarks>
         public static StepOutput RptPolynomialRegressionBackInterpolation(IFormatting host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -2415,6 +2655,19 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The report of a logistic regression.
+        /// </summary>
+        /// <remarks>
+        /// The data are read grouped (a total and a number responding for each record) or individual (a response of 0 or 1, with a total of 1).  Records
+        /// with the same values of every predictor, and the same prior weight, are added together: the fit is of covariate patterns.  Records with a
+        /// missing value are left out, with a warning.  A response of nothing, or of the whole total, is moved in by the rounding unit, so that the
+        /// fit can take its logarithm.
+        /// The model with a constant only is fitted first, for the deviance and the log likelihood against which the model is judged, and then the
+        /// model itself (X_Logistic_Regression in Regress1.cs).  Reported: the deviance, with its P from chi-square on its degrees of freedom; the fall
+        /// in deviance from the model with a constant only, likewise; and each coefficient as an odds ratio, exp(b), with a confidence interval
+        /// exp(b -/+ z se) and the two-sided P of b / se.  What the later reports need is kept in the context.
+        /// </remarks>
         public static StepOutput RptLogisticRegression(IFormatting host, ParameterBag parameters)
         {
             int rows;
@@ -2832,6 +3085,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The log likelihood of a Poisson fit: the sum of w (y log(mu) - mu - log(y!)).
+        /// </summary>
         private static double x_loglik_p(bool useWeights, int n, double[] wt, double[] y, double[] fvl)
         {
             double ll = 0;
@@ -2845,6 +3101,10 @@ namespace StatsDirect.Builtins
             return ll;
         }
 
+        /// <summary>
+        /// The log likelihood of a binomial fit, without the binomial coefficients: the sum of w (y log(p) + (t - y) log(1 - p)), p being the fitted
+        /// number over the total t.
+        /// </summary>
         private static double x_loglik_l(bool useWeights, int n, double[] wt, double[] y, double[] t, double[] fvl)
         {
             double ll = 0;
@@ -2858,11 +3118,28 @@ namespace StatsDirect.Builtins
             return ll;
         }
 
+        /// <summary>
+        /// Adds the warning that q records were dropped for missing data.
+        /// </summary>
         private static void AddDropWarning(IList<ParameterBag> warnList, int q)
         {
             warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, q.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup.")));
         }
 
+        /// <summary>
+        /// The fit and the measures of influence of each covariate pattern of a logistic regression, and the covariances of the coefficients.
+        /// </summary>
+        /// <remarks>
+        /// With p the fitted probability, t the total, w the prior weight and h the leverage of a pattern:
+        ///     Pearson residual                 r = (y - t p) sqrt(w) / sqrt(t p (1 - p))
+        ///     standardised Pearson residual    rs = r / sqrt(1 - h)
+        ///     delta beta                       r^2 h / (1 - h)          (cbar)
+        ///     standardised delta beta          r^2 h / (1 - h)^2        (c), which is rs^2 h / (1 - h)
+        ///     delta deviance                   the deviance residual squared, plus delta beta
+        ///     delta chi-square                 delta beta / h, which is r^2 / (1 - h)
+        /// For individual data each record is given the figures of the pattern that it belongs to.  The figures are also kept in a frame, for saving
+        /// to the worksheet (GridLogisticRegressionFit).
+        /// </remarks>
         public static StepOutput RptLogisticRegressionFit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3061,6 +3338,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// One row of the table of fits and measures of influence, which is also put in row outputRow of the frame that is kept for the worksheet.
+        /// Given nulls for the arrays, as it is for a record with a missing predictor, the row holds missing values.
+        /// </summary>
         private static ParameterBag MakeLogisticRegressionFitRow(double[] t, double[] y, double[] dr, double[] hi, string[] label, double[,] x, double[] ry, double[] fit, double[] pxi, double[] xis, double[] cbar, double[] c, double[] d, double[] dc, int arrayOffset, bool includePredictors, DataFrame outputFrame, int outputRow)
         {
             ParameterBag predictorValuesParameters = new();
@@ -3106,6 +3387,9 @@ namespace StatsDirect.Builtins
             return predictorValuesParameters;
         }
 
+        /// <summary>
+        /// Saves to the worksheet those of the fits and measures of influence that were asked for, from the frame that RptLogisticRegressionFit kept.
+        /// </summary>
         public static StepOutput GridLogisticRegressionFit(ParameterBag parameters)
         {
             bool doTrials = parameters["trials"].AsBoolean;
@@ -3164,6 +3448,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The label of parameter i: Intercept for the constant, the title of its predictor, or b and its number if the predictor has no title.
+        /// </summary>
         private static string qlbli(string[] label, int i, bool DoC)
         {
             string x = DoC
@@ -3177,6 +3464,10 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The diagnostic plots of a logistic regression: delta beta, standardised delta beta, delta deviance and delta chi-square, each against the
+        /// event probability and against the leverage.  The measures are those of RptLogisticRegressionFit.
+        /// </summary>
         public static StepOutput PlotLogisticRegressionDiagnostics(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3262,6 +3553,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Three numbers that are kept together while a list is sorted by the first of them, D.
+        /// </summary>
         private struct Tri
         {
             public double D;
@@ -3288,6 +3582,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The goodness of fit of a Poisson regression, and its coefficients with and without allowance for overdispersion.
+        /// </summary>
+        /// <remarks>
+        /// The deviance; the Pearson chi-square, the sum of w (y - mu)^2 / mu; the fall in deviance from the model with a constant only; and two
+        /// measures of the proportion explained, that fall over the deviance of the model with a constant only, and 1 less the ratio of the log
+        /// likelihoods.  The scale sp is the Pearson chi-square over n - p.  The scaled statistics are the statistics over sp, and the scaled standard
+        /// errors the standard errors times the square root of sp.
+        /// </remarks>
         public static StepOutput RptPoissonRegressionModel(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3440,6 +3743,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The goodness of fit of a logistic regression, with the Hosmer-Lemeshow test, and its coefficients.
+        /// </summary>
+        /// <remarks>
+        /// The deviance; the Pearson chi-square, the sum of w (y - t p)^2 / (t p (1 - p)); the fall in deviance from the model with a constant only;
+        /// and two measures of the proportion explained, as for the Poisson model.
+        /// For the Hosmer-Lemeshow test the patterns are put in ascending order of fitted probability and cut into ten groups of about the same
+        /// total, a pattern never being split.  The statistic is the sum over the groups of (observed - expected)^2 / (n pbar (1 - pbar)), pbar being
+        /// the mean fitted probability of the group, and it is referred to chi-square on the number of groups less 2.
+        /// </remarks>
         public static StepOutput RptLogisticRegressionModel(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3613,6 +3926,14 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The incidence rate ratios of a Poisson regression, exp(b), with their confidence intervals; and, if a predictor that is 0 or 1 is chosen,
+        /// the ratios of the other predictors at each of its two levels.
+        /// </summary>
+        /// <remarks>
+        /// At level 1 of the chosen predictor l, the ratio for predictor i is exp(b[i] + b[l]), and its interval is from the variance of that sum:
+        /// var(b[i]) + var(b[l]) + 2 cov(b[i], b[l]).  At level 0 the ratios are those of the model as it stands.
+        /// </remarks>
         public static StepOutput RptPoissonRegressionIrr(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3731,6 +4052,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Lists the predictors that take no value but 0 and 1, from which one can be chosen for the rate ratios at each of its levels.
+        /// </summary>
         public static StepOutput OpPoissonRegressionIrrMakeDichotomousCovariates(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3778,6 +4102,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Models of growing size, for choosing among the predictors of a logistic regression.
+        /// </summary>
+        /// <remarks>
+        /// The model with every predictor is shown first.  Then the predictors are added one at a time: at each step every predictor that is not yet
+        /// in is tried, and the one that gives the least Akaike information criterion is kept.  Each model kept is shown with its criterion, the
+        /// proportion of the deviance explained, and the fall in deviance from the model with a constant only with its P.
+        /// </remarks>
         public static StepOutput RptLogisticRegressionModelSelection(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -3882,6 +4214,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// One model of the selection: its equation, with each coefficient marked by SignificanceString, and its statistics.
+        /// </summary>
         private static void LR_ModelSelectionOutput(IFormatting host, List<ParameterBag> parametersList, int fault, string[] label, double[] b, double[] se, bool mean, double dev, double devx, int p, int m, int df, int dfx, string err_msg, bool[] selectX)
         {
             ParameterBag parametersParameters = new();
@@ -3947,6 +4282,10 @@ namespace StatsDirect.Builtins
                     : Constant.MISSING);
         }
 
+        /// <summary>
+        /// The mark for a coefficient, by the two-sided P of its ratio to its standard error: none if P is below 0.05, ~?NS if it is below 0.2, ~NS
+        /// otherwise, and ~N/A if there is no standard error.
+        /// </summary>
         private static string SignificanceString(double[] b, double[] se, out bool isSignificant, int j)
         {
             isSignificant = false;
@@ -3964,6 +4303,17 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// How well a logistic regression classifies, at a chosen cut-off of the fitted probability, with the receiver operating characteristic curve.
+        /// </summary>
+        /// <remarks>
+        /// A pattern is called positive if its fitted probability is no less than the cut-off, which is a half unless one between 0 and 1 is given.
+        /// From the two by two table of called against observed (x_lclass): the sensitivity and specificity, the predictive values, the percentage
+        /// correctly classified, and the likelihood ratios of a positive and of a negative call with their confidence intervals (x_lrci).  The output
+        /// called negative is the percentage of those called negative who responded; npv is 100 less that.
+        /// The curve is drawn from the tables at cut-offs of 0.01 to 1 in steps of 0.01.  Its area is found by the trapezoidal rule, and the cut-off
+        /// at which sensitivity plus specificity is greatest is reported.
+        /// </remarks>
         public static StepOutput RptLogisticRegressionClassification(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -4076,6 +4426,17 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Bootstrap confidence intervals for the odds ratios of a logistic regression.
+        /// </summary>
+        /// <remarks>
+        /// Each resample draws as many subjects as the data hold, with replacement: a subject falls to a covariate pattern with probability in
+        /// proportion to the total of the pattern, and responds with the proportion that responded in it.  The model is fitted to each resample, and
+        /// the odds ratios of the fits that succeed are kept.  The interval is the bias-corrected percentile interval: z0 is the normal deviate of
+        /// the proportion of the resampled odds ratios that are no more than the one observed, and the limits are the percentiles of the resampled
+        /// odds ratios at the normal probabilities of 2 z0 - z and 2 z0 + z.  The mean of the resampled odds ratios leaves out any that is 1000 times
+        /// the one observed, or more.  The model is fitted to the data themselves once more at the end.
+        /// </remarks>
         public static StepOutput RptLogisticRegressionBootstrap(IProgressBarHost host, ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -4250,6 +4611,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// For chosen values of the predictors: the probability of response that a logistic regression predicts, with its confidence interval.
+        /// </summary>
+        /// <remarks>
+        /// The logit is x'b and its variance x'Cx, C being the covariance matrix of the coefficients, which is held packed: element (j, i), i no more
+        /// than j, is at j(j - 1)/2 + i.  The limits are found for the logit and taken back to probabilities.  The values offered at first are those of
+        /// x_prep_interlr; if they are left as they are the result is marked as the least squares mean.
+        /// </remarks>
         public static StepOutput RptLogisticRegressionPrediction(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -4362,6 +4731,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The confidence limits of the ratio of two proportions, (x1 / n1) / (x0 / n0), such as a likelihood ratio.
+        /// </summary>
+        /// <remarks>
+        /// The limits start from those of the log of the ratio with a half added to each count.  Each is then moved, by steps of interpolation on
+        /// the log of the ratio, until the score statistic for the ratio (x_lrz) is the normal deviate zc in size, to within 1e-8, or 5000 steps have
+        /// been made.
+        /// </remarks>
         private static void x_lrci(double fp, double tp, double column2total, double column1total, double zc, out double thetal, out double thetau)
         {
             double lastz = 0;
@@ -4418,6 +4795,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// For a given ratio theta of two proportions, the estimate of the second proportion that is most likely: the root of a p^2 + b p + c = 0 for
+        /// which both p and theta p are proportions.
+        /// </summary>
         private static double x_lrptilde(double theta, double a, double b, double C)
         {
             double pest1 = (-b + Math.Sqrt(b * b - 4.0 * a * C)) / 2.0 / a;
@@ -4431,6 +4812,10 @@ namespace StatsDirect.Builtins
             return pest1;
         }
 
+        /// <summary>
+        /// The score statistic for a given ratio of two proportions: how far the first count is from what the ratio would have it, over its standard
+        /// error, both taken at the proportions that are most likely given the ratio (x_lrptilde).
+        /// </summary>
         private static double x_lrz(double thetaHat, out double a, out double b, out double c, double n, double n0, double n1, double x0, double x1)
         {
 
@@ -4446,6 +4831,9 @@ namespace StatsDirect.Builtins
             return (x1 - n1 * p1tilde) / q1tilde / Math.Sqrt(vtilde);
         }
 
+        /// <summary>
+        /// The probability that goes with a logit, 1 / (1 + exp(-x)), arranged so that the exponential is never of a large positive number.
+        /// </summary>
         private static double PFromLogit(double x)
         {
             if (x == Constant.MISSING || double.IsNaN(x))
@@ -4458,6 +4846,13 @@ namespace StatsDirect.Builtins
             return y / (1.0 + y);
         }
 
+        /// <summary>
+        /// The two by two table of classification at the cut-off co.
+        /// </summary>
+        /// <remarks>
+        /// A pattern whose fitted probability is no less than co is called positive: those in it who responded are true positives, and the others
+        /// false positives.  Of a pattern that is called negative, those who did not respond are true negatives, and those who did false negatives.
+        /// </remarks>
         private static void x_lclass(double[] t, double[] fvl, double[] y, int N, out int tp, out int fp, out int fn, out int tn, double co)
         {
             // updated 15 Aug 2001
@@ -4486,6 +4881,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Puts two trial values of the ratio, and their statistics, in order: theta1 and z1 are those of the trial that is nearer the target, and
+        /// zcritical is how far it is from it.
+        /// </summary>
         private static void x_lrdiff(double diff1, double diff2, out double theta1, out double theta0, double temptheta1, double temptheta2, out double z1, out double z0, double ztemp1, double ztemp2, out double zcritical)
         {
             if (diff1 < diff2)
@@ -4506,6 +4905,14 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The table of values that is offered for a prediction from a logistic regression.
+        /// </summary>
+        /// <remarks>
+        /// For each predictor its mean over the patterns; or, if it takes no more than two values, a half; or, if it takes no more than two values
+        /// and its label has a bracket in it, as the dummy variables of a classifier have, one over a number that is one more than the number of
+        /// labels that share what comes before the bracket.
+        /// </remarks>
         private static DataFrame x_prep_interlr(MultipleLinearRegressionContext context)
         {
             int iq = context.DoC ? 1 : 0;
@@ -4572,6 +4979,16 @@ namespace StatsDirect.Builtins
             return frame;
         }
 
+        /// <summary>
+        /// The report of a Poisson regression.
+        /// </summary>
+        /// <remarks>
+        /// Reads the counts, the predictors, the exposure (person-time) if there is one, whose logarithm is the offset of the model, and the weights
+        /// if there are any.  Records with a missing value, or with an exposure that is not positive, are left out, with a warning.  The model with a
+        /// constant only is fitted first, for the deviance and the log likelihood against which the model is judged, and then the model itself
+        /// (X_Poisson_Regression in Regress1.cs).  Reported: the deviance and the fall in deviance, with their P from chi-square, and each
+        /// coefficient with its z and P and as an incidence rate ratio, exp(b), with a confidence interval exp(b -/+ z se).
+        /// </remarks>
         public static StepOutput RptPoissonRegression(IFormatting host, ParameterBag parameters)
         {
             //  Dim PASSX(4, 1) As Double ' (1, 1) = calc intercept (1 = yes); (2, 1) = accuracy; (3, 1) = weights (1 = yes); (4, 1) = ptime (1 = yes)
@@ -4873,6 +5290,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The fit and the residuals of each record of a Poisson regression, and the covariances of the coefficients.
+        /// </summary>
+        /// <remarks>
+        /// With mu the fitted count, w the prior weight and h the leverage: the Freeman-Tukey residual is
+        /// sqrt(w) (sqrt(y) + sqrt(y + 1) - sqrt(4 mu + 1)); the Pearson residual is (y - mu) sqrt(w) / sqrt(mu); and the standardised Pearson
+        /// residual is that over sqrt(1 - h).
+        /// </remarks>
         public static StepOutput RptPoissonRegressionFit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -4990,6 +5415,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Saves to the worksheet those of the fits and residuals of a Poisson regression that were asked for: see RptPoissonRegressionFit.
+        /// </summary>
         public static StepOutput GridPoissonRegressionFit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -5106,6 +5534,10 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The residual plots of a Poisson regression: the absolute deviance residuals against the fitted values, and the deviance residuals against
+        /// each predictor that takes a value other than -1, 0 and 1.
+        /// </summary>
         public static StepOutput RptPoissonRegressionResiduals(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -5153,22 +5585,34 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The two curves that probit analysis can fit to the proportion responding: the normal curve, and the logistic.
+        /// </summary>
         public enum ProbitModel
         {
             Probit = 1,
             Logit = 2,
         }
 
+        /// <summary>
+        /// Probit analysis: see RptProbitOrLogit.
+        /// </summary>
         public static StepOutput RptProbit(ParameterBag parameters)
         {
             return RptProbitOrLogit(parameters, ProbitModel.Probit);
         }
 
+        /// <summary>
+        /// Logit analysis: see RptProbitOrLogit.
+        /// </summary>
         public static StepOutput RptLogit(ParameterBag parameters)
         {
             return RptProbitOrLogit(parameters, ProbitModel.Logit);
         }
 
+        /// <summary>
+        /// Looks in the data for a control group, which is the first record with a dose of zero, and passes on its subjects and responders.
+        /// </summary>
         public static StepOutput ProbitOrLogitDataHasControls(ParameterBag parameters)
         {
             DataFrame doseFrame = parameters["dose"].AsDataFrame;
@@ -5194,6 +5638,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The report of a probit or logit analysis of the response to doses.
+        /// </summary>
+        /// <remarks>
+        /// For each dose the data give the number of subjects and the number responding.  The control group, which sets the natural rate of response,
+        /// is the first record with a dose of zero, or is given as numbers.  The records are put in ascending order of dose, and the line is fitted by
+        /// x_probits, to the doses or to their common logarithms.  x_qdcl then gives the median effective dose and the dose for the chosen percentage
+        /// of response, with their confidence limits.  The heterogeneity of the data about the line is tested by chi-square; if its P is below 0.05
+        /// the standard errors and limits that allow for heterogeneity are the ones reported.
+        /// </remarks>
         private static StepOutput RptProbitOrLogit(ParameterBag parameters, ProbitModel model)
         {
             DataFrame doseFrame = parameters["dose"].AsDataFrame;
@@ -5392,6 +5846,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Puts the doses, with their subjects and responders, in ascending order of dose.
+        /// </summary>
         private static void x_sortbydose(double[] d, double[] s, double[] r, int k)
         {
             Tri[] swp = new Tri[k + 1];
@@ -5411,8 +5868,19 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// 
+        /// Fits the probit or logit line to the responses at k doses, with the natural rate of response estimated as well if there are controls.
         /// </summary>
+        /// <remarks>
+        /// The model is that a subject responds with probability c + (1 - c) F(a + b x), where c is the natural rate, x the dose or its common
+        /// logarithm, and F the normal distribution function for the probit model.  For the logit model the line is fitted to half the log of the
+        /// odds, so that F(v) = exp(2 v) / (1 + exp(2 v)).  The fit is by weighted regression of the working values y2 on x, repeated with the weights
+        /// and working values brought up to date until the squares of the changes in the expected values add up to less than the rounding unit, or 300
+        /// cycles have been made.
+        /// d, s and r are the doses, the subjects and the responders.  On return a and b are the intercept and slope, c the natural rate, p the
+        /// proportions responding after the natural rate has been allowed for, w the weights and y the expected values; s1, s2 and s3 are the weighted
+        /// sums of squares and products of x and the working values about their means, and sw the sum of the weights times the subjects.  The
+        /// faults are those that ProbitFaultToString puts into words.
+        /// </remarks>
         /// <param name="model"></param>
         /// <param name="k"></param>
         /// <param name="c1">Experimental value of natural mortality</param>
@@ -5747,6 +6215,9 @@ namespace StatsDirect.Builtins
             ifault = 0;
         }
 
+        /// <summary>
+        /// The faults of x_probits and x_qdcl, in words.
+        /// </summary>
         private static string ProbitFaultToString(int ifault)
         {
             if (ifault == 0)
@@ -5776,6 +6247,17 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The median effective dose and the dose for qld per cent of response, with their confidence limits, from the line that x_probits fitted.
+        /// </summary>
+        /// <remarks>
+        /// A dose is (z - a) / b, z being the probit or logit of the percentage, taken back from its logarithm if logarithms were used.  c comes in
+        /// as the natural rate, which is returned in c2, and goes out as the chi-square for heterogeneity, s3 - b s2, on k - 2 degrees of freedom less
+        /// the doses of zero weight.  The limits of a dose are those of a ratio of two estimates (Fieller's theorem), with g = t^2 var(b) / b^2: if g
+        /// is more than 1 the slope is not significantly different from zero, and there are no limits (fault 9).  Each pair of limits is worked out
+        /// twice: without heterogeneity, from the normal deviate; and with it, from Student's t, the variances being multiplied by the chi-square over
+        /// its degrees of freedom.
+        /// </remarks>
         private static void x_qdcl(ProbitModel model, int k, out double c2, double ici, bool clog, double qld, ref double dose50, ref double doseq, double a, double b, ref double nohetllm, ref double nohetulm, ref double hetllm, ref double hetulm, ref double nohetllq, ref double nohetulq, ref double hetllq, ref double hetulq, ref double c, out double se, ref double cse, out double seh, ref double cseh, ref double i1, ref double s1, ref double s2, ref double s3, double s4, double s6, double del, double tm, double xm, double sw, out double varb, int icount, out int ifault)
         {
             double covar = 0;
@@ -5954,6 +6436,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The plot of the proportions responding against dose, with the fitted curve and its confidence interval.
+        /// </summary>
         public static StepOutput PlotProbit(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -5978,6 +6463,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The proportion that the fitted curve expects to respond at a chosen dose, the natural rate of response included.
+        /// </summary>
         public static StepOutput RptProbitInterpolateX(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -6019,6 +6507,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The dose at which the fitted curve expects a chosen proportion to respond.
+        /// </summary>
         public static StepOutput RptProbitInterpolateY(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;
@@ -6051,6 +6542,10 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// More of a probit analysis: the number of cycles, the sums of squares and products, the variance and standard errors of the slope and of the
+        /// natural rate of response, and the number expected to respond at each dose.
+        /// </summary>
         public static StepOutput RptProbitMore(ParameterBag parameters)
         {
             MultipleLinearRegressionContext context = (MultipleLinearRegressionContext)parameters["context"].AsObject;

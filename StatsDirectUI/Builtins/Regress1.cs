@@ -6,6 +6,13 @@ namespace StatsDirect.Builtins
 {
     public class Regress1
     {
+        /// <summary>
+        /// The covariance xc and the correlation xr of two variables.
+        /// </summary>
+        /// <remarks>
+        /// x is x[variable, record], not the other way about: idx and idy are the two variables, and nx is the number of records.  The covariance is
+        /// the sum of the products of the deviations from the means over nx - 1.
+        /// </remarks>
         public static void X_Comat(out double xc, out double xr, double[,] x, int nx, int idx, int idy)
         {
             x_avsd(x, nx, idx, out double avx, out double sdx);
@@ -17,6 +24,13 @@ namespace StatsDirect.Builtins
             xc = co / (nx - 1.0);
         }
 
+        /// <summary>
+        /// The mean av and the standard deviation sd, with nx - 1, of variable id of x, which is x[variable, record].
+        /// </summary>
+        /// <remarks>
+        /// The sum of squares is taken about the mean in a second pass.  ep is the sum of the deviations themselves, which would be zero but for
+        /// rounding: taking ep^2 / nx from the sum of squares removes most of the error that rounding of the mean has put in.
+        /// </remarks>
         public static void x_avsd(double[,] x, int nx, int id, out double av, out double sd)
         {
             double sum = 0.0;
@@ -37,6 +51,16 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The singular value decomposition A = U S V' of a matrix of nx rows and p columns, nx no less than p.
+        /// </summary>
+        /// <remarks>
+        /// On entry ad holds A, as ad[row, column].  On return ad holds U, whose p columns are orthonormal, wd the singular values, which are not
+        /// negative and come in no particular order, and vd the matrix V itself, not its transpose.  ifault is set to 1 if nx is less than p, and to 2
+        /// if a singular value has not been found in 30 steps; otherwise it is left as it was.
+        /// The method is that of SingularValueDecomposition, further down: reduction to bidiagonal form by Householder reflections, and then the QR
+        /// algorithm.  LAPACK's DGESVD does the same job, and returns V' and the singular values in descending order.
+        /// </remarks>
         public static void X_SVDCP(double[,] ad, int nx, int p, double[] wd, double[,] vd, ref int ifault)
         {
             int i; int j; int k; int l = 0;
@@ -48,6 +72,10 @@ namespace StatsDirect.Builtins
                 ifault = 1;
                 return;
             }
+            // Reduction to bidiagonal form.  For each i in turn a reflection clears column i below the diagonal, and another clears row i beyond the
+            // element next to the diagonal.  The vectors of the reflections are left in ad where the zeros would be; wd takes the diagonal and rv1 the
+            // elements above it.  Each column and row is scaled by the sum of its absolute values (sca) first, to keep its squares within range.
+            // anorm becomes the size of the bidiagonal matrix: the largest sum of a diagonal element and the element above it.
             const int maxit = 30;
             double g = 0.0;
             double sca = 0.0;
@@ -124,6 +152,7 @@ namespace StatsDirect.Builtins
                     anorm = Math.Abs(wd[i]) + Math.Abs(rv1[i]);
             }
 
+            // The reflections that were made from the right are multiplied out into vd, from the last to the first: V
             for (i = p; i >= 1; i--)
             {
                 if (i < p)
@@ -151,6 +180,7 @@ namespace StatsDirect.Builtins
                 g = rv1[i];
                 l = i;
             }
+            // Those that were made from the left are multiplied out in ad itself, from the last to the first: U
             for (i = p; i >= 1; i--)
             {
                 l = i + 1;
@@ -181,6 +211,7 @@ namespace StatsDirect.Builtins
                 }
                 ad[i, i] = ad[i, i] + 1.0;
             }
+            // The bidiagonal matrix is made diagonal, from the last singular value up, by QR steps with shifts: at most maxit for each value
             for (k = p; k >= 1; k--)
             {
                 int its;
@@ -190,6 +221,9 @@ namespace StatsDirect.Builtins
                     double z;
                     double c;
                     double y;
+                    // The test for splitting, working up from row k.  If an element above the diagonal (rv1) is negligible the matrix splits there.  If
+                    // a diagonal element (wd) is negligible, the element beside it is rotated away first, the rotations going into U.  An element is
+                    // negligible if adding it to anorm leaves anorm as it was.
                     for (l = k; l >= 1; l--)
                     {
                         nm = l - 1;
@@ -224,6 +258,7 @@ namespace StatsDirect.Builtins
                             break;
                         }
                     }
+                    // Converged, if the split is at row k itself: the singular value is made positive, its sign going to its column of V
                     z = wd[k];
                     if (l == k)
                     {
@@ -240,6 +275,7 @@ namespace StatsDirect.Builtins
                         ifault = 2;
                         return;
                     }
+                    // The shift, from the 2 by 2 block at the bottom
                     double x = wd[l];
                     nm = k - 1;
                     y = wd[nm];
@@ -249,6 +285,7 @@ namespace StatsDirect.Builtins
                     g = X_PYTHAG(f, 1.0);
                     var temp = f >= 0 ? Math.Abs(g) : -Math.Abs(g);
                     f = ((x - z) * (x + z) + h * (y / (f + temp) - h)) / x;
+                    // The QR step, on rows l to k: rotations from the right, which go into V, in turn with rotations from the left, which go into U
                     c = 1.0;
                     s = 1.0;
                     for (j = l; j <= nm; j++)
@@ -299,6 +336,9 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The square root of a^2 + b^2, found without squaring a or b, so that it neither overflows nor underflows.
+        /// </summary>
         private static double X_PYTHAG(double a, double b)
         {
             double absa = Math.Abs(a);
@@ -310,6 +350,13 @@ namespace StatsDirect.Builtins
             return absb * Math.Sqrt(1.0 + absa / absb * (absa / absb));
         }
 
+        /// <summary>
+        /// Puts the n values in d into descending order, and moves the columns of v with them.
+        /// </summary>
+        /// <remarks>
+        /// By selection: for each place in turn the largest of the values from there on is found and exchanged into it, with its column.  Used on the
+        /// singular values and V of a decomposition; U is not given, and so is not reordered.
+        /// </remarks>
         public static void X_Eigsrt(double[] d, double[,] v, int n)
         {
             for (int i = 1; i < n; i++)
@@ -339,6 +386,13 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The least squares coefficients from a singular value decomposition: b = V S^-1 U'(y / sig).
+        /// </summary>
+        /// <remarks>
+        /// ud, wd and vd hold U, the singular values and V of the matrix whose rows are those of X divided by sig.  t holds S^-1 U'(y / sig).  A
+        /// singular value of zero is left out of the sum, which gives the shortest of the solutions when X is not of full rank.
+        /// </remarks>
         private static void X_SVDBKD(double[,] ud, double[] wd, double[,] vd, int nx, int p, double[] yd, double[] sig, double[] bd)
         {
             double[] t = new double[p + 1];
@@ -362,6 +416,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// From a singular value decomposition: the inverse of X'X, a condition number for each singular value, and the leverages.
+        /// </summary>
+        /// <remarks>
+        /// v and w hold V and the singular values.  xtxi = V S^-2 V', which is the inverse of X'X for the matrix that was decomposed; a singular value
+        /// of zero is left out.  cn[i] is the largest singular value over singular value i, or zero for a singular value of zero.  hi[j] is
+        /// x'(xtxi) x for row j of the x that is given here.  X_SVGO decomposes the matrix with its rows weighted, and the caller gives this routine
+        /// the rows without their weights: hi is then x'(X'WX)^-1 x, the leverage without the weight of the record.
+        /// </remarks>
         public static void X_SVDVRD(double[,] x, double[,] v, double[] w, int nx, int p, double[,] xtxi, double[] cn, double[] hi)
         {
             double[] owt = new double[p + 1];
@@ -401,19 +464,19 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// 
+        /// The least squares fit by singular value decomposition, which still gives an answer when the design matrix is not of full rank.
         /// </summary>
-        /// <param name="xd"></param>
-        /// <param name="yd"></param>
-        /// <param name="sig"></param>
-        /// <param name="nx"></param>
-        /// <param name="p"></param>
-        /// <param name="bd"></param>
-        /// <param name="ud"></param>
-        /// <param name="vd"></param>
-        /// <param name="wd"></param>
-        /// <param name="yfit"></param>
-        /// <param name="er"></param>
+        /// <param name="xd">The design matrix, xd[record, column].</param>
+        /// <param name="yd">The response.</param>
+        /// <param name="sig">For each record, the standard deviation of its error: the weight of the record is 1 / sig^2.</param>
+        /// <param name="nx">The number of records.</param>
+        /// <param name="p">The number of columns.</param>
+        /// <param name="bd">On return, the coefficients.</param>
+        /// <param name="ud">On return, U of the decomposition of the matrix whose rows are those of xd divided by sig.</param>
+        /// <param name="vd">On return, V of that decomposition.</param>
+        /// <param name="wd">On return, its singular values; one that is less than 1e-12 of the largest is set to zero, and left out of the fit.</param>
+        /// <param name="yfit">On return, the fitted values.</param>
+        /// <param name="er">On return, the residuals y - yfit, not weighted.</param>
         /// <returns>0 on successful decomposition, non-0 if no decomposition found</returns>
         public static int X_SVGO(double[,] xd, double[] yd, double[] sig, int nx, int p, double[] bd, double[,] ud, double[,] vd, double[] wd, double[] yfit, double[] er)
         {
@@ -444,6 +507,36 @@ namespace StatsDirect.Builtins
             return ifault;
         }
 
+        /// <summary>
+        /// The least squares fit of a linear model, made a record at a time by rotations, without the matrix X'X being formed.
+        /// </summary>
+        /// <remarks>
+        /// The triangle R of X = QR is built up by taking each record in turn and rotating it into the triangle found so far, so that the records need
+        /// never all be held at once and may be given in several calls.  The rotations are the modified ones (drotmg), which need no square roots:
+        /// while the fit is being made the triangle is held as r with a scale factor d for each row, row i standing for sqrt(d[i]) times what r holds.
+        ///
+        ///     ido       0 for the whole fit in one call; 1 for the first of several calls, 2 for a call in the middle and 3 for the last
+        ///     intcep    1 if a constant is fitted, which then comes first among the coefficients; 0 if not
+        ///     isub      1 to have the means taken out as the records come (the first row then holds the sum of the weights and the weighted sums)
+        ///     nrow      the number of records in x; negative, to take those records out of a fit again
+        ///     nvar      the number of columns of x, which is x[record, column]
+        ///     iind      the number of predictors, whose columns are in indind; negative, for the first -iind columns
+        ///     idep      the number of dependent variables, whose columns are in inddep; negative, for the last -idep columns
+        ///     ifrq      the column of frequencies, or 0;  iwt  the column of weights, or 0
+        ///     b         on return, the coefficients for the first dependent variable
+        ///     r, d      on return, R in the upper triangle of r, with a diagonal that is not negative, and d set to ones: R'R = X'WX
+        ///     irank     on return, the rank: the coefficients less those of the predictors that were dropped
+        ///     dfe       on return, the degrees of freedom for error: the sum of the frequencies less the rank
+        ///     scpe      on return, the residual sum of squares of the first dependent variable
+        ///     nrmiss    on return, the number of records passed over for a missing value
+        ///     xmin, xmax  on return, the least and the greatest of each column of the design matrix, the constant included
+        ///     wk        work space: the record, as the constant, the predictors and then the dependent variables
+        ///     ifault    on entry not zero, nothing is done; on return 10 or 11 if a record taken out held the least or the greatest of a column,
+        ///               12 if there are no degrees of freedom left for error, and the faults of CheckObs and mxinv2
+        ///
+        /// A predictor that adds nothing to those before it is dropped: its coefficient and its row of R are zero.  Only the first dependent
+        /// variable is carried through to b and scpe.  The callers give the whole fit in one call, with ido 0 and isub 0.
+        /// </remarks>
         public static void glsqr(int ido, int intcep, int isub, int nrow, int nvar, double[,] x, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, double[] b, double[,] r, double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, double[] xmin, double[] xmax, double[] wk, ref int ifault)
         {
             double[] sparam = new double[5 + 1];
@@ -457,6 +550,7 @@ namespace StatsDirect.Builtins
                 return;
             }
 
+            // The coefficients are the constant, if there is one, and then the predictors; in wk the dependent variables follow them, from idepx
             int ndep = Math.Abs(idep);
             int nind = Math.Abs(iind);
             int ncoef = intcep + nind;
@@ -469,6 +563,7 @@ namespace StatsDirect.Builtins
             const double tol = 100.0 * Constant.EPSILON;
             const double tolsq = tol * tol;
 
+            // A fresh start: nothing in R, and the scale factors at one
             if (ido <= 1)
             {
                 nrmiss = 0;
@@ -488,6 +583,7 @@ namespace StatsDirect.Builtins
                 scpe = 0.0;
             }
 
+            // A negative nrow takes records out of the fit: irow is then -1, and the frequency of each record is made negative
             int nobs;
             int irow;
             if (nrow < 0)
@@ -502,6 +598,8 @@ namespace StatsDirect.Builtins
             }
             int i1 = isub == 0 ? 1 : 2;
 
+            // A record at a time: the record is put in wk and looked at for missing values, its range is noted, and it is rotated into the triangle.
+            // A record with a missing value is passed over, and counted in nrmiss.
             for (int iobs = 1; iobs <= nobs; iobs++)
             {
                 CheckObs(ido, x, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
@@ -576,7 +674,10 @@ namespace StatsDirect.Builtins
                             }
                             if (wt != 0.0)
                             {
+                                // sd2 is the weight of the record times its frequency: the scale factor that the record comes with
                                 double sd2 = wt * frq;
+                                // With isub the first row holds the sum of the weights and the weighted sums.  The record has the means so far, itself
+                                // included, taken from it, and its scale factor is adjusted to match, before it is rotated into the other rows.
                                 if (isub == 1)
                                 {
                                     double sumwt = r[1, 1];
@@ -613,6 +714,10 @@ namespace StatsDirect.Builtins
                                 }
                                 if (!skip)
                                 {
+                                    // The record is rotated into the triangle a row at a time.  drotmg finds the rotation that clears element i of the
+                                    // record against the diagonal of row i, and drotm_21 applies it to the rest of the row and of the record, and to
+                                    // the dependent variables.  What is left of the dependent variable at the end is the record's share of the
+                                    // residual sum of squares.
                                     for (int i = i1; i <= ncoef; i++)
                                     {
                                         drotmg(ref d[i], ref sd2, ref r[i, i], wk[i], sparam);
@@ -633,6 +738,10 @@ namespace StatsDirect.Builtins
             }
 
             // drop collinear variables
+            // A predictor is dropped if it does not vary (it is zero throughout, or is a second constant), or if what is left of it after the
+            // predictors before it, d r^2 on the diagonal, is no more than tol^2 of the whole of its column below the row of the constant.  Its row
+            // is rotated out against the rows below it, its share of the dependent variable goes to the residual sum of squares, and the row is
+            // set to zero.
             if (ido == 0 || ido == 3)
             {
                 int nconst = 0;
@@ -683,6 +792,8 @@ namespace StatsDirect.Builtins
                 }
 
                 // calculate b by back-substitution
+                // R b = the dependent variable as the rotations have left it, solved by mxinv2.  The scale factors are then taken into R: each row is
+                // multiplied by the square root of its d, with the sign that makes the diagonal positive, and d is set to ones.
                 for (int i = 1; i <= ncoef; i++)
                     b[i] = b2[i, 1];
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
@@ -699,6 +810,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The same as glsqr, for data held in a vector, one column after another: element (record, column) is at x[record + (column - 1) ldx].
+        /// </summary>
+        /// <remarks>See glsqr, of which this is a copy but for the way in which x is read.</remarks>
         public static void glsqr1(int ido, int intcep, int isub, int nrow, int nvar, double[] x, int ldx, int iind, int[] indind, int idep, int[] inddep, int ifrq, int iwt, double[] b, double[,] r, double[] d, ref int irank, ref double dfe, ref double scpe, ref int nrmiss, double[] xmin, double[] xmax, double[] wk, ref int ifault)
         {
             double[] sparam = new double[5 + 1];
@@ -706,6 +821,7 @@ namespace StatsDirect.Builtins
             if (ifault != 0)
                 return;
 
+            // The coefficients are the constant, if there is one, and then the predictors; in wk the dependent variables follow them, from idepx
             int ndep = Math.Abs(idep);
             int nind = Math.Abs(iind);
             int ncoef = intcep + nind;
@@ -718,6 +834,7 @@ namespace StatsDirect.Builtins
             const double tol = 100.0 * Constant.EPSILON;
             const double tolsq = tol * tol;
 
+            // A fresh start: nothing in R, and the scale factors at one
             if (ido <= 1)
             {
                 nrmiss = 0;
@@ -737,6 +854,7 @@ namespace StatsDirect.Builtins
                 scpe = 0.0;
             }
 
+            // A negative nrow takes records out of the fit: irow is then -1, and the frequency of each record is made negative
             int nobs;
             int irow;
             if (nrow < 0)
@@ -753,6 +871,8 @@ namespace StatsDirect.Builtins
 
             double frq = 0;
             double wt = 0;
+            // A record at a time: the record is put in wk and looked at for missing values, its range is noted, and it is rotated into the triangle.
+            // A record with a missing value is passed over, and counted in nrmiss.
             for (int iobs = 1; iobs <= nobs; iobs++)
             {
                 CheckObs1(ido, x, ldx, iobs, irow, ifrq, iwt, Constant.MISSING, ref nrmiss, ref frq, ref wt, out int igo, ref ifault);
@@ -827,8 +947,11 @@ namespace StatsDirect.Builtins
                             }
                             if (wt != 0.0)
                             {
+                                // sd2 is the weight of the record times its frequency: the scale factor that the record comes with
                                 double sd2 = wt * frq;
                                 bool skip = false;
+                                // With isub the first row holds the sum of the weights and the weighted sums.  The record has the means so far, itself
+                                // included, taken from it, and its scale factor is adjusted to match, before it is rotated into the other rows.
                                 if (isub == 1)
                                 {
                                     double sumwt = r[1, 1];
@@ -871,6 +994,10 @@ namespace StatsDirect.Builtins
                                 }
                                 if (!skip)
                                 {
+                                    // The record is rotated into the triangle a row at a time.  drotmg finds the rotation that clears element i of the
+                                    // record against the diagonal of row i, and drotm_21 applies it to the rest of the row and of the record, and to
+                                    // the dependent variables.  What is left of the dependent variable at the end is the record's share of the
+                                    // residual sum of squares.
                                     for (int i = i1; i <= ncoef; i++)
                                     {
                                         drotmg(ref d[i], ref sd2, ref r[i, i], wk[i], sparam);
@@ -891,6 +1018,10 @@ namespace StatsDirect.Builtins
             }
 
             // drop collinear variables
+            // A predictor is dropped if it does not vary (it is zero throughout, or is a second constant), or if what is left of it after the
+            // predictors before it, d r^2 on the diagonal, is no more than tol^2 of the whole of its column below the row of the constant.  Its row
+            // is rotated out against the rows below it, its share of the dependent variable goes to the residual sum of squares, and the row is
+            // set to zero.
             if (ido == 0 || ido == 3)
             {
                 int nconst = 0;
@@ -941,6 +1072,8 @@ namespace StatsDirect.Builtins
                 }
 
                 // calculate b by back-substitution
+                // R b = the dependent variable as the rotations have left it, solved by mxinv2.  The scale factors are then taken into R: each row is
+                // multiplied by the square root of its d, with the sign that makes the diagonal positive, and d is set to ones.
                 for (int i = 1; i <= ncoef; i++)
                     b[i] = b2[i, 1];
                 mxinv2(ncoef, r, b, true, false, false, r, out irank, ref ifault);
@@ -965,6 +1098,16 @@ namespace StatsDirect.Builtins
             return y < 0.0 ? -Math.Abs(x) : Math.Abs(x);
         }
 
+        /// <summary>
+        /// Reads the frequency and the weight of a record, and says what is to be done with the record.
+        /// </summary>
+        /// <remarks>
+        /// ifrq and iwt are the columns of x that hold the frequency and the weight, or 0 where there is none, when the value is 1.  The frequency is
+        /// made negative when irow is -1, which takes the record out of a fit.  igo is 0 if the record is to be used; 1 if it is to be passed over
+        /// because its frequency is zero; 2 if it is to be passed over because its frequency or weight is missing, when it is counted in nmiss; and
+        /// 3 if the fit is to stop because its frequency or weight is negative, with fault 2 or 3 for a frequency and 5 or 6 for a weight.  xmiss is
+        /// not used: the missing value is Constant.MISSING.
+        /// </remarks>
         private static void CheckObs(int ido, double[,] x, int iobs, int irow, int ifrq, int iwt, double xmiss, ref int nmiss, ref double frq, ref double wt, out int igo, ref int ifault)
         {
             igo = 0;
@@ -1031,6 +1174,9 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The same as CheckObs, for data held in a vector, one column after another: element (record, column) is at x[record + (column - 1) ldx].
+        /// </summary>
         private static void CheckObs1(int ido, double[] x, int ldx, int iobs, int irow, int ifrq, int iwt, double xmiss, ref /* Yes, really */ int nmiss, ref /* yes, really */ double frq, ref double wt, out int igo, ref int ifault)
         {
             igo = 0;
@@ -1100,6 +1246,7 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// Returns the smallest index of sx[ix..n] = nan, or 0 if none found.
         /// </summary>
+        /// <remarks>n is the last element that is looked at, not the number of elements.  The value looked for is Constant.MISSING.</remarks>
         /// <param name="n">The last index to be searched</param>
         /// <param name="sx">The vector to be searched</param>
         /// <param name="ix">First index to be searched</param>
@@ -1116,6 +1263,12 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// blas modified givens rotations application
         /// </summary>
+        /// <remarks>
+        /// Applies the rotation H that drotmg has left in sparam to n pairs of elements: w from row ix1 of sx, from column ix2 on, and z from sy, from
+        /// element iy on.  w becomes h11 w + h12 z and z becomes h21 w + h22 z.  sparam[1] says which elements of H are held and which are taken as
+        /// read: -2 for H = I, when nothing is done; 0 for h11 = h22 = 1; 1 for h12 = 1 and h21 = -1; -1 for all four held.  sparam[2] to sparam[5]
+        /// are h11, h21, h12 and h22.  BLAS calls this DROTM.
+        /// </remarks>
         private static void drotm_21(int n, double[,] sx, int ix1, int ix2, double[] sy, int iy, double[] sparam)
         {
             double sflag = sparam[1];
@@ -1175,6 +1328,9 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// blas modified givens rotations application
         /// </summary>
+        /// <remarks>
+        /// The same as drotm_21, with z as well as w taken from a row of a matrix: row iy1 of sy, from column iy2 on.
+        /// </remarks>
         private static void drotm_22(int n, double[,] sx, int ix1, int ix2, double[,] sy, int iy1, int iy2, double[] sparam)
         {
             double sflag = sparam[1];
@@ -1224,6 +1380,18 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Finds the modified rotation that clears y against x, for two rows that are held with the scale factors d1 and d2.
+        /// </summary>
+        /// <remarks>
+        /// A row is held as the square root of its scale factor times what is stored, so the pair that is rotated is (sqrt(d1) x, sqrt(d2) y).  The
+        /// rotation H, which is left in p for drotm_21 and drotm_22, makes the second of the pair zero without a square root being taken: on return
+        /// d1, d2 and x have been brought up to date, and d1 x^2 is what d1 x^2 + d2 y^2 was.  Of the two forms of H the one that is used is that with
+        /// its larger elements equal to 1 (p[1] is 0 if |d1 x^2| is more than |d2 y^2|, when h11 = h22 = 1, and 1 if not, when h12 = 1 and
+        /// h21 = -1).  If d2 y is zero nothing needs doing, and p[1] is -2.  If a scale factor is out of the range 1 / g^2 to g^2, with g = 4096, it is
+        /// brought back in by factors of g^2, the elements of H take up the factors of g, and p[1] is -1: all four elements are then held.  A
+        /// negative d1, or a rotation that cannot be made, sets H and the scale factors to zero.  BLAS calls this DROTMG.
+        /// </remarks>
         private static void drotmg(ref double d1, ref double d2, ref double x, double y, double[] p)
         {
 
@@ -1363,12 +1531,15 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  variance-covariance matrix from the r matrix
         ///  </summary>
-        ///  <param name="ncoef"></param>
-        ///  <param name="r"></param>
-        ///  <param name="s2"></param>
-        ///  <param name="covb"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="ncoef">The number of coefficients.</param>
+        ///  <param name="r">R, upper triangular, as glsqr leaves it.</param>
+        ///  <param name="s2">The residual mean square, or 1 for the inverse of R'R itself.</param>
+        ///  <param name="covb">On return, s2 (R'R)^-1, the whole symmetric matrix.</param>
+        ///  <param name="ifault">On entry not zero, nothing is done; on return, a fault of mxinv2.</param>
+        ///  <remarks>
+        ///  The inverse V of R is found by mxinv2, and the product V V' is then formed a column at a time in the upper triangle, as dpptri forms it
+        ///  in RegressRpt.cs.  The row and column of a predictor that glsqr dropped, whose diagonal element of R is zero, are zero.
+        ///  </remarks>
         public static void rcovarb(int ncoef, double[,] r, double s2, double[,] covb, ref int ifault)
         {
             mxinv2(ncoef, r, null, false, false, true, covb, out int _, ref ifault);
@@ -1411,16 +1582,23 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Solve a set of linear systems and/or compute a generalized inverse of upper triangular matrix
         ///  </summary>
-        ///  <param name="n"></param>
-        ///  <param name="r"></param>
-        ///  <param name="b"></param>
+        ///  <param name="n">The order of R.</param>
+        ///  <param name="r">R, in the upper triangle; what is below the diagonal is not looked at.</param>
+        ///  <param name="b">The right-hand side on entry, and the solution on return, if useB is set.</param>
         ///  <param name="useB">true for all cases of old paths 1-4</param>
         ///  <param name="transposeR">true to transpose (old path 2 or 4)</param>
         ///  <param name="invertR">true for old paths 3, 4</param>
-        ///  <param name="rinv"></param>
-        ///  <param name="irank"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="rinv">On return the inverse of R, upper triangular, if invertR is set.</param>
+        ///  <param name="irank">On return, the number of diagonal elements of R that are not zero.</param>
+        ///  <param name="ifault">
+        ///  On entry not zero, nothing is done.  On return 5 if a row of R has a diagonal element of zero and something else beside it, and 1 or 2 if
+        ///  the equations cannot all be met because R is not of full rank.
+        ///  </param>
+        ///  <remarks>
+        ///  With useB, R x = b is solved, or R'x = b if transposeR is set, by substitution.  A row of R that is wholly zero stands for a predictor that
+        ///  was dropped: its element of the solution is zero, and its row and column of the inverse are zero, which makes the inverse a generalised
+        ///  one.  LAPACK solves with DTRTRS and inverts with DTRTRI.
+        ///  </remarks>
         public static void mxinv2(int n, double[,] r, double[] b, bool useB, bool transposeR, bool invertR, double[,] rinv, out int irank, ref int ifault)
         {
             if (ifault != 0)
@@ -1919,6 +2097,10 @@ namespace StatsDirect.Builtins
             return p;
         }
 
+        /// <summary>
+        /// The Durbin-Watson statistic of the residuals: the sum of the squares of the differences between each and the one before, over the sum of
+        /// the squares of the residuals.
+        /// </summary>
         public static void x_dwsd(double[] er, int nx, out double dw)
         {
             double[] erd = new double[nx + 1];
@@ -1936,6 +2118,9 @@ namespace StatsDirect.Builtins
             dw = sum1 / sum2;
         }
 
+        /// <summary>
+        /// The differences of a series at lag idif: yd[i] = xd[i + idif] - xd[i], and nd the number of them.
+        /// </summary>
         private static void x_difd(double[] xd, double[] yd, int nx, int idif, ref int nd)
         {
             if (idif <= 0)
@@ -1949,6 +2134,13 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The half widths of the confidence interval and of the prediction interval about a fitted value.
+        /// </summary>
+        /// <remarks>
+        /// XV is the row of the design matrix at which the prediction is made, xtxi the inverse of X'X, rms the residual mean square and cit the
+        /// quantile of Student's t.  cl = cit sqrt(rms x'(X'X)^-1 x), for the mean at x, and pl = cit sqrt(rms (1 + x'(X'X)^-1 x)), for a new record.
+        /// </remarks>
         public static void x_ciyp(double[] XV, double[,] xtxi, int P, double rms, double cit, out double cl, out double pl)
         {
             double xcx = 0;
@@ -1969,13 +2161,17 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  trapezoidal numerical recipies p 131
         ///  </summary>
-        ///  <param name="a"></param>
-        ///  <param name="b"></param>
-        ///  <param name="s">Output</param>
-        ///  <param name="n"></param>
-        ///  <param name="bd"></param>
-        ///  <param name="ip"></param>
-        ///  <remarks></remarks>
+        ///  <param name="a">The lower limit.</param>
+        ///  <param name="b">The upper limit.</param>
+        ///  <param name="s">The result of stage n - 1; not used at stage 1.</param>
+        ///  <param name="n">The stage.</param>
+        ///  <param name="bd">The coefficients of the polynomial that is integrated: see polyfunc.</param>
+        ///  <param name="ip">The number of coefficients.</param>
+        ///  <returns>The trapezoidal rule with 2^(n - 1) panels.</returns>
+        ///  <remarks>
+        ///  Stage 1 is the rule with one panel.  Each later stage halves the panels: it adds the values at the new points, of which there are
+        ///  2^(n - 2), to the result of the stage before, so that no value is worked out twice.  The stages have to be called in order.
+        ///  </remarks>
         public static double trapzd(double a, double b, double s, int n, double[] bd, int ip)
         {
             if (n == 1)
@@ -1997,11 +2193,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  expand a polynomial
         ///  </summary>
-        ///  <param name="x"></param>
-        ///  <param name="bd"></param>
-        ///  <param name="ip"></param>
-        ///  <returns></returns>
-        ///  <remarks></remarks>
+        ///  <param name="x">Where the polynomial is wanted.</param>
+        ///  <param name="bd">The coefficients: bd[1] is the constant, and bd[j] goes with x^(j - 1).</param>
+        ///  <param name="ip">The number of coefficients, which is one more than the degree.</param>
+        ///  <returns>bd[1] + bd[2] x + ... + bd[ip] x^(ip - 1).</returns>
         public static double polyfunc(double x, double[] bd, int ip)
         {
             double pf;
@@ -2027,15 +2222,21 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  numerical recipies p103
         ///  </summary>
-        ///  <param name="xa"></param>
-        ///  <param name="ya"></param>
-        /// <param name="startIndex"></param>
-        /// <param name="n"></param>
-        ///  <param name="x"></param>
-        ///  <param name="y"></param>
-        ///  <param name="dy"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="xa">The x of the points.</param>
+        ///  <param name="ya">The y of the points.</param>
+        /// <param name="startIndex">The element of xa and ya at which the points start.</param>
+        /// <param name="n">The number of points, 10 at most.</param>
+        ///  <param name="x">Where the polynomial through the points is wanted.</param>
+        ///  <param name="y">On return, its value there.</param>
+        ///  <param name="dy">On return, the last correction that was made to y, which serves as an estimate of the error.</param>
+        ///  <param name="ifault">Set to 1 if two of the points have the same x.</param>
+        ///  <remarks>
+        ///  The polynomial of degree n - 1 through the n points, by Neville's method.  The value starts at the y of the point nearest to x.  c and d
+        ///  hold the corrections that bring in one more point at a time, on the one side and on the other, and at each step the correction is taken
+        ///  from the side that keeps the points used about x as evenly as can be.
+        ///  The area under a fitted polynomial is found with this: the results of the last five stages of trapzd are taken as points, with the
+        ///  square of the width of a panel as x, and the polynomial through them is read at a width of zero.
+        ///  </remarks>
         public static void polint(double[] xa, double[] ya, int startIndex, int n, double x, out double y, ref double dy, ref int ifault)
         {
             const int nmax = 10;
