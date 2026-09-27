@@ -662,7 +662,7 @@ namespace StatsDirect.Builtins
             {
                 chartParameters = new ParameterBag();
                 chartList.Add(chartParameters);
-                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Risk difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false)));
+                chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, rkx, rkw, k, "Risk difference", wll, wul, cco, cit, rmh, Transformation.None, false)));
             }
 
             chartParameters = new ParameterBag();
@@ -1980,7 +1980,7 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate difference", rkrl, rkru, cco, cit, rmh, Transformation.None, false)));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate difference", wll, wul, cco, cit, rmh, Transformation.None, false)));
                 }
 
                 chartParameters = new ParameterBag();
@@ -1997,7 +1997,7 @@ namespace StatsDirect.Builtins
                 {
                     chartParameters = new ParameterBag();
                     chartList.Add(chartParameters);
-                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate ratio", rkrl, rkru, cco, cit, rmh, Transformation.Log, false)));
+                    chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.BiasMA, new BiasMAOptions(rkr, ptt, rkw, k, "Incidence rate ratio", wll, wul, cco, cit, rmh, Transformation.Log, false)));
                 }
 
                 chartParameters = new ParameterBag();
