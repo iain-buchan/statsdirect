@@ -44,7 +44,7 @@
         <double>
           <name>accuracy</name>
           <prompt>Precision of estimates</prompt>
-          <default-value>0.0000001</default-value>
+          <default-value>0.000000001</default-value>
           <minimum-value>0</minimum-value>
         </double>
         <boolean>

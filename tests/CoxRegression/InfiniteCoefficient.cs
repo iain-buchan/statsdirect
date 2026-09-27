@@ -6,6 +6,14 @@ internal static partial class Program
 {
     private const string MayBeInfinite = "may be infinite";
 
+    // the precision that the dialog box offers: the default of "accuracy" in the definition of the operation, read as the program reads it
+    private static double DialogPrecision([System.Runtime.CompilerServices.CallerFilePath] string here = "")
+    {
+        string definition = File.ReadAllText(Path.Combine(Path.GetDirectoryName(here), "..", "..", "StatsDirectUI", "Assets", "Operations", "CoxRegression.xml"));
+        var found = System.Text.RegularExpressions.Regex.Match(definition, @"<name>accuracy</name>\s*<prompt>[^<]*</prompt>\s*<default-value>([^<]+)</default-value>");
+        return double.Parse(found.Groups[1].Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture);
+    }
+
     // When everybody with a predictor of 1 has the event before anybody else's time, the likelihood rises for as long as the coefficient of that
     // predictor grows, towards the likelihood of the model in which the predictor makes strata instead: those with 1 have left before the others
     // have their events, and beside them the others count for nothing.  The fit should end, with a warning that names the predictor and no
@@ -14,6 +22,7 @@ internal static partial class Program
     {
         Console.WriteLine("A coefficient that may be infinite");
         System.Random random = new(5);
+        double precision = DialogPrecision();
         int sets = 0, warned = 0;
         double worstCoefficient = 0, worstLikelihood = 0, leastSeparating = double.MaxValue;
         List<string> problems = new();
@@ -33,7 +42,7 @@ internal static partial class Program
             sets++;
             try
             {
-                ParameterBag bag = Regression(data, 3, false, 0.0000001);
+                ParameterBag bag = Regression(data, 3, false, precision);
                 StepOutput fit = Coxreg.RptCoxRegression(bag);
                 List<string> warnings = Rows(fit, "*warn").Select(row => row["warn"].AsString).ToList();
                 if (warnings.Count == 1 && warnings[0].Contains(MayBeInfinite) && warnings[0].StartsWith("the coefficient of Z2 may")) warned++;
@@ -69,17 +78,19 @@ internal static partial class Program
             for (int r = 0; r < n; r++)
                 data[order[r]] = new Subject(r + 1, random.NextDouble() < 0.7 ? 1 : 0, new[] { Math.Round(300.0 - 2.5 * r - random.NextDouble(), 2), Math.Round(random.NextDouble() * 4 - 2, 2) }, 1);
             perfect++;
-            try { Coxreg.RptCoxRegression(Regression(data.ToList(), 2, true, 0.0000001)); }
+            try { Coxreg.RptCoxRegression(Regression(data.ToList(), 2, true, precision)); }
             catch (Exception ex) { if (Message(ex).Contains("Calculation failed to converge")) said++; }
         }
         Say(said == perfect, $"{perfect} sets in which a predictor puts every event in order: {said} said not to have converged", true);
     }
 
-    // At the default precision the iterations end when the log likelihood changes by no more than 0.0000001 of itself, which leaves the
-    // coefficients a little short of the values that make the likelihood greatest.  How short depends on the last steps of the iteration.
+    // The precision that the dialog box offers is 0.000000001, which is the default of R.  The iterations end when the log likelihood changes by
+    // no more than that much of itself, which leaves the coefficients a little short of the values that make the likelihood greatest.
     private static void DefaultPrecision()
     {
         Console.WriteLine("The coefficients at the default precision");
+        double precision = DialogPrecision();
+        Say(precision == 0.000000001, $"the precision that the dialog box offers is 0.000000001 ({precision:R} in the definition of the operation)", true);
         System.Random random = new(101);
         double worst = 0;
         int sets = 0, warned = 0;
@@ -101,7 +112,7 @@ internal static partial class Program
             }
             try
             {
-                StepOutput fit = Coxreg.RptCoxRegression(Regression(data, p, false, 0.0000001));
+                StepOutput fit = Coxreg.RptCoxRegression(Regression(data, p, false, precision));
                 double[,,] arr3 = (double[,,])fit.ParameterBag["ARR3"].AsObject;
                 var reference = Maximise(data, p);
                 if (reference.beta.Any(v => double.IsNaN(v) || Math.Abs(v) > 50)) continue;
@@ -114,7 +125,7 @@ internal static partial class Program
                 Say(false, $"set {set}: " + Message(ex), true);
             }
         }
-        Check($"{sets} sets: the coefficients, against those that make the likelihood greatest", worst, 5e-6, true);
+        Check($"{sets} sets: the coefficients, against those that make the likelihood greatest", worst, 5e-8, true);
         Say(warned == 0, $"no warning of an infinite coefficient in any of them ({warned} given)", true);
     }
 }
