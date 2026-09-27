@@ -2046,7 +2046,7 @@ namespace StatsDirect.Builtins
                 c[i] = ya[i + startIndex - 1];
                 d[i] = c[i];
             }
-            y = ya[ns];
+            y = ya[ns + startIndex - 1];
             ns -= 1;
             for (int m = 1; m < n; m++)
             {
