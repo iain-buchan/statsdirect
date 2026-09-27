@@ -339,8 +339,9 @@ namespace StatsDirect.Builtins
             }
             ColumnData[] CDAT1 = new ColumnData[ncoef + 1];
             double[,,] ARR3 = new double[1 + 1, ncoef + 1, 3 + 1];
-            // column 0 of rows 0 to 4 holds n, the number of coefficients, the two log likelihoods and the number of events, so there are at least five rows
-            double[,] ARR2 = new double[Math.Max(nobs, 4) + 1, 10 + 1];
+            // column 0 of rows 0 to 5 holds n, the number of coefficients, the two log likelihoods, the number of events and the degrees of freedom,
+            // so there are at least six rows
+            double[,] ARR2 = new double[Math.Max(nobs, 5) + 1, 10 + 1];
             for (int i = 1; i <= ncoef; i++)
             {
                 ARR3[1, i, 1] = coef[i, 1];
@@ -370,6 +371,13 @@ namespace StatsDirect.Builtins
             ARR2[1, 0] = ncoef;
             ARR2[2, 0] = algl;
             ARR2[4, 0] = dead;
+            // a predictor that does not vary, or that is determined by others in the model, is dropped by the fit: its coefficient and its standard
+            // error are zero, and it does not count in the degrees of freedom
+            List<string> droppedPredictors = new();
+            for (int i = 1; i <= ncoef; i++)
+                if (coef[i, 2] == 0.0)
+                    droppedPredictors.Add(xd[i - 1].Title);
+            ARR2[5, 0] = ncoef - droppedPredictors.Count;
 
             // run a second time with a dummy var = 1 to get LL(0)
             nef = 1;
@@ -414,8 +422,12 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("d", ARR2[4, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
             outputParameters.AddOutput("x2", x2dev);
-            outputParameters.AddOutput("df", ARR2[1, 0]);
-            outputParameters.AddOutput("p_dev", PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0]));
+            outputParameters.AddOutput("df", ARR2[5, 0]);
+            outputParameters.AddOutput("p_dev", ARR2[5, 0] > 0 ? PDF.chivalp(Math.Abs(x2dev), ARR2[5, 0]) : Constant.MISSING);
+            IList<ParameterBag> warnList = new List<ParameterBag>();
+            outputParameters.AddOutput("*warn", warnList);
+            if (droppedPredictors.Count > 0)
+                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, string.Join(", ", droppedPredictors) + " dropped from the model because " + (droppedPredictors.Count > 1 ? "they do" : "it does") + " not vary or " + (droppedPredictors.Count > 1 ? "are" : "is") + " determined by other variable(s) included.")));
             IList<ParameterBag> predList = new List<ParameterBag>();
             outputParameters.AddOutput("*pred", predList);
             for (int i = 1; i <= Convert.ToInt32(ARR2[1, 0]); i++)
@@ -424,9 +436,11 @@ namespace StatsDirect.Builtins
                 predList.Add(predParameters);
                 predParameters.AddOutput("lab", CDAT1[i].Title);
                 predParameters.AddOutput("i", i);
-                predParameters.AddOutput("b", ARR3[1, i, 1]);
-                predParameters.AddOutput("z", ARR3[1, i, 3]);
-                predParameters.AddOutput("p", MathDbl.zvalp2(ARR3[1, i, 3]));
+                // a predictor that was dropped has no coefficient to show
+                bool dropped = ARR3[1, i, 2] == 0.0;
+                predParameters.AddOutput("b", dropped ? Constant.MISSING : ARR3[1, i, 1]);
+                predParameters.AddOutput("z", dropped ? Constant.MISSING : ARR3[1, i, 3]);
+                predParameters.AddOutput("p", dropped ? Constant.MISSING : MathDbl.zvalp2(ARR3[1, i, 3]));
             }
             outputParameters.AddInput("subgroups", new DataFrame(new StringVariable(subgroups.ToArray())));
             outputParameters.AddInput("ARR2", ARR2);
@@ -1127,7 +1141,7 @@ namespace StatsDirect.Builtins
                             zero = true;
                             for (ii = 1; ii <= i; ii++)
                                 cov[ii, i] = 0.0;
-                            for (ii = i + 1; ii <= ncoef - i; ii++)
+                            for (ii = i + 1; ii <= ncoef; ii++)
                                 cov[i, ii] = 0.0;
                         }
                     }
@@ -1567,7 +1581,7 @@ namespace StatsDirect.Builtins
                     GR[i] = 0.0;
                     for (int ii = 1; ii <= i; ii++)
                         cov[ii, i] = 0.0;
-                    for (int ii = i + 1; ii <= ncoef - i; ii++)
+                    for (int ii = i + 1; ii <= ncoef; ii++)
                         cov[i, ii] = 0.0;
                 }
             }
@@ -1598,7 +1612,7 @@ namespace StatsDirect.Builtins
                     GR[i] = 0.0;
                     for (int ii = 1; ii <= i; ii++)
                         cov[ii, i] = 0.0;
-                    for (int ii = i + 1; ii <= ncoef - i; ii++)
+                    for (int ii = i + 1; ii <= ncoef; ii++)
                         cov[i, ii] = 0.0;
                 }
             }
@@ -1704,7 +1718,7 @@ namespace StatsDirect.Builtins
                             if (Math.Abs(t) > x * EuclideanNorm(k - 1, r))
                                 info = j;
                         }
-                        r[j, k] = 0.0;
+                        r[k, j] = 0.0;
                     }
                 }
                 s = r[j, j] - s;
@@ -2588,9 +2602,11 @@ namespace StatsDirect.Builtins
                 ParameterBag hazardParameters = new();
                 hazardList.Add(hazardParameters);
                 hazardParameters.AddOutput("par", CDAT1[i].Title);
-                hazardParameters.AddOutput("ec", Formatting.SafeExp(ARR3[1, i, 1]));
-                hazardParameters.AddOutput("ell", Formatting.SafeExp(ARR3[1, i, 1] - cit * ARR3[1, i, 2]));
-                hazardParameters.AddOutput("eul", Formatting.SafeExp(ARR3[1, i, 1] + cit * ARR3[1, i, 2]));
+                // a predictor that was dropped from the model (its standard error is zero) has no hazard ratio
+                bool dropped = ARR3[1, i, 2] == 0.0;
+                hazardParameters.AddOutput("ec", dropped ? Constant.MISSING : Formatting.SafeExp(ARR3[1, i, 1]));
+                hazardParameters.AddOutput("ell", dropped ? Constant.MISSING : Formatting.SafeExp(ARR3[1, i, 1] - cit * ARR3[1, i, 2]));
+                hazardParameters.AddOutput("eul", dropped ? Constant.MISSING : Formatting.SafeExp(ARR3[1, i, 1] + cit * ARR3[1, i, 2]));
             }
             IList<ParameterBag> parameterList = new List<ParameterBag>();
             outputParameters.AddOutput("*parameter", parameterList);
@@ -2599,8 +2615,9 @@ namespace StatsDirect.Builtins
                 ParameterBag parameterParameters = new();
                 parameterList.Add(parameterParameters);
                 parameterParameters.AddOutput("par", CDAT1[i].Title);
-                parameterParameters.AddOutput("coef", ARR3[1, i, 1]);
-                parameterParameters.AddOutput("se", ARR3[1, i, 2]);
+                bool dropped = ARR3[1, i, 2] == 0.0;
+                parameterParameters.AddOutput("coef", dropped ? Constant.MISSING : ARR3[1, i, 1]);
+                parameterParameters.AddOutput("se", dropped ? Constant.MISSING : ARR3[1, i, 2]);
             }
             return new StepOutput(outputParameters);
         }
@@ -2613,8 +2630,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ll", ARR2[2, 0]);
             double x2dev = -2.0 * (ARR2[3, 0] - ARR2[2, 0]);
             outputParameters.AddOutput("x2", x2dev);
-            outputParameters.AddOutput("df", ARR2[1, 0]);
-            outputParameters.AddOutput("p", PDF.chivalp(Math.Abs(x2dev), ARR2[1, 0]));
+            // the degrees of freedom are the predictors less those that were dropped from the model
+            outputParameters.AddOutput("df", ARR2[5, 0]);
+            outputParameters.AddOutput("p", ARR2[5, 0] > 0 ? PDF.chivalp(Math.Abs(x2dev), ARR2[5, 0]) : Constant.MISSING);
             return new StepOutput(outputParameters);
         }
     }

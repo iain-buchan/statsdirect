@@ -1,6 +1,8 @@
 <report>
 <title>Cox (proportional hazards) regression</title>
 
+<block name="warn"><p>WARNING: @warn</p><br /></block>
+
 <p>@n subjects with @d events<br />
 Deviance (likelihood ratio) chi-square = @{x2:roundu}   df = @df   <pval>@{p_dev:pval}</pval></p>
 <block name="pred">
