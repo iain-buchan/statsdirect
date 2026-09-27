@@ -822,26 +822,28 @@ namespace StatsDirect.Builtins
         /// Maxwell's test of whether the raters use the categories equally often: d holds the row total less the column total of each
         /// category, and V the variances and covariances of those differences when the raters do use them equally often (on the diagonal
         /// the row total plus the column total less twice the count on the diagonal of the table; off it, minus the sum of the two counts
-        /// that face each other across the diagonal).  The statistic is d' inverse(V) d over the first k - 1 categories, a chi-square on
-        /// k - 1 degrees of freedom.
+        /// that face each other across the diagonal).  The statistic is d' inverse(V) d with the last category left out, a chi-square
+        /// on k - 1 degrees of freedom.  The last category is left out because the differences of all the categories add up to nothing.
+        /// So do the differences of any set of categories that no disagreement joins to the rest; the categories are therefore put into
+        /// the groups that disagreements join, the statistic of each group is worked out with the last category of the group left out,
+        /// and the statistics are added up, on the number of categories less the number of groups as degrees of freedom.
         /// The generalised McNemar test of symmetry: the sum, over the pairs of categories i and j, of (n ij - n ji)^2 / (n ij + n ji),
         /// a chi-square with a degree of freedom for each pair that has a subject.
         /// </summary>
         ///  <param name="o">Zero-based array of values,dimensions (0..k-1, 0..k-1)</param>
         /// <param name="k">The number of categories.</param>
-        /// <param name="x2">On return, Maxwell's chi-square; missing if V has no inverse.</param>
+        /// <param name="x2">On return, Maxwell's chi-square; missing if the raters never disagree.</param>
+        /// <param name="df">On return, the degrees of freedom of Maxwell's chi-square.</param>
         /// <param name="x2M">On return, the generalised McNemar chi-square; missing if no pair of categories has a subject.</param>
         /// <param name="dfm">On return, the degrees of freedom of the generalised McNemar chi-square.</param>
         ///  <remarks>Maxwell AE. Comparing the classification of subjects by two independent judges. British Journal of Psychiatry 1970;116:651-655.</remarks>
-        public static void Maxwell(double[,] o, int k, out double x2, out double x2M, out int dfm)
+        public static void Maxwell(double[,] o, int k, out double x2, out int df, out double x2M, out int dfm)
         {
-            int i; int j; int ifault = 0;
+            int i; int j;
 
             double[] rtot = new double[k];
             double[] ctot = new double[k];
             double[] d = new double[k];
-            double[,] v = new double[k, k];
-            double[,] z = new double[k, k];
             //  get row and column totals and delta vector
             for (i = 0; i < k; i++)
             {
@@ -855,33 +857,80 @@ namespace StatsDirect.Builtins
             {
                 d[i] = rtot[i] - ctot[i];
             }
-            //  get variance/covariance matrix and invert it
+            //  The categories are put into groups.  Two categories are in the same group if a subject was put in one of them by one rater
+            //  and in the other by the other rater, or if they are joined in that way through other categories: group[i] is the first
+            //  category of the group that category i is in.  When every category is joined to every other there is one group.
+            int[] group = new int[k];
             for (i = 0; i < k; i++)
+                group[i] = i;
+            bool joined = true;
+            while (joined)
             {
-                for (j = 0; j < k; j++)
+                joined = false;
+                for (i = 0; i < k; i++)
                 {
-                    if (i == j)
-                        v[i, i] = rtot[i] + ctot[i] - 2.0 * o[i, i];
-                    else
-                        v[j, i] = -(o[j, i] + o[i, j]);
+                    for (j = 0; j < k; j++)
+                    {
+                        if (o[i, j] + o[j, i] > 0.0 && group[i] != group[j])
+                        {
+                            int from = Math.Max(group[i], group[j]);
+                            int to = Math.Min(group[i], group[j]);
+                            for (int m = 0; m < k; m++)
+                                if (group[m] == from)
+                                    group[m] = to;
+                            joined = true;
+                        }
+                    }
                 }
             }
-            //  The differences of all k categories add up to nothing, so that the whole of v has no inverse: the first k - 1 rows and
-            //  columns of it are turned into their inverse, in place, by Gauss-Jordan elimination.  (LAPACK's dgetrf and dgetri do the
-            //  same by way of the LU factors.)
-            MathDbl.gaussj(v, 0, k - 1, z, 1, ref ifault);
-            if (ifault != 0)
+            x2 = 0;
+            df = 0;
+            for (int first = 0; first < k && x2 != Constant.MISSING; first++)
             {
+                //  the categories of the group that starts with this one: a group of one category, which the raters never took for
+                //  another, has a difference of nothing and adds nothing
+                int[] member = new int[k];
+                int members = 0;
+                for (i = 0; i < k; i++)
+                    if (group[i] == first)
+                        member[members++] = i;
+                if (members < 2)
+                    continue;
+                //  get variance/covariance matrix and invert it
+                int size = members - 1;
+                double[,] v = new double[size, size];
+                double[,] z = new double[size, size];
+                for (i = 0; i < size; i++)
+                {
+                    for (j = 0; j < size; j++)
+                    {
+                        if (i == j)
+                            v[i, i] = rtot[member[i]] + ctot[member[i]] - 2.0 * o[member[i], member[i]];
+                        else
+                            v[j, i] = -(o[member[j], member[i]] + o[member[i], member[j]]);
+                    }
+                }
+                //  The differences of all the categories of the group add up to nothing, so that their whole matrix has no inverse:
+                //  the matrix without the last of them is turned into its inverse, in place, by Gauss-Jordan elimination.  (LAPACK's
+                //  dgetrf and dgetri do the same by way of the LU factors.)
+                int ifault = 0;
+                MathDbl.gaussj(v, 0, size, z, 1, ref ifault);
+                if (ifault != 0)
+                {
+                    x2 = Constant.MISSING;
+                }
+                else
+                {
+                    //  cumulate the chi-square statistic
+                    for (i = 0; i < size; i++)
+                        for (j = 0; j < size; j++)
+                            x2 += v[i, j] * d[member[i]] * d[member[j]];
+                    df += size;
+                }
+            }
+            //  no two categories joined: the raters agree on every subject, and there is nothing to test
+            if (df == 0)
                 x2 = Constant.MISSING;
-            }
-            else
-            {
-                x2 = 0;
-                //  cumulate the chi-square statistic
-                for (i = 0; i <= k - 2; i++)
-                    for (j = 0; j <= k - 2; j++)
-                        x2 += v[i, j] * d[i] * d[j];
-            }
             // general McNemar: a pair of categories in which nobody was put adds nothing to the statistic, and is not counted in its
             // degrees of freedom
             dfm = 0;
@@ -1162,7 +1211,7 @@ namespace StatsDirect.Builtins
                     }
 
                     // Maxwell's test
-                    Maxwell(o, g, out double x2, out double x2M, out int dfm);
+                    Maxwell(o, g, out double x2, out int dfMaxwell, out double x2M, out int dfm);
                     if (x2 == Constant.MISSING)
                     {
                         outputParameters.AddOutput("x2", x2);
@@ -1172,8 +1221,8 @@ namespace StatsDirect.Builtins
                     else
                     {
                         outputParameters.AddOutput("x2", x2);
-                        outputParameters.AddOutput("df", g - 1);
-                        outputParameters.AddOutput("pmaxwell", PDF.chivalp(x2, g - 1));
+                        outputParameters.AddOutput("df", dfMaxwell);
+                        outputParameters.AddOutput("pmaxwell", PDF.chivalp(x2, dfMaxwell));
                     }
 
                     // general McNemar

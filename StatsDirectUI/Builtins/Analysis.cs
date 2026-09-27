@@ -986,7 +986,7 @@ namespace StatsDirect.Builtins
             }
 
             // Maxwell's test
-            Tables.Maxwell(o, g, out double x2, out double x2M, out int dfm);
+            Tables.Maxwell(o, g, out double x2, out int dfMaxwell, out double x2M, out int dfm);
             if (x2 == Constant.MISSING)
             {
                 outputParameters.AddOutput("x2", Constant.MISSING);
@@ -996,8 +996,8 @@ namespace StatsDirect.Builtins
             else
             {
                 outputParameters.AddOutput("x2", x2);
-                outputParameters.AddOutput("df", g - 1.0);
-                outputParameters.AddOutput("pmaxwell", PDF.chivalp(x2, g - 1.0));
+                outputParameters.AddOutput("df", Convert.ToDouble(dfMaxwell));
+                outputParameters.AddOutput("pmaxwell", PDF.chivalp(x2, dfMaxwell));
             }
             // general McNemar
             if (x2M == Constant.MISSING)
