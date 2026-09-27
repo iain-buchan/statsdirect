@@ -515,7 +515,8 @@ namespace StatsDirect.Builtins
                         wk[intcep + i] = x[iobs, indind[i]];
                     for (int i = 1; i <= -iind; i++)
                         wk[intcep + i] = x[iobs, i];
-                    if (IndexNaN(nind, wk, intp1) > 0)
+                    // the predictors are elements intp1 to intcep + nind of wk (the search had stopped at element nind)
+                    if (IndexNaN(intcep + nind, wk, intp1) > 0)
                     {
                         nrmiss += irow;
                     }
@@ -532,7 +533,8 @@ namespace StatsDirect.Builtins
                             wk[jdepx] = x[iobs, nvar + i];
                             jdepx++;
                         }
-                        if (IndexNaN(ndep, wk, idepx) > 0)
+                        // the dependent variables are elements idepx to idepx + ndep - 1 (the search had stopped at element ndep, before it began)
+                        if (IndexNaN(idepx + ndep - 1, wk, idepx) > 0)
                         {
                             nrmiss += irow;
                         }
@@ -764,7 +766,8 @@ namespace StatsDirect.Builtins
                         wk[intcep + i] = x[iobs + (indind[i] - 1) * ldx];
                     for (int i = 1; i <= -iind; i++)
                         wk[intcep + i] = x[iobs + (i - 1) * ldx];
-                    if (IndexNaN(nind, wk, intp1) > 0)
+                    // the predictors are elements intp1 to intcep + nind of wk (the search had stopped at element nind)
+                    if (IndexNaN(intcep + nind, wk, intp1) > 0)
                     {
                         nrmiss += irow;
                     }
@@ -781,7 +784,8 @@ namespace StatsDirect.Builtins
                             wk[jdepx] = x[iobs + (nvar + i - 1) * ldx];
                             jdepx++;
                         }
-                        if (IndexNaN(ndep, wk, idepx) > 0)
+                        // the dependent variables are elements idepx to idepx + ndep - 1 (the search had stopped at element ndep, before it began)
+                        if (IndexNaN(idepx + ndep - 1, wk, idepx) > 0)
                         {
                             nrmiss += irow;
                         }
@@ -992,7 +996,8 @@ namespace StatsDirect.Builtins
             }
             if (ifrq > 0)
             {
-                if (frq == Constant.MISSING)
+                // a frequency that is there must not be negative (the test had been made on a missing one only)
+                if (frq != Constant.MISSING)
                 {
                     if (frq < 0.0)
                     {
@@ -1010,7 +1015,8 @@ namespace StatsDirect.Builtins
                 frq = -frq;
             if (iwt > 0)
             {
-                if (wt == Constant.MISSING)
+                // nor may a weight
+                if (wt != Constant.MISSING)
                 {
                     if (wt < 0.0)
                     {
@@ -1056,7 +1062,8 @@ namespace StatsDirect.Builtins
             }
             if (ifrq > 0)
             {
-                if (frq == Constant.MISSING)
+                // a frequency that is there must not be negative (the test had been made on a missing one only)
+                if (frq != Constant.MISSING)
                 {
                     if (frq < 0.0)
                     {
@@ -1074,7 +1081,8 @@ namespace StatsDirect.Builtins
                 frq = -frq;
             if (iwt > 0)
             {
-                if (wt == Constant.MISSING)
+                // nor may a weight
+                if (wt != Constant.MISSING)
                 {
                     if (wt < 0.0)
                     {

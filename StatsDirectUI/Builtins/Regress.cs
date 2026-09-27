@@ -686,6 +686,8 @@ namespace StatsDirect.Builtins
                 bool ok = outcomeVariable.Data[j] != Constant.MISSING;
                 if (weightsVariable.Data[j] == Constant.MISSING)
                     ok = false;
+                else if (weightsVariable.Data[j] < 0.0)
+                    throw new TemplateOperationCancelledException("Weights must not be negative.", "Multiple Linear Regression");
                 for (int k = 1; k <= ip; k++)
                     if (((DoubleVariable)predictorsFrame.Variables[k - 1]).Data[j] == Constant.MISSING)
                         ok = false;
