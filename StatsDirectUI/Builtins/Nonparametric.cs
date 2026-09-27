@@ -2052,7 +2052,10 @@ namespace StatsDirect.Builtins
             if (p < 0 || p > 1)
                 p = 0.025;
             MathDbl.taufromp(p, out double _, out int ix, ref rows, out ifault);
-            int cnt = Convert.ToInt32(rows * (rows - 1) / 2);
+            // the number of pairs of points is worked out in floating point: as a 32-bit integer n (n - 1) is more than can be held when n is
+            // above 46,341
+            double pairs = rows * (rows - 1.0) / 2.0;
+            int cnt = pairs < 2000000 ? Convert.ToInt32(pairs) : int.MaxValue;
             if (cnt < 2000000)
             {
                 double[] pws = new double[cnt + 1];
