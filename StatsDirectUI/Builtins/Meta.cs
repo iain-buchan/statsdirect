@@ -2337,17 +2337,8 @@ namespace StatsDirect.Builtins
                     odr[i] = a * d / (b * c);
                     if (host.Preferences.MetaExact)
                     {
-                        // the conditional exact limits are those of the observed table: a zero cell gives a limit of 0 or infinity, and an
-                        // empty arm (no exposed subjects, or no controls) the uninformative limits 0 to infinity
-                        if (o[i, 1] + o[i, 3] == 0.0 || o[i, 2] + o[i, 4] == 0.0)
-                        {
-                            odrl[i] = 0.0;
-                            odru[i] = double.PositiveInfinity;
-                            lerr[i] = false;
-                            uerr[i] = false;
-                        }
-                        else
-                            OddsRatioCI(host, cco, o[i, 1], o[i, 2], o[i, 3], o[i, 4], out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
+                        // the conditional exact limits are those of the observed table: a zero cell gives a limit of 0 or infinity
+                        OddsRatioCI(host, cco, o[i, 1], o[i, 2], o[i, 3], o[i, 4], out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
                     }
                     else
                     {
@@ -3753,6 +3744,9 @@ namespace StatsDirect.Builtins
 
         private static bool IncludeTable(double[,] o, int i)
         {
+            // a group of nobody tells nothing of the difference between the groups
+            if (o[i, 1] + o[i, 3] <= 0.0 || o[i, 2] + o[i, 4] <= 0.0)
+                return false;
             return !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
         }
 
