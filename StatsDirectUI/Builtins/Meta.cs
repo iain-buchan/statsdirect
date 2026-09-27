@@ -81,7 +81,8 @@ namespace StatsDirect.Builtins
                     double e = (a + b) * (a + c) / n;
                     oe[i] = a - e;
                     sumoe += oe[i];
-                    double v = (a + b) * (c + d) * (a + c) * (b + d) / (n * n * (n - 1));
+                    // one subject gives no variance (0 / 0): the study is left out with the others that have none
+                    double v = n > 1.0 ? (a + b) * (c + d) * (a + c) * (b + d) / (n * n * (n - 1)) : 0.0;
                     sumv += v;
                     odw[i] = v;
                     odx[i] = n;
@@ -127,7 +128,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                throw new InvalidDataException();
+                throw new TemplateOperationCancelledException("None of the studies can be pooled: each of them has no events, or events in every subject, or a group with no subjects.", "Peto odds ratio meta-analysis");
             }
 
             // combinability
@@ -724,6 +725,8 @@ namespace StatsDirect.Builtins
             RelativeRiskMA(host, lowerBound, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException("relriskma() returned an error");
+            if (realk == 0)
+                throw new TemplateOperationCancelledException("None of the studies can be pooled: each of them has no events, or a group with no subjects.", "Relative risk meta-analysis");
 
             ParameterBag outputParameters = new();
 
@@ -2084,6 +2087,8 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
                 throw new TemplateOperationCancelledException();
             }
+            if (realk == 0)
+                throw new TemplateOperationCancelledException("None of the studies can be pooled: each of them has no events, or events in every subject, or a group with no subjects.", "Odds ratio meta-analysis");
 
             // Try exact Mantel
             if (host.Preferences.MetaExact)
