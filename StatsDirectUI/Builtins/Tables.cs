@@ -2611,7 +2611,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
                 risksParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
-                risksParameters.AddOutput("lb", Meta.GetMetaLabel(host, o, i, true, cced, title));
+                risksParameters.AddOutput("lb", Meta.GetMetaLabel(host, included[i], i, true, cced, title));
             }
             outputParameters.AddOutput("rr", rmh);
             outputParameters.AddOutput("from", ll);

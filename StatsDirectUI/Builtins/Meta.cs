@@ -752,7 +752,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
                 risksParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
-                risksParameters.AddOutput("lb", GetMetaLabel(host, o, i, hasUserSuppliedLabels, cced, title));
+                risksParameters.AddOutput("lb", GetMetaLabel(host, included[i], i, hasUserSuppliedLabels, cced, title));
             }
 
             outputParameters.AddOutput("rr", rmh);
@@ -1440,6 +1440,26 @@ namespace StatsDirect.Builtins
             cced = new bool[k + lowerBound];
             included = new bool[k + lowerBound];
 
+            // With the continuity correction delayed, the pooled relative risk of Mantel and Haenszel is from the counts as they are,
+            // which it can be if there is an event in each group among the studies
+            bool raw = false;
+            if (host.Preferences.DelayContinuityCorrection)
+            {
+                bool eventsFirst = false;
+                bool eventsSecond = false;
+                for (int i = lowerBound; i < lowerBound + k; i++)
+                {
+                    if (IncludeRelativeRisk(o, i))
+                    {
+                        if (o[i, 1] > 0.0)
+                            eventsFirst = true;
+                        if (o[i, 2] > 0.0)
+                            eventsSecond = true;
+                    }
+                }
+                raw = eventsFirst && eventsSecond;
+            }
+
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
                 double a = o[i, 1];
@@ -1451,7 +1471,7 @@ namespace StatsDirect.Builtins
                 if (n <= 0)
                     throw new InvalidDataException();
 
-                included[i] = IncludeTable(o, i);
+                included[i] = IncludeRelativeRisk(o, i);
                 if (included[i])
                 {
                     realk++;
@@ -1487,6 +1507,14 @@ namespace StatsDirect.Builtins
                         uerr[i] = false;
                     }
 
+                    if (raw)
+                    {
+                        a = o[i, 1];
+                        b = o[i, 2];
+                        c = o[i, 3];
+                        d = o[i, 4];
+                        n = a + b + c + d;
+                    }
                     //  Rothman-Boice combined risk ratio
                     double weight = b * (a + c) / n;
                     rkw[i] = weight;
@@ -1523,7 +1551,7 @@ namespace StatsDirect.Builtins
             double sumsqwt = 0.0;
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                if (IncludeTable(o, i))
+                if (included[i])
                 {
                     double a = o[i, 1];
                     double b = o[i, 2];
@@ -1558,7 +1586,7 @@ namespace StatsDirect.Builtins
             // sumsqwt = 0.0; 
             for (int i = lowerBound; i < lowerBound + k; i++)
             {
-                if (IncludeTable(o, i))
+                if (included[i])
                 {
                     double a = o[i, 1];
                     double b = o[i, 2];
@@ -2507,7 +2535,7 @@ namespace StatsDirect.Builtins
                 double b = o[i, 2];
                 double c = o[i, 3];
                 double d = o[i, 4];
-                if (IncludeTable(o, i))
+                if (IncludeRelativeRisk(o, i))
                 {
                     if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
@@ -3750,9 +3778,25 @@ namespace StatsDirect.Builtins
             return !(o[i, 1] == 0.0 && o[i, 2] == 0.0 || o[i, 3] == 0.0 && o[i, 4] == 0.0);
         }
 
+        /// <summary>
+        /// Whether a study is taken into the pooling of the relative risk: it is left out if there is no event in either group, or if a
+        /// group has nobody.  A study in which every subject has the event has a relative risk, of 1, and is taken in.
+        /// </summary>
+        private static bool IncludeRelativeRisk(double[,] o, int i)
+        {
+            if (o[i, 1] + o[i, 3] <= 0.0 || o[i, 2] + o[i, 4] <= 0.0)
+                return false;
+            return !(o[i, 1] == 0.0 && o[i, 2] == 0.0);
+        }
+
         public static string GetMetaLabel(IPreferences host, double[,] o, int i, bool stratlab, bool[] cced, string[] title)
         {
-            if (IncludeTable(o, i))
+            return GetMetaLabel(host, IncludeTable(o, i), i, stratlab, cced, title);
+        }
+
+        public static string GetMetaLabel(IPreferences host, bool included, int i, bool stratlab, bool[] cced, string[] title)
+        {
+            if (included)
                 return (stratlab ? title[i] : string.Empty)
                     + (cced[i]
                         ? " [CC = " + (host.Preferences.MetaCC == -9.0 ? "treatment arm" : host.Preferences.MetaCC.ToString()) + "]"
