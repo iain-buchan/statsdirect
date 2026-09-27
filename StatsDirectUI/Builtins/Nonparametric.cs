@@ -1808,9 +1808,10 @@ namespace StatsDirect.Builtins
         /// </summary>
         /// <remarks>
         /// A pair is left out if either of its values is missing.  Each variable is ranked, tied values sharing the mean of the ranks that they
-        /// take up, and rho is the correlation coefficient of the two sets of ranks.  Without ties the P values are exact, from the distribution
-        /// of the sum of the squared differences between the ranks (prho); with ties they are from t = rho sqrt((n - 2) / (1 - rho^2)) on n - 2
-        /// degrees of freedom.
+        /// take up, and rho is the correlation coefficient of the two sets of ranks.  Without ties the P values are from the distribution of
+        /// the sum of the squared differences between the ranks (prho): exact for 10 pairs or fewer, for which every ordering is taken in turn,
+        /// and from a series for more, which is within 0.0004 of the exact distribution at 11 pairs and nearer with more.  With ties they are
+        /// from t = rho sqrt((n - 2) / (1 - rho^2)) on n - 2 degrees of freedom.
         /// </remarks>
         public static StepOutput RptSpearman(ParameterBag parameters)
         {
@@ -2906,8 +2907,9 @@ namespace StatsDirect.Builtins
         /// A pair is left out if either of its values is missing.  The counts, the score, its variance, tau b and the interval are from
         /// XDokend.  Gamma is the score over the number of pairs that are concordant or discordant, tied pairs being left out of the count.
         /// Three sets of P values are given: from the score over its standard error taken as a normal deviate; from the same with the
-        /// continuity correction; and exact, from the distribution of the score without ties (kendp), which takes no account of ties if there
-        /// are any.
+        /// continuity correction; and those called exact, from the distribution of the score without ties (kendp: by counting the orderings
+        /// for 50 pairs or fewer, and by a series for more, which is within 0.0000004 of the count at 51 pairs), which takes no account of
+        /// ties if there are any.
         /// </remarks>
         public static StepOutput RptKendall(IProgressBarHost host, ParameterBag parameters)
         {
