@@ -3781,7 +3781,6 @@ namespace StatsDirect.Builtins
             {
                 if (IncludeTable(o, i))
                 {
-                    realk += 1;
                     double a = o[i, 1];
                     double b = o[i, 2];
                     double c = o[i, 3];
@@ -3805,27 +3804,23 @@ namespace StatsDirect.Builtins
                         }
                         else if (method == 2)
                         {
-                            if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
-                            {
-                                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                                n = a + b + c + d;
-                            }
+                            // the score and its variance are from the counts as they are: a cell of nothing needs no correction
                             // relative risk parameters from Whitehead
                             z = (a * n - (a + b) * (a + c)) / (c + d);
                             v = (b + d) * (a + c) * (a + b) / (n * (c + d));
                         }
                         else
                         {
-                            if (a <= 0 || b <= 0 || c <= 0 || d <= 0)
-                            {
-                                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                                n = a + b + c + d;
-                            }
+                            // the score and its variance are from the counts as they are: a cell of nothing needs no correction
                             // efficient score
                             z = a - (a + b) * (a + c) / n;
                             // hypergeometric variance of the score (Harbord, Egger and Sterne 2006)
                             v = (a + b) * (c + d) * (a + c) * (b + d) / (n * n * (n - 1.0));
                         }
+                        // a score without a variance (no events, no subjects without the event, one subject) tells nothing
+                        if (!(v > 0.0) || double.IsInfinity(v))
+                            continue;
+                        realk += 1;
                         double x = Math.Sqrt(v);
                         double y = z / Math.Sqrt(v);
                         sumx += x;
