@@ -494,11 +494,27 @@ namespace StatsDirect.Builtins
                     droppedPredictors.Add(xd[i - 1].Title);
             ARR2[5, 0] = ncoef - droppedPredictors.Count;
             // A coefficient may be infinite: the log likelihood has stopped rising, and yet one more iteration would have moved the coefficient by
-            // an amount that is not small: not beside the precision, not beside the coefficient itself, and enough to move the logarithm of the
-            // hazard ratio between the least and the greatest value of the predictor by a half or more.  That is what happens when a predictor
-            // separates the subjects who had the event early from the rest: the likelihood goes on rising, by less and less, as the coefficient
-            // grows without limit, and every iteration adds about as much to the coefficient as the one before.
+            // an amount that is not small, neither beside the precision nor beside the coefficient itself.  That is what happens when a predictor,
+            // or several predictors between them, separate the subjects who had the event early from the rest: the likelihood goes on rising, by
+            // less and less, as the coefficients grow without limit, and every iteration adds about as much to them as the one before.
+            // At a coarse precision a coefficient can still be moving by that much when nothing is wrong, so the warning is given only if the
+            // steps of all the coefficients together would move the logarithm of the relative hazard of one record beside another by a half or
+            // more; and of the predictors whose coefficients are still moving, those are named whose own part in that movement (the step times
+            // the range of the predictor) is at least half of an equal share of it.
             List<string> unboundedPredictors = new();
+            double leastMove = double.MaxValue;
+            double greatestMove = double.MinValue;
+            for (int r = 1; r <= rows; r++)
+            {
+                double move = 0.0;
+                for (int i = 1; i <= ncoef; i++)
+                    if (coef[i, 2] != 0.0)
+                        move += GR[i] * holdx[r, i];
+                leastMove = Math.Min(leastMove, move);
+                greatestMove = Math.Max(greatestMove, move);
+            }
+            double movement = greatestMove - leastMove;
+            int fitted = ncoef - droppedPredictors.Count;
             for (int i = 1; i <= ncoef; i++)
             {
                 double least = double.MaxValue;
@@ -509,7 +525,7 @@ namespace StatsDirect.Builtins
                     greatest = Math.Max(greatest, holdx[r, i]);
                 }
                 double step = Math.Abs(GR[i]);
-                if (coef[i, 2] != 0.0 && step > eps && step > Math.Sqrt(eps) * Math.Abs(coef[i, 1]) && step * (greatest - least) > 0.5)
+                if (coef[i, 2] != 0.0 && step > eps && step > Math.Sqrt(eps) * Math.Abs(coef[i, 1]) && movement > 0.5 && step * (greatest - least) >= movement / (2.0 * fitted))
                     unboundedPredictors.Add(xd[i - 1].Title);
             }
 

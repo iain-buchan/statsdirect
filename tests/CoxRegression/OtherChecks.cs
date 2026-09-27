@@ -15,6 +15,7 @@ internal static partial class Program
         RecordsLeftOutByTheFit();
         NotConverged();
         InfiniteCoefficient();
+        JointSeparation();
         DefaultPrecision();
     }
 

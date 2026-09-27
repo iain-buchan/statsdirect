@@ -23,4 +23,6 @@ There are eleven sets that are fixed and sixty that are made at random from a fi
 
 `InfiniteCoefficient.cs` checks what is done when a predictor separates the subjects who had the event early from the rest, so that its coefficient has no finite estimate: the fit should end with a warning that names the predictor, and the other coefficients and the log likelihood should be those of the model in which the predictor makes strata, which is what the likelihood tends to. It also checks that a predictor which puts every event in order, so that the fit cannot converge, is said not to have converged; and that at the precision which the dialog box offers, 0.000000001, which is read from the definition of the operation, the coefficients of 150 ordinary sets of data are within 0.00000005 of those that make the likelihood greatest, with no warning of an infinite coefficient.
 
+`JointSeparation.cs` checks the same warning when the subjects are separated not by one predictor but by several between them: 2 to 20 predictors whose sum separates, at three precisions, for which the warning should name every one of them; and three predictors whose sum separates, though no one of them does, with two predictors that have no part, for which it should name the three and no other.
+
 The run is the same every time. The exit code is 0 if every check passes.
