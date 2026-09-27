@@ -11,6 +11,9 @@ namespace StatsDirect.Builtins
 {
     public static class Survival
     {
+        /// <summary>
+        /// A record as it is sorted: its time (Tm), the number of its group (Gp) and its code (Cs: 1 dead, 0 censored).
+        /// </summary>
         private class Trisvar
         {
             public double Tm { get; set; }
@@ -18,6 +21,10 @@ namespace StatsDirect.Builtins
             public int Cs { get; set; }
         }
 
+        /// <summary>
+        /// The order of records by time and, at the same time, by group, the group with the greater number first: the records of a
+        /// group at a time then stand together.
+        /// </summary>
         private class TrisvarByTmThenGp : IComparer<Trisvar>
         {
             private static int Compare(Trisvar x, Trisvar y)
@@ -43,6 +50,9 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The order of records by time alone.
+        /// </summary>
         private class TrisvarByTm : IComparer<Trisvar>
         {
             private static int Compare(Trisvar x, Trisvar y)
@@ -62,6 +72,16 @@ namespace StatsDirect.Builtins
 
         }
 
+        /// <summary>
+        /// Kaplan-Meier (product-limit) estimates of survival, for one group of subjects or for each of several.  A record has a time, a
+        /// code (0 censored, 1 dead; a code above 1 is that number of deaths at the time) and, if there are groups, a group.  A record
+        /// with a blank cell is left out.  For each group the report has the table of the times (made by Plprep and Plest), the median
+        /// survival time with two confidence intervals, and the mean survival time with its confidence interval.  The estimates are passed
+        /// on for the plots, and can be saved to the worksheet with a row for each subject (Plsave).
+        /// </summary>
+        /// <param name="host">The preferences for the display of numbers.</param>
+        /// <param name="parameters">"times", "deaths" (the codes) and, if there are groups, "groups"; "gamma", the confidence level;
+        /// "save", whether the estimates are to be saved.</param>
         public static StepOutput RptKaplan(IPreferences host, ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
@@ -171,6 +191,7 @@ namespace StatsDirect.Builtins
                     extra += Convert.ToInt32(d[r]) - 1;
 
             // Put the data back into the Public array
+            // arr2 has a column for each record: row 0 the number of its group, row 1 its time and row 2 its code, which is now 0 or 1
             double[,] arr2 = new double[2 + 1, rows + extra + 1];
             ColumnData[] cdat1 = new ColumnData[2 + 1 ];
             for (int c = 0; c <= 2; c++)
@@ -271,6 +292,10 @@ namespace StatsDirect.Builtins
                 //  median survival time
                 //  Hosmer & Lemeshow
                 //  Andersen PK et al.. Statistical models based on counting processes. New York: Springer-Verlag 1993.
+                //  The median is the first time at which S is a half or less (imed).  Its variance, for the first of the two
+                //  intervals, is the variance of S at the median over the square of the slope of the survival curve there; the slope is
+                //  taken between the last time at which S is a half plus a margin or more (iup) and the first time at which it is a
+                //  half less the margin or less (ilp).  The margin (area) is 1 less the confidence level.
                 const int biglong = 999999;
                 int imed = biglong;
                 int ilp = biglong;
@@ -322,6 +347,8 @@ namespace StatsDirect.Builtins
                 groupParameters.AddOutput("aul", ul);
                 //  Hosmer & Lemeshow
                 //  Brookmeyer R, Crowley JJ. A confidence interval for the median survival time. Biometrics 1982;38:29-41.
+                //  The times at which S differs from a half by no more than the normal deviate times its standard error: the first of
+                //  them is the lower limit and the last the upper.  A limit is infinite when there is a median but no such time.
                 imed = 0;
                 int iucl = 0;
                 int ilcl = biglong;
@@ -385,6 +412,9 @@ namespace StatsDirect.Builtins
                     mu = tl;
                 }
                 //  get variance of mu
+                //  the sum, over the times with deaths, of the square of the area under the curve beyond the time, times
+                //  d / (n (n - d)), d being the deaths at the time and n the number at risk; and then times D / (D - 1), D being all
+                //  the deaths
                 double vmu = 0;
                 double totdead = 0;
                 for (i = 1; i <= lastk; i++)
@@ -439,6 +469,10 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The plots that follow the Kaplan-Meier estimates, made by x_plgraph from what RptKaplan passed on.
+        /// </summary>
+        /// <param name="parameters">What RptKaplan passed on, with "use-markers" and "use-tics" for the look of the plots.</param>
         public static StepOutput RptKaplanMeierPlots(ParameterBag parameters)
         {
             int[] cnx = (int[])parameters["cnx"].AsObject;
@@ -463,6 +497,21 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Five plots of the estimates of each group: S against time; H against time; log H against log time, which is a straight line
+        /// if the times have a Weibull distribution; the normal deviate of S against log time, a straight line if they have a lognormal
+        /// distribution; and H over time against time.  A point is left out of a plot if it has no place there: a time of zero where
+        /// the logarithm of the time is wanted, or an H without a value.
+        /// </summary>
+        /// <param name="h">H: h[i, k] at time i of group k, each index from 1.</param>
+        /// <param name="s">S, in the same way.</param>
+        /// <param name="stime">The times.</param>
+        /// <param name="dead">The deaths at each time.</param>
+        /// <param name="groups">The number of groups.</param>
+        /// <param name="cnx">The number of times of each group.</param>
+        /// <param name="glab">The label of each group.</param>
+        /// <param name="tic">Whether the censored times are marked.</param>
+        /// <param name="marker">Whether the points are marked.</param>
         public static IList<IRenderable> x_plgraph(double[,] h, double[,] s, double[,] stime, int[,] dead, int groups, int[] cnx, string[] glab, bool tic, bool marker)
         {
             IList<IRenderable> outputImages = new List<IRenderable>();
@@ -562,12 +611,17 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// 
+        /// The abridged life table.  For each interval of age but the last: the death rate M is the deaths over the population; the
+        /// probability that somebody alive at the start of the interval dies in it is q = n M / (1 + (1 - a) n M), n being the length
+        /// of the interval and a the fraction of it that those who die in it live through; of the l alive at its start (100,000 at
+        /// birth) d = l q die in it; and the years lived in it are L = n (l - d) + a n d.  The last interval is open: all who enter
+        /// it die in it, and the years lived in it are l / M.  T is the years lived in the interval and all those after it, and the
+        /// expectation of life at the start of the interval is e = T / l.
         /// </summary>
-        /// <param name="rows"></param>
-        /// <param name="d"></param>
-        /// <param name="p"></param>
-        /// <param name="a"></param>
+        /// <param name="rows">The number of intervals, the open one among them.  Every list is from element 1.</param>
+        /// <param name="d">The deaths observed in each interval.</param>
+        /// <param name="p">The population of each interval.</param>
+        /// <param name="a">The fraction of each interval that those who die in it live through.</param>
         /// <param name="sl">number living at age x = 'l'</param>
         /// <param name="rm">death rate of interval</param>
         /// <param name="r">range or interval length = 'n'</param>
@@ -609,6 +663,17 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The age at the start of the interval in which most of the table's deaths fall (the last such interval, if two have as many),
+        /// and the median length of life: the age at which half of the 100,000 are alive, taken along a straight line between the
+        /// starts of the two intervals that it lies between.
+        /// </summary>
+        /// <param name="rows">The number of intervals.</param>
+        /// <param name="dd">The number dying in each interval of the table.</param>
+        /// <param name="emo">On return, the age at the start of the interval with most deaths.</param>
+        /// <param name="emd">On return, the median; infinite if more than half are alive at the start of the open interval.</param>
+        /// <param name="sl">The number alive at the start of each interval.</param>
+        /// <param name="x">The age at the start of each interval.</param>
         private static void AbridgedLifetableMedianMode(int rows, double[] dd, out double emo, out double emd, double[] sl, double[] x)
         {
             // mode
@@ -636,6 +701,22 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The variances of the life table.  That of the probability of dying is q^2 (1 - q) / D, D being the deaths observed in the
+        /// interval.  That of the expectation of life at the start of an interval is the sum, over that interval and those after it
+        /// but the open one, of l^2 [(1 - a) n + e']^2 var(q), over the square of the l of the interval itself; e' is the expectation
+        /// at the end of the interval that the term belongs to.  The open interval adds nothing: its death rate is taken as known.
+        /// </summary>
+        /// <param name="rows">The number of intervals.</param>
+        /// <param name="vq">On return, the variance of each probability of dying.</param>
+        /// <param name="q">The probability of dying in each interval.</param>
+        /// <param name="d">The deaths observed in each interval.</param>
+        /// <param name="a">The fraction of each interval that those who die in it live through.  That of the open interval is made missing.</param>
+        /// <param name="r">The length of each interval.</param>
+        /// <param name="e">The expectation of life at the start of each interval.</param>
+        /// <param name="sl">The number alive at the start of each interval.</param>
+        /// <param name="ve">On return, the variance of each expectation of life.</param>
+        /// <param name="vs">On return, for each interval, 100,000 w (1 - w), w being the proportion alive at its start.</param>
         private static void AbridgedLifetableVariance(int rows, double[] vq, double[] q, double[] d, double[] a, double[] r, double[] e, double[] sl, double[] ve, double[] vs)
         {
             double[] f = new double[rows + 1];
@@ -683,6 +764,11 @@ namespace StatsDirect.Builtins
             a[rows] = Constant.MISSING;
         }
 
+        /// <summary>
+        /// Refuses data that an abridged life table cannot be made from, with a message that says what is wrong: columns of the wrong
+        /// lengths, a blank cell, a length or a population that is not above zero, an open interval without deaths.
+        /// </summary>
+        /// <param name="parameters">As for RptAbridgedLifetable.</param>
         private static void AbridgedLifetableCheck(ParameterBag parameters)
         {
             const string title = "Abridged life table";
@@ -720,11 +806,17 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// An age as it is printed: a whole number without decimal places, any other number in full.
+        /// </summary>
         private static string LifetabAge(double age)
         {
             return age == Math.Floor(age) ? Convert.ToInt32(age).ToString() : Formatting.XUnrounded(age);
         }
 
+        /// <summary>
+        /// The label of interval i of a life table, from the ages at which the intervals start.
+        /// </summary>
         private static string LifetabInterval(int i, int rows, double[] x)
         {
             if (i == rows)
@@ -737,6 +829,23 @@ namespace StatsDirect.Builtins
             return LifetabAge(x[i]) + " to " + LifetabAge(end);
         }
 
+        /// <summary>
+        /// The product-limit estimates of a group, with the rows of its table.  S at a time is the product, over the times up to and
+        /// with it, of (n - d) / n, n being the number at risk and d the deaths; its variance is S^2 times the sum of d / (n (n - d))
+        /// (Greenwood's formula).  H is -log S, and its variance is that sum.  Once the last subject at risk has died S is 0 and H is
+        /// infinite (it is held as missing and printed as infinite), and the two standard errors have no value.
+        /// </summary>
+        /// <param name="groupParameters">Where the rows of the table are put.</param>
+        /// <param name="stime">The times: stime[j, lap] is time j of group lap, each index from 1.</param>
+        /// <param name="nat">The number at risk at each time of the group.</param>
+        /// <param name="dead">The deaths at each time.</param>
+        /// <param name="cen">The number censored at each time of the group.</param>
+        /// <param name="h">On return, H at each time.</param>
+        /// <param name="s">On return, S at each time.</param>
+        /// <param name="vh">On return, the variance of H at each time of the group.</param>
+        /// <param name="vs">On return, the variance of S at each time of the group.</param>
+        /// <param name="nx">The number of times of the group.</param>
+        /// <param name="lap">The number of the group.</param>
         private static void Plest(ParameterBag groupParameters, double[,] stime, int[] nat, int[,] dead, int[] cen, double[,] h, double[,] s, double[] vh, double[] vs, int nx, int lap)
         {
             double var = 0;
@@ -789,13 +898,17 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  GIVEN A SYMMETRIC MATRIX ORDER N AS LOWER TRIANGLE in A() CALCULATES AN UPPER TRIANGLE, U( ), SUCH THAT UPRIME * U = A.
         ///  A MUST BE POSITIVE SEMI-DEFINITE.  ETA IS SET TO MULTIPLYING FACTOR DETERMINING EFFECTIVE 0 FOR PIVOT.
+        ///  The triangle is held in a list, row after row: element (i, j) of the lower triangle, j no more than i, is number
+        ///  i (i - 1) / 2 + j.  A pivot that is nothing, within eta of the element it comes from, makes its row of U nothing and adds
+        ///  1 to nullty: the matrix then has less than full rank.  (LAPACK's dpptrf makes the same factor of a packed matrix, but
+        ///  only of one that is positive definite.)
         ///  </summary>
-        ///  <param name="a"></param>
-        ///  <param name="n"></param>
-        ///  <param name="nn"></param>
-        ///  <param name="u"></param>
-        ///  <param name="nullty"></param>
-        ///  <param name="ifault"></param>
+        ///  <param name="a">The matrix, from element 1.</param>
+        ///  <param name="n">The order of the matrix.</param>
+        ///  <param name="nn">The length of the list, n (n + 1) / 2.</param>
+        ///  <param name="u">On return, the factor: element (i, j) of the upper triangle, i no more than j, is number j (j - 1) / 2 + i.</param>
+        ///  <param name="nullty">On return, the number of pivots that are nothing: n less the rank.</param>
+        ///  <param name="ifault">On return, 0; 1 if n is below 1; 2 if the matrix is not positive semi-definite; 3 if nn is not n (n + 1) / 2.</param>
         ///  <remarks>ALGORITHM AS 6 APPL. STATIST. (1968) VOL.17, P.195</remarks>
         private static void Chol(double[] a, int n, int nn, double[] u, ref int nullty, out int ifault)
         {
@@ -868,6 +981,15 @@ namespace StatsDirect.Builtins
             ifault = 0;
         }
 
+        /// <summary>
+        /// The Wei-Lachin tests of two groups of subjects who each have a time to failure, which may be censored, at each of several
+        /// repeats: for each repeat a test of the difference between the groups, and for the repeats together an omnibus test and a
+        /// test of stochastic ordering; each by Gehan's generalised Wilcoxon statistic and by the log-rank statistic (XWeiLachin).
+        /// A subject without a time at a repeat is kept, with a time before every other and censored, so that at that repeat the
+        /// subject is at risk of nothing.
+        /// </summary>
+        /// <param name="parameters">"gid": the group of each subject (two groups); "nr": the number of repeats; "times" and "censor": a
+        /// column of each for every repeat (1 for a failure, 0 for a censored time).</param>
         public static StepOutput RptWeiLachin(ParameterBag parameters)
         {
             int gid2 = 0;
@@ -928,6 +1050,9 @@ namespace StatsDirect.Builtins
                 }
                 //  find missing times, censor them, and code them as minimum observed time minus one
                 //  if min time is 0 and all time 0 are censored, assume that is a missing data pattern
+                //  (minTime starts at the value that stands for a missing number, which no time is below, and so it stays there: the
+                //  code that a missing time is given is that value less 1, which in floating point is the same value.  A missing time
+                //  therefore keeps the missing value, which is before every time, and is censored)
                 double missingCode;
                 if (minTime == 0.0)
                 {
@@ -982,6 +1107,27 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The Wei-Lachin statistics for one of the two kinds of score.  For each repeat the statistic is the sum over the failures of
+        /// the weight times (1 if the failure is in the first group, less the share of the first group among those at risk at the time),
+        /// over the square root of the number of subjects.  The weight is 1 for the log-rank score (method 2) and, for Gehan's score
+        /// (method 1), the share of all the subjects who are at risk at the time.  The variances and covariances of the statistics
+        /// of the repeats are estimated from the part that each subject plays in them.  A repeat has the chi-square of its statistic
+        /// squared over its variance; the repeats together have the omnibus chi-square, the quadratic form of the statistics in the
+        /// generalised inverse of the matrix, on its rank as degrees of freedom, and the normal deviate for stochastic ordering, the sum
+        /// of the statistics over the square root of the sum of all the elements of the matrix.
+        /// The variance is a little small in small samples for the log-rank score: with 40 subjects and no difference between the
+        /// groups the chi-square of a repeat has a mean of about 1.18 where it should be 1, with 80 about 1.10 and with 300 about 1.03.
+        /// </summary>
+        /// <param name="outputParameters">Where the results are put.</param>
+        /// <param name="nr">The number of repeats.</param>
+        /// <param name="nt">The number of subjects.</param>
+        /// <param name="n">The number of subjects in each of the two groups.</param>
+        /// <param name="g">The group of each subject, 1 or 2.</param>
+        /// <param name="s">s[j, k] is 1 if subject j failed at repeat k and 0 if the time is censored.</param>
+        /// <param name="x">x[j, k] is the time of subject j at repeat k.</param>
+        /// <param name="method">1 for Gehan's score, 2 for the log-rank score.</param>
+        /// <param name="ifault">On return, 0; 1 if nobody is at risk at a failure; 2 if a group has no subjects.</param>
         private static void XWeiLachin(ParameterBag outputParameters, int nr, int nt, int[] n, int[] g, int[,] s, double[,] x, int method, out int ifault)
         {
             int nn = (int)Math.Floor((double)nr * (nr + 1) / 2);
@@ -1011,6 +1157,9 @@ namespace StatsDirect.Builtins
             //   ees: PARTIAL SUM USED in EQN. 1
             //   QE = Q*E (SEE EQN. 4)
             //   EVALUATE MU (EQN. 4)
+            //   For a failure, y holds the numbers at risk in the two groups and qe[i] is the weight times the share of group i among
+            //   those at risk.  A failure in the first group adds qe[2] to the sum of the first group, and a failure in the second
+            //   adds qe[1] to the sum of the second: the difference between the two sums is the score.
             for (int k = 1; k <= nr; k++)
             {
                 for (int j = 1; j <= nt; j++)
@@ -1203,13 +1352,15 @@ namespace StatsDirect.Builtins
 
         ///  <summary>
         ///  FORMS in C( ) AS LOWER TRIANGLE, A GENERALIZED INVERSE OF THE POSITIVE SEMI-DEFINATE SYMMETRIC MATRIX A() ORDER N, STORED AS LOWER TRIANGLE.
+        ///  The factor of Chol is made first, and the inverse from it a row at a time, from the last.  A row whose pivot is nothing
+        ///  has a row and a column of nothing in the inverse.  (LAPACK's dpptri makes the inverse of a packed matrix from its factor.)
         ///  </summary>
-        ///  <param name="a"></param>
-        ///  <param name="n"></param>
-        ///  <param name="nn"></param>
-        ///  <param name="c"></param>
-        ///  <param name="nullty"></param>
-        ///  <param name="ifault"></param>
+        ///  <param name="a">The matrix, held as for Chol.</param>
+        ///  <param name="n">The order of the matrix.</param>
+        ///  <param name="nn">The length of the list, n (n + 1) / 2.</param>
+        ///  <param name="c">On return, the generalised inverse, held in the same way.</param>
+        ///  <param name="nullty">On return, n less the rank of the matrix.</param>
+        ///  <param name="ifault">On return, 0, or the fault of Chol.</param>
         ///  <remarks>ALGORITHM AS 7 APPL. STATIST. (1968) VOL.17, P.198</remarks>
         private static void Syminv(double[] a, int n, int nn, double[] c, ref int nullty, out int ifault)
         {
@@ -1274,6 +1425,26 @@ namespace StatsDirect.Builtins
             while (irow != 0);
         }
 
+        /// <summary>
+        /// Adds to the frame that is saved ten columns for a group, with a row for each subject in order of time: the time, the code,
+        /// S with its standard error and confidence limits, and H with its standard error and limits.  The limits of S are from those
+        /// of log(-log S), whose variance is the variance of H over the square of log S, so that they lie between 0 and 1.  Where S
+        /// is 1 its standard error is nothing and both limits are 1; where S is 0 the limits have no value.  The limits of H are H
+        /// plus and minus the normal deviate times its standard error.
+        /// </summary>
+        /// <param name="resultsFrame">The frame that is saved.</param>
+        /// <param name="stime">The times, as for Plest.</param>
+        /// <param name="nat">The number at risk at each time of the group.</param>
+        /// <param name="dead">The deaths at each time.</param>
+        /// <param name="s">S at each time.</param>
+        /// <param name="h">H at each time.</param>
+        /// <param name="vs">The variance of S at each time of the group.</param>
+        /// <param name="vh">The variance of H at each time of the group.</param>
+        /// <param name="nx">The number of times of the group.</param>
+        /// <param name="lap">The number of the group.</param>
+        /// <param name="gamma">The confidence level.</param>
+        /// <param name="allcens">The code of each subject of the group, in order of time, from element 1.</param>
+        /// <param name="alltime">The time of each subject of the group, in the same order.</param>
         private static void Plsave(DataFrame resultsFrame, double[,] stime, int[] nat, int[,] dead, double[,] s, double[,] h, double[] vs, double[] vh, int nx, int lap, double gamma, int[] allcens, double[] alltime)
         {
             double p = (1.0 - gamma) / 2;
@@ -1396,6 +1567,22 @@ namespace StatsDirect.Builtins
             sehuVariable.TruncateDataToLength(r);
         }
 
+        /// <summary>
+        /// Makes the table of a group from the records: its times in order, each once, with the deaths and the number censored at each
+        /// and the number at risk just before each, which is the number of the group less those who died or were censored earlier.
+        /// </summary>
+        /// <param name="arr2">The records: a column for each, with the group in row 0, the time in row 1 and the code in row 2.</param>
+        /// <param name="cdat1">Its first element has the number of records.</param>
+        /// <param name="stime">On return, the times of the group.</param>
+        /// <param name="dead">On return, the deaths at each time.</param>
+        /// <param name="nat">On return, the number at risk at each time.</param>
+        /// <param name="cen">On return, the number censored at each time.</param>
+        /// <param name="gnx">The number of records of each group.</param>
+        /// <param name="nx">On return, the number of times of the group.</param>
+        /// <param name="lap">The number of the group.</param>
+        /// <param name="nt">On return, the number of records.</param>
+        /// <param name="allcens">On return, the code of each record of the group in order of time, from element 1.</param>
+        /// <param name="alltime">On return, the time of each record of the group in the same order.</param>
         private static void Plprep(double[,] arr2, ColumnData[] cdat1, double[,] stime, int[,] dead, int[] nat, int[] cen, int[] gnx, out int nx, int lap, out int nt, int[] allcens, double[] alltime)
         {
             nt = cdat1[0].Rows;
@@ -1455,6 +1642,11 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Counts the groups before the dialog box goes on: with more than two groups the test for trend needs a score for each group,
+        /// and the scores 1, 2, 3 ... are offered for the user to change.
+        /// </summary>
+        /// <param name="parameters">"gid": the group of each record.</param>
         public static StepOutput RptLogRankPreprocess(ParameterBag parameters)
         {
             DataFrame gidFrame = parameters["gid"].AsDataFrame;
@@ -1497,6 +1689,26 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Reads the records for the log-rank and Wilcoxon tests.  The groups, and the strata if there are any, are numbered from 1 in
+        /// the order in which they are first met.  A record whose code is above 1 stands for that number of deaths, and is given a
+        /// record for each.  A blank cell is left as it is: the tests leave out a record that has one.
+        /// </summary>
+        /// <param name="parameters">As for RptLogRank.</param>
+        /// <param name="rows">On return, the number of records, those added for codes above 1 among them.</param>
+        /// <param name="gamma">On return, the confidence level.</param>
+        /// <param name="cit">On return, the normal deviate of the confidence level.</param>
+        /// <param name="groups">On return, the number of groups.</param>
+        /// <param name="strata">On return, the number of strata, or 0 if there are none.</param>
+        /// <param name="scores">On return, the scores of the groups for the test for trend, from element 1; nothing if there are two groups.</param>
+        /// <param name="gid">On return, the title of the group variable.</param>
+        /// <param name="groupIds">On return, for each group, the number of its group in the data plus 1.</param>
+        /// <param name="groupLabels">On return, the labels of the groups of the data, from element 1.</param>
+        /// <param name="stratumLabels">On return, the labels of the strata.</param>
+        /// <param name="ifault">On return, false when the records have been read.</param>
+        /// <param name="arr2">On return, the records: a column for each, with the group in row 0, the time in row 1, the code in row 2 and the
+        /// stratum in row 3.</param>
+        /// <param name="cdat1">On return, the number of records in each of its elements.</param>
         private static void Petoprep(ParameterBag parameters, out int rows, out double gamma, out double cit, out int groups, out int strata, out double[] scores, out string gid, out double[] groupIds, out string[] groupLabels, out string[] stratumLabels, out bool ifault, out double[,] arr2, out ColumnData[] cdat1)
         {
             ifault = true;
@@ -1679,6 +1891,22 @@ namespace StatsDirect.Builtins
             ifault = false;
         }
 
+        /// <summary>
+        /// The abridged life table of a population, from the deaths and the population of each interval of age (see
+        /// AbridgedLifetableBasics), with the variances of the probabilities of dying and of the expectations of life (see
+        /// AbridgedLifetableVariance) and their confidence limits.  The expectation of life at birth and the median length of life are
+        /// also given limits by simulation: the deaths of every interval are drawn from the Poisson distribution with the deaths
+        /// observed as its mean, the table is made again, and the limits are the quantiles of what comes out.  The limits by
+        /// simulation allow for the uncertainty of the death rate of the open interval, which the limits by formula do not, and are
+        /// the wider for it; the draws are not the same from one run to the next.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"intervals": the lengths of the intervals but the last, which is open; "population" and "deaths": a
+        /// row for every interval, the open one among them; "fractions" (may be left out): the fraction of each interval that those who
+        /// die in it live through, which if left out is a half, but 0.1 for a first interval of no more than 1 year and 0.4 for a
+        /// second of no more than 5; "weights" (may be left out): a weight for each interval, by which the expectation of life at its
+        /// start is multiplied; "gamma", the confidence level; "iterations", the number of tables to simulate, 3000 at the least;
+        /// "save", whether the table is to be saved.</param>
         public static StepOutput RptAbridgedLifetable(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             string uti = null;
@@ -2078,6 +2306,11 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The least number that can have been alive at the start of a follow-up life table: the deaths and withdrawals of all its rows.
+        /// The dialog box offers it as the number alive at the start, and takes no less.
+        /// </summary>
+        /// <param name="parameters">"times", "deaths" and "withdrawals".</param>
         public static StepOutput RptFollowUpLifetableCalculateNatst(ParameterBag parameters)
         {
             DoubleVariable timesVariable = parameters["times"].AsDataFrame.Variables[0] as DoubleVariable;
@@ -2095,6 +2328,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The follow-up (actuarial) life table of a group of subjects followed from a common start: for each interval of time the
+        /// deaths and the number withdrawn.  Those withdrawn in an interval are taken to have been at risk for half of it, so that the
+        /// adjusted number at risk is the number alive at the start of the interval less half of the number withdrawn; the probability
+        /// of death in the interval is the deaths over that, and the proportion surviving to the end of an interval is the product of
+        /// the probabilities of survival of the intervals up to it.  Its variance is by Greenwood's formula, and its confidence limits
+        /// are from those of log(-log) of the proportion, so that they lie between 0 and 100 per cent.
+        /// </summary>
+        /// <param name="parameters">"times": the time at which each interval starts; "deaths" and "withdrawals": the numbers in each
+        /// interval; "natst": the number alive at the start; "gamma": the confidence level.</param>
         public static StepOutput RptFollowUpLifetable(ParameterBag parameters)
         {
             double gamma = parameters["gamma"].AsDouble;
@@ -2197,6 +2440,8 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= nt; j++)
             {
                 double en1 = natr - w[j] / 2.0;
+                // en1 is the adjusted number at risk, q the probability of death in the interval and p that of survival; var1 is the
+                // sum of q / (en1 p) over the intervals so far, and the variance of the proportion surviving is its square times var1
                 // an interval that nobody is left to enter has no deaths, and leaves the survivors as they were
                 double q = en1 > 0.0 ? d[j] / en1 : 0.0;
                 p = 1.0 - q;
@@ -2280,6 +2525,22 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The log-rank test and a generalised Wilcoxon test of the difference in survival between two or more groups, within strata if
+        /// there are any.  At each time the deaths expected in a group are the deaths at that time times the share of the group among
+        /// those at risk.  The rank statistic of a group is the sum over the times of a weight times (the deaths observed in it less
+        /// the deaths expected), and the variances and covariances of the statistics are those of the hypergeometric distribution of
+        /// the deaths among the groups, times the square of the weight.  The chi-square is the quadratic form of the statistics of all
+        /// the groups but the last in the inverse of their matrix, on one degree of freedom fewer than there are groups.  With more
+        /// than two groups there is also a test for trend with the scores of the groups.  With strata the statistics and the matrices
+        /// are added up over the strata and the tests made again.
+        /// The hazard ratio of two groups is the ratio of their deaths observed over deaths expected, with approximate limits; for two
+        /// groups without strata there is also the hazard ratio by conditional maximum likelihood, with exact limits and P values.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">"gid", "times", "deaths" (the codes) and, if there are strata, "strata"; "gamma", the confidence level;
+        /// "wt_method", the weights of the Wilcoxon test (1 Peto-Prentice, 2 Gehan-Breslow, 3 Tarone-Ware); with more than two groups
+        /// "group_scores".</param>
         public static StepOutput RptLogRank(IProgressBarHost host, ParameterBag parameters)
         {
             Petoprep(parameters, out int nt, out double gamma, out double cit, out int groups, out int strata, out double[] score, out string gid, out double[] gpid, out string[] glab, out string[] slab, out bool ifault, out double[,] arr2, out _);
@@ -2400,6 +2661,13 @@ namespace StatsDirect.Builtins
                             double jprop = jrisk / risktot;
                             double expect = deadx * jprop;
                             esum[j2] = esum[j2] + expect;
+                            // The weight: 1 for the log-rank test.  For the Wilcoxon test, by Peto and Prentice the estimate of the
+                            // proportion surviving to just before the time (sv, the product over the earlier times of
+                            // (n - d + 1) / (n + 1)) times n / (n + 1); by Gehan and Breslow the number at risk, here over the number of
+                            // records plus 1, which makes no difference to the test; by Tarone and Ware the square root of the number
+                            // at risk.  n is the number at risk in all the groups and d the deaths at the time.  With one death at
+                            // the time the weight of Peto and Prentice is the estimate at the time itself; with several it is what the
+                            // first of them would have if they were taken one after another.
                             double wt = 0;
                             if (test == 2)
                             {
@@ -2421,6 +2689,8 @@ namespace StatsDirect.Builtins
                                 wt = 1.0;
                             }
                             // rank statistic sum and estimated covariance matrix
+                            // the variance of the deaths in group j is n j (n - n j) d (n - d) / (n^2 (n - 1)), and the covariance of
+                            // those in groups j and k is -n j n k d (n - d) / (n^2 (n - 1))
                             u0[j2] = u0[j2] + wt * (dead[j2] - expect);
                             for (int k = 1; k <= groups; k++)
                             {
@@ -2432,6 +2702,8 @@ namespace StatsDirect.Builtins
                             }
                         }
                         // exact test for 2 groups - a table for each unique survival time
+                        // the 2 by 2 table of a time: the deaths in the first group (A) of all the deaths at the time (M1), and the
+                        // numbers at risk in the two groups (N1 and N0).  A table tells nothing if all at risk, or none, die
                         if (groups == 2 & test == 1)
                         {
                             if (j == 1)
@@ -2746,6 +3018,9 @@ namespace StatsDirect.Builtins
                     if (test == 1 && (stratum == strata || strata == 0))
                     {
                         // Hazard Ratio" + " & approximate "
+                        // for each pair of groups: (O j / E j) / (O k / E k), O being the deaths observed and E those expected, over the
+                        // strata if there are any; the limits are those of its logarithm, whose standard error is taken as
+                        // root (1 / E j + 1 / E k)
                         IList<ParameterBag> hazardsList = new List<ParameterBag>();
                         outerParameters.AddOutput("*hazards", hazardsList);
                         ParameterBag hazardsParameters = new();
