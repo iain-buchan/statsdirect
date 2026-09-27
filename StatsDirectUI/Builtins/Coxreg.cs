@@ -92,15 +92,49 @@ namespace StatsDirect.Builtins
             int IComparer<CoxP>.Compare(CoxP x, CoxP y) => Compare(x, y);
         }
 
+        /// <summary>The rows, counted from 0, of the records in which nothing is missing: the time, the event code, each predictor and the stratum.</summary>
+        /// <param name="parameters">The frames that were selected: times, events, predictors and, if there are any, strata.</param>
+        /// <param name="records">On return, the number of records that were selected.</param>
+        private static int[] CompleteRecords(ParameterBag parameters, out int records)
+        {
+            List<double[]> columns = new();
+            foreach (string name in new[] { "times", "events", "predictors", "strata" })
+                if (parameters.ContainsKey(name) && parameters[name] != null && parameters[name].AsDataFrame != null)
+                    foreach (IVariable variable in parameters[name].AsDataFrame.Variables)
+                        columns.Add(((GenericVariable<double>)variable).Data);
+            records = columns.Count > 0 ? columns[0].Length : 0;
+            List<int> complete = new();
+            for (int r = 0; r < records; r++)
+            {
+                bool nothingMissing = true;
+                foreach (double[] column in columns)
+                    if (r >= column.Length || column[r] == Constant.MISSING)
+                        nothingMissing = false;
+                if (nothingMissing)
+                    complete.Add(r);
+            }
+            return complete.ToArray();
+        }
+
+        /// <summary>A variable of the given length in which every value is missing.</summary>
+        private static DoubleVariable MissingVariable(int length, string title)
+        {
+            DoubleVariable variable = new(length, title);
+            for (int i = 0; i < length; i++)
+                variable.SetData(i, Constant.MISSING);
+            return variable;
+        }
+
         public static StepOutput RptCoxRegressionPreprocess(ParameterBag parameters)
         {
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             double[] times = ((DoubleVariable)timesFrame.Variables[0]).Data;
             double adjustment = 0.0;
-            foreach (double time in times)
-                if (time <= 0.0)
-                    if (Math.Abs(time) + 1 > adjustment)
-                        adjustment = Math.Abs(time) + 1;
+            // a record with a missing value is left out of the regression, so its time does not count here
+            foreach (int r in CompleteRecords(parameters, out int _))
+                if (times[r] <= 0.0)
+                    if (Math.Abs(times[r]) + 1 > adjustment)
+                        adjustment = Math.Abs(times[r]) + 1;
             ParameterBag outputParameters = new();
             if (adjustment > 0.0)
                 outputParameters.AddOutput("timesAdjustment", adjustment);
@@ -114,18 +148,21 @@ namespace StatsDirect.Builtins
             if (parameters.ContainsKey("useTimesAdjustment") && !parameters["useTimesAdjustment"].AsBoolean)
                 throw new TemplateOperationCancelledException();
 
+            // A record in which the time, the event code, a predictor or the stratum is missing is left out of the regression and of everything
+            // that follows it.  recordOf gives the row, counted from 0, of each record that is kept.
+            int[] recordOf = CompleteRecords(parameters, out int records);
             int ic = 0;
             DataFrame timesFrame = parameters["times"].AsDataFrame;
             DoubleVariable timesVariable = (DoubleVariable)timesFrame.Variables[0];
             ic++;
             int irt = ic;
-            int rows = timesVariable.Length;
+            int rows = recordOf.Length;
             double[] x = new double[rows * ic + 1];
             int ik = 0;
             for (int r = 0; r < rows; r++)
             {
                 ik++;
-                x[ik] = timesVariable.Data[r];
+                x[ik] = timesVariable.Data[recordOf[r]];
             }
 
             if (parameters.ContainsKey("timesAdjustment"))
@@ -149,7 +186,7 @@ namespace StatsDirect.Builtins
             for (int r = 0; r < rows; r++)
             {
                 ik++;
-                x[ik] = eventsVariable.Data[r];
+                x[ik] = eventsVariable.Data[recordOf[r]];
                 dead += x[ik];
                 if (x[ik] > 1)
                     ok = true;
@@ -177,8 +214,8 @@ namespace StatsDirect.Builtins
                 for (int r = 0; r < rows; r++)
                 {
                     ik++;
-                    x[ik] = eventsVariable.Data[r] > 1
-                        ? eventsVariable.Data[r]
+                    x[ik] = eventsVariable.Data[recordOf[r]] > 1
+                        ? eventsVariable.Data[recordOf[r]]
                         : 1;
                 }
             }
@@ -193,11 +230,6 @@ namespace StatsDirect.Builtins
             int ncov; if (parameters.ContainsKey("predictors") && parameters["predictors"] != null)
             {
                 predictorsFrame = parameters["predictors"].AsDataFrame;
-                // Store the predictor Data
-                double[,] xx = new double[predictorsFrame.VariableCount, rows + 1];
-                for (int c = 0; c < predictorsFrame.VariableCount; c++)
-                    for (int r = 1; r <= rows; r++)
-                        xx[c, r] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r - 1];
 
                 // load predictors into the master matrix
                 ncov = predictorsFrame.VariableCount;
@@ -213,7 +245,7 @@ namespace StatsDirect.Builtins
                     for (int r = 0; r < rows; r++)
                     {
                         ik += 1;
-                        x[ik] = (predictorsFrame.Variables[c] as DoubleVariable).Data[r];
+                        x[ik] = (predictorsFrame.Variables[c] as DoubleVariable).Data[recordOf[r]];
                     }
                 }
                 ic += ncov;
@@ -231,7 +263,7 @@ namespace StatsDirect.Builtins
                 // If we get here, ncov must be at least 1, so predictorsFrame cannot be null.
                 Debug.Assert(null != predictorsFrame);
                 for (int r = 1; r <= rows; r++)
-                    holdx[r, c] = (predictorsFrame.Variables[c - 1] as DoubleVariable).Data[r - 1];
+                    holdx[r, c] = (predictorsFrame.Variables[c - 1] as DoubleVariable).Data[recordOf[r - 1]];
             }
 
             // identify the binary covariates
@@ -243,7 +275,11 @@ namespace StatsDirect.Builtins
                 for (int c = 0; c < predictorsFrame.VariableCount; c++)
                 {
                     xd[c] = new ColumnData();
-                    bincov[c + 1] = IsBinary(predictorsFrame.Variables[c] as DoubleVariable, xd[c]);
+                    // whether a predictor is binary is judged from the records that are kept
+                    DoubleVariable kept = new(rows, predictorsFrame.Variables[c].Title);
+                    for (int r = 1; r <= rows; r++)
+                        kept.SetData(r - 1, holdx[r, c + 1]);
+                    bincov[c + 1] = IsBinary(kept, xd[c]);
                     if (bincov[c + 1])
                         binaries += 1;
                 }
@@ -271,7 +307,7 @@ namespace StatsDirect.Builtins
                 for (int r = 0; r < rows; r++)
                 {
                     ik += 1;
-                    x[ik] = strataVariable.Data[r];
+                    x[ik] = strataVariable.Data[recordOf[r]];
                 }
             }
             else
@@ -426,6 +462,8 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p_dev", ARR2[5, 0] > 0 ? PDF.chivalp(Math.Abs(x2dev), ARR2[5, 0]) : Constant.MISSING);
             IList<ParameterBag> warnList = new List<ParameterBag>();
             outputParameters.AddOutput("*warn", warnList);
+            if (records > rows)
+                warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, (records - rows).ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup.")));
             if (droppedPredictors.Count > 0)
                 warnList.Add(new ParameterBag("warn", new FilledStringParameter(FilledParameterDirection.Output, string.Join(", ", droppedPredictors) + " dropped from the model because " + (droppedPredictors.Count > 1 ? "they do" : "it does") + " not vary or " + (droppedPredictors.Count > 1 ? "are" : "is") + " determined by other variable(s) included.")));
             IList<ParameterBag> predList = new List<ParameterBag>();
@@ -447,6 +485,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddInput("ARR3", ARR3);
             outputParameters.AddInput("CDAT1", CDAT1);
             outputParameters.AddInput("holdx", holdx);
+            // for the values that the reports that follow save to the worksheet: the number of records selected, and the row of each that was kept
+            outputParameters.AddInput("coxRecords", records);
+            outputParameters.AddInput("coxRecordOf", recordOf);
             return new StepOutput(outputParameters);
         }
 
@@ -2274,19 +2315,22 @@ namespace StatsDirect.Builtins
             }
             else if (createGrid)
             {
-                // save to worksheet if requested
-                DoubleVariable survivalVariable = new(iobs, "Survival (baseline)");
-                DoubleVariable hazardVariable = new(iobs, "Hazard (baseline cumulative)");
-                DoubleVariable hazardRatioVariable = new(iobs, "Hazard ratio");
+                // save to worksheet if requested: each value in the row of its record, the row of a record that was left out of the regression
+                // for a missing value being left empty
+                int records = parameters["coxRecords"].AsInt32;
+                int[] recordOf = (int[])parameters["coxRecordOf"].AsObject;
+                DoubleVariable survivalVariable = MissingVariable(records, "Survival (baseline)");
+                DoubleVariable hazardVariable = MissingVariable(records, "Hazard (baseline cumulative)");
+                DoubleVariable hazardRatioVariable = MissingVariable(records, "Hazard ratio");
                 DataFrame resultsFrame = new();
                 resultsFrame.Variables.Add(survivalVariable);
                 resultsFrame.Variables.Add(hazardVariable);
                 resultsFrame.Variables.Add(hazardRatioVariable);
                 for (i = 1; i <= iobs; i++)
                 {
-                    survivalVariable.SetData(i - 1, z[i].S);
-                    hazardVariable.SetData(i - 1, z[i].H);
-                    hazardRatioVariable.SetData(i - 1, z[i].Exb);
+                    survivalVariable.SetData(recordOf[i - 1], z[i].S);
+                    hazardVariable.SetData(recordOf[i - 1], z[i].H);
+                    hazardRatioVariable.SetData(recordOf[i - 1], z[i].Exb);
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
@@ -2553,12 +2597,15 @@ namespace StatsDirect.Builtins
                 // restore the original record order if calling plot function or output to worksheet
                 Array.Sort(z, 1, iobs, new CoxpByIndex());
 
-                DoubleVariable leverageVariable = new(iobs, "Leverage");
-                DoubleVariable proportionalityVariable = new(iobs, "Proportionality");
-                DoubleVariable coxOakesResidualVariable = new(iobs, "Cox-Oakes residual");
-                DoubleVariable coxSnellResidualVariable = new(iobs, "Cox-Snell residual");
-                DoubleVariable martingaleResidualVariable = new(iobs, "Martingale residual");
-                DoubleVariable devianceResidualVariable = new(iobs, "Deviance residual");
+                // each value goes in the row of its record, the row of a record that was left out of the regression for a missing value being left empty
+                int records = parameters["coxRecords"].AsInt32;
+                int[] recordOf = (int[])parameters["coxRecordOf"].AsObject;
+                DoubleVariable leverageVariable = MissingVariable(records, "Leverage");
+                DoubleVariable proportionalityVariable = MissingVariable(records, "Proportionality");
+                DoubleVariable coxOakesResidualVariable = MissingVariable(records, "Cox-Oakes residual");
+                DoubleVariable coxSnellResidualVariable = MissingVariable(records, "Cox-Snell residual");
+                DoubleVariable martingaleResidualVariable = MissingVariable(records, "Martingale residual");
+                DoubleVariable devianceResidualVariable = MissingVariable(records, "Deviance residual");
                 DataFrame resultsFrame = new();
                 resultsFrame.Variables.Add(leverageVariable);
                 resultsFrame.Variables.Add(proportionalityVariable);
@@ -2568,15 +2615,15 @@ namespace StatsDirect.Builtins
                 resultsFrame.Variables.Add(devianceResidualVariable);
                 for (int i = 1; i <= iobs; i++)
                 {
-                    leverageVariable.SetData(i - 1, ARR2[i, 2]);
-                    proportionalityVariable.SetData(i - 1, ARR2[i, 5]);
-                    coxOakesResidualVariable.SetData(i - 1, ARR2[i, 3]);
+                    leverageVariable.SetData(recordOf[i - 1], ARR2[i, 2]);
+                    proportionalityVariable.SetData(recordOf[i - 1], ARR2[i, 5]);
+                    coxOakesResidualVariable.SetData(recordOf[i - 1], ARR2[i, 3]);
                     double rc = z[i].Exb * z[i].H;
                     double rm = z[i].Censor - rc;
                     double rd = Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
-                    coxSnellResidualVariable.SetData(i - 1, rc);
-                    martingaleResidualVariable.SetData(i - 1, rm);
-                    devianceResidualVariable.SetData(i - 1, rd);
+                    coxSnellResidualVariable.SetData(recordOf[i - 1], rc);
+                    martingaleResidualVariable.SetData(recordOf[i - 1], rm);
+                    devianceResidualVariable.SetData(recordOf[i - 1], rd);
                 }
                 outputParameters.AddOutput("results", resultsFrame);
             }
