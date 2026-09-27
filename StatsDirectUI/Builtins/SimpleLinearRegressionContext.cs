@@ -80,27 +80,31 @@ namespace StatsDirect.Builtins
             if (calculated)
                 return;
 
+            // The sums of squares and products are taken about the means.  Taken about zero and corrected afterwards (the sum of x squared less
+            // the square of the sum over n, and so on) they lose their leading figures when the values are large beside their spread.
             SumX = 0.0;
             double sumy = 0.0;
-            double sumxy = 0.0;
-            double sys = 0.0;
-            double sxs = 0.0;
             for (int n = 0; n < NX; n++)
             {
-                double x = X[n];
-                double y = Y[n];
-                SumX += x;
-                sxs += x * x;
-                sumy += y;
-                sys += y * y;
-                sumxy += x * y;
+                SumX += X[n];
+                sumy += Y[n];
             }
-            SSX = sxs - SumX * SumX / NX;
-            SSY = sys - sumy * sumy / NX;
+            double meanX = SumX / NX;
+            double meanY = sumy / NX;
+            SSX = 0.0;
+            SSY = 0.0;
+            double xy = 0.0;
+            for (int n = 0; n < NX; n++)
+            {
+                double dx = X[n] - meanX;
+                double dy = Y[n] - meanY;
+                SSX += dx * dx;
+                SSY += dy * dy;
+                xy += dx * dy;
+            }
             SDX = Math.Sqrt(SSX / (NX - 1));
-            double xy = sumxy - SumX * sumy / NX;
             Slope = xy / SSX;
-            YIntercept = sumy / NX - Slope * (SumX / NX);
+            YIntercept = meanY - Slope * meanX;
             R = xy / Math.Sqrt(SSX * SSY);
             IsPerfectCorrelation = Math.Abs(R) >= 1;
             SSREG = xy * xy / SSX;
