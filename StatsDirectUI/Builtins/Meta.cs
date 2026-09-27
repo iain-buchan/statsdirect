@@ -2414,9 +2414,11 @@ namespace StatsDirect.Builtins
                 rmh = Constant.MISSING;
                 double sq = Math.Sqrt((4.0 * rk * sk + cit * cit * w) * cit * cit * w);
                 // ll = ( 2.0 * rk * sk + cit * cit * w - sq ) / 2.0 / rk / rk; 
+                // the limits are the odds ratios psi for which (R - psi S)^2 is no more than z^2 psi W; what is worked out here is the
+                // upper limit of 1 / psi, and with S nothing there is no upper limit of psi
                 ul = (2.0 * rk * sk + cit * cit * w + sq) / 2.0 / rk / rk;
-                ll = Math.Exp(1.0 / ul);
-                ul = Constant.MISSING;
+                ll = 1.0 / ul;
+                ul = double.PositiveInfinity;
             }
             else
             {
