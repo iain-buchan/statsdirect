@@ -2297,30 +2297,73 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// Polynomial regression of the degree chosen: the multiple linear regression of y on x, x^2 and so on, with a constant.
         /// </summary>
-        /// <remarks>CalcPoly makes the design matrix, with the records in ascending order of x; the fit and the report are those of multiple linear regression.</remarks>
+        /// <remarks>
+        /// CalcPoly makes the design matrix, with the records in ascending order of x and without those in which x or y is missing; the fit and the
+        /// report are those of multiple linear regression.  The number of records left out is passed on, so that the warning is given again when the
+        /// degree is changed, by which time the records have gone from the frames.
+        /// </remarks>
         public static StepOutput RptPolynomialRegression(ParameterBag parameters)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
             int P = Parsing.Cint_Txt(parameters["degree"].AsString) + 1;
             MultipleLinearRegressionContext context = new() { N = vY.Length, P = P, DoC = true };
-            CalcPoly(parameters, context);
+            int leftOut = CalcPoly(parameters, context);
+            if (leftOut == 0 && parameters.ContainsKey(RecordsLeftOut))
+                leftOut = parameters[RecordsLeftOut].AsInt32;
+            string dropWarning = leftOut > 0
+                ? leftOut.ToString() + " observations dropped due to missing data. Make sure that observations with missing data are not a subgroup"
+                : null;
             (context.P, context.M) = x_glin(context, context.P, context.M);
-            return new StepOutput(MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, true, context.M, null));
+            ParameterBag outputParameters = MakeMultipleRegressionOutput(context, context.Se, context.B, true, context.N, context.P, true, context.M, dropWarning);
+            outputParameters[RecordsLeftOut] = FilledParameterFactory.Input(leftOut);
+            return new StepOutput(outputParameters);
         }
+
+        /// <summary>The name under which polynomial regression passes on the number of records that it left out for a missing value.</summary>
+        private const string RecordsLeftOut = "polynomialRecordsLeftOut";
 
         ///  <summary>
         ///  Fill in py, weight, px and titles given X and Y data, P and N.
         ///  </summary>
         /// <param name="parameters"></param>
         ///  <param name="context"></param>
-        ///  <remarks></remarks>
-        private static void CalcPoly(ParameterBag parameters, MultipleLinearRegressionContext context)
+        ///  <returns>The number of records left out because x or y is missing.</returns>
+        ///  <remarks>
+        ///  The two frames are changed as well as read: the records with a missing value are taken out of them, and the rest are put in ascending
+        ///  order of x.  The reports that follow a polynomial regression read the same frames, and so see the records that were fitted, in that order.
+        ///  </remarks>
+        private static int CalcPoly(ParameterBag parameters, MultipleLinearRegressionContext context)
         {
             DataFrame fY = parameters["y"].AsDataFrame;
             DoubleVariable vY = (DoubleVariable)fY.Variables[0];
             DataFrame fX = parameters["x"].AsDataFrame;
             DoubleVariable vX = (DoubleVariable)fX.Variables[0];
+            //  Records in which x or y is missing are left out
+            int records = Math.Min(vX.Length, vY.Length);
+            int complete = 0;
+            for (int i = 0; i < records; i++)
+                if (vX.Data[i] != Constant.MISSING && vY.Data[i] != Constant.MISSING)
+                    complete++;
+            int leftOut = records - complete;
+            if (leftOut > 0 || vX.Length != records || vY.Length != records)
+            {
+                double[] completeX = new double[complete];
+                double[] completeY = new double[complete];
+                int k = 0;
+                for (int i = 0; i < records; i++)
+                {
+                    if (vX.Data[i] != Constant.MISSING && vY.Data[i] != Constant.MISSING)
+                    {
+                        completeX[k] = vX.Data[i];
+                        completeY[k] = vY.Data[i];
+                        k++;
+                    }
+                }
+                vX.Data = completeX;
+                vY.Data = completeY;
+            }
+            context.N = complete;
             //  Sort X and Y in increasing order of X
             Array.Sort(vX.Data, vY.Data);
             int deg = context.P - 1;
@@ -2353,6 +2396,7 @@ namespace StatsDirect.Builtins
                 context.Y[j] = vY.Data[j - 1];
                 context.S[j] = 1.0;
             }
+            return leftOut;
         }
 
         /// <summary>
