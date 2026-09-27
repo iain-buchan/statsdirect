@@ -1232,7 +1232,7 @@ namespace StatsDirect.Builtins
             igr = 0;
             for (int i = 1; i <= 4; i++)
                 for (ii = 1; ii <= nobs; ii++)
-                    caze[ii, 1] = Constant.MISSING;
+                    caze[ii, i] = Constant.MISSING;
             icnn = 0;
             for (int i = nobs; i >= 1; i--)
             {
