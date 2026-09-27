@@ -545,6 +545,10 @@ namespace StatsDirect.Builtins
             bool[] lerr = new bool[k + 1];
             bool[] uerr = new bool[k + 1];
             bool[] cced = new bool[k + 1];
+            bool[] included = new bool[k + 1];
+            // the limits of each study from its standard error, which the bias indicators take the standard error back from
+            double[] wll = new double[k + 1];
+            double[] wul = new double[k + 1];
             for (int i = 1; i <= k; i++)
             {
                 o[i, 1] = Math.Abs(sr[i]);
@@ -557,7 +561,7 @@ namespace StatsDirect.Builtins
                     throw new InvalidDataException();
             }
 
-            Riskdifma(host, k, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, cced, out int ierr);
+            Riskdifma(host, k, o, out double rmh, out double ll, out double ul, out double x2Rmh, cit, cco, rkr, rkw, dsw, rkrl, rkru, rkx, lerr, uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, cced, included, wll, wul, out int realk, out int ierr);
             if (ierr == -1)
                 throw new InvalidDataException();
 
@@ -583,6 +587,8 @@ namespace StatsDirect.Builtins
                               : host.Preferences.MetaCC.ToString();
                     tmp += "]";
                 }
+                if (!included[i])
+                    tmp = "* (excluded)";
                 inputsParameters.AddOutput("lb", tmp);
             }
 
@@ -600,9 +606,9 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("uci", rkru[i]);
                 differencesParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
                 differencesParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
-                differencesParameters.AddOutput("lb", hasUserSuppliedLabels ? title[i] : string.Empty);
+                differencesParameters.AddOutput("lb", included[i] ? (hasUserSuppliedLabels ? title[i] : string.Empty) : "* (excluded)");
                 differencesParameters.AddOutput("yi", rkr[i]);
-                differencesParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, false));
+                differencesParameters.AddOutput("vi", included[i] ? VarianceFromCI(rkrl[i], rkru[i], cit, false) : Constant.MISSING);
                 // double a = o[ i, 1 ]; 
                 // double b = o[ i, 2 ]; 
                 // double C = o[ i, 3 ]; 
@@ -616,13 +622,13 @@ namespace StatsDirect.Builtins
 
             outputParameters.AddOutput("x2", x2Rmh);
             outputParameters.AddOutput("df", 1);
-            outputParameters.AddOutput("xp", PDF.chivalp(x2Rmh, 1.0));
+            outputParameters.AddOutput("xp", x2Rmh == Constant.MISSING ? Constant.MISSING : PDF.chivalp(x2Rmh, 1.0));
 
-            outputParameters.AddOutput("qc", k > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
-            outputParameters.AddOutput("df_cochran", k - 1);
-            outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, k - 1));
+            outputParameters.AddOutput("qc", realk > 1 ? qc : 0.0);   // 0 by definition with one stratum, not the rounding residue of one squared deviation
+            outputParameters.AddOutput("df_cochran", realk - 1);
+            outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            IsquareNcc(host, qc, k, cco, cit, out double isq, out double llisq, out double ulisq);
+            IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
@@ -639,7 +645,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*egger", eggerList);
             ParameterBag eggerParameters = new();
             eggerList.Add(eggerParameters);
-            bool biasReported = Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, Transformation.None);
+            bool biasReported = Metabias(host, eggerParameters, rkr, wll, wul, k, ref cco, Transformation.None);
             FewStrata(outputParameters, eggerList, biasReported);
 
             IList<ParameterBag> chartList = new List<ParameterBag>();
@@ -660,11 +666,11 @@ namespace StatsDirect.Builtins
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, rkw, title, rmh, ll, ul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Risk difference meta-analysis plot [fixed effects]", 1, "risk difference")));
 
             chartParameters = new ParameterBag();
             chartList.Add(chartParameters);
-            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, null, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
+            chartParameters.AddOutput("chart", ChartRendererFactory.PrepForLater(ChartType.MHRD, new MHOptions(1, k, dsw, title, dsrd, dsll, dsul, cco, rkr, rkrl, rkru, lerr, uerr, included, "Risk difference meta-analysis plot [random effects]", 1, "risk difference")));
 
             return new StepOutput(outputParameters);
         }
@@ -1616,12 +1622,17 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
-        private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, out int ierr)
+        private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, bool[] included, double[] wll, double[] wul, out int realk, out int ierr)
         {
             ierr = -1;
+            realk = 0;
             double sumlk = 0.0;
             double mhn = 0.0;
             double mhd = 0.0;
+            double[] vark = new double[k + 1];
+            // With the continuity correction delayed, the pooled risk difference of Mantel and Haenszel, its weights and its variance
+            // are from the counts as they are; otherwise from the corrected counts of the studies with a cell of nothing
+            bool raw = host.Preferences.DelayContinuityCorrection;
             for (int i = 1; i <= k; i++)
             {
                 double a = o[i, 1];
@@ -1630,36 +1641,36 @@ namespace StatsDirect.Builtins
                 double d = o[i, 4];
                 double n = a + b + c + d;
                 rkx[i] = n;
-                // rd and ci for stratum
-                if (b + d <= 0.0 || a + c <= 0.0)
+                if (n <= 0)
+                    throw new InvalidDataException();
+
+                // rd and ci for stratum: a group of nobody has no risk, and its study is left out
+                included[i] = a + c > 0.0 && b + d > 0.0;
+                if (!included[i])
                 {
                     rkr[i] = Constant.MISSING;
                     rkrl[i] = Constant.MISSING;
                     rkru[i] = Constant.MISSING;
+                    wll[i] = Constant.MISSING;
+                    wul[i] = Constant.MISSING;
                     lerr[i] = true;
                     uerr[i] = true;
+                    cced[i] = false;
+                    rkw[i] = 0.0;
+                    dsw[i] = 0.0;
+                    continue;
                 }
-                else
+                realk++;
+                rkr[i] = a / (a + c) - b / (b + d);
+                if (host.Preferences.MetaExact)
                 {
-                    rkr[i] = a / (a + c) - b / (b + d);
-                    if (host.Preferences.MetaExact)
-                    {
-                        double r1 = a;
-                        double n1 = a + c;
-                        double r2 = b;
-                        double n2 = b + d;
-                        MathDbl.uppci(Convert.ToInt32(r1), Convert.ToInt32(n1), Convert.ToInt32(r2), Convert.ToInt32(n2), out rkrl[i], out rkru[i], cit, 100.0 * cco);
-                    }
+                    double r1 = a;
+                    double n1 = a + c;
+                    double r2 = b;
+                    double n2 = b + d;
+                    MathDbl.uppci(Convert.ToInt32(r1), Convert.ToInt32(n1), Convert.ToInt32(r2), Convert.ToInt32(n2), out rkrl[i], out rkru[i], cit, 100.0 * cco);
                 }
-                //  rd across strata
-                if (n <= 0)
-                    throw new InvalidDataException();
 
-                // standard weights - do this before continuity correction
-                double nmn = (a + c) * (b + d) / n;
-                rkw[i] = nmn;
-                mhn += (a * (b + d) / n - b * (a + c) / n);
-                mhd += nmn;
                 if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
                 {
                     ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
@@ -1670,45 +1681,57 @@ namespace StatsDirect.Builtins
                 {
                     cced[i] = false;
                 }
-                //  Greenland-Robins pooled risk difference
-                double lk = (a * c * Math.Pow(b + d, 3.0) + b * d * Math.Pow(a + c, 3.0)) / ((a + c) * (b + d) * Math.Pow(n, 2.0));
-                sumlk += lk;
-                // inverse variance weights
-                // rkw(i) = 1# / vark
+                // the variance of the risk difference of the study, and the limits that go with it
+                vark[i] = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
+                double se = Math.Sqrt(vark[i]);
+                wll[i] = rkr[i] - cit * se;
+                wul[i] = rkr[i] + cit * se;
                 if (!host.Preferences.MetaExact)
                 {
-                    double vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
-                    double se = Math.Sqrt(vark);
-                    rkrl[i] = rkr[i] - cit * se;
-                    rkru[i] = rkr[i] + cit * se;
+                    rkrl[i] = wll[i];
+                    rkru[i] = wul[i];
                 }
                 lerr[i] = rkrl[i] == Constant.MISSING;
                 uerr[i] = rkru[i] == Constant.MISSING;
+
+                if (raw)
+                {
+                    a = o[i, 1];
+                    b = o[i, 2];
+                    c = o[i, 3];
+                    d = o[i, 4];
+                    n = a + b + c + d;
+                }
+                //  rd across strata: the weights of Mantel and Haenszel
+                double nmn = (a + c) * (b + d) / n;
+                rkw[i] = nmn;
+                mhn += rkr[i] * nmn;
+                mhd += nmn;
+                //  Greenland-Robins pooled risk difference
+                double lk = (a * c * Math.Pow(b + d, 3.0) + b * d * Math.Pow(a + c, 3.0)) / ((a + c) * (b + d) * Math.Pow(n, 2.0));
+                sumlk += lk;
             }
+            if (realk == 0)
+                throw new TemplateOperationCancelledException("No study has subjects in both groups: there is nothing to pool.", "Risk difference meta-analysis");
+
             rmh = mhn / mhd;
             double serd = Math.Sqrt(sumlk / Math.Pow(mhd, 2.0));
             ll = rmh - serd * cit;
             ul = rmh + serd * cit;
             if (ll > ul)
                 Utilities.Utilities.Swap(ref ll, ref ul);
-            x2Rmh = Math.Pow(rmh / serd, 2.0);
+            // without an event, or without a non-event, in any study the counts as they are give the pooled difference no variance
+            x2Rmh = serd > 0.0 ? Math.Pow(rmh / serd, 2.0) : Constant.MISSING;
             // Q (combinability)
             qc = 0.0;
             double sumwt = 0.0;
             double sumsqwt = 0.0;
             for (int i = 1; i <= k; i++)
             {
-                double a = o[i, 1];
-                double b = o[i, 2];
-                double c = o[i, 3];
-                double d = o[i, 4];
-                // nmn = ( a + C ) * ( b + D ) / N; 
-                double rkrs = a / (a + c) - b / (b + d);
-                if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                double vark = a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
-                double wt = 1.0 / vark;
-                qc += wt * Math.Pow(rkrs - rmh, 2.0);
+                if (!included[i])
+                    continue;
+                double wt = 1.0 / vark[i];
+                qc += wt * Math.Pow(rkr[i] - rmh, 2.0);
                 sumwt += wt;
                 sumsqwt += wt * wt;
             }
@@ -1719,7 +1742,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                tausq = (qc - (k - 1.0)) / (sumwt - sumsqwt / sumwt);
+                tausq = (qc - (realk - 1.0)) / (sumwt - sumsqwt / sumwt);
             }
             if (tausq < 0.0)
             {
@@ -1727,22 +1750,13 @@ namespace StatsDirect.Builtins
             }
             double wrd = 0.0;
             sumwt = 0.0;
-            // sumsqwt = 0.0; 
             for (int i = 1; i <= k; i++)
             {
-                double a = o[i, 1];
-                double b = o[i, 2];
-                double c = o[i, 3];
-                double d = o[i, 4];
-                // nmn = ( ( a + C ) * ( b + D ) ) / N; 
-                double rkrs = a / (a + c) - b / (b + d);
-                if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
-                    ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
-                double vark = a * c / Math.Pow(a + c, 3) + b * d / Math.Pow(b + d, 3);
-                double wt = 1.0 / vark;
-                double weight = 1.0 / (tausq + 1.0 / wt);
+                if (!included[i])
+                    continue;
+                double weight = 1.0 / (tausq + vark[i]);
                 dsw[i] = weight;
-                wrd += rkrs * weight;
+                wrd += rkr[i] * weight;
                 sumwt += weight;
             }
             dsrd = wrd / sumwt;
