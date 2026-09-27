@@ -875,14 +875,15 @@ namespace StatsDirect.Builtins
             {
                 case 3:
                     DataFrame weights = parameters["weights"].AsDataFrame;
+                    // column i of the table of weights holds the weights of column i of the table of ratings, a row to a row
                     for (int i = 0; i < weights.VariableCount; i++)
                     {
                         DoubleVariable v = (DoubleVariable) weights.Variables[i];
                         for (int j = 0; j < v.Length; j++)
                         {
-                            w[i, j] = v.Data[j];
-                            if (w[i, j] == Constant.MISSING)
-                                w[i, j] = 0.0;
+                            w[j, i] = v.Data[j];
+                            if (w[j, i] == Constant.MISSING)
+                                w[j, i] = 0.0;
                         }
                     }
                     break;

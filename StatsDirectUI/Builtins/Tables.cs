@@ -465,8 +465,9 @@ namespace StatsDirect.Builtins
             {
                 for (int j = 0; j < g; j++)
                 {
-                    pdotj[i] += o[i, j];
-                    pidot[j] += o[i, j];
+                    // pidot[i] the total of row i (the first rater's category i), pdotj[j] the total of column j (the second rater's)
+                    pidot[i] += o[i, j];
+                    pdotj[j] += o[i, j];
                     gt += o[i, j];
                 }
             }
@@ -506,7 +507,7 @@ namespace StatsDirect.Builtins
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
                     if (i != j)
-                        sumpb += o[i, j] / gt * Math.Pow(pdotj[j] + pidot[i], 2.0);
+                        sumpb += o[i, j] / gt * Math.Pow(pdotj[i] + pidot[j], 2.0);
             sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
             sekci = Math.Sqrt(sekci);
             kcil = k - cit * sekci;
@@ -560,7 +561,7 @@ namespace StatsDirect.Builtins
             double sumpw = 0.0;
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
-                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
+                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[i] + wjbar[j]) * (1.0 - pow), 2.0);
             sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
             sekwci = Math.Sqrt(sekwci);
             kwcil = kw - cit * sekwci;
@@ -615,8 +616,9 @@ namespace StatsDirect.Builtins
             {
                 for (int j = 0; j < g; j++)
                 {
-                    pdotj[i] += o[i, j];
-                    pidot[j] += o[i, j];
+                    // pidot[i] the total of row i (the first rater's category i), pdotj[j] the total of column j (the second rater's)
+                    pidot[i] += o[i, j];
+                    pdotj[j] += o[i, j];
                     gt += o[i, j];
                 }
             }
@@ -648,7 +650,7 @@ namespace StatsDirect.Builtins
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
                     if (i != j)
-                        sumpb += o[i, j] / gt * Math.Pow(pdotj[j] + pidot[i], 2.0);
+                        sumpb += o[i, j] / gt * Math.Pow(pdotj[i] + pidot[j], 2.0);
             sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
             sekci = Math.Sqrt(sekci);
             kcil = k - cit * sekci;
@@ -690,7 +692,7 @@ namespace StatsDirect.Builtins
             double sumpw = 0.0;
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
-                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[j] + wjbar[i]) * (1.0 - pow), 2.0);
+                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[i] + wjbar[j]) * (1.0 - pow), 2.0);
             sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
             sekwci = Math.Sqrt(sekwci);
             kwcil = kw - cit * sekwci;
@@ -867,14 +869,15 @@ namespace StatsDirect.Builtins
                 if (wtype == 3)
                 {
                     DataFrame weights = parameters["weights"].AsDataFrame;
+                    // column i of the table of weights holds the weights of column i of the table of ratings, a row to a row
                     for (int i = 0; i < weights.VariableCount; i++)
                     {
                         DoubleVariable v = (DoubleVariable)weights.Variables[i];
                         for (int j = 0; j < v.Length; j++)
                         {
-                            w[i, j] = v.Data[j];
-                            if (w[i, j] == Constant.MISSING)
-                                w[i, j] = 0.0;
+                            w[j, i] = v.Data[j];
+                            if (w[j, i] == Constant.MISSING)
+                                w[j, i] = 0.0;
                         }
                     }
                 }
@@ -1328,14 +1331,15 @@ namespace StatsDirect.Builtins
             if (wtype == 3)
             {
                 DataFrame weights = parameters["weights"].AsDataFrame;
+                // column i of the table of weights holds the weights of column i of the table of ratings, a row to a row
                 for (int i = 0; i < weights.VariableCount; i++)
                 {
                     DoubleVariable v = (DoubleVariable)weights.Variables[i];
                     for (int j = 0; j < v.Length; j++)
                     {
-                        w[i, j] = v.Data[j];
-                        if (w[i, j] == Constant.MISSING)
-                            w[i, j] = 0.0;
+                        w[j, i] = v.Data[j];
+                        if (w[j, i] == Constant.MISSING)
+                            w[j, i] = 0.0;
                     }
                 }
             }
