@@ -468,6 +468,28 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
+        /// The variance of a quantity that has the value quantity[i, j] for a subject in row i and column j of a table, the cells
+        /// counting in the proportions share[i, j]: the sum over the cells of the share times the square of what the quantity differs
+        /// from its mean by.  The mean of the squares less the square of the mean is the same thing, but when the variance is nothing
+        /// rounding can leave that difference a little below nothing, and its square root is then not a number.
+        /// </summary>
+        /// <param name="quantity">The value of the quantity in each cell.</param>
+        /// <param name="share">The proportion of the subjects who are in each cell.</param>
+        /// <param name="g">The number of rows, and of columns.</param>
+        private static double CentredVariance(double[,] quantity, double[,] share, int g)
+        {
+            double mean = 0.0;
+            for (int i = 0; i < g; i++)
+                for (int j = 0; j < g; j++)
+                    mean += share[i, j] * quantity[i, j];
+            double variance = 0.0;
+            for (int i = 0; i < g; i++)
+                for (int j = 0; j < g; j++)
+                    variance += share[i, j] * (quantity[i, j] - mean) * (quantity[i, j] - mean);
+            return variance;
+        }
+
+        /// <summary>
         /// Categorical agreement statistics for the case of two raters: Cohen's kappa, weighted kappa, Scott's Pi and Gwett's AC1
         /// </summary>
         /// <param name="o">(0..g-1, 0..g-1)-based array of values</param>
@@ -529,7 +551,6 @@ namespace StatsDirect.Builtins
             po = 0.0;
             pe = 0.0;
             double px = 0.0;
-            double pog = 0.0;
             double peg = 0.0;
             for (int i = 0; i < g; i++)
             {
@@ -539,7 +560,6 @@ namespace StatsDirect.Builtins
                 pe += pdotj[i] * pidot[i];
                 px += pdotj[i] * pidot[i] * (pdotj[i] + pidot[i]);
                 double pik = (pdotj[i] + pidot[i]) / 2.0;
-                pog += o[i, i] / gt * (1.0 - pik);
                 peg += pik * (1.0 - pik);
             }
             pegama = peg / (g - 1.0);
@@ -553,17 +573,20 @@ namespace StatsDirect.Builtins
             // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
             // the variance is (A + B - C) / [n (1 - pe)^4], where A is the sum over the diagonal of
             // p ii [(1 - pe) - (p i. + p .i) (1 - po)]^2, B is (1 - po)^2 times the sum off the diagonal of p ij (p .i + p j.)^2, and
-            // C is (po pe - 2 pe + po)^2
-            double sumpa = 0.0;
-            double sumpb = 0.0;
+            // C is (po pe - 2 pe + po)^2.  A + B is the mean of the squares, and C the square of the mean, of a quantity that for a
+            // subject in row i and column j is (1 - pe) [if i = j] - (p .i + p j.) (1 - po): so A + B - C is its variance, which is
+            // taken here about the mean (see CentredVariance), and is nothing when the raters agree on every subject
+            double[,] share = new double[g, g];
+            double[,] quantity = new double[g, g];
             for (int i = 0; i < g; i++)
-                sumpa += o[i, i] / gt * Math.Pow(1.0 - pe - (pdotj[i] + pidot[i]) * (1.0 - po), 2.0);
-            for (int i = 0; i < g; i++)
+            {
                 for (int j = 0; j < g; j++)
-                    if (i != j)
-                        sumpb += o[i, j] / gt * Math.Pow(pdotj[i] + pidot[j], 2.0);
-            sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
-            sekci = Math.Sqrt(sekci);
+                {
+                    share[i, j] = o[i, j] / gt;
+                    quantity[i, j] = (i == j ? 1.0 - pe : 0.0) - (pdotj[i] + pidot[j]) * (1.0 - po);
+                }
+            }
+            sekci = Math.Sqrt(CentredVariance(quantity, share, g) / (gt * Math.Pow(1.0 - pe, 4.0)));
             kcil = k - cit * sekci;
             if (kcil < -1.0)
                 kcil = -1.0;
@@ -576,7 +599,6 @@ namespace StatsDirect.Builtins
             // weight of 1 on the diagonal and of less away from it gives a part of the credit to ratings that are near each other
             pow = 0.0;
             pew = 0.0;
-            double soma = 0.0;
             for (int i = 0; i < g; i++)
             {
                 for (int j = 0; j < g; j++)
@@ -584,7 +606,6 @@ namespace StatsDirect.Builtins
                     double pkl = o[i, j] / gt;
                     pow += w[i, j] * pkl;
                     pew += w[i, j] * pidot[i] * pdotj[j];
-                    soma += pkl * Math.Pow(1.0 - ((pdotj[i] + pidot[i]) / 2.0 + (pdotj[j] + pidot[j]) / 2.0) / 2.0, 2.0);
                 }
             }
             kw = (pow - pew) / (1.0 - pew);
@@ -592,9 +613,14 @@ namespace StatsDirect.Builtins
             // the variance of AC1, with pe for its agreement by chance and pi i for pik above, is (1 - f) / [n (1 - pe)^2] times
             //   po (1 - po) - 4 (1 - AC1) [sum of p ii (1 - pi i) / (g - 1) - po pe]
             //   + 4 (1 - AC1)^2 [sum of p ij (1 - (pi i + pi j) / 2)^2 / (g - 1)^2 - pe^2]
+            // which is the variance of a quantity that for a subject in row i and column j is
+            // 1 [if i = j] - 2 (1 - AC1) (1 - (pi i + pi j) / 2) / (g - 1).  It is taken about the mean, as for kappa
             double f = 0.0;
             // set f to gt/population size if population size is known, otherwise assume an infinite inference population thus f = 0
-            double vgama = (1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0)) * (po * (1.0 - po) - 4.0 * (1.0 - gama) * (1.0 / (g - 1.0) * pog - po * pegama) + 4.0 * Math.Pow(1.0 - gama, 2.0) * (1.0 / Math.Pow(g - 1.0, 2.0) * soma - Math.Pow(pegama, 2.0)));
+            for (int i = 0; i < g; i++)
+                for (int j = 0; j < g; j++)
+                    quantity[i, j] = (i == j ? 1.0 : 0.0) - 2.0 * (1.0 - gama) * (1.0 - ((pdotj[i] + pidot[i]) / 2.0 + (pdotj[j] + pidot[j]) / 2.0) / 2.0) / (g - 1.0);
+            double vgama = (1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0)) * CentredVariance(quantity, share, g);
             segama = Math.Sqrt(vgama);
             gamacil = gama - cit * segama;
             gamaciu = gama + cit * segama;
@@ -622,13 +648,12 @@ namespace StatsDirect.Builtins
             // pew^2, over (1 - pew) root n)
             // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
             // the variance is the sum of p ij [w ij (1 - pew) - (wibar i + wjbar j) (1 - pow)]^2 less
-            // (pow pew - 2 pew + pow)^2, over n (1 - pew)^4
-            double sumpw = 0.0;
+            // (pow pew - 2 pew + pow)^2, over n (1 - pew)^4: the mean of the squares of the quantity in the square brackets less the
+            // square of its mean, which is its variance, taken here about the mean as for kappa
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
-                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[i] + wjbar[j]) * (1.0 - pow), 2.0);
-            sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
-            sekwci = Math.Sqrt(sekwci);
+                    quantity[i, j] = w[i, j] * (1.0 - pew) - (wibar[i] + wjbar[j]) * (1.0 - pow);
+            sekwci = Math.Sqrt(CentredVariance(quantity, share, g) / (gt * Math.Pow(1.0 - pew, 4.0)));
             kwcil = kw - cit * sekwci;
             if (kwcil < -1.0) kwcil = -1.0;
             kwciu = kw + cit * sekwci;
@@ -714,17 +739,20 @@ namespace StatsDirect.Builtins
             // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
             // the variance is (A + B - C) / [n (1 - pe)^4], where A is the sum over the diagonal of
             // p ii [(1 - pe) - (p i. + p .i) (1 - po)]^2, B is (1 - po)^2 times the sum off the diagonal of p ij (p .i + p j.)^2, and
-            // C is (po pe - 2 pe + po)^2
-            double sumpa = 0.0;
-            double sumpb = 0.0;
+            // C is (po pe - 2 pe + po)^2.  A + B is the mean of the squares, and C the square of the mean, of a quantity that for a
+            // subject in row i and column j is (1 - pe) [if i = j] - (p .i + p j.) (1 - po): so A + B - C is its variance, which is
+            // taken here about the mean (see CentredVariance), and is nothing when the raters agree on every subject
+            double[,] share = new double[g, g];
+            double[,] quantity = new double[g, g];
             for (int i = 0; i < g; i++)
-                sumpa += o[i, i] / gt * Math.Pow(1.0 - pe - (pdotj[i] + pidot[i]) * (1.0 - po), 2.0);
-            for (int i = 0; i < g; i++)
+            {
                 for (int j = 0; j < g; j++)
-                    if (i != j)
-                        sumpb += o[i, j] / gt * Math.Pow(pdotj[i] + pidot[j], 2.0);
-            sekci = (sumpa + Math.Pow(1.0 - po, 2.0) * sumpb - Math.Pow(po * pe - 2.0 * pe + po, 2.0)) / (gt * Math.Pow(1.0 - pe, 4.0));
-            sekci = Math.Sqrt(sekci);
+                {
+                    share[i, j] = o[i, j] / gt;
+                    quantity[i, j] = (i == j ? 1.0 - pe : 0.0) - (pdotj[i] + pidot[j]) * (1.0 - po);
+                }
+            }
+            sekci = Math.Sqrt(CentredVariance(quantity, share, g) / (gt * Math.Pow(1.0 - pe, 4.0)));
             kcil = k - cit * sekci;
             if (kcil < -1.0) kcil = -1.0;
             kciu = k + cit * sekci;
@@ -768,13 +796,12 @@ namespace StatsDirect.Builtins
             // pew^2, over (1 - pew) root n)
             // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
             // the variance is the sum of p ij [w ij (1 - pew) - (wibar i + wjbar j) (1 - pow)]^2 less
-            // (pow pew - 2 pew + pow)^2, over n (1 - pew)^4
-            double sumpw = 0.0;
+            // (pow pew - 2 pew + pow)^2, over n (1 - pew)^4: the mean of the squares of the quantity in the square brackets less the
+            // square of its mean, which is its variance, taken here about the mean as for kappa
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
-                    sumpw += o[i, j] / gt * Math.Pow(w[i, j] * (1.0 - pew) - (wibar[i] + wjbar[j]) * (1.0 - pow), 2.0);
-            sekwci = (sumpw - Math.Pow(pow * pew - 2.0 * pew + pow, 2.0)) / (gt * Math.Pow(1.0 - pew, 4.0));
-            sekwci = Math.Sqrt(sekwci);
+                    quantity[i, j] = w[i, j] * (1.0 - pew) - (wibar[i] + wjbar[j]) * (1.0 - pow);
+            sekwci = Math.Sqrt(CentredVariance(quantity, share, g) / (gt * Math.Pow(1.0 - pew, 4.0)));
             kwcil = kw - cit * sekwci;
             if (kwcil < -1.0) kwcil = -1.0;
             kwciu = kw + cit * sekwci;
