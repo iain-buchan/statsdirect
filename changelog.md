@@ -2,6 +2,14 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Kaplan-Meier: a record with a blank cell is left out, and the report says how many were. A blank time or a blank group had stopped the analysis ("Failed to compare two elements in the array", "Value was either too large or too small for an Int32"), and a record with a blank death/event code had been counted as censored. With a blank in the first cell of the group column each group had been given the label of another; the groups keep their own labels, in the report and in the keys of the plots
+- Kaplan-Meier: the median survival time was given as the next time of death when the survival proportion at the median is exactly a half, as it is without censoring when half of an even number of subjects have died, if rounding had left the proportion a little above a half. A proportion within 1 part in a million million of a half is taken as a half
+- Log-rank and Wilcoxon: a record with a blank death/event code had been counted as censored. It is left out, as a record with a blank time, group or stratum is, and the report says how many records were left out
+- Abridged life table: a blank population had been taken as a number, which gave its interval a death rate of zero and a table that was wrong without any sign of it; a blank length, a population of zero, an open interval without deaths, or columns of the wrong lengths had stopped the analysis ("Value was either too large or too small for an Int32", "Index was outside the bounds of the array"). Each is refused with a message that says what is wrong. Follow-up life table: numbers of deaths or withdrawals below zero are refused, and an interval that nobody is left to enter leaves the survivors as they were, where it had given survivors that were not a number
+
 ##[v5.0.11] 2026-09-27
 
 Version 5.0.11 follows a check of every function on the Agreement menu against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked: agreement of continuous measurements, kappa and the other measures of the agreement of categories, and the universal agreement measure. It also gives the warning of Cox regression, that a coefficient may be infinite, when several predictors separate the subjects between them.
