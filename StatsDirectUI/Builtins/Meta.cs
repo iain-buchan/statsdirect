@@ -1469,6 +1469,8 @@ namespace StatsDirect.Builtins
                     {
                         cced[i] = true;
                         ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+                        // the total is that of the corrected cells
+                        n = a + b + c + d;
                     }
                     else
                     {
