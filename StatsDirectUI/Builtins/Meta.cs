@@ -1977,7 +1977,31 @@ namespace StatsDirect.Builtins
             Transformation xform = Transformation.None;
             if (mode != MetaIncidenceRateMode.Difference)
                 xform = Transformation.Log;
-            bool biasReported = Metabias(host, eggerParameters, rkr, rkrl, rkru, k, ref cco, xform);
+            // The bias indicators take the standard error of each study from limits that are the estimate plus and minus a multiple of
+            // it: those of the rate difference are such limits; for the rate ratio, whose limits in the report are exact, they are
+            // made here from the standard error of its logarithm, the root of 1 / a + 1 / b
+            double[] wll = rkrl;
+            double[] wul = rkru;
+            if (mode == MetaIncidenceRateMode.Ratio)
+            {
+                wll = new double[k + 1];
+                wul = new double[k + 1];
+                for (int i = 1; i <= k; i++)
+                {
+                    if (rkr[i] == Constant.MISSING || rkr[i] <= 0.0)
+                    {
+                        wll[i] = Constant.MISSING;
+                        wul[i] = Constant.MISSING;
+                    }
+                    else
+                    {
+                        double se = Math.Sqrt(1.0 / a[i] + 1.0 / b[i]);
+                        wll[i] = Math.Exp(Math.Log(rkr[i]) - cit * se);
+                        wul[i] = Math.Exp(Math.Log(rkr[i]) + cit * se);
+                    }
+                }
+            }
+            bool biasReported = Metabias(host, eggerParameters, rkr, wll, wul, k, ref cco, xform);
             FewStrata(outputParameters, eggerList, biasReported);
 
             double[] ptt = new double[k + 1];
@@ -2587,8 +2611,6 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= k; i++)
             {
                 // ird and ci for stratum
-                double pt = pt1[i] + pt2[i];
-                double m = a[i] + b[i];
                 if (a[i] + b[i] <= 0.0 || pt1[i] <= 0.0 || pt2[i] <= 0.0)
                 {
                     rkr[i] = Constant.MISSING;
@@ -2604,28 +2626,12 @@ namespace StatsDirect.Builtins
                     double ir1 = a[i] / pt1[i];
                     double ir2 = b[i] / pt2[i];
                     double ird = ir1 - ir2;
-                    double xmh = (a[i] - m * pt1[i] / pt) * (a[i] - m * pt1[i] / pt) / (m * pt1[i] * pt2[i] / (pt * pt));
-                    if (xmh == 0)
-                    {
-                        rkrl[i] = Constant.MISSING;
-                        lerr[i] = true;
-                    }
-                    else
-                    {
-                        rkrl[i] = ird - cit * Math.Sqrt(ird * ird / xmh);
-                    }
-                    if (xmh == 0)
-                    {
-                        rkru[i] = Constant.MISSING;
-                        uerr[i] = true;
-                    }
-                    else
-                    {
-                        rkru[i] = ird + cit * Math.Sqrt(ird * ird / xmh);
-                    }
+                    // the limits of the study are from the variance that its weight is made from
+                    double vark = a[i] / (pt1[i] * pt1[i]) + b[i] / (pt2[i] * pt2[i]);
+                    rkrl[i] = ird - cit * Math.Sqrt(vark);
+                    rkru[i] = ird + cit * Math.Sqrt(vark);
                     rkr[i] = ird;
                     //  pooled incidence risk difference
-                    double vark = a[i] / (pt1[i] * pt1[i]) + b[i] / (pt2[i] * pt2[i]);
                     rkw[i] = 1.0 / vark;
                     sumwt += rkw[i];
                     sumwi += rkw[i] * ird;
