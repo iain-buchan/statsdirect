@@ -2471,6 +2471,21 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>The deviance residual of a record, from whether it had the event (1) or was censored (0) and from its Cox-Snell residual.</summary>
+        /// <remarks>
+        /// With rm the martingale residual, which is the event less the Cox-Snell residual rc, the deviance residual is
+        /// sign(rm) sqrt(-2 (rm + event ln(rc))).  The term with the logarithm is nothing for a censored record, whose residual is therefore
+        /// -sqrt(2 rc), and 0 if its time is before the first event.
+        /// </remarks>
+        private static double DevianceResidual(int censor, double rc)
+        {
+            if (double.IsNaN(rc))
+                return Constant.MISSING;
+            double rm = censor - rc;
+            double logTerm = censor == 0 ? 0.0 : censor * Math.Log(rc);
+            return Math.Sign(rm) * Math.Sqrt(Math.Max(0.0, -2.0 * (rm + logTerm)));
+        }
+
         public static StepOutput RptCoxResiduals(ParameterBag parameters)
         {
             double[,] ARR2 = (double[,])parameters["ARR2"].AsObject;
@@ -2499,23 +2514,17 @@ namespace StatsDirect.Builtins
 
             BaselineSurvivalAndHazard(z, iobs);
 
-            int ictr = 0;
+            // the deviance residual of each record, to be plotted against its time and against the rank of its time
             double[] xp = new double[iobs];
             double[] yp = new double[iobs];
             double[] xr = new double[iobs];
             for (int i = 1; i <= iobs; i++)
             {
-                if (z[i].S != 0.0)
-                {
-                    double rc = z[i].Exb * z[i].H;
-                    double rm = z[i].Censor - rc;
-                    double rd = z[i].Censor - rm <= 0 ? Constant.MISSING : Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
-                    yp[ictr++] = rd;
-                }
+                yp[i - 1] = DevianceResidual(z[i].Censor, z[i].Exb * z[i].H);
                 xp[i - 1] = z[i].Time;
             }
 
-            ExFortran.Rank(xp, xr, 0, ictr, 1, out double _);
+            ExFortran.Rank(xp, xr, 0, iobs, 1, out double _);
             ParameterBag outputParameters = new();
             IList<ParameterBag> chartList = new List<ParameterBag>();
             outputParameters.AddOutput("*chart", chartList);
@@ -2557,7 +2566,7 @@ namespace StatsDirect.Builtins
                     coxOakesResidualVariable.SetData(recordOf[i - 1], ARR2[i, 3]);
                     double rc = z[i].Exb * z[i].H;
                     double rm = z[i].Censor - rc;
-                    double rd = Math.Sign(rm) * Math.Sqrt(-2.0 * (rm + z[i].Censor * Math.Log(z[i].Censor - rm)));
+                    double rd = DevianceResidual(z[i].Censor, rc);
                     coxSnellResidualVariable.SetData(recordOf[i - 1], rc);
                     martingaleResidualVariable.SetData(recordOf[i - 1], rm);
                     devianceResidualVariable.SetData(recordOf[i - 1], rd);
