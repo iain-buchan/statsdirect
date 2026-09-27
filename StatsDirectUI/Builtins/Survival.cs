@@ -76,8 +76,8 @@ namespace StatsDirect.Builtins
         /// Kaplan-Meier (product-limit) estimates of survival, for one group of subjects or for each of several.  A record has a time, a
         /// code (0 censored, 1 dead; a code above 1 is that number of deaths at the time) and, if there are groups, a group.  A record
         /// with a blank cell is left out.  For each group the report has the table of the times (made by Plprep and Plest), the median
-        /// survival time with two confidence intervals, and the mean survival time with its confidence interval.  The estimates are passed
-        /// on for the plots, and can be saved to the worksheet with a row for each subject (Plsave).
+        /// survival time (see TimeOfHalf) with two confidence intervals, and the mean survival time with its confidence interval.  The
+        /// estimates are passed on for the plots, and can be saved to the worksheet with a row for each subject (Plsave).
         /// </summary>
         /// <param name="host">The preferences for the display of numbers.</param>
         /// <param name="parameters">"times", "deaths" (the codes) and, if there are groups, "groups"; "gamma", the confidence level;
@@ -292,10 +292,11 @@ namespace StatsDirect.Builtins
                 //  median survival time
                 //  Hosmer & Lemeshow
                 //  Andersen PK et al.. Statistical models based on counting processes. New York: Springer-Verlag 1993.
-                //  The median is the first time at which S is a half or less (imed).  Its variance, for the first of the two
-                //  intervals, is the variance of S at the median over the square of the slope of the survival curve there; the slope is
-                //  taken between the last time at which S is a half plus a margin or more (iup) and the first time at which it is a
-                //  half less the margin or less (ilp).  The margin (area) is 1 less the confidence level.
+                //  The median is the first time at which S is a half or less (imed); where S is exactly a half from that time to the
+                //  next time of death, it is the middle of the two times.  Its variance, for the first of the two intervals, is the
+                //  variance of S at the median over the square of the slope of the survival curve there; the slope is taken between
+                //  the last time at which S is a half plus a margin or more (iup) and the first time at which it is a half less the
+                //  margin or less (ilp).  The margin (area) is 1 less the confidence level.
                 const int biglong = 999999;
                 int imed = biglong;
                 int ilp = biglong;
@@ -303,11 +304,11 @@ namespace StatsDirect.Builtins
                 double area = 1.0 - gamma;
                 const double p = 0.5;
                 // S is a product of fractions: where it should be exactly a half, rounding can leave it a little to either side
-                const double fuzz = 1.0E-12;
+                const double fuzz = HalfTolerance;
                 int i;
                 for (i = 1; i <= cnx[lap]; i++)
                 {
-                    if (s[i, lap] <= p + fuzz && i < imed)
+                    if (s[i, lap] < p + fuzz && i < imed)
                         imed = i;
                     if (s[i, lap] <= p - area + fuzz && i < ilp)
                         ilp = i;
@@ -318,6 +319,20 @@ namespace StatsDirect.Builtins
                     imed = 0;
                 if (ilp == biglong)
                     ilp = 0;
+
+                // the times of the group, S, and the confidence limits of S: S less and plus the normal deviate times its standard error
+                double[] times = new double[cnx[lap] + 1];
+                double[] curve = new double[cnx[lap] + 1];
+                double[] lowerLimit = new double[cnx[lap] + 1];
+                double[] upperLimit = new double[cnx[lap] + 1];
+                for (i = 1; i <= cnx[lap]; i++)
+                {
+                    times[i] = stime[i, lap];
+                    curve[i] = s[i, lap];
+                    lowerLimit[i] = vs[i] == Constant.MISSING ? Constant.MISSING : s[i, lap] - cit * Math.Sqrt(vs[i]);
+                    upperLimit[i] = vs[i] == Constant.MISSING ? Constant.MISSING : s[i, lap] + cit * Math.Sqrt(vs[i]);
+                }
+                double median = TimeOfHalf(curve, times, cnx[lap]);
 
                 double ul;
                 double ll;
@@ -332,8 +347,8 @@ namespace StatsDirect.Builtins
                     double vartp = vs[imed] / (ftp * ftp);
                     if (vartp >= 0)
                     {
-                        ll = stime[imed, lap] - cit * Math.Sqrt(vartp);
-                        ul = stime[imed, lap] + cit * Math.Sqrt(vartp);
+                        ll = median - cit * Math.Sqrt(vartp);
+                        ul = median + cit * Math.Sqrt(vartp);
                     }
                     else
                     {
@@ -341,42 +356,22 @@ namespace StatsDirect.Builtins
                         ul = Constant.MISSING;
                     }
                 }
-                groupParameters.AddOutput("med", imed != 0 ? host.RoundU(stime[imed, lap]) : "can not estimate");
+                groupParameters.AddOutput("med", imed != 0 ? host.RoundU(median) : "can not estimate");
                 groupParameters.AddOutput("pc", gamma * 100);
                 groupParameters.AddOutput("all", ll);
                 groupParameters.AddOutput("aul", ul);
                 //  Hosmer & Lemeshow
                 //  Brookmeyer R, Crowley JJ. A confidence interval for the median survival time. Biometrics 1982;38:29-41.
-                //  The times at which S differs from a half by no more than the normal deviate times its standard error: the first of
-                //  them is the lower limit and the last the upper.  A limit is infinite when there is a median but no such time.
-                imed = 0;
-                int iucl = 0;
-                int ilcl = biglong;
-                for (i = 1; i <= cnx[lap]; i++)
-                {
-                    if (s[i, lap] <= 0.5 + fuzz && imed == 0)
-                        imed = i;
-                    if (vs[i] != Constant.MISSING && vs[i] > 0.0)
-                    {
-                        if (Math.Abs(s[i, lap] - 0.5) / Math.Sqrt(vs[i]) <= cit)
-                        {
-                            if (i < ilcl)
-                                ilcl = i;
-                            if (i > iucl)
-                                iucl = i;
-                        }
-                    }
-                }
-                if (ilcl == biglong)
-                    ilcl = 0;
-                if (ilcl != 0)
-                    groupParameters.AddOutput("bll", stime[ilcl, lap]);
-                else
-                    groupParameters.AddOutput("bll", imed == 0 ? Constant.MISSING : double.NegativeInfinity);
-                if (iucl != 0 & iucl <= cnx[lap] && imed > 0)
-                    groupParameters.AddOutput("bul", stime[iucl, lap]);
-                else
-                    groupParameters.AddOutput("bul", imed == 0 ? Constant.MISSING : double.PositiveInfinity);
+                //  The limits of the median are the times at which the confidence limits of S come down to a half: the lower, the first
+                //  time at which the lower limit of S is a half or less; the upper, the first time at which the upper limit of S is a
+                //  half or less.  Between them are the times at which S differs from a half by no more than the normal deviate times
+                //  its standard error, and the interval runs up to the time of death next after the last of those.  The upper limit of
+                //  S has no value once S is 0, and so is not a half or less there.  A limit that is not reached is printed as infinite.
+                double bll = TimeOfHalf(lowerLimit, times, cnx[lap]);
+                double bul = TimeOfHalf(upperLimit, times, cnx[lap]);
+                bool reached = imed != 0 || bll != Constant.MISSING;
+                groupParameters.AddOutput("bll", bll != Constant.MISSING ? bll : reached ? double.NegativeInfinity : Constant.MISSING);
+                groupParameters.AddOutput("bul", bul != Constant.MISSING ? bul : reached ? double.PositiveInfinity : Constant.MISSING);
                 //  mean survival time
                 //  Hosmer & Lemeshow
                 //  Andersen PK et al.. Statistical models based on counting processes. New York: Springer-Verlag 1993.
@@ -467,6 +462,37 @@ namespace StatsDirect.Builtins
                 outputParameters.AddOutput("results", resultsFrame);
 
             return new StepOutput(outputParameters);
+        }
+
+        /// <summary>
+        /// How near a half a proportion must be to be taken as a half: the square root of 2 to the power -52, the least by which a
+        /// number can differ from 1.
+        /// </summary>
+        private const double HalfTolerance = 1.4901161193847656E-08;
+
+        /// <summary>
+        /// The first time at which a curve that comes down with time is a half or less.  If the curve is exactly a half at that time
+        /// and is lower at a later time, the result is the middle of the two times: the curve is a half all the way between them.
+        /// </summary>
+        /// <param name="curve">The height of the curve at each time, from element 1; a height without a value is passed over.</param>
+        /// <param name="times">The times, in order, from element 1.</param>
+        /// <param name="n">The number of times.</param>
+        /// <returns>The time, or the missing value if the curve is never a half or less.</returns>
+        private static double TimeOfHalf(double[] curve, double[] times, int n)
+        {
+            int first = 0;
+            for (int i = 1; i <= n && first == 0; i++)
+                if (curve[i] != Constant.MISSING && curve[i] < 0.5 + HalfTolerance)
+                    first = i;
+            if (first == 0)
+                return Constant.MISSING;
+            if (Math.Abs(curve[first] - 0.5) < HalfTolerance)
+            {
+                for (int i = first + 1; i <= n; i++)
+                    if (curve[i] != Constant.MISSING && curve[i] < curve[first])
+                        return (times[first] + times[i]) / 2.0;
+            }
+            return times[first];
         }
 
         /// <summary>
