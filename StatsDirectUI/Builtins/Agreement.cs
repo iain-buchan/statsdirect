@@ -83,7 +83,7 @@ namespace StatsDirect.Builtins
                 string[] groupNames = ratersVariable.SortedCategoryNames;
                 bool[] standardArray = (bool[])parameters["reference"].AsObject;
                 string referenceName = null;
-                for (int finder = 0; finder <= groupNames.Length; finder++)
+                for (int finder = 0; finder < groupNames.Length; finder++)
                 {
                     if (standardArray[finder])
                     {
@@ -959,7 +959,8 @@ namespace StatsDirect.Builtins
                     }
                 }
                 dz /= c0;
-                if (dz < dx)
+                //  a delta equal to the delta observed is counted: with perfect agreement the delta observed is nothing, and none is below it
+                if (dz <= dx)
                     mp += 1;
 
                 ctr += 1;

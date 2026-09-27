@@ -163,7 +163,8 @@ namespace StatsDirect.Numerics
 				minValue = tmp;
 			}
 
-			return (int)Math.Floor((maxValue-minValue+1)*genrand_real1() + minValue);
+			// genrand_real1 can be 1 itself, once in 2^32 draws, which would give maxValue + 1
+			return Math.Min( maxValue, (int)Math.Floor((maxValue-minValue+1)*genrand_real1() + minValue) );
 		}
 
 		/// <summary>
