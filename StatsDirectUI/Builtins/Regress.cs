@@ -3226,8 +3226,9 @@ namespace StatsDirect.Builtins
                     d = Constant.MISSING;
                     dc = Constant.MISSING;
                 }
-                yy1[i] = c;
-                yy2[i] = cbar;
+                // yy1 is plotted as Delta Beta, which is cbar, and yy2 as Delta Beta Std, which is c: see RptLogisticRegressionFit
+                yy1[i] = cbar;
+                yy2[i] = c;
                 yy3[i] = d;
                 yy4[i] = dc;
                 xx[i] = PP;
