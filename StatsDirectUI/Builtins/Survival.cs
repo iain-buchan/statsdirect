@@ -2687,20 +2687,19 @@ namespace StatsDirect.Builtins
                             double jprop = jrisk / risktot;
                             double expect = deadx * jprop;
                             esum[j2] = esum[j2] + expect;
-                            // The weight: 1 for the log-rank test.  For the Wilcoxon test, by Peto and Prentice the estimate of the
-                            // proportion surviving to just before the time (sv, the product over the earlier times of
-                            // (n - d + 1) / (n + 1)) times n / (n + 1); by Gehan and Breslow the number at risk, here over the number of
-                            // records plus 1, which makes no difference to the test; by Tarone and Ware the square root of the number
-                            // at risk.  n is the number at risk in all the groups and d the deaths at the time.  With one death at
-                            // the time the weight of Peto and Prentice is the estimate at the time itself; with several it is what the
-                            // first of them would have if they were taken one after another.
+                            // The weight: 1 for the log-rank test.  For the Wilcoxon test, by Peto and Prentice an estimate of the
+                            // proportion surviving the time: the product, over the times up to and with this one, of
+                            // (n - d + 1) / (n + 1), which is sv, the product over the earlier times, times the factor of this time;
+                            // by Gehan and Breslow the number at risk, here over the number of records plus 1, which makes no
+                            // difference to the test; by Tarone and Ware the square root of the number at risk.  n is the number at
+                            // risk in all the groups and d the deaths at the time.
                             double wt = 0;
                             if (test == 2)
                             {
                                 switch (wtMethod)
                                 {
                                     case 1:
-                                        wt = sv * risktot / (risktot + 1.0);
+                                        wt = sv * (risktot - deadx + 1.0) / (risktot + 1.0);
                                         break;
                                     case 2:
                                         wt = risktot / (ntx + 1);
