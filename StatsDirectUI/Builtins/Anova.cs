@@ -221,11 +221,12 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// Tie test for XAgreeKendall: the means and standard deviations compared are computed values,
-        /// so two values that agree to a relative tolerance of 1e-12 are treated as tied
+        /// so two values that agree to a relative tolerance of 1e-12 are treated as tied, as are two that differ by no more than
+        /// the tolerance given, which is for values whose rounding error is not in proportion to their own size
         /// </summary>
-        private static bool XAgreeTied(double a, double b)
+        private static bool XAgreeTied(double a, double b, double tolerance = 0.0)
         {
-            return a == b || Math.Abs(a - b) <= 1e-12 * Math.Max(Math.Abs(a), Math.Abs(b));
+            return a == b || Math.Abs(a - b) <= Math.Max(tolerance, 1e-12 * Math.Max(Math.Abs(a), Math.Abs(b)));
         }
 
         /// <summary>
@@ -234,11 +235,11 @@ namespace StatsDirect.Builtins
         /// <param name="v">tied value</param>
         /// <param name="tv">1-based list of tie group values already counted</param>
         /// <param name="tvn">number of values in tv</param>
-        private static bool XAgreeNewTie(double v, double[] tv, ref int tvn)
+        private static bool XAgreeNewTie(double v, double[] tv, ref int tvn, double tolerance = 0.0)
         {
             for (int n = 1; n <= tvn; n++)
             {
-                if (XAgreeTied(v, tv[n]))
+                if (XAgreeTied(v, tv[n], tolerance))
                     return false;
             }
             tvn += 1;
@@ -257,7 +258,7 @@ namespace StatsDirect.Builtins
         ///  <param name="tau"></param>
         ///  <param name="p2"></param>
         ///  <remarks></remarks>
-        public static void XAgreeKendall(IProgressBarHost host, double[] ssd, double[] av, int lowerBound, ref int rx, out double tau, out double p2, out bool isLowPower, out bool isTauB)
+        public static void XAgreeKendall(IProgressBarHost host, double[] ssd, double[] av, int lowerBound, ref int rx, out double tau, out double p2, out bool isLowPower, out bool isTauB, double xTolerance = 0.0)
         {
             int nxx = 0; int ls = 0;
             double sigat1 = 0; double sigat2 = 0; double sigat3 = 0;
@@ -309,7 +310,7 @@ namespace StatsDirect.Builtins
                             int ytie = 0;
                             for (int N = pn + 1; N <= nxx; N++)
                             {
-                                bool xTied = XAgreeTied(x[pn], x[N]);
+                                bool xTied = XAgreeTied(x[pn], x[N], xTolerance);
                                 bool yTied = XAgreeTied(y[pn], y[N]);
                                 if (!xTied && !yTied)
                                 {
@@ -324,7 +325,7 @@ namespace StatsDirect.Builtins
                                     ytie += 1;
                             }
                             int cnt = xtie + 1;
-                            if (cnt > 1 && XAgreeNewTie(x[pn], xtv, ref xtvn))
+                            if (cnt > 1 && XAgreeNewTie(x[pn], xtv, ref xtvn, xTolerance))
                             {
                                 siga += cnt * (cnt - 1) / 2.0;
                                 sigat1 += cnt * (cnt - 1);
@@ -415,12 +416,10 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptAgreement(IProgressBarHost host, ParameterBag parameters)
         {
-            long ntot = 0;
             double sum;
             double sumvr = 0;
-            double totsq = 0;
             double tot = 0;
-            double sqtot = 0; double sum2tot = 0; double sumtot = 0;
+            double scale = 0;
 
             double GAMMA = parameters["ci"].AsDouble;
             if (GAMMA <= 0)
@@ -467,11 +466,11 @@ namespace StatsDirect.Builtins
                     xd[rx] = mx / cnt;
                     mxd[rx] = mx;
                     sum = 0;
-                    double sumsq = 0;
                     for (int c = 0; c < cols; c++)
                     {
                         sum += ARR2[c][r];
-                        sumsq += ARR2[c][r] * ARR2[c][r];
+                        if (Math.Abs(ARR2[c][r]) > scale)
+                            scale = Math.Abs(ARR2[c][r]);
                     }
                     double avg = sum / Convert.ToDouble(cols);
                     double sumsqdev = 0;
@@ -492,7 +491,6 @@ namespace StatsDirect.Builtins
                     sumvr += vr[rx];
                     av[rx] = avg;
                     tot += xd[rx];
-                    totsq += xd[rx] * xd[rx];
                     for (int c = 0; c < cols; c++)
                         xxm[rx] += Math.Abs(ARR2[c][r] - av[rx]);
                     rx++;
@@ -500,7 +498,11 @@ namespace StatsDirect.Builtins
             }
             double meanvr = sumvr / rx;
             double mean = tot / rx;
-            double ss = totsq - tot * tot / rx;
+            // the sum of squares of the differences is taken about their mean: taken as the sum of the squares less the square of the sum over
+            // n, it loses its figures when the differences are large beside their spread
+            double ss = 0.0;
+            for (int r = 0; r < rx; r++)
+                ss += (xd[r] - mean) * (xd[r] - mean);
             double sd = Math.Sqrt(ss / (rx - 1));
             double z = PDF.gauinv(1 - (1 - GAMMA) / 2);
             // create temp variable for copying values 
@@ -532,28 +534,16 @@ namespace StatsDirect.Builtins
             MathDbl.civ(0, out double cit, GAMMA, out double P0);
             double lla = mean - cit * sd;
             double ula = mean + cit * sd;
-            for (int r = 0; r < rows; r++)
-            {
-                long nx = 0;
-                double sq = 0.0;
-                sum = 0.0;
-                for (int c = 0; c < cols; c++)
-                {
-                    if (ARR2[c][r] != Constant.MISSING)
-                    {
-                        nx++;
-                        sum += ARR2[c][r];
-                        sq += ARR2[c][r] * ARR2[c][r];
-                    }
-                }
-                if (nx != cols)
-                    continue; // ICC uses the same complete rows as the rest of the report
-                sqtot += sq;
-                if (nx != 0)
-                    sum2tot += sum * sum / nx;
-                ntot += nx;
-                sumtot += sum;
-            }
+            // the sum of squares between subjects, for the intraclass correlation, from the means of the subjects (the complete rows) about
+            // the grand mean: sums of squares taken about zero lose their figures when the values are large beside their spread
+            double grand = 0.0;
+            for (int r = 0; r < rx; r++)
+                grand += av[r];
+            grand /= rx;
+            double ssgroup = 0.0;
+            for (int r = 0; r < rx; r++)
+                ssgroup += (av[r] - grand) * (av[r] - grand);
+            ssgroup *= cols;
             string tlist = string.Empty;
             for (int c = 0; c < cols; c++)
             {
@@ -561,9 +551,6 @@ namespace StatsDirect.Builtins
                     tlist += ", ";
                 tlist += frame.Variables[c].Title;
             }
-            double cc = sumtot * sumtot / ntot;
-            double sstot = sqtot - cc;
-            double ssgroup = sum2tot - cc;
             double m = cols;
             //  One-way random effects ANOVA estimator ICC(1) = (MSB - MSW) / (MSB + (m - 1) MSW)
             //  with the exact F-based confidence interval (Shrout & Fleiss 1979; McGraw & Wong 1996)
@@ -571,7 +558,8 @@ namespace StatsDirect.Builtins
             double icc_df1 = n - 1.0;
             double icc_df2 = n * (m - 1.0);
             double msb = ssgroup / icc_df1;
-            double msw = (sstot - ssgroup) / icc_df2;
+            // the mean square within subjects is the mean of the subjects' variances, each of them taken about the subject's own mean
+            double msw = meanvr;
             double icc = (msb - msw) / (msb + (m - 1.0) * msw);
             double fratio = msb / msw;
             //  PDF.ffromp(dfd, dfn, p) returns the F quantile whose upper tail area is p
@@ -588,7 +576,9 @@ namespace StatsDirect.Builtins
             bool isTauB = false;
             if (rx > 2)
             {
-                XAgreeKendall(host, ssd, av, 0, ref rx, out tau, out p2, out isLowPower, out isTauB);
+                // the measurements are rounded to about 1 part in 10^16 of their size, and so are the standard deviations made from them,
+                // however small those are: two standard deviations within 4 parts in 10^15 of the greatest measurement are taken as tied
+                XAgreeKendall(host, ssd, av, 0, ref rx, out tau, out p2, out isLowPower, out isTauB, 4e-15 * scale);
             }
             else
             {
