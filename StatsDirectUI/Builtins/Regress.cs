@@ -364,6 +364,8 @@ namespace StatsDirect.Builtins
         public static StepOutput CalcSimpleLinearRegressionCi(ParameterBag parameters)
         {
             SimpleLinearRegressionContext context = GetSimpleLinearRegressionContextWithData(parameters);
+            // The context is new, made from the data: the regression has to be fitted before its line and its limits can be worked out
+            context.CalculateLeastSquaresMethod();
             double REGGAMMA = parameters["gamma"].AsDouble;
             int nx = context.NX;
             context.CalcRcia(REGGAMMA);
@@ -380,7 +382,8 @@ namespace StatsDirect.Builtins
 
             for (int j = 0; j < nx; j++)
             {
-                double sey = Math.Sqrt(context.MS * (1.0 / nx + Math.Pow(context.Y[j] - context.SumX / nx, 2.0) / context.SSX));
+                // the standard error of the fitted value at the x of the record
+                double sey = Math.Sqrt(context.MS * (1.0 / nx + Math.Pow(context.X[j] - context.SumX / nx, 2.0) / context.SSX));
                 double ya = context.Slope * context.X[j] + context.YIntercept;
                 double pcon = ya + sey * context.PERT;
                 double ncon = ya - sey * context.PERT;
