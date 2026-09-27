@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.11] 2026-09-27
+
+Version 5.0.11 follows a check of every function on the Agreement menu against figures calculated from the definitions, one routine at a time, with the routines commented as they were checked: agreement of continuous measurements, kappa and the other measures of the agreement of categories, and the universal agreement measure. It also gives the warning of Cox regression, that a coefficient may be infinite, when several predictors separate the subjects between them.
 
 ### Fixed
 - Agreement of continuous measurements: the intraclass correlation coefficient and its confidence limits lost accuracy when the measurements were large beside their spread (right to five figures with values about 100,000 and a spread of units, and to two with values about 10,000,000), as the sums of squares were taken about zero. They are taken about the means, as is the sum of squares behind the limits of agreement. In the same data, subjects with equal standard deviations were not seen as tied by Kendall's rank correlation of the standard deviations with the means
