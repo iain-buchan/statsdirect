@@ -296,12 +296,13 @@ namespace StatsDirect.Builtins
                 //  next time of death, it is the middle of the two times.  Its variance, for the first of the two intervals, is the
                 //  variance of S at the median over the square of the slope of the survival curve there; the slope is taken between
                 //  the last time at which S is a half plus a margin or more (iup) and the first time at which it is a half less the
-                //  margin or less (ilp).  The margin (area) is 1 less the confidence level.
+                //  margin or less (ilp).  The margin (area) is 0.05 at every confidence level: it sets how much of the curve the slope
+                //  is taken over, and the confidence level has no part in that.
                 const int biglong = 999999;
                 int imed = biglong;
                 int ilp = biglong;
                 int iup = 0;
-                double area = 1.0 - gamma;
+                const double area = 0.05;
                 const double p = 0.5;
                 // S is a product of fractions: where it should be exactly a half, rounding can leave it a little to either side
                 const double fuzz = HalfTolerance;
