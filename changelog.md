@@ -2,6 +2,11 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
+##[Unreleased]
+
+### Fixed
+- Logistic and Poisson regression: the leverages of a fit with a constant and two or more predictors left unselected took in a column that did not belong to the model, and were wrong (they added up to more than the number of parameters). No report was affected: only the fits made for model selection leave predictors unselected, and they do not use the leverages
+
 ##[v5.0.9] 2026-09-26
 
 The Excel link add-in retired, and its copies removed from users' machines by the installer and at start-up.

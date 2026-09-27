@@ -2836,7 +2836,9 @@ namespace StatsDirect.Builtins
                 }
                 for (int ix = 1; ix <= rank; ix++)
                     work[ip + ix] = 0.0;
-                for (int j = 1; j <= ip + 1; j++)
+                // The ip columns of the model.  (One more was taken, which held ones, not zeros, when a constant was fitted and two or more predictors
+                // were left unselected: the leverages of such a fit were wrong.)
+                for (int j = 1; j <= ip; j++)
                 {
                     double temp = work[j];
                     if (temp != 0.0)
