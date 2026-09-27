@@ -9,7 +9,7 @@ dotnet run --project tests/MetaAnalysis -c Release
 
 The checks are made on a build of the program, as those of `tests/CoxRegression` are: `StatsDirect.dll` of the Debug configuration, or of the folder given with `-p:StatsDirectBin=...`. They take a few seconds. One part can be run alone by naming it: `bin`, `other` or `limits`.
 
-Sets of studies are put through the ten reports of the menu, and every figure of each report that has a benchmark is compared with it: the estimate, limits and weights of each study, the pooled estimates with their limits and tests, Cochran's Q, I-squared and its limits, the variance between the studies, and the bias indicators. A figure may differ from its benchmark by one part in ten million; a limit of I-squared by the exact method by one in a million, which is what the search for it is good to.
+Sets of studies are put through the ten reports of the menu, and every figure of each report that has a benchmark is compared with it: the estimate, limits, variance and weights of each study, the pooled estimates with their limits and tests, Cochran's Q, I-squared and its limits, the variance between the studies, and the bias indicators. A figure may differ from its benchmark by one part in ten million; a limit of I-squared by the exact method by one in a million, which is what the search for it is good to.
 
 **The benchmarks** (`benchmarks`) are figures of R 4.6.1 with the packages meta 8.5.0 and metafor 5.2.1, and figures worked out in R from the distributions themselves. The scripts that made them are beside them, and make them again:
 

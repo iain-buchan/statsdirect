@@ -82,6 +82,7 @@ while (at <= length(lines)) {
             i <- which(keep)
             put(paste0(key, "|ir.", i, "|", tolower(sm)), back(m$TE))
             if (sm == "IRD") put(c(paste0(key, "|ir.", i, "|lci"), paste0(key, "|ir.", i, "|uci")), c(m$lower, m$upper))
+            put(paste0(key, "|ir.", i, "|vi"), m$seTE^2)
             put(paste0(key, "|ir.", i, "|wt"), 100 * m$w.common / sum(m$w.common))
             put(paste0(key, "|ir.", i, "|dwt"), 100 * m$w.random / sum(m$w.random))
             mm <- m; bias(key, mm)
