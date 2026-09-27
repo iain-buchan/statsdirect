@@ -372,8 +372,12 @@ namespace StatsDirect.Builtins
             coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             if (ifault != 0)
             {
-                if (ifault == 3)
+                // faults 3 and 5 are a fit that has not converged: the log likelihood still fell when no more than 1/512 of the step was taken, or
+                // the iterations ran out.  Faults above 100 name a predictor; fault 100 is a matrix that could not be factorised, with none to name.
+                if (ifault == 3 || ifault == 5)
                     throw new TemplateOperationCancelledException("Calculation failed to converge, try again with a lower precision or fewer predictors.", "Cox Regression");
+                else if (ifault == 100)
+                    throw new TemplateOperationCancelledException("Singularity in Hessian: try again with fewer predictors.", "Cox Regression");
                 else if (ifault > 99)
                     throw new TemplateOperationCancelledException("Singularity in Hessian: try dropping predictor " + (ifault - 100).ToString() + ": " + predictorsFrame.Variables[Math.Max(ifault - 101, 0)].Title, "Cox Regression");
                 else
@@ -1078,8 +1082,12 @@ namespace StatsDirect.Builtins
                 if (Math.Abs(crit) <= eps)
                     break;
             }
-            if (iter >= maxit)
+            // the loop has run out, without convergence, only if the count has passed the limit
+            if (iter > maxit)
                 ifault = 5;
+            // a fit that has not converged is reported as that: what follows is for a fit that has
+            if (ifault != 0)
+                return;
             double zdot;
             int irank; int kk; if (strat)
             {
