@@ -756,8 +756,9 @@ namespace StatsDirect.Builtins
                     for (j = 0; j <= k - 2; j++)
                         x2 += v[i, j] * d[i] * d[j];
             }
-            // general McNemar
-            dfm = (int)Math.Floor(k / 2.0 * (k - 1));
+            // general McNemar: a pair of categories in which nobody was put adds nothing to the statistic, and is not counted in its
+            // degrees of freedom
+            dfm = 0;
             x2M = 0;
             for (i = 0; i <= k - 2; i++)
             {
@@ -766,12 +767,12 @@ namespace StatsDirect.Builtins
                     if (o[i, j] + o[j, i] > 0.0)
                     {
                         x2M += (o[i, j] - o[j, i]) * (o[i, j] - o[j, i]) / (o[i, j] + o[j, i]);
-                        //   Else
-                        //    x2m = MISSING
-                        //    Exit sub
+                        dfm += 1;
                     }
                 }
             }
+            if (dfm == 0)
+                x2M = Constant.MISSING;
         }
 
         public static StepOutput RptKappa(IPreferences host, ParameterBag parameters)
@@ -1036,7 +1037,7 @@ namespace StatsDirect.Builtins
                     {
                         outputParameters.AddOutput("x2m", "[not calculated - zero cells]");
                         outputParameters.AddOutput("dfmcnemar", dfm);
-                        outputParameters.AddOutput("pmcnemar", string.Empty);
+                        outputParameters.AddOutput("pmcnemar", Constant.MISSING);
                     }
                     else
                     {
