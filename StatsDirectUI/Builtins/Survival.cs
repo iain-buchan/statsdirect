@@ -683,6 +683,43 @@ namespace StatsDirect.Builtins
             a[rows] = Constant.MISSING;
         }
 
+        private static void AbridgedLifetableCheck(ParameterBag parameters)
+        {
+            const string title = "Abridged life table";
+            double[] lengths = (parameters["intervals"].AsDataFrame.Variables[0] as DoubleVariable).Data;
+            double[] population = (parameters["population"].AsDataFrame.Variables[0] as DoubleVariable).Data;
+            double[] deaths = (parameters["deaths"].AsDataFrame.Variables[0] as DoubleVariable).Data;
+            int rows = lengths.Length + 1;
+            if (lengths.Length < 1)
+                throw new TemplateOperationCancelledException("There must be at least one interval with a length, and the open interval after it.", title);
+            if (population.Length != rows || deaths.Length != rows)
+                throw new TemplateOperationCancelledException("There must be one more row of populations and of deaths than of interval lengths: the last row is for the open interval at the end of the table. There are " + lengths.Length + " lengths, " + population.Length + " populations and " + deaths.Length + " numbers of deaths.", title);
+            for (int i = 0; i < rows; i++)
+            {
+                string row = "row " + (i + 1);
+                if ((i < rows - 1 && lengths[i] == Constant.MISSING) || population[i] == Constant.MISSING || deaths[i] == Constant.MISSING)
+                    throw new TemplateOperationCancelledException("Every interval must have a length, a population and a number of deaths: there is a blank cell in " + row + ".", title);
+                if (i < rows - 1 && lengths[i] <= 0.0)
+                    throw new TemplateOperationCancelledException("The length of an interval must be more than zero: see " + row + ".", title);
+                if (population[i] <= 0.0)
+                    throw new TemplateOperationCancelledException("The population of an interval must be more than zero: see " + row + ".", title);
+            }
+            if (deaths[rows - 1] == 0.0)
+                throw new TemplateOperationCancelledException("The open interval at the end of the table must have deaths: its death rate is what closes the table.", title);
+            foreach (string name in new[] { "fractions", "weights" })
+            {
+                if (!parameters.ContainsKey(name) || parameters[name] == null)
+                    continue;
+                double[] values = (parameters[name].AsDataFrame.Variables[0] as DoubleVariable).Data;
+                int needed = name == "fractions" ? rows - 1 : rows;
+                if (values.Length < needed)
+                    throw new TemplateOperationCancelledException("There must be " + needed + " rows of " + name + ": there are " + values.Length + ".", title);
+                for (int i = 0; i < needed; i++)
+                    if (values[i] == Constant.MISSING)
+                        throw new TemplateOperationCancelledException("There is a blank cell in row " + (i + 1) + " of the " + name + ".", title);
+            }
+        }
+
         private static string LifetabAge(double age)
         {
             return age == Math.Floor(age) ? Convert.ToInt32(age).ToString() : Formatting.XUnrounded(age);
@@ -1653,6 +1690,9 @@ namespace StatsDirect.Builtins
             double p0 = (1.0 - gamma) / 2.0;
             double cit = PDF.gauinv(1.0 - p0);
 
+            // data that a table cannot be made from are refused, with a message that says what is wrong
+            AbridgedLifetableCheck(parameters);
+
             DataFrame intervalsFrame = parameters["intervals"].AsDataFrame;
             DoubleVariable intervalsVariable = intervalsFrame.Variables[0]as DoubleVariable;
             int rows = intervalsVariable.Length + 1;
@@ -2104,6 +2144,15 @@ namespace StatsDirect.Builtins
             }
             if (nx == 0)
                 throw new TemplateOperationCancelledException("There are no rows with a time, a number of deaths and a number withdrawn.", "Follow-up life table");
+            double leaving = 0.0;
+            for (int j = 1; j <= nx; j++)
+            {
+                if (d[row[j]] < 0.0 || w[row[j]] < 0.0)
+                    throw new TemplateOperationCancelledException("A number of deaths or of withdrawals cannot be below zero: see row " + row[j] + ".", "Follow-up life table");
+                leaving += d[row[j]] + w[row[j]];
+            }
+            if (natst < leaving)
+                throw new TemplateOperationCancelledException("The number alive at the start, " + natst + ", is less than the deaths and withdrawals of the table, " + leaving + ".", "Follow-up life table");
             Array.Sort(tm, row, 1, nx);
             // Rows with the same starting time, including the last row, are one interval
             double[] tt = new double[nx + 1];
@@ -2148,7 +2197,8 @@ namespace StatsDirect.Builtins
             for (int j = 1; j <= nt; j++)
             {
                 double en1 = natr - w[j] / 2.0;
-                double q = d[j] / en1;
+                // an interval that nobody is left to enter has no deaths, and leaves the survivors as they were
+                double q = en1 > 0.0 ? d[j] / en1 : 0.0;
                 p = 1.0 - q;
                 cump = p * cump;
                 if (p * en1 != 0.0)
