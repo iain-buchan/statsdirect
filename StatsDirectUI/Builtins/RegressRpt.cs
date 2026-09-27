@@ -848,6 +848,7 @@ namespace StatsDirect.Builtins
                 }
 
                 //  factorize u (info mat)
+                //  cov holds the information matrix in packed form.  It is factorised as U'U, which fails (fault 5) if it is not positive definite.
 
                 dpptrf(ip, cov, out info);
                 if (info > 0)
@@ -857,6 +858,7 @@ namespace StatsDirect.Builtins
                 }
 
                 //  new parameter estimates
+                //  The Newton step is the solution of (information matrix) (step) = score, found from the factorisation, and is added to b
 
                 if (maxit > 0)
                 {
@@ -896,6 +898,7 @@ namespace StatsDirect.Builtins
             while (true);
 
             //  invert u (info mat)
+            //  The inverse of the information matrix, put in place of its factor: the covariance matrix of the coefficients, in packed form
             dpptri(ip, cov, out info);
             if (info > 0)
                 ifault = 5;
@@ -944,6 +947,32 @@ namespace StatsDirect.Builtins
         }
 
 
+        // -----------------------------------------------------------------------------------------------------------------------------------------
+        // The routines from here to the end of the file are the linear algebra of the conditional logistic fit, on a symmetric positive definite
+        // matrix A (the information matrix) held in packed form.  They have the names of the BLAS and LAPACK routines that do the same jobs, so that
+        // the documentation of those can be read alongside.
+        //
+        // Packed form: only the upper triangle is kept, one column after another, in a vector.  Element (i, j), i no more than j, is at
+        // i + j(j - 1)/2, so that column j starts at 1 + j(j - 1)/2 and the diagonal element (j, j) is at j(j + 1)/2.  A matrix of order n takes
+        // n(n + 1)/2 elements.  (For a symmetric matrix this is the same vector as the lower triangle packed by rows.)  Elements are counted from 1:
+        // element 0 of each array is unused.
+        //
+        //     dpptrf    A = U'U, the Cholesky factorisation: U, which is upper triangular, replaces A
+        //     dpptrs    solves A x = b from the factorisation: U'y = b, and then U x = y
+        //     dpptri    the inverse of A from the factorisation: the inverse of U (dtptri), and then its product with its own transpose
+        //     dtpsv     solves U x = b or U'x = b
+        //     dtpmv     x := U x or x := U'x
+        //     dtptri    the inverse of U, in place
+        //     dspr      A := A + alpha x x'
+        //
+        // Where the Fortran routines take letters, these take flags: ntrans is true for the matrix itself and false for its transpose, and udiag is
+        // true if the diagonal is to be taken as ones, whatever is stored there.  Where Fortran passes part of an array, these take the array and the
+        // place to start: idap in ap and idx in x.  incx is the step from one element of x to the next.
+        //
+        // info is zero if all is well.  dpptrf sets it to j if the leading block of order j is not positive definite; dtptri and dpptri set it to j
+        // if diagonal element j of the triangle is zero.  In the routines that have an info, a negative n or a step of zero is also reported through
+        // it, by the position of that argument in the Fortran routine.
+        // -----------------------------------------------------------------------------------------------------------------------------------------
         /// <summary>
         ///  Computes the inverse of a real symmetric positive definite
         ///  matrix a using the cholesky factorization a = u**t*u or a = l*l**t
@@ -952,6 +981,13 @@ namespace StatsDirect.Builtins
         /// <param name="n"></param>
         /// <param name="ap"></param>
         /// <param name="info"></param>
+        /// <remarks>
+        /// With A = U'U, the inverse of A is V V', where V is the inverse of U.  dtptri puts V in place of U.  The product is then formed a column at a
+        /// time, in place: when column j is reached, the triangle of order j - 1 before it has x x' added to it (dspr), where x is column j of V above
+        /// the diagonal, and column j is then multiplied by its diagonal element.
+        /// On entry ap holds U as dpptrf left it; on return it holds the upper triangle of the inverse of A, packed.  info is j if diagonal element j
+        /// of U is zero, when there is no inverse.  jc and jj are the places in ap where column j starts and ends.
+        /// </remarks>
         private static void dpptri(int n, double[] ap, out int info)
         {
             info = 0;
@@ -964,9 +1000,11 @@ namespace StatsDirect.Builtins
             }
             if (n == 0)
                 return;
+            // The inverse V of U, in place
             dtptri(false, n, ap, out info);
             if (info > 0)
                 return;
+            // V V', a column at a time
             int jj = 0;
             for (int j = 1; j <= n; j++)
             {
@@ -990,6 +1028,10 @@ namespace StatsDirect.Builtins
         /// positive definite matrix a in packed storage using the cholesky
         /// factorization a = u**t*u or a = l*l**t computed by dpptrf.
         /// </summary>
+        /// <remarks>
+        /// With A = U'U, A x = b is solved in two steps: U'y = b, working down, and then U x = y, working up.  ap holds U as dpptrf left it, and is not
+        /// changed.  Only the first column of b is used: it holds the right-hand side on entry and the solution on return.
+        /// </remarks>
         private static void dpptrs(int n, double[] ap, double[,] b, out int info)
         {
             double[] tb = new double[n + 1 ];
@@ -1008,6 +1050,7 @@ namespace StatsDirect.Builtins
             for (int i = 1; i <= n; i++)
                 tb[i] = b[i, 1];
 
+            // U'y = b, and then U x = y
             dtpsv(false, false, n, ap, 1, tb, 1, 1, out info);
             dtpsv(true, false, n, ap, 1, tb, 1, 1, out info);
 
@@ -1018,6 +1061,13 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// Computes the cholesky factorization of an upper real symmetric positive definite matrix a stored in packed format.
         /// </summary>
+        /// <remarks>
+        /// A = U'U with U upper triangular, worked a column at a time.  For column j, with the columns before it done, the part above the diagonal is the
+        /// solution of U'x = a, where a is that part of column j of A and U is the triangle of order j - 1 found so far (dtpsv).  The diagonal element
+        /// is the square root of what is left of a(j, j) when the squares of that solution have been taken away.  If what is left is not positive the
+        /// matrix is not positive definite: info is set to j, what is left is put in the diagonal position, and the routine returns.
+        /// On entry ap holds A in packed form; on return it holds U.  jc and jj are the places in ap where column j starts and ends.
+        /// </remarks>
         private static void dpptrf(int n, double[] ap, out int info)
         {
             info = 0;
@@ -1035,8 +1085,10 @@ namespace StatsDirect.Builtins
             {
                 int jc = jj + 1;
                 jj += j;
+                // Column j above the diagonal: the solution of U'x = a, with the triangle of order j - 1 found so far
                 if (j > 1)
                     dtpsv(false, false, j - 1, ap, 1, ap, jc, 1, out info);
+                // The diagonal element: the square root of a(j, j) less the squares of that solution
                 double ddot = 0.0;
                 for (int i = jc; i <= jc + j - 2; i++)
                     ddot += ap[i] * ap[i];
@@ -1059,6 +1111,10 @@ namespace StatsDirect.Builtins
         ///   where alpha is a real scalar, x is an n element vector and a is an
         ///   n by n upper symmetric matrix, supplied in packed form.
         /// </summary>
+        /// <remarks>
+        /// x starts at x[idx] and the matrix at ap[idap].  x and ap may be the same array, as they are when dpptri calls this with a column of the
+        /// matrix as x.  Nothing is reported if n is negative or incx is zero: the routine returns with nothing done.
+        /// </remarks>
         private static void dspr(int n, double alpha, double[] x, int idx, int incx, double[] ap, int idap)
         {
             int info = 0;
@@ -1070,6 +1126,7 @@ namespace StatsDirect.Builtins
                 return;
             if (n == 0 || alpha == 0.0)
                 return;
+            // A column at a time: column j of the upper triangle gains alpha x[j] times the elements of x up to j.  kk is the place where column j starts.
             int kx = incx <= 0 ? idx - (n - 1) * incx : idx;
             int kk = idap;
             int jx = kx;
@@ -1101,6 +1158,11 @@ namespace StatsDirect.Builtins
         ///   no test for singularity or near-singularity is included in this
         ///   routine. such tests must be performed before calling this routine.
         /// </summary>
+        /// <remarks>
+        /// ntrans true solves U x = b, by back substitution from the last element up; ntrans false solves U'x = b, by forward substitution from the first
+        /// element down.  x holds b on entry and the solution on return.  x and ap may be the same array: dpptrf solves for a column of the factor that
+        /// lies in ap itself.
+        /// </remarks>
         private static void dtpsv(bool ntrans, bool udiag, int n, double[] ap, int idap, double[] x, int idx, int incx, out int info)
         {
             info = 0;
@@ -1116,6 +1178,8 @@ namespace StatsDirect.Builtins
             int kx = incx <= 0 ? idx - (n - 1) * incx : idx;
             if (ntrans)
             {
+                // U x = b: x[j] is found, from the last up, and its multiple of column j is then taken from the elements of x above it.  kk is the place
+                // of the diagonal element of column j.
                 int kk = idap + n * (n + 1) / 2 - 1;
                 int jx = kx + (n - 1) * incx;
                 for (int j = n; j >= 1; j--)
@@ -1138,6 +1202,8 @@ namespace StatsDirect.Builtins
             }
             else
             {
+                // U'x = b: x[j] is found, from the first down, from the elements of column j above the diagonal and the elements of x found already.  kk
+                // is the place where column j starts.
                 int kk = idap;
                 int jx = kx;
                 for (int j = 1; j <= n; j++)
@@ -1167,6 +1233,10 @@ namespace StatsDirect.Builtins
         ///   where x is an n element vector and  a is an n by n unit, or non-unit,
         ///   upper triangular matrix, supplied in packed form.
         /// </summary>
+        /// <remarks>
+        /// ntrans true forms U x, working from the first element; ntrans false forms U'x, working from the last.  The product replaces x.  x and ap may
+        /// be the same array: dtptri multiplies a column of the matrix that lies in ap itself.
+        /// </remarks>
         private static void dtpmv(bool ntrans, bool udiag, int n, double[] ap, int idap, double[] x, int idx, int incx, out int info)
         {
             info = 0;
@@ -1182,6 +1252,8 @@ namespace StatsDirect.Builtins
 
             if (ntrans)
             {
+                // U x: x[j] times column j is added into the elements of x above it, and x[j] is then multiplied by the diagonal element.  kk is the place
+                // where column j starts.
                 int kk = idap;
                 int jx = kx;
                 for (int j = 1; j <= n; j++)
@@ -1204,6 +1276,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
+                // U'x: x[j] becomes the sum of the products of column j with the elements of x up to j.  kk is the place of the diagonal element of column j.
                 int kk = idap + n * (n + 1) / 2 - 1;
                 int jx = kx + (n - 1) * incx;
                 for (int j = n; j >= 1; j--)
@@ -1227,6 +1300,12 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// Computes the inverse of a real upper triangular matrix a stored in packed format.
         /// </summary>
+        /// <remarks>
+        /// The inverse V of an upper triangular U is upper triangular, and is found a column at a time.  The diagonal element of column j is the
+        /// reciprocal of that of U.  The part above it is minus that reciprocal times V u, where V is the inverse of order j - 1 found so far (dtpmv) and
+        /// u is the part of column j of U above the diagonal.  On return V has replaced U in ap.  info is j if diagonal element j of U is zero, when
+        /// nothing has been changed.
+        /// </remarks>
         private static void dtptri(bool udiag, int n, double[] ap, out int info)
         {
             info = 0;
@@ -1237,6 +1316,7 @@ namespace StatsDirect.Builtins
                 info = -info;
                 return;
             }
+            // There is no inverse if a diagonal element is zero: info is left at its place
             if (!udiag)
             {
                 int jj = 0;
@@ -1248,6 +1328,7 @@ namespace StatsDirect.Builtins
                 }
                 info = 0;
             }
+            // A column at a time: jc is the place where column j starts
             int jc = 1;
             for (int j = 1; j <= n; j++)
             {
