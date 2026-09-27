@@ -2,7 +2,9 @@
 
 Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
-##[Unreleased]
+##[v5.0.10] 2026-09-27
+
+Version 5.0.10 follows a check of every function on the Regression and Correlation menu against figures calculated from the definitions and against R, one routine at a time, with the routines commented as they were checked. Cox regression has the most changes: records with missing values, predictors that carry nothing of their own, the baseline survival with tied times, a warning when a coefficient may be infinite, and a finer default precision.
 
 ### Fixed
 - Logistic and Poisson regression: the leverages of a fit with a constant and two or more predictors left unselected took in a column that did not belong to the model, and were wrong (they added up to more than the number of parameters). No report was affected: only the fits made for model selection leave predictors unselected, and they do not use the leverages
