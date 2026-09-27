@@ -660,7 +660,7 @@ namespace StatsDirect.Builtins
                 differencesParameters.AddOutput("dwt", 100 * dsw[i] / Formatting.dsum(dsw, 1));
                 differencesParameters.AddOutput("lb", included[i] ? (hasUserSuppliedLabels ? title[i] : string.Empty) : "* (excluded)");
                 differencesParameters.AddOutput("yi", rkr[i]);
-                differencesParameters.AddOutput("vi", included[i] ? VarianceFromCI(rkrl[i], rkru[i], cit, false) : Constant.MISSING);
+                differencesParameters.AddOutput("vi", VarianceOfRiskDifference(host, o, i));
                 // double a = o[ i, 1 ]; 
                 // double b = o[ i, 2 ]; 
                 // double C = o[ i, 3 ]; 
@@ -813,7 +813,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("st", i);
                 risksParameters.AddOutput("rr", rkr[i]);
                 risksParameters.AddOutput("yi", rkr[i] > 0 ? Math.Log(rkr[i]) : 0);
-                risksParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, true));
+                risksParameters.AddOutput("vi", VarianceOfLogRelativeRisk(host, o, i));
                 risksParameters.AddOutput("lci", rkrl[i]);
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
@@ -2043,7 +2043,7 @@ namespace StatsDirect.Builtins
                 else
                 {
                     irParameters.AddOutput("yi", rkr[i] > 0 ? Math.Log(rkr[i]) : 0);
-                    irParameters.AddOutput("vi", VarianceFromCI(rkrl[i], rkru[i], cit, true));
+                    irParameters.AddOutput("vi", 1.0 / rkw[i]);   // the variance of the logarithm of the rate ratio, which the weight is 1 over
                 }
 
             }
@@ -2309,7 +2309,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
                 orParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
-                orParameters.AddOutput("vi", VarianceFromCI(odrl[i], odru[i], cit, true));
+                orParameters.AddOutput("vi", VarianceOfLogOddsRatio(host, o, i));
                 orParameters.AddOutput("lci", odrl[i]);
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
@@ -2710,6 +2710,58 @@ namespace StatsDirect.Builtins
             if (dsll > dsul)
                 Utilities.Utilities.Swap(ref dsll, ref dsul);
             ierr = 0;
+        }
+
+        /// <summary>
+        /// The variance of the logarithm of the odds ratio of table i, 1 / a + 1 / b + 1 / c + 1 / d, with the continuity correction
+        /// of a table with a cell of nothing: the variance that Cochran's Q and the random effects weights are made from, which the
+        /// reports show.  A table that is not pooled has none.
+        /// </summary>
+        public static double VarianceOfLogOddsRatio(IPreferences host, double[,] o, int i)
+        {
+            if (!IncludeTable(o, i))
+                return Constant.MISSING;
+            double a = o[i, 1];
+            double b = o[i, 2];
+            double c = o[i, 3];
+            double d = o[i, 4];
+            if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
+                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+            return 1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d;
+        }
+
+        /// <summary>
+        /// The variance of the logarithm of the relative risk of table i, 1 / a + 1 / b - 1 / (a + c) - 1 / (b + d), with the
+        /// continuity correction of a table with a cell of nothing.  A table that is not pooled has none.
+        /// </summary>
+        public static double VarianceOfLogRelativeRisk(IPreferences host, double[,] o, int i)
+        {
+            if (!IncludeRelativeRisk(o, i))
+                return Constant.MISSING;
+            double a = o[i, 1];
+            double b = o[i, 2];
+            double c = o[i, 3];
+            double d = o[i, 4];
+            if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
+                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+            return 1.0 / a + 1.0 / b - 1.0 / (a + c) - 1.0 / (b + d);
+        }
+
+        /// <summary>
+        /// The variance of the risk difference of table i, a c / (a + c)^3 + b d / (b + d)^3, with the continuity correction of a
+        /// table with a cell of nothing.  A table with a group of nobody has none.
+        /// </summary>
+        public static double VarianceOfRiskDifference(IPreferences host, double[,] o, int i)
+        {
+            double a = o[i, 1];
+            double b = o[i, 2];
+            double c = o[i, 3];
+            double d = o[i, 4];
+            if (a + c <= 0.0 || b + d <= 0.0)
+                return Constant.MISSING;
+            if (a <= 0.0 || b <= 0.0 || c <= 0.0 || d <= 0.0)
+                ContinuityCorrect(host, a, b, c, d, out a, out b, out c, out d);
+            return a * c / Math.Pow(a + c, 3.0) + b * d / Math.Pow(b + d, 3.0);
         }
 
         /// <summary>

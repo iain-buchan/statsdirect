@@ -434,7 +434,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
                 orParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
-                orParameters.AddOutput("vi", Meta.VarianceFromCI(odrl[i], odru[i], cit, true));
+                orParameters.AddOutput("vi", Meta.VarianceOfLogOddsRatio(host, o, i));
                 orParameters.AddOutput("lci", odrl[i]);
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));

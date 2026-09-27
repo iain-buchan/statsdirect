@@ -2606,7 +2606,7 @@ namespace StatsDirect.Builtins
                 risksParameters.AddOutput("st", i);
                 risksParameters.AddOutput("rr", rkr[i]);
                 risksParameters.AddOutput("yi", rkr[i] > 0 ? Math.Log(rkr[i]) : 0);
-                risksParameters.AddOutput("vi", Meta.VarianceFromCI(rkrl[i], rkru[i], cit, true));
+                risksParameters.AddOutput("vi", Meta.VarianceOfLogRelativeRisk(host, o, i));
                 risksParameters.AddOutput("lci", rkrl[i]);
                 risksParameters.AddOutput("uci", rkru[i]);
                 risksParameters.AddOutput("wt", 100 * rkw[i] / Formatting.dsum(rkw, 1));
@@ -3336,7 +3336,7 @@ namespace StatsDirect.Builtins
                 orParameters.AddOutput("st", i);
                 orParameters.AddOutput("or", odr[i]);
                 orParameters.AddOutput("yi", odr[i] > 0 ? Math.Log(odr[i]) : 0);
-                orParameters.AddOutput("vi", Meta.VarianceFromCI(odrl[i], odru[i], cit, true));
+                orParameters.AddOutput("vi", Meta.VarianceOfLogOddsRatio(host, o, i));
                 orParameters.AddOutput("lci", odrl[i]);
                 orParameters.AddOutput("uci", odru[i]);
                 orParameters.AddOutput("wt", 100 * odw[i] / Formatting.dsum(odw, 1));
