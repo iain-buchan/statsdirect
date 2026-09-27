@@ -12,8 +12,33 @@ using static StatsDirect.Builtins.ExactBB;
 
 namespace StatsDirect.Builtins
 {
+    /// <summary>
+    /// The analyses of the Meta-analysis menu, and the pooling of tables that the chi-square and crosstabs menus share with them.
+    ///
+    /// What the analyses of the Meta-analysis menu share.  Each study gives an estimate y on the scale of the pooling (the logarithm
+    /// for a ratio, Fisher's z for a correlation, the double arcsine for a proportion) with a variance v, and has the weight
+    /// w = 1 / v.  The fixed effects estimate is the sum of w y over the sum of w, with the variance 1 over the sum of w.
+    /// Cochran's Q is the sum of w (y - pooled)^2, on one degree of freedom fewer than there are studies.  The variance between
+    /// the studies by the method of moments (DerSimonian-Laird) is (Q - df) / (sum of w - sum of w^2 / sum of w), not below 0; the
+    /// random effects weights are 1 / (v + that variance), and the random effects estimate is pooled with them in the same way.
+    /// I-squared is 100 (Q - df) / Q, not below 0 (see IsquareNcc).  The bias indicators are in Metabias and ModMetabias.
+    ///
+    /// A table of two groups by an event is held as o[i, 1] = a, the events of the first group; o[i, 2] = b, the events of the
+    /// second; o[i, 3] = c and o[i, 4] = d, the subjects without the event of the first group and of the second; n is their total.
+    /// </summary>
     public static class Meta
     {
+        /// <summary>
+        /// Peto odds ratio meta-analysis.  For each study O - E is a less its expectation (a + b)(a + c) / n, and V is the variance
+        /// of a with the totals of the table given, (a + b)(c + d)(a + c)(b + d) / (n^2 (n - 1)).  The logarithm of the odds ratio of
+        /// the study is (O - E) / V with the variance 1 / V, and that of the pooled odds ratio is the sum of O - E over the sum of V,
+        /// with the variance 1 over the sum of V.  The weight of a study is V.  A study without a variance (no events, events in
+        /// every subject, a group of nobody, one subject) is left out.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"sn" and "sr": the number of subjects and the number with the event in the first group of each
+        /// study; "xn" and "xr": the same of the second group; "strata" (may be left out): the labels of the studies; "gamma": the
+        /// confidence level.</param>
         public static StepOutput RptPetoMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
@@ -132,6 +157,8 @@ namespace StatsDirect.Builtins
             }
 
             // combinability
+            // Q: the sum over the studies of V times the square of what the logarithm of the odds ratio of the study differs from
+            // that of the pooled odds ratio by
             double qc = 0.0;
             int realk = 0;
             for (int i = 1; i <= k; i++)
@@ -290,6 +317,24 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*fewStrata", fewList);
         }
 
+        /// <summary>
+        /// The bias indicators of Begg and Mazumdar and of Egger, from the estimate of each study and its confidence limits.  The
+        /// standard error of a study is taken back from its limits, (upper - lower) / (2 z) on the scale of the pooling, so the limits
+        /// must be the estimate plus and minus z standard errors on that scale and at the confidence level of the analysis.
+        /// Begg and Mazumdar: each estimate less the fixed effects pooled estimate, over the root of (its variance less the variance of
+        /// the pooled estimate), is correlated with the variance by Kendall's rank correlation (Anova.XAgreeKendall).
+        /// Egger: the estimate over its standard error is regressed on 1 over the standard error; the intercept is the bias, with a
+        /// t test on two degrees of freedom fewer than there are studies.  Nothing is given with fewer than four studies.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="outputParameters">Where the results are put.</param>
+        /// <param name="t">The estimate of each study, from element 1.  A study with a missing estimate or limit is left out.</param>
+        /// <param name="tl">The lower limit of each study.</param>
+        /// <param name="tu">The upper limit of each study.</param>
+        /// <param name="n">The number of studies.</param>
+        /// <param name="cco">The confidence level of the limits; made 0.95 if it is not above 0.</param>
+        /// <param name="xform">The scale of the pooling: the logarithm, Fisher's z, or the estimates as they are.</param>
+        /// <returns>True if the indicators are given: false if there are fewer than four studies.</returns>
         public static bool Metabias(IProgressBarHost host, ParameterBag outputParameters, double[] t, double[] tl, double[] tu, int n, ref double cco, Transformation xform)
         {
             double cit;
@@ -508,6 +553,12 @@ namespace StatsDirect.Builtins
             return !tooFewStrata;
         }
 
+        /// <summary>
+        /// Risk difference meta-analysis: the report of what Riskdifma works out, with the bias indicators of Begg and Mazumdar and of
+        /// Egger, which take the standard error of each study from the limits that Riskdifma makes from its variance.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">As for RptPetoMeta.</param>
         public static StepOutput RptRiskDifferenceMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
@@ -676,6 +727,12 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Relative risk meta-analysis: the report of what RelativeRiskMA works out, with the bias indicators of Begg and Mazumdar and
+        /// of Egger from the approximate limits of each study (GetAproxrrCI), and that of Harbord and Egger (ModMetabias).
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">As for RptPetoMeta.</param>
         public static StepOutput RptRelativeRiskMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             const int lowerBound = 1;
@@ -834,6 +891,16 @@ namespace StatsDirect.Builtins
         }
 
         // TODO: Move this somewhere more sensible now that it's used by functions outside meta.
+        /// <summary>
+        /// The labels of the studies, from element 0: those of the column of labels, cut to 50 characters, and for a row without a
+        /// label (or beyond a column of labels that is shorter than the data) the row's number in the given form.
+        /// </summary>
+        /// <param name="parameters">The parameters of the analysis.</param>
+        /// <param name="parameterName">The name of the column of labels among them; it may be absent.</param>
+        /// <param name="missingTitleFormat">The form of the label of a row without one, for example "stratum {0}".</param>
+        /// <param name="expectedRows">The number of rows of data.</param>
+        /// <param name="hasUserSuppliedLabels">On return, whether there is a column of labels.</param>
+        /// <param name="extraElementsAtEnd">The number of elements to add at the end, for the label of a pooled estimate.</param>
         internal static string[] MakeTitles(ParameterBag parameters, string parameterName, string missingTitleFormat, int expectedRows, out bool hasUserSuppliedLabels, int extraElementsAtEnd = 0)
         {
             string[] title;
@@ -875,6 +942,19 @@ namespace StatsDirect.Builtins
             return title;
         }
 
+        /// <summary>
+        /// Effect size meta-analysis, of the difference between the means of two groups.
+        /// Standardised: g is the difference between the means over the pooled standard deviation of the two groups (or g is given);
+        /// d = J g is g without its bias, J being the ratio of gamma functions G(m / 2) / (root(m / 2) G((m - 1) / 2)) with
+        /// m = n - 2; the variance of d is n / (n1 n2) + d^2 / (2 n).  The exact limits of g are from the non-central t distribution
+        /// (Ginterval); the approximate limits of d are d plus and minus z standard errors.
+        /// Weighted mean difference (type "m"): the difference between the means as it is, with the variance s1^2 / n1 + s2^2 / n2.
+        /// Either is pooled as the summary of the class describes.  A study without a standard deviation stops the pooling.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"type": "g" if g is given, "m" for the weighted mean difference, anything else for d from
+        /// means and standard deviations; "en", "em", "es": number, mean and standard deviation of the first (experimental) group;
+        /// "cn", "cm", "cs": those of the second (control) group; "g": g, if it is given; "strata" (may be left out); "gamma".</param>
         public static StepOutput RptEffect(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
@@ -1326,6 +1406,17 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The exact confidence limits of g.  t = g z has the non-central t distribution on df degrees of freedom whose
+        /// non-centrality is z times the effect size, z being the root of n1 n2 / (n1 + n2).  The lower limit is the effect size at
+        /// which the distribution function at t is 1 - alpha, and the upper that at which it is alpha.
+        /// </summary>
+        /// <param name="g">The difference between the means over the pooled standard deviation.</param>
+        /// <param name="df">The degrees of freedom, n1 + n2 - 2.</param>
+        /// <param name="z">The root of n1 n2 / (n1 + n2).</param>
+        /// <param name="alpha">The probability in each tail.</param>
+        /// <param name="lcig">On return, the lower limit; missing if it was not found.</param>
+        /// <param name="ucig">On return, the upper limit; missing if it was not found.</param>
         private static void Ginterval(double g, int df, double z, double alpha, out double lcig, out double ucig)
         {
             double t = g * z;
@@ -1335,6 +1426,12 @@ namespace StatsDirect.Builtins
             ucig = upper == Constant.MISSING ? Constant.MISSING : upper / z;
         }
 
+        /// <summary>
+        /// The non-centrality at which the non-central t distribution function at t, on df degrees of freedom, is p.  The function
+        /// falls as the non-centrality rises: an interval about t is widened until the function is above p at its lower end and below
+        /// p at its upper, and is then halved until its ends meet.
+        /// </summary>
+        /// <returns>The non-centrality, or the missing value if the distribution function could not be worked out.</returns>
         private static double NoncentralityOfT(double t, int df, double p)
         {
             double Difference(double delta)
@@ -1380,6 +1477,43 @@ namespace StatsDirect.Builtins
             return 0.5 * (lo + hi);
         }
 
+        /// <summary>
+        /// The relative risk of each table and the pooled relative risk of Mantel and Haenszel, for the meta-analysis and for the
+        /// crosstabs with strata.  The relative risk of a table is (a / (a + c)) / (b / (b + d)); a table with a cell of nothing
+        /// has the continuity correction in every cell first (ContinuityCorrect).  The pooled relative risk is the sum of
+        /// a (b + d) / n over the sum of b (a + c) / n, the terms of the denominator being the weights; the variance of its logarithm
+        /// is the sum of ((a + b)(a + c)(b + d) - a b n) / n^2 over the product of the two sums.  With the continuity correction
+        /// delayed the pooling is from the counts as they are, if there is an event in each group among the tables.
+        /// Q and the random effects figures are from the logarithm of the relative risk of each table with its variance
+        /// 1 / a + 1 / b - 1 / (a + c) - 1 / (b + d), and Q is about the pooled relative risk of Mantel and Haenszel.
+        /// </summary>
+        /// <param name="host">The preferences: the exact method (Koopman's limits for each table), the continuity correction.</param>
+        /// <param name="lowerBound">The element at which the tables start.</param>
+        /// <param name="k">The number of tables.</param>
+        /// <param name="realk">On return, the number of tables that are pooled.</param>
+        /// <param name="o">The tables (see the summary of the class).</param>
+        /// <param name="rmh">On return, the pooled relative risk.</param>
+        /// <param name="ll">On return, its lower limit.</param>
+        /// <param name="ul">On return, its upper limit.</param>
+        /// <param name="x2Rmh">On return, the square of the logarithm of the pooled relative risk over its standard error.</param>
+        /// <param name="cit">The normal deviate of the confidence level.</param>
+        /// <param name="rkr">On return, the relative risk of each table.</param>
+        /// <param name="rkw">On return, the fixed effects weight of each table.</param>
+        /// <param name="dsw">On return, the random effects weight of each table.</param>
+        /// <param name="rkrl">On return, the lower limit of each table.</param>
+        /// <param name="rkru">On return, the upper limit of each table.</param>
+        /// <param name="rkx">On return, the total of each table.</param>
+        /// <param name="lerr">On return, whether the lower limit of each table is missing.</param>
+        /// <param name="uerr">On return, whether the upper limit of each table is missing.</param>
+        /// <param name="qc">On return, Cochran's Q.</param>
+        /// <param name="dsrr">On return, the random effects pooled relative risk.</param>
+        /// <param name="dsx2">On return, the square of its logarithm over its standard error.</param>
+        /// <param name="dsll">On return, its lower limit.</param>
+        /// <param name="dsul">On return, its upper limit.</param>
+        /// <param name="tausq">On return, the variance between the tables.</param>
+        /// <param name="cced">On return, whether each table had the continuity correction.</param>
+        /// <param name="included">On return, whether each table is pooled (see IncludeRelativeRisk).</param>
+        /// <param name="ierr">On return, 0.</param>
         public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
         {
             ierr = -1;
@@ -1577,6 +1711,21 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
+        /// <summary>
+        /// The risk difference of each study, a / (a + c) - b / (b + d), and the pooled risk difference of Mantel and Haenszel: the
+        /// mean of the differences with the weights (a + c)(b + d) / n, whose variance is the sum of
+        /// (a c (b + d)^3 + b d (a + c)^3) / ((a + c)(b + d) n^2) over the square of the sum of the weights.  The variance of the
+        /// difference of a study is a c / (a + c)^3 + b d / (b + d)^3.  A study with a cell of nothing has the continuity correction
+        /// in every cell for its variance and, unless the correction is delayed, for its weight and its part of the variance of the
+        /// pooled difference; the difference itself is from the counts as they are.  Q is about the pooled difference of Mantel and
+        /// Haenszel.  A study with a group of nobody is left out.
+        /// </summary>
+        /// <param name="wll">On return, the difference of each study less z standard errors: for the bias indicators.</param>
+        /// <param name="wul">On return, the difference of each study plus z standard errors.</param>
+        /// <param name="included">On return, whether each study is pooled.</param>
+        /// <param name="realk">On return, the number of studies that are pooled.</param>
+        /// <remarks>The other parameters are as those of RelativeRiskMA.  With the exact method the limits of each study are
+        /// those of Miettinen (MathDbl.uppci).</remarks>
         private static void Riskdifma(IPreferences host, int k, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, double[] rkx, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dsx2, out double dsll, out double dsul, out double tausq, bool[] cced, bool[] included, double[] wll, double[] wul, out int realk, out int ierr)
         {
             ierr = -1;
@@ -1723,6 +1872,9 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
+        /// <summary>
+        /// Which of the two comparisons of incidence rates is wanted.
+        /// </summary>
         private enum MetaIncidenceRateMode
         {
             Difference = 1,
@@ -1733,6 +1885,16 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptMetaIncidenceRateDifference(IPreferencesAndProgressBar host, ParameterBag parameters) => RptMetaIncidenceRate(host, parameters, MetaIncidenceRateMode.Difference);
 
+        /// <summary>
+        /// Incidence rate meta-analysis: the report of the rate difference (IrdMeta) or of the rate ratio (IrrMeta).  With the exact
+        /// method the rate ratio also has the estimate by conditional maximum likelihood with its exact limits: the events of the
+        /// first group of a study, given the events of both groups, have the binomial distribution whose odds are the rate ratio
+        /// times the person-time of the first group over that of the second.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"a" and "pt1": the events and the person-time of the first group of each study; "b" and "pt2":
+        /// those of the second; "strata" (may be left out); "gamma".</param>
+        /// <param name="mode">The difference or the ratio.</param>
         private static StepOutput RptMetaIncidenceRate(IPreferencesAndProgressBar host, ParameterBag parameters, MetaIncidenceRateMode mode)
         {
             double cco = parameters["gamma"].AsDouble;
@@ -2010,6 +2172,14 @@ namespace StatsDirect.Builtins
             }
             return new StepOutput(outputParameters);
         }
+        /// <summary>
+        /// Odds ratio meta-analysis: the report of what Mantel works out.  With the exact method there is also the pooled odds ratio by
+        /// conditional maximum likelihood, with exact (Fisher) and mid-P limits and P values (ExactBB.Exact22K): given the totals of
+        /// every table, the sum of the a cells has a distribution that depends on the common odds ratio alone.
+        /// The bias indicators of Begg and Mazumdar and of Egger are from the logit limits of each study (GetLogitCi).
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">As for RptPetoMeta.</param>
         public static StepOutput RptMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double p2M = 0; double p1M = 0;
@@ -2253,6 +2423,31 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The odds ratio of each table and the pooled odds ratio of Mantel and Haenszel, for the meta-analysis, the Mantel-Haenszel
+        /// test and the crosstabs with strata.  The odds ratio of a table is a d / (b c); a table with a cell of nothing has the
+        /// continuity correction in every cell first (ContinuityCorrect).  The pooled odds ratio is R / S, R being the sum of a d / n
+        /// and S the sum of b c / n, whose terms are the weights; the variance of its logarithm is
+        /// sum(P R) / (2 R^2) + sum(P S + Q R) / (2 R S) + sum(Q S) / (2 S^2), with P = (a + d) / n and Q = (b + c) / n for each
+        /// table.  With the continuity correction delayed the pooling is from the counts as they are, if a d is above nothing in
+        /// some table.  If S is nothing the pooled odds ratio is infinite, and the lower limit is Sato's.
+        /// The chi-square of Mantel and Haenszel is from the counts as they are: the square of (the sum of a less its expectation,
+        /// less a half for continuity if it is a half or more) over the sum of the variances of a with the totals given.
+        /// Cochran's Q and the random effects figures are from the logarithm of the odds ratio of each table with its variance
+        /// 1 / a + 1 / b + 1 / c + 1 / d, and Q is about the pooled odds ratio of Mantel and Haenszel.  The statistic of Breslow and
+        /// Day is from the counts as they are: for each table the a that the pooled odds ratio would give with the totals of the
+        /// table, and its variance.
+        /// </summary>
+        /// <param name="x2">On return, the chi-square of Mantel and Haenszel.</param>
+        /// <param name="sk">On return, S, the sum of b c / n.</param>
+        /// <param name="odr">On return, the odds ratio of each table.</param>
+        /// <param name="odw">On return, the fixed effects weight of each table.</param>
+        /// <param name="dswt">On return, the random effects weight of each table.</param>
+        /// <param name="bd">On return, the statistic of Breslow and Day.</param>
+        /// <param name="included">On return, whether each table is pooled (see IncludeTable).</param>
+        /// <param name="ierr">On return, 0.</param>
+        /// <remarks>The other parameters are as those of RelativeRiskMA.  With the exact method the limits of each table are the
+        /// conditional exact limits (ExactBB.OddsRatioCI).</remarks>
         public static void Mantel(IPreferencesAndProgressBar host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr)
         {
             odr = new double[k + lowerBound];
@@ -2505,6 +2700,11 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
+        /// <summary>
+        /// The logit limits of the odds ratio of each table, the odds ratio times and over the exponential of z times the root of
+        /// 1 / a + 1 / b + 1 / c + 1 / d, with the continuity correction of a table with a cell of nothing: the limits from which the
+        /// bias indicators take the standard errors, whatever the method of the limits of the report.
+        /// </summary>
         public static void GetLogitCi(IPreferences host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
@@ -2534,6 +2734,11 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The approximate limits of the relative risk of each table, the relative risk times and over the exponential of z times the
+        /// root of 1 / a + 1 / b - 1 / (a + c) - 1 / (b + d), with the continuity correction of a table with a cell of nothing: the
+        /// limits from which the bias indicators take the standard errors, whatever the method of the limits of the report.
+        /// </summary>
         public static void GetAproxrrCI(IPreferences host, double[,] o, int k, double cit, double[] axll, double[] axul)
         {
             for (int i = 1; i <= k; i++)
@@ -2555,6 +2760,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The incidence rate difference of each study, a / t1 - b / t2, with the variance a / t1^2 + b / t2^2, pooled as the summary of
+        /// the class describes.  A study without an event in either group, or without person-time in a group, is left out.
+        /// </summary>
         private static void IrdMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsrd, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
         {
             double sumwt = 0.0;
@@ -2652,6 +2861,12 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
+        /// <summary>
+        /// The incidence rate ratio of each study, (a / t1) / (b / t2), pooled on the scale of its logarithm, whose variance is
+        /// 1 / a + 1 / b, as the summary of the class describes.  The limits of each study are exact: those of the binomial proportion
+        /// a of a + b, by the F distribution, put on the scale of the rate ratio.  A study without an event in one of its groups,
+        /// or without person-time in a group, is left out.
+        /// </summary>
         private static void IrrMeta(int k, double[] a, double[] b, double[] pt1, double[] pt2, out double rmh, out double ll, out double ul, out double zrmh, ref double cit, ref double cco, double[] rkr, double[] rkw, double[] dsw, double[] rkrl, double[] rkru, bool[] lerr, bool[] uerr, out double qc, out double dsirr, out double dz, out double dsll, out double dsul, out double realk, out double tausq, out int ierr)
         {
             double sumwt = 0.0;
@@ -2751,6 +2966,16 @@ namespace StatsDirect.Builtins
             ierr = 0;
         }
 
+        /// <summary>
+        /// Summary meta-analysis, of a statistic that each study gives with its standard error or with its confidence limits, pooled
+        /// as the summary of the class describes.  For a ratio the pooling is of the logarithm of the statistic, and a standard error
+        /// that is given is that of the logarithm.  From limits the standard error is (upper - lower) / (2 z), the limits being
+        /// taken to be at the confidence level of the analysis.  A study with a blank cell is left out.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"y": the statistic of each study; "use_ci": "true" if the limits "ll_y" and "ul_y" are given,
+        /// otherwise the standard error "se_y"; "use_ratio": whether the statistic is a ratio; "stat_in" and "statx": the name of the
+        /// statistic and the words of the test, for the report; "studies" (may be left out): the labels; "gamma".</param>
         public static StepOutput RptMetaSummary(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double dsul; double dsll; double dsrr;
@@ -3019,6 +3244,19 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Correlation meta-analysis.  By the method of Hedges and Olkin each correlation r is put on the scale of Fisher's z, whose
+        /// variance is 1 / (n - 3), pooled as the summary of the class describes, and the results are put back on the scale of r.
+        /// By the method of Schmidt and Hunter the correlations themselves are pooled with the numbers of subjects as weights: the
+        /// mean r; the variance of the correlations about it, with the same weights; the variance that sampling error accounts for,
+        /// (1 - mean r squared)^2 / (mean n - 1); and what is left, the variance of the population correlations, not below 0.  The
+        /// limits of the mean are from the standard error root(variance of r / k), the credibility limits from the variance that is
+        /// left, and the chi-square of heterogeneity is k times the variance of r over the variance of sampling error, on k - 1
+        /// degrees of freedom.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"r": the correlation of each study, between -1 and 1; "n": its number of subjects, above 3;
+        /// "studies" (may be left out): the labels; "gamma".</param>
         public static StepOutput RptMetaCorrelation(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double tausq;
@@ -3303,6 +3541,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Limits of the odds ratio of a table by the score test (Cornfield): see CornfieldLimit.  No report calls it at present.
+        /// </summary>
         public static void OrciCorn(IPreferences host, ref double conflev, ref double a, ref double b, ref double c, ref double d, out double odr, out double ll, out double ul)
         {
             //  ref Alan Agresti R script http://web.stat.ufl.edu/~aa/cda/R/two_sample/R2/
@@ -3356,6 +3597,11 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// One limit of the odds ratio by the score test.  From its starting value the odds ratio is moved by one part in a thousand
+        /// at a time, down for the lower limit (t = 0) and up for the upper (t = 1), until the score statistic of the table at
+        /// that odds ratio reaches the chi-square of the confidence level.
+        /// </summary>
         private static double CornfieldLimit(double x, double nx, double y, double ny, double conflev, ref double lim, double t)
         {
             double ci = 0;
@@ -3400,14 +3646,14 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// 
+        /// I-squared with its test-based limits, as IsquareNcc gives them when the exact method is off.  No report calls it at present.
         /// </summary>
-        /// <param name="q"></param>
-        /// <param name="k"></param>
-        /// <param name="cit"></param>
-        /// <param name="isq"></param>
-        /// <param name="ll"></param>
-        /// <param name="ul"></param>
+        /// <param name="q">Cochran's Q.</param>
+        /// <param name="k">The number of studies.</param>
+        /// <param name="cit">The normal deviate of the confidence level.</param>
+        /// <param name="isq">On return, I-squared as a percentage.</param>
+        /// <param name="ll">On return, the lower limit; missing with fewer than three studies.</param>
+        /// <param name="ul">On return, the upper limit.</param>
         /// <remarks>Higgins P, Thompson S. Quantifying heterogeneity in meta-analysis. Stats in Medicine 2002; 21: 1539-1558</remarks>
         public static void Isquare(double q, int k, double cit, out double isq, out double ll, out double ul)
         {
@@ -3437,6 +3683,12 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The continuity correction of a table with a cell of nothing, by the preference MetaCC.  A number between 0 and 1 (0.5 if
+        /// the preference is 0) is added to every cell.  For the treatment arm correction (-9) what is added to the cells of a group
+        /// is in proportion to the size of the group: n1 / (n1 + n2) to a and c, the cells of the first group, and n2 / (n1 + n2) to
+        /// b and d; if a group has nobody, 0.5 is added to every cell.
+        /// </summary>
         private static void ContinuityCorrect(IPreferences host, double a, double b, double c, double d, out double ax, out double bx, out double cx, out double dx)
         {
             double x = host.Preferences.MetaCC == 0.0 ? 0.5 : host.Preferences.MetaCC;
@@ -3480,6 +3732,17 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Proportion meta-analysis.  The proportion of each study is put on the scale of the double arcsine of Freeman and Tukey
+        /// (ArcsineP), whose variance is 1 / (n + 0.5), pooled as the summary of the class describes, and the results are put back on
+        /// the scale of a proportion (ArcsineInv) by the method that is chosen.  The limits of each study are the exact limits of a
+        /// binomial proportion.  If no study has an event the pooled proportion and its lower limit are given as 0, and if every
+        /// subject of every study has one the pooled proportion and its upper limit as 1.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="parameters">"sn" and "sr": the number of subjects and the number with the event of each study; "method":
+        /// "doubleArcsine" for the inverse of the double arcsine with the harmonic mean of the numbers of subjects, anything else
+        /// for the square of the sine of half the pooled value; "strata" (may be left out); "gamma".</param>
         public static StepOutput RptProportionMeta(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double cco = parameters["gamma"].AsDouble;
@@ -3713,6 +3976,9 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The double arcsine of r events in n subjects: arcsin root(r / (n + 1)) + arcsin root((r + 1) / (n + 1)).
+        /// </summary>
         private static double ArcsineP(double r, double n)
         {
             // Anscombe (1948)
@@ -3722,6 +3988,9 @@ namespace StatsDirect.Builtins
             return Math.Asin(Math.Sqrt(r / (n + 1.0))) + Math.Asin(Math.Sqrt((r + 1.0) / (n + 1.0)));
         }
 
+        /// <summary>
+        /// The standard error of the double arcsine of a proportion of n subjects, root(1 / (n + fudge)); fudge is 0.5.
+        /// </summary>
         private static double ArcsineSe(double n, double fudge)
         {
             // Anscombe (1948)
@@ -3732,6 +4001,14 @@ namespace StatsDirect.Builtins
             return Math.Sqrt(1.0 / (n + fudge));
         }
 
+        /// <summary>
+        /// The proportion that has the double arcsine t.  By the first method, the square of the sine of t / 2.  By the second, with
+        /// m the harmonic mean of the numbers of subjects of the studies: 0.5 (1 - sign(cos t) root(1 - (sin t + (sin t - 1 / sin t) / m)^2)),
+        /// and 0 or 1 if t is beyond the double arcsine of no events or of m events in m subjects.
+        /// </summary>
+        /// <param name="t">The double arcsine.</param>
+        /// <param name="n">The numbers of subjects of the studies, from element 1; the last element is not one of them.</param>
+        /// <param name="method">The method.</param>
         private static double ArcsineInv(double t, double[] n, VarianceStabilisationMethod method)
         {
             // Anscombe (1948)
@@ -3759,6 +4036,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Whether a table is taken into the pooling of the odds ratio: it is left out if there is no event in either group, if every
+        /// subject of both groups has the event, or if a group has nobody.
+        /// </summary>
         private static bool IncludeTable(double[,] o, int i)
         {
             // a group of nobody tells nothing of the difference between the groups
@@ -3778,11 +4059,18 @@ namespace StatsDirect.Builtins
             return !(o[i, 1] == 0.0 && o[i, 2] == 0.0);
         }
 
+        /// <summary>
+        /// The label of table i in a report: its own label if the tables have labels, with a note of the continuity correction if it
+        /// had one, or "* (excluded)" if it is not pooled (IncludeTable).
+        /// </summary>
         public static string GetMetaLabel(IPreferences host, double[,] o, int i, bool stratlab, bool[] cced, string[] title)
         {
             return GetMetaLabel(host, IncludeTable(o, i), i, stratlab, cced, title);
         }
 
+        /// <summary>
+        /// The label of table i in a report, for a table that is known to be pooled or not.
+        /// </summary>
         public static string GetMetaLabel(IPreferences host, bool included, int i, bool stratlab, bool[] cced, string[] title)
         {
             if (included)
@@ -3794,6 +4082,21 @@ namespace StatsDirect.Builtins
                 return "* (excluded)";
         }
 
+        /// <summary>
+        /// The bias indicator of Harbord and Egger: for each study the score Z of the test of no difference and its variance V, from
+        /// the counts as they are; Z / root(V) is regressed on root(V), and the intercept is the bias, with a t test on two degrees of
+        /// freedom fewer than there are studies.  Nothing is given with fewer than four studies.
+        /// For the odds ratio (method 1) Z = a - (a + b)(a + c) / n and V is the variance of a with the totals of the table given.
+        /// For the relative risk (method 2) Z = (a n - (a + b)(a + c)) / (c + d) and V = (a + b)(a + c)(b + d) / (n (c + d)).
+        /// For a proportion (method 3) the table has the events in o[i, 1], the number of subjects in o[i, 2] and the pooled
+        /// proportion p in o[i, 3]: Z = events - n p and V = n p (1 - p).
+        /// </summary>
+        /// <param name="host">The preferences.</param>
+        /// <param name="outputParameters">Where the results are put.</param>
+        /// <param name="o">The tables.</param>
+        /// <param name="k">The number of tables.</param>
+        /// <param name="cco">The confidence level of the analysis; the limits of the bias are at the level of BiasTestConfidenceLevel.</param>
+        /// <param name="method">1, 2 or 3, as above.</param>
         public static void ModMetabias(IPreferences host, ParameterBag outputParameters, double[,] o, int k, double cco, int method)
         {
             //  Horbord et al 2006
@@ -3906,6 +4209,19 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("p", p2);
         }
 
+        /// <summary>
+        /// I-squared, 100 (Q - df) / Q and not below 0, with its confidence limits.  With the exact method off the limits are
+        /// test-based: those of the logarithm of H, H^2 being Q / df, from its standard error; they need three studies.  With the
+        /// exact method on they are from the non-central chi-square distribution of Q (see the comments below).
+        /// </summary>
+        /// <param name="host">The preferences: the exact method.</param>
+        /// <param name="q">Cochran's Q.</param>
+        /// <param name="k">The number of studies.</param>
+        /// <param name="cco">The confidence level.</param>
+        /// <param name="cit">Its normal deviate.</param>
+        /// <param name="i2">On return, I-squared as a percentage; missing with fewer than two studies.</param>
+        /// <param name="ll">On return, the lower limit.</param>
+        /// <param name="ul">On return, the upper limit.</param>
         public static void IsquareNcc(IPreferences host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
         {
             double SElnH;
@@ -4174,6 +4490,10 @@ namespace StatsDirect.Builtins
             return b;
         }
 
+        /// <summary>
+        /// The variance that confidence limits imply if they are an estimate plus and minus z standard errors: the square of
+        /// (upper - lower) / (2 z), on the scale of the logarithm for a ratio.
+        /// </summary>
         public static double VarianceFromCI(double ll, double ul, double cit, bool logtransform)
         {
             if (cit <= 0)
@@ -4183,6 +4503,9 @@ namespace StatsDirect.Builtins
                 : Math.Pow((ul - ll) / 2 / cit, 2);
         }
 
+        /// <summary>
+        /// A copy of a list: the charts are drawn after the report is made, and must not see the changes made to the list meanwhile.
+        /// </summary>
         private static T[] ShallowCopy<T>(T[] original)
         {
             T[] copy = new T[original.Length];
