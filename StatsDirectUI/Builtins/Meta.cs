@@ -987,16 +987,13 @@ namespace StatsDirect.Builtins
                     if (g[i] != Constant.MISSING)
                     {
                         double m = n - 2;
-                        if (m < 200)
-                            gj[i] = Math.Exp(PDF.alogam(m / 2.0)) / (Math.Sqrt(m / 2.0) * Math.Exp(PDF.alogam((m - 1.0) / 2.0)));
-                        else
-                            gj[i] = 1.0 - 3.0 / (4.0 * m - 1.0);
+                        gj[i] = Math.Exp(PDF.alogam(m / 2.0) - PDF.alogam((m - 1.0) / 2.0)) / Math.Sqrt(m / 2.0);
                         d[i] = gj[i] * g[i];
                         vard = n / (cn[i] * en[i]) + Math.Pow(d[i], 2.0) / (2.0 * n);
                         lcid[i] = d[i] - cit * Math.Sqrt(vard);
                         ucid[i] = d[i] + cit * Math.Sqrt(vard);
                         double z = Math.Sqrt(cn[i] * en[i] / n);
-                        Ginterval(g[i], Convert.ToInt32(n - 2), z, (1.0 - cco) / 2.0, lcid[i], ucid[i], out lcig[i], out ucig[i]);
+                        Ginterval(g[i], Convert.ToInt32(n - 2), z, (1.0 - cco) / 2.0, out lcig[i], out ucig[i]);
                     }
                     else
                     {
@@ -1329,103 +1326,58 @@ namespace StatsDirect.Builtins
             }
         }
 
-        private static void Ginterval(double g, int df, double z, double alpha, double lcid, double ucid, out double lcig, out double ucig)
+        private static void Ginterval(double g, int df, double z, double alpha, out double lcig, out double ucig)
         {
-
             double t = g * z;
-            double al = 1.0 - alpha;
-            double au = alpha;
-            const double acc = 0.000000001;
-            double x = t; // lcid * z; 
-            double na = ExFortran.pnct(t, df, x, out _);
-            double delta = Math.Abs(na - al);
-            double last = delta;
-            double gstep = x;
-            int cnt = 0;
-            double gtry;
+            double lower = NoncentralityOfT(t, df, 1.0 - alpha);
+            double upper = NoncentralityOfT(t, df, alpha);
+            lcig = lower == Constant.MISSING ? Constant.MISSING : lower / z;
+            ucig = upper == Constant.MISSING ? Constant.MISSING : upper / z;
+        }
 
-            // lcig = Constant.MISSING;
-            do
+        private static double NoncentralityOfT(double t, int df, double p)
+        {
+            double Difference(double delta)
             {
-                cnt++;
-                if (cnt > 100)
-                    break;
-                gstep /= 10.0;
-                gtry = x + gstep;
-                na = ExFortran.pnct(t, df, gtry, out _);
+                double v = ExFortran.pnct(t, df, delta, out int fault);
+                return fault != 0 || v == Constant.MISSING || double.IsNaN(v) ? double.NaN : v - p;
             }
-            while (!(na > 0 && na < 1));
 
-            if (Math.Abs(na - al) > delta)
-                gstep = -gstep;
-            cnt = 0;
-            gtry = x;
-            do
+            double width = Math.Max(1.0, Math.Abs(t));
+            double lo = t - width;
+            double hi = t + width;
+            double flo = Difference(lo);
+            double fhi = Difference(hi);
+            for (int i = 0; i < 60 && !(flo > 0.0 && fhi < 0.0); i++)
             {
-                cnt++;
-                if (cnt > 5000)
+                if (double.IsNaN(flo) || double.IsNaN(fhi))
+                    return Constant.MISSING;
+                width *= 2.0;
+                if (!(flo > 0.0))
                 {
-                    lcig = Constant.MISSING;
-                    break;
+                    lo = t - width;
+                    flo = Difference(lo);
                 }
-                gtry += gstep;
-                na = ExFortran.pnct(t, df, gtry, out _);
-                delta = Math.Abs(na - al);
-                if (delta < acc)
+                if (!(fhi < 0.0))
                 {
-                    lcig = gtry / z;
-                    break;
+                    hi = t + width;
+                    fhi = Difference(hi);
                 }
-                if (delta > last)
-                    gstep = -gstep / 10.0;
-                last = delta;
             }
-            while (true);
-
-            x = ucid * z;
-            na = ExFortran.pnct(t, df, x, out _);
-            delta = Math.Abs(na - au);
-            last = delta;
-            gstep = x;
-            cnt = 0;
-            do
+            if (!(flo > 0.0 && fhi < 0.0))
+                return Constant.MISSING;
+            for (int i = 0; i < 200 && hi - lo > 1.0E-13 * Math.Max(1.0, Math.Abs(lo) + Math.Abs(hi)); i++)
             {
-                cnt++;
-                if (cnt > 100)
-                    break;
-                gstep /= 10.0;
-                gtry = x + gstep;
-                na = ExFortran.pnct(t, df, gtry, out _);
+                double mid = 0.5 * (lo + hi);
+                double fm = Difference(mid);
+                if (double.IsNaN(fm))
+                    return Constant.MISSING;
+                if (fm > 0.0)
+                    lo = mid;
+                else
+                    hi = mid;
             }
-            while (!(na > 0 & na < 1));
-
-            if (Math.Abs(na - au) > delta)
-                gstep = -gstep;
-
-            cnt = 0;
-            gtry = x;
-            ucig = Constant.MISSING;
-            do
-            {
-                cnt++;
-                if (cnt > 5000)
-                {
-                    lcig = Constant.MISSING;
-                    break;
-                }
-                gtry += gstep;
-                na = ExFortran.pnct(t, df, gtry, out _);
-                delta = Math.Abs(na - au);
-                if (delta < acc)
-                {
-                    ucig = gtry / z;
-                    break;
-                }
-                if (delta > last)
-                    gstep = -gstep / 10.0;
-                last = delta;
-            }
-            while (true);
+            return 0.5 * (lo + hi);
         }
 
         public static void RelativeRiskMA(IPreferences host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2Rmh, double cit, out double[] rkr, out double[] rkw, out double[] dsw, out double[] rkrl, out double[] rkru, out double[] rkx, out bool[] lerr, out bool[] uerr, out double qc, out double dsrr, out double dsx2, out double dsll, out double dsul, out double tausq, out bool[] cced, out bool[] included, out int ierr)
