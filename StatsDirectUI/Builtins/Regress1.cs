@@ -2086,6 +2086,18 @@ namespace StatsDirect.Builtins
         /// <param name="selectX">If the nth element is true, include the nth predictor in the regression; if false, exclude it.</param>
         /// <param name="dropped">Message if any are dropped; unchanged if none are. Passed by ref as callers can make multiple calls in sequence then check for drops.</param>
         /// <param name="errMsg">Message if any errors; unchanged if none. Passed by ref as callers can make multiple calls in sequence then check for errors.</param>
+        /// <remarks>
+        /// The model is log(mu) = X b + offset, where mu is the expected count.  This routine checks the data, sets the starting values, calls the fitting
+        /// loop (XIterativeWeightedLeastSquares, where the method is described) and then works out what is reported from what the loop leaves behind:
+        ///     df                  the observations used, less the rank of the model
+        ///     leverage            the diagonal of the hat matrix, h = w x'(X'WX)^-1 x, where w is the weight that the fit gave the observation
+        ///     devianceResidual    the square root of each observation's share of the deviance, with the sign of y - mu
+        ///     covariance          (X'WX)^-1 for the coefficients, as the lower triangle packed by rows: element (i, k), k no more than i, is at i(i - 1)/2 + k
+        ///     seBeta              the square roots of its diagonal, which is at i(i + 1)/2
+        /// The coefficients in beta are the constant, if there is one, and then the selected predictors in order.
+        /// Arrays are 1-based: element 0 is unused.  An observation with a prior weight of zero is left out.  The loop is called a second time if the first
+        /// call dropped observations at the boundary, so that the fit is made without them from the start.
+        /// </remarks>
         public static void X_Poisson_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int predictors, bool[] selectX, int parameters, double[] y, double[] t, double[] weight, ref double deviance, ref int df, double[] beta, ref int rank, double[] seBeta, double[] covariance, double accuracy, int maxIterations, double[] fits, double[] devianceResidual, double[] leverage, double[] offset, out int errLevel, ref string dropped, ref string errMsg)
         {
             double ti = 0;
@@ -2247,6 +2259,19 @@ namespace StatsDirect.Builtins
         ///  </summary>
         ///  <param name="selectX">If the nth element is true, include the nth predictor in the regression; if false, exclude it.</param>
         ///  <param name="err_level">0 = no errors; 1 = input data errors; 2 = calculation errors critical; 3 = calculation errors carry on</param>
+        ///  <remarks>
+        ///  The model is log(p / (1 - p)) = X b + offset, where p is the probability of a response: y_r responses out of y_t, so that mu = y_t p is the
+        ///  expected number.  This routine checks the data, sets the starting values, calls the fitting loop (XIterativeWeightedLeastSquares, where the
+        ///  method is described) and then works out what is reported from what the loop leaves behind:
+        ///      df            the observations used, less the rank of the model
+        ///      leverage      the diagonal of the hat matrix, h = w x'(X'WX)^-1 x, where w is the weight that the fit gave the observation
+        ///      residual      the square root of each observation's share of the deviance, with the sign of y_r - mu
+        ///      covariance    (X'WX)^-1 for the coefficients, as the lower triangle packed by rows: element (i, k), k no more than i, is at i(i - 1)/2 + k
+        ///      se_beta       the square roots of its diagonal, which is at i(i + 1)/2
+        ///  The coefficients in beta are the constant, if there is one, and then the selected predictors in order.
+        ///  Arrays are 1-based: element 0 is unused.  An observation with a prior weight of zero, or with y_t of zero, is left out.  The loop is called a
+        ///  second time if the first call dropped observations at the boundary, so that the fit is made without them from the start.
+        ///  </remarks>
         public static void X_Logistic_Regression(bool useIntercept, bool useOffset, ref bool useWeights, int records, double[,] x, int xVariables, bool[] selectX, int parameters, double[] y_r, double[] y_t, double[] weight, out double deviance, ref int df, double[] beta, ref int rank, double[] se_beta, double[] covariance, double accuracy, int max_iterations, double[] fit, double[] residual, double[] leverage, double[] offset, out int err_level, ref string dropped, ref string err_msg)
         {
             int observations = 0;
@@ -2442,6 +2467,9 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Get starting values for linear predictor and fitted values for Poisson regression
         ///  </summary>
+        ///  <remarks>
+        ///  mu starts at y, or at 1 where y is zero, and eta at log(mu).  An observation of zero weight gets zeros, which the fit does not use.
+        ///  </remarks>
         private static void X_Poisson_Starting_Values(int n, double[] y, double[] fitted_values, double[] linear_predictor, double[] weight, int observations)
         {
             int i;
@@ -2490,6 +2518,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  get starting values for linear predictor (eta) and fitted values (fvl) for logistic regression
         ///  </summary>
+        ///  <remarks>
+        ///  With r responses out of n, mu starts at n (r + 1/2) / (n + 1), which is strictly between 0 and n even when r is 0 or n, and eta at
+        ///  log(mu / (n - mu)).  An observation of zero weight, or with n of zero, gets zeros, which the fit does not use.
+        ///  </remarks>
         private static void X_Logistic_Starting_Values(int records, double[] y_r, double[] y_t, double[] fitted_value, double[] linearPredictor, double[] weight, int observations)
         {
             if (records == observations)
@@ -2518,6 +2550,36 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Fits a generalised linear model by iteratively reweighted least squares: model 1 is binomial with a logit link, model 2 is Poisson with a log link.
+        /// </summary>
+        /// <remarks>
+        /// Each pass solves the weighted least squares problem  min || W^(1/2) (z - X b) ||  where, at the current fit,
+        ///     z = (eta - offset) + (y - mu) / (dmu/deta)     the working response
+        ///     W = (dmu/deta)^2 / var(y)                      the working weight: n p (1 - p) for the logistic model and mu for the Poisson
+        /// then sets eta = X b + offset, and mu from eta.  It stops when the deviance changes by less than accuracy * (1 + deviance).
+        ///
+        /// The equations are solved without forming X'WX, whose condition number is the square of that of W^(1/2) X:
+        ///     W^(1/2) X = Q R        by Householder reflections (QRFactorization)
+        ///     R = U S P'             the singular value decomposition of the triangle (X_SVD_Regression_Main)
+        ///     b = P S^-1 U' Q' W^(1/2) z
+        /// Singular values that are negligible beside the largest are left out of the sum, so a model that is not of full rank still gets an answer, and
+        /// its rank is returned.
+        ///
+        /// When the fit has converged one more pass is made, with final set, in which nothing is updated: it leaves the decomposition at the final weights.
+        /// On return decomposition holds S^-1 P' in its first rank rows, from which the caller gets the covariance matrix P S^-2 P' = (X'WX)^-1 and the
+        /// leverages, and working_weight holds W^(1/2), times the square root of the prior weight if there is one.
+        ///
+        /// Arrays are 1-based (element 0 is unused), and several are used for more than one thing:
+        ///     fit               mu on entry and on return; within a pass, W^(1/2) z and then U'Q'W^(1/2) z
+        ///     working_weight    dmu/deta, then W^(1/2)
+        ///     variance_std      1 / sd(y): not a variance
+        ///     s_diagonals       the scalars of the Householder reflections, then the singular values, then their reciprocals
+        ///     decomposition     X, then W^(1/2) X, then its QR factors, then P', then S^-1 P'
+        ///     t                 the binomial denominators; for the Poisson model only a flag, set to -1 by PoissonDeviance when a fitted value is not positive
+        ///
+        /// err_level 2 stops the fit with the message in err_msg; err_level 3 is a warning, and the fit carries on.
+        /// </remarks>
         private static void XIterativeWeightedLeastSquares(int model, bool useIntercept, ref bool useWeights, int records, double[,] x, int predictors, bool[] select_x, double[] y, double[] t, double[] weight, ref int observations, ref double deviance, out int rank, double[] beta, int parameters, double[] fit, double[] eta, double[] variance_std, double[] working_weight, double[] offset, double[,] decomposition, double accuracy, int max_iterations, out int iterations, double[] s_diagonals, ref int err_level, ref string dropped, ref string err_msg)
         {
             int i; int k;
@@ -2528,10 +2590,14 @@ namespace StatsDirect.Builtins
             //level 3 errors are allowed to continue and generate a warning in err_msg
 
             rank = parameters;
+            // final is set for the last pass, which updates nothing.  indqy is passed to the singular value decomposition: 1 if the right-hand side is to be
+            // transformed with the matrix, 0 on the final pass, when there is none.
             bool final = false;
             int indqy = 1;
             iterations = 0;
             // setup x matrix
+            // The design matrix goes into decomposition: a column of ones for the constant, then the selected predictors in order.  (With a constant, every
+            // column up to the number of predictors is set to one first, and the selected predictors then overwrite from the second.)
             if (useIntercept)
             {
                 for (i = 1; i <= records; i++)
@@ -2557,10 +2623,12 @@ namespace StatsDirect.Builtins
                 }
             }
             // working weights and response
+            // One pass of this loop is one weighted least squares fit
             do
             {
                 iterations++;
                 // get derivative then variance
+                // dmu/deta goes into working_weight and 1 / sd(y) into variance_std, both at the current fit
                 switch (model)
                 {
                     case 1:
@@ -2573,6 +2641,9 @@ namespace StatsDirect.Builtins
                         break;
                 }
 
+                // The right-hand side W^(1/2) z, written over the fitted values.  Since W^(1/2) = (dmu/deta) / sd,
+                //     W^(1/2) z = ((eta - offset) dmu/deta + (y - mu)) / sd
+                // Not on the final pass, which keeps the fitted values for the caller.
                 if (final == false)
                 {
                     for (i = 1; i <= records; i++)
@@ -2580,10 +2651,12 @@ namespace StatsDirect.Builtins
                         fit[i] = ((eta[i] - offset[i]) * working_weight[i] + y[i] - fit[i]) * variance_std[i];
                     }
                 }
+                // W^(1/2) = (dmu/deta) / sd
                 for (i = 1; i <= records; i++)
                 {
                     working_weight[i] = variance_std[i] * working_weight[i];
                 }
+                // Prior weights: both sides of each equation are multiplied by the square root of the observation's weight
                 if (useWeights)
                 {
                     if (final)
@@ -2609,6 +2682,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
+                // W^(1/2) X: each row of the design matrix multiplied by its weight
                 for (i = 1; i <= parameters; i++)
                 {
                     if (records > 0)
@@ -2619,15 +2693,20 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
+                // W^(1/2) X = Q R.  R replaces the upper triangle, the vectors of the reflections go below it and their scalars into s_diagonals.
                 QRFactorization(records, parameters, decomposition, s_diagonals);
+                // Q' applied to the right-hand side: only its first elements, as many as there are parameters, are needed from here on
                 if (final == false)
                 {
                     X_Householder_QR_Transformation(records, parameters, decomposition, s_diagonals, fit);
                 }
 
+                // R = U S P'.  The singular values replace s_diagonals, P' replaces the top of decomposition, and U' is applied to the right-hand side
+                // unless indqy is 0, as it is on the final pass.
                 X_SVD_Regression_Main(parameters, decomposition, records, indqy, fit, s_diagonals, ref err_level, ref err_msg);
                 if (err_level == 0)
                 {
+                    // The rank is the number of singular values that are not negligible.  If it changes from one pass to the next the fit is not stable.
                     rank = IsRank(parameters, s_diagonals);
                     if (iterations == 1)
                     {
@@ -2641,6 +2720,7 @@ namespace StatsDirect.Builtins
                             err_level = 3;
                         }
                     }
+                    // S^-1 P': each of the first rank rows of P' is divided by its singular value
                     for (i = 1; i <= rank; i++)
                         s_diagonals[i] = 1.0 / s_diagonals[i];
 
@@ -2653,9 +2733,12 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
+                // The final pass ends here, with S^-1 P' in decomposition for the covariance matrix and the leverages
                 if (final)
                     return;
 
+                // b = (S^-1 P')' c, where c is the right-hand side after both transformations: the least squares solution, and the shortest one if the model
+                // is not of full rank
                 for (i = 1; i <= parameters; i++)
                     beta[i] = 0.0;
                 for (j = 1; j <= rank; j++)
@@ -2666,6 +2749,7 @@ namespace StatsDirect.Builtins
                             beta[i] += fit[j] * decomposition[j, i];
                     }
                 }
+                // The design matrix again, since the decomposition was made in its place, for the linear predictor eta = X b + offset
                 if (useIntercept)
                 {
                     k = 1;
@@ -2707,6 +2791,8 @@ namespace StatsDirect.Builtins
                     }
                 }
                 //  fit response from linear predictor
+                // mu from eta, by the inverse of the link.  An observation whose eta is too large to tell from the boundary is dropped, by setting its weight
+                // to zero, and named in dropped.
                 switch (model)
                 {
                     case 1:
@@ -2717,6 +2803,7 @@ namespace StatsDirect.Builtins
                         break;
                 }
 
+                // The deviance at the new fit.  PoissonDeviance sets t to -1 if a fitted value is not positive, which stops the fit; LogisticDeviance leaves t as it is.
                 deviance = 0.0;
                 if (useWeights)
                 {
@@ -2787,6 +2874,7 @@ namespace StatsDirect.Builtins
                     }
 
                 }
+                // Converged when the deviance has changed by less than accuracy * (1 + deviance), or is zero: one more pass follows, with final set
                 if (deviance <= 0)
                 {
                     final = true;
@@ -2808,6 +2896,7 @@ namespace StatsDirect.Builtins
                         dev1 = deviance;
                     }
                 }
+                // Too many passes: a warning, and the final pass follows all the same
                 if (iterations > max_iterations)
                 {
                     err_level = 3;
@@ -2819,6 +2908,14 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The leverage of each observation: the diagonal of the hat matrix, h = w x'(X'WX)^-1 x.
+        /// </summary>
+        /// <remarks>
+        /// q holds S^-1 P' as the fitting loop left it, so that (X'WX)^-1 = (S^-1 P')'(S^-1 P') and h is w times the squared length of the vector S^-1 P' x.
+        /// workingWeight holds the square root of w.  work holds the row x of the design matrix in its first ip elements (a one first, if there is a
+        /// constant) and the vector S^-1 P' x after them.
+        /// </remarks>
         private static void LeverageFromDerivative(bool mean, int n, int m, double[,] x, bool[] isx, int ip, double[,] q, int rank, double[] workingWeight, double[] h, double[] work)
         {
             int im = mean ? 1 : 0;
@@ -2860,6 +2957,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  log Poisson deviance
         ///  </summary>
+        ///  <remarks>
+        ///  One observation's share of the deviance: 2 (y log(y / mu) - (y - mu)), which is 2 mu when y is zero.  A fitted value that is not positive cannot
+        ///  be used: t is set to -1 to tell the caller, and the share is returned as zero.
+        ///  </remarks>
         private static double PoissonDeviance(double fit, double y, ref double t)
         {
             double dev = 0.0;
@@ -2878,6 +2979,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  logistic binary deviance
         ///  </summary>
+        ///  <remarks>
+        ///  One observation's share of the deviance, for y responses out of t with mu expected: 2 (y log(y / mu) + (t - y) log((t - y) / (t - mu))).
+        ///  When y is 0 or t one of the two terms vanishes, which leaves 2 t |log(1 - mu / t)| or 2 t |log(mu / t)|.
+        ///  </remarks>
         private static double LogisticDeviance(double fit, double y, double t)
         {
             double dev = 0.0;
@@ -2900,6 +3005,13 @@ namespace StatsDirect.Builtins
             return 2.0 * dev;
         }
 
+        /// <summary>
+        /// The covariance matrix of the coefficients, (X'WX)^-1 = P S^-2 P', from q = S^-1 P' as the fitting loop left it.
+        /// </summary>
+        /// <remarks>
+        /// Element (i, k) is the sum, over the first rank rows of q, of q[j, i] q[j, k].  Only the lower triangle is formed, packed by rows: element (i, k),
+        /// k no more than i, goes to i(i - 1)/2 + k, so that the diagonal is at i(i + 1)/2.  work holds column i of q.
+        /// </remarks>
         private static void X_Covariance_From_SVD(int p, int rank, double[,] q, double[] covariance, double[] work)
         {
             int ij = 1;
@@ -2929,6 +3041,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Poisson derivative of log link function
         ///  </summary>
+        ///  <remarks>dmu/deta = exp(eta), which is mu.  Zero for an observation of zero weight.</remarks>
         private static void X_Poisson_Derivative(int records, double[] eta, double[] derivative, double[] weight, int observations)
         {
             if (records == observations)
@@ -2946,6 +3059,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  binomial logistic derivative
         ///  </summary>
+        ///  <remarks>dmu/deta = t e / (1 + e)^2 with e = exp(eta), which is t p (1 - p).  Zero for an observation of zero weight or with t of zero.</remarks>
         private static void X_Binomial_Derivative(int records, double[] eta, double[] t, double[] derivative, double[] weight, int observations)
         {
             int i;
@@ -2979,6 +3093,7 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Poisson variance
         ///  </summary>
+        ///  <remarks>Not the variance but the reciprocal of the standard deviation of y: 1 / sqrt(mu).  Zero for an observation of zero weight.</remarks>
         private static void X_Poisson_Variance(int records, double[] fit, double[] variance_std, double[] weight, int observations)
         {
             if (records != observations)
@@ -2996,6 +3111,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  binomial variance
         ///  </summary>
+        ///  <remarks>
+        ///  Not the variance but the reciprocal of the standard deviation of y: sqrt(t / (mu (t - mu))), which is 1 / sqrt(t p (1 - p)).  Zero for an
+        ///  observation of zero weight or with t of zero.
+        ///  </remarks>
         private static void X_Binomial_Variance(int records, double[] fit, double[] t, double[] variance_std, double[] weight, int observations)
         {
             if (records != observations)
@@ -3011,16 +3130,25 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  This routine finds the QR factorization of matrix A (m by n, where m>=n) such that the maxtrix is is reduced to upper triangular form by orthogonal transformations.
+        ///  This routine finds the QR factorization of matrix A (m by n, where m>=n) such that the matrix is reduced to upper triangular form by orthogonal transformations.
         ///  Householder reduction method.
         ///  </summary>
+        ///  <remarks>
+        ///  On return the upper triangle of a holds R.  Each column below the diagonal holds the vector of the reflection that cleared it, and zeta holds one
+        ///  scalar for each reflection, or zero where none was needed.  Reflection i is H = I - u u', where u is zero above element i, zeta[i] at element i
+        ///  and the stored column below it, scaled so that u'u = 2.  Q' is the product of the reflections, the first applied first.
+        ///  This is the factorisation that LAPACK calls DGEQRF, which holds each reflection as I - tau v v' with the first element of v equal to one.
+        ///  </remarks>
         private static void QRFactorization(int m, int n, double[,] a, double[] zeta)
         {
             for (int i1 = 1; i1 <= Math.Min(m - 1, n); i1++)
             {
+                // The reflection that clears column i1 below the diagonal
                 X_Setup_Householder_Reflection(m - i1, ref a[i1, i1], a, out zeta[i1], i1 + 1, i1, m);
                 if (zeta[i1] > 0.0 & i1 < n)
                 {
+                    // The reflection applied to the columns to the right.  With zeta put on the diagonal for the moment, column i1 from the diagonal down
+                    // is the vector u.  The rest of zeta is borrowed for the products u'a of u with each column a, and each column then becomes a - (u'a) u.
                     double temp_1 = a[i1, i1];
                     a[i1, i1] = zeta[i1];
                     for (int i = 1; i <= n - i1; i++)
@@ -3068,9 +3196,13 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  B := Q*B transform of real matrix (row, col) B where Q is an orthogonal (row, row) matrix. 
-        ///  Product of Householder transformation matrices.
+        ///  b := Q'b, where Q is the orthogonal matrix of the factorisation a = QR that QRFactorization left in a and zeta: the reflections are applied to b in
+        ///  the order in which they were made.
         ///  </summary>
+        ///  <remarks>
+        ///  The first n elements of the result are the right-hand side of R x = Q'b, whose solution is the least squares solution; the squares of the rest
+        ///  add up to the residual sum of squares.  LAPACK calls this DORMQR, used with the transpose.
+        ///  </remarks>
         private static void X_Householder_QR_Transformation(int m, int n, double[,] a, double[] zeta, double[] b)
         {
             for (int i1 = 1; i1 <= n; i1++)
@@ -3078,6 +3210,7 @@ namespace StatsDirect.Builtins
                 double zeta_i1 = zeta[i1];
                 if (zeta_i1 > 0.0)
                 {
+                    // With zeta put on the diagonal for the moment, column i1 from the diagonal down is the vector u: hold is u'b, and b becomes b - (u'b) u
                     double temp = a[i1, i1];
                     a[i1, i1] = zeta_i1;
                     double hold = 0.0;
@@ -3115,6 +3248,13 @@ namespace StatsDirect.Builtins
         ///  First reduce R to its bidiagonal form using Givens' plane rotations.
         ///  Then use the QR algorithm to get the singular value decomposition of the bidiagonal form.
         ///  </summary>
+        ///  <remarks>
+        ///  On entry the upper triangle of a holds R; m is the number of rows that the index arithmetic takes the array to have.  On return sv holds the
+        ///  singular values, largest first, the first n rows of a hold P' (row j is the right singular vector that goes with sv[j]) and, if ncolb is 1, the
+        ///  first n elements of b have been multiplied by Q', which the fitting loop calls U'.
+        ///  In LAPACK the same three steps are DGEBRD (reduction to bidiagonal form, there by reflections), DORGBR (forming P') and DBDSQR (the singular
+        ///  values of a bidiagonal matrix).
+        ///  </remarks>
         private static void X_SVD_Regression_Main(int n, double[,] a, int m, int ncolb, double[] b, double[] sv, ref int err_level, ref string err_msg)
         {
             double[] work = new double[2 * m + 1];
@@ -3132,6 +3272,13 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Factorize upper triangular matrix as R = Q*B*P'.
         ///  </summary>
+        ///  <remarks>
+        ///  B is upper bidiagonal: its diagonal is returned in diag and the line above the diagonal in super_diag.  Row k of the triangle is cleared beyond
+        ///  the element next to the diagonal by rotating neighbouring columns, from the last column inwards.  Each rotation of columns puts an element below
+        ///  the diagonal, and a rotation of rows takes it away again (X_SVD_Rotation_Transform).  The rotations of rows make up Q' and are applied to y as
+        ///  they are made, if ncoly is 1.  The rotations of columns make up P: the tangent of each is kept in place of the element that it cleared, for
+        ///  X_SVD_P_Prime.  The index arithmetic treats a as stored by columns, m rows to a column.
+        ///  </remarks>
         private static void X_SVD_Bidiagonal_Reduction(int n, double[,] a, int m, double[] diag, double[] super_diag, int ncoly, double[] y)
         {
             for (int k = 1; k <= n - 2; k++)
@@ -3185,6 +3332,12 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Reduce a real bidiagonal matrix to diagonal form by orthogonal transformations.
         ///  </summary>
+        ///  <remarks>
+        ///  The QR algorithm with shifts, working on the bidiagonal matrix from the bottom row up.  Rotations made from the left are applied to b as well, if
+        ///  ncolb is 1, and those made from the right to the rows of z, if ncolz is not zero: that is how Q'b of the reduction becomes U'b, and P' of the
+        ///  reduction becomes P' of the decomposition.  On return diag holds the singular values, none negative and the largest first.  ifail is zero if
+        ///  all of them were found within 50 n steps; otherwise it is the number of rows still to be dealt with.  LAPACK calls this DBDSQR.
+        ///  </remarks>
         private static void X_SVD_of_Bidiagonal(int n, double[] diag, double[] super_diag, int ncolb, double[] b, int ncolz, double[,] z, int m, out int ifail)
         {
             double[] wrk0 = new double[n + 1];
@@ -3194,6 +3347,7 @@ namespace StatsDirect.Builtins
             wrk0[1] = 0;
             bool wantb = ncolb > 0;
             bool wantz = ncolz > 0;
+            // The matrix is scaled by its largest element, so that the tests for negligible elements work on numbers near 1
             double max = Math.Abs(diag[1]);
             for (int i1 = 2; i1 <= n; i1++)
                 max = Max3(max, Math.Abs(diag[i1]), Math.Abs(super_diag[i1 - 1]));
@@ -3205,12 +3359,15 @@ namespace StatsDirect.Builtins
             int maxit = 50 * n;
             int iter = 1;
             int i0 = n;
+            // Rows 1 to i0 are still to be dealt with: the singular values below them have been found
             while (i0 > 1 && iter <= maxit)
             {
                 X_SVD_Test_Bidiagonal_Split(i0, diag, super_diag, out bool force, out int split_row);
                 int i3 = split_row + 1;
                 double ctemp;
                 double stemp;
+                // A negligible diagonal element.  In row i0 the column above it is rotated away from the right, and z takes the rotations; in a row further
+                // up the rest of the row is rotated away from the left, and b takes them.
                 if (force)
                 {
                     if (split_row == i0)
@@ -3281,6 +3438,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                 }
+                // Nothing left above the diagonal in row i0: its singular value has been found.  Otherwise, one QR step on rows i3 to i0.
                 if (i3 >= i0)
                 {
                     i0 -= 1;
@@ -3330,11 +3488,13 @@ namespace StatsDirect.Builtins
                     iter++;
                 }
             }
+            // The scaling undone
             if (max > 0.0)
             {
                 X_SVD_Vector_by_Scalar(n, max, diag);
                 X_SVD_Vector_by_Scalar(n - 1, max, super_diag);
             }
+            // A singular value is not negative: the sign of one that came out so goes to the matching element of b
             for (int i1 = i0; i1 <= n; i1++)
             {
                 if (diag[i1] < 0.0)
@@ -3347,6 +3507,8 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            // Sorted, the largest first.  The interchanges are recorded in wrk0 (as whole numbers plus a quarter, so that they convert back safely) and are
+            // then made in b and in the rows of z.
             for (int i2 = 1; i2 < i0; i2++)
                 wrk0[i2] = i2 + 0.25;
             for (int i2 = i0; i2 <= n; i2++)
@@ -3398,6 +3560,7 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            // Zero if every singular value was found; otherwise the number of rows still to be dealt with
             wrk0[1] = iter;
             ifail = i0 == 1 ? 0 : i0;
         }
@@ -3406,6 +3569,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Return P' from the upper triangular matrix factorized as R = Q*B*P'.
         ///  </summary>
+        ///  <remarks>
+        ///  The reduction left the tangent of each rotation of columns in place of the element that the rotation cleared.  The rotations are multiplied out
+        ///  here, from the last row of the triangle up, into the first n rows and columns of a.
+        ///  </remarks>
         private static void X_SVD_P_Prime(int n, double[,] a, int m)
         {
             double[] wrk = new double[2 * m + 1];
@@ -3476,6 +3643,7 @@ namespace StatsDirect.Builtins
         ///  <remarks>IEB July 2009: updated to auto-drop observations at the boundary (complete prediction of outcome)</remarks>
         private static void X_Log_Poisson_Response(int records, double[] linear_predictor, double[] fitted_value, double[] weight, ref int observations, ref bool weighted, ref string dropped)
         {
+            // mu = exp(eta).  An eta beyond -log(rounding unit), about 36.7, either way cannot be told from the boundary: the observation is dropped.
             int i;
 
             double b = -Math.Log(Constant.EPSNEG);
@@ -3514,6 +3682,8 @@ namespace StatsDirect.Builtins
         ///  <remarks>IEB July 2009: updated to auto-drop observations at the boundary (complete prediction of outcome)</remarks>
         private static void X_Logistic_Response(int records, double[] linearPredictor, double[] fittedValue, double[] y_n, double[] weight, ref int observations, ref bool weighted, ref string dropped)
         {
+            // mu = t e / (1 + e) with e = exp(eta).  An eta beyond -log(rounding unit), about 36.7, either way gives a p that cannot be told from 0 or 1:
+            // the observation is dropped.
             double b = -Math.Log(Constant.EPSNEG);
             if (records == observations)
             {
@@ -3555,6 +3725,8 @@ namespace StatsDirect.Builtins
         ///  <remarks>IEB July 2009: updated to auto-drop observations at the boundary (complete prediction of outcome)</remarks>
         private static void BinBound(ref string dropped, int i, out bool weighted, ref int observations, double[] weights)
         {
+            // Drops observation i: its weight becomes zero, the count of observations falls by one and it is named in the message.  The fit is treated as
+            // weighted from now on, so that the zero weight is respected.
             weighted = true;
             if (weights[i] != 0.0)
             {
@@ -3567,6 +3739,16 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Sets up the Householder reflection that clears a column below its leading element.
+        /// </summary>
+        /// <remarks>
+        /// alpha is the leading element, and the n elements to be cleared start at a[iz1, iz2] and run down the column.  The reflection is H = I - u u',
+        /// where u has zeta as its first element and then the n elements as they are left in a on return, scaled so that u'u = 2.  On return alpha holds
+        /// what the reflection leaves in the leading position: the length of the whole column, made negative if alpha was positive.  zeta is zero if the
+        /// elements to be cleared were already negligible beside alpha, when nothing is changed and no reflection is needed.
+        /// LAPACK's DLARFG does the same job, holding the reflection as I - tau v v'.
+        /// </remarks>
         private static void X_Setup_Householder_Reflection(int n, ref double alpha, double[,] a, out double zeta, int iz1, int iz2, int m)
         {
             if (n < 1)
@@ -3613,6 +3795,8 @@ namespace StatsDirect.Builtins
                 }
                 else
                 {
+                    // The length of the elements to be cleared, as scale * sqrt(sumSquares): scale is the largest of them so far, so that squaring can neither
+                    // overflow nor underflow.  (sumSquares starts at 1, which does not matter, as scale starts at 0.)
                     double sumSquares = 1.0;
                     double scale = 0.0;
                     int i1 = iz1;
@@ -3687,6 +3871,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Applies a sequence of plane rotations to an upper triangular matrix from the right, and restores the triangle with rotations from the left.
+        /// </summary>
+        /// <remarks>
+        /// The triangle is the n by n block of a that starts one place beyond row and column ist.  Rotation j, whose cosine and sine are c[j + ist] and
+        /// s[j + ist], turns columns j and j + 1, for j from k2 - 1 down to k1.  Each puts an element below the diagonal, at (j + 1, j), and a rotation of
+        /// rows j and j + 1 is made at once to take it away; its cosine and sine replace those of the rotation of columns in c and s.  The second loop
+        /// applies the rotations of rows to the rest of each row, column by column.
+        /// </remarks>
         private static void X_SVD_Rotation_Transform(int n, int k1, int k2, double[] c, double[] s, double[,] a, int m, int ist)
         {
             for (int j = k2 - 1; j >= k1; j--)
@@ -3724,6 +3917,11 @@ namespace StatsDirect.Builtins
         ///  Get the angles for the plane rotation
         ///  c = 1/sqrt(1 + t^2) and s = c*t where t = b/a
         ///  </summary>
+        ///  <remarks>
+        ///  The rotation is the one that turns the pair (a, b) into (r, 0).  On return a holds r, which has the sign of a and the length of the pair, and b
+        ///  holds the tangent t, from which the rotation can be worked out again.  If b is zero nothing is turned: c is 1 and s is 0.
+        ///  LAPACK's DLARTG does the same job.
+        ///  </remarks>
         private static void X_SVD_Rotation_Angle(ref double a, ref double b, out double c, out double s)
         {
             if (b == 0.0)
@@ -3770,6 +3968,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Looks up a bidiagonal matrix, from row n, for an element that is negligible beside its neighbours, where the matrix can be split in two.
+        /// </summary>
+        /// <remarks>
+        /// rowSplit is the row of the first such element met, or 0 if there is none.  If it is the element above the diagonal, rows 1 to rowSplit and the
+        /// rows below them are separate problems, and force is false.  If it is the diagonal element, force is true: the rest of its row, or in row n the
+        /// column above it, has to be rotated away before the matrix splits.  An element is negligible if it is no more than the rounding unit times the
+        /// larger of its neighbours, or if all of them are tiny.
+        /// </remarks>
         public static void X_SVD_Test_Bidiagonal_Split(int n, double[] diag, double[] superDiag, out bool force, out int rowSplit)
         {
             const double eps = Constant.EPSNEG;
@@ -3840,6 +4047,14 @@ namespace StatsDirect.Builtins
             rowSplit = i;
         }
 
+        /// <summary>
+        /// Deals with a negligible diagonal element in the last row, n, of a block of a bidiagonal matrix.
+        /// </summary>
+        /// <remarks>
+        /// The element above it, in column n, is rotated into the diagonal element of its own row by a rotation of columns.  That puts an element into
+        /// column n one row further up, which the next rotation deals with, and so on up to row 1.  Column n is left with nothing in it above the diagonal.
+        /// The cosines and sines are kept in c and s, if doCs is set, to be applied to the rows of z.
+        /// </remarks>
         private static void X_SVD_Plane_Rotate(int n, double[] diag, double[] superDiag, bool doCs, double[] c, double[] s)
         {
             if (n > 1)
@@ -3867,6 +4082,15 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The rotation that starts a QR step on a block of a bidiagonal matrix B.
+        /// </summary>
+        /// <remarks>
+        /// diag and superDiag are the elements of the first row of the block; diagM1, diagN and superDiagM1 are the last two diagonal elements and the
+        /// element between them.  The shift is the eigenvalue of the last 2 by 2 block of BB' that is nearer to its last element, diagN squared.  The
+        /// rotation is fixed by the first column of B'B less the shift times I, which is (diag^2 - shift, diag * superDiag), here divided through by diag.
+        /// superDiagM2 is not used.
+        /// </remarks>
         private static void X_SVD_QR_Shift_Parameters(double diag, double superDiag, double diagM1, double diagN, double superDiagM2, double superDiagM1, out double c, out double s)
         {
             double a; double b; double q;
@@ -3895,6 +4119,15 @@ namespace StatsDirect.Builtins
             X_SVD_Rotation_Angle(ref a, ref b, out c, out s);
         }
 
+        /// <summary>
+        /// One QR step on rows m to n of a bidiagonal matrix.
+        /// </summary>
+        /// <remarks>
+        /// The first rotation, of columns m and m + 1 with cosine c and sine s, puts an element below the diagonal.  Rotations of rows and of columns, in
+        /// turn, then chase it down the matrix and off the end, which leaves the matrix bidiagonal again.  The cosines and sines of the rotations of rows
+        /// are kept in c_left and s_left, to be applied to the right-hand side, and those of columns in c_right and s_right, to be applied to the rows of
+        /// the matrix of right singular vectors, where they are wanted.
+        /// </remarks>
         private static void X_SVD_QR_Rotate(int m, int n, double[] diag, double[] super_diag, double c, double s, bool want_left, double[] c_left, double[] s_left, bool want_right, double[] c_right, double[] s_right)
         {
             double cs; double sn;
@@ -3949,6 +4182,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Return Cos(theta) and Sin(theta) for Tan(theta).
         ///  </summary>
+        ///  <remarks>
+        ///  cos = 1 / sqrt(1 + t^2) and sin = t cos.  Where t^2 is lost beside 1, or 1 beside t^2, the limits are used: cos is 1 and sin is t for a small t,
+        ///  and cos is 1 / |t| and sin is 1 with the sign of t for a large one.
+        ///  </remarks>
         private static void X_SVD_Cos_Sin_Tan(double tanTheta, out double cosTheta, out double sinTheta)
         {
             double sqrEps = Math.Sqrt(Constant.EPSNEG);
@@ -3971,6 +4208,13 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// a / b, guarded against overflow and underflow.
+        /// </summary>
+        /// <remarks>
+        /// Zero if the quotient would be too small to hold.  The reciprocal of the smallest normal number, with the sign of the quotient (of a, if b is
+        /// zero), if it would be too large or b is zero.
+        /// </remarks>
         private static double X_SVD_Divide_Safely(double a, double b)
         {
             if (a == 0.0)
@@ -4001,6 +4245,10 @@ namespace StatsDirect.Builtins
             return div;
         }
 
+        /// <summary>
+        /// The numerical rank: how many of the singular values in x, which are in descending order, come before the first that is negligible.
+        /// </summary>
+        /// <remarks>A value is negligible if it is no more than the rounding unit times the largest before it.</remarks>
         private static int IsRank(int n, double[] x)
         {
             int k = 0;
