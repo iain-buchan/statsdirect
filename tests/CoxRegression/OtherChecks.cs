@@ -25,7 +25,6 @@ internal static partial class Program
         for (int k = 1; k < columns.Length; k++) predictors.Variables.Add(new DoubleVariable((double[])columns[k].Clone(), "Z" + (k + 1)));
         bag.AddInput("predictors", predictors);
         bag.AddInput("accuracy", accuracy);
-        bag.AddInput("splitting-ratio", 1000.0);
         bag.AddInput("centre-continuous-covariates", true);
         return bag;
     }
@@ -152,12 +151,12 @@ internal static partial class Program
         for (int k = 1; k <= p; k++) indef[k] = 3 + k;
         object[] a =
         {
-            n, columns, x, n, 1, 3, 0, 2, 0, maxit, accuracy, 1000.0, p, nvef, indef, 0, 0, new double[p + 1, 5], p, 0.0, new double[p + 1, p + 1], p,
+            n, columns, x, n, 1, 3, 0, 2, 0, maxit, accuracy, p, nvef, indef, 0, 0, new double[p + 1, 5], p, 0.0, new double[p + 1, p + 1], p,
             new double[p + 1], new double[n + 1, 7], n, new double[p + 1], new int[n + 1], 0, 0
         };
         typeof(Coxreg).GetMethod("coxreg", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, a);
-        double[,] coef = (double[,])a[17];
-        return ((int)a[28], (double[,])a[23], Enumerable.Range(1, p).Select(i => coef[i, 1]).ToArray());
+        double[,] coef = (double[,])a[16];
+        return ((int)a[27], (double[,])a[22], Enumerable.Range(1, p).Select(i => coef[i, 1]).ToArray());
     }
 
     private static void Data(System.Random random, int n, double slope, out double[] time, out double[] censor, out double[] z1, out double[] z2)

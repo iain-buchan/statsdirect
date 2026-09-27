@@ -394,9 +394,6 @@ namespace StatsDirect.Builtins
             int ifix = 0;
             int itie = 0;
             int maxit = 30;
-            double ratio = parameters["splitting-ratio"].AsDouble;
-            if (ratio <= 0)
-                ratio = -1.0;
             bool centre = parameters["centre-continuous-covariates"].AsBoolean;
             int nobs = rows;
             int ldcoef = nef;
@@ -437,7 +434,7 @@ namespace StatsDirect.Builtins
             int ifault = 0; int ncoef = 0;
             int nrmiss = 0;
             double algl = 0;
-            coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
+            coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             if (ifault != 0)
             {
                 // faults 3 and 5 are a fit that has not converged: the log likelihood still fell when no more than 1/512 of the step was taken, or
@@ -513,7 +510,7 @@ namespace StatsDirect.Builtins
             cov = new double[ldcoef + 1, ldcoef + 1];
             GR = new double[ldcoef + 1];
             xmean = new double[ldcoef + 1];
-            coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
+            coxreg(nobs, nCol, ref x, ref nobs, ref irt, ref ifrq, ref ifix, ref icen, ref istrat, ref maxit, ref eps, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcoef, ref xmean, ref ccase, ref nobs, ref GR, ref igrp, ref nrmiss, ref ifault);
             ARR2[3, 0] = algl;
 
             // What the plots can be split by: the strata if there are any, otherwise any one of the binary predictors, or nothing
@@ -672,7 +669,7 @@ namespace StatsDirect.Builtins
         /// The arguments are those of coxest.  Faults: 1 and 2 if x or caze has too few rows; 5 if an effect has no columns; 6 if a column of an
         /// effect is out of range; 10 if there are no coefficients; 11 and 12 if cov or coef is too small; otherwise those of coxest.
         /// </remarks>
-        private static void coxreg(int nRow, int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
+        private static void coxreg(int nRow, int nCol, ref double[] x, ref int ldx, ref int irt, ref int IFRQ, ref int ifix, ref int icen, ref int istrat, ref int maxit, ref double eps, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref int ifault)
         {
             int i;
             double[] obz = new double[1 + 1];
@@ -727,7 +724,7 @@ namespace StatsDirect.Builtins
             double[] smh = new double[2 * Math.Max(ncoef * ncoef, 2) + 1];
             int[] iptr = new int[nRow + ncoef + 1];
             int[] idt = new int[nRow + 1];
-            coxest(nRow, nCol, ref x, ldx, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref ratio, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
+            coxest(nRow, nCol, ref x, ldx, irt, IFRQ, ifix, icen, ref istrat, ref maxit, ref eps, ref nef, ref nvef, ref indef, ref itie, ref ncoef, ref coef, ref ldcoef, ref algl, ref cov, ref ldcov, ref xmean, ref caze, ref ldcase, ref GR, ref igrp, ref nrmiss, ref OBS, ref smg, ref smh, ref iptr, ref idt, ref ifault);
         }
 
         /// <summary>
@@ -744,7 +741,6 @@ namespace StatsDirect.Builtins
         /// <param name="istrat">The column of the strata, or 0.</param>
         /// <param name="maxit">The most iterations that may be made.</param>
         /// <param name="eps">The fit has converged when the log likelihood changes by no more than eps of itself.</param>
-        /// <param name="ratio">The ratio for the splitting of a stratum (see CoxHessian), or -1 for none.</param>
         /// <param name="nef">The number of effects;  nvef  the number of columns of each;  indef  those columns (see genregs).</param>
         /// <param name="itie">1 if the records are already in order, from the latest time to the earliest within each stratum.</param>
         /// <param name="ncoef">On return, the number of coefficients.</param>
@@ -757,7 +753,7 @@ namespace StatsDirect.Builtins
         /// <param name="igrp">On return, the number of the stratum of each record, or -1 for a record that was left out.</param>
         /// <param name="nrmiss">On return, the number of records that were left out.</param>
         /// <param name="ifault">
-        /// On return 0 if all is well.  1 and 2 if x or caze has too few rows; 3 if eps is negative; 4 if ratio is negative and not -1; 6 and 7 if
+        /// On return 0 if all is well.  1 and 2 if x or caze has too few rows; 3 if eps is negative; 6 and 7 if
         /// an effect has no columns or a column that is out of range; 10 if a censoring code is out of range (which is looked at only when there
         /// is a fixed term); 14 if there are no coefficients; 15 if a frequency is negative, or coef is
         /// too small; 16 if cov is too small, or the records were said to be in order and are not; otherwise the faults of coxiter.
@@ -768,7 +764,7 @@ namespace StatsDirect.Builtins
         /// the latest time to the earliest, a censored record before an event of the same time.  Taken in that order, the records met so far in a
         /// stratum are at every step the ones that are at risk at the time that has been reached.
         /// </remarks>
-        private static void coxest(int nRow, int nCol, ref double[] x, int ldx, int irt, int IFRQ, int ifix, int icen, ref int istrat, ref int maxit, ref double eps, ref double ratio, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
+        private static void coxest(int nRow, int nCol, ref double[] x, int ldx, int irt, int IFRQ, int ifix, int icen, ref int istrat, ref int maxit, ref double eps, ref int nef, ref int[] nvef, ref int[] indef, ref int itie, ref int ncoef, ref double[,] coef, ref int ldcoef, ref double algl, ref double[,] cov, ref int ldcov, ref double[] xmean, ref double[,] caze, ref int ldcase, ref double[] GR, ref int[] igrp, ref int nrmiss, ref double[] OBS, ref double[]
         smg, ref double[] smh, ref int[] iptr, ref int[] idt, ref int ifault)
         {
             int nidt = 0; int ik;
@@ -785,8 +781,6 @@ namespace StatsDirect.Builtins
             }
             if (eps < 0.0)
                 ifault = 3;
-            if (ratio < 0.0 && ratio != -1.0)
-                ifault = 4;
             if (ifault != 0)
                 return;
             int ntrm = 0;
@@ -988,7 +982,7 @@ namespace StatsDirect.Builtins
             if (ncoef > 0)
                 for (ik = 1; ik <= ncoef; ik++)
                     coef[ik, 1] = 0.0;
-            coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, istrat, maxit, eps, ratio, nef, nvef, indef, itie, ref ncoef, coef, ref algl, cov, ldcov, xmean, caze, ldcase, GR, igrp, ref nrmiss, OBS, smg, smh, iptr, idt, ref ifault);
+            coxiter(nRow, nCol, x, irt, IFRQ, ifix, icen, istrat, maxit, eps, nef, nvef, indef, itie, ref ncoef, coef, ref algl, cov, ldcov, xmean, caze, ldcase, GR, igrp, ref nrmiss, OBS, smg, smh, iptr, idt, ref ifault);
             if (ifault != 0)
                 return;
 
@@ -1024,7 +1018,7 @@ namespace StatsDirect.Builtins
         ///     caze[k, 6]  exp(z'b): its hazard relative to that of a subject whose predictors are all 0
         /// While the work is going on the columns of caze hold other things, which are said where they are used.
         /// </remarks>
-        private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int istrat, int maxit, double eps, double ratio, int nef, int[] nvef, int[] indef, int itie, ref /* yes, really */ int ncoef, double[,] coef, ref double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, int[] igrp, ref int nrmiss, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, ref int ifault)
+        private static void coxiter(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int istrat, int maxit, double eps, int nef, int[] nvef, int[] indef, int itie, ref /* yes, really */ int ncoef, double[,] coef, ref double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, int[] igrp, ref int nrmiss, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, ref int ifault)
         {
             //   NEWTON-RAPHSON ITERATIONS
             double[] smd = new double[1 + 1];
@@ -1035,7 +1029,6 @@ namespace StatsDirect.Builtins
             int nob1 = 0;
             double smfrq = 0.0;
             double strato = 1.23457E-27;
-            bool strat = false;
             int igr = istrat > 0 ? 0 : 1;
             int ii = 0;
             int imiss = 0;
@@ -1151,7 +1144,6 @@ namespace StatsDirect.Builtins
             icncd = ncoef;
             igr = 0;
             icnn = 0;
-            bool zero = false;
             double smu = 0;
             for (ii = nobs + 1; ii <= ncoef + nobs; ii++)
                 iptr[ii] = 0;
@@ -1190,7 +1182,7 @@ namespace StatsDirect.Builtins
             icncd = icnn;
             // The log likelihood at the starting values, and the first step.  ihess is not yet set: until the iterations are near the maximum the
             // matrix of second derivatives is replaced by one that is quicker to form (see CoxHessian).
-            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 1, ihess, out double alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out bool change, zero, ref ifault);
+            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 1, ihess, out double alglo, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
             if (ifault != 0)
                 return;
             double div;
@@ -1215,11 +1207,9 @@ namespace StatsDirect.Builtins
                 {
                     for (int i = 1; i <= ncoef; i++)
                         coef[i, 2] = coef[i, 1] + div * coef[i, 3];
-                    CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 2, ihess, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out change, zero, ref ifault);
+                    CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 2, ihess, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
                     if (ifault != 0)
                         return;
-                    if (change)
-                        strat = true;
                     crit = algl - alglo;
                     if (crit < 1.0E+20 * Math.Abs(alglo) && crit != 0.0)
                         crit /= Math.Abs(algl);
@@ -1259,153 +1249,11 @@ namespace StatsDirect.Builtins
             // a fit that has not converged is reported as that: what follows is for a fit that has
             if (ifault != 0)
                 return;
-            // What follows, down to the next call of CoxHessian, is done only if CoxHessian split a stratum during the iterations (see the note on
-            // splitting there).  A regressor may then have next to nothing left to vary by within the strata as they now stand.  To find out, the
-            // linear predictor z'b of each record, less its mean in the stratum, is regressed by least squares on the regressors, less theirs
-            // (glsqr1, a record at a time), which leaves in cov the triangular factor of that regression.  A regressor whose diagonal element of
-            // the factor is less than 0.0001 of its standard deviation over all the records has its row and column of cov cleared, and zero is
-            // set, which tells CoxHessian to leave out a regressor whose coefficient is 0.  The coefficients of the regression are not kept.
-            // caze is used as working space: for regressor j, caze[j, 1] is its sum in the stratum, and caze[j, 2] and caze[j, 3] its sum of
-            // squares and its sum over all the records, which become its standard deviation.
             double zdot;
-            int irank; int kk; if (strat)
-            {
-                ifault = 6;
-                int indy = ncoef + 1;
-                int indep = indy;
-                // Call GLREG(1, 0, INDY, X(1), -NCOEF, INDEF(1), INDEP, COEF(1, 1), NCOEF, COV(1, 1), LDCOV, SMG(1), irank, SMU, SMD(1), IMISS, SMH(1), SMH(1), NCOEF, OBS(1), ifault)
-                //  Can't do calls with array offsets into VB, so this separates the top half of smh into its own array for the call
-                double[] smhmax = new double[ncoef + 1];
-                double[] coef1 = new double[ncoef + 1];
-                for (int i = 0; i <= ncoef; i++)
-                {
-                    smhmax[i] = smh[i + ncoef];
-                    coef1[i] = coef[i, 1];
-                }
-                irank = 0;
-                imiss = 0;
-                Regress1.glsqr1(1, 0, 0, 0, indy, x, 1, -ncoef, indef, indep, indef, 0, 0, coef1, cov, smg, ref irank, ref smu, ref smd[1], ref imiss, smh, smhmax, OBS, ref ifault);
-                for (int i = 0; i <= ncoef; i++)
-                {
-                    smh[i + ncoef] = smhmax[i];
-                    coef[i, 1] = coef1[i];
-                }
-
-                if (ifault != 0)
-                    return;
-                igr = 0;
-                for (ii = 1; ii <= ncoef; ii++)
-                {
-                    caze[ii, 2] = 0.0;
-                    caze[ii, 3] = 0.0;
-                }
-                xx = 0;
-                double ymean = 0;
-                for (int i = 1; i <= nobs; i++)
-                {
-                    k = iptr[i];
-                    if (igrp[k] >= 0)
-                    {
-                        if (igr != igrp[k])
-                        {
-                            igr = igrp[k];
-                            ymean = 0.0;
-                            xx = 0.0;
-                            for (j = 1; j <= ncoef; j++)
-                                caze[j, 1] = 0.0;
-                            for (j = i; j <= nobs; j++)
-                            {
-                                kk = iptr[j];
-                                if (igrp[kk] >= 0)
-                                {
-                                    if (igrp[kk] != igr)
-                                        break;
-                                    genregs(nCol, x, 1 + (kk - 1) * nCol, nef, nvef, indef, 2, ref ncoef, OBS, ref imiss, ref ifault);
-                                    zdot = 0.0;
-                                    for (iq = 1; iq <= ncoef; iq++)
-                                        zdot += OBS[iq] * coef[iq, 1];
-                                    ymean += zdot;
-                                    for (iq = 1; iq <= ncoef; iq++)
-                                        caze[iq, 1] = caze[iq, 1] + OBS[iq] * 1.0;
-                                    xx += 1.0;
-                                }
-                            }
-                            if (xx > 0.0)
-                                xx = 1.0 / xx;
-                            ymean *= xx;
-                        }
-                        genregs(nCol, x, 1 + (k - 1) * nCol, nef, nvef, indef, 2, ref ncoef, OBS, ref imiss, ref ifault);
-                        OBS[indy] = 0.0;
-                        for (j = 1; j <= ncoef; j++)
-                        {
-                            caze[j, 2] = caze[j, 2] + OBS[j] * OBS[j];
-                            caze[j, 3] = caze[j, 3] + OBS[j];
-                            OBS[indy] = OBS[indy] + OBS[j] * coef[j, 1];
-                            OBS[j] = OBS[j] - xx * caze[j, 1];
-                        }
-                        OBS[indy] = OBS[indy] - ymean;
-                        // Call GLREG(2, 1, INDY, OBS(1), -NCOEF, INDEF(1), INDEP, COEF(1, 1), NCOEF, COV(1, 1), LDCOV, SMG(1), irank, SMU, SMD(1), IMISS, SMH(1), SMH(1), NCOEF, OBS(1), ifault)
-                        //  Can't do calls with array offsets into VB, so this separates the top half of smh into its own array for the call
-                        smhmax = new double[ncoef + 1];
-                        coef1 = new double[ncoef + 1];
-                        for (ii = 0; ii <= ncoef; ii++)
-                        {
-                            smhmax[ii] = smh[ii + ncoef];
-                            coef1[ii] = coef[ii, 1];
-                        }
-                        Regress1.glsqr1(2, 0, 0, 1, indy, OBS, 1, -ncoef, indef, indep, indef, 0, 0, coef1, cov, smg, ref irank, ref smu, ref smd[1], ref imiss, smh, smhmax, OBS, ref ifault);
-                        for (ii = 0; ii <= ncoef; ii++)
-                        {
-                            smh[ii + ncoef] = smhmax[ii];
-                            coef[ii, 1] = coef1[ii];
-                        }
-                    }
-                }
-                xx = nobs - nrmiss;
-                if (xx > 1.0)
-                {
-                    for (int i = 1; i <= ncoef; i++)
-                    {
-                        caze[i, 3] = caze[i, 3] * caze[i, 3] / xx;
-                        caze[i, 2] = (caze[i, 2] - caze[i, 3]) / (xx - 1.0);
-                        div = 0.0;
-                        if (caze[i, 2] > 0.0)
-                        {
-                            caze[i, 2] = Math.Sqrt(caze[i, 2]);
-                            div = Math.Abs(cov[i, i]) / caze[i, 2];
-                        }
-                        if (div < 0.0001)
-                        {
-                            zero = true;
-                            for (ii = 1; ii <= i; ii++)
-                                cov[ii, i] = 0.0;
-                            for (ii = i + 1; ii <= ncoef; ii++)
-                                cov[i, ii] = 0.0;
-                        }
-                    }
-                    // Call GLREG(3, 0, INDY, OBS(1), -NCOEF, INDEF(1), INDEP, COEF(1, 1), NCOEF, COV(1, 1), LDCOV, SMG(1), irank, SMU, SMD(1), IMISS, SMH(1), SMH(1), NCOEF, OBS(1), ifault)
-                    // Declare Sub GLSQR Lib "StatsDirect" (ByVal ido As Long, ByVal intcep As Long, ByVal isub As Long, ByVal nRow As Long, ByVal nvar As Long, ByVal x As Double, !!ByVal ldx As Long!!, ByVal iind As Long, ByVal indind As Long, ByVal idep As Long, ByVal inddep As Long, ByVal IFRQ As Long, ByVal iwt As Long, ByVal b As Double, !!ByVal ldb As Long!!, ByVal r As Double, !!ByVal ldr As Long!!, ByVal D As Double, ByVal irank As Long, ByVal rdf As Double, ByVal rss As Double, ByVal nrmiss As Long, ByVal xmin As Double, ByVal XMax As Double, ByVal WK As Double, ByVal ifault As Long)
-                    //  Can't do calls with array offsets into VB, so this separates the top half of smh into its own array for the call
-                    smhmax = new double[ncoef + 1];
-                    coef1 = new double[ncoef + 1];
-                    for (ii = 0; ii <= ncoef; ii++)
-                    {
-                        smhmax[ii] = smh[ii + ncoef];
-                        coef1[ii] = coef[ii, 1];
-                    }
-                    Regress1.glsqr1(3, 0, 0, 0, indy, OBS, 1, -ncoef, indef, indep, indef, 0, 0, coef1, cov, smg, ref irank, ref smu, ref smd[1], ref imiss, smh, smhmax, OBS, ref ifault);
-                    for (ii = 0; ii <= ncoef; ii++)
-                    {
-                        smh[ii + ncoef] = smhmax[ii];
-                        coef[ii, 1] = coef1[ii];
-                    }
-                    for (ii = 1; ii <= ncoef; ii++)
-                        coef[ii, 1] = coef[ii, 2];
-                }
-            }
+            int irank; int kk;
             // The last pass, at the coefficients that were found, with the matrix of second derivatives itself.  It leaves in cov the triangular
             // factor R of that matrix, and in column 1 of caze the proportionality constant of each record.
-            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, ratio, nef, nvef, indef, ncoef, coef, 1, true, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, out change, zero, ref ifault);
+            CoxHessian(nobs, nCol, x, irt, IFRQ, ifix, icen, nef, nvef, indef, ncoef, coef, 1, true, out algl, cov, ldcov, xmean, caze, ldcase, GR, OBS, smg, smh, iptr, idt, igrp, ref ifault);
             if (ifault != 0)
                 return;
             // The proportionality constants are moved to column 5, and columns 1 to 4 are made ready for the figures of each record
@@ -1559,7 +1407,6 @@ namespace StatsDirect.Builtins
         ///  <param name="IFRQ">The column of the frequencies, or 0.</param>
         ///  <param name="ifix">The column of a term with a fixed coefficient of 1, or 0.</param>
         ///  <param name="icen">The column of the censoring codes: 0 for an event, 1 for a censored record.</param>
-        ///  <param name="ratio">The ratio for the splitting of a stratum, or -1 for none.</param>
         ///  <param name="nef">The number of effects.</param>
         ///  <param name="nvef">The number of columns of each effect.</param>
         ///  <param name="indef">The columns of the effects.</param>
@@ -1571,7 +1418,7 @@ namespace StatsDirect.Builtins
         ///  <param name="cov">On return, in its upper triangle, the triangular factor R of the matrix: R'R is the matrix.</param>
         ///  <param name="ldcov">No longer used now that MXFAC is never called inside here.</param>
         ///  <param name="xmean">The means of the regressors.</param>
-        ///  <param name="caze">On return caze[k, 1] is exp((z - m)'b) for record k, and caze[k, 6] is exp(z'b); columns 2 to 4 are working space.</param>
+        ///  <param name="caze">On return caze[k, 1] is exp((z - m)'b) for record k, caze[k, 4] its censoring code, and caze[k, 6] exp(z'b).</param>
         ///  <param name="ldcase">Not used.</param>
         ///  <param name="GR">On return, the step: the solution s of R'R s = g, where g is the gradient.</param>
         ///  <param name="OBS">Working space: the regressors of a record.</param>
@@ -1579,9 +1426,7 @@ namespace StatsDirect.Builtins
         ///  <param name="smh">Working space: the sum of u (z - m)(z - m)' over those at risk, its upper triangle, a column at a time.</param>
         ///  <param name="iptr">The order in which the records are taken, and then for each regressor 1 if it varies (see coxiter).</param>
         ///  <param name="idt">The marks of the times with events (see coxiter).</param>
-        ///  <param name="igrp">The stratum of each record, or -1 for a record that is left out.  A stratum that is split is renumbered here.</param>
-        ///  <param name="change">On return, true if a stratum was split.</param>
-        ///  <param name="Zero">If set, a regressor whose coefficient is 0 is left out.</param>
+        ///  <param name="igrp">The stratum of each record, or -1 for a record that is left out.</param>
         ///  <param name="ifault">
         ///  On return 100 if the matrix cannot be factorised, with the number of the first regressor whose row of it adds up to nothing added to
         ///  the 100 if there is one; the faults of mxinv2; otherwise as it was.  If it is not 0 on entry, nothing is factorised and 100 is returned.
@@ -1603,272 +1448,147 @@ namespace StatsDirect.Builtins
         ///  The matrix is then factorised as R'R (CholeskiFactor) and R'R s = g is solved for the step s, in two stages (mxinv2).  A regressor
         ///  that does not vary within any stratum, or that the factorisation finds to be determined by the regressors before it, is left out:
         ///  its element of the gradient and its row and column of the matrix are cleared, and its element of the step is 0.
-        ///
-        ///  Splitting.  If ratio is not -1, each stratum is looked over for a time that divides it: one at which every event at that time and
-        ///  before it has a proportionality constant more than ratio times the greatest among the records after it.  The records of the earlier
-        ///  part (its events, and the censored records whose constants are as great) are then made a stratum of their own, and the pass is made
-        ///  again.  The constants are read from column 5 of caze.  During the iterations that column is filled only when there is a fixed term
-        ///  (ifix above 0); without one, as in this program, it holds zeros until the fit is over, and no stratum is split.
         ///  </remarks>
-        private static void CoxHessian(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, double ratio, int nef, int[] nvef, int[] indef, int ncoef, double[,] coef, int icoef, bool ihess, out double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, int[] igrp, out bool change, bool Zero, ref int ifault)
+        private static void CoxHessian(int nobs, int nCol, double[] x, int irt, int IFRQ, int ifix, int icen, int nef, int[] nvef, int[] indef, int ncoef, double[,] coef, int icoef, bool ihess, out double algl, double[,] cov, int ldcov, double[] xmean, double[,] caze, int ldcase, double[] GR, double[] OBS, double[] smg, double[] smh, int[] iptr, int[] idt, int[] igrp, ref int ifault)
         {
             int irank = 0;
-            int kk = 0;
             int ncoef1 = 0;
-            double xmin = 0; double XMax = 0;
             double smu = 0;
 
             // tolerance
             const double tol = 0.000000000001;
-            change = false;
-            do
+            // the matrix, of which only the upper triangle is formed, the gradient and the log likelihood start at nothing
+            int igr = 0;
+            for (int i = 1; i <= ncoef; i++)
+                for (int ii = 1; ii <= i; ii++)
+                    cov[ii, i] = 0.0;
+            for (int i = 1; i <= ncoef; i++)
+                GR[i] = 0.0;
+            algl = 0.0;
+            for (int i = 1; i <= nobs; i++)
             {
-                // the matrix, of which only the upper triangle is formed, the gradient and the log likelihood start at nothing
-                int igr = 0;
-                for (int i = 1; i <= ncoef; i++)
-                    for (int ii = 1; ii <= i; ii++)
-                        cov[ii, i] = 0.0;
-                for (int i = 1; i <= ncoef; i++)
-                    GR[i] = 0.0;
-                algl = 0.0;
-                for (int i = 1; i <= nobs; i++)
+                int k = iptr[i];
+                if (igrp[k] >= 0)
                 {
-                    int k = iptr[i];
-                    if (igrp[k] >= 0)
+                    // a new stratum: nobody is at risk yet
+                    if (igrp[k] != igr)
                     {
-                        // a new stratum: nobody is at risk yet
-                        if (igrp[k] != igr)
+                        for (int iq = 1; iq <= ncoef; iq++)
+                            smg[iq] = 0.0;
+                        for (int iq = 1; iq <= ncoef * ncoef; iq++)
+                            smh[iq] = 0.0;
+                        smu = 0.0;
+                        igr = igrp[k];
+                    }
+                    coxvars(x, (k - 1) * nCol, irt, 0, IFRQ, ifix, 0, icen, out double _, out double _, out double xfrq, out double xfix, out double _, out double xcen, out int nrmiss);
+                    if (xfrq >= 0.0)
+                    {
+                        int icnn = Convert.ToInt32(xcen);
+                        genregs(nCol, x, 1 + (k - 1) * nCol, nef, nvef, indef, 2, ref ncoef1, OBS, ref nrmiss, ref ifault);
+                        double zdot = 0.0;
+                        double zdot_base = 0.0;
+                        for (int iq = 1; iq <= ncoef; iq++)
                         {
-                            for (int iq = 1; iq <= ncoef; iq++)
-                                smg[iq] = 0.0;
-                            for (int iq = 1; iq <= ncoef * ncoef; iq++)
-                                smh[iq] = 0.0;
-                            smu = 0.0;
-                            igr = igrp[k];
+                            zdot_base += coef[iq, icoef] * OBS[iq];
+                            OBS[iq] = OBS[iq] - xmean[iq];
+                            zdot += coef[iq, icoef] * OBS[iq];
                         }
-                        coxvars(x, (k - 1) * nCol, irt, 0, IFRQ, ifix, 0, icen, out double _, out double _, out double xfrq, out double xfix, out double _, out double xcen, out int nrmiss);
-                        if (xfrq >= 0.0)
+                        double xx = xfix + zdot;
+                        double xx_base = xfix + zdot_base;
+                        // a record with an event: its own part of the gradient and of the log likelihood
+                        if (icnn == 0)
                         {
-                            int icnn = Convert.ToInt32(xcen);
-                            genregs(nCol, x, 1 + (k - 1) * nCol, nef, nvef, indef, 2, ref ncoef1, OBS, ref nrmiss, ref ifault);
-                            double zdot = 0.0;
-                            double zdot_base = 0.0;
                             for (int iq = 1; iq <= ncoef; iq++)
+                                GR[iq] = GR[iq] + xfrq * OBS[iq];
+                            algl += xfrq * Math.Min(xx, 30.0);
+                        }
+                        xx = Math.Max(-30.0, Math.Min(xx, 30.0));
+                        xx_base = Math.Max(-30.0, Math.Min(xx_base, 30.0));
+                        double u = Math.Exp(xx);
+                        caze[k, 1] = u;
+                        caze[k, 4] = xcen;
+                        if (ifix > 0)
+                        {
+                            caze[k, 5] = caze[k, 1] / Math.Exp(xfix);
+                            caze[k, 6] = Math.Exp(xx_base) / Math.Exp(xfix);
+                        }
+                        else
+                        {
+                            caze[k, 6] = Math.Exp(xx_base);
+                        }
+                        // the record joins those at risk
+                        smu += xfrq * u;
+                        for (int iq = 1; iq <= ncoef; iq++)
+                            smg[iq] = smg[iq] + xfrq * u * OBS[iq];
+                        double xtmp;
+                        if (ihess)
+                        {
+                            for (int j = 1; j <= ncoef; j++)
                             {
-                                zdot_base += coef[iq, icoef] * OBS[iq];
-                                OBS[iq] = OBS[iq] - xmean[iq];
-                                zdot += coef[iq, icoef] * OBS[iq];
+                                xtmp = xfrq * u * OBS[j];
+                                for (int ii = 1; ii <= j; ii++)
+                                    smh[ii + (j - 1) * ncoef] = smh[ii + (j - 1) * ncoef] + OBS[ii] * xtmp;
                             }
-                            double xx = xfix + zdot;
-                            double xx_base = xfix + zdot_base;
-                            // a record with an event: its own part of the gradient and of the log likelihood
-                            if (icnn == 0)
+                        }
+                        // The last of the records with events at this time: everybody who is at risk at this time has now been met.  Each of
+                        // the jj records with events is taken in turn, this one first and then those before it in the order, for the part
+                        // that the sums over those at risk play in the log likelihood, the gradient and the matrix.
+                        if (idt[k] > 0)
+                        {
+                            int M = i;
+                            int jj = idt[k];
+                            for (int j = 1; j <= jj; j++)
                             {
+                                algl -= xfrq * Math.Log(smu);
                                 for (int iq = 1; iq <= ncoef; iq++)
-                                    GR[iq] = GR[iq] + xfrq * OBS[iq];
-                                algl += xfrq * Math.Min(xx, 30.0);
-                            }
-                            xx = Math.Max(-30.0, Math.Min(xx, 30.0));
-                            xx_base = Math.Max(-30.0, Math.Min(xx_base, 30.0));
-                            double u = Math.Exp(xx);
-                            caze[k, 1] = u;
-                            caze[k, 4] = xcen;
-                            if (ifix > 0)
-                            {
-                                caze[k, 5] = caze[k, 1] / Math.Exp(xfix);
-                                caze[k, 6] = Math.Exp(xx_base) / Math.Exp(xfix);
-                            }
-                            else
-                            {
-                                caze[k, 6] = Math.Exp(xx_base);
-                            }
-                            // the record joins those at risk
-                            smu += xfrq * u;
-                            for (int iq = 1; iq <= ncoef; iq++)
-                                smg[iq] = smg[iq] + xfrq * u * OBS[iq];
-                            double xtmp;
-                            if (ihess)
-                            {
-                                for (int j = 1; j <= ncoef; j++)
+                                    GR[iq] = GR[iq] + -xfrq / smu * smg[iq];
+                                if (!ihess)
                                 {
-                                    xtmp = xfrq * u * OBS[j];
-                                    for (int ii = 1; ii <= j; ii++)
-                                        smh[ii + (j - 1) * ncoef] = smh[ii + (j - 1) * ncoef] + OBS[ii] * xtmp;
-                                }
-                            }
-                            // The last of the records with events at this time: everybody who is at risk at this time has now been met.  Each of
-                            // the jj records with events is taken in turn, this one first and then those before it in the order, for the part
-                            // that the sums over those at risk play in the log likelihood, the gradient and the matrix.
-                            if (idt[k] > 0)
-                            {
-                                int M = i;
-                                int jj = idt[k];
-                                for (int j = 1; j <= jj; j++)
-                                {
-                                    algl -= xfrq * Math.Log(smu);
                                     for (int iq = 1; iq <= ncoef; iq++)
-                                        GR[iq] = GR[iq] + -xfrq / smu * smg[iq];
-                                    if (!ihess)
+                                        OBS[iq] = OBS[iq] + -1.0 / smu * smg[iq];
+                                    for (int L = 1; L <= ncoef; L++)
                                     {
-                                        for (int iq = 1; iq <= ncoef; iq++)
-                                            OBS[iq] = OBS[iq] + -1.0 / smu * smg[iq];
-                                        for (int L = 1; L <= ncoef; L++)
+                                        xtmp = xfrq * OBS[L];
+                                        for (int ii = 1; ii <= L; ii++)
+                                            cov[ii, L] = cov[ii, L] + OBS[ii] * xtmp;
+                                    }
+                                }
+                                else
+                                {
+                                    double tmp = xfrq / smu;
+                                    for (int L = 1; L <= ncoef; L++)
+                                    {
+                                        xtmp = -tmp * smg[L] / smu;
+                                        for (int ii = 1; ii <= L; ii++)
                                         {
-                                            xtmp = xfrq * OBS[L];
-                                            for (int ii = 1; ii <= L; ii++)
-                                                cov[ii, L] = cov[ii, L] + OBS[ii] * xtmp;
+                                            cov[ii, L] = cov[ii, L] + smh[ii + (L - 1) * ncoef] * tmp;
+                                            cov[ii, L] = cov[ii, L] + smg[ii] * xtmp;
                                         }
                                     }
-                                    else
+                                }
+                                if (j != jj)
+                                {
+                                    do
                                     {
-                                        double tmp = xfrq / smu;
-                                        for (int L = 1; L <= ncoef; L++)
-                                        {
-                                            xtmp = -tmp * smg[L] / smu;
-                                            for (int ii = 1; ii <= L; ii++)
-                                            {
-                                                cov[ii, L] = cov[ii, L] + smh[ii + (L - 1) * ncoef] * tmp;
-                                                cov[ii, L] = cov[ii, L] + smg[ii] * xtmp;
-                                            }
-                                        }
+                                        M -= 1;
+                                        k = iptr[M];
                                     }
-                                    if (j != jj)
-                                    {
-                                        do
-                                        {
-                                            M -= 1;
-                                            k = iptr[M];
-                                        }
-                                        while (igrp[k] < 0);
-                                        if (IFRQ > 0)
-                                            xfrq = x[IFRQ + (k - 1) * nCol];
-                                        genregs(nCol, x, 1 + (k - 1) * nCol, nef, nvef, indef, 2, ref ncoef1, OBS, ref nrmiss, ref ifault);
-                                        for (int iq = 1; iq <= ncoef; iq++)
-                                            OBS[iq] = OBS[iq] - xmean[iq];
-                                    }
+                                    while (igrp[k] < 0);
+                                    if (IFRQ > 0)
+                                        xfrq = x[IFRQ + (k - 1) * nCol];
+                                    genregs(nCol, x, 1 + (k - 1) * nCol, nef, nvef, indef, 2, ref ncoef1, OBS, ref nrmiss, ref ifault);
+                                    for (int iq = 1; iq <= ncoef; iq++)
+                                        OBS[iq] = OBS[iq] - xmean[iq];
                                 }
                             }
                         }
                     }
                 }
-                // Splitting (see the remarks): column 2 of caze becomes the greatest constant so far in the stratum, and column 3 the least
-                // among the events from here on
-                igr = 0;
-                bool strat = false;
-                if (ratio != -1.0)
-                {
-                    for (int i = 1; i <= nobs; i++)
-                    {
-                        int k = iptr[i];
-                        if (igrp[k] >= 0)
-                        {
-                            if (igr != igrp[k])
-                            {
-                                igr = igrp[k];
-                                XMax = -1.0E+30;
-                            }
-                            XMax = Math.Max(XMax, caze[k, 5]);
-                            caze[k, 2] = XMax;
-                        }
-                    }
-                    igr = 0;
-                    for (int i = nobs; i >= 1; i--)
-                    {
-                        int k = iptr[i];
-                        if (igrp[k] >= 0 & Convert.ToInt64(caze[k, 4]) == 0)
-                        {
-                            if (igr != igrp[k])
-                            {
-                                igr = igrp[k];
-                                xmin = 1.0E+30;
-                            }
-                            xmin = Math.Min(xmin, caze[k, 5]);
-                            caze[k, 3] = xmin;
-                        }
-                    }
-                    igr = 0;
-                    for (int i = 1; i < nobs; i++)
-                    {
-                        int k = iptr[i];
-                        if (igrp[k] >= 0 & Convert.ToInt64(caze[k, 4]) == 0)
-                        {
-                            igr = igrp[k];
-                            int j = i;
-                            bool ok = true;
-                            do
-                            {
-                                j++;
-                                if (j > nobs)
-                                {
-                                    ok = false;
-                                    break;
-                                }
-                                kk = iptr[j];
-                            }
-                            while (igrp[kk] < 0 || Convert.ToInt64(caze[kk, 4]) != 0);
-                            if (igrp[kk] != igr)
-                                ok = false;
-                            if (ok)
-                            {
-                                if (caze[kk, 3] > ratio * caze[k, 2])
-                                {
-                                    XMax = caze[k, 2];
-                                    int iimax = 1;
-                                    int imax = igrp[1];
-                                    for (int iq = 1; iq <= nobs; iq++)
-                                    {
-                                        if (igrp[iq] > imax)
-                                        {
-                                            iimax = iq;
-                                            imax = igrp[iq];
-                                        }
-                                    }
-                                    int ngrp = igrp[iimax] + 1;
-                                    strat = true;
-                                    change = true;
-                                    j = i + 1;
-                                    for (int ii = j; ii <= nobs; ii++)
-                                    {
-                                        k = iptr[ii];
-                                        if (igrp[k] >= 0 & igrp[k] == igr)
-                                        {
-                                            if (Convert.ToInt64(caze[k, 4]) == 0)
-                                            {
-                                                igrp[k] = ngrp;
-                                            }
-                                            else
-                                            {
-                                                if (caze[k, 5] >= ratio * XMax)
-                                                {
-                                                    igrp[k] = ngrp;
-                                                }
-                                                else
-                                                {
-                                                    int it = iptr[j];
-                                                    iptr[j] = k;
-                                                    for (int jj = j + 1; jj <= ii; jj++)
-                                                    {
-                                                        int jt = iptr[jj];
-                                                        iptr[jj] = it;
-                                                        it = jt;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                if (!strat)
-                    break;
             }
-            while (true);
             // a regressor that does not vary within any stratum is left out
             for (int i = 1; i <= ncoef; i++)
             {
-                if (iptr[nobs + i] == 0 || (Zero && (coef[i, icoef] == 0.0)))
+                if (iptr[nobs + i] == 0)
                 {
                     GR[i] = 0.0;
                     for (int ii = 1; ii <= i; ii++)

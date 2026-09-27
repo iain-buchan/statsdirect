@@ -187,7 +187,6 @@ internal static partial class Program
             bag.AddInput("strata", new DataFrame(strata));
         }
         bag.AddInput("accuracy", accuracy);
-        bag.AddInput("splitting-ratio", 1000.0);
         bag.AddInput("centre-continuous-covariates", centre);
         return bag;
     }

@@ -47,11 +47,6 @@
           <default-value>0.0000001</default-value>
           <minimum-value>0</minimum-value>
         </double>
-        <double>
-          <name>splitting-ratio</name>
-          <rubric>SPLITTING RATIO:  At any event time x, if the ratio of the proportionality constant at all times before x is more than R times that for all times after x then StatsDirect splits the data into another stratum.  R is the ratio to enter below.</rubric>
-          <default-value>1000</default-value>
-        </double>
         <boolean>
           <name>centre-continuous-covariates</name>
           <prompt>Centre continuous covariates</prompt>
