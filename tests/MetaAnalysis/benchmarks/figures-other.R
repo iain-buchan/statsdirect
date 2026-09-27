@@ -70,10 +70,11 @@ while (at <= length(lines)) {
       for (sm in c("IRR", "IRD")) {
         key <- paste(name, sn, tolower(sm), sep = "|")
         back <- if (sm == "IRR") exp else identity
-        # as the program pools: by inverse variance, the studies without a rate ratio left out
-        keep <- if (sm == "IRR") x[, 1] > 0 & x[, 3] > 0 else x[, 1] + x[, 3] > 0
+        # as the program pools: by inverse variance.  A study without an event in either group is left out; one without an event in
+        # one of its groups has meta's continuity correction, which is 0.5 added to the events of both its groups
+        keep <- x[, 1] + x[, 3] > 0 & x[, 2] > 0 & x[, 4] > 0
         if (sum(keep) > 0) {
-          m <- try(suppressWarnings(do.call(metainc, c(list(x[keep, 1], x[keep, 2], x[keep, 3], x[keep, 4], sm = sm, method = "Inverse", incr = 0, method.tau = "DL", warn = FALSE), lev))), silent = TRUE)
+          m <- try(suppressWarnings(do.call(metainc, c(list(x[keep, 1], x[keep, 2], x[keep, 3], x[keep, 4], sm = sm, method = "Inverse", incr = 0.5, method.incr = "only0", method.tau = "DL", warn = FALSE), lev))), silent = TRUE)
           if (!inherits(m, "try-error") && is.finite(m$TE.common)) {
             common(key, m, c("|rmh", "|from", "|to", "|z"), back)
             random(key, m, c(if (sm == "IRR") "|dsirr" else "|dsird", "|dsll", "|dsul", "|dz"), back)

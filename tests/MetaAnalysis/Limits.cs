@@ -90,7 +90,67 @@ internal static partial class Program
                 }
             }
         }
-        if (failures == before) Console.WriteLine("ok    studies that cannot be pooled, the labels of the studies left out, Sato's limit, the standard errors of the bias plots");
+        // Incidence rates, studies without events.  One without an event in either group is left out; one without an event in one of
+        // its groups has the continuity correction in the events of both groups, which is a half unless a number is set
+        {
+            Set(settings[0]);
+            const double z = 1.959963984540054;
+            double[] nothing = { 0, 0, 0 }, time1 = { 120, 90, 300 }, time2 = { 110, 95, 280 };
+            foreach (bool ratio in new[] { true, false })
+            {
+                var refused = Report("x", h => Rates(ratio, h, 0.95, nothing, time1, nothing, time2));
+                string error = refused.TryGetValue("x|error", out object e) ? (string)e : "no error";
+                Say(error.StartsWith("TemplateOperationCancelledException") && error.Contains("None of the studies can be pooled"), $"no events in any study, rate {(ratio ? "ratio" : "difference")}: refused with a message that says so ({error})");
+            }
+            double[] a = { 0, 5, 0, 7 }, t1 = { 100, 120, 90, 150 }, b = { 0, 3, 4, 0 }, t2 = { 110, 100, 95, 160 };
+            foreach (double set in new[] { -9, 0.25 })
+            {
+                Set(("x1.cc.d0", true, set, false));
+                double cc = set > 0 ? set : 0.5;
+                string[] labels = { "* (excluded)", "", " [CC = " + cc.ToString() + "]", " [CC = " + cc.ToString() + "]" };
+                double[] ac = a.Select((v, i) => a[i] == 0 || b[i] == 0 ? v + cc : v).ToArray(), bc = b.Select((v, i) => a[i] == 0 || b[i] == 0 ? v + cc : v).ToArray();
+                foreach (bool ratio in new[] { true, false })
+                {
+                    string what = $"rate {(ratio ? "ratio" : "difference")}, correction {(set > 0 ? "set to 0.25" : "not set")}";
+                    var figures = Report("x", h => Rates(ratio, h, 0.95, a, t1, b, t2));
+                    double figure(string key) => figures.TryGetValue(key, out object v) && v is double d ? d : double.NaN;
+                    double total = 0;
+                    double[] weight = new double[4];
+                    for (int i = 1; i < 4; i++)
+                    {
+                        weight[i] = ratio ? 1 / (1 / ac[i] + 1 / bc[i]) : 1 / (ac[i] / (t1[i] * t1[i]) + bc[i] / (t2[i] * t2[i]));
+                        total += weight[i];
+                    }
+                    for (int i = 0; i < 4; i++)
+                    {
+                        string label = figures.TryGetValue($"x|inputs.{i + 1}|lb", out object l) ? (string)l : "no label";
+                        Say(label == labels[i], $"{what}, study {i + 1} ({a[i]} and {b[i]} events): the label \"{labels[i]}\" (\"{label}\")");
+                        if (i == 0) continue;
+                        double estimate = ratio ? ac[i] / t1[i] / (bc[i] / t2[i]) : a[i] / t1[i] - b[i] / t2[i];
+                        double given = figure($"x|ir.{i + 1}|{(ratio ? "irr" : "ird")}");
+                        Say(Math.Abs(given - estimate) <= 1e-12 * Math.Max(1, Math.Abs(estimate)), $"{what}, study {i + 1}: the rate {(ratio ? "ratio" : "difference")} ({given}; from the definition {estimate})");
+                        given = figure($"x|ir.{i + 1}|wt");
+                        Say(Math.Abs(given - 100 * weight[i] / total) <= 1e-9, $"{what}, study {i + 1}: the fixed effects weight ({given}; from the definition {100 * weight[i] / total})");
+                        if (!ratio)
+                        {
+                            double se = Math.Sqrt(1 / weight[i]);
+                            Say(Math.Abs(figure($"x|ir.{i + 1}|lci") - (estimate - z * se)) <= 1e-12 && Math.Abs(figure($"x|ir.{i + 1}|uci") - (estimate + z * se)) <= 1e-12, $"{what}, study {i + 1}: the limits are the difference plus and minus z standard errors");
+                        }
+                    }
+                }
+            }
+            Set(settings[0]);
+        }
+        if (failures == before) Console.WriteLine("ok    studies that cannot be pooled, the labels of the studies left out, Sato's limit, the standard errors of the bias plots, rates without events");
+    }
+
+    internal static StepOutput Rates(bool ratio, Host h, double level, double[] a, double[] t1, double[] b, double[] t2)
+    {
+        ParameterBag bag = new();
+        bag.AddInput("gamma", level);
+        bag.AddInput("a", Column("a", a)); bag.AddInput("pt1", Column("pt1", t1));
+        bag.AddInput("b", Column("b", b)); bag.AddInput("pt2", Column("pt2", t2));
+        return ratio ? Meta.RptMetaIncidenceRateRatio(h, bag) : Meta.RptMetaIncidenceRateDifference(h, bag);
     }
 
     // the limits that a report hands to its bias assessment plot, a place for each study from 1

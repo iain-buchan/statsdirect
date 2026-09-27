@@ -43,6 +43,10 @@ for (k in c(1, 2, 3, 4, 6, 10)) for (size in c(30, 300, 5000)) for (rep in 1) {
 put("rate.zero", "rate", cbind(c(0, 3, 5, 0, 7, 2), c(120, 150, 90, 60, 200, 80), c(2, 0, 4, 0, 9, 1), c(110, 160, 95, 70, 210, 75)))
 put("rate.same", "rate", cbind(c(4, 4, 4, 4), c(100, 100, 100, 100), c(4, 4, 4, 4), c(100, 100, 100, 100)))
 put("rate.equal", "rate", cbind(c(5, 10, 8, 3), c(100, 200, 160, 60), c(10, 5, 4, 6), c(200, 100, 80, 120)))
+# every study without an event in one of its groups; no events in the first group of any study; and with studies without an event
+put("rate.onezero", "rate", cbind(c(0, 4, 0, 6, 3, 0), c(80, 150, 95, 60, 210, 40), c(3, 0, 5, 0, 0, 2), c(110, 160, 90, 70, 200, 75)))
+put("rate.first0", "rate", cbind(c(0, 0, 0, 0), c(100, 250, 80, 140), c(3, 7, 2, 5), c(120, 240, 90, 150)), 0.9)
+put("rate.mixed", "rate", cbind(c(0, 12, 0, 9, 0), c(300, 410, 150, 280, 90), c(0, 8, 4, 0, 0), c(310, 400, 160, 300, 100)), 0.99)
 put("cont.same", "cont", cbind(rep(20, 4), rep(10, 4), rep(2, 4), rep(20, 4), rep(9, 4), rep(2, 4)))
 put("cont.nosd", "cont", cbind(c(20, 25, 30, 18), c(10, 11, 9, 12), c(0, 2, 3, 2), c(20, 25, 30, 18), c(9, 9, 9, 9), c(0, 2, 2, 3)))
 put("cont.small", "cont", cbind(c(2, 3, 2, 4, 3), c(10, 11, 9, 12, 10), c(1, 2, 3, 2, 1), c(2, 2, 3, 3, 4), c(9, 9, 9, 9, 9), c(1, 2, 2, 3, 2)))

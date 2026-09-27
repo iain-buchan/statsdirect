@@ -127,7 +127,8 @@ while (at <= length(lines)) {
   if (kind == "rate") {
     a <- x[, 1]; t1 <- x[, 2]; b <- x[, 3]; t2 <- x[, 4]
     for (i in seq_len(k)) {
-      if (a[i] <= 0 || b[i] <= 0) next
+      # the limits are of the events as they are: without an event in one of the groups one of them is 0 or infinity
+      if (a[i] + b[i] <= 0 || t1[i] <= 0 || t2[i] <= 0) next
       ci <- binom.test(a[i], a[i] + b[i], conf.level = level)$conf.int
       put(paste0(name, "|", sn, "|irr|ir.", i, c("|lci", "|uci")), ci / (1 - ci) * t2[i] / t1[i])
     }
