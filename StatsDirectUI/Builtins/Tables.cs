@@ -11,6 +11,9 @@ namespace StatsDirect.Builtins
 {
     public static class Tables
     {
+        /// <summary>
+        /// A category of a classification: its label, and the value that the data have for a subject put in it (the number of its group).
+        /// </summary>
         private class Namevar
         {
             public string Title { get; set;  }
@@ -238,25 +241,35 @@ namespace StatsDirect.Builtins
 
         private static double LogChoose(int n, int k) => PDF.alogam(n + 1.0) - PDF.alogam(k + 1.0) - PDF.alogam(n - k + 1.0);
 
-        ///  <summary>
-        ///
-        ///  </summary>
-        ///  <param name="frame">One classifier variable per rater, one row of data per subject.</param>
-        ///  <param name="poscat"></param>
-        ///  <param name="k"></param>
-        ///  <param name="mbar"></param>
-        ///  <param name="mbarh"></param>
-        ///  <param name="pbar"></param>
-        ///  <param name="minm"></param>
-        ///  <param name="maxm"></param>
-        ///  <param name="medm"></param>
-        ///  <remarks></remarks>
+        /// <summary>
+        /// Kappa of one category against all the others, for any number of raters and for subjects who need not all have the same number
+        /// of ratings.  For a subject let m be the number of ratings that it has and x the number of them that are in the category; let
+        /// n be the number of subjects with a rating, mbar the mean of m, and pbar the proportion of all the ratings that are in the
+        /// category.  Then, summing over the subjects,
+        ///   B = the sum of (x - m pbar)^2 / m, over n               (the mean square between subjects)
+        ///   W = the sum of x (m - x) / m, over n (mbar - 1)         (the mean square within subjects)
+        ///   kappa = (B - W) / (B + (mbar - 1) W)
+        /// B + (mbar - 1) W is mbar pbar (1 - pbar), so that kappa is also 1 - W / [pbar (1 - pbar)].
+        /// </summary>
+        /// <param name="frame">One classifier variable per rater, one row of data per subject.</param>
+        /// <param name="poscat">The label of the category.</param>
+        /// <param name="k">On return, kappa.</param>
+        /// <param name="mbar">On return, the mean number of ratings of a subject with a rating.</param>
+        /// <param name="mbarh">On return, the harmonic mean of the numbers of ratings.</param>
+        /// <param name="pbar">On return, the proportion of all the ratings that are in the category.</param>
+        /// <param name="minm">On return, the least number of ratings of a subject with a rating.</param>
+        /// <param name="maxm">On return, the greatest number of ratings of a subject.</param>
+        /// <param name="medm">On return, the median number of ratings of a row.</param>
+        /// <param name="nRated">On return, the number of subjects with a rating.</param>
         private static void KappaHat(DataFrame frame, string poscat, out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm, out double nRated)
         {
             int n = frame.Variables[0].Length;
             double[] qm = new double[n];
             double[] qx = new double[n];
             //  IEB Aug 2007: Corrected to allow for complete non-rating of a subject
+            //  qm[i] is the number of ratings of subject i and qx[i] the number of them that are in the category.  A rating is the
+            //  number of a group of the rater's variable; an empty cell has the value of a missing number and, in a list of groups
+            //  that has one for missing values, belongs to none of the others
             for (int i = 0; i < n; i++)
             {
                 for (int j = 0; j < frame.VariableCount; j++)
@@ -317,6 +330,19 @@ namespace StatsDirect.Builtins
             k = (bx - wx) / (bx + (mbar - 1.0) * wx);
         }
 
+        /// <summary>
+        /// Makes the lists of the categories of two classifications the same, so that the table of one against the other is square, with
+        /// the same category in row i as in column i.  The labels of both lists are put into one list, in order; where a label is there
+        /// twice the first of the two is struck out (its label made empty), and the list is put in order again, which takes the empty
+        /// labels to its start.  What follows them is every category, once.  Each of the two lists is then gone through beside it: where
+        /// a list has not the category that is due, its later categories are moved up a place and the category is put in with a value
+        /// that no subject has, so that its row or column of the table is empty.
+        /// </summary>
+        /// <param name="xcats">The number of categories in the first list; on return, in either.</param>
+        /// <param name="xcat">The first list, in order of label, from element lowerBound.</param>
+        /// <param name="ycats">The number of categories in the second list; on return, in either.</param>
+        /// <param name="ycat">The second list, in order of label, from element lowerBound.</param>
+        /// <param name="lowerBound">The element at which the lists start: 0 or 1.</param>
         private static void XSymmetriseXtab(ref int xcats, ref Namevar[] xcat, ref int ycats, ref Namevar[] ycat, int lowerBound)
         {
             Namevar[] maxcat = new Namevar[xcats + ycats + lowerBound];
@@ -370,6 +396,21 @@ namespace StatsDirect.Builtins
             ycats = maxcats;
         }
 
+        /// <summary>
+        /// Confidence interval for kappa from the 2 by 2 table of two raters, by goodness of fit.  If a proportion p of all the ratings
+        /// are of the first category and kappa is k, the numbers of subjects expected to be put in the first category by both raters, by
+        /// one of them only and by neither are n (p^2 + k p q), 2 n p q (1 - k) and n (q^2 + k p q), q being 1 - p.  The chi-square of
+        /// the three numbers observed against these depends on k, and the limits are the two values of k at which it is the square of
+        /// the normal deviate.  They are roots of a cubic, which is solved in closed form through the cosine of an angle.
+        /// </summary>
+        /// <param name="n1">The number of subjects put in the first category by both raters.</param>
+        /// <param name="n2">The number put in the first category by one rater and in the second by the other.</param>
+        /// <param name="n3">The number put in the second category by both raters.</param>
+        /// <param name="z">The normal deviate of the confidence level.</param>
+        /// <param name="ka">On return, the estimate of kappa: 1 - n2 / (2 n p q), with p = (2 n1 + n2) / (2 n).</param>
+        /// <param name="lwr">On return, the lower limit.</param>
+        /// <param name="upr">On return, the upper limit.</param>
+        /// <param name="fault">On return, 0, or 2 if all the ratings are of one category, when there is no interval.</param>
         public static void XKappaCI22(int n1, int n2, int n3, double z, out double ka, out double lwr, out double upr, out int fault)
         {
             //       This program calculates a Donner-Eliasziw goodness-of-fit
@@ -415,6 +456,8 @@ namespace StatsDirect.Builtins
             b = Math.Pow(b, 0.5);
             lwr = b * (Math.Cos(th120) + Math.Pow(3.0, 0.5) * Math.Sin(th120)) - y3 / 3.0;
             upr = 2.0 * b * Math.Cos(th300) - y3 / 3.0;
+            // without a disagreement kappa is 1, and so is its upper limit.  The equation for the limits is then the quadratic
+            // (n + z^2) k^2 + z^2 [(p^2 + q^2) / p q] k + z^2 - n = 0, and the lower limit is the greater of its roots
             if (n2 == 0)
             {
                 upr = 1.0;
@@ -429,22 +472,22 @@ namespace StatsDirect.Builtins
         /// </summary>
         /// <param name="o">(0..g-1, 0..g-1)-based array of values</param>
         /// <param name="w">(0..g-1, 0..g-1)-based array of weights</param>
-        /// <param name="g">number of observations per rater</param>
+        /// <param name="g">number of categories</param>
         /// <param name="k">Cohen's kappa</param>
         /// <param name="sek">Standard error of kappa</param>
-        /// <param name="sekci"></param>
+        /// <param name="sekci">Standard error of kappa for its confidence interval, which does not suppose the raters independent</param>
         /// <param name="kcil">Lower confidence bound for kappa</param>
         /// <param name="kciu">Upper confidence bound for kappa</param>
         /// <param name="kw">Weighted kappa</param>
         /// <param name="sekw">Standard error of weighted kappa</param>
-        /// <param name="sekwci"></param>
+        /// <param name="sekwci">Standard error of weighted kappa for its confidence interval</param>
         /// <param name="kwcil">Lower confidence bound for weighted kappa</param>
         /// <param name="kwciu">Upper confidence bound for weighted kappa</param>
         /// <param name="po">Observed agreement for kappa</param>
         /// <param name="pe">Expected agreement for kappa</param>
         /// <param name="pow">Observed agreement for weighted kappa</param>
         /// <param name="pew">Expected agreement for weighted kappa</param>
-        /// <param name="cit">Confidence level</param>
+        /// <param name="cit">Normal deviate of the confidence level</param>
         /// <param name="spe">Expected agreement for Scott's Pi</param>
         /// <param name="spi">Scott's Pi</param>
         /// <param name="gama">Gwett's AC1</param>
@@ -452,7 +495,7 @@ namespace StatsDirect.Builtins
         /// <param name="gamacil">Lower confidence bound for AC1</param>
         /// <param name="gamaciu">Upper confidence bound for AC1</param>
         /// <param name="pegama">Chance-independent agreement for Gwett's AC1</param>
-        /// <param name="ierror"></param>
+        /// <param name="ierror">True until the calculation has finished</param>
         /// <remarks>The double version</remarks>
         public static void Kappa(double[,] o, double[,] w, int g, out double k, out double sek, out double sekci, out double kcil, out double kciu, out double kw, out double sekw, out double sekwci, out double kwcil, out double kwciu, out double po, out double pe, out double pow, out double pew, double cit, out double spe, out double spi, out double gama, out double segama, out double gamacil, out double gamaciu, out double pegama, out bool ierror)
         {
@@ -477,6 +520,12 @@ namespace StatsDirect.Builtins
                 throw new InvalidDataException();
 
             //unweighted kappa
+            // In what follows p ij is the proportion of the subjects who are in row i and column j of the table, p i. the proportion
+            // in row i and p .j the proportion in column j.  The agreement observed, po, is the proportion on the diagonal, and the
+            // agreement expected, pe, is what that would be if the raters were independent: the sum of p i. p .i.  Kappa is the
+            // agreement beyond what is expected as a share of the most that there could be: (po - pe) / (1 - pe).
+            // For AC1, pik is the mean of the two raters' proportions in category i, and the agreement by chance is the sum of
+            // pik (1 - pik) over g - 1
             po = 0.0;
             pe = 0.0;
             double px = 0.0;
@@ -499,7 +548,12 @@ namespace StatsDirect.Builtins
             k = (po - pe) / (1.0 - pe);
             // standard error for the z test
             sek = 1.0 / ((1.0 - pe) * Math.Sqrt(gt)) * Math.Sqrt(pe + pe * pe - px);
+            // (which is the standard error when the raters are independent: the square root of pe + pe^2 less the sum of
+            // p i. p .i (p i. + p .i), over (1 - pe) root n)
             // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
+            // the variance is (A + B - C) / [n (1 - pe)^4], where A is the sum over the diagonal of
+            // p ii [(1 - pe) - (p i. + p .i) (1 - po)]^2, B is (1 - po)^2 times the sum off the diagonal of p ij (p .i + p j.)^2, and
+            // C is (po pe - 2 pe + po)^2
             double sumpa = 0.0;
             double sumpb = 0.0;
             for (int i = 0; i < g; i++)
@@ -518,6 +572,8 @@ namespace StatsDirect.Builtins
                 kciu = 1.0;
 
             //weighted kappa
+            // as kappa, with the agreement observed the sum of w ij p ij and the agreement expected the sum of w ij p i. p .j: a
+            // weight of 1 on the diagonal and of less away from it gives a part of the credit to ratings that are near each other
             pow = 0.0;
             pew = 0.0;
             double soma = 0.0;
@@ -533,6 +589,9 @@ namespace StatsDirect.Builtins
             }
             kw = (pow - pew) / (1.0 - pew);
             sekw = 1.0 / ((1.0 - pew) * Math.Sqrt(gt));
+            // the variance of AC1, with pe for its agreement by chance and pi i for pik above, is (1 - f) / [n (1 - pe)^2] times
+            //   po (1 - po) - 4 (1 - AC1) [sum of p ii (1 - pi i) / (g - 1) - po pe]
+            //   + 4 (1 - AC1)^2 [sum of p ij (1 - (pi i + pi j) / 2)^2 / (g - 1)^2 - pe^2]
             double f = 0.0;
             // set f to gt/population size if population size is known, otherwise assume an infinite inference population thus f = 0
             double vgama = (1.0 - f) / (gt * Math.Pow(1.0 - pegama, 2.0)) * (po * (1.0 - po) - 4.0 * (1.0 - gama) * (1.0 / (g - 1.0) * pog - po * pegama) + 4.0 * Math.Pow(1.0 - gama, 2.0) * (1.0 / Math.Pow(g - 1.0, 2.0) * soma - Math.Pow(pegama, 2.0)));
@@ -542,6 +601,8 @@ namespace StatsDirect.Builtins
             // vgamma is the variance of Gwett's AC1 statistic and epgamma its standard error
             double[] wibar = new double[g];
             double[] wjbar = new double[g];
+            // wibar[i] is the mean weight of row i, the sum of w ij p .j, and wjbar[j] the mean weight of column j, the sum of
+            // w ij p i.
             for (int i = 0; i < g; i++)
             {
                 for (int j = 0; j < g; j++)
@@ -557,7 +618,11 @@ namespace StatsDirect.Builtins
 
             // standard error for z test
             sekw *= Math.Sqrt(px - Math.Pow(pew, 2.0));
+            // (when the raters are independent: the square root of the sum of p i. p .j [w ij - (wibar i + wjbar j)]^2 less
+            // pew^2, over (1 - pew) root n)
             // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
+            // the variance is the sum of p ij [w ij (1 - pew) - (wibar i + wjbar j) (1 - pow)]^2 less
+            // (pow pew - 2 pew + pow)^2, over n (1 - pew)^4
             double sumpw = 0.0;
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
@@ -570,6 +635,8 @@ namespace StatsDirect.Builtins
             if (kwciu > 1.0) kwciu = 1.0;
 
             // Scott's pi
+            // as kappa, but the agreement expected is taken from the mean of the two raters' proportions in each category: it is
+            // the sum of the squares of those means
             spe = 0.0;
             for (int i = 0; i < g; i++)
                 spe += Math.Pow(crtot[i] / (gt * 2.0), 2.0);
@@ -577,32 +644,32 @@ namespace StatsDirect.Builtins
             ierror = false;
         }
 
-        ///  <summary>
-        ///  
-        ///  </summary>
-        /// <param name="host"></param>
+        /// <summary>
+        /// Cohen's kappa, weighted kappa and Scott's pi of a table of whole numbers: as the version for a table of floating point
+        /// numbers, without AC1.  It is used for the tables drawn in the simulation of P.
+        /// </summary>
         /// <param name="o">(0..g-1, 0..g-1)-based array of values</param>
-        ///  <param name="w">(0..g-1, 0..g-1)-based array of weights</param>
-        ///  <param name="g"></param>
-        ///  <param name="k"></param>
-        ///  <param name="sek"></param>
-        /// <param name="sekci"></param>
-        /// <param name="kcil"></param>
-        ///  <param name="kciu"></param>
-        ///  <param name="kw"></param>
-        ///  <param name="sekw"></param>
-        /// <param name="sekwci"></param>
-        /// <param name="kwcil"></param>
-        ///  <param name="kwciu"></param>
-        ///  <param name="po"></param>
-        ///  <param name="pe"></param>
-        ///  <param name="pow"></param>
-        ///  <param name="pew"></param>
-        ///  <param name="cit"></param>
-        ///  <param name="spe"></param>
-        ///  <param name="spi"></param>
-        ///  <param name="ierror"></param>
-        ///  <remarks>The integer version</remarks>
+        /// <param name="w">(0..g-1, 0..g-1)-based array of weights</param>
+        /// <param name="g">The number of categories.</param>
+        /// <param name="k">Kappa.</param>
+        /// <param name="sek">The standard error of kappa when the raters are independent.</param>
+        /// <param name="sekci">The standard error of kappa for its confidence interval.</param>
+        /// <param name="kcil">The lower limit of kappa.</param>
+        /// <param name="kciu">The upper limit of kappa.</param>
+        /// <param name="kw">Weighted kappa.</param>
+        /// <param name="sekw">The standard error of weighted kappa when the raters are independent.</param>
+        /// <param name="sekwci">The standard error of weighted kappa for its confidence interval.</param>
+        /// <param name="kwcil">The lower limit of weighted kappa.</param>
+        /// <param name="kwciu">The upper limit of weighted kappa.</param>
+        /// <param name="po">The agreement observed.</param>
+        /// <param name="pe">The agreement expected.</param>
+        /// <param name="pow">The weighted agreement observed.</param>
+        /// <param name="pew">The weighted agreement expected.</param>
+        /// <param name="cit">The normal deviate of the confidence level.</param>
+        /// <param name="spe">The agreement expected for Scott's pi.</param>
+        /// <param name="spi">Scott's pi.</param>
+        /// <param name="ierror">True until the calculation has finished.</param>
+        /// <remarks>The integer version</remarks>
         public static void Kappa(int[,] o, double[,] w, int g, ref double k, ref double sek, ref double sekci, ref double kcil, ref double kciu, ref double kw, ref double sekw, ref double sekwci, ref double kwcil, ref double kwciu, ref double po, ref double pe, ref double pow, ref double pew, ref double cit, ref double spe, ref double spi, out bool ierror)
         {
             // two rater kappa
@@ -642,7 +709,12 @@ namespace StatsDirect.Builtins
             k = (po - pe) / (1.0 - pe);
             // standard error for the z test
             sek = 1.0 / ((1.0 - pe) * Math.Sqrt(gt)) * Math.Sqrt(pe + pe * pe - px);
+            // (which is the standard error when the raters are independent: the square root of pe + pe^2 less the sum of
+            // p i. p .i (p i. + p .i), over (1 - pe) root n)
             // standard error for the confidence interval: after Fleiss, Cohen and Everitt 1969
+            // the variance is (A + B - C) / [n (1 - pe)^4], where A is the sum over the diagonal of
+            // p ii [(1 - pe) - (p i. + p .i) (1 - po)]^2, B is (1 - po)^2 times the sum off the diagonal of p ij (p .i + p j.)^2, and
+            // C is (po pe - 2 pe + po)^2
             double sumpa = 0.0;
             double sumpb = 0.0;
             for (int i = 0; i < g; i++)
@@ -659,6 +731,8 @@ namespace StatsDirect.Builtins
             if (kciu > 1.0) kciu = 1.0;
 
             //weighted kappa
+            // as kappa, with the agreement observed the sum of w ij p ij and the agreement expected the sum of w ij p i. p .j: a
+            // weight of 1 on the diagonal and of less away from it gives a part of the credit to ratings that are near each other
             pow = 0.0;
             pew = 0.0;
             for (int i = 0; i < g; i++)
@@ -673,6 +747,8 @@ namespace StatsDirect.Builtins
             sekw = 1.0 / ((1.0 - pew) * Math.Sqrt(gt));
             double[] wibar = new double[g];
             double[] wjbar = new double[g];
+            // wibar[i] is the mean weight of row i, the sum of w ij p .j, and wjbar[j] the mean weight of column j, the sum of
+            // w ij p i.
             for (int i = 0; i < g; i++)
             {
                 for (int j = 0; j < g; j++)
@@ -688,7 +764,11 @@ namespace StatsDirect.Builtins
 
             //standard error for the z test
             sekw *= Math.Sqrt(px - Math.Pow(pew, 2.0));
+            // (when the raters are independent: the square root of the sum of p i. p .j [w ij - (wibar i + wjbar j)]^2 less
+            // pew^2, over (1 - pew) root n)
             // standard error for confidence interval after Fleiss, Cohen and Everitt 1969
+            // the variance is the sum of p ij [w ij (1 - pew) - (wibar i + wjbar j) (1 - pow)]^2 less
+            // (pow pew - 2 pew + pow)^2, over n (1 - pew)^4
             double sumpw = 0.0;
             for (int i = 0; i < g; i++)
                 for (int j = 0; j < g; j++)
@@ -701,6 +781,8 @@ namespace StatsDirect.Builtins
             if (kwciu > 1.0) kwciu = 1.0;
 
             // Scott's pi
+            // as kappa, but the agreement expected is taken from the mean of the two raters' proportions in each category: it is
+            // the sum of the squares of those means
             spe = 0.0;
             for (int i = 0; i < g; i++)
                 spe += Math.Pow(crtot[i] / (gt * 2.0), 2.0);
@@ -708,7 +790,21 @@ namespace StatsDirect.Builtins
             ierror = false;
         }
 
+        /// <summary>
+        /// Two tests of the disagreement of two raters, from the k by k table of their ratings.
+        /// Maxwell's test of whether the raters use the categories equally often: d holds the row total less the column total of each
+        /// category, and V the variances and covariances of those differences when the raters do use them equally often (on the diagonal
+        /// the row total plus the column total less twice the count on the diagonal of the table; off it, minus the sum of the two counts
+        /// that face each other across the diagonal).  The statistic is d' inverse(V) d over the first k - 1 categories, a chi-square on
+        /// k - 1 degrees of freedom.
+        /// The generalised McNemar test of symmetry: the sum, over the pairs of categories i and j, of (n ij - n ji)^2 / (n ij + n ji),
+        /// a chi-square with a degree of freedom for each pair that has a subject.
+        /// </summary>
         ///  <param name="o">Zero-based array of values,dimensions (0..k-1, 0..k-1)</param>
+        /// <param name="k">The number of categories.</param>
+        /// <param name="x2">On return, Maxwell's chi-square; missing if V has no inverse.</param>
+        /// <param name="x2M">On return, the generalised McNemar chi-square; missing if no pair of categories has a subject.</param>
+        /// <param name="dfm">On return, the degrees of freedom of the generalised McNemar chi-square.</param>
         ///  <remarks>Maxwell AE. Comparing the classification of subjects by two independent judges. British Journal of Psychiatry 1970;116:651-655.</remarks>
         public static void Maxwell(double[,] o, int k, out double x2, out double x2M, out int dfm)
         {
@@ -743,6 +839,9 @@ namespace StatsDirect.Builtins
                         v[j, i] = -(o[j, i] + o[i, j]);
                 }
             }
+            //  The differences of all k categories add up to nothing, so that the whole of v has no inverse: the first k - 1 rows and
+            //  columns of it are turned into their inverse, in place, by Gauss-Jordan elimination.  (LAPACK's dgetrf and dgetri do the
+            //  same by way of the LU factors.)
             MathDbl.gaussj(v, 0, k - 1, z, 1, ref ifault);
             if (ifault != 0)
             {
@@ -775,6 +874,20 @@ namespace StatsDirect.Builtins
                 x2M = Constant.MISSING;
         }
 
+        /// <summary>
+        /// Agreement between raters who put each subject into one of a number of categories: a column of ratings for each rater and a
+        /// row for each subject.
+        /// Two raters: the table of the first rater's categories against the second's is made, and from it come Cohen's kappa, weighted
+        /// kappa, Scott's pi and Gwet's AC1 (see Kappa), the interval for a 2 by 2 table (see XKappaCI22), and the tests of Maxwell and
+        /// of McNemar generalised (see Maxwell).  A subject without a rating from both raters is left out.
+        /// Three or more raters: with two categories, kappa for raters whose number may differ from subject to subject; with more, the
+        /// kappa of each category against the rest and the kappa of all the categories (see KappaHat).  The tests and intervals are
+        /// from the standard errors that hold when there is no agreement beyond chance, and with more than two categories they are given
+        /// only if every subject has the same number of ratings.
+        /// </summary>
+        /// <param name="host">The preferences for the display of numbers.</param>
+        /// <param name="parameters">"responses": the columns of ratings; "ci": the confidence level; for two raters "method", the weights
+        /// of weighted kappa (1 linear, 2 quadratic, 3 given in "weights").</param>
         public static StepOutput RptKappa(IPreferences host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;
@@ -795,6 +908,10 @@ namespace StatsDirect.Builtins
 
             // ieb june05 update to exclude missing data categories
             // do crosstabs if two raters --->
+            // The categories that each rater has used are listed in order of label (labels that are numbers in order of size), without
+            // the group of missing values, and the two lists are made the same.  xt[i, j] counts the subjects whom the second rater
+            // put in category i and the first in category j; o is the same table with a row for each category of the first rater
+            // and a column for each of the second, as it is printed
             if (raters == 2)
             {
                 ClassifierVariable v0 = (ClassifierVariable)frame.Variables[0];
@@ -1085,6 +1202,10 @@ namespace StatsDirect.Builtins
                     // ----> Fleiss Cuzick for > 2 raters and 2 responses
                     KappaHat(frame, catz[0], out double k, out double mbar, out double mbarh, out double pbar, out double minm, out double maxm, out double medm, out double nRated);
                     double n = nRated; // subjects with at least one rating (the same n that mbar, mbarh and pbar use)
+                    // the standard error of kappa when there is no agreement beyond chance: with mbar the mean and mbarh the harmonic
+                    // mean of the numbers of ratings of a subject, and q = 1 - p, it is the square root of
+                    // 2 (mbarh - 1) + (mbar - mbarh) (1 - 4 p q) / (mbar p q), over (mbar - 1) root (n mbarh).  The test and the
+                    // confidence interval are both made with it
                     double sek = 1.0 / ((mbar - 1.0) * Math.Sqrt(n * mbarh)) * Math.Sqrt(2.0 * (mbarh - 1.0) + (mbar - mbarh) * (1.0 - 4.0 * pbar * (1.0 - pbar)) / (mbar * pbar * (1.0 - pbar)));
                     double z = sek != 0.0 ? k / sek : Constant.MISSING;
                     string ratz;
@@ -1118,6 +1239,8 @@ namespace StatsDirect.Builtins
                     double medm = 0;
                     double n = 0; // subjects with at least one rating
                     double mx = 0; // ratings per subject (constant when minm == maxm)
+                    // the kappa of each category against the rest, and the kappa of all the categories, which is the mean of those
+                    // with the weight p q for a category that has the proportion p of the ratings (q is 1 - p)
                     for (int i = 0; i < cats; i++)
                     {
                         KappaHat(frame, catz[i], out double k, out double mbar, out double _, out double pbar, out minm, out maxm, out medm, out n);
@@ -1128,6 +1251,9 @@ namespace StatsDirect.Builtins
                         kbard += pbar * qbar;
                         se2 += pbar * qbar * (qbar - pbar);
                     }
+                    // the standard errors when there is no agreement beyond chance and every subject has m ratings: for the kappa of
+                    // a category root [2 / (n m (m - 1))], and for the kappa of all the categories root 2 over
+                    // [(sum of p q) root (n m (m - 1))], times the square root of (sum of p q)^2 - sum of p q (q - p)
                     for (int i = 0; i < cats; i++)
                         sej[i] = Math.Sqrt(2.0 / (n * mx * (mx - 1.0)));
                     double kbar = kbard != 0.0 ? kbarn / kbard : Constant.MISSING;
@@ -1207,6 +1333,16 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// P values for kappa and weighted kappa of two raters by simulation: the proportion, among tables drawn at random with the row
+        /// and column totals of the table observed, of those whose kappa is as great as the kappa observed (see KappaResample), with
+        /// the confidence interval of that proportion.  The table is made from the columns of ratings as RptKappa makes it, or is
+        /// given as a table.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">As for RptKappa or RptKappaScreen, with "iterations", the number of tables to draw; "seed", the
+        /// start of the random numbers (0 for one taken from the clock); and "kDouble" and "kwDouble", the kappa and weighted kappa
+        /// observed.</param>
         public static StepOutput RptKappaSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
             int iter = parameters["iterations"].AsInt32;
@@ -1403,21 +1539,20 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Simulated exact P for Cohen's Kappa
         ///  </summary>
-        /// <param name="host"></param>
+        /// <param name="host">Where progress is shown.</param>
         /// <param name="o">(0..nrow-1,0..ncol-1) input table</param>
         ///  <param name="w">(0..nrow-1,0..ncol-1) input weights</param>
         ///  <param name="g">Number of rows and columns</param>
-        /// <param name="cit"></param>
+        /// <param name="cit">Normal deviate of the confidence level</param>
         /// <param name="originalK">K-value from original operation, for comparison</param>
         ///  <param name="originalKw">Weighted K from original operation, for comparison</param>
         ///  <param name="iter">Monte Carlo iterations</param>
-        /// <param name="exactIterW"></param>
+        /// <param name="exactIterW">On return, the number of tables for which weighted kappa could be tested</param>
         /// <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
-        /// <param name="exactR"></param>
-        /// <param name="exactIter"></param>
-        /// <param name="exactRw"></param>
-        /// <remarks></remarks>
+        /// <param name="exactR">On return, the number of tables with a kappa as great as the original</param>
+        /// <param name="exactIter">On return, the number of tables for which kappa could be tested</param>
+        /// <param name="exactRw">On return, the number of tables with a weighted kappa as great as the original</param>
         private static void KappaResample(IProgressBarHost host, int[,] o, double[,] w, int g, double cit, double originalK, double originalKw, int iter, ref int exactR, ref int exactIter, ref int exactRw, ref int exactIterW, int iseed, ref int ierror)
         {
             int[] ncolt = new int[g];
@@ -1466,6 +1601,8 @@ namespace StatsDirect.Builtins
                         break;
                     }
                 }
+                //  a table drawn from those that have the totals of the rows and columns of the table observed, each with the
+                //  probability that it has when the two ratings are independent; it takes the place of the table in o
                 Chi.Rcont2(0, g, g, nrowt, ncolt, ref primed, ref o, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
@@ -1488,6 +1625,8 @@ namespace StatsDirect.Builtins
                 Kappa(o, w, g, ref k, ref sek, ref sekci, ref kcil, ref kciu, ref kw, ref sekw, ref sekwci, ref kwcil, ref kwciu, ref po, ref pe, ref pow, ref pew, ref cit, ref spe, ref spi, out bool wasError);
                 if (!wasError)
                 {
+                    //  the table is counted if its kappa is as great as the kappa observed, or is short of it by less than rounding
+                    //  could account for.  A table whose kappa has no standard error is not counted among the tables at all
                     if (sek != 0.0)
                     {
                         if (k > originalK || Math.Abs(k - originalK) < tol)
@@ -1521,6 +1660,11 @@ namespace StatsDirect.Builtins
             exactIterW = iter - missingSekw;
         }
 
+        /// <summary>
+        /// The numbers of rows and columns that a table of weights for two raters must have: the number of categories that the two
+        /// raters used between them, found as RptKappa finds it.  The dialog box asks for a table of that size.
+        /// </summary>
+        /// <param name="parameters">"responses": the two columns of ratings.</param>
         public static StepOutput RptKappaSizeWeights(ParameterBag parameters)
         {
             DataFrame frame = parameters["responses"].AsDataFrame;

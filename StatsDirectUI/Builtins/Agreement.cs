@@ -10,6 +10,19 @@ namespace StatsDirect.Builtins
     public static class Agreement
     {
 
+        /// <summary>
+        /// The universal measure of agreement R between observers who each measure every one of a number of objects, in one dimension
+        /// or in several.  What an observer measures of an object is a point, and delta is the mean distance between the points of two
+        /// observers for the same object, over the objects and the pairs of observers.  If what the observers measured had nothing to do
+        /// with which object it was, each observer's points could as well be dealt among the objects in any other order: the mean of
+        /// delta over all such dealings is the delta expected by chance, and R is 1 - delta / (that mean), which is 1 when the observers
+        /// agree in every measurement and about 0 when they agree no better than chance.  P is the probability of a delta as small as
+        /// the delta observed, from the distribution that has the mean, variance and skewness of delta over the dealings (see Agree and
+        /// Pgamt).  With one observer as a standard, each of the others is compared with the standard alone (see AgreeStandard).
+        /// </summary>
+        /// <param name="parameters">"data": the measurements, in one column; "raters", "objects" and "categories": the observer, the
+        /// object and the dimension of each measurement ("categories" is left out when there is one dimension); "reference": a mark
+        /// against the observer who is the standard, left out when there is none.</param>
         public static StepOutput RptUniversalAgreement(ParameterBag parameters)
         {
             int nobs = 0;
@@ -47,6 +60,20 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Reads the measurements into data[object, observer, dimension], each index from 1.  Every observer must have one measurement,
+        /// and no more, of every object in every dimension.  With a standard, the numbers of the observers are changed round so that
+        /// the standard is the first.
+        /// </summary>
+        /// <param name="parameters">As for RptUniversalAgreement.</param>
+        /// <param name="n">On return, the number of objects.</param>
+        /// <param name="b">On return, the number of observers.</param>
+        /// <param name="c">On return, the number of dimensions.</param>
+        /// <param name="data">On return, the measurements.</param>
+        /// <param name="standard">On return, true if an observer is the standard.</param>
+        /// <param name="nobs">On return, the number of measurements read.</param>
+        /// <param name="title">On return, the title of the measurements, with the names of the dimensions if there are any.</param>
+        /// <param name="refIdent">On return, the name of the standard for the report, or "None".</param>
         private static void GatherUniversalAgreementData(ParameterBag parameters, out int n, out int b, out int c, out double[,,] data, out bool standard, ref int nobs, ref string title, ref string refIdent)
         {
             DataFrame dataFrame = parameters["data"].AsDataFrame;
@@ -190,6 +217,16 @@ namespace StatsDirect.Builtins
                 title = dataVariable.Title;
         }
 
+        /// <summary>
+        /// Compares the values of R of two independent groups of observers, from what the report of each group gives: R, and the mean,
+        /// variance and skewness of delta.  As R is 1 - delta / mean, the variance of R is that of delta over the square of the mean,
+        /// and the third moment of R about its mean is minus that of delta over the cube of the mean.  The difference between the two
+        /// values of R has the sum of their variances and the difference of their third moments; divided by its standard deviation, it
+        /// is referred to the distribution with its skewness (see Pgamt) for a two sided P value.  The P value of each group's own R is
+        /// given beside it.
+        /// </summary>
+        /// <param name="parameters">"r1_in", "mu1_in", "var1_in" and "gam1_in": R and the mean, variance and skewness of delta for the
+        /// first group; "r2_in" and so on for the second.</param>
         public static StepOutput RptUniversalRCompare(ParameterBag parameters)
         {
             double r1 = parameters["r1_in"].AsDouble;
@@ -209,6 +246,8 @@ namespace StatsDirect.Builtins
             //  the delta that was observed in each group: R is 1 - delta / mean, so delta is mean (1 - R)
             double d1 = mu1 * (1.0 - r1);
             double d2 = mu2 * (1.0 - r2);
+            //  the variance of the difference, var1 / mu1^2 + var2 / mu2^2, and further on its skewness: its third moment about its
+            //  mean, sig2^3 gam2 / mu2^3 - sig1^3 gam1 / mu1^3, over the cube of its standard deviation
             double vard = (Math.Pow(mu1, 2.0) * var2 + Math.Pow(mu2, 2.0) * var1) / (Math.Pow(mu1, 2.0) * Math.Pow(mu2, 2.0));
             double sig1 = Math.Sqrt(var1);
             double sig2 = Math.Sqrt(var2);
@@ -245,6 +284,9 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  calculates the value for delta and the value for the coefficient of agreement, r.
         ///  exact values for the mean (edel), variance (var), and skewness (gam) of the delta distribution are computed.
+        ///  The distribution of delta is over all the ways of dealing each observer's measurements among the objects: n factorial ways
+        ///  for each observer, every one as likely as any other.  Its moments are not found by going through the dealings but from
+        ///  sums of the distances between the points, of their squares and cubes, and of their products.
         ///  </summary>
         ///  <param name="n">number of objects observed</param>
         ///  <param name="b">number of observers/judges</param>
@@ -278,6 +320,7 @@ namespace StatsDirect.Builtins
             double[,] tij3 = new double[b + 1, b + 1];
 
             const double zero = 0.0;
+            //  d holds the distance between every two points.  The point of object i and observer j is number b (i - 1) + j
             for (i = 1; i <= n; i++)
             {
                 for (j = 1; j <= b; j++)
@@ -306,6 +349,10 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            //  For each two observers ir and ix, taken in that order: sj[i, ir, ix] is the sum of the distances from the point that ir
+            //  has for object i to the points that ix has for all the objects, and sj2 and sj3 are the sums of the squares and of the
+            //  cubes of those distances.  sij, sij2 and sij3 are their totals over the objects: sums over all n^2 pairs of a point of
+            //  ir with a point of ix
             for (ix = 1; ix <= b; ix++)
             {
                 for (ir = 1; ir <= b; ir++)
@@ -335,6 +382,9 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            //  t2 is the part of the third moment of delta that comes from three observers at a time.  The deltas of two pairs of
+            //  observers are uncorrelated, which is why the variance below has a term for each pair and no more, but the deltas of
+            //  the three pairs that can be made of three observers are not independent of each other
             double t2 = zero;
             if (b > 2)
             {
@@ -375,6 +425,10 @@ namespace StatsDirect.Builtins
                 }
                 t2 = 6.0 * t2 / (n - 1);
             }
+            //  For each pair of observers: tij2 and tij3 are the sums, over the points of both, of the square and of the cube of a
+            //  point's sum of distances to the points of the other observer; vi is the sum of a point's sum of distances times its
+            //  sum of squared distances; and uij is the sum, over the pairs of a point of one with a point of the other, of their
+            //  distance times the two points' sums of distances
             for (ix = 2; ix <= b; ix++)
             {
                 for (ir = 1; ir < ix; ir++)
@@ -399,6 +453,11 @@ namespace StatsDirect.Builtins
                     }
                 }
             }
+            //  The mean of delta is the mean of all the n^2 distances between a point of one observer and a point of another,
+            //  averaged over the pairs of observers.  Its variance is the sum over the pairs of observers of
+            //  S^2 - n T + n^2 Q (S being sij, T tij2 and Q sij2), over n - 1 and over the square of n times the number of
+            //  distances that make up delta (fac).  t1 is the part of the third moment that comes from each pair of observers
+            //  by itself
             edel = zero;
             var = zero;
             double t1 = zero;
@@ -421,6 +480,7 @@ namespace StatsDirect.Builtins
             var = var * con * con / (n - 1);
             gam = Math.Pow(con, 3.0) * (t1 - t2) / (n - 1) / Math.Sqrt(Math.Pow(var, 3.0));
             edel = con * edel;
+            //  delta itself: the mean distance between the two points of the same object, over the objects and the pairs of observers
             delta = zero;
             for (ix = 2; ix <= b; ix++)
             {
@@ -443,6 +503,8 @@ namespace StatsDirect.Builtins
 
         ///  <summary>
         ///  Calculates the probability of a value of t being less than or equal to the observed value of t.
+        ///  The distribution is the Pearson type III with mean 0, variance 1 and the skewness given: a gamma distribution, moved
+        ///  along and, for a negative skewness, turned about.
         ///  </summary>
         ///  <param name="t">standardized test statistic</param>
         ///  <param name="gam">skewness of the delta distribution</param>
@@ -467,7 +529,10 @@ namespace StatsDirect.Builtins
         }
 
         ///  <summary>
-        ///  multivariate measure of agreement between a set of raters and a standdard (or correct set) of responses.
+        ///  multivariate measure of agreement between a set of raters and a standard (or correct set) of responses.
+        ///  The first observer is the standard.  Each of the others is taken with the standard as a pair of observers (AgreeStdCalc),
+        ///  and the deltas of the pairs are added up.  So are their means, their variances and their third moments about the mean,
+        ///  which is right because each observer's measurements are dealt among the objects independently of the others'.
         ///  </summary>
         ///  <param name="kn">number of objects observed</param>
         ///  <param name="km">number of observers/judges</param>
@@ -528,6 +593,22 @@ namespace StatsDirect.Builtins
             prob = Pgamt(t, gam);
         }
 
+        /// <summary>
+        /// The delta of one observer with the standard, and the mean, variance and third moment about the mean of that delta over all the
+        /// dealings of the observer's measurements among the objects: the calculation of Agree for two observers.
+        /// </summary>
+        /// <param name="kn">The number of objects.</param>
+        /// <param name="kr">The number of dimensions.</param>
+        /// <param name="d">Room for the distances between the points.</param>
+        /// <param name="data">The measurements: data[object, 1, dimension] of the standard and data[object, 2, dimension] of the observer.</param>
+        /// <param name="sj1">Room for each point's sum of distances to the points of the other of the two.</param>
+        /// <param name="sj2">Room for each point's sum of squared distances.</param>
+        /// <param name="sj3">Room for each point's sum of cubed distances.</param>
+        /// <param name="uj">Room for the sums of products of distances (see Agree).</param>
+        /// <param name="cum1">On return, the mean of delta.</param>
+        /// <param name="cum2">On return, the variance of delta.</param>
+        /// <param name="cum3">On return, the third moment of delta about its mean.</param>
+        /// <param name="delta">On return, the delta observed.</param>
         private static void AgreeStdCalc(int kn, int kr, double[,] d, double[,,] data, double[,,] sj1, double[,,] sj2, double[,,] sj3, double[,,] uj, out double cum1, out double cum2, out double cum3, out double delta)
         {
             int i;
@@ -639,6 +720,14 @@ namespace StatsDirect.Builtins
             delta /= Convert.ToDouble(kn);
         }
 
+        /// <summary>
+        /// The P value of the universal measure of agreement by simulation: the proportion, among dealings of the observers' measurements
+        /// among the objects that are made at random, of those with a delta no greater than the delta observed, with the confidence
+        /// interval of that proportion.  It is for observers without a standard.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">As for RptUniversalAgreement, with "iterations", the number of dealings; "seed", the start of the
+        /// random numbers (0 for one taken from the clock); and "ci", the confidence level of the interval.</param>
         public static StepOutput RptUniversalAgreementSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
             int nobs = 0;
@@ -667,6 +756,25 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The permutation test of an experiment in randomised blocks, by simulation.  For the measure of agreement the objects are its
+        /// groups and the observers its blocks; it is called for the distance as it is (v = 1) and without alignment, commensuration
+        /// or ranks, so that the measurements go to Calc as they are.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="v">The power to which the distance between two points is raised.</param>
+        /// <param name="kg">The number of groups (objects).</param>
+        /// <param name="kb">The number of blocks (observers).</param>
+        /// <param name="kr">The number of responses (dimensions).</param>
+        /// <param name="ia">1 to align the blocks: the median of each block, in each dimension, is taken from its values.</param>
+        /// <param name="ic">1 to make the dimensions commensurate: each is divided by a measure of its spread.</param>
+        /// <param name="lr">1 to put ranks in place of the values (see Rank).</param>
+        /// <param name="data">The values: data[group, block, response], each index from 1.  They are changed.</param>
+        /// <param name="h">The power for the ranks.</param>
+        /// <param name="iseed">The start of the random numbers, or 0 for one taken from the clock.</param>
+        /// <param name="ms">The number of dealings to make.</param>
+        /// <param name="mp">On return, the number of dealings with a delta no greater than the delta observed.</param>
+        /// <param name="mpd">On return, the number of dealings made.</param>
         private static void Rmrbp(IProgressBarHost host, double v, int kg, int kb, int kr, int ia, int ic, int lr, double[,,] data, int h, int iseed, int ms, out int mp, out int mpd)
         {
 
@@ -781,6 +889,15 @@ namespace StatsDirect.Builtins
             Calc(host, v, kg, kb, kr, iseed, ms, data, out mp, out mpd);
         }
 
+        /// <summary>
+        /// Puts in place of the values of each block, in each dimension, their ranks less the mean rank, (kg + 1) / 2, raised to the power
+        /// h with the sign kept.  Values that are equal share the mean of the ranks that they would have between them.
+        /// </summary>
+        /// <param name="kg">The number of groups.</param>
+        /// <param name="kb">The number of blocks.</param>
+        /// <param name="kr">The number of responses.</param>
+        /// <param name="h">The power.</param>
+        /// <param name="data">The values: data[group, block, response], each index from 1.</param>
         private static void Rank(int kg, int kb, int kr, int h, ref double[,,] data)
         {
 
@@ -839,6 +956,20 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Delta for the values as they are, and for ms dealings of them made at random: mp counts the dealings with a delta no greater
+        /// than the delta of the values as they are.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="v">The power to which the distance between two points is raised.</param>
+        /// <param name="kg">The number of groups (objects).</param>
+        /// <param name="kb">The number of blocks (observers).</param>
+        /// <param name="kr">The number of responses (dimensions).</param>
+        /// <param name="iseed">The start of the random numbers, or 0 for one taken from the clock.</param>
+        /// <param name="ms">The number of dealings to make.</param>
+        /// <param name="data">The values: data[group, block, response], each index from 1.  They are left as the last dealing.</param>
+        /// <param name="mp">On return, the number of dealings with a delta no greater than the delta observed.</param>
+        /// <param name="mpd">On return, the number of dealings made: ms, or fewer if the user stopped the simulation.</param>
         private static void Calc(IProgressBarHost host, double v, int kg, int kb, int kr, int iseed, int ms, double[,,] data, out int mp, out int mpd)
         {
 
@@ -897,6 +1028,7 @@ namespace StatsDirect.Builtins
             }
             double c0 = bc2 * kg;
             delta /= c0;
+            //  a little above the delta observed, so that a delta that differs from it by rounding alone counts as equal to it
             double dx = delta * 1.000000000001;
             mp = 0;
 
@@ -906,6 +1038,10 @@ namespace StatsDirect.Builtins
             mpd = ms;
             for (iw = 1; iw <= ms; iw++)
             {
+                //  For each block but the first (the first can stay as it is, as only the order of one block beside another matters):
+                //  the values of each group in turn change places with those of a group picked at random.  A dealing starts from the
+                //  one before it and not from the values as they were, so that after the first few dealings every order is very
+                //  nearly as likely as any other
                 for (j = 2; j <= kb; j++)
                 {
                     for (i = 1; i <= kg; i++)

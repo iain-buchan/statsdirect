@@ -841,6 +841,15 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Agreement between two raters from the table of their ratings, typed in: row i and column j hold the number of subjects whom
+        /// the first rater put in category i and the second in category j.  The report is that of Tables.RptKappa for two raters:
+        /// Cohen's kappa, weighted kappa, Scott's pi and Gwet's AC1 (Tables.Kappa), the interval for a 2 by 2 table
+        /// (Tables.XKappaCI22), and the tests of Maxwell and of McNemar generalised (Tables.Maxwell).
+        /// </summary>
+        /// <param name="host">The preferences for the display of numbers.</param>
+        /// <param name="parameters">"responsesCrosstab": the table; "ci": the confidence level; "method": the weights of weighted kappa
+        /// (1 linear, 2 quadratic, 3 given in "weights", a table laid out as the table of ratings is).</param>
         public static StepOutput RptKappaScreen(IPreferences host, ParameterBag parameters)
         {
             double cco = parameters["ci"].AsDouble;

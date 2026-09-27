@@ -247,17 +247,27 @@ namespace StatsDirect.Builtins
             return true;
         }
 
-        ///  <summary>
-        ///  
-        ///  </summary>
-        ///  <param name="host"></param>
-        ///  <param name="ssd">0-based array</param>
-        ///  <param name="av">0-based array</param>
-        /// <param name="lowerBound"></param>
-        /// <param name="rx">Number of valid elements in ssd and av (from 0 to rx-1)</param>
-        ///  <param name="tau"></param>
-        ///  <param name="p2"></param>
-        ///  <remarks></remarks>
+        /// <summary>
+        /// Kendall's rank correlation between two lists of calculated values, with its two sided P value: used for the standard deviation
+        /// of each subject against its mean in the analysis of agreement, and in meta-analysis.
+        /// Every pair of points is looked at.  A pair is concordant if the point with the greater x has the greater y, discordant if it
+        /// has the lesser y, and tied in x or in y if the two values are the same (see XAgreeTied).  The score S is the number of
+        /// concordant pairs less the number of discordant pairs, and tau is S over the number of pairs, n (n - 1) / 2.  With ties the
+        /// divisor is the square root of (the pairs not tied in x) times (the pairs not tied in y), which gives tau b.
+        /// Without ties P is from the distribution of S over all the orderings (kendp: by counting them up to 50 points, by a series
+        /// beyond).  With ties it is from the normal distribution, with the variance of S that allows for ties and with S brought 1
+        /// nearer to zero for continuity.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="ssd">The first list (x), from element lowerBound.</param>
+        /// <param name="av">The second list (y), from element lowerBound.</param>
+        /// <param name="lowerBound">The element at which the lists start.</param>
+        /// <param name="rx">The number of points.  A point with a missing value in either list is left out.</param>
+        /// <param name="tau">On return tau, or tau b if there are ties; missing if it cannot be calculated.</param>
+        /// <param name="p2">On return, the two sided P value.</param>
+        /// <param name="isLowPower">On return, true if there are fewer than 11 points.</param>
+        /// <param name="isTauB">On return, true if there are ties.</param>
+        /// <param name="xTolerance">Two values of x that differ by no more than this are tied, whatever their size.</param>
         public static void XAgreeKendall(IProgressBarHost host, double[] ssd, double[] av, int lowerBound, ref int rx, out double tau, out double p2, out bool isLowPower, out bool isTauB, double xTolerance = 0.0)
         {
             int nxx = 0; int ls = 0;
@@ -324,6 +334,9 @@ namespace StatsDirect.Builtins
                                 if (yTied)
                                     ytie += 1;
                             }
+                            // the point pn and the points after it with the same x make a group of cnt tied values.  A group is counted
+                            // once, when the first of its points is met (then cnt is the size of the whole group): it has
+                            // cnt (cnt - 1) / 2 tied pairs, and adds to the three sums over the groups that the variance of S needs
                             int cnt = xtie + 1;
                             if (cnt > 1 && XAgreeNewTie(x[pn], xtv, ref xtvn, xTolerance))
                             {
@@ -345,6 +358,11 @@ namespace StatsDirect.Builtins
                     s = p - q;
                     double xn = nx;
                     hn = xn * (xn - 1.0) / 2.0;
+                    // the variance of S when there is no association.  Without ties it is n (n - 1) (2n + 5) / 18.  With groups of t
+                    // values tied in x and of u values tied in y it is
+                    //   [n (n - 1) (2n + 5) - sum of t (t - 1) (2t + 5) - sum of u (u - 1) (2u + 5)] / 18
+                    //   + [sum of t (t - 1) (t - 2)] [sum of u (u - 1) (u - 2)] / [9 n (n - 1) (n - 2)]
+                    //   + [sum of t (t - 1)] [sum of u (u - 1)] / [2 n (n - 1)]
                     double tievar1 = (xn * (xn - 1.0) * (2.0 * xn + 5.0) - sigat3 - sigbt3) / 18.0;
                     double tievar2 = sigat2 * sigbt2 / (9.0 * xn * (xn - 1.0) * (xn - 2.0));
                     double tievar3 = sigat1 * sigbt1 / (2.0 * xn * (xn - 1.0));
@@ -414,6 +432,21 @@ namespace StatsDirect.Builtins
             isLowPower = nxx < 11;
         }
 
+        /// <summary>
+        /// Agreement of two or more measurements of the same quantity on each of a number of subjects: the columns are the measurements
+        /// and the rows the subjects, and a row with a missing value is left out.  The report gives
+        /// - for two columns, the limits of agreement: the mean of the differences between the two, plus and minus the normal deviate
+        ///   of the confidence level times the standard deviation of the differences;
+        /// - the intraclass correlation coefficient, from the one way analysis of variance in which the subjects are the groups;
+        /// - the within-subjects standard deviation, which is the square root of the mean of the subjects' variances, and the
+        ///   repeatability, root 2 times the normal deviate times that standard deviation: the size that the difference between two
+        ///   measurements of a subject stays within for the given proportion of pairs of measurements;
+        /// - Kendall's rank correlation of the subjects' standard deviations with their means, which shows whether the error of
+        ///   measurement changes with the size of what is measured.
+        /// The mean, standard deviation and greatest difference of each subject are passed on for the plots.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">"data": the columns of measurements; "ci": the confidence level.</param>
         public static StepOutput RptAgreement(IProgressBarHost host, ParameterBag parameters)
         {
             double sum;
@@ -440,6 +473,11 @@ namespace StatsDirect.Builtins
             double[] xxm = new double[rows + 1];
 
             // Get Min, Max range (into xd) for all rows
+            // For each subject with all its measurements (they are numbered from 0 to rx - 1 as they are met):
+            //   mxd  the difference between two of its measurements that is greatest in size, an earlier column less a later one;
+            //   xd   that difference over the number of pairs of columns: with two columns, the first less the second;
+            //   av, vr and ssd  the mean, variance and standard deviation of its measurements;
+            //   xxm  the sum of the sizes of the differences of its measurements from their mean.
             int rx = 0;
             for (int r = 0; r < rows; r++)
             {
@@ -529,8 +567,11 @@ namespace StatsDirect.Builtins
             double[] transTemp5 = new double[rx];
             Array.Copy(xxm, transTemp5, Math.Min(xxm.Length, transTemp5.Length));
             xxm = transTemp5;
+            // the variance of the difference between two measurements of a subject is twice the variance within subjects, which is
+            // where the root 2 of the repeatability comes from
             double wssd = Math.Sqrt(meanvr);
             double rep = Math.Sqrt(2) * z * wssd;
+            // cit is the normal deviate of the confidence level again, and P0 is 1 less the confidence level
             MathDbl.civ(0, out double cit, GAMMA, out double P0);
             double lla = mean - cit * sd;
             double ula = mean + cit * sd;
@@ -554,6 +595,9 @@ namespace StatsDirect.Builtins
             double m = cols;
             //  One-way random effects ANOVA estimator ICC(1) = (MSB - MSW) / (MSB + (m - 1) MSW)
             //  with the exact F-based confidence interval (Shrout & Fleiss 1979; McGraw & Wong 1996)
+            //  MSB is the mean square between subjects, m times the sum of squares of the subjects' means about the grand mean over
+            //  n - 1, and MSW the mean square within subjects, on n (m - 1) degrees of freedom; m is the number of measurements of
+            //  each subject.  The coefficient is the share of the variance of a single measurement that is between subjects
             double n = rx;
             double icc_df1 = n - 1.0;
             double icc_df2 = n * (m - 1.0);
@@ -565,6 +609,8 @@ namespace StatsDirect.Builtins
             //  PDF.ffromp(dfd, dfn, p) returns the F quantile whose upper tail area is p
             double fupper = PDF.ffromp(icc_df2, icc_df1, (1.0 - GAMMA) / 2.0);
             double flower = PDF.ffromp(icc_df2, icc_df1, 1.0 - (1.0 - GAMMA) / 2.0);
+            //  F = MSB / MSW over the upper and the lower quantile of F gives the limits of the ratio that F estimates, and
+            //  (ratio - 1) / (ratio + m - 1) turns each into a limit of the coefficient, which can be no less than -1 / (m - 1)
             double icc_lcl = (fratio / fupper - 1.0) / (fratio / fupper + m - 1.0);
             double icc_ucl = (fratio / flower - 1.0) / (fratio / flower + m - 1.0);
             double icc_min = -1.0 / (m - 1.0);
@@ -626,6 +672,8 @@ namespace StatsDirect.Builtins
             //  SDChart.PlotXY(av, ssd, rx, "subject mean", "subject standard deviation", "Repeatability Plot", False, -1)
             //  Agreement plot (elided)
             //  Q-Q plot
+            //  the sums of the sizes of the differences from the subject's mean (xxm), in order, against quantiles of chi-square on
+            //  m - 1 degrees of freedom: as many quantiles as subjects, at probabilities in equal steps from 0.01 to 0.99
             const double p_start = 0.01;
             const double p_finish = 0.99;
             double p_inc = (p_finish - p_start) / (rx - 1);
