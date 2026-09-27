@@ -6,6 +6,11 @@ Changelog best practices reference: https://keepachangelog.com/en/1.0.0/
 
 ### Fixed
 - Logistic and Poisson regression: the leverages of a fit with a constant and two or more predictors left unselected took in a column that did not belong to the model, and were wrong (they added up to more than the number of parameters). No report was affected: only the fits made for model selection leave predictors unselected, and they do not use the leverages
+- Polynomial regression: the area under a fitted polynomial of degree 8 or 9 was wrong. The integration needs more than five stages for those degrees, and from the sixth stage the interpolation that finishes it started from the wrong one of its points. Areas for degrees 2 to 7 are unchanged
+- Simple linear regression, Save regression and CI to worksheet: the three columns held a fitted value of zero and no confidence limits, as the regression was not fitted before they were worked out; and the standard error of the fitted value was taken at the y of each record where its x belongs. The columns now hold the fitted line and the confidence limits of the mean
+- Logistic regression, diagnostic plots: the plots titled Delta Beta showed the standardised delta beta and those titled Delta Beta Std showed delta beta, and the size of the markers in the plot of delta chi-square followed the standardised figure. The plots now show what their titles say, as the table of the same figures always did
+- Multiple linear regression: a negative weight is refused, with a message; it had been taken as it stood, and the record counted against the fit. In the least squares routine behind the fit, a record with a missing frequency or weight is passed over where it had stopped the fit, a negative one stops the fit where it had been let through, and a missing value in the last predictor or in the outcome is seen where it had not been looked for. The reports take out incomplete records before they fit, so no result of theirs changes
+- Polynomial regression, back interpolation: the least x, from which the search starts, is now found as the greatest is; it had been taken to be the first x, which is the least when the records are in ascending order of x, as the fit leaves them. No result changes while they are
 
 ##[v5.0.9] 2026-09-26
 
