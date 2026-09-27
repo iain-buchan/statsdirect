@@ -2340,8 +2340,17 @@ namespace StatsDirect.Builtins
                         }
                     }
                     realk += 1;
-                    eai = eai + a - (a + c) * (a + b) / n;
-                    vari += (a + c) * (b + d) * (a + b) * (c + d) / (Math.Pow(n, 2.0) * (n - 1.0));
+                    // the chi-square of Mantel and Haenszel is from the counts as they are: it needs no correction of the cells
+                    {
+                        double ar = o[i, 1];
+                        double br = o[i, 2];
+                        double cr = o[i, 3];
+                        double dr = o[i, 4];
+                        double nr = ar + br + cr + dr;
+                        eai = eai + ar - (ar + cr) * (ar + br) / nr;
+                        if (nr > 1.0)
+                            vari += (ar + cr) * (br + dr) * (ar + br) * (cr + dr) / (Math.Pow(nr, 2.0) * (nr - 1.0));
+                    }
                     double rr = a * d / n;
                     double ss = b * c / n;
                     double pp = (a + d) / n;
@@ -2419,7 +2428,8 @@ namespace StatsDirect.Builtins
             }
             if (ll > ul)
                 Utilities.Utilities.Swap(ref ll, ref ul);
-            x2 = Math.Pow(Math.Abs(eai) - 0.5, 2.0) / vari;
+            // the correction of a half for continuity is made only if the difference is a half or more
+            x2 = Math.Pow(Math.Abs(eai) - (Math.Abs(eai) >= 0.5 ? 0.5 : 0.0), 2.0) / vari;
 
             // Q (combinability)
             qc = 0.0;
