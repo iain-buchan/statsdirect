@@ -376,6 +376,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The report of a conditional logistic regression: the coefficients of the predictors, and their odds ratios, for cases and controls matched in strata.
+        /// </summary>
+        /// <remarks>
+        /// Within a stratum of n people, m of them cases, the conditional likelihood is the probability that those m are the cases, given that there are
+        /// m cases among the n: exp(sum of z'b over the cases) divided by the sum of the same quantity over every set of m of the n.  Nothing has to be
+        /// estimated for the strata themselves.  The fit is made by clogit.  It is made twice: the first fit, with a single predictor that is 1 for
+        /// everybody, gives the deviance of no effect at all, from which the likelihood ratio chi-square of the model is taken.
+        /// A record is left out if its stratum, its case-control indicator or any of its predictors is missing.
+        /// </remarks>
         public static StepOutput RptConditionalLogisticRegression(ParameterBag parameters)
         {
             const string capti = "Conditional logistic regression";
@@ -392,6 +402,7 @@ namespace StatsDirect.Builtins
             int[] ic = new int[rows + 1];
             int strata = stratumVariable.GroupCount;
             string[] stratlab = new string[strata + 1];
+            // isi is the stratum of each record, numbered from 1, or 0 for a record that is to be left out
             for (int i = 1; i <= rows; i++)
                 isi[i] = stratumVariable.Data[i - 1] == Constant.MISSING
                     ? 0
@@ -454,6 +465,8 @@ namespace StatsDirect.Builtins
             const int maxit = 15;
 
             // first with a single unity predictor to get LR chi-square baseline
+            // This fit stops with fault 5, since a predictor that is the same for everybody carries no information, but not before the likelihood of no
+            // effect has been worked out, which is all that is wanted of it
             double[,] z_dum = new double[rows + 1, 1 + 1];
             int[] isz_dum = new int[1 + 1 ];
             isz_dum[1] = 1;
@@ -467,6 +480,7 @@ namespace StatsDirect.Builtins
 
             clogit(rows, cols, strata, z, rows, isz, cols, ic, isi, out double dev, b, se, sc, cov, NCA, nct, tol, maxit, out iter, out ifault);
 
+            // The likelihood ratio chi-square of the model: the fall in the deviance from that of no effect
             double lrx2 = Math.Abs(devx - dev);
 
             string warn = string.Empty;
@@ -552,6 +566,7 @@ namespace StatsDirect.Builtins
                 ParameterBag orParameters = new();
                 orList.Add(orParameters);
                 orParameters.AddOutput("lab", cd[i].Title);
+                // The odds ratio for a rise of one in the predictor, and its confidence interval, from the coefficient and its standard error
                 orParameters.AddOutput("or", Formatting.SafeExp(b[i]));
                 double lci = Formatting.SafeExp(b[i] - se[i] * cit);
                 double uci = Formatting.SafeExp(b[i] + se[i] * cit);
@@ -566,27 +581,37 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  conditional logistic - from as 196
         ///  </summary>
-        ///  <param name="n"></param>
-        ///  <param name="m"></param>
-        ///  <param name="ns"></param>
-        ///  <param name="z"></param>
-        ///  <param name="ldz"></param>
-        ///  <param name="isz"></param>
-        ///  <param name="ip"></param>
-        ///  <param name="ic"></param>
-        ///  <param name="isi"></param>
-        ///  <param name="dev"></param>
-        ///  <param name="b"></param>
-        ///  <param name="se"></param>
-        ///  <param name="sc"></param>
-        ///  <param name="cov"></param>
-        ///  <param name="nca"></param>
-        ///  <param name="nct"></param>
-        ///  <param name="tol"></param>
-        ///  <param name="maxit"></param>
-        ///  <param name="iter"></param>
-        ///  <param name="ifault"></param>
-        ///  <remarks></remarks>
+        ///  <param name="n">The number of records.</param>
+        ///  <param name="m">The number of columns of z.</param>
+        ///  <param name="ns">The number of strata.</param>
+        ///  <param name="z">The predictors: z[record, column].</param>
+        ///  <param name="ldz">The number of rows that z has, which must be at least n.</param>
+        ///  <param name="isz">For each column of z, more than zero if it is in the model.</param>
+        ///  <param name="ip">The number of columns that are in the model.</param>
+        ///  <param name="ic">For each record, 0 for a case and 1 for a control.</param>
+        ///  <param name="isi">For each record its stratum, from 1 to ns, or 0 to leave the record out.</param>
+        ///  <param name="dev">On return, the deviance: minus twice the conditional log likelihood.</param>
+        ///  <param name="b">On entry the starting values of the coefficients, and on return their estimates.</param>
+        ///  <param name="se">On return, the standard errors of the coefficients.</param>
+        ///  <param name="sc">On return, the score at the last pass.</param>
+        ///  <param name="cov">On return, the covariance matrix of the coefficients, in packed form.</param>
+        ///  <param name="nca">On return, the number of cases in each stratum.</param>
+        ///  <param name="nct">On return, the number of controls in each stratum.</param>
+        ///  <param name="tol">The fit stops when the log likelihood changes by no more than tol (1 + |log likelihood|).</param>
+        ///  <param name="maxit">The most passes that may be made.</param>
+        ///  <param name="iter">On return, the number of passes made.</param>
+        ///  <param name="ifault">
+        ///  On return 0 if all is well; 1 if the arguments do not agree with one another; 2 if a stratum or a case-control indicator is out of range, or
+        ///  there are no more records than coefficients; 4 if a linear predictor is too large for its exponential to be taken; 5 if the information
+        ///  matrix is not positive definite; 6 if the fit has not converged in maxit passes.
+        ///  </param>
+        ///  <remarks>
+        ///  Prepares the data for clmain2, which makes the fit.  The records that are to be used are put in order, stratum by stratum, with the cases of
+        ///  each stratum before its controls, and only the columns of the model are kept.  Within each stratum every predictor then has the mean of its
+        ///  cases taken away, from cases and controls alike.  That changes no difference between two people of the same stratum, and so does not change
+        ///  the likelihood, but it makes the predictors of the cases of a stratum add up to nothing, which clmain2 relies upon.
+        ///  While the records are being put in order nca and nct are used to keep places, not counts: see the comments in the body.
+        ///  </remarks>
         private static void clogit(int n, int m, int ns, double[,] z, int ldz, int[] isz, int ip, int[] ic, int[] isi, out double dev, double[] b, double[] se, double[] sc, double[] cov, int[] nca, int[] nct, double tol, int maxit, out int iter, out int ifault)
         {
             int k; // Used in many ways through this function; this should be optimised, but not trivial to do so
@@ -594,6 +619,7 @@ namespace StatsDirect.Builtins
             // tola = 10# * DPMACH(3)
             // double tola = 10.0 * 0.000000000000000111022302462516; 
 
+            // Fault 1, unless the arguments agree with one another
             ifault = 1;
             iter = 0;
             dev = Constant.MISSING;
@@ -612,6 +638,7 @@ namespace StatsDirect.Builtins
             if (j != ip)
                 return;
 
+            // Fault 2, unless every stratum and indicator is in range and there are records enough.  The cases and controls of each stratum are counted.
             ifault = 2;
             int nobs = 0;
             for (int i = 1; i <= ns; i++)
@@ -643,6 +670,9 @@ namespace StatsDirect.Builtins
 
             ifault = 0;
 
+            // The counts are turned into places.  From here until the counts are restored, nca[i] is the number of records that come before the next
+            // case of stratum i to be put in order, and nct[i] the same for its next control: the cases of a stratum come first, then its controls, then
+            // the next stratum.  nobs becomes the number of records in use, and maxobs one more than the size of the largest stratum.
             nobs = nca[1] + nct[1];
             int maxobs = nobs;
             nct[1] = nca[1];
@@ -669,6 +699,9 @@ namespace StatsDirect.Builtins
             // int l4 = maxobs * ip * ( ip + 1 ) / 2 + l3; 
 
             //  sort by strata then case-control
+            //  The predictors of each record go to the place that is next for its stratum and kind, ip to a record, in wk.  (wk is larger than this
+            //  needs: the rest of it is not used.)  Afterwards nca[i] is the place where the controls of stratum i start, and nct[i] the place where
+            //  the next stratum starts.
             for (int i = 1; i <= n; i++)
             {
                 int l = isi[i];
@@ -697,6 +730,8 @@ namespace StatsDirect.Builtins
             }
 
             //  center covariates
+            //  In each stratum the mean of each predictor over the cases is taken from every record of the stratum.  k is the place in wk where the
+            //  stratum starts, ncase the number of its cases and ncc the number of its records.
             int ncase = nca[1];
             int ncc = nct[1];
             k = 0;
@@ -730,6 +765,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
+            // The counts restored: nca[i] the cases of stratum i, and nct[i] its controls
             for (int i = ns; i >= 2; i--)
             {
                 nct[i] -= nca[i];
@@ -738,6 +774,7 @@ namespace StatsDirect.Builtins
 
             nct[1] -= nca[1];
 
+            // The predictors as clmain2 takes them: wz[predictor, record], with the records in their new order
             double[,] wz = new double[ip + 1, nobs + 1];
             for (j = 1; j <= nobs; j++)
                 for (int i = 1; i <= ip; i++)
@@ -745,6 +782,8 @@ namespace StatsDirect.Builtins
 
             clmain2(nobs, maxobs, ns, wz, nca, nct, ip, out dev, b, sc, cov, maxit, tol, out iter, ref ifault);
 
+            // clmain2 returns the log likelihood: the deviance is minus twice that.  The standard errors are the square roots of the diagonal of the
+            // covariance matrix, which is at i(i + 1)/2 in the packed form.
             dev = -2.0 * dev; 
             k = 0;
             for (int i = 1; i <= ip; i++)
@@ -756,6 +795,24 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The conditional logistic fit, by Newton's method, from data that clogit has put in order and centred.
+        /// </summary>
+        /// <remarks>
+        /// For a stratum with m cases among n people, write u = exp(z'b) for each person, and B for the sum, over every set of m of the n, of the product
+        /// of the u of the set.  Because clogit has made the predictors of the cases add up to nothing, the log likelihood of the stratum is -log B, the
+        /// score is minus the first derivative of log B, which is dB / B, and the information is its second derivative, d2B / B - (dB / B)(dB / B)'.
+        /// Howard2 supplies B, dB and d2B.  Each pass adds these up over the strata, solves (information) (step) = score for the step with the packed
+        /// Cholesky routines, and adds the step to b.  The fit stops when the log likelihood changes by no more than tol (1 + |log likelihood|).
+        ///
+        /// To keep B within range every u of the stratum is divided by exp(c1), which divides B by exp(m c1).  m c1 is put back into the log likelihood,
+        /// and the derivatives of log B are not changed by it.
+        ///
+        /// z is z[predictor, record].  nca and nct are the numbers of cases and controls in each stratum; a stratum with no case, or with no control,
+        /// adds nothing.  On return b holds the coefficients after the last step, while dlik, sc and cov (the log likelihood, the score, and the inverse
+        /// of the information in packed form, which is the covariance matrix of the coefficients) belong to the coefficients as they were before it: at
+        /// convergence the difference is too small to matter.
+        /// </remarks>
         private static void clmain2(int nobs, int maxobs, int ns, double[,] z, int[] nca, int[] nct, int ip, out double dlik, double[] b, double[] sc, double[] cov, int maxit, double tol, out int iter, ref int ifault)
         {
             //      based on applied statistics algorithm as 196 (logcch)
@@ -768,12 +825,14 @@ namespace StatsDirect.Builtins
             double[,] wd2b = new double[ip * (ip + 1) / 2 + 1, maxobs + 1];
             double[] u = new double[maxobs + 1 ];
 
+            // The largest number whose exponential can be taken: minus the log of the smallest positive number, about 708
             double toobig = -Math.Log(Constant.SPREAL);
             iter = 0;
 
             do
             {
 
+                // The log likelihood, the score and the information (in packed form, in cov) start each pass at zero
                 iter += 1;
                 dlik = 0.0;
                 int k = 0;
@@ -787,6 +846,7 @@ namespace StatsDirect.Builtins
                     }
                 }
 
+                // Stratum by stratum: nid is the number of records that come before the stratum, m the number of its cases and n the number of its records
                 int nid = 0;
                 for (int i = 1; i <= ns; i++)
                 {
@@ -794,6 +854,7 @@ namespace StatsDirect.Builtins
                     int n = m + nct[i];
                     if (nca[i] > 0 & nct[i] > 0)
                     {
+                        // The linear predictor z'b of each record of the stratum, in u, and their sum
                         double sum = 0.0;
                         for (int j = 1; j <= n; j++)
                         {
@@ -806,6 +867,8 @@ namespace StatsDirect.Builtins
                             u[j] = t;
                             sum += t;
                         }
+                        // c1 = (log gamma(n) - log gamma(m) - log gamma(n - m)) / m + the mean of the linear predictors.  The first part is about the log
+                        // of the number of sets of m, shared among the m, so that dividing each u by exp(c1) brings B to about the size of 1.
                         double c1 = PDF.alogam(Convert.ToDouble(n)) - PDF.alogam(Convert.ToDouble(m)) - PDF.alogam(Convert.ToDouble(n - m));
                         c1 = c1 / Convert.ToDouble(m) + sum / Convert.ToDouble(n);
                         for (int j = 1; j <= n; j++)
@@ -821,13 +884,17 @@ namespace StatsDirect.Builtins
                                 return;
                             }
                         }
+                        // B, dB and d2B for the sets of m of the n records are left in column m + 1 of wb, wdb and wd2b
                         Howard2(m, n, u, z, nid + 1, ip, wb, wdb, wd2b);
                         double bmn = wb[m + 1];
+                        // -log B, with the scaling put back
                         dlik = dlik - Math.Log(bmn) - c1 * Convert.ToDouble(m);
                         int l = 0;
                         int ir = 1;
                         int iis = 0;
                         //  cumulative score to stratum
+                        //  The score loses dB / B, and the information gains d2B / B - (dB / B)(dB / B)'.  l runs through the packed form, and ir and iis are
+                        //  the row and the column of element l.
                         for (k = 1; k <= ip; k++)
                         {
                             sc[k] = sc[k] - wdb[k, m + 1] / bmn;
@@ -869,6 +936,9 @@ namespace StatsDirect.Builtins
                         b[i] = b[i] + wdb[i, 1];
                 }
 
+                // Converged when the log likelihood has changed by no more than tol (1 + |log likelihood|) since the pass before.  Fault 6 if maxit
+                // passes have been made without that.  With maxit of 0 one pass is made and no step is taken, which gives the likelihood, the score and
+                // the information at the coefficients as they were given.
                 if (iter != 1)
                 {
                     if (Math.Abs(dlikx - dlik) > (1.0 + Math.Abs(dlikx)) * tol)
@@ -904,6 +974,27 @@ namespace StatsDirect.Builtins
                 ifault = 5;
         }
 
+        /// <summary>
+        /// For one stratum, the sum over every set of m of its n records of the product of the u of the set, with its first and second derivatives with
+        /// respect to the coefficients.
+        /// </summary>
+        /// <remarks>
+        /// Write B(j, i) for the sum over the sets of j of the first i records.  A set either leaves record i out or has it in, so
+        ///     B(j, i) = B(j, i - 1) + u[i] B(j - 1, i - 1)
+        /// with B(0, i) = 1.  Since u[i] = exp(z'b), its derivative with respect to coefficient k is z[k] u[i], and the derivatives of B follow the same
+        /// recursion with the terms that the product rule adds:
+        ///     dB(j, i)  = dB(j, i - 1)  + u[i] dB(j - 1, i - 1)  + z u[i] B(j - 1, i - 1)
+        ///     d2B(j, i) = d2B(j, i - 1) + u[i] d2B(j - 1, i - 1) + z z' u[i] B(j - 1, i - 1) + z u[i] dB(j - 1, i - 1)' + u[i] dB(j - 1, i - 1) z'
+        /// where z is that of record i.
+        ///
+        /// The work is done in place.  Column j + 1 of wb, wdb and wd2b holds B(j, .), dB(j, .) and d2B(j, .); column 1 is B(0, .) = 1, whose derivatives
+        /// are zero.  Pass im of the outer loop brings record j + im - 1 into column j + 1, for j from 1 to m in turn, so that the column on its left has
+        /// always just been brought up to the record before.  After n - m + 1 passes column m + 1 holds the sums over the sets of m of all n records.  A
+        /// column to the left of it, j + 1, holds the sums over the sets of j of the first n - m + j records only, which is all that was needed of it.
+        ///
+        /// The records of the stratum are u[1] to u[n], and their predictors are in columns idz to idz + n - 1 of z.  wd2b is in packed form: l runs
+        /// through the lower triangle by rows, and ir and iis are the row and the column of element l.
+        /// </remarks>
         private static void Howard2(int m, int n, double[] u, double[,] z, int idz, int ip, double[] wb, double[,] wdb, double[,] wd2b)
         {
             //      from as 196
@@ -918,6 +1009,7 @@ namespace StatsDirect.Builtins
                     wd2b[i, j] = 0.0;
             }
 
+            // B(0, .) = 1.  Then the recursion: record i is brought into column j + 1 from column j.
             wb[1] = 1.0;
             for (int im = 1; im <= n - m + 1; im++)
             {
