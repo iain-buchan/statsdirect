@@ -3247,16 +3247,21 @@ namespace StatsDirect.Builtins
             {
                 double emin = 1.0;
                 double percnt = 80.0;
-                Rcexact(filledRows, filledCols, filled, 0.0, percnt, emin, ref p1, ref p2, out int ierr);
-                if (ierr != 0)
+                Rcexact(host, "Fisher-Freeman-Halton exact test", filledRows, filledCols, filled, 0.0, percnt, emin, ref p1, ref p2, out int ierr);
+                if (ierr != 0 && ierr != ExactStopped)
                 {
                     //  try hybrid approximation
                     lb = "(hybrid approximation)";
                     emin = 1.0; //  In case reset by first call
                     percnt = 80.0; //  In case reset by first call
-                    Rcexact(filledRows, filledCols, filled, 5.0, percnt, emin, ref p1, ref p2, out ierr);
+                    Rcexact(host, "Fisher-Freeman-Halton exact test (hybrid approximation)", filledRows, filledCols, filled, 5.0, percnt, emin, ref p1, ref p2, out ierr);
                 }
-                if (ierr != 0)
+                if (ierr == ExactStopped)
+                {
+                    lb = string.Empty;
+                    outputParameters.AddOutput("p2", "not calculated (stopped)");
+                }
+                else if (ierr != 0)
                 {
                     lb = string.Empty;
                     outputParameters.AddOutput("p2", "not possible, use Monte Carlo");
@@ -4693,6 +4698,8 @@ namespace StatsDirect.Builtins
         ///   derived from:
         ///   ALGORITHM 643, COLLECTED ALGORITHMS FROM ACM. VOL.19(4), DECEMBER, 1993, PP. 484-488.
         ///  </remarks>
+        /// <param name="host">What shows the progress bar, or nothing for a test without one.</param>
+        /// <param name="doing">The words of the progress bar.</param>
         /// <param name="nrow">The number of rows.</param>
         /// <param name="ncol">The number of columns.</param>
         /// <param name="table">The counts, table[row, column], each from 1; the whole number part of each is taken.</param>
@@ -4707,11 +4714,12 @@ namespace StatsDirect.Builtins
         /// <param name="pre">On return, the P value: the sum of the probabilities of the tables with the same totals that are no more
         /// probable than the table that was observed.</param>
         /// <param name="ierr">On return, 0, or what went wrong: 1, a count below 0; 2, no counts (the probabilities are then
-        /// missing); any other number, the table is too large for the work space, or for the keys by which its parts are
-        /// known.</param>
-        private static void Rcexact(int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, ref double pre, out int ierr)
+        /// missing); -1, the user stopped the test (the probabilities are then missing); any other number, the table is too
+        /// large for the work space, or for the keys by which its parts are known.</param>
+        private static void Rcexact(IProgressBarHost host, string doing, int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, ref double pre, out int ierr)
         {
             ierr = 0;
+            ExactProgress progress = host == null ? null : new ExactProgress(host, doing);
             try
             {
                 int i;
@@ -4780,7 +4788,7 @@ namespace StatsDirect.Builtins
                 }
                 while (true);
 
-                RcExactGo(nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr);
+                RcExactGo(progress, nrow, ncol, table, expect, percnt, emin, ref prt, out pre, ref fact, ref ico, ref iro, ref kyy, ref idif, ref irn, ref key, ref ldkey, ref ipoin, ref stp, ref ldstp, ref ifrq, ref dlp, ref dsp, ref tm, ref key2, ref ierr);
             }
             //IEB 23 Dec 14: don't just catch overflow error so change from catch (OverflowException) to catch (Exception)
             catch (Exception)
@@ -4788,6 +4796,113 @@ namespace StatsDirect.Builtins
                 ierr = int.MaxValue;
                 prt = Constant.MISSING;
                 pre = Constant.MISSING;
+            }
+            finally
+            {
+                progress?.Dispose();
+            }
+            // what went wrong in the showing of the bar is not a fault of the test: it goes on to the caller
+            progress?.Rethrow();
+            if (ierr == ExactStopped)
+            {
+                prt = Constant.MISSING;
+                pre = Constant.MISSING;
+            }
+        }
+
+        /// <summary>The fault of an exact test that the user stopped.</summary>
+        private const int ExactStopped = -1;
+
+        /// <summary>
+        /// The progress bar of the exact test, with which the user can stop the test.
+        /// </summary>
+        /// <remarks>
+        /// The search goes in stages, one for each column of the longer side of the table but the last, and goes through the nodes
+        /// of a stage one after another.  The first stage has one node.  How many nodes a later stage has is known when it starts,
+        /// and the share of them that is done goes with the time that the stage has taken.  How long the stages after it will take
+        /// is not known until they are reached, so the bar is of the stage that is being done, and its words say which stage that
+        /// is.  Nothing is shown for a test that takes less than a second, and the bar is brought up to date 10 times a second.
+        /// </remarks>
+        private sealed class ExactProgress : IDisposable
+        {
+            private const long ShownAfter = 1000; // milliseconds
+            private const long Every = 100;
+            private readonly IProgressBarHost host;
+            private readonly string doing;
+            private readonly System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+            private IProgressBar bar;
+            private System.Runtime.ExceptionServices.ExceptionDispatchInfo failure;
+            private long next = ShownAfter;
+            private int stages;
+            private int stage;
+            private int shown;
+            private int nodes = 1;
+            private int done;
+
+            public ExactProgress(IProgressBarHost host, string doing)
+            {
+                this.host = host;
+                this.doing = doing;
+            }
+
+            /// <summary>The search starts: it has this number of stages after the first.</summary>
+            public void Start(int stages)
+            {
+                this.stages = stages;
+            }
+
+            /// <summary>A stage starts, which has this number of nodes.</summary>
+            public void Stage(int stage, int nodes)
+            {
+                this.stage = stage;
+                this.nodes = Math.Max(1, nodes);
+                done = 0;
+            }
+
+            /// <summary>A node of the stage is to be done, those before it being done.</summary>
+            /// <returns>Whether the user has stopped the test.</returns>
+            public bool Node()
+            {
+                done++;
+                return Stopped();
+            }
+
+            /// <summary>Brings the bar up to date if it is time to.</summary>
+            /// <returns>Whether the user has stopped the test.</returns>
+            public bool Stopped()
+            {
+                long now = watch.ElapsedMilliseconds;
+                if (now < next)
+                    return false;
+                next = now + Every;
+                try
+                {
+                    if (bar == null || shown != stage)
+                    {
+                        bar?.Dispose();
+                        bar = null;
+                        bar = host.StartProgress(stage < 1 || stages < 2 ? doing : doing + ": stage " + stage + " of " + stages, true);
+                        shown = stage;
+                    }
+                    return bar.Update(Math.Max(0, done - 1) / (double)nodes);
+                }
+                catch (Exception e)
+                {
+                    failure = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(e);
+                    return true;
+                }
+            }
+
+            /// <summary>Throws what went wrong in the showing of the bar, if anything did.</summary>
+            public void Rethrow()
+            {
+                failure?.Throw();
+            }
+
+            public void Dispose()
+            {
+                bar?.Dispose();
+                bar = null;
             }
         }
 
@@ -4809,10 +4924,11 @@ namespace StatsDirect.Builtins
         /// if every way of finishing the table is no more probable than the table observed, the whole probability of them is added
         /// to the P value at once; if none is, the way is dropped; otherwise the node that is reached is put on the list of the next
         /// stage (Pushnode), or, in the hybrid approximation, the probability of the rest being no more probable is taken from the
-        /// chi-square distribution.  The parameters before fact are those of Rcexact; the others are work space, and ldkey and ldstp
-        /// the numbers of keys and of past values that there is room for in each of two stages.
+        /// chi-square distribution.  The parameters before fact are those of Rcexact, but for the first, which is the progress bar
+        /// (or nothing); the others are work space, and ldkey and ldstp the numbers of keys and of past values that there is room
+        /// for in each of two stages.  ierr is -1 on return if the user stopped the test.
         /// </remarks>
-        private static void RcExactGo(int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr)
+        private static void RcExactGo(ExactProgress progress, int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr)
         {
             bool chisq = false;
             double tmp = 0;
@@ -5001,6 +5117,9 @@ namespace StatsDirect.Builtins
             stp[1] = 0.0;
             ifrq[1] = 1;
             ifrq[ikstp2 + 1] = -1;
+            progress?.Start(nco - 2);
+            // the ways of filling a column that have been tried: the clock of the progress bar is looked at for one in 256 of them
+            int ways = 0;
 
             do
             {
@@ -5046,6 +5165,11 @@ namespace StatsDirect.Builtins
                     // outer
                     do
                     {
+                        if (progress != null && (++ways & 255) == 0 && progress.Stopped())
+                        {
+                            ierr = ExactStopped;
+                            return;
+                        }
                         //                                   arc to daughter length = ico(kb)
                         for (i = 1; i <= nro; i++)
                         {
@@ -5368,6 +5492,11 @@ namespace StatsDirect.Builtins
                     //                                   update pointers
                     if (iflag != 3)
                     {
+                        if (progress != null && progress.Node())
+                        {
+                            ierr = ExactStopped;
+                            return;
+                        }
                         break;
                     }
                     k -= 1;
@@ -5385,6 +5514,19 @@ namespace StatsDirect.Builtins
                     if (k < 2)
                     {
                         return;
+                    }
+                    if (progress != null)
+                    {
+                        // the nodes of the stage that starts, for the progress bar
+                        int nodes = 0;
+                        for (i = ikkey + 1; i <= ikkey + ldkey; i++)
+                        {
+                            if (key[i] >= 0)
+                            {
+                                nodes++;
+                            }
+                        }
+                        progress.Stage(nco - k, nodes);
                     }
                 }
                 while (true);
