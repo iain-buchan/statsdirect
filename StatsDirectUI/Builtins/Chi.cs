@@ -1213,10 +1213,12 @@ namespace StatsDirect.Builtins
 
                     //   Test for zero entries in matrix.
 
+                    // the columns from this one on have nothing left: the rest of the row is nothing, and the counts of the row
+                    // that have been drawn are as they are
                     if (ie == 0)
                     {
                         ia = 0;
-                        for (int j = lowerBound; j < ncol + lowerBound; j++)
+                        for (int j = m; j < ncol + lowerBound; j++)
                             matrix[l, j] = 0;
                         break;
                     }
