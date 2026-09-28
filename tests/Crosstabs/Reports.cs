@@ -86,6 +86,13 @@ internal static partial class Program
             ParameterBag table = Rows(Rows(bag, "*columns")[0], "*xtab")[0];
             string order = string.Join(",", Rows(table, "*y").Select(v => v["y"].AsString)) + " by " + string.Join(",", Rows(table, "*x").Select(v => v["x"].AsString));
             Say(order == "2,9,10,100 by B,a,b", $"labels that are numbers are put in the order of the numbers, and others in the order of their characters ({order})");
+            // labels of which some are numbers and some are not: the numbers first, in order of size, and then the others
+            string[] mixed = { "10", "10a", "1.0", "9", "10a", "9", "10", "1.0", "1st", "2" };
+            string[] beside = { "b", "a", "B", "a", "b", "B", "a", "b", "a", "B" };
+            bag = Crosstabs(Classifier("Rows", mixed), Classifier("Columns", beside), null, 0.95, null, null, null, false);
+            table = Rows(Rows(bag, "*columns")[0], "*xtab")[0];
+            order = string.Join(",", Rows(table, "*y").Select(v => v["y"].AsString)) + " by " + string.Join(",", Rows(table, "*x").Select(v => v["x"].AsString));
+            Say(order == "1.0,2,9,10,10a,1st by B,a,b", $"labels that are numbers are put before those that are not ({order})");
             // a subject without a value of a classifier is left out
             string[] some = { "1", null, "2", "1", "2", "* (missing)", "1", "2" };
             string[] more = { "1", "1", null, "2", "2", "2", "1", "1" };
