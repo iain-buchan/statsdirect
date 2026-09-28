@@ -719,172 +719,6 @@ namespace StatsDirect.Numerics
         //         End If
         //     End Function
 
-        public static void z_profile(int ia, int im, int ib, int z_in, int ic, int id, double M, double N, double u, double v, double a, double b, double C, double D, double thhat, double psihat, double th, out double ps, double th1, double th2, int k, double f, out double hth, double z, ref bool ifault)
-        {
-            const double tol10 = 0.0000000001;
-            const double tol12 = 0.000000000001;
-            ps = 0.5;
-            hth = 0.5 * th;
-            if (Math.Abs(th) > 1.0 + tol12)
-            {
-                ifault = true;
-                return;
-            }
-            if (Math.Abs(th) > 1.0 - tol12)
-            {
-                return;
-            }
-            if (ia == 0 || ib == 0 || ic == 0 || id == 0)
-            {
-                double aa = M + N;
-                double cc;
-                double bb;
-                double ths;
-                if (ib == 0)
-                {
-                    ths = (aa - Math.Sqrt(Math.Pow(aa, 2.0) - 4.0 * a * D)) * 0.5 / D;
-                    ps = hth;
-                    if (th >= ths)
-                    {
-                        return;
-                    }
-                    bb = D * (1.0 + th) + C;
-                    cc = hth * ((D - C) * (1.0 + hth) - a * hth);
-                }
-                else if (ic == 0)
-                {
-                    ths = (aa - Math.Sqrt(Math.Pow(aa, 2.0) - 4.0 * a * D)) * 0.5 / a;
-                    ps = 1.0 - hth;
-                    if (th >= ths)
-                    {
-                        return;
-                    }
-                    bb = a * (1.0 + th) + b;
-                    cc = hth * ((a - b) * (1.0 + hth) - D * hth);
-                }
-                else if (id == 0)
-                {
-                    ths = -(aa - Math.Sqrt(Math.Pow(aa, 2.0) - 4.0 * b * C)) * 0.5 / b;
-                    ps = 1.0 + hth;
-                    if (th < ths)
-                    {
-                        return;
-                    }
-                    bb = b * (1.0 - th) + a;
-                    cc = -hth * ((b - a) * (1.0 - hth) + C * hth);
-                }
-                else
-                {
-                    ths = -(aa - Math.Sqrt(Math.Pow(aa, 2.0) - 4.0 * b * C)) * 0.5 / C;
-                    ps = -hth;
-                    if (th <= ths)
-                    {
-                        return;
-                    }
-                    bb = C * (1.0 - th) + D;
-                    cc = -hth * ((C - D) * (1.0 - hth) + b * hth);
-                }
-                ps = (bb + Math.Sqrt(Math.Pow(bb, 2.0) - 4.0 * aa * cc)) * 0.5 / aa;
-                if (ia == 0 | ib == 0)
-                {
-                    ps = 1.0 - ps;
-                }
-            }
-            else if ((ia == 0 & ib == 0) | (ic == 0 & id == 0))
-            {
-                ps = Math.Abs(hth);
-                if (ic == 0)
-                {
-                    ps = 1.0 - ps;
-                }
-            }
-            else if ((ib == 0 & ic == 0) | (ia == 0 & id == 0))
-            {
-                if (im == z_in)
-                {
-                    return;
-                }
-                if (im < z_in)
-                {
-                    if (N * th < M)
-                    {
-                        ps = (M + (M - N) * hth) / (M + N);
-                    }
-                    else
-                    {
-                        ps = hth;
-                    }
-                }
-                else if (M * th < N)
-                {
-                    ps = (M + (M - N) * hth) / (M + N);
-                }
-                else if (ia == 0)
-                {
-                    if (z_in < im)
-                    {
-                        if (M * -th < N)
-                        {
-                            ps = (N + (M - N) * hth) / (M + N);
-                        }
-                        else
-                        {
-                            ps = -hth;
-                        }
-                    }
-                    else
-                    {
-                        if (N * -th < M)
-                        {
-                            ps = (N + (M - N) * hth) / (M + N);
-                        }
-                        else
-                        {
-                            ps = 1.0 + hth;
-                        }
-                    }
-                }
-                else
-                {
-                    ps = 1.0 - hth;
-                }
-            }
-            else
-            {
-                double psimin = Math.Abs(hth);
-                double psimax = 1.0 - psimin;
-                do
-                {
-                    double P1 = ps + hth;
-                    double P2 = ps - hth;
-                    double Q1 = 1.0 - P1;
-                    double Q2 = 1.0 - P2;
-                    if (P1 < tol12 | P2 < tol12 | Q1 < tol12 | Q2 < tol12)
-                    {
-                        ifault = true;
-                        return;
-                    }
-                    double deriv1 = a / P1 + b / P2 - C / Q1 - D / Q2;
-                    double deriv2 = -a / Math.Pow(P1, 2.0) - b / Math.Pow(P2, 2.0) - C / Math.Pow(Q1, 2.0) - D / Math.Pow(Q2, 2.0);
-                    double oldps = ps;
-                    ps -= deriv1 / deriv2;
-                    if (ps <= psimin + tol10)
-                    {
-                        ps = 0.5 * (psimin + oldps);
-                    }
-                    if (ps > psimax - tol10)
-                    {
-                        ps = 0.5 * (psimax + oldps);
-                    }
-                    if (Math.Abs(ps - oldps) <= tol12)
-                    {
-                        break;
-                    }
-                }
-                while (true);
-            }
-        }
-
         public static void pone(double p0, double dpsi, double r, out double dp1, out bool imposs)
         {
             double Q0 = 1.0 - p0;
@@ -918,78 +752,121 @@ namespace StatsDirect.Numerics
             imposs = (pl < 0.0 || pu > 1.0);
         }
 
+        /// <summary>
+        /// The confidence limits of the difference of two proportions, that of the first sample less that of the second, of
+        /// Miettinen and Nurminen: the differences at which the score statistic has the value z squared.
+        /// </summary>
+        /// <remarks>
+        /// For a difference d the two proportions that are most likely with that difference are found: p2 of the second sample,
+        /// and p1 = p2 + d of the first.  With a of M responding in the first sample and b of N in the second, the derivative of
+        /// the logarithm of the likelihood is a / p1 - (M - a) / (1 - p1) + b / p2 - (N - b) / (1 - p2), which falls as p2
+        /// rises: p2 is at the end of its range if the derivative has one sign over the range, and is found by halving the range
+        /// if not.  The statistic is the square of the difference observed less d, over the variance
+        /// (p1 (1 - p1) / M + p2 (1 - p2) / N) (M + N) / (M + N - 1).  It is 0 at the difference observed and without limit at
+        /// -1 and at 1, and each limit is found by halving the range between, until it has all its figures.
+        /// </remarks>
+        /// <param name="ia">The number responding in the first sample.</param>
+        /// <param name="im">The size of the first sample.</param>
+        /// <param name="ib">The number responding in the second sample.</param>
+        /// <param name="z_in">The size of the second sample.</param>
+        /// <param name="xl">On return, the lower limit; missing if the numbers are not those of two samples.</param>
+        /// <param name="xu">On return, the upper limit; missing if the numbers are not those of two samples.</param>
+        /// <param name="z">The normal deviate of the confidence level.</param>
+        /// <param name="Conf">The confidence level, of which no use is made.</param>
         public static void uppci(int ia, int im, int ib, int z_in, out double xl, out double xu, double z, double Conf)
         {
-            int k;
-            double f = 0;
-            double ps = 0;
-            bool fault = false;
-
-            double[] thb = new double[2 + 1];
-            double[] PP = new double[2 + 1];
-            thb[1] = -1.0;
-            thb[2] = 1.0;
-            int ic = im - ia;
-            int id = z_in - ib;
-            if (ia < 0 | ib < 0 | ic < 0 | id < 0 | im <= 0 | z_in <= 0)
-            {
-                xu = Constant.MISSING;
-                xl = Constant.MISSING;
+            xl = Constant.MISSING;
+            xu = Constant.MISSING;
+            if (ia < 0 | ib < 0 | im - ia < 0 | z_in - ib < 0 | im <= 0 | z_in <= 0)
                 return;
-            }
-            double M = Convert.ToDouble(im);
-            double N = Convert.ToDouble(z_in);
-            double u = (1.0 / M + 1.0 / N) / 4.0;
-            double v = (1.0 / M - 1.0 / N) / 4.0;
-            double a = Convert.ToDouble(ia);
-            double b = Convert.ToDouble(ib);
-            double C = Convert.ToDouble(ic);
-            double D = Convert.ToDouble(id);
-            double thhat = a / M - b / N;
-            double psihat = 0.5 * (a / M + b / N);
-            double[] x = new double[2 + 1];
-            double[] e = new double[2 + 1];
-            for (k = 1; k <= 2; k++)
+            double a = ia;
+            double M = im;
+            double b = ib;
+            double N = z_in;
+            double observed = a / M - b / N;
+
+            // the score statistic at the difference d, less what it is to be at a limit
+            double Statistic(double d)
             {
-                double th;
-                if ((k == 1 & ia == 0 & id == 0) | (k == 2 & ib == 0 & ic == 0))
+                // the range of the second proportion: both proportions are to be from 0 to 1
+                double low = Math.Max(0.0, -d);
+                double high = Math.Min(1.0, 1.0 - d);
+                // the derivative of the logarithm of the likelihood; a count of nothing has no part in it
+                double Slope(double p2)
                 {
-                    th = thb[k];
-                    ps = 0.5;
+                    double p1 = p2 + d;
+                    double slope = 0.0;
+                    if (a > 0.0)
+                        slope += a / p1;
+                    if (M - a > 0.0)
+                        slope -= (M - a) / (1.0 - p1);
+                    if (b > 0.0)
+                        slope += b / p2;
+                    if (N - b > 0.0)
+                        slope -= (N - b) / (1.0 - p2);
+                    return slope;
                 }
+                double p;
+                if (low >= high)
+                    p = low;
                 else
                 {
-                    double th1 = thhat;
-                    double th2 = thb[k];
-                    th = (th1 + th2) * 0.5;
-                    int iter;
-                    for (iter = 1; iter <= 40; iter++)
+                    // At the low end of the range a proportion is 0, and the derivative is without limit if there is a response in
+                    // that sample; at the high end a proportion is 1, and it is without limit the other way if there is a subject
+                    // without a response in that sample
+                    bool rises = (low + d <= 0.0 && a > 0.0) || (low <= 0.0 && b > 0.0) || Slope(low) > 0.0;
+                    bool falls = (high + d >= 1.0 && M - a > 0.0) || (high >= 1.0 && N - b > 0.0) || Slope(high) < 0.0;
+                    if (!rises)
+                        p = low;
+                    else if (!falls)
+                        p = high;
+                    else
                     {
-                        z_profile(ia, im, ib, z_in, ic, id, M, N, u, v, a, b, C, D, thhat, psihat, th, out ps, th1, th2, k, f, out double hth, z, ref fault);
-                        if (fault)
+                        double below = low;
+                        double above = high;
+                        for (int i = 0; i < 200; i++)
                         {
-                            xl = Constant.MISSING;
-                            xu = Constant.MISSING;
-                            return;
+                            double mid = 0.5 * (below + above);
+                            if (mid <= below || mid >= above)
+                                break;
+                            if (Slope(mid) > 0.0)
+                                below = mid;
+                            else
+                                above = mid;
                         }
-                        PP[1] = ps + hth;
-                        PP[2] = ps - hth;
-                        f = Math.Pow((th - thhat) / z, 2.0);
-                        f *= (1.0 - 1.0 / (M + N));
-                        f = PP[1] * (1 - PP[1]) / M + PP[2] * (1 - PP[2]) / N - f;
-                        if (f < 0.0)
-                        {
-                            th2 = th;
-                        }
-                        else { th1 = th; }
-                        th = (th1 + th2) * 0.5;
+                        p = 0.5 * (below + above);
                     }
                 }
-                e[k] = ps;
-                x[k] = th;
+                double q = Math.Max(0.0, Math.Min(1.0, p + d));
+                double variance = (q * (1.0 - q) / M + p * (1.0 - p) / N) * (M + N) / (M + N - 1.0);
+                double gap = observed - d;
+                if (variance <= 0.0)
+                    return gap == 0.0 ? -z * z : double.PositiveInfinity;
+                return gap * gap / variance - z * z;
             }
-            xl = x[1];
-            xu = x[2];
+
+            // the limit between the difference observed, where the statistic is 0, and the end of the range, where it is
+            // without limit
+            double Limit(double end)
+            {
+                if (observed == end)
+                    return end;
+                double inner = observed;
+                double outer = end;
+                for (int i = 0; i < 200; i++)
+                {
+                    double mid = 0.5 * (inner + outer);
+                    if (mid == inner || mid == outer)
+                        break;
+                    if (Statistic(mid) > 0.0)
+                        outer = mid;
+                    else
+                        inner = mid;
+                }
+                return 0.5 * (inner + outer);
+            }
+            xl = Limit(-1.0);
+            xu = Limit(1.0);
         }
 
         /// <summary>
