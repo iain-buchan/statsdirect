@@ -150,6 +150,7 @@ internal static partial class Program
         if (which is "all" or "benchmarks") Benchmarks(folder);
         if (which is "all" or "definitions") Definitions();
         if (which is "all" or "limits") Limits();
+        if (which is "all" or "scales") Scales();
         Console.WriteLine();
         Console.WriteLine(failures == 0 ? $"ALL {checks} CHECKS PASS" : $"{failures} OF {checks} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
