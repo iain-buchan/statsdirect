@@ -306,6 +306,7 @@ internal static partial class Program
         if (which is "all" or "large") Large(folder);
         if (which is "all" or "definitions") Definitions();
         if (which is "all" or "simulations") Simulations();
+        if (which is "all" or "moved") Moved();
         if (which is "all" or "limits") Limits(folder);
         Console.WriteLine();
         Console.WriteLine(failures == 0 ? $"ALL {checks} CHECKS PASS" : $"{failures} OF {checks} CHECKS FAILED");
