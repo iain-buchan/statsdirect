@@ -1,6 +1,7 @@
 using StatsDirect.Charting;
 using StatsDirect.Data;
 using StatsDirect.Numerics;
+using StatsDirect.Numerics.SpecialFunctions;
 using StatsDirect.Templates;
 using StatsDirect.Utilities;
 
@@ -1067,7 +1068,9 @@ namespace StatsDirect.Builtins
                     if (g[i] != Constant.MISSING)
                     {
                         double m = n - 2;
-                        gj[i] = Math.Exp(PDF.alogam(m / 2.0) - PDF.alogam((m - 1.0) / 2.0)) / Math.Sqrt(m / 2.0);
+                        // Evaluate the gamma ratio directly: subtracting two large log gammas loses digits
+                        // as the sample size grows, and can even give a bias correction greater than one.
+                        gj[i] = Math.Exp(-MathSupport.LogGammaRatio((m - 1.0) / 2.0, .5) - .5 * Math.Log(m / 2.0));
                         d[i] = gj[i] * g[i];
                         vard = n / (cn[i] * en[i]) + Math.Pow(d[i], 2.0) / (2.0 * n);
                         lcid[i] = d[i] - cit * Math.Sqrt(vard);
@@ -1429,15 +1432,17 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// The non-centrality at which the non-central t distribution function at t, on df degrees of freedom, is p.  The function
         /// falls as the non-centrality rises: an interval about t is widened until the function is above p at its lower end and below
-        /// p at its upper, and is then halved until its ends meet.
+        /// p at its upper, and is then halved until its ends meet. A limit is returned only if its probability also agrees with p.
         /// </summary>
         /// <returns>The non-centrality, or the missing value if the distribution function could not be worked out.</returns>
         private static double NoncentralityOfT(double t, int df, double p)
         {
+            if (!double.IsFinite(t) || t == Constant.MISSING || df <= 0 || !(p > 0 && p < 1))
+                return Constant.MISSING;
             double Difference(double delta)
             {
                 double v = ExFortran.pnct(t, df, delta, out int fault);
-                return fault != 0 || v == Constant.MISSING || double.IsNaN(v) ? double.NaN : v - p;
+                return fault != 0 || !double.IsFinite(v) || v < 0 || v > 1 ? double.NaN : v - p;
             }
 
             double width = Math.Max(1.0, Math.Abs(t));
@@ -1463,18 +1468,32 @@ namespace StatsDirect.Builtins
             }
             if (!(flo > 0.0 && fhi < 0.0))
                 return Constant.MISSING;
-            for (int i = 0; i < 200 && hi - lo > 1.0E-13 * Math.Max(1.0, Math.Abs(lo) + Math.Abs(hi)); i++)
+            for (int i = 0; i < 200; i++)
             {
                 double mid = 0.5 * (lo + hi);
+                if (mid == lo || mid == hi)
+                    break;
                 double fm = Difference(mid);
                 if (double.IsNaN(fm))
                     return Constant.MISSING;
+                if (fm == 0)
+                    return mid;
                 if (fm > 0.0)
+                {
                     lo = mid;
+                    flo = fm;
+                }
                 else
+                {
                     hi = mid;
+                    fhi = fm;
+                }
             }
-            return 0.5 * (lo + hi);
+            // A tiny bracket may straddle a discontinuity in a failed CDF, rather than a probability root.
+            // Do not turn such a failure into apparently precise (and potentially identical) interval limits.
+            double residual = Math.Min(Math.Abs(flo), Math.Abs(fhi));
+            return residual <= 2e-14 + 2e-11 * Math.Min(p, 1 - p)
+                ? (Math.Abs(flo) < Math.Abs(fhi) ? lo : hi) : Constant.MISSING;
         }
 
         /// <summary>
