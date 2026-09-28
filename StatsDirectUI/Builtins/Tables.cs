@@ -5373,6 +5373,9 @@ namespace StatsDirect.Builtins
                     ncstk[istk] = nco;
                     ystk[istk] = y;
                     l = 1;
+                    // the greatest totals that are left at this step, and not those of the table that the search started with
+                    ir1 = irstk[1, istk];
+                    ic1 = icstk[1, istk];
                     if (ir1 > ic1)
                     {
                         if (nro >= nco)
@@ -5449,6 +5452,8 @@ namespace StatsDirect.Builtins
                         }
 
                         n = nstk[istk];
+                        // the number of candidates of the step that the search has come back to, and not that of the step that it came from
+                        m = mstk[istk];
                         nro = nrstk[istk];
                         nco = ncstk[istk];
                         y = ystk[istk];
