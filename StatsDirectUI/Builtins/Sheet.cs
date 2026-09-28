@@ -3064,17 +3064,8 @@ namespace StatsDirect.Builtins
         {
             private static int Compare(string x, string y)
             {
-                if (x.Equals(y))
-                    return 0;
-
-                //  If both are numeric, compare numerically; else, compare as text
-                bool lower;
-                if (double.TryParse(x, out double numericX) && double.TryParse(y, out double numericY))
-                    lower = numericX <= numericY;
-                else
-                    lower = string.CompareOrdinal(x, y) < 0;
-
-                return lower ? -1 : 1;
+                //  Numbers in order of size, before the labels that are not numbers, which are compared as text
+                return Formatting.CompareLabels(x, y);
             }
 
             // interface methods implemented by Compare

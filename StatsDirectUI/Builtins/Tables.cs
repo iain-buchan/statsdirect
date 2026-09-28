@@ -27,15 +27,13 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// If both sides are numeric, compare as numbers.  Otherwise, compare as text.
+        /// Numbers in order of size, before the titles that are not numbers, which are compared as text.
         /// </summary>
         private class NamevarAscending : IComparer<Namevar>
         {
             public int Compare(Namevar x, Namevar y)
             {
-                if (double.TryParse(x.Title, out double nx) && double.TryParse(y.Title, out double ny))
-                    return nx.CompareTo(ny);
-                return string.CompareOrdinal(x.Title, y.Title);
+                return Formatting.CompareLabels(x.Title, y.Title);
             }
         }
 

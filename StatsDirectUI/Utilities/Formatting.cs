@@ -19,6 +19,33 @@ namespace StatsDirect.Utilities
 
         private static string DecimalSeparator => CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
 
+        /// <summary>
+        /// The order of two labels of categories.
+        /// </summary>
+        /// <remarks>
+        /// A label that is a number is before one that is not.  Numbers are in order of size, and labels that are not numbers in
+        /// the order of their characters (capital letters before small ones).  Labels that are the same number written in two ways
+        /// are in the order of their characters.  A label that is empty is before every other: a list of categories from which
+        /// some have been struck out, by making their labels empty, has those at its start when it is sorted.
+        /// This is an order of all labels, which a sort needs: if one label is before a second, and that before a third, the first
+        /// is before the third.
+        /// </remarks>
+        /// <returns>Below 0 if x is before y, 0 if they are the same label, above 0 if x is after y.</returns>
+        public static int CompareLabels(string x, string y)
+        {
+            bool xIsEmpty = string.IsNullOrEmpty(x);
+            bool yIsEmpty = string.IsNullOrEmpty(y);
+            if (xIsEmpty || yIsEmpty)
+                return xIsEmpty == yIsEmpty ? 0 : xIsEmpty ? -1 : 1;
+            bool xIsNumber = double.TryParse(x, out double xNumber) && !double.IsNaN(xNumber) && !double.IsInfinity(xNumber);
+            bool yIsNumber = double.TryParse(y, out double yNumber) && !double.IsNaN(yNumber) && !double.IsInfinity(yNumber);
+            if (xIsNumber != yIsNumber)
+                return xIsNumber ? -1 : 1;
+            if (xIsNumber && xNumber != yNumber)
+                return xNumber < yNumber ? -1 : 1;
+            return string.CompareOrdinal(x, y);
+        }
+
         public static string XRound(double amount, int places)
         {
             try

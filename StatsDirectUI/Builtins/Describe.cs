@@ -17,17 +17,8 @@ namespace StatsDirect.Builtins
         {
             private static int Compare(Group x, Group y)
             {
-                if (x.Label.Equals(y.Label))
-                    return 0;
-
-                //  If both titles are numeric, compare numerically; else, compare as text
-                bool lower;
-                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
-                    lower = numericX <= numericY;
-                else
-                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
-
-                return lower ? -1 : 1;
+                //  Numbers in order of size, before the titles that are not numbers, which are compared as text
+                return Formatting.CompareLabels(x.Label, y.Label);
             }
 
             // interface methods implemented by Compare
@@ -41,17 +32,8 @@ namespace StatsDirect.Builtins
         {
             private static int Compare(Group x, Group y)
             {
-                if (x.Label.Equals(y.Label))
-                    return 0;
-
-                //  If both titles are numeric, compare numerically; else, compare as text
-                bool lower;
-                if (double.TryParse(x.Label, out double numericX) && double.TryParse(y.Label, out double numericY))
-                    lower = numericX <= numericY;
-                else
-                    lower = string.CompareOrdinal(x.Label, y.Label) < 0;
-
-                return lower ? 1 : -1;
+                //  The order of SortGroupByTitleAscending, from its end to its start
+                return Formatting.CompareLabels(y.Label, x.Label);
             }
 
             // interface methods implemented by Compare
