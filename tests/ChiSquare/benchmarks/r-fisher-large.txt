@@ -1,0 +1,1122 @@
+fisher|large001|tail_1	"(lower tail)"
+fisher|large001|p_1	0e+00
+fisher|large001|p_1d	0e+00
+fisher|large001|p_2	0e+00
+fisher|large001|mid_p	0e+00
+fisher|large001|mid_p_2	0e+00
+fisher|large002|tail_1	"(lower tail)"
+fisher|large002|p_1	1.26459805092231e-192
+fisher|large002|p_1d	2.52919610184461e-192
+fisher|large002|p_2	1.2645980509223e-192
+fisher|large002|mid_p	6.78107618424191e-193
+fisher|large002|mid_p_2	1.35621523684838e-192
+fisher|large003|tail_1	"(lower tail)"
+fisher|large003|p_1	1.68468118187896e-93
+fisher|large003|p_1d	3.36936236375791e-93
+fisher|large003|p_2	2.07369675704769e-93
+fisher|large003|mid_p	8.42340590939478e-94
+fisher|large003|mid_p_2	1.68468118187896e-93
+fisher|large004|tail_1	"(lower tail)"
+fisher|large004|p_1	8.34859334958642e-16
+fisher|large004|p_1d	1.66971866991728e-15
+fisher|large004|p_2	1.51435436995099e-15
+fisher|large004|mid_p	6.40021835958404e-16
+fisher|large004|mid_p_2	1.28004367191681e-15
+fisher|large005|tail_1	"(lower tail)"
+fisher|large005|p_1	1.71548444445525e-03
+fisher|large005|p_1d	3.43096888891051e-03
+fisher|large005|p_2	2.73770969746709e-03
+fisher|large005|mid_p	1.42501113582865e-03
+fisher|large005|mid_p_2	2.8500222716573e-03
+fisher|large006|tail_1	"(lower tail)"
+fisher|large006|p_1	1.9495715592817e-01
+fisher|large006|p_1d	3.8991431185634e-01
+fisher|large006|p_2	3.87681712872894e-01
+fisher|large006|mid_p	1.75964430439767e-01
+fisher|large006|mid_p_2	3.51928860879534e-01
+fisher|large007|tail_1	"(lower tail)"
+fisher|large007|p_1	4.30674043834296e-01
+fisher|large007|p_1d	8.61348087668592e-01
+fisher|large007|p_2	8.28365881476788e-01
+fisher|large007|mid_p	4.09596338332634e-01
+fisher|large007|mid_p_2	8.19192676665269e-01
+fisher|large008|tail_1	"(lower tail)"
+fisher|large008|p_1	5.08246676354509e-01
+fisher|large008|p_1d	1e+00
+fisher|large008|p_2	1e+00
+fisher|large008|mid_p	4.90804081114576e-01
+fisher|large008|mid_p_2	9.81608162229153e-01
+fisher|large009|tail_1	"(upper tail)"
+fisher|large009|p_1	4.10166177001733e-01
+fisher|large009|p_1d	8.20332354003467e-01
+fisher|large009|p_2	8.17534912054997e-01
+fisher|large009|mid_p	3.88008170675204e-01
+fisher|large009|mid_p_2	7.76016341350408e-01
+fisher|large010|tail_1	"(upper tail)"
+fisher|large010|p_1	7.78829456541499e-02
+fisher|large010|p_1d	1.557658913083e-01
+fisher|large010|p_2	1.50272896534169e-01
+fisher|large010|mid_p	7.00315763882409e-02
+fisher|large010|mid_p_2	1.40063152776482e-01
+fisher|large011|tail_1	"(upper tail)"
+fisher|large011|p_1	4.77864972426491e-05
+fisher|large011|p_1d	9.55729944852982e-05
+fisher|large011|p_2	7.80188294460424e-05
+fisher|large011|mid_p	3.80201139223063e-05
+fisher|large011|mid_p_2	7.60402278446126e-05
+fisher|large012|tail_1	"(upper tail)"
+fisher|large012|p_1	9.65132173545039e-21
+fisher|large012|p_1d	1.93026434709008e-20
+fisher|large012|p_2	1.54742442372729e-20
+fisher|large012|mid_p	6.79249072605492e-21
+fisher|large012|mid_p_2	1.35849814521098e-20
+fisher|large013|tail_1	"(upper tail)"
+fisher|large013|p_1	1.34822881415591e-117
+fisher|large013|p_1d	2.69645762831182e-117
+fisher|large013|p_2	1.34822881415591e-117
+fisher|large013|mid_p	7.3770810458261e-118
+fisher|large013|mid_p_2	1.47541620916522e-117
+fisher|large014|tail_1	"(upper tail)"
+fisher|large014|p_1	0e+00
+fisher|large014|p_1d	0e+00
+fisher|large014|p_2	0e+00
+fisher|large014|mid_p	0e+00
+fisher|large014|mid_p_2	0e+00
+fisher|large015|tail_1	"(lower tail)"
+fisher|large015|p_1	2.59246386799513e-314
+fisher|large015|p_1d	5.18492773599025e-314
+fisher|large015|p_2	4.40224564569023e-314
+fisher|large015|mid_p	1.62716261661354e-314
+fisher|large015|mid_p_2	3.25432523322708e-314
+fisher|large016|tail_1	"(lower tail)"
+fisher|large016|p_1	6.09157039607585e-171
+fisher|large016|p_1d	1.21831407921517e-170
+fisher|large016|p_2	6.7564134531563e-171
+fisher|large016|mid_p	3.93105473938121e-171
+fisher|large016|mid_p_2	7.86210947876243e-171
+fisher|large017|tail_1	"(lower tail)"
+fisher|large017|p_1	1.48259807617179e-76
+fisher|large017|p_1d	2.96519615234358e-76
+fisher|large017|p_2	1.89306400128163e-76
+fisher|large017|mid_p	1.01400656381127e-76
+fisher|large017|mid_p_2	2.02801312762254e-76
+fisher|large018|tail_1	"(lower tail)"
+fisher|large018|p_1	6.56477068950244e-16
+fisher|large018|p_1d	1.31295413790049e-15
+fisher|large018|p_2	1.31064288852663e-15
+fisher|large018|mid_p	5.87614299341454e-16
+fisher|large018|mid_p_2	1.17522859868291e-15
+fisher|large019|tail_1	"(lower tail)"
+fisher|large019|p_1	1.37292162128354e-03
+fisher|large019|p_1d	2.74584324256709e-03
+fisher|large019|p_2	2.63271165228678e-03
+fisher|large019|mid_p	1.29595312201671e-03
+fisher|large019|mid_p_2	2.59190624403342e-03
+fisher|large020|tail_1	"(lower tail)"
+fisher|large020|p_1	1.64089072332987e-01
+fisher|large020|p_1d	3.28178144665974e-01
+fisher|large020|p_2	3.21914497630031e-01
+fisher|large020|mid_p	1.59543126703109e-01
+fisher|large020|mid_p_2	3.19086253406218e-01
+fisher|large021|tail_1	"(lower tail)"
+fisher|large021|p_1	4.42008301147037e-01
+fisher|large021|p_1d	8.84016602294074e-01
+fisher|large021|p_2	8.78787127609291e-01
+fisher|large021|mid_p	4.32003848273063e-01
+fisher|large021|mid_p_2	8.64007696546125e-01
+fisher|large022|tail_1	"(lower tail)"
+fisher|large022|p_1	5.06408292584912e-01
+fisher|large022|p_1d	1e+00
+fisher|large022|p_2	1e+00
+fisher|large022|mid_p	4.98626243602119e-01
+fisher|large022|mid_p_2	9.97252487204238e-01
+fisher|large023|tail_1	"(upper tail)"
+fisher|large023|p_1	3.89486566376268e-01
+fisher|large023|p_1d	7.78973132752537e-01
+fisher|large023|p_2	7.72682463915697e-01
+fisher|large023|mid_p	3.83680468551896e-01
+fisher|large023|mid_p_2	7.67360937103792e-01
+fisher|large024|tail_1	"(upper tail)"
+fisher|large024|p_1	7.26795417869151e-02
+fisher|large024|p_1d	1.4535908357383e-01
+fisher|large024|p_2	1.39675930773955e-01
+fisher|large024|mid_p	6.97450223751826e-02
+fisher|large024|mid_p_2	1.39490044750365e-01
+fisher|large025|tail_1	"(upper tail)"
+fisher|large025|p_1	3.36489041912234e-05
+fisher|large025|p_1d	6.72978083824469e-05
+fisher|large025|p_2	6.50624552918418e-05
+fisher|large025|mid_p	3.16965751136627e-05
+fisher|large025|mid_p_2	6.33931502273253e-05
+fisher|large026|tail_1	"(upper tail)"
+fisher|large026|p_1	1.65388233021465e-19
+fisher|large026|p_1d	3.30776466042931e-19
+fisher|large026|p_2	3.21702813084739e-19
+fisher|large026|mid_p	1.43925109319998e-19
+fisher|large026|mid_p_2	2.87850218639997e-19
+fisher|large027|tail_1	"(upper tail)"
+fisher|large027|p_1	2.51586315734627e-152
+fisher|large027|p_1d	5.03172631469255e-152
+fisher|large027|p_2	3.78392132790053e-152
+fisher|large027|mid_p	1.67966504827644e-152
+fisher|large027|mid_p_2	3.35933009655288e-152
+fisher|large028|tail_1	"(upper tail)"
+fisher|large028|p_1	3.39257852783244e-285
+fisher|large028|p_1d	6.78515705566487e-285
+fisher|large028|p_2	5.64130127567259e-285
+fisher|large028|mid_p	2.28509277571436e-285
+fisher|large028|mid_p_2	4.57018555142872e-285
+fisher|large029|tail_1	"(lower tail)"
+fisher|large029|p_1	4.54917761926427e-300
+fisher|large029|p_1d	9.09835523852853e-300
+fisher|large029|p_2	8.11862471206376e-300
+fisher|large029|mid_p	4.00658540372857e-300
+fisher|large029|mid_p_2	8.01317080745713e-300
+fisher|large030|tail_1	"(lower tail)"
+fisher|large030|p_1	1.44433157020942e-198
+fisher|large030|p_1d	2.88866314041884e-198
+fisher|large030|p_2	2.88127057525983e-198
+fisher|large030|mid_p	1.29715241076353e-198
+fisher|large030|mid_p_2	2.59430482152706e-198
+fisher|large031|tail_1	"(lower tail)"
+fisher|large031|p_1	6.75174765756795e-89
+fisher|large031|p_1d	1.35034953151359e-88
+fisher|large031|p_2	1.27145764787075e-88
+fisher|large031|mid_p	6.23631535750091e-89
+fisher|large031|mid_p_2	1.24726307150018e-88
+fisher|large032|tail_1	"(lower tail)"
+fisher|large032|p_1	6.34480807864509e-16
+fisher|large032|p_1d	1.26896161572902e-15
+fisher|large032|p_2	1.23801710688343e-15
+fisher|large032|mid_p	6.15236163367102e-16
+fisher|large032|mid_p_2	1.2304723267342e-15
+fisher|large033|tail_1	"(lower tail)"
+fisher|large033|p_1	1.36920606118663e-03
+fisher|large033|p_1d	2.73841212237326e-03
+fisher|large033|p_2	2.7463613220815e-03
+fisher|large033|mid_p	1.34524901196907e-03
+fisher|large033|mid_p_2	2.69049802393813e-03
+fisher|large034|tail_1	"(lower tail)"
+fisher|large034|p_1	1.59740624890722e-01
+fisher|large034|p_1d	3.19481249781444e-01
+fisher|large034|p_2	3.18289839973917e-01
+fisher|large034|mid_p	1.58766484478522e-01
+fisher|large034|mid_p_2	3.17532968957044e-01
+fisher|large035|tail_1	"(lower tail)"
+fisher|large035|p_1	4.23072601221713e-01
+fisher|large035|p_1d	8.46145202443425e-01
+fisher|large035|p_2	8.4448240110674e-01
+fisher|large035|mid_p	4.21404578354619e-01
+fisher|large035|mid_p_2	8.42809156709237e-01
+fisher|large036|tail_1	"(lower tail)"
+fisher|large036|p_1	5.01014138918814e-01
+fisher|large036|p_1d	1e+00
+fisher|large036|p_2	9.99999999999999e-01
+fisher|large036|mid_p	4.99352937385345e-01
+fisher|large036|mid_p_2	9.9870587477069e-01
+fisher|large037|tail_1	"(upper tail)"
+fisher|large037|p_1	3.84053223143268e-01
+fisher|large037|p_1d	7.68106446286536e-01
+fisher|large037|p_2	7.65264019555134e-01
+fisher|large037|mid_p	3.82273402468263e-01
+fisher|large037|mid_p_2	7.64546804936526e-01
+fisher|large038|tail_1	"(upper tail)"
+fisher|large038|p_1	6.75574306801125e-02
+fisher|large038|p_1d	1.35114861360225e-01
+fisher|large038|p_2	1.34499859280952e-01
+fisher|large038|mid_p	6.70640092629302e-02
+fisher|large038|mid_p_2	1.3412801852586e-01
+fisher|large039|tail_1	"(upper tail)"
+fisher|large039|p_1	3.14851867728188e-05
+fisher|large039|p_1d	6.29703735456376e-05
+fisher|large039|p_2	6.25404980862994e-05
+fisher|large039|mid_p	3.09024373417975e-05
+fisher|large039|mid_p_2	6.18048746835949e-05
+fisher|large040|tail_1	"(upper tail)"
+fisher|large040|p_1	1.02133712232843e-19
+fisher|large040|p_1d	2.04267424465686e-19
+fisher|large040|p_2	1.97294994194936e-19
+fisher|large040|mid_p	9.8246430525438e-20
+fisher|large040|mid_p_2	1.96492861050876e-19
+fisher|large041|tail_1	"(upper tail)"
+fisher|large041|p_1	2.50760877155147e-139
+fisher|large041|p_1d	5.01521754310294e-139
+fisher|large041|p_2	4.78882835958797e-139
+fisher|large041|mid_p	2.19641586651908e-139
+fisher|large041|mid_p_2	4.39283173303815e-139
+fisher|large042|tail_1	"(upper tail)"
+fisher|large042|p_1	5.16559473526262e-273
+fisher|large042|p_1d	1.03311894705252e-272
+fisher|large042|p_2	8.90953276046839e-273
+fisher|large042|mid_p	4.34125359616533e-273
+fisher|large042|mid_p_2	8.68250719233066e-273
+fisher|large043|tail_1	"(lower tail)"
+fisher|large043|p_1	4.5514566617785e-295
+fisher|large043|p_1d	9.10291332355701e-295
+fisher|large043|p_2	8.49716811891108e-295
+fisher|large043|mid_p	4.26573146726081e-295
+fisher|large043|mid_p_2	8.53146293452161e-295
+fisher|large044|tail_1	"(lower tail)"
+fisher|large044|p_1	2.25563072500135e-196
+fisher|large044|p_1d	4.5112614500027e-196
+fisher|large044|p_2	4.27254300893084e-196
+fisher|large044|mid_p	2.15089998955483e-196
+fisher|large044|mid_p_2	4.30179997910967e-196
+fisher|large045|tail_1	"(lower tail)"
+fisher|large045|p_1	9.27410343098752e-89
+fisher|large045|p_1d	1.8548206861975e-88
+fisher|large045|p_2	1.82072812446096e-88
+fisher|large045|mid_p	8.9709965189419e-89
+fisher|large045|mid_p_2	1.79419930378838e-88
+fisher|large046|tail_1	"(lower tail)"
+fisher|large046|p_1	6.32034646776292e-16
+fisher|large046|p_1d	1.26406929355258e-15
+fisher|large046|p_2	1.25807561996386e-15
+fisher|large046|mid_p	6.26116894016163e-16
+fisher|large046|mid_p_2	1.25223378803233e-15
+fisher|large047|tail_1	"(lower tail)"
+fisher|large047|p_1	1.3457373177988e-03
+fisher|large047|p_1d	2.6914746355976e-03
+fisher|large047|p_2	2.69159639032926e-03
+fisher|large047|mid_p	1.334007595554e-03
+fisher|large047|mid_p_2	2.66801519110801e-03
+fisher|large048|tail_1	"(lower tail)"
+fisher|large048|p_1	1.58830962057735e-01
+fisher|large048|p_1d	3.17661924115471e-01
+fisher|large048|p_2	3.17458689895069e-01
+fisher|large048|mid_p	1.58496557440464e-01
+fisher|large048|mid_p_2	3.16993114880927e-01
+fisher|large049|tail_1	"(lower tail)"
+fisher|large049|p_1	4.21083467923016e-01
+fisher|large049|p_1d	8.42166935846032e-01
+fisher|large049|p_2	8.41998559164036e-01
+fisher|large049|mid_p	4.2063029861709e-01
+fisher|large049|mid_p_2	8.4126059723418e-01
+fisher|large050|tail_1	"(lower tail)"
+fisher|large050|p_1	5.00150324557355e-01
+fisher|large050|p_1d	1e+00
+fisher|large050|p_2	1e+00
+fisher|large050|mid_p	4.99681449366572e-01
+fisher|large050|mid_p_2	9.99362898733144e-01
+fisher|large051|tail_1	"(upper tail)"
+fisher|large051|p_1	3.82660292595971e-01
+fisher|large051|p_1d	7.65320585191941e-01
+fisher|large051|p_2	7.65293108616364e-01
+fisher|large051|mid_p	3.82177804956307e-01
+fisher|large051|mid_p_2	7.64355609912615e-01
+fisher|large052|tail_1	"(upper tail)"
+fisher|large052|p_1	6.68279246687802e-02
+fisher|large052|p_1d	1.3365584933756e-01
+fisher|large052|p_2	1.33645353742524e-01
+fisher|large052|mid_p	6.66459863032421e-02
+fisher|large052|mid_p_2	1.33291972606484e-01
+fisher|large053|tail_1	"(upper tail)"
+fisher|large053|p_1	3.16206198798167e-05
+fisher|large053|p_1d	6.32412397596334e-05
+fisher|large053|p_2	6.29900320978105e-05
+fisher|large053|mid_p	3.14278738764843e-05
+fisher|large053|mid_p_2	6.28557477529686e-05
+fisher|large054|tail_1	"(upper tail)"
+fisher|large054|p_1	1.13389145399979e-19
+fisher|large054|p_1d	2.26778290799957e-19
+fisher|large054|p_2	2.25303766516538e-19
+fisher|large054|mid_p	1.12098581562929e-19
+fisher|large054|mid_p_2	2.24197163125859e-19
+fisher|large055|tail_1	"(upper tail)"
+fisher|large055|p_1	2.15174052264275e-137
+fisher|large055|p_1d	4.3034810452855e-137
+fisher|large055|p_2	4.11338829983035e-137
+fisher|large055|mid_p	2.06354102826349e-137
+fisher|large055|mid_p_2	4.12708205652699e-137
+fisher|large056|tail_1	"(upper tail)"
+fisher|large056|p_1	1.3045052508399e-283
+fisher|large056|p_1d	2.6090105016798e-283
+fisher|large056|p_2	2.55443081638814e-283
+fisher|large056|mid_p	1.24671162762806e-283
+fisher|large056|mid_p_2	2.49342325525613e-283
+fisher|large057|tail_1	"(lower tail)"
+fisher|large057|p_1	2.56629223448874e-301
+fisher|large057|p_1d	5.13258446897747e-301
+fisher|large057|p_2	5.05831068914752e-301
+fisher|large057|mid_p	2.50752397337923e-301
+fisher|large057|mid_p_2	5.01504794675845e-301
+fisher|large058|tail_1	"(lower tail)"
+fisher|large058|p_1	6.55292164442904e-198
+fisher|large058|p_1d	1.31058432888581e-197
+fisher|large058|p_2	1.28555205702094e-197
+fisher|large058|mid_p	6.43137563797715e-198
+fisher|large058|mid_p_2	1.28627512759543e-197
+fisher|large059|tail_1	"(lower tail)"
+fisher|large059|p_1	2.77769885304423e-89
+fisher|large059|p_1d	5.55539770608846e-89
+fisher|large059|p_2	5.5351644020245e-89
+fisher|large059|mid_p	2.75292541499717e-89
+fisher|large059|mid_p_2	5.50585082999433e-89
+fisher|large060|tail_1	"(lower tail)"
+fisher|large060|p_1	6.26320558173666e-16
+fisher|large060|p_1d	1.25264111634733e-15
+fisher|large060|p_2	1.25036624836154e-15
+fisher|large060|mid_p	6.23053239916742e-16
+fisher|large060|mid_p_2	1.24610647983348e-15
+fisher|large061|tail_1	"(lower tail)"
+fisher|large061|p_1	1.35068040170372e-03
+fisher|large061|p_1d	2.70136080340744e-03
+fisher|large061|p_2	2.69935800783082e-03
+fisher|large061|mid_p	1.34769938006106e-03
+fisher|large061|mid_p_2	2.69539876012212e-03
+fisher|large062|tail_1	"(lower tail)"
+fisher|large062|p_1	1.58807859464295e-01
+fisher|large062|p_1d	3.17615718928589e-01
+fisher|large062|p_2	3.17557567398376e-01
+fisher|large062|mid_p	1.58697204964217e-01
+fisher|large062|mid_p_2	3.17394409928435e-01
+fisher|large063|tail_1	"(lower tail)"
+fisher|large063|p_1	4.20744624602734e-01
+fisher|large063|p_1d	8.41489249205468e-01
+fisher|large063|p_2	8.41281720945653e-01
+fisher|large063|mid_p	4.20543855406155e-01
+fisher|large063|mid_p_2	8.41087710812311e-01
+fisher|large064|tail_1	"(lower tail)"
+fisher|large064|p_1	5.0002275117395e-01
+fisher|large064|p_1d	1e+00
+fisher|large064|p_2	9.993830837956e-01
+fisher|large064|mid_p	4.99714293136536e-01
+fisher|large064|mid_p_2	9.99428586273072e-01
+fisher|large065|tail_1	"(upper tail)"
+fisher|large065|p_1	3.82405867090524e-01
+fisher|large065|p_1d	7.64811734181047e-01
+fisher|large065|p_2	7.64739909861798e-01
+fisher|large065|mid_p	3.82229440536305e-01
+fisher|large065|mid_p_2	7.6445888107261e-01
+fisher|large066|tail_1	"(upper tail)"
+fisher|large066|p_1	6.68130640278092e-02
+fisher|large066|p_1d	1.33626128055618e-01
+fisher|large066|p_2	1.33511000011803e-01
+fisher|large066|mid_p	6.67535099598907e-02
+fisher|large066|mid_p_2	1.33507019919781e-01
+fisher|large067|tail_1	"(upper tail)"
+fisher|large067|p_1	3.17555826546912e-05
+fisher|large067|p_1d	6.35111653093823e-05
+fisher|large067|p_2	6.33599710450324e-05
+fisher|large067|mid_p	3.16830193377792e-05
+fisher|large067|mid_p_2	6.33660386755584e-05
+fisher|large068|tail_1	"(upper tail)"
+fisher|large068|p_1	1.13612164930539e-19
+fisher|large068|p_1d	2.27224329861079e-19
+fisher|large068|p_2	2.27145765090771e-19
+fisher|large068|mid_p	1.13148401721272e-19
+fisher|large068|mid_p_2	2.26296803442544e-19
+fisher|large069|tail_1	"(upper tail)"
+fisher|large069|p_1	2.75041512185148e-138
+fisher|large069|p_1d	5.50083024370295e-138
+fisher|large069|p_2	5.49943869588364e-138
+fisher|large069|mid_p	2.71223810537795e-138
+fisher|large069|mid_p_2	5.42447621075589e-138
+fisher|large070|tail_1	"(upper tail)"
+fisher|large070|p_1	2.65068510297131e-283
+fisher|large070|p_1d	5.30137020594262e-283
+fisher|large070|p_2	5.26410769057978e-283
+fisher|large070|mid_p	2.59232432981811e-283
+fisher|large070|mid_p_2	5.18464865963623e-283
+fisher|large071|tail_1	"(lower tail)"
+fisher|large071|p_1	2.34840114978811e-300
+fisher|large071|p_1d	4.69680229957621e-300
+fisher|large071|p_2	4.67719892346294e-300
+fisher|large071|mid_p	2.32850914007723e-300
+fisher|large071|mid_p_2	4.65701828015447e-300
+fisher|large072|tail_1	"(lower tail)"
+fisher|large072|p_1	4.28629332119225e-198
+fisher|large072|p_1d	8.5725866423845e-198
+fisher|large072|p_2	8.54268975871413e-198
+fisher|large072|mid_p	4.2605992001245e-198
+fisher|large072|mid_p_2	8.52119840024899e-198
+fisher|large073|tail_1	"(lower tail)"
+fisher|large073|p_1	2.95970309758232e-89
+fisher|large073|p_1d	5.91940619516464e-89
+fisher|large073|p_2	5.91402232684588e-89
+fisher|large073|mid_p	2.94834421095835e-89
+fisher|large073|mid_p_2	5.89668842191671e-89
+fisher|large074|tail_1	"(lower tail)"
+fisher|large074|p_1	6.19287403627775e-16
+fisher|large074|p_1d	1.23857480725555e-15
+fisher|large074|p_2	1.23845390935896e-15
+fisher|large074|mid_p	6.1822288665129e-16
+fisher|large074|mid_p_2	1.23644577330258e-15
+fisher|large075|tail_1	"(lower tail)"
+fisher|large075|p_1	1.35014191881137e-03
+fisher|large075|p_1d	2.70028383762275e-03
+fisher|large075|p_2	2.69952106066509e-03
+fisher|large075|mid_p	1.34929903132689e-03
+fisher|large075|mid_p_2	2.69859806265379e-03
+fisher|large076|tail_1	"(lower tail)"
+fisher|large076|p_1	1.58682333918406e-01
+fisher|large076|p_1d	3.17364667836812e-01
+fisher|large076|p_2	3.17336276526212e-01
+fisher|large076|mid_p	1.58644717481885e-01
+fisher|large076|mid_p_2	3.1728943496377e-01
+fisher|large077|tail_1	"(lower tail)"
+fisher|large077|p_1	4.20785157196018e-01
+fisher|large077|p_1d	8.41570314392036e-01
+fisher|large077|p_2	8.41484027285204e-01
+fisher|large077|mid_p	4.2072229042294e-01
+fisher|large077|mid_p_2	8.4144458084588e-01
+fisher|large078|tail_1	"(upper tail)"
+fisher|large078|p_1	5.00032088295315e-01
+fisher|large078|p_1d	1e+00
+fisher|large078|p_2	1e+00
+fisher|large078|mid_p	4.99970495337335e-01
+fisher|large078|mid_p_2	9.99940990674671e-01
+fisher|large079|tail_1	"(upper tail)"
+fisher|large079|p_1	3.82200281132777e-01
+fisher|large079|p_1d	7.64400562265554e-01
+fisher|large079|p_2	7.64349939035758e-01
+fisher|large079|mid_p	3.82139561943694e-01
+fisher|large079|mid_p_2	7.64279123887387e-01
+fisher|large080|tail_1	"(upper tail)"
+fisher|large080|p_1	6.68377937334244e-02
+fisher|large080|p_1d	1.33675587466849e-01
+fisher|large080|p_2	1.33669864005901e-01
+fisher|large080|mid_p	6.68190845722653e-02
+fisher|large080|mid_p_2	1.33638169144531e-01
+fisher|large081|tail_1	"(upper tail)"
+fisher|large081|p_1	3.1751210027625e-05
+fisher|large081|p_1d	6.350242005525e-05
+fisher|large081|p_2	6.34562419705491e-05
+fisher|large081|mid_p	3.17213120165744e-05
+fisher|large081|mid_p_2	6.34426240331489e-05
+fisher|large082|tail_1	"(upper tail)"
+fisher|large082|p_1	1.11934336138297e-19
+fisher|large082|p_1d	2.23868672276594e-19
+fisher|large082|p_2	2.23736452437715e-19
+fisher|large082|mid_p	1.11741739380874e-19
+fisher|large082|mid_p_2	2.23483478761748e-19
+fisher|large083|tail_1	"(upper tail)"
+fisher|large083|p_1	3.09183468577424e-138
+fisher|large083|p_1d	6.18366937154848e-138
+fisher|large083|p_2	6.17701442534643e-138
+fisher|large083|mid_p	3.07710785073856e-138
+fisher|large083|mid_p_2	6.15421570147711e-138
+fisher|large084|tail_1	"(upper tail)"
+fisher|large084|p_1	1.29119664007212e-283
+fisher|large084|p_1d	2.58239328014425e-283
+fisher|large084|p_2	2.56341066023464e-283
+fisher|large084|mid_p	1.28118966048277e-283
+fisher|large084|mid_p_2	2.56237932096555e-283
+fisher|large085|tail_1	"(lower tail)"
+fisher|large085|p_1	7.49151825495197e-300
+fisher|large085|p_1d	1.49830365099039e-299
+fisher|large085|p_2	1.4944806007747e-299
+fisher|large085|mid_p	7.46885617331126e-300
+fisher|large085|mid_p_2	1.49377123466225e-299
+fisher|large086|tail_1	"(lower tail)"
+fisher|large086|p_1	4.77552940288941e-198
+fisher|large086|p_1d	9.55105880577883e-198
+fisher|large086|p_2	9.54074859772789e-198
+fisher|large086|mid_p	4.76594039233071e-198
+fisher|large086|mid_p_2	9.53188078466142e-198
+fisher|large087|tail_1	"(lower tail)"
+fisher|large087|p_1	2.67472107748312e-89
+fisher|large087|p_1d	5.34944215496625e-89
+fisher|large087|p_2	5.34738048122396e-89
+fisher|large087|mid_p	2.67070304087658e-89
+fisher|large087|mid_p_2	5.34140608175317e-89
+fisher|large088|tail_1	"(lower tail)"
+fisher|large088|p_1	6.27244272817303e-16
+fisher|large088|p_1d	1.25448854563461e-15
+fisher|large088|p_2	1.25379759904636e-15
+fisher|large088|mid_p	6.26691173824993e-16
+fisher|large088|mid_p_2	1.25338234764999e-15
+fisher|large089|tail_1	"(lower tail)"
+fisher|large089|p_1	1.35072042055134e-03
+fisher|large089|p_1d	2.70144084110269e-03
+fisher|large089|p_2	2.70132786271026e-03
+fisher|large089|mid_p	1.35027449736665e-03
+fisher|large089|mid_p_2	2.7005489947333e-03
+fisher|large090|tail_1	"(lower tail)"
+fisher|large090|p_1	1.58670158455696e-01
+fisher|large090|p_1d	3.17340316911391e-01
+fisher|large090|p_2	3.17310593439166e-01
+fisher|large090|mid_p	1.58654091417167e-01
+fisher|large090|mid_p_2	3.17308182834333e-01
+fisher|large091|tail_1	"(lower tail)"
+fisher|large091|p_1	4.20743594579464e-01
+fisher|large091|p_1d	8.41487189158928e-01
+fisher|large091|p_2	8.41439082184551e-01
+fisher|large091|mid_p	4.20714415780043e-01
+fisher|large091|mid_p_2	8.41428831560085e-01
+fisher|large092|tail_1	"(lower tail)"
+fisher|large092|p_1	5.00005088359591e-01
+fisher|large092|p_1d	1e+00
+fisher|large092|p_2	1e+00
+fisher|large092|mid_p	4.99979145488923e-01
+fisher|large092|mid_p_2	9.99958290977846e-01
+fisher|large093|tail_1	"(upper tail)"
+fisher|large093|p_1	3.82096504656149e-01
+fisher|large093|p_1d	7.64193009312297e-01
+fisher|large093|p_2	7.64167207118e-01
+fisher|large093|mid_p	3.82066057850295e-01
+fisher|large093|mid_p_2	7.64132115700589e-01
+fisher|large094|tail_1	"(upper tail)"
+fisher|large094|p_1	6.68093069640625e-02
+fisher|large094|p_1d	1.33618613928125e-01
+fisher|large094|p_2	1.33612153337158e-01
+fisher|large094|mid_p	6.67995567920808e-02
+fisher|large094|mid_p_2	1.33599113584162e-01
+fisher|large095|tail_1	"(upper tail)"
+fisher|large095|p_1	3.17016209018787e-05
+fisher|large095|p_1d	6.34032418037574e-05
+fisher|large095|p_2	6.33971841093372e-05
+fisher|large095|mid_p	3.16897276728795e-05
+fisher|large095|mid_p_2	6.3379455345759e-05
+fisher|large096|tail_1	"(upper tail)"
+fisher|large096|p_1	1.12892501974846e-19
+fisher|large096|p_1d	2.25785003949692e-19
+fisher|large096|p_2	2.25762781920251e-19
+fisher|large096|mid_p	1.12824235026916e-19
+fisher|large096|mid_p_2	2.25648470053832e-19
+fisher|large097|tail_1	"(upper tail)"
+fisher|large097|p_1	3.03408778329313e-138
+fisher|large097|p_1d	6.06817556658626e-138
+fisher|large097|p_2	6.06501150905799e-138
+fisher|large097|mid_p	3.02914566138759e-138
+fisher|large097|mid_p_2	6.05829132277518e-138
+fisher|large098|tail_1	"(upper tail)"
+fisher|large098|p_1	4.8318671884564e-284
+fisher|large098|p_1d	9.66373437691279e-284
+fisher|large098|p_2	9.64689849280632e-284
+fisher|large098|mid_p	4.81810870752106e-284
+fisher|large098|mid_p_2	9.63621741504212e-284
+fisher|large099|tail_1	"(lower tail)"
+fisher|large099|p_1	3.12599226129319e-300
+fisher|large099|p_1d	6.25198452258639e-300
+fisher|large099|p_2	6.24738964238592e-300
+fisher|large099|mid_p	3.11656615513854e-300
+fisher|large099|mid_p_2	6.23313231027708e-300
+fisher|large100|tail_1	"(lower tail)"
+fisher|large100|p_1	4.79183283891914e-198
+fisher|large100|p_1d	9.58366567783827e-198
+fisher|large100|p_2	9.58219619896108e-198
+fisher|large100|mid_p	4.78429018923021e-198
+fisher|large100|mid_p_2	9.56858037846043e-198
+fisher|large101|tail_1	"(lower tail)"
+fisher|large101|p_1	2.55286951765054e-89
+fisher|large101|p_1d	5.10573903530107e-89
+fisher|large101|p_2	5.10412098143027e-89
+fisher|large101|mid_p	2.54908733301206e-89
+fisher|large101|mid_p_2	5.09817466602412e-89
+fisher|large102|tail_1	"(lower tail)"
+fisher|large102|p_1	6.23827040006203e-16
+fisher|large102|p_1d	1.24765408001241e-15
+fisher|large102|p_2	1.24720271408812e-15
+fisher|large102|mid_p	6.23514982373846e-16
+fisher|large102|mid_p_2	1.24702996474769e-15
+fisher|large103|tail_1	"(lower tail)"
+fisher|large103|p_1	1.35019547673624e-03
+fisher|large103|p_1d	2.70039095347248e-03
+fisher|large103|p_2	2.70019802644935e-03
+fisher|large103|mid_p	1.34996723295371e-03
+fisher|large103|mid_p_2	2.69993446590743e-03
+fisher|large104|tail_1	"(lower tail)"
+fisher|large104|p_1	1.58674817831307e-01
+fisher|large104|p_1d	3.17349635662615e-01
+fisher|large104|p_2	3.17341556048189e-01
+fisher|large104|mid_p	1.58661357687262e-01
+fisher|large104|mid_p_2	3.17322715374524e-01
+fisher|large105|tail_1	"(lower tail)"
+fisher|large105|p_1	4.20762439312413e-01
+fisher|large105|p_1d	8.41524878624827e-01
+fisher|large105|p_2	8.41510907012522e-01
+fisher|large105|mid_p	4.20744918908887e-01
+fisher|large105|mid_p_2	8.41489837817775e-01
+fisher|large106|tail_1	"(lower tail)"
+fisher|large106|p_1	5.00012764726643e-01
+fisher|large106|p_1d	1e+00
+fisher|large106|p_2	1e+00
+fisher|large106|mid_p	4.99987573204139e-01
+fisher|large106|mid_p_2	9.99975146408277e-01
+fisher|large107|tail_1	"(upper tail)"
+fisher|large107|p_1	3.82120092827214e-01
+fisher|large107|p_1d	7.64240185654428e-01
+fisher|large107|p_2	7.64201067190625e-01
+fisher|large107|mid_p	3.8209895366902e-01
+fisher|large107|mid_p_2	7.64197907338041e-01
+fisher|large108|tail_1	"(upper tail)"
+fisher|large108|p_1	6.68202163691601e-02
+fisher|large108|p_1d	1.3364043273832e-01
+fisher|large108|p_2	1.33626059667552e-01
+fisher|large108|mid_p	6.68131013788369e-02
+fisher|large108|mid_p_2	1.33626202757674e-01
+fisher|large109|tail_1	"(upper tail)"
+fisher|large109|p_1	3.1673943438951e-05
+fisher|large109|p_1d	6.33478868779019e-05
+fisher|large109|p_2	6.33463542412494e-05
+fisher|large109|mid_p	3.16657554729993e-05
+fisher|large109|mid_p_2	6.33315109459985e-05
+fisher|large110|tail_1	"(upper tail)"
+fisher|large110|p_1	1.12697687502235e-19
+fisher|large110|p_1d	2.2539537500447e-19
+fisher|large110|p_2	2.25401881244062e-19
+fisher|large110|mid_p	1.12644185698943e-19
+fisher|large110|mid_p_2	2.25288371397886e-19
+fisher|large111|tail_1	"(upper tail)"
+fisher|large111|p_1	3.15102559728392e-138
+fisher|large111|p_1d	6.30205119456784e-138
+fisher|large111|p_2	6.30038918782406e-138
+fisher|large111|mid_p	3.1466970968422e-138
+fisher|large111|mid_p_2	6.2933941936844e-138
+fisher|large112|tail_1	"(upper tail)"
+fisher|large112|p_1	3.64842500170814e-284
+fisher|large112|p_1d	7.29685000341629e-284
+fisher|large112|p_2	7.28883568247581e-284
+fisher|large112|mid_p	3.6400243359902e-284
+fisher|large112|mid_p_2	7.2800486719804e-284
+fisher|large113|tail_1	"(lower tail)"
+fisher|large113|p_1	5.12613297395231e-01
+fisher|large113|p_1d	1e+00
+fisher|large113|p_2	1e+00
+fisher|large113|mid_p	5e-01
+fisher|large113|mid_p_2	1e+00
+fisher|large114|tail_1	"(lower tail)"
+fisher|large114|p_1	5.12613297395231e-01
+fisher|large114|p_1d	1e+00
+fisher|large114|p_2	1e+00
+fisher|large114|mid_p	5e-01
+fisher|large114|mid_p_2	1e+00
+fisher|large115|tail_1	"(lower tail)"
+fisher|large115|p_1	3.63978611953743e-01
+fisher|large115|p_1d	7.27957223907486e-01
+fisher|large115|p_2	7.27957223907485e-01
+fisher|large115|mid_p	3.52241131691469e-01
+fisher|large115|mid_p_2	7.04482263382939e-01
+fisher|large116|tail_1	"(upper tail)"
+fisher|large116|p_1	3.63978611953743e-01
+fisher|large116|p_1d	7.27957223907486e-01
+fisher|large116|p_2	7.27957223907485e-01
+fisher|large116|mid_p	3.52241131691469e-01
+fisher|large116|mid_p_2	7.04482263382939e-01
+fisher|large117|tail_1	"(lower tail)"
+fisher|large117|p_1	1.63467734272751e-01
+fisher|large117|p_1d	3.26935468545503e-01
+fisher|large117|p_2	3.26935468545503e-01
+fisher|large117|mid_p	1.55906868482578e-01
+fisher|large117|mid_p_2	3.11813736965155e-01
+fisher|large118|tail_1	"(upper tail)"
+fisher|large118|p_1	1.63467734272751e-01
+fisher|large118|p_1d	3.26935468545503e-01
+fisher|large118|p_2	3.26935468545503e-01
+fisher|large118|mid_p	1.55906868482578e-01
+fisher|large118|mid_p_2	3.11813736965155e-01
+fisher|large119|tail_1	"(lower tail)"
+fisher|large119|p_1	2.31658891611158e-02
+fisher|large119|p_1d	4.63317783222316e-02
+fisher|large119|p_2	4.63317783222315e-02
+fisher|large119|mid_p	2.15377689238269e-02
+fisher|large119|mid_p_2	4.30755378476537e-02
+fisher|large120|tail_1	"(upper tail)"
+fisher|large120|p_1	2.31658891611158e-02
+fisher|large120|p_1d	4.63317783222316e-02
+fisher|large120|p_2	4.63317783222315e-02
+fisher|large120|mid_p	2.15377689238269e-02
+fisher|large120|mid_p_2	4.30755378476537e-02
+fisher|large121|tail_1	"(lower tail)"
+fisher|large121|p_1	2.82727724165813e-04
+fisher|large121|p_1d	5.65455448331626e-04
+fisher|large121|p_2	5.65455448331626e-04
+fisher|large121|mid_p	2.52988062833001e-04
+fisher|large121|mid_p_2	5.05976125666002e-04
+fisher|large122|tail_1	"(upper tail)"
+fisher|large122|p_1	2.82727724165813e-04
+fisher|large122|p_1d	5.65455448331626e-04
+fisher|large122|p_2	5.65455448331626e-04
+fisher|large122|mid_p	2.52988062833001e-04
+fisher|large122|mid_p_2	5.05976125666002e-04
+fisher|large123|tail_1	"(lower tail)"
+fisher|large123|p_1	1.10857443048253e-09
+fisher|large123|p_1d	2.21714886096505e-09
+fisher|large123|p_2	2.21714886096506e-09
+fisher|large123|mid_p	9.29136082726232e-10
+fisher|large123|mid_p_2	1.85827216545246e-09
+fisher|large124|tail_1	"(upper tail)"
+fisher|large124|p_1	1.10857443048253e-09
+fisher|large124|p_1d	2.21714886096505e-09
+fisher|large124|p_2	2.21714886096506e-09
+fisher|large124|mid_p	9.29136082726232e-10
+fisher|large124|mid_p_2	1.85827216545246e-09
+fisher|large125|tail_1	"(lower tail)"
+fisher|large125|p_1	2.31085431028481e-205
+fisher|large125|p_1d	4.62170862056962e-205
+fisher|large125|p_2	4.62170862056958e-205
+fisher|large125|mid_p	1.30225380388971e-205
+fisher|large125|mid_p_2	2.60450760777942e-205
+fisher|large126|tail_1	"(upper tail)"
+fisher|large126|p_1	2.31085431028481e-205
+fisher|large126|p_1d	4.62170862056962e-205
+fisher|large126|p_2	4.62170862056958e-205
+fisher|large126|mid_p	1.30225380388971e-205
+fisher|large126|mid_p_2	2.60450760777942e-205
+fisher|large127|tail_1	"(lower tail)"
+fisher|large127|p_1	5.02523113598596e-01
+fisher|large127|p_1d	1e+00
+fisher|large127|p_2	9.99999999999999e-01
+fisher|large127|mid_p	4.99999999999999e-01
+fisher|large127|mid_p_2	9.99999999999997e-01
+fisher|large128|tail_1	"(lower tail)"
+fisher|large128|p_1	5.02523113598596e-01
+fisher|large128|p_1d	1e+00
+fisher|large128|p_2	9.99999999999999e-01
+fisher|large128|mid_p	4.99999999999999e-01
+fisher|large128|mid_p_2	9.99999999999997e-01
+fisher|large129|tail_1	"(lower tail)"
+fisher|large129|p_1	3.45150467764339e-01
+fisher|large129|p_1d	6.90300935528679e-01
+fisher|large129|p_2	6.9030093552868e-01
+fisher|large129|mid_p	3.42825804235327e-01
+fisher|large129|mid_p_2	6.85651608470654e-01
+fisher|large130|tail_1	"(upper tail)"
+fisher|large130|p_1	3.45150467764339e-01
+fisher|large130|p_1d	6.90300935528679e-01
+fisher|large130|p_2	6.9030093552868e-01
+fisher|large130|mid_p	3.42825804235327e-01
+fisher|large130|mid_p_2	6.85651608470654e-01
+fisher|large131|tail_1	"(lower tail)"
+fisher|large131|p_1	1.6036590007882e-01
+fisher|large131|p_1d	3.2073180015764e-01
+fisher|large131|p_2	3.20731800157641e-01
+fisher|large131|mid_p	1.58834438057803e-01
+fisher|large131|mid_p_2	3.17668876115606e-01
+fisher|large132|tail_1	"(upper tail)"
+fisher|large132|p_1	1.6036590007882e-01
+fisher|large132|p_1d	3.2073180015764e-01
+fisher|large132|p_2	3.20731800157641e-01
+fisher|large132|mid_p	1.58834438057803e-01
+fisher|large132|mid_p_2	3.17668876115606e-01
+fisher|large133|tail_1	"(lower tail)"
+fisher|large133|p_1	2.31723736375453e-02
+fisher|large133|p_1d	4.63447472750906e-02
+fisher|large133|p_2	4.63447472750907e-02
+fisher|large133|mid_p	2.28299133780409e-02
+fisher|large133|mid_p_2	4.56598267560817e-02
+fisher|large134|tail_1	"(upper tail)"
+fisher|large134|p_1	2.31723736375453e-02
+fisher|large134|p_1d	4.63447472750906e-02
+fisher|large134|p_2	4.63447472750907e-02
+fisher|large134|mid_p	2.28299133780409e-02
+fisher|large134|mid_p_2	4.56598267560817e-02
+fisher|large135|tail_1	"(lower tail)"
+fisher|large135|p_1	2.3480994127513e-04
+fisher|large135|p_1d	4.69619882550261e-04
+fisher|large135|p_2	4.69619882550261e-04
+fisher|large135|mid_p	2.2936369757131e-04
+fisher|large135|mid_p_2	4.58727395142621e-04
+fisher|large136|tail_1	"(upper tail)"
+fisher|large136|p_1	2.3480994127513e-04
+fisher|large136|p_1d	4.69619882550261e-04
+fisher|large136|p_2	4.69619882550261e-04
+fisher|large136|mid_p	2.2936369757131e-04
+fisher|large136|mid_p_2	4.58727395142621e-04
+fisher|large137|tail_1	"(lower tail)"
+fisher|large137|p_1	1.05225473595346e-09
+fisher|large137|p_1d	2.10450947190693e-09
+fisher|large137|p_2	2.10450947190693e-09
+fisher|large137|mid_p	1.01284700455211e-09
+fisher|large137|mid_p_2	2.02569400910421e-09
+fisher|large138|tail_1	"(upper tail)"
+fisher|large138|p_1	1.05225473595346e-09
+fisher|large138|p_1d	2.10450947190693e-09
+fisher|large138|p_2	2.10450947190693e-09
+fisher|large138|mid_p	1.01284700455211e-09
+fisher|large138|mid_p_2	2.02569400910421e-09
+fisher|large139|tail_1	"(lower tail)"
+fisher|large139|p_1	2.69800109855178e-198
+fisher|large139|p_1d	5.39600219710356e-198
+fisher|large139|p_2	5.39600219710356e-198
+fisher|large139|mid_p	2.27052893316643e-198
+fisher|large139|mid_p_2	4.54105786633287e-198
+fisher|large140|tail_1	"(upper tail)"
+fisher|large140|p_1	2.69800109855178e-198
+fisher|large140|p_1d	5.39600219710356e-198
+fisher|large140|p_2	5.39600219710356e-198
+fisher|large140|mid_p	2.27052893316643e-198
+fisher|large140|mid_p_2	4.54105786633287e-198
+fisher|large141|tail_1	"(lower tail)"
+fisher|large141|p_1	5.00564189371971e-01
+fisher|large141|p_1d	1e+00
+fisher|large141|p_2	9.99999999999999e-01
+fisher|large141|mid_p	4.99999999999994e-01
+fisher|large141|mid_p_2	9.99999999999989e-01
+fisher|large142|tail_1	"(lower tail)"
+fisher|large142|p_1	5.00564189371971e-01
+fisher|large142|p_1d	1e+00
+fisher|large142|p_2	9.99999999999999e-01
+fisher|large142|mid_p	4.99999999999994e-01
+fisher|large142|mid_p_2	9.99999999999989e-01
+fisher|large143|tail_1	"(lower tail)"
+fisher|large143|p_1	3.45538470739066e-01
+fisher|large143|p_1d	6.91076941478131e-01
+fisher|large143|p_2	6.91076941478137e-01
+fisher|large143|mid_p	3.4501741030072e-01
+fisher|large143|mid_p_2	6.9003482060144e-01
+fisher|large144|tail_1	"(upper tail)"
+fisher|large144|p_1	3.45538470739066e-01
+fisher|large144|p_1d	6.91076941478131e-01
+fisher|large144|p_2	6.91076941478137e-01
+fisher|large144|mid_p	3.4501741030072e-01
+fisher|large144|mid_p_2	6.9003482060144e-01
+fisher|large145|tail_1	"(lower tail)"
+fisher|large145|p_1	1.58691797031947e-01
+fisher|large145|p_1d	3.17383594063894e-01
+fisher|large145|p_2	3.17383594063897e-01
+fisher|large145|mid_p	1.58350030988171e-01
+fisher|large145|mid_p_2	3.16700061976343e-01
+fisher|large146|tail_1	"(upper tail)"
+fisher|large146|p_1	1.58691797031947e-01
+fisher|large146|p_1d	3.17383594063894e-01
+fisher|large146|p_2	3.17383594063897e-01
+fisher|large146|mid_p	1.58350030988171e-01
+fisher|large146|mid_p_2	3.16700061976343e-01
+fisher|large147|tail_1	"(lower tail)"
+fisher|large147|p_1	2.28429388719706e-02
+fisher|large147|p_1d	4.56858777439412e-02
+fisher|large147|p_2	4.56858777439417e-02
+fisher|large147|mid_p	2.27665379094761e-02
+fisher|large147|mid_p_2	4.55330758189521e-02
+fisher|large148|tail_1	"(upper tail)"
+fisher|large148|p_1	2.28429388719706e-02
+fisher|large148|p_1d	4.56858777439412e-02
+fisher|large148|p_2	4.56858777439417e-02
+fisher|large148|mid_p	2.27665379094761e-02
+fisher|large148|mid_p_2	4.55330758189521e-02
+fisher|large149|tail_1	"(lower tail)"
+fisher|large149|p_1	2.34950878713684e-04
+fisher|large149|p_1d	4.69901757427367e-04
+fisher|large149|p_2	4.69901757427372e-04
+fisher|large149|mid_p	2.33711371567375e-04
+fisher|large149|mid_p_2	4.67422743134749e-04
+fisher|large150|tail_1	"(upper tail)"
+fisher|large150|p_1	2.34950878713684e-04
+fisher|large150|p_1d	4.69901757427367e-04
+fisher|large150|p_2	4.69901757427372e-04
+fisher|large150|mid_p	2.33711371567375e-04
+fisher|large150|mid_p_2	4.67422743134749e-04
+fisher|large151|tail_1	"(lower tail)"
+fisher|large151|p_1	1.00073013867917e-09
+fisher|large151|p_1d	2.00146027735835e-09
+fisher|large151|p_2	2.00146027735836e-09
+fisher|large151|mid_p	9.92091020232649e-10
+fisher|large151|mid_p_2	1.9841820404653e-09
+fisher|large152|tail_1	"(upper tail)"
+fisher|large152|p_1	1.00073013867917e-09
+fisher|large152|p_1d	2.00146027735835e-09
+fisher|large152|p_2	2.00146027735836e-09
+fisher|large152|mid_p	9.92091020232649e-10
+fisher|large152|mid_p_2	1.9841820404653e-09
+fisher|large153|tail_1	"(lower tail)"
+fisher|large153|p_1	4.78502078413294e-198
+fisher|large153|p_1d	9.57004156826588e-198
+fisher|large153|p_2	9.57004156826596e-198
+fisher|large153|mid_p	4.59014232411896e-198
+fisher|large153|mid_p_2	9.18028464823791e-198
+fisher|large154|tail_1	"(upper tail)"
+fisher|large154|p_1	4.78502078413294e-198
+fisher|large154|p_1d	9.57004156826588e-198
+fisher|large154|p_2	9.57004156826596e-198
+fisher|large154|mid_p	4.59014232411896e-198
+fisher|large154|mid_p_2	9.18028464823791e-198
+fisher|large155|tail_1	"(lower tail)"
+fisher|large155|p_1	5.00103006452555e-01
+fisher|large155|p_1d	1e+00
+fisher|large155|p_2	1e+00
+fisher|large155|mid_p	4.9999999999997e-01
+fisher|large155|mid_p_2	9.9999999999994e-01
+fisher|large156|tail_1	"(lower tail)"
+fisher|large156|p_1	5.00103006452555e-01
+fisher|large156|p_1d	1e+00
+fisher|large156|p_2	1e+00
+fisher|large156|mid_p	4.9999999999997e-01
+fisher|large156|mid_p_2	9.9999999999994e-01
+fisher|large157|tail_1	"(lower tail)"
+fisher|large157|p_1	3.44596642710037e-01
+fisher|large157|p_1d	6.89193285420073e-01
+fisher|large157|p_2	6.8919328542011e-01
+fisher|large157|mid_p	3.44501563693203e-01
+fisher|large157|mid_p_2	6.89003127386406e-01
+fisher|large158|tail_1	"(upper tail)"
+fisher|large158|p_1	3.44596642710037e-01
+fisher|large158|p_1d	6.89193285420073e-01
+fisher|large158|p_2	6.8919328542011e-01
+fisher|large158|mid_p	3.44501563693203e-01
+fisher|large158|mid_p_2	6.89003127386406e-01
+fisher|large159|tail_1	"(lower tail)"
+fisher|large159|p_1	1.5877919833246e-01
+fisher|large159|p_1d	3.17558396664919e-01
+fisher|large159|p_2	3.17558396664938e-01
+fisher|large159|mid_p	1.58716705897132e-01
+fisher|large159|mid_p_2	3.17433411794264e-01
+fisher|large160|tail_1	"(upper tail)"
+fisher|large160|p_1	1.5877919833246e-01
+fisher|large160|p_1d	3.17558396664919e-01
+fisher|large160|p_2	3.17558396664938e-01
+fisher|large160|mid_p	1.58716705897132e-01
+fisher|large160|mid_p_2	3.17433411794264e-01
+fisher|large161|tail_1	"(lower tail)"
+fisher|large161|p_1	2.27636109485671e-02
+fisher|large161|p_1d	4.55272218971343e-02
+fisher|large161|p_2	4.55272218971368e-02
+fisher|large161|mid_p	2.27496707802847e-02
+fisher|large161|mid_p_2	4.54993415605694e-02
+fisher|large162|tail_1	"(upper tail)"
+fisher|large162|p_1	2.27636109485671e-02
+fisher|large162|p_1d	4.55272218971343e-02
+fisher|large162|p_2	4.55272218971368e-02
+fisher|large162|mid_p	2.27496707802847e-02
+fisher|large162|mid_p_2	4.54993415605694e-02
+fisher|large163|tail_1	"(lower tail)"
+fisher|large163|p_1	2.32728580168811e-04
+fisher|large163|p_1d	4.65457160337622e-04
+fisher|large163|p_2	4.65457160337644e-04
+fisher|large163|mid_p	2.32503368125279e-04
+fisher|large163|mid_p_2	4.65006736250559e-04
+fisher|large164|tail_1	"(upper tail)"
+fisher|large164|p_1	2.32728580168811e-04
+fisher|large164|p_1d	4.65457160337622e-04
+fisher|large164|p_2	4.65457160337644e-04
+fisher|large164|mid_p	2.32503368125279e-04
+fisher|large164|mid_p_2	4.65006736250559e-04
+fisher|large165|tail_1	"(lower tail)"
+fisher|large165|p_1	9.87998884316297e-10
+fisher|large165|p_1d	1.97599776863259e-09
+fisher|large165|p_2	1.97599776863267e-09
+fisher|large165|mid_p	9.86430342841446e-10
+fisher|large165|mid_p_2	1.97286068568289e-09
+fisher|large166|tail_1	"(upper tail)"
+fisher|large166|p_1	9.87998884316297e-10
+fisher|large166|p_1d	1.97599776863259e-09
+fisher|large166|p_2	1.97599776863267e-09
+fisher|large166|mid_p	9.86430342841446e-10
+fisher|large166|mid_p_2	1.97286068568289e-09
+fisher|large167|tail_1	"(lower tail)"
+fisher|large167|p_1	4.9202519426721e-198
+fisher|large167|p_1d	9.8405038853442e-198
+fisher|large167|p_2	9.84050388534464e-198
+fisher|large167|mid_p	4.8823915794065e-198
+fisher|large167|mid_p_2	9.764783158813e-198
+fisher|large168|tail_1	"(upper tail)"
+fisher|large168|p_1	4.9202519426721e-198
+fisher|large168|p_1d	9.8405038853442e-198
+fisher|large168|p_2	9.84050388534464e-198
+fisher|large168|mid_p	4.8823915794065e-198
+fisher|large168|mid_p_2	9.764783158813e-198
+fisher|large169|tail_1	"(lower tail)"
+fisher|large169|p_1	5.0002523132501e-01
+fisher|large169|p_1d	1e+00
+fisher|large169|p_2	1e+00
+fisher|large169|mid_p	4.99999999999808e-01
+fisher|large169|mid_p_2	9.99999999999617e-01
+fisher|large170|tail_1	"(lower tail)"
+fisher|large170|p_1	5.0002523132501e-01
+fisher|large170|p_1d	1e+00
+fisher|large170|p_2	1e+00
+fisher|large170|mid_p	4.99999999999808e-01
+fisher|large170|mid_p_2	9.99999999999617e-01
+fisher|large171|tail_1	"(lower tail)"
+fisher|large171|p_1	3.44614484776413e-01
+fisher|large171|p_1d	6.89228969552826e-01
+fisher|large171|p_2	6.89228969553073e-01
+fisher|large171|mid_p	3.44591193000474e-01
+fisher|large171|mid_p_2	6.89182386000948e-01
+fisher|large172|tail_1	"(upper tail)"
+fisher|large172|p_1	3.44614484776413e-01
+fisher|large172|p_1d	6.89228969552826e-01
+fisher|large172|p_2	6.89228969553073e-01
+fisher|large172|mid_p	3.44591193000474e-01
+fisher|large172|mid_p_2	6.89182386000948e-01
+fisher|large173|tail_1	"(lower tail)"
+fisher|large173|p_1	1.58661196394394e-01
+fisher|large173|p_1d	3.17322392788788e-01
+fisher|large173|p_2	3.17322392788892e-01
+fisher|large173|mid_p	1.58645893414113e-01
+fisher|large173|mid_p_2	3.17291786828226e-01
+fisher|large174|tail_1	"(upper tail)"
+fisher|large174|p_1	1.58661196394394e-01
+fisher|large174|p_1d	3.17322392788788e-01
+fisher|large174|p_2	3.17322392788892e-01
+fisher|large174|mid_p	1.58645893414113e-01
+fisher|large174|mid_p_2	3.17291786828226e-01
+fisher|large175|tail_1	"(lower tail)"
+fisher|large175|p_1	2.27561991442834e-02
+fisher|large175|p_1d	4.55123982885668e-02
+fisher|large175|p_2	4.55123982885802e-02
+fisher|large175|mid_p	2.27527841202836e-02
+fisher|large175|mid_p_2	4.55055682405672e-02
+fisher|large176|tail_1	"(upper tail)"
+fisher|large176|p_1	2.27561991442834e-02
+fisher|large176|p_1d	4.55123982885668e-02
+fisher|large176|p_2	4.55123982885802e-02
+fisher|large176|mid_p	2.27527841202836e-02
+fisher|large176|mid_p_2	4.55055682405672e-02
+fisher|large177|tail_1	"(lower tail)"
+fisher|large177|p_1	2.32676494646787e-04
+fisher|large177|p_1d	4.65352989293574e-04
+fisher|large177|p_2	4.65352989293692e-04
+fisher|large177|mid_p	2.32621303069027e-04
+fisher|large177|mid_p_2	4.65242606138055e-04
+fisher|large178|tail_1	"(upper tail)"
+fisher|large178|p_1	2.32676494646787e-04
+fisher|large178|p_1d	4.65352989293574e-04
+fisher|large178|p_2	4.65352989293692e-04
+fisher|large178|mid_p	2.32621303069027e-04
+fisher|large178|mid_p_2	4.65242606138055e-04
+fisher|large179|tail_1	"(lower tail)"
+fisher|large179|p_1	9.87098675222664e-10
+fisher|large179|p_1d	1.97419735044533e-09
+fisher|large179|p_2	1.97419735044575e-09
+fisher|large179|mid_p	9.86714354583096e-10
+fisher|large179|mid_p_2	1.97342870916619e-09
+fisher|large180|tail_1	"(upper tail)"
+fisher|large180|p_1	9.87098675222664e-10
+fisher|large180|p_1d	1.97419735044533e-09
+fisher|large180|p_2	1.97419735044575e-09
+fisher|large180|mid_p	9.86714354583096e-10
+fisher|large180|mid_p_2	1.97342870916619e-09
+fisher|large181|tail_1	"(lower tail)"
+fisher|large181|p_1	4.91243507250093e-198
+fisher|large181|p_1d	9.82487014500186e-198
+fisher|large181|p_2	9.82487014500218e-198
+fisher|large181|mid_p	4.90312174078297e-198
+fisher|large181|mid_p_2	9.80624348156595e-198
+fisher|large182|tail_1	"(upper tail)"
+fisher|large182|p_1	4.91243507250093e-198
+fisher|large182|p_1d	9.82487014500186e-198
+fisher|large182|p_2	9.82487014500218e-198
+fisher|large182|mid_p	4.90312174078297e-198
+fisher|large182|mid_p_2	9.80624348156595e-198
+fisher|large183|tail_1	"(upper tail)"
+fisher|large183|p_1	2.46363227395402e-01
+fisher|large183|p_1d	4.92726454790804e-01
+fisher|large183|p_2	3.56155532560759e-01
+fisher|large183|mid_p	1.52233877675186e-01
+fisher|large183|mid_p_2	3.04467755350372e-01
+fisher|large184|tail_1	"(lower tail)"
+fisher|large184|p_1	9.93359923871315e-01
+fisher|large184|p_1d	1e+00
+fisher|large184|p_2	1e+00
+fisher|large184|mid_p	4.96679961935657e-01
+fisher|large184|mid_p_2	9.93359923871315e-01
+fisher|large185|tail_1	"(lower tail)"
+fisher|large185|p_1	7.50000001249999e-01
+fisher|large185|p_1d	1e+00
+fisher|large185|p_2	9.99999999999999e-01
+fisher|large185|mid_p	4.99999999999999e-01
+fisher|large185|mid_p_2	9.99999999999999e-01
+fisher|large186|tail_1	"(lower tail)"
+fisher|large186|p_1	4.26762945265704e-01
+fisher|large186|p_1d	8.53525890531409e-01
+fisher|large186|p_2	6.40038762003655e-01
+fisher|large186|mid_p	2.66700181436663e-01
+fisher|large186|mid_p_2	5.33400362873327e-01
+fisher|large187|tail_1	"(upper tail)"
+fisher|large187|p_1	5.00000000277778e-01
+fisher|large187|p_1d	1e+00
+fisher|large187|p_2	1e+00
+fisher|large187|mid_p	2.50000000138889e-01
+fisher|large187|mid_p_2	5.00000000277778e-01
