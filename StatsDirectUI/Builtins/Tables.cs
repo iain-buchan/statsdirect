@@ -6987,6 +6987,17 @@ namespace StatsDirect.Builtins
             return sp;
         }
 
+        /// <summary>
+        /// The odds ratio of one table of Woolf's analysis: its logarithm y, the weight w, which is 1 over the variance vs of
+        /// the logarithm, chi-square y^2 w with 1 degree of freedom, and the limits y less and plus cit times the root of vs,
+        /// with their exponentials.
+        /// </summary>
+        /// <param name="outputParameters">Where the figures are put, if they are shown: "odds", "log", "var", "se", "weight",
+        /// "chi_2", "chi" (the root, with the sign of y), "chi_p", "pc", "ci_from", "ci_to", "odds_from", "odds_to".</param>
+        /// <param name="showIntermediates">Whether the figures of each table are shown.</param>
+        /// <param name="a1">The counts of the table, a1 to d1, with whatever has been added to them.</param>
+        /// <param name="vs">The variance of the logarithm of the odds ratio.</param>
+        /// <param name="cit">The normal deviate of the confidence level cco.</param>
         private static void WoolfStratum(ParameterBag outputParameters, bool showIntermediates, double a1, double b1, double c1, double d1, double vs, double cit, double cco, out double y, out double w)
         {
             double x = a1 * d1 / (b1 * c1);
@@ -7021,6 +7032,37 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// Woolf's analysis of a series of 2 by 2 tables: the odds ratio of each table, and the odds ratio of them all as the
+        /// mean of the logarithms of the odds ratios, each with 1 over its variance as its weight.
+        /// </summary>
+        /// <remarks>
+        /// A table is a, b in its first row and c, d in its second.  Its chi-square, with and without the correction for
+        /// continuity, is as in Chi.RptChi2By2, and the root of each has the sign of a d - b c; there is none if a column of
+        /// the table has no observations.
+        /// Without the correction of Haldane the logarithm of the odds ratio is that of a d / (b c), with the variance
+        /// 1 / a + 1 / b + 1 / c + 1 / d; a table with an empty cell has neither.  With the correction a half is added to
+        /// each count for the odds ratio, and the variance is 1 / (a + 1) + 1 / (b + 1) + 1 / (c + 1) + 1 / (d + 1).
+        /// For the tables together, with y the logarithm and w the weight of a table: the mean is sum(w y) / sum(w), and its
+        /// variance 1 / sum(w); the chi-square of the mean against 0 is the square of the mean times sum(w), with 1 degree of
+        /// freedom; and the chi-square for heterogeneity is sum(w y^2) - (sum(w y))^2 / sum(w), which is the sum of
+        /// w (y - mean)^2, with one degree of freedom fewer than there are tables.  The tables together are given if there is
+        /// more than one; without the correction they are given only if no table has an empty cell.
+        /// A table that has a row without observations, or a count below 0, is refused.
+        /// </remarks>
+        /// <param name="o">The tables: o[i, 1] to o[i, 4] are a, b, c and d of table i, from 1.</param>
+        /// <param name="k">The number of tables.</param>
+        /// <param name="showIntermediates">Whether the report has the figures of each table.</param>
+        /// <param name="cit">The normal deviate of the confidence level.</param>
+        /// <param name="cco">The confidence level.</param>
+        /// <param name="ierr">On return, true.</param>
+        /// <returns>"pc": the confidence level as a percentage; "*table": for each table, if they are shown, "table" (its
+        /// number), "pc_a", "pc_c" and "pc_t" (the first count of each row and of both as a percentage of the total),
+        /// "table_chi_2", "table_chi", "yates_chi_2", "yates_chi", "yates_chi_p", and the blocks "*warn_small" (an expected
+        /// count is below 5), "*warn_zero_column", "*no_haldane" (the figures of WoolfStratum), "*warn_no_haldane" and
+        /// "*haldane"; "*combined_no_haldane": "tables", "mean", "odds", "var", "se", "pc", "ci_from", "ci_to", "odds_from",
+        /// "odds_to", "chi_2", "chi", "chi_p", "het_chi_2", "df", "het_chi_p"; "*combined_with_haldane": the same, each name
+        /// but "pc" with an x after it.</returns>
         public static ParameterBag Woolf(double[,] o, int k, bool showIntermediates, double cit, double cco, out bool ierr)
         {
             ierr = true;
@@ -7241,6 +7283,14 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// Woolf's analysis of a series of 2 by 2 tables from a worksheet (Woolf): the first row of each table is of the
+        /// experimental group and the second of the control group, and the first count of a row is the number with the outcome.
+        /// </summary>
+        /// <param name="parameters">"sn" and "sr": the size of the experimental group of each table and the number of it with
+        /// the outcome; "xn" and "xr": the same of the control group; "cco": the confidence level, for which 0.95 is taken if
+        /// it is not between 0 and 1; "show_intermediates": whether the report has the figures of each table.</param>
+        /// <returns>What Woolf returns.</returns>
         public static StepOutput RptChiWoolfWorksheet(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;

@@ -13,6 +13,41 @@ namespace StatsDirect.Builtins
 {
     public static class Chi
     {
+        /// <summary>
+        /// The chi-square test of a 2 by 2 table, with the odds ratio if the table is of a case-control study and the risk ratio
+        /// if it is of a cohort study.
+        /// </summary>
+        /// <remarks>
+        /// The table is a, b in its first row and c, d in its second; p and q are the totals of the rows, r and s those of the
+        /// columns, and n is the number of observations.  The expected count of a cell is the total of its row times the total of
+        /// its column over n.  Chi-square is the sum over the cells of the squared difference of the observed and the expected
+        /// count over the expected count, which is n (a d - b c)^2 / (p q r s); with the correction for continuity of Yates, a
+        /// half is taken from each difference, which makes it n (|a d - b c| - n / 2)^2 / (p q r s), and nothing if |a d - b c| is
+        /// below n / 2.  Each has 1 degree of freedom.
+        /// Pearson's coefficient of contingency is the root of chi-square / (chi-square + n), and V is
+        /// (a d - b c) / root(p q r s), which is the correlation of the row and the column over the observations.
+        /// The report warns if n is below 20 or an expected count is below 5.
+        /// Case-control study: the odds ratio a d / (b c) has the limits of Woolf, which are the exponentials of its logarithm
+        /// less and plus the normal deviate times the root of 1 / a + 1 / b + 1 / c + 1 / d; with an empty cell they are not
+        /// worked out, and the limit at the end at which the odds ratio is (0, or infinity) is given alone.  The exact limits and
+        /// P values are those of ExactBB.OddsRatioCMLE, which rounds counts that are not whole numbers.
+        /// Cohort study: the risk ratio and what goes with it are those of Analysis.RptMiscRelRisk; there is no risk ratio if b
+        /// is 0, and the report says so.
+        /// Fisher's exact test (Exact.RptExactFisher) is added if n is below 20 or an expected count is below 5, if it is asked
+        /// for, and if the exact method of the odds ratio, which has its P values, could not be used; but not if that method
+        /// was used.
+        /// </remarks>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">"a", "b": the first row of the table; "c", "d": the second; "cco": the confidence level, for
+        /// which 0.95 is taken if it is not between 0 and 1; "study_type": "casecontrol", "cohort" or another word; "doFisher":
+        /// whether Fisher's exact test is asked for.</param>
+        /// <returns>"tab3_a1" to "tab3_c3": the table with its totals; "tab_a1" to "tab_b2": the expected counts; "chi" and
+        /// "chi_p", "yates_chi" and "yates_chi_p": the two chi-squares and their P values; "pearson" and "vs": the two
+        /// coefficients; "*warn": a row with "wrn", what is too small, if the report is to warn; "*note": a row with "note" for
+        /// each thing that the report says of an analysis that it has not; "*odds": a row for a case-control study, with
+        /// "odds", "woolf_ci" (the confidence level as a percentage), "woolf_ci_1" and "woolf_ci_2", "ci", "llf", "ulf", "p1f",
+        /// "p2f", "llm", "ulm", "p1m", "p2m", and "*note" if the exact method was not used; "*relrisk": a row for a cohort
+        /// study, with what Analysis.RptMiscRelRisk returns; "*fisher": a row with what Exact.RptExactFisher returns.</returns>
         public static StepOutput RptChi2By2(IProgressBarHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
@@ -72,6 +107,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("tab_a2", e3);
             outputParameters.AddOutput("tab_b2", e4);
 
+            // chi-square, and chi-square with the correction for continuity
             double f = a * d - b * c;
             double x2 = f * f * n / (p * q * r * s);
             outputParameters.AddOutput("chi", x2);
@@ -115,6 +151,7 @@ namespace StatsDirect.Builtins
                 double odr = OddsRatio(a, b, c, d);
                 double yodr;
                 double xodr;
+                // with an empty cell the logarithm of the odds ratio has no standard error: the limit that is known is given
                 if (b * c > 0 && a * d > 0)
                 {
                     double seodr = Math.Sqrt(1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d);
@@ -192,6 +229,8 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        // the three analyses of a 2 by k table: without the test for trend, with it for the scores 1 to k, and with it for scores
+        // that are given
         private enum Chi2ByNTrend
         {
             WithoutTrend = 0,
@@ -199,10 +238,42 @@ namespace StatsDirect.Builtins
             WithTrend = 2
         }
 
+        // The chi-square test of a 2 by k table without the test for trend, with it for the scores 1 to k, and with it for scores
+        // that are given (RptChi2ByN)
         public static StepOutput RptChi2ByNWithoutTrend(ParameterBag parameters) => RptChi2ByN(parameters, Chi2ByNTrend.WithoutTrend);
         public static StepOutput RptChi2ByNLinearTrend(ParameterBag parameters) => RptChi2ByN(parameters, Chi2ByNTrend.LinearTrend);
         public static StepOutput RptChi2ByNWithTrend(ParameterBag parameters) => RptChi2ByN(parameters, Chi2ByNTrend.WithTrend);
 
+        /// <summary>
+        /// The chi-square test of a 2 by k table: k groups, with the numbers of each that are successes and failures; and the
+        /// test for a linear trend of the proportion of successes with a score of the groups.
+        /// </summary>
+        /// <remarks>
+        /// Chi-square is the sum over the cells of the squared difference of the observed and the expected count over the
+        /// expected count, the expected count being the total of the row times the total of the column over the number of
+        /// observations; it has k - 1 degrees of freedom.  The report warns of the cells whose expected count is below 5.
+        /// Trend: with a_i successes and b_i failures in the n_i observations of group i, whose score is v_i, and with A
+        /// successes and B failures in all N, the sums are k1 = sum(v a), k2 = sum(v b) and k4 = sum(v^2 n).  The root of the
+        /// chi-square for trend is (k1 - k2 A / B) / root((k4 - (k1 + k2)^2 / N) A / B), which is above 0 if the proportion
+        /// rises with the score, and its square is
+        ///   [sum(v (a - n A / N))]^2 / ((A / N) (B / N) [sum(n v^2) - (sum(n v))^2 / N]),
+        /// with 1 degree of freedom: the variance of the scores is over N, where the test for trend of the r by c analysis
+        /// (Tables.SChi) has N - 1.  What is left of chi-square has k - 2 degrees of freedom, and tests the departure of the
+        /// proportions from the line; it is taken as nothing if it is below 1 part in 10^9 of chi-square.
+        /// There is no chi-square if there are no successes or no failures, and no test for trend if the scores are all the
+        /// same: the report says so.
+        /// </remarks>
+        /// <param name="parameters">"data": a column of the successes, one of the failures and, if the scores are given, one of
+        /// the scores, with a row for each group.  A group is to have an observation, and there are to be two groups or
+        /// more.</param>
+        /// <param name="z">Which of the three analyses.</param>
+        /// <returns>"*row": for each group "obs_succ", "obs_fail", "obs_tot", "obs_pc" (the successes as a percentage),
+        /// "exp_succ", "exp_fail" and, in "*score", "score"; "tot_succ", "tot_fail", "tot_tot", "tot_pc"; "*scoreHead": a row if
+        /// there are scores; "*warn": a row with "num" and "den", the number of cells with an expected count below 5 and the
+        /// number of cells; "*note": a row with "note" if there is no chi-square, or no trend to test; "chi", "chi_abs" (its
+        /// root), "totdf", "chi_p"; "*z": a row for the test for trend, with "chi_lin", "chi_1df" (its root, without its
+        /// sign), "chi_lin_p", and in "*non" "chi_non", "df" and "chi_non_p" for what is left, if there are more than two
+        /// groups.  Handed on to a step that follows: "x2", and "x2_lin" if there is a test for trend.</returns>
         private static StepOutput RptChi2ByN(ParameterBag parameters, Chi2ByNTrend z)
         {
             DataFrame datFrame = parameters["data"].AsDataFrame;
@@ -375,6 +446,25 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The test of Mantel and Haenszel and the pooled odds ratio of a series of 2 by 2 tables that are typed: the analysis
+        /// of Meta.RptMantel, which has the tables from a worksheet, with the same report.
+        /// </summary>
+        /// <remarks>
+        /// What is worked out is in Meta.Mantel.  The exact methods are used if they are asked for here, whatever the
+        /// preference of the meta-analysis menu is: the pooled odds ratio by conditional maximum likelihood with its exact
+        /// limits and P values (ExactBB.Exact22K), for which counts that are not whole numbers are rounded; the exact limits
+        /// of the odds ratio of each table; and the limits of I-squared from the non-central chi-square distribution.
+        /// Tables of which none can be pooled are refused.
+        /// </remarks>
+        /// <param name="host">The preferences (the continuity correction), and where progress is shown.</param>
+        /// <param name="parameters">"data": two columns with two rows for each table, as the tables are typed: the first
+        /// column is of those with the characteristic and the second of those without it, and the first row of a table is of
+        /// those with the outcome and the second of those without it; "cco": the confidence level, for which 0.95 is taken if
+        /// it is not between 0 and 1; "try_exact": whether the exact methods are asked for; "plot_forest": whether the two
+        /// plots of the odds ratios are made.</param>
+        /// <returns>As Meta.RptMantel, with the strata named "stratum 1" and so on; "*chart" has the two plots, or
+        /// nothing.</returns>
         public static StepOutput RptChiMantel(IPreferencesAndProgressBar host, ParameterBag parameters)
         {
             double p2M = 0;
@@ -614,6 +704,16 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The analysis of an r by c table of counts that is typed or is in a worksheet: the table is handed to Tables.SChi,
+        /// which has the chi-square test, the measures of association and the exact and simulated P values.
+        /// </summary>
+        /// <param name="host">The preferences, questions to the user and where progress is shown.</param>
+        /// <param name="parameters">"data": a column of counts for each column of the table; "cco": the confidence level;
+        /// "doExact", "doMonteCarlo", "show_pc", "xp", "cs", "xs" and "specify_scores": the options, as Tables.SChi has them;
+        /// and, if P values are to be simulated, "iterations", "ci" (the confidence level of a simulated P value) and "seed".
+        /// A table without an observation is refused.</param>
+        /// <returns>What Tables.SChi returns.</returns>
         public static StepOutput RptChiRbyC(ITemplateHost host, ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;
@@ -654,6 +754,13 @@ namespace StatsDirect.Builtins
             return new StepOutput(Tables.SChi(host, ref cco, a, rows, cols, doExact, doMonteCarlo, pc, xp, cs, xs, specifyScores, mcci, iterations, seed));
         }
 
+        /// <summary>
+        /// Woolf's analysis of a series of 2 by 2 tables that are typed (Tables.Woolf).
+        /// </summary>
+        /// <param name="parameters">"data": two columns with two rows for each table, as the tables are typed; "cco": the
+        /// confidence level, for which 0.95 is taken if it is not between 0 and 1; "show_intermediates": whether the report has
+        /// the figures of each table.</param>
+        /// <returns>What Tables.Woolf returns.</returns>
         public static StepOutput RptChiWoolf(ParameterBag parameters)
         {
             int rc;
@@ -692,6 +799,26 @@ namespace StatsDirect.Builtins
             return new StepOutput(Tables.Woolf(o, k, showIntermediates, cit, cco, out bool _));
         }
 
+        /// <summary>
+        /// The simulated exact P value of the chi-square for trend of a 2 by k table: the share of tables drawn at random, with
+        /// the totals of the rows and of the columns of the table observed, whose chi-square for trend is no less than that of
+        /// the table observed; with the limits of Clopper and Pearson of that share (MathDbl.binci).
+        /// </summary>
+        /// <remarks>
+        /// The tables are drawn by Rcont2, each with the probability that the totals give it, and are counted by
+        /// Chi2TrendResample.  They are of whole numbers: counts that are not are rounded, a half to the even number, and the
+        /// table observed is that of the counts as rounded, of which the report tells.  A P value is not simulated, and the
+        /// report says why, if a row or a column has no observations, if the scores are all the same, if the table has more
+        /// than 5,000,000 observations, or if the simulation is stopped before a table is drawn; one that is stopped later gives
+        /// the P value of the tables drawn.
+        /// </remarks>
+        /// <param name="host">Where progress is shown, and the simulation can be stopped.</param>
+        /// <param name="parameters">"data": as for RptChi2ByN, the scores being 1 to k if there is no third column;
+        /// "iterations": the number of tables to draw; "ci": the confidence level of the limits; "seed": the seed of the random
+        /// numbers, or 0 for one from the clock.</param>
+        /// <returns>"*result": a row with "p", "pc" (the confidence level as a percentage), "ll", "ul", "warn" (what the report
+        /// says after the limits of a one sided interval), "k" (the number of tables drawn), "seed_fmt" and "rounded" (what the
+        /// report says if counts were rounded); "*note": a row with "note" if no P value is simulated.</returns>
         public static StepOutput RptChi2ByNWithTrendSimulateExactP(IProgressBarHost host, ParameterBag parameters)
         {
             int iterations = parameters["iterations"].AsInt32;
