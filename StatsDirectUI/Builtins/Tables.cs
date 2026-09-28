@@ -4844,7 +4844,7 @@ namespace StatsDirect.Builtins
             int[] iwk7 = new int[ircmax + 1];
             // IEB 23 Dec 14 extended workspace from 400 to 4000 as example second from end in big Fisher.xls over ran
             int[] iwk8 = new int[4000 + 1];
-            int[] iwk9 = new int[4000 + 1];
+            long[] iwk9 = new long[4000 + 1];
             double[] rwk1 = new double[4000 + 1];
             double[] rwk2 = new double[k + 1];
 
@@ -5718,9 +5718,10 @@ namespace StatsDirect.Builtins
         /// dlp.  It is that of the table whose cells are as nearly equal as the totals allow, which Shortie gives at once if there
         /// is such a table; otherwise it is found stage by stage, a row at a time, over the values that the cells of the row can
         /// have near their expectations, the column totals that are left being kept under a key with the least sum that reaches
-        /// them.  ierr is 4 on return if there is not room for the keys.  The other parameters are work space.
+        /// them.  ierr is 4 on return if there is not room for the keys, and 8 if a key cannot be held in 64 bits.  The other
+        /// parameters are work space.
         /// </remarks>
-        private static void Shortpath(int nrow, int[] irow, int ncol, int[] icol, ref double dlp, int mm, double[] fact, double tol, ref int ierr, int[] ico, int[] iro, int[] it, int[] lb, int[] nr, int[] nt, int[] nu, int[] itc, int[] ist, double[] alen, double[] stv)
+        private static void Shortpath(int nrow, int[] irow, int ncol, int[] icol, ref double dlp, int mm, double[] fact, double tol, ref int ierr, int[] ico, int[] iro, int[] it, int[] lb, int[] nr, int[] nt, int[] nu, int[] itc, long[] ist, double[] alen, double[] stv)
         {
             int i;
             int n11, n12;
@@ -5837,6 +5838,13 @@ namespace StatsDirect.Builtins
             int ks = 0;
             int k = ldst;
             int kyy = ico[nco] + 1;
+            // a key is the totals that are left as the digits of a number of base kyy, and so is less than kyy to the power nco:
+            // it is held in 64 bits, and the search is not made where that is not enough
+            if (Math.Pow(kyy, nco) > 9.0e18)
+            {
+                ierr = 8;
+                return;
+            }
 
             // outer
             do
@@ -5856,7 +5864,7 @@ namespace StatsDirect.Builtins
                 do
                 {
                     int itp;
-                    int key;
+                    long key;
                     do
                     {
                         //                                   generate a node
@@ -5887,10 +5895,10 @@ namespace StatsDirect.Builtins
                                     //                                   compute marginals
                                     for (i = nco; i >= 2; i--)
                                     {
-                                        ico[i] = key % kyy;
+                                        ico[i] = (int)(key % kyy);
                                         key /= kyy;
                                     }
-                                    ico[1] = key;
+                                    ico[1] = (int)key;
                                     //                                   set up nt array
                                     nt[1] = nn - ico[1];
                                     for (i = 2; i <= nco; i++)
@@ -6061,13 +6069,13 @@ namespace StatsDirect.Builtins
                                 Array.Sort(it, 1, nco);
                             }
                             //                                compute hash value
-                            key = it[1] * kyy + it[2];
+                            key = (long)it[1] * kyy + it[2];
                             for (i = 3; i <= nco; i++)
                             {
                                 key = it[i] + key * kyy;
                             }
                             //                                table index
-                            int ipn = key % ldst + 1;
+                            int ipn = (int)(key % ldst) + 1;
                             //                                find empty position
                             itp = ipn - 1;
                             bool cycleinner = false;
