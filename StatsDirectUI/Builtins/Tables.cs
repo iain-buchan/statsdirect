@@ -2810,7 +2810,8 @@ namespace StatsDirect.Builtins
             double g2 = 0.0;
             double n2 = Convert.ToDouble(nzRows - 1) * Convert.ToDouble(nzCols - 1);
             double n = Convert.ToDouble(nzRows) * Convert.ToDouble(nzCols);
-            int trueN = rows * cols;
+            // the cells of the rows and columns that have counts: those of an empty row or column are not cells of the analysis
+            int trueN = nzRows * nzCols;
             int n1 = 0;
             int n5 = 0;
 
@@ -2927,10 +2928,13 @@ namespace StatsDirect.Builtins
                 {
                     double ef = rtot[r] * ctot[c] / gtot;
                     ex[r, c] = ef;
-                    if (ef < 1.0)
-                        n1 += 1;
-                    if (ef < 5.0)
-                        n5 += 1;
+                    if (rtot[r] > 0.0 && ctot[c] > 0.0)
+                    {
+                        if (ef < 1.0)
+                            n1 += 1;
+                        if (ef < 5.0)
+                            n5 += 1;
+                    }
                 }
 
                 // expected value for cell
@@ -3087,18 +3091,50 @@ namespace StatsDirect.Builtins
             // Fisher's - by network algorithm
             // crashes if non integer observations or too large
             string lb = string.Empty;
-            if (doExact && rows > 1 && cols > 1)
+            // The exact test and the simulation are of the rows and columns that have counts: an empty row or column, as one that is
+            // added to make a table symmetrical, has no part in either
+            double[,] filled = o;
+            double[] filledRowScore = rowScore;
+            double[] filledColScore = colScore;
+            int filledRows = rows;
+            int filledCols = cols;
+            if (nzRows < rows || nzCols < cols)
+            {
+                filledRows = nzRows;
+                filledCols = nzCols;
+                filled = new double[filledRows + 1, filledCols + 1];
+                filledRowScore = new double[filledRows + 1];
+                filledColScore = new double[filledCols + 1];
+                int fr = 0;
+                for (int r = 1; r <= rows; r++)
+                {
+                    if (rtot[r] <= 0.0)
+                        continue;
+                    fr++;
+                    filledRowScore[fr] = rowScore[r];
+                    int fc = 0;
+                    for (int c = 1; c <= cols; c++)
+                    {
+                        if (ctot[c] <= 0.0)
+                            continue;
+                        fc++;
+                        filledColScore[fc] = colScore[c];
+                        filled[fr, fc] = o[r, c];
+                    }
+                }
+            }
+            if (doExact && filledRows > 1 && filledCols > 1)
             {
                 double emin = 1.0;
                 double percnt = 80.0;
-                Rcexact(rows, cols, o, 0.0, percnt, emin, ref p1, ref p2, out int ierr);
+                Rcexact(filledRows, filledCols, filled, 0.0, percnt, emin, ref p1, ref p2, out int ierr);
                 if (ierr != 0)
                 {
                     //  try hybrid approximation
                     lb = "(hybrid approximation)";
                     emin = 1.0; //  In case reset by first call
                     percnt = 80.0; //  In case reset by first call
-                    Rcexact(rows, cols, o, 5.0, percnt, emin, ref p1, ref p2, out ierr);
+                    Rcexact(filledRows, filledCols, filled, 5.0, percnt, emin, ref p1, ref p2, out ierr);
                 }
                 if (ierr != 0)
                 {
@@ -3122,7 +3158,7 @@ namespace StatsDirect.Builtins
             {
                 int ierrormc = 0;
 
-                Chi.ChiRCResample(host, o, rowScore, colScore, rows, cols, iterations, x2, out int rx2, x2Eq, out int rx2Eq, x2Trend, out int rx2Trend, g2, out int rg2, out int actualIterations, seed, ref ierrormc);
+                Chi.ChiRCResample(host, filled, filledRowScore, filledColScore, filledRows, filledCols, iterations, x2, out int rx2, x2Eq, out int rx2Eq, x2Trend, out int rx2Trend, g2, out int rg2, out int actualIterations, seed, ref ierrormc);
                 outputParameters.AddOutput("*pmcx2", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2, actualIterations, seed, mcci) });
                 outputParameters.AddOutput("*pmcx2eq", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Eq, actualIterations, seed, mcci) });
                 outputParameters.AddOutput("*pmcx2trend", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Trend, actualIterations, seed, mcci) });
@@ -3159,7 +3195,7 @@ namespace StatsDirect.Builtins
             }
             else
             {
-                c1 = Math.Sqrt(x2 / gtot / Math.Min(rows - 1, cols - 1));
+                c1 = Math.Sqrt(x2 / gtot / Math.Min(nzRows - 1, nzCols - 1));
                 outputParameters.AddOutput("cramer", c1);
             }
 
