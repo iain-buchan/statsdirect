@@ -21,4 +21,8 @@
 <p>Remaining Chi&#xb2; (non-linearity) = @{chi_non:roundu} (@df DF)  <pval>@{chi_non_p:pval}</pval></p>
 </block>
 </block>
+<block name="note">
+
+<p><warn>@note</warn></p>
+</block>
 </report>

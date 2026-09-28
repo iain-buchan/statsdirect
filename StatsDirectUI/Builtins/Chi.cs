@@ -245,12 +245,14 @@ namespace StatsDirect.Builtins
                 a += a1;
                 b += b1;
                 t += t1;
-                c += a1 * a1 / t1;
                 k1 += s1 * a1;
                 k2 += s1 * b1;
                 k4 += s1 * s1 * (a1 + b1);
             }
             double n1 = 0;
+            // chi-square is the sum over the cells of (observed - expected)^2 / expected; it has no value if a column has nothing
+            double x2 = 0.0;
+            bool sameScores = true;
             List<ParameterBag> rowList = new();
             outputParameters.AddOutput("*row", rowList);
             for (int r = 1; r <= rows; r++)
@@ -265,6 +267,9 @@ namespace StatsDirect.Builtins
                 double e2 = b * t1 / t;
                 if (e2 < 5)
                     n1++;
+                x2 += (a1 - e1) * (a1 - e1) / e1 + (b1 - e2) * (b1 - e2) / e2;
+                if (s1 != s[1])
+                    sameScores = false;
                 ParameterBag rowParameters = new();
                 rowList.Add(rowParameters);
                 rowParameters.AddOutput("obs_succ", a1);
@@ -305,7 +310,21 @@ namespace StatsDirect.Builtins
             }
 
             double n2 = rows - 1;
-            double x2 = (t * c - a * a) * t / (a * b);
+
+            // what the report says of a test that it has not
+            List<ParameterBag> noteList = new();
+            outputParameters.AddOutput("*note", noteList);
+            void Note(string note)
+            {
+                ParameterBag noteParameters = new();
+                noteList.Add(noteParameters);
+                noteParameters.AddOutput("note", note);
+            }
+            bool emptyColumn = a <= 0.0 || b <= 0.0;
+            if (emptyColumn)
+                Note("Chi-square can not be calculated: there are no " + (a <= 0.0 ? "successes" : "failures") + ".");
+            else if (z != Chi2ByNTrend.WithoutTrend && sameScores)
+                Note("The scores are all the same: there is no trend to test.");
 
             outputParameters.AddOutput("chi", x2);
             outputParameters.AddInput("x2", x2); //  For use with follow-on functions
@@ -315,7 +334,7 @@ namespace StatsDirect.Builtins
 
             List<ParameterBag> zList = new();
             outputParameters.AddOutput("*z", zList);
-            if (z != Chi2ByNTrend.WithoutTrend)
+            if (z != Chi2ByNTrend.WithoutTrend && !emptyColumn && !sameScores)
             {
                 c = x2;
                 double k8 = b / a;
@@ -340,8 +359,10 @@ namespace StatsDirect.Builtins
                 if (rows > 2)
                 {
                     x2 = c - x2;
-                    if (Math.Abs(x2) < 100.0 * Constant.EPSILON * c)
-                        x2 = 0; // the trend accounts for the whole chi-square: a residue of rounding only
+                    // the trend accounts for the whole chi-square: what is left is a residue of rounding only (the chi-square
+                    // for trend of a table of thousands of millions is right to 9 figures)
+                    if (Math.Abs(x2) < 1.0E-9 * c)
+                        x2 = 0;
                     n2 = rows - 2;
                     ParameterBag nonParameters = new();
                     nonList.Add(nonParameters);
@@ -660,7 +681,6 @@ namespace StatsDirect.Builtins
             int iterations = parameters["iterations"].AsInt32;
             double ci = parameters["ci"].AsDouble;
             int seed = parameters["seed"].AsInt32;
-            double x2 = parameters["x2_lin"].AsDouble;
 
             DataFrame datFrame = parameters["data"].AsDataFrame;
             bool hasSpecifiedTrend = datFrame.VariableCount == 3;
@@ -672,38 +692,90 @@ namespace StatsDirect.Builtins
             int rows = datFrame.MaxRows;
             const int cols = 2;
 
-            int[,] x = new int[rows + 1, 3];
+            // the report has the P value, or what it says in the place of one
+            ParameterBag outputParameters = new();
+            List<ParameterBag> resultList = new();
+            outputParameters.AddOutput("*result", resultList);
+            List<ParameterBag> noteList = new();
+            outputParameters.AddOutput("*note", noteList);
+            StepOutput NotSimulated(string why)
+            {
+                ParameterBag noteParameters = new();
+                noteList.Add(noteParameters);
+                noteParameters.AddOutput("note", "The P value is not simulated: " + why + ".");
+                return new StepOutput(outputParameters);
+            }
+
+            // The tables that are drawn are of whole numbers: counts that are not are rounded, a half to the even number, and the
+            // table observed is the table of the counts as rounded
+            double[,] counts = new double[rows + 1, 3];
             double[] wt = new double[rows + 1];
+            double successes = 0.0;
+            double failures = 0.0;
+            bool rounded = false;
+            bool sameScores = true;
             for (int row = 1; row <= rows; row++)
             {
-                x[row, 1] = Convert.ToInt32(datV0.Data[row - 1]);
-                x[row, 2] = Convert.ToInt32(datV1.Data[row - 1]);
+                counts[row, 1] = Math.Round(datV0.Data[row - 1]);
+                counts[row, 2] = Math.Round(datV1.Data[row - 1]);
+                if (counts[row, 1] != datV0.Data[row - 1] || counts[row, 2] != datV1.Data[row - 1])
+                    rounded = true;
+                if (counts[row, 1] + counts[row, 2] <= 0.0)
+                    return NotSimulated("row " + row.ToString() + " has no observations");
+                successes += counts[row, 1];
+                failures += counts[row, 2];
                 wt[row] = hasSpecifiedTrend ? datV2.Data[row - 1] : row;
+                if (wt[row] != wt[1])
+                    sameScores = false;
             }
+            if (successes <= 0.0 || failures <= 0.0)
+                return NotSimulated("there are no " + (successes <= 0.0 ? "successes" : "failures"));
+            if (sameScores)
+                return NotSimulated("the scores are all the same, so that there is no trend to test");
+            if (successes + failures > MaximumSimulated)
+                return NotSimulated("the simulation is for tables of no more than 5,000,000 observations");
+
+            int[,] x = new int[rows + 1, 3];
+            for (int row = 1; row <= rows; row++)
+            {
+                x[row, 1] = Convert.ToInt32(counts[row, 1]);
+                x[row, 2] = Convert.ToInt32(counts[row, 2]);
+            }
+            double x2 = Chi2Trend(x, wt, rows);
 
             int ierror = 0;
             Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, out int r, out int actualIterations, seed, ref ierror);
+            if (actualIterations < 1)
+                return NotSimulated("the simulation was stopped before a table was drawn");
 
-            ParameterBag outputParameters = new();
-            if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
-            {
-                double p = r / (double)actualIterations;
-                outputParameters.AddOutput("p", p);
-                //  CI
-                MathDbl.binci(r, actualIterations, out double ll, out double ul, ci, out string warn);
-                outputParameters.AddOutput("pc", 100.0 * ci);
-                outputParameters.AddOutput("ll", ll);
-                outputParameters.AddOutput("ul", ul);
-                outputParameters.AddOutput("warn", warn);
-                outputParameters.AddOutput("k", actualIterations.ToString());
-                outputParameters.AddOutput("seed_fmt", seed.ToString());
-            }
-            else
-            {
-                outputParameters.AddOutput("p", "P = * (cancelled)");
-            }
+            ParameterBag resultParameters = new();
+            resultList.Add(resultParameters);
+            double p = r / (double)actualIterations;
+            resultParameters.AddOutput("p", p);
+            //  CI
+            MathDbl.binci(r, actualIterations, out double ll, out double ul, ci, out string warn);
+            resultParameters.AddOutput("pc", 100.0 * ci);
+            resultParameters.AddOutput("ll", ll);
+            resultParameters.AddOutput("ul", ul);
+            resultParameters.AddOutput("warn", warn);
+            resultParameters.AddOutput("k", actualIterations.ToString());
+            resultParameters.AddOutput("seed_fmt", seed.ToString());
+            resultParameters.AddOutput("rounded", rounded ? "; counts that are not whole numbers were rounded" : string.Empty);
             return new StepOutput(outputParameters);
         }
+
+        // the greatest number of observations of a table that is simulated
+        private const int MaximumSimulated = 5000000;
+
+        /// <summary>
+        /// Why tables with the totals of the table observed cannot be drawn, from the fault that Rcont2 gives.
+        /// </summary>
+        private static string NotDrawn(int fault) => "Monte Carlo simulation not possible: " + fault switch
+        {
+            3 or 4 => "all row and column totals must be greater than zero",
+            5 => "the table has more than 5,000,000 observations",
+            _ => "the tables could not be drawn (fault " + fault.ToString() + ")"
+        };
 
         ///  <summary>
         ///  Simulated exact P for Cochran-Armitage trend test
@@ -746,7 +818,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            int maxtot = 5000000;
+            int maxtot = MaximumSimulated;
             bool primed = false;
 
             double[] fact = new double[ncol + 1];
@@ -767,7 +839,7 @@ namespace StatsDirect.Builtins
                 }
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
-                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    throw new InvalidDataException(NotDrawn(ierror));
                 double x2Rep = Chi2Trend(x, wt, nrow);
                 if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
                     r += 1;
@@ -859,7 +931,7 @@ namespace StatsDirect.Builtins
                 }
             }
 
-            int maxtot = 5000000;
+            int maxtot = MaximumSimulated;
             bool primed = false;
 
             double[] fact = new double[ncol + 1];
@@ -884,7 +956,7 @@ namespace StatsDirect.Builtins
                 }
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
-                    throw new InvalidDataException("Monte Carlo simulation not possible: all row and column totals must be be greater than zero");
+                    throw new InvalidDataException(NotDrawn(ierror));
                 ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
                 if (!faultrep)
                 {
