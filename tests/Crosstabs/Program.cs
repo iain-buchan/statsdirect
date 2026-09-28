@@ -1,7 +1,7 @@
 // The Crosstabs menu: checks by calculation.  Tables are put through the Crosstabs report and through the analysis of an r by c table,
 // and every figure that has a benchmark is compared with it.  The benchmarks are in the folder benchmarks, with the R scripts that made
 // them.  The exact test is also compared, in Exact.cs and Large.cs, with the sum over every table with the same totals, which is
-// worked out here; Large.cs has the progress bar of the test too.
+// worked out here; Large.cs has the progress bar of the test too, and Ways.cs the test of tables of many columns.
 using System.Globalization;
 using System.Reflection;
 using StatsDirect.Builtins;
@@ -255,6 +255,7 @@ internal static partial class Program
             Compare(Figures(Path.Combine(folder, "cases-xtab.txt")), Path.Combine(folder, "r-xtab.txt"));
         }
         if (which is "all" or "exact") Exact();
+        if (which is "all" or "ways") Ways();
         if (which is "all" or "large") { LargeTotals(); WiderTables(folder); }
         if (which is "all" or "progress") ProgressOfTheTest(folder);
         if (which is "all" or "report") Reports();
