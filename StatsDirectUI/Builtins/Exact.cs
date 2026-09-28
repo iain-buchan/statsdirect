@@ -326,44 +326,6 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
-        public static StepOutput RptChiWoolf(ParameterBag parameters)
-        {
-            int rc;
-
-            DataFrame datFrame = parameters["dat"].AsDataFrame;
-            DoubleVariable datV0 = datFrame.Variables[0]as DoubleVariable;
-            DoubleVariable datV1 = datFrame.Variables[1]as DoubleVariable;
-            int rows = datFrame.MaxRows;
-            if (rows <= 0)
-                throw new InvalidDataException();
-
-            double cco = parameters["cco"].AsDouble;
-            if (cco <= 0.0 || cco >= 1.0)
-                cco = 0.95;
-            double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
-
-            bool showIntermediates = parameters["show_intermediates"].AsBoolean;
-
-            int k = rows / 3;
-            double[,] o = new double[k + 1, 5];
-            int cnt = 0;
-            for (rc = 1; rc <= rows; rc += 2)
-            {
-                cnt++;
-                double rtd = datV0.Data[rc - 1];
-                o[cnt, 1] = rtd;
-                rtd = datV1.Data[rc - 1];
-                o[cnt, 2] = rtd;
-                rtd = datV0.Data[rc];
-                o[cnt, 3] = rtd;
-                rtd = datV1.Data[rc];
-                o[cnt, 4] = rtd;
-            }
-
-            return new StepOutput(Tables.Woolf(o, k, showIntermediates, cit, cco, out bool ierr));
-        }
-
-
         /// <summary>
         /// Matched pairs: McNemar's chi-square test, and the exact test and confidence interval of the ratio of the two numbers of
         /// pairs that differ.

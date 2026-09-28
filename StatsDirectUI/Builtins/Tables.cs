@@ -7039,8 +7039,10 @@ namespace StatsDirect.Builtins
                 double r = a + c;
                 double s = b + d;
                 double n = p + q;
+                if (a < 0.0 || b < 0.0 || c < 0.0 || d < 0.0)
+                    throw new InvalidDataException("Table " + idx.ToString() + " has a count below 0.");
                 if (p <= 0.0 || n <= 0.0 || q <= 0.0)
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("Table " + idx.ToString() + " has a row without observations: its odds ratio can not be calculated.");
 
                 ParameterBag tableParameters = new();
                 if (showIntermediates)
@@ -7263,11 +7265,11 @@ namespace StatsDirect.Builtins
                 o[i, 1] = sr;
                 o[i, 2] = sn - sr;
                 if (sr < 0 || sn < 0 || sn < sr)
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("Row " + i.ToString() + ": the number of the experimental group with the outcome is to be from 0 to the size of the group.");
                 o[i, 3] = xr;
                 o[i, 4] = xn - xr;
                 if (xr < 0 || xn < 0 || xn < xr)
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("Row " + i.ToString() + ": the number of the control group with the outcome is to be from 0 to the size of the group.");
             }
 
             bool showIntermediates = parameters["show_intermediates"].AsBoolean;
