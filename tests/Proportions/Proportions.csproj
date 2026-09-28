@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <!-- The folder of a build of the program: that of the Debug configuration unless another is given with -p:StatsDirectBin=... -->
+    <StatsDirectBin Condition="'$(StatsDirectBin)' == ''">../../StatsDirectUI/bin/Debug/net10.0-windows10.0.17763.0</StatsDirectBin>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="StatsDirect">
+      <HintPath>$(StatsDirectBin)/StatsDirect.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- the cases and their benchmarks are read at run time -->
+    <None Include="benchmarks/*.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
