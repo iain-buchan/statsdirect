@@ -3398,10 +3398,12 @@ namespace StatsDirect.Builtins
             {
                 int ierrormc = 0;
 
-                Chi.ChiRCResample(host, filled, filledRowScore, filledColScore, filledRows, filledCols, iterations, x2, out int rx2, x2Eq, out int rx2Eq, x2Trend, out int rx2Trend, g2, out int rg2, out int actualIterations, seed, ref ierrormc);
+                Chi.ChiRCResample(host, filled, filledRowScore, filledColScore, filledRows, filledCols, iterations, out int rx2, out int rx2Eq, out int rx2Trend, out int rg2, out int actualIterations, seed, ref ierrormc);
                 outputParameters.AddOutput("*pmcx2", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2, actualIterations, seed, mcci) });
-                outputParameters.AddOutput("*pmcx2eq", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Eq, actualIterations, seed, mcci) });
-                outputParameters.AddOutput("*pmcx2trend", new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Trend, actualIterations, seed, mcci) });
+                // a test that there is not has no simulated P value: with scores that are all the same its statistic has no value
+                bool Tested(double statistic) => !double.IsNaN(statistic) && !double.IsInfinity(statistic);
+                outputParameters.AddOutput("*pmcx2eq", Tested(x2Eq) ? new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Eq, actualIterations, seed, mcci) } : new List<ParameterBag>());
+                outputParameters.AddOutput("*pmcx2trend", Tested(x2Trend) ? new List<ParameterBag>() { Chi.MCResults(ierrormc, rx2Trend, actualIterations, seed, mcci) } : new List<ParameterBag>());
                 outputParameters.AddOutput("*pmcg2", new List<ParameterBag>() { Chi.MCResults(ierrormc, rg2, actualIterations, seed, mcci) });
             }
 

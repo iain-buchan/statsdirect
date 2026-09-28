@@ -757,10 +757,8 @@ namespace StatsDirect.Builtins
                 x[row, 1] = Convert.ToInt32(counts[row, 1]);
                 x[row, 2] = Convert.ToInt32(counts[row, 2]);
             }
-            double x2 = Chi2Trend(x, wt, rows);
-
             int ierror = 0;
-            Chi2TrendResample(host, x, wt, rows, cols, x2, iterations, out int r, out int actualIterations, seed, ref ierror);
+            Chi2TrendResample(host, x, wt, rows, cols, iterations, out int r, out int actualIterations, seed, ref ierror);
             if (actualIterations < 1)
                 return NotSimulated("the simulation was stopped before a table was drawn");
 
@@ -801,14 +799,20 @@ namespace StatsDirect.Builtins
         ///  <param name="wt">(1..nrow) input weights</param>
         ///  <param name="nrow">rows</param>
         ///  <param name="ncol">columns (could modify this for r by c)</param>
-        ///  <param name="x2">chi-square for trend (could add independence chi-square too)</param>
         ///  <param name="iter">Monte Carlo iterations</param>
         ///  <param name="r">Monte Carlo P numerator</param>
         /// <param name="actualIterations">The number of Monte Carlo iterations actually performed</param>
         /// <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
-        ///  <remarks></remarks>
-        private static void Chi2TrendResample(IProgressBarHost host, int[,] x, double[] wt, int nrow, int ncol, double x2, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
+        ///  <remarks>
+        ///  With the totals of the rows and columns given, the chi-square for trend of a table is a constant times the square of
+        ///  T = sum(score x successes) - (successes of all the rows) x sum(score x total of the row) / (number of observations),
+        ///  and of T the first sum is the part of it that differs from table to table.  A table is counted if its T is as far from 0
+        ///  as that of the table observed, or short of that by less than the rounding of the sum could account for: 1 part in
+        ///  10^12 of the sum of the scores, each without its sign and times the total of its row.  Two tables that have the same
+        ///  chi-square have it from sums that are rounded differently, and are both to be counted.
+        ///  </remarks>
+        private static void Chi2TrendResample(IProgressBarHost host, int[,] x, double[] wt, int nrow, int ncol, int iter, out int r, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1];
             int[] nrowt = new int[nrow + 1];
@@ -840,7 +844,26 @@ namespace StatsDirect.Builtins
             double[] fact = new double[ncol + 1];
             int[] jwork = new int[ncol + 1];
 
-            const double tol = Constant.EPSILON * 100.0;
+            // what the totals make of T, and the T of the table observed, which the tables drawn take the place of
+            double observations = 0.0;
+            double scored = 0.0;
+            double scale = 0.0;
+            for (j = 1; j <= nrow; j++)
+            {
+                observations += nrowt[j];
+                scored += wt[j] * nrowt[j];
+                scale += Math.Abs(wt[j]) * nrowt[j];
+            }
+            double expected = ncolt[1] * scored / observations;
+            double FromExpected(int[,] table)
+            {
+                double sum = 0.0;
+                for (int row = 1; row <= nrow; row++)
+                    sum += wt[row] * table[row, 1];
+                return Math.Abs(sum - expected);
+            }
+            double observed = FromExpected(x);
+            double tol = 1.0E-12 * scale;
 
             r = 0;
             for (i = 1; i <= iter; i++)
@@ -856,44 +879,10 @@ namespace StatsDirect.Builtins
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException(NotDrawn(ierror));
-                double x2Rep = Chi2Trend(x, wt, nrow);
-                if (x2Rep > x2 || Math.Abs(x2Rep - x2) < tol)
+                if (FromExpected(x) >= observed - tol)
                     r += 1;
             }
             actualIterations = i - 1;
-        }
-
-        private static double Chi2Trend(int[,] x, double[] wt, int rows)
-        {
-            double a = 0, b = 0, t = 0, k1 = 0, k2 = 0, k4 = 0;
-            for (int r = 1; r <= rows; r++)
-            {
-                double a1 = x[r, 1];
-                double b1 = x[r, 2];
-                double s1 = wt[r];
-                a += a1;
-                b += b1;
-                double t1 = a1 + b1;
-                if (t1 <= 0.0)
-                {
-                    return 0.0;
-                }
-                t += t1;
-                k1 += s1 * a1;
-                k2 += s1 * b1;
-                k4 += s1 * s1 * (a1 + b1);
-            }
-
-            double k8 = b / a;
-            double d = (k4 - Math.Pow(k1 + k2, 2.0) / t) / k8;
-            if (d < 0)
-            {
-                d = 0;
-            }
-            d = Math.Sqrt(d);
-            double x1 = (k1 - k2 / k8) / d;
-
-            return x1 * x1;
         }
 
         ///  <summary>
@@ -906,18 +895,21 @@ namespace StatsDirect.Builtins
         ///  <param name="nrow">rows</param>
         ///  <param name="ncol">columns</param>
         ///  <param name="iter">Monte Carlo iterations</param>
-        ///  <param name="x2">chi-square for independence</param>
         ///  <param name="rx2">Monte Carlo P numerator for independece chi-square</param>
-        ///  <param name="x2Eq">chi-square for equality</param>
         ///  <param name="rx2Eq">Monte Carlo P numerator for equality chi-square</param>
-        ///  <param name="x2Trend">chi-square for trend</param>
         ///  <param name="rx2Trend">Monte Carlo P numerator for trend chi-square</param>
-        ///  <param name="g2">chi-square for g-square</param>
         ///  <param name="rg2">Monte Carlo P numerator for g-square</param>
         ///  <param name="actualIterations">The number of Monte Carlo iterations actually performed</param>
         ///  <param name="iseed">RNG seed (0 for automatic)</param>
         ///  <param name="ierror">return non-zero if fault (-1 if interrupted)</param>
-        public static void ChiRCResample(IProgressBarHost host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, double x2, out int rx2, double x2Eq, out int rx2Eq, double x2Trend, out int rx2Trend, double g2, out int rg2, out int actualIterations, int iseed, ref int ierror)
+        ///  <remarks>
+        ///  The table observed is that of the counts, rounded if they are not whole numbers.  Of each statistic what is compared is
+        ///  the part of it that differs from table to table when the totals of the rows and columns are given (ChiRC), and a table
+        ///  is counted if that part is no less than that of the table observed, or short of it by less than the rounding of its sums
+        ///  could account for (1 part in 10^12): two tables that have the same statistic have it from sums that are rounded
+        ///  differently, and are both to be counted.
+        ///  </remarks>
+        public static void ChiRCResample(IProgressBarHost host, double[,] o, double[] rowScore, double[] colScore, int nrow, int ncol, int iter, out int rx2, out int rx2Eq, out int rx2Trend, out int rg2, out int actualIterations, int iseed, ref int ierror)
         {
             int[] ncolt = new int[ncol + 1];
             int[] nrowt = new int[nrow + 1];
@@ -957,8 +949,36 @@ namespace StatsDirect.Builtins
             rg2 = 0;
             rx2Eq = 0;
             rx2Trend = 0;
-            const double tol = Constant.EPSILON * 100.0;
             actualIterations = 0;
+
+            // the totals, which every table that is drawn has, and what they make of the sum of the products of the scores and the
+            // counts: its expectation, and the sum of the products without their signs, to which its rounding is in proportion
+            double[] rtot = new double[nrow + 1];
+            double[] ctot = new double[ncol + 1];
+            double gtot = 0.0;
+            double rowScored = 0.0;
+            double rowScale = 0.0;
+            for (j = 1; j <= nrow; j++)
+            {
+                rtot[j] = nrowt[j];
+                gtot += nrowt[j];
+                rowScored += rowScore[j] * nrowt[j];
+                rowScale += Math.Abs(rowScore[j]) * nrowt[j];
+            }
+            double colScored = 0.0;
+            double colScale = 0.0;
+            for (i = 1; i <= ncol; i++)
+            {
+                ctot[i] = ncolt[i];
+                colScored += colScore[i] * ncolt[i];
+                colScale += Math.Abs(colScore[i]) * ncolt[i];
+            }
+            double crossExpected = rowScored * colScored / gtot;
+            double crossTolerance = 1.0E-12 * rowScale * colScale / gtot;
+
+            // the table observed, which the tables drawn take the place of
+            ChiRC(x, nrow, ncol, rowScore, colScore, rtot, ctot, gtot, out double x2, out double logs, out double cross, out double between);
+            double crossDistance = Math.Abs(cross - crossExpected);
 
             for (i = 1; i <= iter; i++)
             {
@@ -973,19 +993,16 @@ namespace StatsDirect.Builtins
                 Rcont2(1, nrow, ncol, nrowt, ncolt, ref primed, ref x, ref fact, ref ntotal, ref maxtot, ref jwork, out ierror, ref rng);
                 if (ierror != 0)
                     throw new InvalidDataException(NotDrawn(ierror));
-                ChiRC(x, nrow, ncol, rowScore, colScore, out double x2rep, out double x2Trendrep, out double x2Eqrep, out double g2rep, out bool faultrep);
-                if (!faultrep)
-                {
-                    actualIterations++;
-                    if (x2rep > x2 || Math.Abs(x2rep - x2) < tol)
-                        rx2++;
-                    if (g2rep > g2 || Math.Abs(g2rep - g2) < tol)
-                        rg2++;
-                    if (x2Eqrep > x2Eq || Math.Abs(x2Eqrep - x2Eq) < tol)
-                        rx2Eq++;
-                    if (x2Trendrep >= x2Trend || Math.Abs(x2Trendrep - x2Trend) < tol)
-                        rx2Trend++;
-                }
+                ChiRC(x, nrow, ncol, rowScore, colScore, rtot, ctot, gtot, out double x2rep, out double logsRep, out double crossRep, out double betweenRep);
+                actualIterations++;
+                if (x2rep >= x2 - 1.0E-12 * x2)
+                    rx2++;
+                if (logsRep >= logs - 1.0E-12 * Math.Max(1.0, logs))
+                    rg2++;
+                if (betweenRep >= between - 1.0E-12 * between)
+                    rx2Eq++;
+                if (Math.Abs(crossRep - crossExpected) >= crossDistance - crossTolerance)
+                    rx2Trend++;
             }
         }
 
@@ -1019,90 +1036,43 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
-        /// The four statistics of a table that is drawn in the simulation, as Tables.SChi works them out for the table observed:
-        /// chi-square, G-square, the chi-square for trend and the chi-square for the equality of the mean scores.  fault is set if
-        /// the table has no counts.
+        /// What is compared of a table that is drawn in the simulation and of the table observed, for each of the four statistics
+        /// that Tables.SChi works out for the table observed: the part of it that differs from table to table when the totals of
+        /// the rows and columns are given.
         /// </summary>
-        private static void ChiRC(int[,] x, int rows, int cols, double[] rowscore, double[] colscore, out double x2, out double x2trend, out double x2eq, out double g2, out bool fault)
+        /// <param name="x">The table, from row 1 and column 1.</param>
+        /// <param name="rtot">The totals of the rows.</param>
+        /// <param name="ctot">The totals of the columns.</param>
+        /// <param name="gtot">The number of observations.</param>
+        /// <param name="x2">On return, chi-square: the sum over the cells of (observed - expected)^2 / expected.</param>
+        /// <param name="logs">On return, the sum over the cells of x log(x).  G-square is twice this, less a constant.</param>
+        /// <param name="cross">On return, the sum over the cells of the row score times the column score times the count.  The
+        /// chi-square for trend is a constant times the square of this less its expectation.</param>
+        /// <param name="between">On return, the sum over the columns of the square of the sum of the row scores of the
+        /// observations of the column, over the total of the column.  The chi-square for the equality of the mean scores is a
+        /// constant times this, less a constant.</param>
+        private static void ChiRC(int[,] x, int rows, int cols, double[] rowscore, double[] colscore, double[] rtot, double[] ctot, double gtot, out double x2, out double logs, out double cross, out double between)
         {
-            double gtot = 0;
-            double sumWeighted = 0;
-            double[] rtot = new double[rows + 1];
-            double[] ctot = new double[cols + 1];
-            for (int r = 1; r <= rows; r++)
-            {
-                for (int c = 1; c <= cols; c++)
-                {
-                    rtot[r] += x[r, c];
-                    ctot[c] += x[r, c];
-                    gtot += x[r, c];
-                    sumWeighted += x[r, c] * rowscore[r] * colscore[c];
-                }
-            }
-
-            fault = false;
             x2 = 0.0;
-            g2 = 0.0;
-            x2trend = 0.0;
-            x2eq = 0.0;
-            if (gtot < 1)
-            {
-                fault = true;
-                return;
-            }
-
-            double sumWtCol = 0.0;
-            double sumWtSqCol = 0.0;
-            int nzCols = 0;
-            for (int c = 1; c <= cols; c++)
-            {
-                sumWtCol += ctot[c] * colscore[c];
-                sumWtSqCol += ctot[c] * colscore[c] * colscore[c];
-                if (ctot[c] > 0.0)
-                    nzCols++;
-            }
-
-            double sumWtRow = 0.0;
-            double sumWtSqRow = 0.0;
-            int nzRows = 0;
-            for (int r = 1; r <= rows; r++)
-            {
-                sumWtRow += rtot[r] * rowscore[r];
-                sumWtSqRow += rtot[r] * rowscore[r] * rowscore[r];
-                if (rtot[r] > 0.0)
-                    nzRows++;
-            }
-
-            double dsrs = 0.0;
+            logs = 0.0;
+            cross = 0.0;
+            between = 0.0;
             for (int c = 1; c <= cols; c++)
             {
                 double xi = 0.0;
                 for (int r = 1; r <= rows; r++)
                 {
                     xi += rowscore[r] * x[r, c];
+                    cross += x[r, c] * rowscore[r] * colscore[c];
                     double ef = rtot[r] * ctot[c] / gtot;
                     if (ef != 0.0)
-                    {
                         x2 += Math.Pow(x[r, c] - ef, 2.0) / ef;
-                        if (x[r, c] != 0)
-                            g2 += x[r, c] * Math.Log(x[r, c] / ef);
-                    }
+                    if (x[r, c] != 0)
+                        logs += x[r, c] * Math.Log(x[r, c]);
                 }
                 if (ctot[c] != 0.0)
-                    dsrs += xi * xi / ctot[c];
+                    between += xi * xi / ctot[c];
             }
-
-            //  ANOVA style equality of variance test
-            double sxx = sumWtSqRow - sumWtRow * sumWtRow / gtot;
-            x2eq = (gtot - 1.0) / sxx * (dsrs - sumWtRow * sumWtRow / gtot);
-
-            //  Chi-square for linear trend
-            double syy = sumWtSqCol - sumWtCol * sumWtCol / gtot;
-            double sxy = sumWeighted - sumWtCol * sumWtRow / gtot;
-            x2trend = (gtot - 1.0) * (sxy * sxy) / (sxx * syy);
-
-            // Chi-square and G-square for independence
-            g2 = 2.0 * g2;
         }
 
         ///  <remarks>
