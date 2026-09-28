@@ -2720,18 +2720,23 @@ namespace StatsDirect.Builtins
             if (specifyScores)
             {
                 xs = true;
-                ScoresOptions sOptions = new() { Title1 = "Column Scores", Title2 = "Row Scores" };
+                ScoresOptions sOptions = new() { Title1 = "Row scores", Title2 = "Column scores" };
                 for (int r = 1; r <= rows; r++)
                     sOptions.Values1.Add(r);
                 for (int c = 1; c <= cols; c++)
                     sOptions.Values2.Add(c);
-                bool userOk = null != host.Amend(sOptions, null);
+                // The dialog gives the scores back in the bag, the first list as "values1" and the second as "values2", and leaves
+                // the options as they were; the scores of a host that changes the options instead are taken from them
+                ParameterBag given = host.Amend(sOptions, null);
+                bool userOk = null != given;
                 if (userOk)
                 {
+                    double[] first = given.ContainsKey("values1") ? given["values1"].AsObject as double[] : null;
+                    double[] second = given.ContainsKey("values2") ? given["values2"].AsObject as double[] : null;
                     for (int r = 1; r <= rows; r++)
-                        rowScore[r] = sOptions.Values1[r - 1];
+                        rowScore[r] = first != null && first.Length == rows ? first[r - 1] : sOptions.Values1[r - 1];
                     for (int c = 1; c <= cols; c++)
-                        colScore[c] = sOptions.Values2[c - 1];
+                        colScore[c] = second != null && second.Length == cols ? second[c - 1] : sOptions.Values2[c - 1];
                 }
                 else
                 {
