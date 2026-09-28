@@ -217,8 +217,17 @@ namespace StatsDirect.Builtins
 
         /// <summary>
         /// Fisher's exact test P values for an arranged 2 by 2 table (a &lt;= d, b &lt;= c) too large for its hypergeometric distribution to be
-        /// tabulated: each probability is formed from the log gamma function, so no term need be representable relative to the smallest
+        /// tabulated from 0: the probabilities are worked out from the most probable value of the first count
         /// </summary>
+        /// <remarks>
+        /// With p and q the totals of the rows and r the total of the first column, the first count can be from 0 to the less of p and
+        /// r, and the probability of the value k over that of k - 1 is (p - k + 1) (r - k + 1) / (k (q - r + k)).  The probabilities
+        /// fall away from the most probable value, and each is worked out in proportion to that of the most probable value, from the
+        /// one next to it.  A sum of them is made from a value outwards, until a term is below 1 part in 10^20 of the sum: the sum
+        /// of them all, from the most probable value both ways, makes them probabilities; a tail is the sum from the value observed
+        /// outwards; and the two sided P value is the sum, each way, from the first value that is no more probable than the value
+        /// observed.  The time taken is as the standard deviation of the first count and not as the size of the table.
+        /// </remarks>
         /// <param name="e1">expectation of a</param>
         /// <param name="tail1">the tail summed for the one sided P</param>
         /// <param name="p1">one sided P</param>
@@ -226,27 +235,113 @@ namespace StatsDirect.Builtins
         /// <param name="midP">one sided mid-P</param>
         public static void FisherLarge(int a, int b, int c, int d, double e1, out string tail1, out double p1, out double p2, out double midP)
         {
-            int p = a + b;
-            int q = c + d;
-            int r = a + c;
-            int n = p + q;
-            double lnTables = LogChoose(n, r);
-            double observed = Math.Exp(LogChoose(p, a) + LogChoose(q, r - a) - lnTables);
-            // The mirror image of a table has the same probability, which the log gamma function reproduces only to about nine figures
-            double limit = observed * (1.0 + 1.0E-7);
-            double lower = 0.0;
-            double upper = 0.0;
-            p2 = 0.0;
-            for (int k = 0; k <= Math.Min(p, r); k++)
+            double p = (double)a + b;
+            double q = (double)c + d;
+            double r = (double)a + c;
+            double n = p + q;
+            int last = (int)Math.Min(p, r);
+            int mode = (int)Math.Min(last, Math.Floor((p + 1.0) * (r + 1.0) / (n + 2.0)));
+            // the probability of k - 1 over that of k, and that of k + 1 over that of k
+            double Down(int k) => k * (q - r + k) / ((p - k + 1.0) * (r - k + 1.0));
+            double Up(int k) => (p - k) * (r - k) / ((k + 1.0) * (q - r + k + 1.0));
+
+            // A probability in proportion to that of the most probable value is held as a number and the count of the factors of
+            // 2^-512 that have been taken out of it, so that it stays within the range of the numbers.  With three of them it is
+            // below the least number above nothing
+            const double factor = 1.3407807929942597E+154;   // 2^512
+            const int nothing = 3;
+            void Next(ref double term, ref int count, double ratio)
             {
-                double term = Math.Exp(LogChoose(p, k) + LogChoose(q, r - k) - lnTables);
-                if (k <= a)
-                    lower += term;
-                if (k >= a)
-                    upper += term;
-                if (term <= limit)
-                    p2 += term;
+                term *= ratio;
+                if (term < 1.0 / factor)
+                {
+                    term *= factor;
+                    count++;
+                }
             }
+            // whether x is no more than y, or above it by no more than 1 part in 10^7: the mirror image of a table has the same
+            // probability, and the two are not to be parted by the rounding of their last figures
+            bool NoMore(double x, int xCount, double y, int yCount)
+            {
+                if (xCount == yCount)
+                    return x <= y * (1.0 + 1.0E-7);
+                if (xCount == yCount + 1)
+                    return x / factor <= y * (1.0 + 1.0E-7);
+                if (xCount == yCount - 1)
+                    return x <= y / factor * (1.0 + 1.0E-7);
+                return xCount > yCount;
+            }
+            // the sum of the probabilities from the value k outwards (step -1: downwards; 1: upwards), over that of k; what each
+            // addition loses to rounding is carried to the next
+            double Outwards(int k, int step)
+            {
+                double sum = 1.0;
+                double lost = 0.0;
+                double term = 1.0;
+                while (step < 0 ? k > 0 : k < last)
+                {
+                    term *= step < 0 ? Down(k) : Up(k);
+                    k += step;
+                    if (term < 1.0E-20 * sum)
+                        break;
+                    double y = term - lost;
+                    double s = sum + y;
+                    lost = s - sum - y;
+                    sum = s;
+                }
+                return sum;
+            }
+
+            // the sum of them all, over the probability of the most probable value, which is in both parts
+            double total = Outwards(mode, -1) + Outwards(mode, 1) - 1.0;
+            double Probability(double x, int count) => count >= nothing ? 0.0 : Math.ScaleB(x / total, -512 * count);
+
+            // the table observed
+            double observed = 1.0;
+            int observedCount = 0;
+            for (int k = mode; k > a && observedCount < nothing; k--)
+                Next(ref observed, ref observedCount, Down(k));
+            for (int k = mode; k < a && observedCount < nothing; k++)
+                Next(ref observed, ref observedCount, Up(k));
+
+            // the tail that the table observed is in is added up from it outwards; the other is what is left, with the table observed
+            int away = a > mode ? 1 : -1;
+            double beyond = Outwards(a, away);
+            double tail = Probability(observed * beyond, observedCount);
+            double rest = 1.0 - Probability(observed * (beyond - 1.0), observedCount);
+            double lower = away < 0 ? tail : rest;
+            double upper = away < 0 ? rest : tail;
+
+            // two sided: each way from the most probable value, the first value that is no more probable than the table observed,
+            // and the values beyond it
+            p2 = 0.0;
+            {
+                double term = 1.0;
+                int count = 0;
+                int k = mode;
+                while (!NoMore(term, count, observed, observedCount) && k > 0 && count < nothing)
+                {
+                    Next(ref term, ref count, Down(k));
+                    k--;
+                }
+                if (NoMore(term, count, observed, observedCount))
+                    p2 += Probability(term * Outwards(k, -1), count);
+            }
+            if (mode < last)
+            {
+                double term = 1.0;
+                int count = 0;
+                Next(ref term, ref count, Up(mode));
+                int k = mode + 1;
+                while (!NoMore(term, count, observed, observedCount) && k < last && count < nothing)
+                {
+                    Next(ref term, ref count, Up(k));
+                    k++;
+                }
+                if (NoMore(term, count, observed, observedCount))
+                    p2 += Probability(term * Outwards(k, 1), count);
+            }
+
             if (a > e1)
             {
                 tail1 = "(upper tail)";
@@ -258,10 +353,8 @@ namespace StatsDirect.Builtins
                 p1 = Math.Min(lower, 1.0);
             }
             p2 = Math.Min(p2, 1.0);
-            midP = p1 - observed / 2.0;
+            midP = p1 - Probability(observed, observedCount) / 2.0;
         }
-
-        private static double LogChoose(int n, int k) => PDF.alogam(n + 1.0) - PDF.alogam(k + 1.0) - PDF.alogam(n - k + 1.0);
 
         /// <summary>
         /// Kappa of one category against all the others, for any number of raters and for subjects who need not all have the same number
