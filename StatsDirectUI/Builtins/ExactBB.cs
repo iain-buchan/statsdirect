@@ -546,7 +546,7 @@ namespace StatsDirect.Builtins
         private static double SubLog(double a, double b)
         {
             if (a == b)
-                return 0.0;
+                return double.NegativeInfinity;
             double big = a > b ? a : b;
             return Math.Log(Math.Exp(a - big) - Math.Exp(b - big)) + big;
         }
@@ -867,9 +867,13 @@ namespace StatsDirect.Builtins
             int diff = sumA - minSumA;
             // A table counts as no more probable than the observed one when its coefficient is within PROBABILITY_TOLERANCE of it
             double noMoreProbable = UseLogScale ? polyDenominator[diff] + Math.Log(1.0 + PROBABILITY_TOLERANCE) : polyDenominator[diff] * (1.0 + PROBABILITY_TOLERANCE);
+            // A sum that has nothing in it yet: 0, or on the scale of logarithms the logarithm of 0
+            double nothing = UseLogScale ? double.NegativeInfinity : 0.0;
             double upTail = polyDenominator[degDenominator];
-            double upZ = polyDenominator[degDenominator] <= noMoreProbable ? polyDenominator[degDenominator] : 0.0;
-            double loZ = 0.0;
+            double upZ = polyDenominator[degDenominator] <= noMoreProbable ? polyDenominator[degDenominator] : nothing;
+            double loZ = nothing;
+            // The lower tail is added up as the upper tail is: taken from 1, a small tail would have few figures or none
+            double loTail = polyDenominator[diff];
 
             if (UseLogScale)
             {
@@ -883,15 +887,16 @@ namespace StatsDirect.Builtins
                 for (int i = diff - 1; i >= 0; i--)
                 {
                     denom = SumLog(denom, polyDenominator[i]);
+                    loTail = SumLog(loTail, polyDenominator[i]);
                     if (polyDenominator[i] <= noMoreProbable)
                         loZ = SumLog(loZ, polyDenominator[i]);
                 }
                 double upFishPVal = ZExp(upTail - denom, ref ierr);
-                double loFishPVal = 1.0 - ZExp(SubLog(upTail, polyDenominator[diff]) - denom, ref ierr);
+                double loFishPVal = ZExp(loTail - denom, ref ierr);
                 fishP1 = Math.Min(upFishPVal, loFishPVal);
-                fishP2 = ZExp(SumLog(upZ, loZ) - denom, ref ierr);
+                fishP2 = ZExp((double.IsNegativeInfinity(loZ) ? upZ : SumLog(upZ, loZ)) - denom, ref ierr);
                 double upMidPPVal = ZExp(SubLog(upTail, Math.Log(0.5) + polyDenominator[diff]) - denom, ref ierr);
-                double loMidPPVal = 1.0 - upMidPPVal;
+                double loMidPPVal = ZExp(SubLog(loTail, Math.Log(0.5) + polyDenominator[diff]) - denom, ref ierr);
                 midP1 = Math.Min(upMidPPVal, loMidPPVal);
                 midP2 = Math.Min(2.0 * midP1, 1.0);
             }
@@ -907,6 +912,7 @@ namespace StatsDirect.Builtins
                 for (int i = diff - 1; i >= 0; i--)
                 {
                     denom += polyDenominator[i];
+                    loTail += polyDenominator[i];
                     if (polyDenominator[i] <= noMoreProbable)
                         loZ += polyDenominator[i];
                 }
@@ -921,11 +927,11 @@ namespace StatsDirect.Builtins
                 else
                 {
                     double upFishPVal = upTail / denom;
-                    double loFishPVal = 1.0 - (upTail - polyDenominator[diff]) / denom;
+                    double loFishPVal = loTail / denom;
                     fishP1 = Math.Min(upFishPVal, loFishPVal);
                     fishP2 = (upZ + loZ) / denom;
                     double upMidPPVal = (upTail - 0.5 * polyDenominator[diff]) / denom;
-                    double loMidPPVal = 1.0 - upMidPPVal;
+                    double loMidPPVal = (loTail - 0.5 * polyDenominator[diff]) / denom;
                     midP1 = Math.Min(upMidPPVal, loMidPPVal);
                     midP2 = Math.Min(2.0 * midP1, 1.0);
                 }
