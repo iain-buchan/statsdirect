@@ -231,6 +231,7 @@ internal static partial class Program
             Compare("against the distributions themselves", figures, Path.Combine(folder, "x-other.txt"));
         }
         if (which is "all" or "limits") Limits();
+        if (which is "all" or "precision") EffectSizePrecision();
         Console.WriteLine();
         Console.WriteLine(failures == 0 ? $"ALL {checks} CHECKS PASS" : $"{failures} OF {checks} CHECKS FAILED");
         return failures == 0 ? 0 : 1;
