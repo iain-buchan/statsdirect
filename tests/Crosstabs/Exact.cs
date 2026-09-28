@@ -70,9 +70,10 @@ internal static partial class Program
         int rows = t.GetLength(0), cols = t.GetLength(1);
         double[,] o = new double[rows + 1, cols + 1];
         for (int i = 0; i < rows; i++) for (int j = 0; j < cols; j++) o[i + 1, j + 1] = t[i, j];
-        object[] a = { rows, cols, o, 0.0, 80.0, 1.0, 0.0, 0.0, 0 };
+        // the first two parameters are what shows the progress bar, and its words: the test is made here without a bar
+        object[] a = { null, null, rows, cols, o, 0.0, 80.0, 1.0, 0.0, 0.0, 0 };
         typeof(Tables).GetMethod("Rcexact", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, a);
-        return ((double)a[7], (double)a[6], (int)a[8]);
+        return ((double)a[9], (double)a[8], (int)a[10]);
     }
 
     private static int[,] Table(string text)
@@ -85,6 +86,35 @@ internal static partial class Program
 
     private static string Text(int[,] t) =>
         string.Join(" / ", Enumerable.Range(0, t.GetLength(0)).Select(i => string.Join(" ", Enumerable.Range(0, t.GetLength(1)).Select(j => t[i, j]))));
+
+    // The two bounds of the method for a table with the totals r and c, each in order of size, from the routines of the program: for
+    // each, nothing if it is the bound that is given here (from every table with the totals), or else what the routine gave
+    internal static (string least, string greatest) Bounds(int[] r, int[] c, double leastOfAll, double greatestOfAll)
+    {
+        MethodInfo shortpath = typeof(Tables).GetMethod("Shortpath", BindingFlags.NonPublic | BindingFlags.Static);
+        MethodInfo longpath = typeof(Tables).GetMethod("Longpath", BindingFlags.NonPublic | BindingFlags.Static);
+        int rows = r.Length, cols = c.Length, n = r.Sum();
+        int big = Math.Max(rows, cols), both = rows + cols + 1, k = Math.Max(both, big);
+        double[] fact = new double[2 * (n + 1) + 1];
+        Array.Copy(LogFactorials(n), fact, n + 1);
+        int[] irow = new int[rows + 1], icol = new int[cols + 1];
+        Array.Copy(r, 0, irow, 1, rows); Array.Copy(c, 0, icol, 1, cols);
+        double tol = Math.Sqrt(2.220446049250313E-16);
+        // the greatest sum is taken from a number that is more than twice as great (the routine gives 0 if what is left is no more than
+        // the sum): the sum of a column is no more than the logarithm of the factorial of its total
+        double above = 1000 + 2 * c.Sum(v => fact[v]);
+        // the keys of the search for the least sum are whole numbers of 64 bits (they were of 32 bits before the correction of the search)
+        object keys = shortpath.GetParameters()[17].ParameterType == typeof(long[]) ? new long[4001] : new int[4001];
+        object[] s = { rows, irow.Clone(), cols, icol.Clone(), 0.0, n, fact, tol, 0, new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[big + 1], new int[big + 1], new int[4001], keys, new double[k + 1], new double[4001] };
+        object[] l = { big, rows, irow.Clone(), cols, icol.Clone(), above, fact, tol, new int[both + 1, both + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[rows + 1, both + 1], new double[k + 1] };
+        string least, greatest;
+        double near = 1e-9 * Math.Max(1, Math.Abs(leastOfAll) / 1000);
+        try { shortpath.Invoke(null, s); least = (int)s[8] == 0 && Math.Abs(-(double)s[4] - leastOfAll) <= near ? null : $"{-(double)s[4]} (fault {s[8]})"; }
+        catch (TargetInvocationException ex) { least = ex.InnerException.GetType().Name; }
+        try { longpath.Invoke(null, l); greatest = Math.Abs(above - (double)l[5] - greatestOfAll) <= near ? null : (above - (double)l[5]).ToString(inv); }
+        catch (TargetInvocationException ex) { greatest = ex.InnerException.GetType().Name; }
+        return (least, greatest);
+    }
 
     private static void Against(int[,] t, ref int compared, ref double worst)
     {
@@ -144,8 +174,6 @@ internal static partial class Program
 
         // the two bounds: the least and the greatest sum of the logarithms of the factorials of the cells of a table with given totals
         before = failures;
-        MethodInfo shortpath = typeof(Tables).GetMethod("Shortpath", BindingFlags.NonPublic | BindingFlags.Static);
-        MethodInfo longpath = typeof(Tables).GetMethod("Longpath", BindingFlags.NonPublic | BindingFlags.Static);
         System.Random draw = new(314159);
         int sets = 0;
         for (int trial = 0; trial < 1200; trial++)
@@ -157,19 +185,7 @@ internal static partial class Program
             int[] Totals(int k) { int[] v = Enumerable.Repeat(1, k).ToArray(); for (int i = 0; i < n - k; i++) v[draw.Next(k)]++; Array.Sort(v); return v; }
             int[] r = Totals(rows), c = Totals(cols);
             var all = EveryTable(r, c, null);
-            int big = Math.Max(rows, cols), both = rows + cols + 1, k = Math.Max(both, big);
-            double[] fact = new double[2 * (n + 1) + 1];
-            Array.Copy(LogFactorials(n), fact, n + 1);
-            int[] irow = new int[rows + 1], icol = new int[cols + 1];
-            Array.Copy(r, 0, irow, 1, rows); Array.Copy(c, 0, icol, 1, cols);
-            double tol = Math.Sqrt(2.220446049250313E-16);
-            object[] s = { rows, irow.Clone(), cols, icol.Clone(), 0.0, n, fact, tol, 0, new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[big + 1], new int[big + 1], new int[4001], new int[4001], new double[k + 1], new double[4001] };
-            object[] l = { big, rows, irow.Clone(), cols, icol.Clone(), 1000.0, fact, tol, new int[both + 1, both + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[k + 1], new int[rows + 1, both + 1], new double[k + 1] };
-            string least, greatest;
-            try { shortpath.Invoke(null, s); least = (int)s[8] == 0 && Math.Abs(-(double)s[4] - all.least) <= 1e-9 ? null : $"{-(double)s[4]} (fault {s[8]})"; }
-            catch (TargetInvocationException ex) { least = ex.InnerException.GetType().Name; }
-            try { longpath.Invoke(null, l); greatest = Math.Abs(1000.0 - (double)l[5] - all.greatest) <= 1e-9 ? null : (1000.0 - (double)l[5]).ToString(inv); }
-            catch (TargetInvocationException ex) { greatest = ex.InnerException.GetType().Name; }
+            var (least, greatest) = Bounds(r, c, all.least, all.greatest);
             sets++;
             Say(least == null, $"row totals {string.Join(",", r)}, column totals {string.Join(",", c)}: the least sum {all.least}; the routine gives {least}");
             Say(greatest == null, $"row totals {string.Join(",", r)}, column totals {string.Join(",", c)}: the greatest sum {all.greatest}; the routine gives {greatest}");

@@ -7,7 +7,7 @@ dotnet build StatsDirectUI/StatsDirectUI.csproj -c Debug
 dotnet run --project tests/Crosstabs -c Release
 ```
 
-The checks are made on a build of the program, as those of `tests/CoxRegression` are: `StatsDirect.dll` of the Debug configuration, or of the folder given with `-p:StatsDirectBin=...`. They take about a minute. One part can be run alone by naming it: `benchmarks`, `exact` or `report`.
+The checks are made on a build of the program, as those of `tests/CoxRegression` are: `StatsDirect.dll` of the Debug configuration, or of the folder given with `-p:StatsDirectBin=...`. They take about a minute and a half. One part can be run alone by naming it: `benchmarks`, `exact`, `large`, `progress` or `report`.
 
 The same routines serve the r by c chi-square test of the chi-square menu, and the tests in strata serve the generalised Cochran-Mantel-Haenszel tests.
 
@@ -31,8 +31,18 @@ A file of cases has for each table a line `case`, name, kind (`rc` or `rck`), ro
 
 **The exact test against every table with the same totals** (`exact`, `Exact.cs`). 6,004 tables, drawn at random with uneven totals, of up to 5 rows and 7 columns: the P value and the probability of the table are compared with those from a list of every table with the same totals, which is made here. The two bounds that the method uses to leave out parts of its search, the least and the greatest sum of the logarithms of the factorials of the cells, are compared with those of the list for 1,200 sets of totals.
 
+**The exact test of tables with large totals, and of tables that were refused** (`large`, `Large.cs`). 53 tables of which all the rows but one have few subjects, and that one has from 80 to 4,000 in each column: the tables with their totals are few enough to be listed, and their column totals are large enough for the keys of the search for the least sum to be above what a whole number of 32 bits holds. The P value of each is compared with that from the list of every table with its totals, and the two bounds of the method with the least and the greatest sum of the list. One of them is the table 1 2 0 1 0 0 / 0 0 1 0 0 1 / 1 1 1 0 1 0 / 294 264 274 201 268 186, whose P value was given as 0.920227, and is 0.865318.
+
+6 tables that were refused at once by the check of the keys of the method, of 5 by 5 to 6 by 6 and 60 to 90 subjects, and 4 tables of 2 rows and 92,678 to 100,000 subjects at the limit of the keys, are compared with benchmarks that are R's `fisher.test`: the P value, or that the test is not made for a table whose keys cannot be held. The benchmarks are made by
+
+```
+Rscript --vanilla figures-exact-large.R cases-exact-large.txt r-exact-large.txt
+```
+
+**The progress bar of the exact test** (`progress`, `Large.cs`). The analysis is given a progress bar that keeps what it is told: no bar is shown for a test of less than a second; a test of some seconds shows a bar for each stage of its search that it meets after the first second, whose words say which stage it is, and whose shares are from 0 to 1 and in order; each bar is finished once; the P value is the same, to the last bit, as without the bar. A test that is stopped has no P value and no hybrid approximation, and the other figures of the analysis are as they are without the test. What goes wrong in the showing of the bar reaches the caller, and is not taken for a fault of the test. These checks depend on the time that a test takes: the tests that they use take 5 and 14 seconds on the computer on which they were written.
+
 **The report** (`report`, `Reports.cs`): the dialog of the scores gives back what was typed, and the scores of the user are those of the analysis; the questions are put once; each column variable starts from the categories of the row variable; the order of the categories; a subject without a value is left out; the 2 by 2 tables of the strata are pooled as the meta-analysis of the same tables pools them; the random tables of the simulation have the totals of the table, and the mean and variance of a cell, with small totals and with large; the scores that the tests in strata can make from the counts; and what those tests say is wrong with what they are given.
 
-**What is not checked here.** The time that the exact test takes: the place at which a look-up starts was corrected, which made the test of a table with many cells two to three times as fast (a 4 by 3 table of 900 subjects took 21 seconds, and takes 8), and leaves its P value as it was.
+**What is not checked here.** The time that the exact test takes: the place at which a look-up starts was corrected, which made the test of a table with many cells two to three times as fast (a 4 by 3 table of 900 subjects took 21 seconds, and takes 8), and leaves its P value as it was. How evenly the progress bar of a stage goes with the time is not checked either: in the tables that were timed the share of the nodes of a stage that were done was within 2 to 15% of the share of the time of the stage that had gone.
 
 The run is the same every time. The exit code is 0 if every check passes.

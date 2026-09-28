@@ -1,6 +1,6 @@
-// What the Crosstabs report asks of the program about it: preferences, a progress bar that shows nothing, answers to its questions and
-// the scores of a test for trend.  The scores come back as the program's own dialog gives them: in the bag that Amend returns, under
-// "values1" and "values2", the options that were handed over being left as they were.
+// What the Crosstabs report asks of the program about it: preferences, a progress bar that shows nothing or one that keeps what it is
+// told, answers to its questions and the scores of a test for trend.  The scores come back as the program's own dialog gives them: in
+// the bag that Amend returns, under "values1" and "values2", the options that were handed over being left as they were.
 using System.Reflection;
 using StatsDirect.Builtins;
 using StatsDirect.Templates;
@@ -11,6 +11,39 @@ internal sealed class NoProgress : IProgressBarHost, IProgressBar
     public void Finish() { }
     public bool Update(double fractionComplete) => false;
     public void Dispose() { }
+}
+
+// A progress bar that keeps what it is told, and with which a test can be stopped as the Cancel button of the program stops it.
+internal sealed class RecordedProgress : IProgressBarHost
+{
+    public sealed class Bar : IProgressBar
+    {
+        public string Words;
+        public List<double> Shares = new();
+        public int Finished;
+        public RecordedProgress Of;
+        public void Finish() { Finished++; }
+        public void Dispose() { Finish(); }
+        public bool Update(double fractionComplete)
+        {
+            Shares.Add(fractionComplete);
+            Of.Updates++;
+            if (Of.FailAt > 0 && Of.Updates >= Of.FailAt) throw new InvalidOperationException("the bar failed");
+            return Of.StopAt > 0 && Of.Updates >= Of.StopAt;
+        }
+    }
+
+    public List<Bar> Bars = new();
+    public int Updates;
+    public int StopAt;      // the user stops the test at this update of the bar; 0: never
+    public int FailAt;      // the bar fails at this update; 0: never
+
+    public IProgressBar StartProgress(string operationDescription, bool provideProgress, bool display = true)
+    {
+        Bar bar = new() { Words = operationDescription, Of = this };
+        Bars.Add(bar);
+        return bar;
+    }
 }
 
 public class PreferencesProxy : DispatchProxy
@@ -41,6 +74,7 @@ public class HostProxy : DispatchProxy
     public static double[] Scores1, Scores2;        // the scores that the dialog gives back; nothing: the scores that it was shown
     public static bool CancelScores = false;
     public static List<string> Questions = new();
+    internal static RecordedProgress Progress;      // the progress bar that keeps what it is told; nothing: a bar that shows nothing
     private static readonly NoProgress none = new();
     private static readonly SDPreferences preferences = DispatchProxy.Create<SDPreferences, PreferencesProxy>();
 
@@ -49,7 +83,7 @@ public class HostProxy : DispatchProxy
         switch (method.Name)
         {
             case "get_Preferences": return preferences;
-            case "StartProgress": return none;
+            case "StartProgress": return Progress == null ? none : Progress.StartProgress((string)arguments[0], (bool)arguments[1]);
             case "RoundU": return ((double)arguments[0]).ToString("G10");
             case "pval":
             case "pval_half": return ((double)arguments[0]).ToString("G6");
