@@ -1379,6 +1379,28 @@ namespace StatsDirect.Builtins
             return null;
         }
 
+        /// <summary>
+        /// Paired proportions: each of n pairs has two responses, and the proportion of the first responses is compared with
+        /// that of the second.
+        /// </summary>
+        /// <remarks>
+        /// Of the pairs, r respond both times, s the first time only and t the second time only.  The two proportions are
+        /// (r + s) / n and (r + t) / n, and their difference is (s - t) / n: the pairs that respond alike have no part in it.
+        /// The exact test is of the pairs that differ.  If the two proportions are the same in the population a pair that
+        /// differs is as likely to differ one way as the other, and the less of s and t is a binomial count of s + t trials
+        /// with the probability of a half.  The one sided P value is the probability of a count that is no more than the one
+        /// observed, and the two sided P value is twice that, or 1 if that is more.  For the mid-P values half the probability
+        /// of the count observed is taken from the one sided P value first.
+        /// The confidence limits of the difference are those of MathDbl.Wilson.
+        /// Numbers that are not whole numbers are rounded, a half to the even number.
+        /// </remarks>
+        /// <param name="parameters">"n": the number of pairs; "r": the number that respond both times; "s": the first time
+        /// only; "t": the second time only; "cco": the confidence level, for which 0.95 is taken if it is not between 0 and
+        /// 1.</param>
+        /// <returns>"n_out", "r_out", "s_out", "t_out": the numbers, rounded; "prop_1", "prop_2", "prop_diff": the two
+        /// proportions and their difference; "*exact": a row with "cum_1" and "cum_2", the one sided and the two sided P
+        /// value, and "cum_1_mid" and "cum_2_mid", the mid-P values; "qcl": the name of the method of the limits; "pc": the
+        /// confidence level as a percentage; "lower" and "upper": the limits of the difference.</returns>
         public static StepOutput RptPropPairs(ParameterBag parameters)
         {
             // numbers that are not whole numbers are rounded, a half to the even number
@@ -1446,6 +1468,7 @@ namespace StatsDirect.Builtins
             //  Call cipair(ia, ib, ic, CL, cu, qcl, cit, ierr)
             //  q = "Exact (unconditional)"
             // Else
+            // the limits of the difference, from the four numbers of the table of the first response by the second
             int ial = Convert.ToInt32(r);
             int ibl = Convert.ToInt32(s);
             int icl = Convert.ToInt32(t);
@@ -1474,6 +1497,36 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// A proportion: r of n observations have the characteristic.  The proportion has confidence limits, and is compared with
+        /// the proportion of a null hypothesis.
+        /// </summary>
+        /// <remarks>
+        /// The exact limits are those of Clopper and Pearson (MathDbl.binci).
+        /// The P values are from the binomial distribution of the count of n trials with the null proportion (PDF.BinomialTails),
+        /// whatever the size of the sample.  The one sided P value is the less of the probability of a count that is no more
+        /// than r and that of a count that is no less than r.  The two sided P value is the sum of the probabilities of the
+        /// counts that are no more probable than r.  With a null proportion of a half the distribution is the same each side
+        /// of its middle, and the two sided P value is twice the one sided P value, or 1 if that is more; with another null
+        /// proportion it is not, as a rule.
+        /// The limits of Wilson are the two proportions p that are z of their own standard errors from the proportion observed,
+        /// which are the roots of (r / n - p)^2 = z^2 p (1 - p) / n:
+        /// (2 r + z^2 -/+ z root(z^2 + 4 r (1 - r / n))) / (2 (n + z^2)), where z is the normal deviate of the confidence level.
+        /// The one sided mid-P value is the one sided P value less half the probability of the count r, and the two sided
+        /// mid-P value is twice that, or 1 if that is more.
+        /// With a null proportion of 0 the count can be nothing but 0, and with one of 1 nothing but n: a P value is then 1 if
+        /// that is the count observed and 0 if it is not, and the one sided mid-P value is a half or 0.
+        /// Numbers that are not whole numbers are rounded, a half to the even number.
+        /// </remarks>
+        /// <param name="parameters">"n": the number of observations; "r": the number that have the characteristic; "qpi": the
+        /// proportion of the null hypothesis, for which 0 is taken if it is below 0 and 1 if it is above 1; "cco": the
+        /// confidence level, for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"prop": the proportion; "ci_exact": the confidence level as a percentage, "lower_exact" and "upper_exact":
+        /// the limits of Clopper and Pearson, and "warn_exact": what the report says after them if the interval is one sided;
+        /// "null": the null proportion; "p_1_exact" and "p_2_exact": the one sided and the two sided P value; "ci_approx",
+        /// "lower_approx" and "upper_approx": the confidence level and the limits of Wilson; "p_1_approx" and "p_2_approx":
+        /// the one sided and the two sided mid-P value; "ap_1_exact", "ap_2_exact", "ap_1_approx" and "ap_2_approx": the name
+        /// of the distribution of each P value, which is "Binomial".</returns>
         public static StepOutput RptPropSingle(ParameterBag parameters)
         {
             // counts that are not whole numbers are rounded, a half to the even number
@@ -1548,6 +1601,27 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Two independent proportions: r1 of n1 observations of one sample, and r2 of n2 of another, have the characteristic.
+        /// </summary>
+        /// <remarks>
+        /// The difference is that of the proportion of the first sample less that of the second, r1 / n1 - r2 / n2.  Its
+        /// confidence limits are those of MathDbl.uppci.
+        /// The exact two sided mid-P value is that of the 2 by 2 table of the two samples by the characteristic
+        /// (PropMidPFisher2); there is none if none, or all, of both samples have the characteristic.
+        /// The normal deviate z is the difference over its standard error under the null hypothesis that the two proportions are
+        /// the same, root(p (1 - p) (1 / n1 + 1 / n2)), where p is the proportion of the two samples together,
+        /// (r1 + r2) / (n1 + n2).  If p is 0 or 1 the standard error is 0: there is then no z, and the report has no
+        /// approximate P values.  The P values of z are made where the report is shown.
+        /// Numbers that are not whole numbers are rounded, a half to the even number.
+        /// </remarks>
+        /// <param name="parameters">"n1" and "r1": the size of the first sample and the number of it with the characteristic;
+        /// "n2" and "r2": those of the second; "cco": the confidence level, for which 0.95 is taken if it is not between 0
+        /// and 1.</param>
+        /// <returns>"n_1", "r_1", "n_2", "r_2": the numbers, rounded; "prop_1", "prop_2" and "prop_diff": the two proportions
+        /// and their difference; "ci": the confidence level as a percentage, and "from" and "to": the limits of the
+        /// difference; "*exact2": a row with "mp", the exact two sided mid-P value, if there is one; "se" and "z": the
+        /// standard error and the normal deviate, or missing; "*approx2": a row with "z", if there is one.</returns>
         public static StepOutput RptPropUnPaired(ParameterBag parameters)
         {
             // numbers that are not whole numbers are rounded, a half to the even number
@@ -1605,6 +1679,7 @@ namespace StatsDirect.Builtins
                 exact2Parameters.AddOutput("mp", mp);
             }
 
+            // the standard error of the difference if the two proportions are the same, from the proportion of both samples
             double sepest = Math.Sqrt(p * (1 - p) * (1 / n1 + 1 / n2));
             double z;
             if (sepest == 0)

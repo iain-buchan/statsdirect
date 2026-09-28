@@ -158,6 +158,29 @@ namespace StatsDirect.Numerics
             return s;
         }
 
+        /// <summary>
+        /// The confidence limits of the difference of paired proportions, that of the first response less that of the second,
+        /// from the score limits of the two proportions and the correlation of the two responses.
+        /// </summary>
+        /// <remarks>
+        /// Of N pairs, a respond both times, b the first time only, c the second time only and d neither time.  The proportions
+        /// are p1 = (a + b) / N and p2 = (a + c) / N, and their difference is (b - c) / N.
+        /// Each proportion has the score limits of a single proportion: for p1, with m = a + b,
+        /// (m + (z^2 -/+ z root(z^2 + 4 m (N - m) / N)) / 2) / (N + z^2), which are l1 and u1; and l2 and u2 likewise for p2.
+        /// The correlation of the two responses over the pairs is phi = (a d - b c) / root((a + b) (c + d) (a + c) (b + d)).
+        /// If a d - b c is above 0 it has a correction for continuity: N / 2 is taken from a d - b c, which is made 0 if that
+        /// leaves it below 0.  If a total of the table of the first response by the second is 0, phi is 0.
+        /// The lower limit is the difference less root((p1 - l1)^2 - 2 phi (p1 - l1) (u2 - p2) + (u2 - p2)^2), and the upper
+        /// limit is the difference plus root((u1 - p1)^2 - 2 phi (u1 - p1) (p2 - l2) + (p2 - l2)^2).
+        /// </remarks>
+        /// <param name="ia">The number of pairs that respond both times.</param>
+        /// <param name="ib">The number that respond the first time only.</param>
+        /// <param name="ic">The number that respond the second time only.</param>
+        /// <param name="id">The number that respond neither time.</param>
+        /// <param name="cl">On return, the lower limit, or missing.</param>
+        /// <param name="cu">On return, the upper limit, or missing.</param>
+        /// <param name="z">The normal deviate of the confidence level.</param>
+        /// <param name="fault">On return, true if a number is below 0 or there are no pairs.</param>
         public static void Wilson(int ia, int ib, int ic, int id, out double cl, out double cu, double z, out bool fault)
         {
             fault = false;
@@ -170,6 +193,7 @@ namespace StatsDirect.Numerics
                 double c = Convert.ToDouble(ic);
                 double d = Convert.ToDouble(id);
                 double N = Convert.ToDouble(inl);
+                // the difference of the two proportions, and the correlation of the two responses
                 double th = (b - c) / N;
                 double temp;
                 double ph;
@@ -206,6 +230,7 @@ namespace StatsDirect.Numerics
                         ph /= Math.Sqrt((a + b) * (c + d) * (a + c) * (b + d));
                     }
                 }
+                // the score limits of the first proportion (l2, u2) and of the second (l3, u3), and how far each is from its proportion
                 double den = N + zsq;
                 double u2 = (a + b + 0.5 * (zsq + z * Math.Sqrt(zsq + 4.0 * (a + b) * (c + d) / N))) / den;
                 double l2 = (a + b + 0.5 * (zsq - z * Math.Sqrt(zsq + 4.0 * (a + b) * (c + d) / N))) / den;
@@ -215,6 +240,7 @@ namespace StatsDirect.Numerics
                 double du2 = u2 - (a + b) / N;
                 double dl3 = (a + c) / N - l3;
                 double du3 = u3 - (a + c) / N;
+                // the limits of the difference; what is under a root is taken as 0 if rounding has made it less
                 if (Math.Pow(dl2, 2.0) - 2.0 * ph * dl2 * du3 + Math.Pow(du3, 2.0) > 0.0)
                 {
                     temp = Math.Pow(dl2, 2.0) - 2.0 * ph * dl2 * du3 + Math.Pow(du3, 2.0);
