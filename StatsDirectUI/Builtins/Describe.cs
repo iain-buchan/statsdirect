@@ -47,7 +47,8 @@ namespace StatsDirect.Builtins
         {
             private static int Compare(Group x, Group y)
             {
-                return x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? -1 : 1;
+                //  Values that have the same frequency are in the order of their titles
+                return x.NBin == y.NBin ? Formatting.CompareLabels(x.Label, y.Label) : x.NBin < y.NBin ? -1 : 1;
             }
 
             // interface methods implemented by Compare
@@ -61,7 +62,8 @@ namespace StatsDirect.Builtins
         {
             private static int Compare(Group x, Group y)
             {
-                return x.NBin == y.NBin ? 0 : x.NBin < y.NBin ? 1 : -1;
+                //  Values that have the same frequency are in the order of their titles
+                return x.NBin == y.NBin ? Formatting.CompareLabels(x.Label, y.Label) : x.NBin < y.NBin ? 1 : -1;
             }
 
             // interface methods implemented by Compare
@@ -259,11 +261,19 @@ namespace StatsDirect.Builtins
                 int xtot = vc.Length;
                 int bins = vc.GroupCount;
                 Group[] bin = new Group[bins + 1];
+                //  The missing values are the first row of the table in every order, and the rows after it are sorted
+                int firstSorted = 1;
                 for (int i = 1; i <= bins; i++)
                 {
                     bin[i] = vc.Groups[i - 1];
                     if (bin[i].Label == Formatting.MISSINGLABEL)
+                    {
                         xtot -= bin[i].NBin;
+                        Group missing = bin[i];
+                        bin[i] = bin[1];
+                        bin[1] = missing;
+                        firstSorted = 2;
+                    }
                 }
 
                 IComparer<Group> comparer;
@@ -281,7 +291,7 @@ namespace StatsDirect.Builtins
                     else
                         comparer = new SortGroupByNbinDescending();
                 }
-                Array.Sort(bin, 1, bins, comparer);
+                Array.Sort(bin, firstSorted, bins - firstSorted + 1, comparer);
 
                 List<ParameterBag> binList = new();
                 variableParameters.AddOutput("*bin", binList);
