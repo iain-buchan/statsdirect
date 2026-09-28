@@ -2056,6 +2056,19 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The first step of Crosstabs: it looks at the classifiers, before the options are asked for, and says whether there are
+        /// strata and how many categories the rows and the columns have, by which the operation chooses what to ask.  It puts the
+        /// two questions about the table of each column variable (whether to go on with a table of more than 10 rows or columns;
+        /// whether to make a table symmetrical whose rows and columns differ in number), and hands the answers on to RptCrosstabs.
+        /// The categories of a classifier are those of its groups that have a label, in the order of their labels (NamevarAscending).
+        /// </summary>
+        /// <param name="host">Where the questions are put.</param>
+        /// <param name="parameters">"c1": the classifier of the rows; "c2": that of the columns, which may be more than one variable;
+        /// "c3" (may be left out, and is looked at only if "c2" is one variable): that of the strata.</param>
+        /// <returns>"strat": whether there are strata (a third classifier with more than one category); "proceed" and "symmetrical":
+        /// the answers for each column variable; and, with strata, "xcats" and "ycats": the numbers of categories of the columns and
+        /// of the rows.</returns>
         public static StepOutput RptCrosstabsPreprocess(ITemplateHost host, ParameterBag parameters)
         {
             bool strat = false;
@@ -2155,6 +2168,22 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Crosstabs: the subjects are counted into a table of the categories of the row classifier by those of each column variable,
+        /// and the table is analysed.  A subject with a missing value in a classifier of the table is left out of it.
+        /// Without strata the table is analysed as an r by c table (SChi).  With strata there is a table for each stratum: 2 by 2
+        /// tables are pooled as odds ratios (TabMh) or as relative risks (TabRelativeRisk), as the user says which kind of study they
+        /// are from, and larger tables have the generalised Cochran-Mantel-Haenszel tests (TabCmh).
+        /// A table that is made symmetrical has the categories of both classifiers in its rows and in its columns, those that a
+        /// classifier does not have being empty (XSymmetriseXtab).
+        /// </summary>
+        /// <param name="host">The preferences, where progress is shown, and where the questions are put if the first step did not
+        /// hand on its answers.</param>
+        /// <param name="parameters">"c1", "c2" and "c3" as for RptCrosstabsPreprocess, and what that step returned; "cco": the
+        /// confidence level.  Without strata, the options of SChi: "doExact", "doMonteCarlo" (with "iterations", "seed" and "ci"),
+        /// "show_pc", "xp", "cs", "xs" and "specify_scores".  With strata, "study_type" ("casecontrol", "cohort" or "neither") for
+        /// 2 by 2 tables, and for larger tables "values1" and "values2": the scores of the categories of the rows and of the
+        /// columns.</param>
         public static StepOutput RptCrosstabs(ITemplateHost host, ParameterBag parameters)
         {
             double[] z = null;
@@ -2466,6 +2495,21 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The generalised Cochran-Mantel-Haenszel tests of an r by c table in strata, for Crosstabs (Gencmh): of ordinal association
+        /// (the scores of the rows and of the columns are correlated; 1 degree of freedom), of the mean score of the columns
+        /// differing between the rows (rows - 1 degrees of freedom), and of any association (nominal; (rows - 1)(columns - 1) degrees
+        /// of freedom).
+        /// </summary>
+        /// <param name="parameters">"values1": the scores of the categories of the row classifier; "values2": those of the column
+        /// classifier.</param>
+        /// <param name="istrata">The number of strata.</param>
+        /// <param name="irows">The number of rows.</param>
+        /// <param name="icols">The number of columns.</param>
+        /// <param name="zt">The counts: zt[column, row, stratum], each from 1.</param>
+        /// <param name="ylab">The name of the row classifier.</param>
+        /// <param name="xlab">The name of the column classifier.</param>
+        /// <param name="zlab">The name of the classifier of the strata.</param>
         private static ParameterBag TabCmh(ParameterBag parameters, int istrata, int irows, int icols, double[,,] zt, string ylab, string xlab, string zlab)
         {
             string ender;
@@ -2571,6 +2615,16 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// The 2 by 2 tables of the strata pooled as relative risks, for Crosstabs: the report of what Meta.RelativeRiskMA works out,
+        /// as the relative risk meta-analysis gives it.  The second category of the row classifier is the first group (the exposed)
+        /// and its first category the second group; the second category of the column classifier is the event.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="cco">The confidence level; 0.95 if it is not above 0.</param>
+        /// <param name="zcats">The number of strata.</param>
+        /// <param name="zt">The counts: zt[column, row, stratum], each from 1.</param>
+        /// <param name="zcat">The categories of the strata, whose labels are the labels of the tables.</param>
         private static ParameterBag TabRelativeRisk(IPreferencesAndProgressBar host, double cco, int zcats, double[,,] zt, Namevar[] zcat)
         {
             const int lowerBound = 1;
@@ -2712,6 +2766,41 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// The analysis of an r by c table of counts, for the r by c chi-square test and for Crosstabs.
+        /// Independence: chi-square is the sum over the cells of (observed - expected)^2 / expected, and G-square twice the sum of
+        /// observed log(observed / expected), the expected count of a cell being its row total times its column total over n.  Both
+        /// are on (rows - 1)(columns - 1) degrees of freedom, the rows and columns being those that have counts.  The exact test
+        /// (Rcexact) and the simulation of exact P values (Chi.ChiRCResample) are of the table without its empty rows and columns.
+        /// Scores: each row has a score and each column has one: 1, 2, 3 and so on unless the user gives others.  r is the
+        /// correlation of the two scores over the subjects, and the chi-square for trend is (n - 1) r^2 on 1 degree of freedom.  The
+        /// chi-square for the equality of the mean scores is (n - 1) times the sum of squares, between the columns, of the scores of
+        /// the rows over their total sum of squares, on one degree of freedom fewer than there are columns with counts.
+        /// Association: phi is the root of chi-square / n; Pearson's coefficient of contingency the root of
+        /// chi-square / (chi-square + n); Cramer's V the root of chi-square / (n times the lesser of rows - 1 and columns - 1), and
+        /// for a 2 by 2 table (a d - b c) over the root of the product of the four totals, which has a sign.
+        /// Order: with P twice the number of pairs of subjects that are in the same order by row and by column, and Q twice the
+        /// number that are in opposite orders, gamma is (P - Q) / (P + Q) and tau-b is (P - Q) over the root of
+        /// (n^2 - the sum of the squares of the row totals)(n^2 - that of the column totals).  Each has two standard errors: that
+        /// of the estimate, by the delta method, for the test that it is nothing and for its confidence limits; and that of P - Q
+        /// on the hypothesis of independence, put on the scale of the estimate.
+        /// </summary>
+        /// <param name="host">The preferences, where progress is shown, and where the scores are asked for.</param>
+        /// <param name="cco">The confidence level; made 0.95 if it is not between 0 and 1.</param>
+        /// <param name="o">The counts, o[row, column], each from 1.</param>
+        /// <param name="rows">The number of rows.</param>
+        /// <param name="cols">The number of columns.</param>
+        /// <param name="doExact">Whether the exact test is wanted.  It is not made if a count is not a whole number or if n is above
+        /// 100000.</param>
+        /// <param name="doMonteCarlo">Whether the exact P values are to be simulated.</param>
+        /// <param name="pc">Whether the percentages of the rows, of the columns and of n are to be given.</param>
+        /// <param name="xp">Whether the expected counts are to be given.</param>
+        /// <param name="cs">Whether the part of chi-square that is from each cell is to be given.</param>
+        /// <param name="xs">Whether the scores are to be given.</param>
+        /// <param name="specifyScores">Whether the user is to be asked for the scores.</param>
+        /// <param name="mcci">The confidence level of the limits of a simulated P value.</param>
+        /// <param name="iterations">The number of tables to draw in the simulation.</param>
+        /// <param name="seed">The seed of the simulation; 0 for a seed from the clock.</param>
         public static ParameterBag SChi(ITemplateHost host, ref double cco, double[,] o, int rows, int cols, bool doExact, bool doMonteCarlo, bool pc, bool xp, bool cs, bool xs, bool specifyScores, double mcci, int iterations, int seed)
         {
             double ul; double ll; double p; double c1;
@@ -3321,6 +3410,16 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// The 2 by 2 tables of the strata pooled as odds ratios, for Crosstabs: the report of what Meta.Mantel works out, with the
+        /// pooled odds ratio by conditional maximum likelihood (ExactBB.Exact22K), as the odds ratio meta-analysis gives it.  The
+        /// tables are laid out as those of TabRelativeRisk.
+        /// </summary>
+        /// <param name="host">The preferences, and where progress is shown.</param>
+        /// <param name="cco">The confidence level; 0.95 if it is not above 0.</param>
+        /// <param name="zcats">The number of strata.</param>
+        /// <param name="zt">The counts: zt[column, row, stratum], each from 1.</param>
+        /// <param name="zcat">The categories of the strata, whose labels are the labels of the tables.</param>
         private static ParameterBag TabMh(IPreferencesAndProgressBar host, double cco, int zcats, double[,,] zt, Namevar[] zcat)
         {
             const int lowerBound = 1;
@@ -3536,6 +3635,10 @@ namespace StatsDirect.Builtins
             return outputParameters;
         }
 
+        /// <summary>
+        /// Whether a table is symmetrical: whether it has as many rows as columns and, if strict is set, the same labels in the same
+        /// order.
+        /// </summary>
         private static bool XSymmetrical(int xcats, Namevar[] xcat, int ycats, Namevar[] ycat, bool strict)
         {
             if (strict)
@@ -3551,6 +3654,28 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  Generalised Cochran Mantel Haenszel test
         ///  </summary>
+        /// <remarks>
+        /// One of the three tests of an r by c table in strata.  In each stratum the counts have, with the totals of the stratum
+        /// given and no association, the expectations row total times column total over n, and the covariance of two cells
+        /// (i, j) and (k, l) is Ri (n [i = k] - Rk) Cj (n [j = l] - Cl) / (n^2 (n - 1)), R and C being the row and column totals.
+        /// What is observed less what is expected, and the covariances, are added over the strata, and the statistic is the quadratic
+        /// form of the sum in the inverse of its covariance matrix: for any association (itype 1) of the counts themselves, for the
+        /// mean scores (itype 2) of the sum of the scores of the columns in each row, and for the correlation (itype 3) of the sum of
+        /// the products of the scores of the row and of the column.  The degrees of freedom are the rank of the covariance matrix.
+        /// A stratum of one subject, or of none, adds nothing.
+        /// </remarks>
+        /// <param name="istrata">The number of strata.</param>
+        /// <param name="irows">The number of rows.</param>
+        /// <param name="icols">The number of columns.</param>
+        /// <param name="table">The counts, from element 1: those of the rows of the first stratum of the first column, then of the
+        /// second stratum of the first column, and so on to the last stratum of the last column.</param>
+        /// <param name="rowscr">The scores of the columns, from element 1 (the score that each cell of a row has).</param>
+        /// <param name="colscr">The scores of the rows, from element 1.</param>
+        /// <param name="itype">1: any association; 2: the mean score differs between the rows; 3: the scores are correlated.</param>
+        /// <param name="x2">On return, the statistic.</param>
+        /// <param name="df">On return, its degrees of freedom.</param>
+        /// <param name="p">On return, the probability of a chi-square as great.</param>
+        /// <param name="ierr">On return, 0, or the number of what is wrong with what was given (see Cmhgo).</param>
         public static void Gencmh(int istrata, int irows, int icols, double[] table, double[] rowscr, double[] colscr, int itype, out double x2, out double df, out double p, out int ierr)
         {
             double[,] stat = new double[istrata + 2, 3 + 1];
@@ -3566,6 +3691,10 @@ namespace StatsDirect.Builtins
             p = stat[istrata + 1, 3];
         }
 
+        /// <summary>
+        /// Checks what is given, makes the work space that the test of the kind itype needs, and calls Cmhgo.  The parameters are
+        /// those of Cmhgo; ierr is 9 or 10 if there is not the memory for the work space.
+        /// </summary>
         public static void Cmhexec(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, out int ierr)
         {
 
@@ -3674,6 +3803,29 @@ namespace StatsDirect.Builtins
             Cmhgo(nclvar, nclval, table, indrow, indcol, itype, irowsc, icolsc, rowscr, colscr, res, ldres, ix, f, colsum, rowsum, difvec, difsum, cov, covsum, awk, bwk, ref ierr);
         }
 
+        /// <summary>
+        /// A generalised Cochran-Mantel-Haenszel test of a table of counts that is classified by nclvar variables, of which one is the
+        /// rows and one the columns; the combinations of the categories of the others are the strata.
+        /// </summary>
+        /// <param name="nclvar">The number of classifying variables.</param>
+        /// <param name="nclval">The number of categories of each variable, from element 1.</param>
+        /// <param name="table">The counts, from element 1, the last variable changing fastest.</param>
+        /// <param name="indrow">Which variable is the rows.</param>
+        /// <param name="indcol">Which variable is the columns.</param>
+        /// <param name="itype">1: any association (Cmhall); 2: mean scores (Cmhmean); 3: correlation (Cmhcorr).</param>
+        /// <param name="irowsc">How the columns are scored: 0, by rowscr as it is given; 1, 1, 2, 3 and so on; 2 to 5, from the counts
+        /// (Cmhrcs): 2 over all the strata together, 3 to 5 in each stratum.  The program gives 0.</param>
+        /// <param name="icolsc">How the rows are scored, in the same way, by colscr.</param>
+        /// <param name="rowscr">The scores of the columns, from element 1.</param>
+        /// <param name="colscr">The scores of the rows, from element 1.</param>
+        /// <param name="stat">On return, for each stratum from 1 the statistic of the stratum alone, its degrees of freedom and its
+        /// probability, in elements 1 to 3; and in the row after the last stratum those of the strata together.  A missing value
+        /// where there is nothing to give.</param>
+        /// <param name="ldstat">The number of rows of stat from 1: it must be above the number of strata.</param>
+        /// <param name="ierr">On return, 0, or: 1, fewer than two variables; 2 or 3, indrow or indcol is not a variable; 4, itype is
+        /// not 1 to 3; 5, a variable without categories; 6 or 7, fewer than two rows or columns; 8, stat is too small; 9 or 11,
+        /// irowsc or icolsc is not 0 to 5; 10 or 12, the scores that are given are all the same; 13, a count below 0.</param>
+        /// <remarks>The other parameters are work space.</remarks>
         public static void Cmhgo(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int itype, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] stat, int ldstat, int[] ix, double[] f, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] awk, double[] bwk, ref int ierr)
         {
             int i, iq = 0;
@@ -3889,6 +4041,16 @@ namespace StatsDirect.Builtins
 
         }
 
+        /// <summary>
+        /// The test of any association.  For a stratum alone the statistic is (n - 1) / n times its chi-square, on
+        /// (rows - 1)(columns - 1) degrees of freedom, the rows and columns being those of the stratum that have counts.  For the
+        /// strata together the counts less their expectations of all but the last row and the last column are added over the strata,
+        /// with their covariances (Cmhcov), and the statistic is the quadratic form of the sum in the inverse of its covariance
+        /// matrix, which is factorised with a tolerance; the degrees of freedom are its rank.
+        /// </summary>
+        /// <param name="incrow">The step in table from one row to the next.</param>
+        /// <param name="inccol">The step in table from one column to the next.</param>
+        /// <remarks>The other parameters are those of Cmhgo.</remarks>
         public static void Cmhall(int nclvar, int[] nclval, double[] table, int indrow, int indcol, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] awk, double[] bwk, ref int ierr)
         {
             int i, j, m;
@@ -4013,6 +4175,16 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The test of the mean score differing between the rows.  In a stratum each row has the mean of the scores of the columns
+        /// of its subjects; with v the variance of the score over the subjects of the stratum (divisor n), the statistic of the
+        /// stratum alone is (n - 1) times the variance between the rows over v, on one degree of freedom fewer than it has rows with
+        /// counts.  For the strata together the sums of the scores of the rows less their expectations, row total times (mean of the
+        /// row - mean of the stratum), are added over the strata, with their covariances
+        /// v n^2 / (n - 1) ([i = j] Ri / n - Ri Rj / n^2); each row is then taken against the last, and the statistic is the
+        /// quadratic form of the differences in the inverse of their covariance matrix, whose rank is the degrees of freedom.
+        /// </summary>
+        /// <remarks>The parameters are those of Cmhall; fh is work space.</remarks>
         private static void Cmhmean(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, double[] rowscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, double[] difvec, double[] difsum, double[] cov, double[] covsum, double[] fh, ref int ierr)
         {
             int ij;
@@ -4188,6 +4360,15 @@ namespace StatsDirect.Builtins
 
         }
 
+        /// <summary>
+        /// The test of correlation.  In a stratum the scores of the row and of the column of a subject have the variances va and vb
+        /// and the covariance vab over its subjects (divisor n); the statistic of the stratum alone is (n - 1) vab^2 / (va vb), on 1
+        /// degree of freedom.  For the strata together n vab is added over the strata, and n^2 va vb / (n - 1), which is its variance;
+        /// the statistic is the square of the first sum over the second, on 1 degree of freedom.
+        /// </summary>
+        /// <param name="difsum">On return, the sum over the strata of n vab.</param>
+        /// <param name="covsum">On return, the sum over the strata of n^2 va vb / (n - 1).</param>
+        /// <remarks>The other parameters are those of Cmhall.</remarks>
         private static void Cmhcorr(int nclvar, int[] nclval, double[] table, int indrow, int indcol, int irowsc, int icolsc, double[] rowscr, double[] colscr, double[,] res, int ldres, int incrow, int inccol, double[] f, int[] ix, double[] colsum, double[] rowsum, out double difsum, out double covsum, ref int ierr)
         {
             double tol = Math.Sqrt(Constant.EPSILON);
@@ -4328,6 +4509,10 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  unpack stratified contingency table into y
         ///  </summary>
+        /// <remarks>
+        /// y has, from element 1, the ir by ic table of the stratum that ix points to, column after column.  ix has for each
+        /// variable the number of its category; those of the rows and of the columns are 1.
+        /// </remarks>
         public static void Cmhgetct(double[] table, int ir, int ic, int incrow, int inccol, int indrow, int indcol, int nclvar, int[] nclval, double[] y, int[] ix)
         {
             int i1 = ix[nclvar];
@@ -4356,6 +4541,11 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  o-e covariance
         ///  </summary>
+        /// <remarks>
+        /// For a stratum of rnh subjects: difvec has the counts less their expectations of all but the last row and the last column,
+        /// row after row; cov has their covariances but for the factor rnh^2 / (rnh - 1), which the caller puts in: the products of
+        /// an element of a, ([i = k] rnh Ri - Ri Rk) / rnh^2 for the rows i and k, and one of b, which is the same of the columns.
+        /// </remarks>
         public static void Cmhcov(int ir, int ic, int lm1, double[] rowsum, double[] colsum, double rnh, double[] f, double[] difvec, double[] cov, double[] a, double[] b)
         {
             int irx = ir - 1;
@@ -4411,6 +4601,13 @@ namespace StatsDirect.Builtins
         ///  <summary>
         ///  row and column scores
         ///  </summary>
+        /// <remarks>
+        /// Scores from the totals of the categories, sum, of which there are len.  For iscore 2, 3 or 4 the score of a category is
+        /// the mean rank of its subjects: the total of the categories before it plus half of (its own total + 1); for 2 and 4 that
+        /// is divided by the total of table, which has lentbl counts.  For iscore 5 the score of the first category is 1 less its
+        /// total over the total of table, and that of each category after it the score before it less its total over the total of
+        /// the categories from it on.
+        /// </remarks>
         public static void Cmhrcs(int iscore, int len, int lentbl, double[] sum, double[] table, double[] ab)
         {
             double tblsum = 0;
@@ -4496,6 +4693,22 @@ namespace StatsDirect.Builtins
         ///   derived from:
         ///   ALGORITHM 643, COLLECTED ALGORITHMS FROM ACM. VOL.19(4), DECEMBER, 1993, PP. 484-488.
         ///  </remarks>
+        /// <param name="nrow">The number of rows.</param>
+        /// <param name="ncol">The number of columns.</param>
+        /// <param name="table">The counts, table[row, column], each from 1; the whole number part of each is taken.</param>
+        /// <param name="expect">0 for the exact test.  Above 0, the expected count that a cell is to have for the chi-square
+        /// distribution to be taken in the place of the exact distribution of a part of the table (5 in the program).</param>
+        /// <param name="percnt">With expect above 0, the percentage of the cells of that part that are to have so great an expected
+        /// count (80 in the program).</param>
+        /// <param name="emin">With expect above 0, the expected count that every one of its cells is to have (1 in the
+        /// program).</param>
+        /// <param name="prt">On return, the probability of the table that was observed, given its totals (greater by the tolerance
+        /// of the comparisons of the method, which is a part in 67 million).</param>
+        /// <param name="pre">On return, the P value: the sum of the probabilities of the tables with the same totals that are no more
+        /// probable than the table that was observed.</param>
+        /// <param name="ierr">On return, 0, or what went wrong: 1, a count below 0; 2, no counts (the probabilities are then
+        /// missing); any other number, the table is too large for the work space, or for the keys by which its parts are
+        /// known.</param>
         private static void Rcexact(int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, ref double pre, out int ierr)
         {
             ierr = 0;
@@ -4586,6 +4799,19 @@ namespace StatsDirect.Builtins
         ///   derived from:
         ///   ALGORITHM 643, COLLECTED ALGORITHMS FROM ACM. VOL.19(4), DECEMBER, 1993, PP. 484-488.
         ///  </remarks>
+        /// <remarks>
+        /// The table is built up a column at a time, the columns in the order of their totals and the longer side of the table
+        /// taken as the columns.  A node is what is left of the row totals when some columns have been filled, in order of size,
+        /// which is all that the rest of the table depends on; it is known by a key made of those totals.  The ways of reaching a
+        /// node are kept as the distinct values of the logarithm of the probability so far (the past), each with the number of ways
+        /// that give it.  For each node and each way of filling the next column, the greatest and the least that the rest of the
+        /// table can add are worked out (Shortpath and Longpath, which are kept for each part of a table in a second table of keys):
+        /// if every way of finishing the table is no more probable than the table observed, the whole probability of them is added
+        /// to the P value at once; if none is, the way is dropped; otherwise the node that is reached is put on the list of the next
+        /// stage (Pushnode), or, in the hybrid approximation, the probability of the rest being no more probable is taken from the
+        /// chi-square distribution.  The parameters before fact are those of Rcexact; the others are work space, and ldkey and ldstp
+        /// the numbers of keys and of past values that there is room for in each of two stages.
+        /// </remarks>
         private static void RcExactGo(int nrow, int ncol, double[,] table, double expect, double percnt, double emin, ref double prt, out double pre, ref double[] fact, ref int[] ico, ref int[] iro, ref int[] kyy, ref int[] idif, ref int[] irn, ref int[] key, ref int ldkey, ref int[] ipoin, ref double[] stp, ref int ldstp, ref int[] ifrq, ref double[] dlp, ref double[] dsp, ref double[] tm, ref int[] key2, ref int ierr)
         {
             bool chisq = false;
@@ -5172,6 +5398,12 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// longest path for a given table (network algorithm)
         /// </summary>
+        /// <remarks>
+        /// For a table with the row totals irow and the column totals icol, each in order of size from element 1: the greatest sum
+        /// of the logarithms of the factorials of the cells that a table with those totals can have is found by a search of the
+        /// tables that put as much as can be in one cell after another, and is taken from dsp; if what is left is within tol of
+        /// nothing, dsp is made 0.  The other parameters are the logarithms of the factorials and work space.
+        /// </remarks>
         private static void Longpath(int kd, int nrow, int[] irow, int ncol, int[] icol, ref double dsp, double[] fact, double tol, int[,] icstk, int[] ncstk, int[] lstk, int[] mstk, int[] nstk, int[] nrstk, int[,] irstk, double[] ystk)
         {
             if (nrow == 1)
@@ -5480,6 +5712,14 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// shortest path length
         /// </summary>
+        /// <remarks>
+        /// For a table of mm subjects with the row totals irow and the column totals icol, each in order of size from element 1:
+        /// the least sum of the logarithms of the factorials of the cells that a table with those totals can have is taken from
+        /// dlp.  It is that of the table whose cells are as nearly equal as the totals allow, which Shortie gives at once if there
+        /// is such a table; otherwise it is found stage by stage, a row at a time, over the values that the cells of the row can
+        /// have near their expectations, the column totals that are left being kept under a key with the least sum that reaches
+        /// them.  ierr is 4 on return if there is not room for the keys.  The other parameters are work space.
+        /// </remarks>
         private static void Shortpath(int nrow, int[] irow, int ncol, int[] icol, ref double dlp, int mm, double[] fact, double tol, ref int ierr, int[] ico, int[] iro, int[] it, int[] lb, int[] nr, int[] nt, int[] nu, int[] itc, int[] ist, double[] alen, double[] stv)
         {
             int i;
@@ -5886,6 +6126,12 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// shortest path length (network algorithm)
         /// </summary>
+        /// <remarks>
+        /// Whether there is a table with the totals that are given in which the total of each column is shared as equally as can be
+        /// among the rows, a cell having the whole part of the column total over the number of rows, or one more (the row totals are
+        /// irow from element irx, and the column totals icol from element icx).  If there is, xmin is set and the sum of the
+        /// logarithms of the factorials of its cells is added to val.
+        /// </remarks>
         private static void Shortie(int nrow, int[] irow, int irx, int ncol, int[] icol, int icx, ref double val, ref bool xmin, double[] fact, int[] nd, int[] ne, int[] m)
         {
             int ix1 = irx - 1;
@@ -5941,6 +6187,10 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>generate new nodes based on marginal totals (fisher network algorithm)</summary>
+        /// <remarks>
+        /// The next way of filling a column: idif has the count of the column in each row, which may be no more than what is left of
+        /// the row total, imax.  iflag is 1 on return when there is no other way.
+        /// </remarks>
         private static void Sibling(int nrow, int[] imax, int[] idif, ref int k, ref int ks, out int iflag)
         {
             int m;
@@ -6085,6 +6335,10 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// pop a node off the stack
         /// </summary>
+        /// <remarks>
+        /// The next node of the stage: its row totals are taken out of its key into irow, and ipn is its place.  iflag is 3 on
+        /// return when the stage has no more nodes.
+        /// </remarks>
         private static void Popnode(int nrow, int[] irow, ref int iflag, int[] kyy, int[] key, int ldkey, ref int last, ref int ipn, int istart)
         {
             do
@@ -6119,6 +6373,12 @@ namespace StatsDirect.Builtins
         /// <summary>
         /// push a node onto the stack (network algorithm)
         /// </summary>
+        /// <remarks>
+        /// A node of the next stage, of key kval, reached with the past value pastp in ifreq ways.  If ipsh is set the key is looked
+        /// for, and put in if it is not there.  The past values of a node are kept as a tree in order of size: if one within tol of
+        /// pastp is there, ifreq is added to its number of ways; otherwise pastp is put in.  ifault is 1 on return if there is no
+        /// room for the key or for the past value.
+        /// </remarks>
         private static void Pushnode(double pastp, double tol, int kval, int[] key, int jkey, int ldkey, int[] ipoin, double[] stp, int jstp, int ldstp, int[] ifrq, int jstp2, int jstp3, int jstp4, int ifreq, ref int itop, bool ipsh, ref int itp, ref int ifault)
         {
             // offset into stp() and ifrq

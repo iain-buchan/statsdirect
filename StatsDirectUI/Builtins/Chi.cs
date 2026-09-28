@@ -873,6 +873,12 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The P value of a statistic by simulation: the proportion r / its of the tables drawn whose statistic was no less than that
+        /// of the table observed, with exact (Clopper-Pearson) confidence limits of the proportion at the level cco.
+        /// </summary>
+        /// <returns>The results, or nothing if the simulation failed (ierror other than 0, or -1 for one that was stopped and has
+        /// the tables drawn so far).</returns>
         public static ParameterBag MCResults(int ierror, int r, int its, int seed, double cco)
         {
             if (ierror == 0 || ierror == -1 /* interrupted but partial results returned */ )
@@ -896,6 +902,11 @@ namespace StatsDirect.Builtins
                 return null;
         }
 
+        /// <summary>
+        /// The four statistics of a table that is drawn in the simulation, as Tables.SChi works them out for the table observed:
+        /// chi-square, G-square, the chi-square for trend and the chi-square for the equality of the mean scores.  fault is set if
+        /// the table has no counts.
+        /// </summary>
         private static void ChiRC(int[,] x, int rows, int cols, double[] rowscore, double[] colscore, out double x2, out double x2trend, out double x2eq, out double g2, out bool fault)
         {
             double gtot = 0;
