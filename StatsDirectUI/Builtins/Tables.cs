@@ -2063,20 +2063,20 @@ namespace StatsDirect.Builtins
             //  First classifier
             DataFrame c1Frame = parameters["c1"].AsDataFrame;
             ClassifierVariable c1Variable = (ClassifierVariable)c1Frame.Variables[0];
-            int ycats = c1Variable.GroupCount;
-            Namevar[] ycat = new Namevar[ycats + 1];
+            int rowCategories = c1Variable.GroupCount;
+            Namevar[] rowCategory = new Namevar[rowCategories + 1];
             int cnt = 0;
-            for (int i = 0; i < ycats; i++)
+            for (int i = 0; i < rowCategories; i++)
             {
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
                     cnt++;
-                    ycat[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
+                    rowCategory[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
                 }
             }
-            ycats = cnt;
+            rowCategories = cnt;
 
-            SortName(ycats, ycat, 1);
+            SortName(rowCategories, rowCategory, 1);
 
             //  Second classifier
             DataFrame c2Frame = parameters["c2"].AsDataFrame;
@@ -2099,8 +2099,16 @@ namespace StatsDirect.Builtins
 
             ParameterBag outputParameters = new();
             outputParameters.AddInput("strat", strat);
+            // the answers to the questions about the table of each column variable, which the report is handed and does not ask again
+            bool[] proceed = new bool[c2Frame.VariableCount];
+            bool[] symmetrical = new bool[c2Frame.VariableCount];
+            outputParameters.AddInput("proceed", proceed);
+            outputParameters.AddInput("symmetrical", symmetrical);
             for (int c = 0; c < c2Frame.VariableCount; c++)
             {
+                // each column variable starts from the categories that the row variable has
+                int ycats = rowCategories;
+                Namevar[] ycat = (Namevar[])rowCategory.Clone();
                 ClassifierVariable c2Variable = (ClassifierVariable)c2Frame.Variables[c];
                 int xcats = c2Variable.GroupCount;
                 Namevar[] xcat = new Namevar[xcats + 1];
@@ -2120,22 +2128,23 @@ namespace StatsDirect.Builtins
                 bool wasCancelled;
                 if (ycats > 10 || xcats > 10)
                 {
-                    ok = host.GetBoolean($"Table is large: {ycats} rows by ${xcats} columns. Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
+                    ok = host.GetBoolean($"Table is large: {ycats} rows by {xcats} columns. Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
                 }
+                proceed[c] = ok;
+                if (!ok)
+                    continue;
 
                 if (!XSymmetrical(xcats, xcat, ycats, ycat, false))
                 {
                     bool symmetrise = host.GetBoolean("This table is asymmetrical. Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
                     if (wasCancelled)
                         throw new TemplateOperationCancelledException();
+                    symmetrical[c] = symmetrise;
                     if (symmetrise)
                         XSymmetriseXtab(ref xcats, ref xcat, ref ycats, ref ycat, 1);
                 }
-
-                if (!ok)
-                    continue;
 
                 if (strat)
                 {
@@ -2162,21 +2171,26 @@ namespace StatsDirect.Builtins
             double[] y = new double[n + 1];
             Array.Copy(c1Variable.Data, 0, y, 1, n);
 
-            int yCategoryCount = c1Variable.GroupCount;
-            Namevar[] ycat = new Namevar[yCategoryCount + 1];
+            int rowCategories = c1Variable.GroupCount;
+            Namevar[] rowCategory = new Namevar[rowCategories + 1];
             string yLabel = c1Variable.Title;
             int cnt = 0;
-            for (int i = 0; i < yCategoryCount; i++)
+            for (int i = 0; i < rowCategories; i++)
             {
                 if (c1Variable.Groups[i].Label != Formatting.MISSINGLABEL)
                 {
                     cnt++;
-                    ycat[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
+                    rowCategory[cnt] = new Namevar(c1Variable.Groups[i].Label, i);
                 }
             }
-            yCategoryCount = cnt;
+            rowCategories = cnt;
 
-            SortName(yCategoryCount, ycat, 1);
+            SortName(rowCategories, rowCategory, 1);
+
+            // the answers that the step before gave to the questions about the table of each column variable, if it was run
+            bool[] proceed = parameters.ContainsKey("proceed") ? parameters["proceed"].AsObject as bool[] : null;
+            bool[] symmetrical = parameters.ContainsKey("symmetrical") ? parameters["symmetrical"].AsObject as bool[] : null;
+            bool answered = proceed != null && symmetrical != null && proceed.Length == parameters["c2"].AsDataFrame.VariableCount && symmetrical.Length == proceed.Length;
 
             //  Second classifier(s)
             DataFrame c2Frame = parameters["c2"].AsDataFrame;
@@ -2215,6 +2229,9 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("*columns", columnsList);
             for (int c = 0; c < c2Frame.VariableCount; c++)
             {
+                // each column variable starts from the categories that the row variable has
+                int yCategoryCount = rowCategories;
+                Namevar[] ycat = (Namevar[])rowCategory.Clone();
                 ClassifierVariable c2Variable = c2Frame.Variables[c] as ClassifierVariable;
                 int xCategoryCount = c2Variable.GroupCount;
                 double[] x = new double[n + 1];
@@ -2238,22 +2255,36 @@ namespace StatsDirect.Builtins
                 bool wasCancelled;
                 if (yCategoryCount > 10 || xCategoryCount > 10)
                 {
-                    ok = host.GetBoolean("Table = " + yCategoryCount.ToString() + " rows by " + xCategoryCount.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
-                    if (wasCancelled)
-                        throw new TemplateOperationCancelledException();
+                    if (answered)
+                    {
+                        ok = proceed[c];
+                    }
+                    else
+                    {
+                        ok = host.GetBoolean("Table = " + yCategoryCount.ToString() + " rows by " + xCategoryCount.ToString() + " columns" + "\r\n" + "Continue?", "Crosstabs: Large table warning", false, out wasCancelled);
+                        if (wasCancelled)
+                            throw new TemplateOperationCancelledException();
+                    }
                 }
+                if (!ok)
+                    continue;
 
                 if (!XSymmetrical(xCategoryCount, xcat, yCategoryCount, ycat, false))
                 {
-                    bool symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
-                    if (wasCancelled)
-                        throw new TemplateOperationCancelledException();
+                    bool symmetrise;
+                    if (answered)
+                    {
+                        symmetrise = symmetrical[c];
+                    }
+                    else
+                    {
+                        symmetrise = host.GetBoolean("This table is asymmetrical." + "\r\n" + "Force it to be symmetrical by adding empty columns or rows?", "Crosstabs: symmetry", false, out wasCancelled);
+                        if (wasCancelled)
+                            throw new TemplateOperationCancelledException();
+                    }
                     if (symmetrise)
                         XSymmetriseXtab(ref xCategoryCount, ref xcat, ref yCategoryCount, ref ycat, 1);
                 }
-
-                if (!ok)
-                    continue;
 
                 ParameterBag columnsParameters = new();
                 columnsList.Add(columnsParameters);
