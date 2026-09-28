@@ -446,9 +446,31 @@ namespace StatsDirect.Numerics
         public static double pnct(double t, int idf, double delta, out int ifault)
         {
             ifault = 0;
-            if (idf <= 0)
+            if (idf <= 0 || double.IsNaN(t) || !double.IsFinite(delta) || t == Constant.MISSING || delta == Constant.MISSING)
             {
                 ifault = 1;
+                return Constant.MISSING;
+            }
+            if (double.IsInfinity(t))
+                return t < 0 ? 0 : 1;
+            if (t == 0)
+                return PDF.alnorm(-delta);
+            // For t<0, F(t) <= Phi(-delta); the reflected upper tail has the same bound.
+            // Beyond 38.5 standard deviations even that bound rounds to zero in a double.
+            if (t < 0 && delta > 38.5) return 0;
+            if (t > 0 && delta < -38.5) return 1;
+            if (delta == 0)
+                return PDF.TProbability(t, idf, lowerTail: true);
+            // The recurrence below starts with exp(-delta^2/2) or exp(-delta^2*b/2).
+            // Small seeds can underflow before later terms grow back to matter; its cost also grows with df.
+            // Integrate the defining mixture in these ranges, with an explicit failure if it cannot converge.
+            // Odd df also use the integral: their Owen integral in dnctint has an approximation
+            // which can lose about 3e-8, even at modest noncentrality.
+            if (Math.Abs(delta) > 20 || idf > 1000 || (idf & 1) != 0)
+            {
+                double integral = NoncentralTIntegral.Cdf(t, idf, delta);
+                if (double.IsFinite(integral)) return integral;
+                ifault = 2;
                 return Constant.MISSING;
             }
             const double pi = Constant.PI;
@@ -520,6 +542,15 @@ namespace StatsDirect.Numerics
                 p1 = PDF.alnorm(-dsb);
                 p = dnctint(ref dsb, ref a);
                 p = p1 + 2.0 * (p + sum);
+            }
+            // The recurrence subtracts nearly equal terms in the tails. Re-evaluate a small tail
+            // (and any invalid value) by the positive mixture integral, rather than rounding it away.
+            if (!double.IsFinite(p) || p < 1e-4 || p > 1 - 1e-4)
+            {
+                double integral = NoncentralTIntegral.Cdf(t, idf, delta);
+                if (double.IsFinite(integral)) return integral;
+                ifault = 2;
+                return Constant.MISSING;
             }
             return p;
         }
@@ -1175,6 +1206,13 @@ namespace StatsDirect.Numerics
             {
                 ifault = 2;
                 return Constant.MISSING;
+            }
+            // Invert the smaller tail. Matching a CDF rounded near one otherwise leaves only a
+            // few significant figures in its complement, even when the CDF itself is accurate.
+            if (p > .5)
+            {
+                double reflected = tnct(1 - p, idf, -delta, out ifault);
+                return ifault == 0 ? -reflected : Constant.MISSING;
             }
             const double eps = Constant.EPSILON;
             double xinit = PDF.gauinv(p, out ifault) + delta;

@@ -469,10 +469,13 @@ namespace StatsDirect.Expressions
             }
             else
             {
-                p = NoncentralT(q, df, ncp);
+                // With whole df the shared routine can evaluate either tail directly by symmetry.
+                // Subtracting a rounded CDF from one loses small upper tails and their logarithms.
+                bool directUpper = !lowerTail && HasWholeDegreesOfFreedom(df);
+                p = directUpper ? NoncentralT(-q, df, -ncp) : NoncentralT(q, df, ncp);
                 if (p == Constant.MISSING)
                     return Constant.MISSING;
-                if (!lowerTail)
+                if (!lowerTail && !directUpper)
                     p = 1.0 - p;
             }
             if (logP)
@@ -488,13 +491,13 @@ namespace StatsDirect.Expressions
                 return PDF.TQuantile(p, df, lowerTail, logP);
             if (logP)
                 p = Math.Exp(p);
-            if (!lowerTail)
-                p = 1.0 - p;
             if (HasWholeDegreesOfFreedom(df))
             {
-                double q = ExFortran.tnct(p, (int)df, ncp, out int fault);
-                return fault != 0 ? Constant.MISSING : q;
+                double q = ExFortran.tnct(p, (int)df, lowerTail ? ncp : -ncp, out int fault);
+                return fault != 0 ? Constant.MISSING : (lowerTail ? q : -q);
             }
+            if (!lowerTail)
+                p = 1.0 - p;
             return NoncentralTQuantile(p, df, ncp);
         }
 
