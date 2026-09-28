@@ -291,102 +291,28 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        // The exact two sided mid-P value of a 2 by 2 table: with the totals of the table given, the probability of a first count
+        // that is no more than the one observed, and of one that is no less, each less half the probability of the count
+        // observed; twice the less of the two, or 1 if that is more.  Missing for a table with an empty row or column.
         private static double PropMidPFisher2(int a, int b, int c, int d)
         {
-            int fault = 0;
-
-            if (a > d)
-            {
-                int t = a;
-                a = d;
-                d = t;
-            }
-            if (b > c)
-            {
-                int t = b;
-                b = c;
-                c = t;
-            }
-
-            int p = a + b;
-            int q = c + d;
-            int r = a + c;
-            int s = b + d;
-            int n = p + q;
-
-            if (p > 0 && q > 0 && r > 0 && s > 0)
-            {
-
-                double b0 = 1.0;
-                double n1 = n;
-                double s1 = s;
-                do
-                {
-                    if (b0 > 1.0E+300 || s1 <= 0.0)
-                    {
-                        fault = 1;
-                        break;
-                    }
-                    b0 = b0 * n1 / s1;
-                    s1 -= 1.0;
-                    n1 -= 1.0;
-                }
-                while (n1 > Convert.ToDouble(q));
-
-                if (fault != 0)
-                    return Constant.MISSING;
-                double[] f1 = new double[p + 2];
-                double[] g1 = new double[p + 2];
-                double[] h1 = new double[p + 2];
-                int a1 = 0;
-                int q1 = q - r;
-                int p1 = p;
-                int r1 = r;
-                double h = 1.0 / b0;
-                double f = h;
-                f1[1] = f;
-                h1[1] = h;
-                // g = 1.0; 
-                g1[1] = 1.0;
-
-                int a2;
-                do
-                {
-                    a1 += 1;
-                    q1 += 1;
-                    h = h * p1 / a1 * r1 / q1;
-                    f += h;
-                    a2 = a1 + 1;
-                    f1[a2] = f;
-                    h1[a2] = h;
-                    p1 -= 1;
-                    r1 -= 1;
-                }
-                while (p1 > 0);
-
-                //   UPPER TAIL PROBABILITIES WOULD BE SUBJECT TO SUBTRACTION ERRORS
-                //   IF CALCULATED BY 1 - F. THEREFORE ......
-
-                double g = 0.0;
-                int j;
-                for (j = a2; j >= 2; j--)
-                {
-                    g += h1[j];
-                    g1[j] = g;
-                }
-
-                a1 = a + 1;
-                // The two sided mid-P is twice the smaller of the two one sided mid-P values (the central convention, as the
-                // Fisher's exact test report prints it), each tail's mid-P being its cumulative probability up to and including
-                // the observed table less half the probability of that table
-                double lowerMidP = f1[a1] - h1[a1] / 2.0;
-                double upperMidP = g1[a1] - h1[a1] / 2.0;
-                double z = 2.0 * Math.Min(lowerMidP, upperMidP);
-                if (z > 1.0)
-                    z = 1.0;
-                return z;
-            }
-            return Constant.MISSING;
+            double p = (double)a + b;
+            double q = (double)c + d;
+            double r = (double)a + c;
+            double s = (double)b + d;
+            if (!(p > 0 && q > 0 && r > 0 && s > 0))
+                return Constant.MISSING;
+            // the first count can be from what the first column has more than the second row, or 0, to the less of the first
+            // row and the first column
+            long first = (long)Math.Max(0.0, r - q);
+            long last = (long)Math.Min(p, r);
+            long mode = (long)Math.Floor((p + 1.0) * (r + 1.0) / (p + q + 2.0));
+            DiscreteTails.Sum(first, last, mode, a, k => (p - k) * (r - k) / ((k + 1.0) * (q - r + k + 1.0)), k => k * (q - r + k) / ((p - k + 1.0) * (r - k + 1.0)),
+                out double lower, out double upper, out double point, out double _);
+            // The two sided mid-P is twice the smaller of the two one sided mid-P values (the central convention, as the
+            // Fisher's exact test report prints it), each tail's mid-P being its cumulative probability up to and including
+            // the observed table less half the probability of that table
+            return Math.Min(1.0, 2.0 * (Math.Min(lower, upper) - point / 2.0));
         }
 
         public static StepOutput RptMiscRetroRisk(IProgressBarHost host, ParameterBag parameters)
@@ -1455,14 +1381,17 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptPropPairs(ParameterBag parameters)
         {
-            double n = parameters["n"].AsDouble;
+            // numbers that are not whole numbers are rounded, a half to the even number
+            double n = Math.Round(parameters["n"].AsDouble);
 
             if (n <= 0)
                 throw new InvalidDataException("Total number in study must be at least 1");
-            double r = parameters["r"].AsDouble;
-            double s = parameters["s"].AsDouble;
-            double t = parameters["t"].AsDouble;
+            double r = Math.Round(parameters["r"].AsDouble);
+            double s = Math.Round(parameters["s"].AsDouble);
+            double t = Math.Round(parameters["t"].AsDouble);
 
+            if (r < 0 || s < 0 || t < 0)
+                throw new InvalidDataException("A number responding can not be below 0");
             if (n < r + s + t)
                 throw new InvalidDataException("Total number in study must be at least the sum of the number responding in both categories + first category only + second category only");
 
@@ -1621,21 +1550,24 @@ namespace StatsDirect.Builtins
 
         public static StepOutput RptPropUnPaired(ParameterBag parameters)
         {
-            double n1 = parameters["n1"].AsDouble;
-            double r1 = parameters["r1"].AsDouble;
+            // numbers that are not whole numbers are rounded, a half to the even number
+            double n1 = Math.Round(parameters["n1"].AsDouble);
+            double r1 = Math.Round(parameters["r1"].AsDouble);
 
             if (r1 > n1)
                 throw new InvalidDataException("The number responding in group 1 can not be more than its total");
             if (n1 <= 0)
                 throw new InvalidDataException();
 
-            double n2 = parameters["n2"].AsDouble;
-            double r2 = parameters["r2"].AsDouble;
+            double n2 = Math.Round(parameters["n2"].AsDouble);
+            double r2 = Math.Round(parameters["r2"].AsDouble);
             if (r2 > n2)
                 throw new InvalidDataException("The number responding in group 2 can not be more than its total");
 
             if (n2 <= 0)
                 throw new InvalidDataException();
+            if (r1 < 0 || r2 < 0)
+                throw new InvalidDataException("A number responding can not be below 0");
 
             double cco = parameters["cco"].AsDouble;
             if (cco <= 0.0 | cco >= 1.0)

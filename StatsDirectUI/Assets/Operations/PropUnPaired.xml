@@ -5,30 +5,30 @@
   <help chm-id="1250" />
   <steps>
       <parameters>
-        <double>
+        <integer>
           <name>n1</name>
           <prompt>Total observations in SAMPLE 1</prompt>
           <must-request>true</must-request>
           <minimum-value>1</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>r1</name>
           <prompt>Number responding in SAMPLE 1</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>n2</name>
           <prompt>Total observations in SAMPLE 2</prompt>
           <must-request>true</must-request>
           <minimum-value>1</minimum-value>
-        </double>
-        <double>
+        </integer>
+        <integer>
           <name>r2</name>
           <prompt>Number responding in SAMPLE 2</prompt>
           <must-request>true</must-request>
           <minimum-value>0</minimum-value>
-        </double>
+        </integer>
         <confidence-interval>
           <name>cco</name>
           <must-request>true</must-request>
