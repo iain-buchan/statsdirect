@@ -458,6 +458,18 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("ulm", ulm);
             outputParameters.AddOutput("p1m", p1m);
             outputParameters.AddOutput("p2m", p2m);
+
+            // Why the report has no figures, if it has none
+            List<ParameterBag> noteList = new();
+            outputParameters.AddOutput("*note", noteList);
+            if (ierr != 0)
+            {
+                ParameterBag noteParameters = new();
+                noteList.Add(noteParameters);
+                noteParameters.AddOutput("note", ierr == -1
+                    ? "The table is too large for the exact method, which considers no more than a million values of the first count."
+                    : "The exact method could not be completed for this table.");
+            }
             return new StepOutput(outputParameters);
         }
 

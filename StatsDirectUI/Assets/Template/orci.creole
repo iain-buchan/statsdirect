@@ -16,4 +16,5 @@
 
 <p><ci>Exact mid-P @{pc:round2}% confidence interval = @{llm:roundu}  to  @{ulm:roundu}</ci><br />
 <pval>Exact mid-P one sided @{p1m:pval}, two sided @{p2m:pval}</pval></p>
+<block name="note"><p><warn>@note</warn></p></block>
 </report>
