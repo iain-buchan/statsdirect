@@ -13,6 +13,10 @@ namespace StatsDirect.Builtins
 {
     public static class Describe
     {
+        /// <summary>
+        /// The rows of the Frequencies analysis in the order of their values: numbers in order of size, and after them the values
+        /// that are not numbers, in the order of their characters (Formatting.CompareLabels).
+        /// </summary>
         private class SortGroupByTitleAscending : IComparer<Group>
         {
             private static int Compare(Group x, Group y)
@@ -28,6 +32,9 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The rows of the Frequencies analysis in the order of their values, the last of that order first.
+        /// </summary>
         private class SortGroupByTitleDescending : IComparer<Group>
         {
             private static int Compare(Group x, Group y)
@@ -43,6 +50,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The rows of the Frequencies analysis in the order of their frequencies, the least first.  Values that have the same
+        /// frequency are in the order of the values.
+        /// </summary>
         private class SortGroupByNbinAscending : IComparer<Group>
         {
             private static int Compare(Group x, Group y)
@@ -58,6 +69,10 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The rows of the Frequencies analysis in the order of their frequencies, the greatest first.  Values that have the same
+        /// frequency are in the order of the values, as they are when the least frequency is first.
+        /// </summary>
         private class SortGroupByNbinDescending : IComparer<Group>
         {
             private static int Compare(Group x, Group y)
@@ -235,6 +250,26 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The frequency analysis of one or more columns: for each column, the number of its records, and a table of its values
+        /// with the frequency of each, the frequency as a percentage, the cumulative frequency and the cumulative percentage.
+        /// </summary>
+        /// <remarks>
+        /// A column comes from the worksheet as categories, one for each value that its cells have, as text; a cell that is empty,
+        /// down to the last row of the selection that has something, is a record of the category "* (missing)".  A column that is
+        /// handed over as numbers is made into categories here, its missing values being that category.
+        /// The missing values are the first row of the table in every order.  They are counted in the number of records, and have
+        /// no part in the percentages, which are of the records that are not missing, or in the cumulative frequencies, which run
+        /// down the other rows in the order in which the rows are given.
+        /// The frame that is handed over is changed: a column of numbers in it is replaced by its categories.
+        /// </remarks>
+        /// <param name="parameters">"data": the columns; "sortBy": "value" for the rows in the order of the values, anything else
+        /// for the order of the frequencies; "sortOrder": "asc" for the least first, anything else for the greatest first.</param>
+        /// <returns>"*variable": for each column "ti", its title, "n", the number of its records, "*missing", which has nothing if
+        /// no record is missing, and otherwise "k", the number of records that are missing, and "m", the number that are not, and
+        /// "*bin", the rows of its table: "x" the value, "fx" its frequency, "pc" the frequency as a percentage, "cm" the
+        /// cumulative frequency and "pc2" the cumulative percentage; the last three are "na" in the row of the missing
+        /// values.</returns>
         public static StepOutput RptFrequency(ParameterBag parameters)
         {
             DataFrame data = parameters["data"].AsDataFrame;

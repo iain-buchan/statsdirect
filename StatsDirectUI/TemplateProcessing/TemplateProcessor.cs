@@ -605,6 +605,11 @@ namespace StatsDirect.TemplateProcessing
         /// for any gidx call - cdat().bins is not populated
         /// this sub calculates the bins if required e.g. by rpt_frequency
         /// </summary>
+        /// <remarks>
+        /// The categories of a column of numbers: one for each value that the column has, in the order in which the values are
+        /// first met, with the number of times that the value is there; its label is the number as text.  The missing values are
+        /// in no category.  The data of what is returned are the numbers themselves, and the identifier of a category is its value.
+        /// </remarks>
         public static ClassifierVariable gidx_bins(DoubleVariable v)
         {
             // find number of categories
