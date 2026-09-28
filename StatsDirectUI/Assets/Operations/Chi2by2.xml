@@ -66,6 +66,7 @@ Yates-corrected Chi&#xb2; = @{yates_chi:roundu}  <pval>@{yates_chi_p:pval}</pval
 Pearson's contingency = @{pearson:roundu}<br />
 Cram&#xe9;r's <i>V</i> (signed) = @{vs:roundu}</p>
 <block name="warn"><p><warn>@wrn too small for chi-square, please use Fisher's exact test instead</warn></p></block>
+<block name="note"><p><warn>@note</warn></p></block>
 </report>
 <block name="odds"><include src="odds.creole"/></block>
 <block name="relrisk"><include src="relrisk.creole"/></block>

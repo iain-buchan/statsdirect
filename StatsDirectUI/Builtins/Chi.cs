@@ -35,8 +35,22 @@ namespace StatsDirect.Builtins
             double s = b + d;
             double n = p + q;
             ParameterBag outputParameters = new();
-            if (!(fault == 0 && (p > 0 || q > 0 || r > 0 || s > 0) && p * q * r * s > 0))
+            if (fault != 0)
                 throw new InvalidDataException();
+            if (a < 0 || b < 0 || c < 0 || d < 0)
+                throw new InvalidDataException("A count of the table is below 0.");
+            if (!(p * q * r * s > 0))
+                throw new InvalidDataException("A row or a column of the table has no observations: chi-square can not be calculated for such a table.");
+
+            // what the report says of an analysis that it has not
+            List<ParameterBag> noteList = new();
+            outputParameters.AddOutput("*note", noteList);
+            void Note(string note)
+            {
+                ParameterBag noteParameters = new();
+                noteList.Add(noteParameters);
+                noteParameters.AddOutput("note", note);
+            }
 
             outputParameters.AddOutput("tab3_a1", a);
             outputParameters.AddOutput("tab3_b1", b);
@@ -134,6 +148,16 @@ namespace StatsDirect.Builtins
                 // The odds ratio block carries the exact P values, so the Fisher's exact test block is only needed when this routine fails
                 if (ierr == 0)
                     doneExact = true;
+                List<ParameterBag> oddsNoteList = new();
+                oddsParameters.AddOutput("*note", oddsNoteList);
+                if (ierr != 0)
+                {
+                    ParameterBag oddsNoteParameters = new();
+                    oddsNoteList.Add(oddsNoteParameters);
+                    oddsNoteParameters.AddOutput("note", ierr == -1
+                        ? "The table is too large for the exact method of the odds ratio, which considers no more than a million values of the first count."
+                        : "The exact method of the odds ratio could not be completed for this table.");
+                }
                 oddsParameters.AddOutput("ci", cco * 100.0);
                 oddsParameters.AddOutput("llf", llf);
                 oddsParameters.AddOutput("ulf", ulf);
@@ -145,21 +169,25 @@ namespace StatsDirect.Builtins
                 oddsParameters.AddOutput("p2m", p2m);
             }
             else if (isCohort)
-                relRiskList.Add(Analysis.RptMiscRelRisk(parameters).ParameterBag);
+            {
+                // The risk ratio has no value if none of those without the characteristic has the outcome: the tests are given all
+                // the same
+                if (b > 0)
+                    relRiskList.Add(Analysis.RptMiscRelRisk(parameters).ParameterBag);
+                else
+                    Note("The risk ratio is not given: none of those without the characteristic has the outcome.");
+            }
 
+            // Fisher's exact test: if the observations or the expected counts are few, if it is asked for, and if the exact method
+            // of the odds ratio, which has the P values of the test, could not be completed
             List<ParameterBag> fisherList = new();
             outputParameters.AddOutput("*fisher", fisherList);
-            if (!doneExact)
+            if (!doneExact && (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20 || doFisher || isCaseControl))
             {
-                if (e1 < 5 || e2 < 5 || e3 < 5 || e4 < 5 || n < 20)
-                {
+                if (n <= int.MaxValue)
                     fisherList.Add(Exact.RptExactFisher(parameters).ParameterBag);
-                }
                 else
-                {
-                    if (doFisher)
-                        fisherList.Add(Exact.RptExactFisher(parameters).ParameterBag);
-                }
+                    Note("Fisher's exact test is not given for a table of more than 2,147,483,647 observations.");
             }
             return new StepOutput(outputParameters);
         }
