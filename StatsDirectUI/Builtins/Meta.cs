@@ -2270,15 +2270,20 @@ namespace StatsDirect.Builtins
             // Try exact Mantel
             if (host.Preferences.MetaExact)
             {
+                // An exact method is of counts: counts that are not whole numbers are rounded, a half to the even number
                 Rec2X2[] tbl = new Rec2X2[k + 1];
                 for (int i = 1; i <= k; i++)
                 {
+                    double a = Math.Round(o[i, 1]);
+                    double b = Math.Round(o[i, 2]);
+                    double c = Math.Round(o[i, 3]);
+                    double d = Math.Round(o[i, 4]);
                     tbl[i].Freq = 1;
-                    tbl[i].A = o[i, 1];
-                    tbl[i].M1 = o[i, 1] + o[i, 2];
-                    tbl[i].N1 = o[i, 1] + o[i, 3];
-                    tbl[i].N0 = o[i, 2] + o[i, 4];
-                    tbl[i].IsInformative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
+                    tbl[i].A = a;
+                    tbl[i].M1 = a + b;
+                    tbl[i].N1 = a + c;
+                    tbl[i].N0 = b + d;
+                    tbl[i].IsInformative = (a * d != 0.0) | (b * c != 0.0);
                 }
                 bool useLogScale = false;
                 new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
@@ -2477,10 +2482,13 @@ namespace StatsDirect.Builtins
         /// <param name="bd">On return, the statistic of Breslow and Day.</param>
         /// <param name="included">On return, whether each table is pooled (see IncludeTable).</param>
         /// <param name="ierr">On return, 0.</param>
+        /// <param name="exact">Whether the exact method is used; if it is not given, as the preferences have it.</param>
         /// <remarks>The other parameters are as those of RelativeRiskMA.  With the exact method the limits of each table are the
         /// conditional exact limits (ExactBB.OddsRatioCI).</remarks>
-        public static void Mantel(IPreferencesAndProgressBar host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr)
+        public static void Mantel(IPreferencesAndProgressBar host, int lowerBound, int k, out int realk, double[,] o, out double rmh, out double ll, out double ul, out double x2, out double sk, double cit, double cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr, bool? exact = null)
         {
+            // the exact method: as it is asked for, or as the preferences have it
+            bool useExact = exact ?? host.Preferences.MetaExact;
             odr = new double[k + lowerBound];
             odrl = new double[k + lowerBound];
             odru = new double[k + lowerBound];
@@ -2593,7 +2601,7 @@ namespace StatsDirect.Builtins
                         }
                     }
                     odr[i] = a * d / (b * c);
-                    if (host.Preferences.MetaExact)
+                    if (useExact)
                     {
                         // the conditional exact limits are those of the observed table: a zero cell gives a limit of 0 or infinity
                         OddsRatioCI(host, cco, o[i, 1], o[i, 2], o[i, 3], o[i, 4], out double _, out odrl[i], out odru[i], out lerr[i], out uerr[i]);
@@ -4337,10 +4345,12 @@ namespace StatsDirect.Builtins
         /// <param name="i2">On return, I-squared as a percentage; missing with fewer than two studies.</param>
         /// <param name="ll">On return, the lower limit.</param>
         /// <param name="ul">On return, the upper limit.</param>
-        public static void IsquareNcc(IPreferences host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul)
+        /// <param name="exact">Whether the exact method is used; if it is not given, as the preferences have it.</param>
+        public static void IsquareNcc(IPreferences host, double q, int k, double cco, double cit, out double i2, out double ll, out double ul, bool? exact = null)
         {
             double SElnH;
             int ierr = 0;
+            bool useExact = exact ?? host.Preferences.MetaExact;
 
             double df = Convert.ToDouble(k - 1);
             double dk = Convert.ToDouble(k);
@@ -4361,7 +4371,7 @@ namespace StatsDirect.Builtins
             if (cco <= 0.0 || cco >= 1.0)
                 return;
             //  With one degree of freedom (two studies) the test-based interval has no standard error; the exact interval is still given
-            if (df < 2 && !host.Preferences.MetaExact)
+            if (df < 2 && !useExact)
                 return;
             double levelci = 1.0 - (1.0 - cco) / 2.0;
             double clevelci = 1.0 - levelci;
@@ -4384,7 +4394,7 @@ namespace StatsDirect.Builtins
             ul = 100.0 * (ubH2 - 1.0) / ubH2;
             }
 
-            if (!host.Preferences.MetaExact)
+            if (!useExact)
                 return;
 
             //  Iterative solution to seek CI for non-centrality parameter (and then for H and I2)

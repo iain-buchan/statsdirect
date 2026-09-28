@@ -399,18 +399,20 @@ namespace StatsDirect.Builtins
             string[] title = new string[k + 1];
             double[] axll = new double[k + 1];
             double[] axul = new double[k + 1];
+            // The tables are typed with the characteristic in their columns and the outcome in their rows: the first column is of
+            // those with the characteristic (the exposed), and the first row of those with the outcome.  A table is held as the
+            // analysis of tables from a worksheet holds it: exposed with the outcome, not exposed with it, exposed without it, not
+            // exposed without it
             for (int r = 1; r <= rows; r += 2)
             {
                 int strat = 1 + r / 2;
                 title[strat] = "stratum " + strat.ToString();
-                double rtd = datV0.Data[r - 1];
-                o[strat, 1] = rtd;
-                rtd = datV1.Data[r - 1];
-                o[strat, 3] = rtd;
-                rtd = datV0.Data[r];
-                o[strat, 2] = rtd;
-                rtd = datV1.Data[r];
-                o[strat, 4] = rtd;
+                o[strat, 1] = datV0.Data[r - 1];
+                o[strat, 2] = datV1.Data[r - 1];
+                o[strat, 3] = datV0.Data[r];
+                o[strat, 4] = datV1.Data[r];
+                if (o[strat, 1] < 0.0 || o[strat, 2] < 0.0 || o[strat, 3] < 0.0 || o[strat, 4] < 0.0)
+                    throw new InvalidDataException("A count of table " + strat.ToString() + " is below 0.");
             }
 
             double cco = parameters["cco"].AsDouble;
@@ -420,23 +422,37 @@ namespace StatsDirect.Builtins
             bool plotForest = parameters["plot_forest"].AsBoolean;
             double cit = PDF.gauinv(cco + (1.0 - cco) / 2.0);
 
-            Meta.Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr);
+            // the exact methods are those of the conditional maximum likelihood estimate, of the limits of the odds ratio of each
+            // table and of the limits of I-squared
+            bool tryExact = parameters["try_exact"].AsBoolean;
+
+            Meta.Mantel(host, 1, k, out int realk, o, out double rmh, out double ll, out double ul, out double x2, out double sk, cit, cco, out double[] odr, out double[] odw, out double[] dswt, out double[] odrl, out double[] odru, out double[] odx, out bool[] lerr, out bool[] uerr, out double qc, out double bd, out double dsor, out double dsx2, out double dsll, out double dsul, out bool[] cced, out double tausq, out bool[] included, out int ierr, tryExact);
             if (ierr != 0)
-                return null;
+            {
+                if (ierr != 99)
+                    throw new InvalidDataException();
+                throw new TemplateOperationCancelledException();
+            }
+            if (realk == 0)
+                throw new TemplateOperationCancelledException("None of the tables can be pooled: each of them has no events, or events in every subject, or a group with no subjects.", "Mantel-Haenszel test");
 
             // Try exact Mantel
-            bool tryExact = parameters["try_exact"].AsBoolean;
             if (tryExact)
             {
+                // An exact method is of counts: counts that are not whole numbers are rounded, a half to the even number
                 Rec2X2[] tbl = new Rec2X2[k + 1];
                 for (int i = 1; i <= k; i++)
                 {
+                    double a = Math.Round(o[i, 1]);
+                    double b = Math.Round(o[i, 2]);
+                    double c = Math.Round(o[i, 3]);
+                    double d = Math.Round(o[i, 4]);
                     tbl[i].Freq = 1;
-                    tbl[i].A = o[i, 1];
-                    tbl[i].M1 = o[i, 1] + o[i, 2];
-                    tbl[i].N1 = o[i, 1] + o[i, 3];
-                    tbl[i].N0 = o[i, 2] + o[i, 4];
-                    tbl[i].IsInformative = (o[i, 1] * o[i, 4] != 0.0) | (o[i, 2] * o[i, 3] != 0.0);
+                    tbl[i].A = a;
+                    tbl[i].M1 = a + b;
+                    tbl[i].N1 = a + c;
+                    tbl[i].N0 = b + d;
+                    tbl[i].IsInformative = (a * d != 0.0) | (b * c != 0.0);
                 }
                 bool useLogScale = false;
                 new ExactBB().Exact22K(host, 1, k, Exact22KDataType.Type1, tbl, cco, out eor, out ulf, out llf, out ulm, out llm, out p1F, out p2F, out p1M, out p2M, ref useLogScale, out ierr);
@@ -473,7 +489,7 @@ namespace StatsDirect.Builtins
                 inputsParameters.AddOutput("lb", string.Empty);
             }
             outputParameters.AddOutput("pc", cco * 100);
-            outputParameters.AddOutput("method", host.Preferences.MetaExact ? "CML" : "logit");
+            outputParameters.AddOutput("method", tryExact ? "CML" : "logit");
             List<ParameterBag> orList = new();
             outputParameters.AddOutput("*or", orList);
             for (int i = 1; i <= k; i++)
@@ -552,7 +568,7 @@ namespace StatsDirect.Builtins
             outputParameters.AddOutput("df_cochran", realk - 1);
             outputParameters.AddOutput("xp_cochran", PDF.chivalp(qc, realk - 1));
             outputParameters.AddOutput("tausq", tausq);
-            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq);
+            Meta.IsquareNcc(host, qc, realk, cco, cit, out double isq, out double llisq, out double ulisq, tryExact);
             outputParameters.AddOutput("isq", isq);
             outputParameters.AddOutput("pc1", cco * 100);
             outputParameters.AddOutput("llisq", llisq);
