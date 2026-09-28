@@ -5563,6 +5563,60 @@ namespace StatsDirect.Builtins
         }
 
         /// <summary>
+        /// What is left of a table at a step of the search of Longpath: the totals of the rows and of the columns that are left,
+        /// each in order of size.  It is the key under which the greatest sum that has reached that part of the table is kept.
+        /// </summary>
+        private readonly struct Totals : IEquatable<Totals>
+        {
+            private readonly int[] totals;
+            private readonly int hash;
+
+            /// <param name="rows">The totals of the rows at each step, rows[row, step].</param>
+            /// <param name="columns">The totals of the columns at each step, columns[column, step].</param>
+            /// <param name="step">The step.</param>
+            /// <param name="nro">The number of rows that are left.</param>
+            /// <param name="nco">The number of columns that are left.</param>
+            public Totals(int[,] rows, int[,] columns, int step, int nro, int nco)
+            {
+                totals = new int[nro + nco + 1];
+                totals[0] = nro;
+                for (int i = 1; i <= nro; i++)
+                    totals[i] = rows[i, step];
+                for (int j = 1; j <= nco; j++)
+                    totals[nro + j] = columns[j, step];
+                unchecked
+                {
+                    int h = 17;
+                    foreach (int t in totals)
+                        h = h * 31 + t;
+                    hash = h;
+                }
+            }
+
+            public bool Equals(Totals other)
+            {
+                if (hash != other.hash || totals.Length != other.totals.Length)
+                    return false;
+                for (int i = 0; i < totals.Length; i++)
+                {
+                    if (totals[i] != other.totals[i])
+                        return false;
+                }
+                return true;
+            }
+
+            public override bool Equals(object obj) => obj is Totals other && Equals(other);
+
+            public override int GetHashCode() => hash;
+        }
+
+        /// <summary>The steps that a search of Longpath takes before it keeps the parts of the table that it reaches.</summary>
+        private const int KeptAfter = 64;
+
+        /// <summary>The greatest number of parts of a table that a search of Longpath keeps.</summary>
+        private const int KeptAtMost = 1000000;
+
+        /// <summary>
         /// longest path for a given table (network algorithm)
         /// </summary>
         /// <remarks>
@@ -5570,6 +5624,13 @@ namespace StatsDirect.Builtins
         /// of the logarithms of the factorials of the cells that a table with those totals can have is found by a search of the
         /// tables that put as much as can be in one cell after another, and is taken from dsp; if what is left is within tol of
         /// nothing, dsp is made 0.  The other parameters are the logarithms of the factorials and work space.
+        /// What is left of the table after some cells have been filled is the same whatever the order in which they were
+        /// filled, and the search would go through it once for each order: with few rows and many columns that is a number of
+        /// times that doubles, or more, with each column.  So what is left of the table is kept (Totals), with the greatest sum
+        /// that has reached it.  If it is reached again with a sum that is no greater, the search does not go on from it: every
+        /// sum that it would come to is no more than one that was come to before, for the same numbers are added to a sum that
+        /// is no greater.  The greatest sum that is found is the same to the last bit.  The parts are kept once the search has
+        /// taken KeptAfter steps, so that a short search is as it was, and no more than KeptAtMost of them.
         /// </remarks>
         private static void Longpath(int kd, int nrow, int[] irow, int ncol, int[] icol, ref double dsp, double[] fact, double tol, int[,] icstk, int[] ncstk, int[] lstk, int[] mstk, int[] nstk, int[] nrstk, int[,] irstk, double[] ystk)
         {
@@ -5606,6 +5667,9 @@ namespace StatsDirect.Builtins
             int istk = 1;
             int l = 1;
             double amx = 0.0;
+            // the steps of the search, and the greatest sum with which each part of the table has been reached
+            int steps = 0;
+            Dictionary<Totals, double> reached = null;
             int ir1 = irstk[1, istk];
             int ic1 = icstk[1, istk];
             int m, n;
@@ -5750,6 +5814,8 @@ namespace StatsDirect.Builtins
                     }
                 }
                 bool skip3;
+                // whether what is left of the table has been reached before, with a sum that was no less
+                bool known = false;
                 if (nro == 1)
                 {
                     for (k = 1; k <= nco; k++)
@@ -5771,6 +5837,15 @@ namespace StatsDirect.Builtins
                     nrstk[istk] = nro;
                     ncstk[istk] = nco;
                     ystk[istk] = y;
+                    if (++steps > KeptAfter)
+                    {
+                        reached ??= new Dictionary<Totals, double>();
+                        Totals left = new Totals(irstk, icstk, istk, nro, nco);
+                        if (reached.TryGetValue(left, out double before) && y <= before)
+                            known = true;
+                        else if (reached.Count < KeptAtMost || reached.ContainsKey(left))
+                            reached[left] = y;
+                    }
                     l = 1;
                     // the greatest totals that are left at this step, and not those of the table that the search started with
                     ir1 = irstk[1, istk];
@@ -5814,12 +5889,13 @@ namespace StatsDirect.Builtins
                             n = 2;
                         }
                     }
-                    skip3 = true;
+                    // from a part that is known the search goes back, as it does from a table that is filled
+                    skip3 = !known;
                 }
 
                 if (skip3 == false)
                 {
-                    if (y > amx)
+                    if (!known && y > amx)
                     {
                         amx = y;
                         if (dsp - amx <= tol)
