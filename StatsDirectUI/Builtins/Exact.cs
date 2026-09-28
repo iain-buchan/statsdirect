@@ -10,6 +10,22 @@ namespace StatsDirect.Builtins
 {
     public static class Exact
     {
+        /// <summary>
+        /// The sign test: of n observations r are on one side, and the hypothesis is that either side is as likely.
+        /// </summary>
+        /// <remarks>
+        /// The one sided P value is the probability of as few as the less of r and n - r being on one side, a sum of binomial
+        /// probabilities, and the two sided P value is twice that, or 1 if that is more.  z is the normal deviate with the
+        /// correction for continuity, (|n / 2 - r| - 1/2) / root(n / 4), or 0 if that is below 0; the report gives its P values.
+        /// The limits of the proportion r / n are those of Clopper and Pearson (MathDbl.binci).  If r is given as more than n, the
+        /// two are taken the other way round.
+        /// </remarks>
+        /// <param name="parameters">"n": the number of observations; "r": the number on one side; "cco": the confidence level,
+        /// for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"sample" and "sample_1": n and r; "*exact": a row with "prob_1" and "prob_2", the one sided and the two sided
+        /// P value; "*large": nothing (the report has a line for a sample too large for the exact calculation, which is made for
+        /// any n); "z"; "ci": the confidence level as a percentage; "lower", "prop" and "upper": the proportion and its limits;
+        /// "warn": what the report says after the limits when the interval is one sided (r is 0 or n).</returns>
         public static StepOutput RptExactSign(ParameterBag parameters)
         {
             double n = parameters["n"].AsDouble;
@@ -79,6 +95,12 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// Fisher's exact test of a 2 by 2 table (Tables.SFisher).  Counts that are not whole numbers are rounded, a half to the
+        /// even number.
+        /// </summary>
+        /// <param name="parameters">"a", "b": the first row of the table; "c", "d": the second.</param>
+        /// <returns>What Tables.SFisher returns.</returns>
         public static StepOutput RptExactFisher(ParameterBag parameters)
         {
             int fault = 0;
@@ -92,6 +114,19 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// The expanded Fisher-Irwin test of a 2 by 2 table: Fisher's exact test, with the distribution of the first count.
+        /// </summary>
+        /// <remarks>
+        /// The table is arranged and its P values are worked out as in Tables.SFisher.  The rows of the distribution are for the
+        /// values 0 to the total of the first row of the arranged table: the probability of no more than the value, of the value,
+        /// and of no less, each as text (Formatting.pr14).  A table too large for its distribution to be tabulated (the
+        /// probability that the first count is 0 is below 1e-300) has no rows, and its P values are from Tables.FisherLarge.
+        /// </remarks>
+        /// <param name="parameters">"a", "b": the first row of the table; "c", "d": the second.  Counts that are not whole numbers
+        /// are rounded, a half to the even number.</param>
+        /// <returns>What Tables.SFisher returns, but for "tail_2"; "*header": a row if the distribution is tabulated; "*row":
+        /// its rows, with "a", "lower", "ind_p" and "upper".</returns>
         public static StepOutput RptExactFisherX(ParameterBag parameters)
         {
             int fault = 0;
@@ -329,6 +364,26 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// Matched pairs: McNemar's chi-square test, and the exact test and confidence interval of the ratio of the two numbers of
+        /// pairs that differ.
+        /// </summary>
+        /// <remarks>
+        /// Of the pairs, b differ one way and c the other; a and d, the pairs that do not differ, are in the report and in nothing
+        /// else.  Chi-square is (b - c)^2 / (b + c), and with the correction for continuity (|b - c| - 1)^2 / (b + c), in which
+        /// |b - c| - 1 is taken as 0 if it is below 0; each has 1 degree of freedom.
+        /// The ratio R' is b / c.  Its limits are from quantiles of the F distribution, and are the limits of Clopper and Pearson
+        /// for the proportion b / (b + c), each as the odds p / (1 - p).  With r the greater of b and c, and s the less, F is
+        /// r / (s + 1), and the two sided P value is twice the probability that F with 2 (s + 1) and 2 r degrees of freedom is
+        /// above it, or 1 if that is more: twice the probability of r or more of the b + c pairs being one way, when either way
+        /// is as likely.
+        /// </remarks>
+        /// <param name="parameters">"a", "b": the first row of the table of pairs; "c", "d": the second; "gamma": the confidence
+        /// level, for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"tab_a1" to "tab_b2": the table; "chi", "chi_p", "yates_chi", "yates_chi_p": the two chi-squares and their
+        /// P values; "risk": R', infinity if c is 0; "pc": the confidence level as a percentage; "from" and "to": the limits of
+        /// R', of which the upper is infinity if c is 0; "f" and "tail_2": F and the two sided P value; "*r_prime": a row if the P
+        /// value is below 0.05, for which the report says that R' differs from 1.</returns>
         public static StepOutput RptExactMcNamar(ParameterBag parameters)
         {
             double ba = parameters["a"].AsDouble;
@@ -423,6 +478,17 @@ namespace StatsDirect.Builtins
         }
 
 
+        /// <summary>
+        /// The odds ratio of a 2 by 2 table with its conditional maximum likelihood estimate, exact confidence limits and exact
+        /// P values, Fisher and mid-P (ExactBB.OddsRatioCMLE).
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="parameters">"a", "b": the first row of the table; "c", "d": the second; "gamma": the confidence level,
+        /// for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"tab_a1" to "tab_b2": the table that is analysed; "odds": its odds ratio a d / (b c), missing if both
+        /// products are 0; "eor": the conditional maximum likelihood estimate; "pc": the confidence level as a percentage; "llf"
+        /// and "ulf": Fisher's limits; "p1f" and "p2f": Fisher's one sided and two sided P value; "llm", "ulm", "p1m" and "p2m":
+        /// the same with mid-P; "*note": a row with "note", what the report says if the method gave no figures.</returns>
         public static StepOutput RptExactORCML(IProgressBarHost host, ParameterBag parameters)
         {
             // Gart replaced by CML in May 2001
@@ -473,6 +539,14 @@ namespace StatsDirect.Builtins
             return new StepOutput(outputParameters);
         }
 
+        /// <summary>
+        /// A rate, the number of events over the time at risk, with the exact confidence limits of a Poisson count over the same
+        /// time (Rates.poisson_ci).
+        /// </summary>
+        /// <param name="parameters">"revents": the number of events, which need not be a whole number; "tar": the time at risk,
+        /// which is to be above 0; "cco": the confidence level, for which 0.95 is taken if it is not between 0 and 1.</param>
+        /// <returns>"events", "time", "rate"; "pc": the confidence level as a percentage; "from" and "to": the limits of the
+        /// rate.</returns>
         public static StepOutput RptRatePoissonCI(ParameterBag parameters)
         {
             double cco = parameters["cco"].AsDouble;

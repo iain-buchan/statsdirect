@@ -110,6 +110,18 @@ namespace StatsDirect.Builtins
             return (p3, resultDegree, 0);
         }
 
+        /// <summary>
+        /// The function whose root is looked for: the numerator polynomial over the denominator polynomial, both at r, less value.
+        /// </summary>
+        /// <remarks>
+        /// The denominator polynomial has for the coefficient of each power of r the number of ways in which the sum of the first
+        /// counts can be the least that it can be and that power more (scaled; on the scale of logarithms if UseLogScale).  Each
+        /// term over the polynomial is the probability of that sum when the odds ratio is r.  With the terms up to a sum as the
+        /// numerator the ratio is the probability of no more than that sum, and with each term multiplied by its sum the ratio is
+        /// the mean of the sum.  Above 1 both polynomials are worked out in powers of 1 / r, which keeps them from overflow.
+        /// </remarks>
+        /// <param name="r">The odds ratio (or rate ratio).</param>
+        /// <param name="ierr">On return, 0, or 6 if the denominator is 0.</param>
         private double Func(double r, out int ierr)
         {
             ierr = 0;
@@ -404,6 +416,39 @@ namespace StatsDirect.Builtins
             Type4
         }
 
+        /// <summary>
+        /// The conditional maximum likelihood estimate of the odds ratio (or rate ratio) that a number of 2 by 2 tables have in
+        /// common, its exact confidence limits and the exact P values of the hypothesis that it is 1.
+        /// </summary>
+        /// <remarks>
+        /// With the totals of each table fixed, the distribution of the sum of the first counts depends on the odds ratio alone.
+        /// The estimate is the odds ratio with which that sum has its observed value as its mean.  Fisher's lower limit is the
+        /// odds ratio with which the observed sum or more has the probability (1 - confLevel) / 2, and the upper limit that with
+        /// which the observed sum or fewer has it; the mid-P limits take half the probability of the observed sum in the place of
+        /// the whole of it.  If the observed sum is the least that it can be, the estimate and the lower limits are 0; if it is
+        /// the greatest, the estimate and the upper limits are infinite.
+        /// The work is done on the ordinary scale, and again on the scale of logarithms if that overflows or fails.
+        /// </remarks>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="lowerBound">The element of tables that has the first table.</param>
+        /// <param name="numTables">The number of tables.</param>
+        /// <param name="dataType">The kind of data, which is described below.</param>
+        /// <param name="tables">The tables.</param>
+        /// <param name="confLevel">The confidence level.</param>
+        /// <param name="cMLE">On return, the estimate.</param>
+        /// <param name="upFishLim">On return, Fisher's upper limit.</param>
+        /// <param name="loFishLim">On return, Fisher's lower limit.</param>
+        /// <param name="upMidPLim">On return, the upper mid-P limit.</param>
+        /// <param name="loMidPLim">On return, the lower mid-P limit.</param>
+        /// <param name="fishP1">On return, Fisher's one sided P value.</param>
+        /// <param name="fishP2">On return, Fisher's two sided P value.</param>
+        /// <param name="midP1">On return, the one sided mid-P value.</param>
+        /// <param name="midP2">On return, the two sided mid-P value.</param>
+        /// <param name="useLogScale">Whether to work on the scale of logarithms from the start; on return, whether the work was
+        /// done on it.</param>
+        /// <param name="ierr">On return, 0, or what went wrong: -1, the sum of the first counts can have more than a million
+        /// values; -2, it can have one value only; any other number, the calculation failed.  What is returned is then
+        /// missing.</param>
         public void Exact22K(IProgressBarHost host, int lowerBound, int numTables, Exact22KDataType dataType, Rec2X2[] tables, double confLevel, out double cMLE, out double upFishLim, out double loFishLim, out double upMidPLim, out double loMidPLim, out double fishP1, out double fishP2, out double midP1, out double midP2, ref bool useLogScale, out int ierr)
         {
             //   Stratified case-control data, matched case-control data, and
@@ -862,6 +907,14 @@ namespace StatsDirect.Builtins
         /// <param name="midP1"></param>
         /// <param name="midP2"></param>
         /// <param name="ierr"></param>
+        /// <remarks>
+        /// The probabilities are those of the sum of the first counts when the odds ratio is 1: each coefficient of the
+        /// polynomial over the sum of them all.  Fisher's one sided P value is the less of the probability of the observed sum or
+        /// more and that of the observed sum or fewer, each of which is added up from its own terms.  The two sided P value is
+        /// the sum of the probabilities of the sums that are no more probable than the observed one.  The one sided mid-P value
+        /// is the less of the two tails when each has half the probability of the observed sum taken from it, and the two sided
+        /// mid-P value is twice that, or 1 if that is more.
+        /// </remarks>
         private void CalcExactPVals(out double fishP1, out double fishP2, out double midP1, out double midP2, ref int ierr)
         {
             int diff = sumA - minSumA;
@@ -948,6 +1001,11 @@ namespace StatsDirect.Builtins
         /// <param name="approx"></param>
         /// <param name="cMLE"></param>
         /// <param name="ierr"></param>
+        /// <remarks>
+        /// The estimate is the odds ratio with which the mean of the sum of the first counts is the sum observed: the root of
+        /// Func, with each term of the numerator the term of the denominator multiplied by its sum.  It is 0 if the observed sum
+        /// is the least that the totals allow, and infinite if it is the greatest.
+        /// </remarks>
         private double CalcCmle(double approx, ref int ierr)
         {
             if (minSumA < sumA && sumA < maxSumA)
@@ -1013,6 +1071,14 @@ namespace StatsDirect.Builtins
         /// <param name="confLevel"></param>
         /// <param name="limit"></param>
         /// <param name="ierr"></param>
+        /// <remarks>
+        /// A limit is the root of Func with the terms of the denominator up to a sum as the numerator, so that the ratio is the
+        /// probability of no more than that sum.  For Fisher's lower limit the sum is one less than the observed sum, and the
+        /// probability is to be (1 + confLevel) / 2; for Fisher's upper limit the sum is the observed sum, and the probability is
+        /// to be (1 - confLevel) / 2.  For the mid-P limits the sum is the observed sum, and its own term is halved.
+        /// </remarks>
+        /// <param name="lower">Whether the lower limit is wanted.</param>
+        /// <param name="fisher">Whether the limit is Fisher's; if not, it is the mid-P limit.</param>
         private double CalcExactLim(bool lower, bool fisher, double approx, double confLevel, ref int ierr)
         {
             if (sumA == minSumA)
@@ -1074,6 +1140,21 @@ namespace StatsDirect.Builtins
             return Math.Exp(z);
         }
 
+        /// <summary>
+        /// The conditional maximum likelihood estimate of the odds ratio of a 2 by 2 table, with Fisher's exact limits: what
+        /// OddsRatioCMLE gives, without the mid-P limits and the P values.
+        /// </summary>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="cco">The confidence level.</param>
+        /// <param name="a">The first count of the first row.</param>
+        /// <param name="b">The second count of the first row.</param>
+        /// <param name="c">The first count of the second row.</param>
+        /// <param name="d">The second count of the second row.</param>
+        /// <param name="eor">On return, the estimate.</param>
+        /// <param name="llf">On return, the lower limit.</param>
+        /// <param name="ulf">On return, the upper limit.</param>
+        /// <param name="lerr">On return, whether the lower limit is missing.</param>
+        /// <param name="uerr">On return, whether the upper limit is missing.</param>
         public static void OddsRatioCI(IProgressBarHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out bool lerr, out bool uerr)
         {
             // An exact method is of counts: those that are not whole numbers are rounded, a half to the even number
@@ -1123,6 +1204,32 @@ namespace StatsDirect.Builtins
             uerr = ulf == Constant.MISSING;
         }
         
+        /// <summary>
+        /// The conditional maximum likelihood estimate of the odds ratio of a 2 by 2 table, its exact confidence limits and the
+        /// exact P values of the hypothesis that it is 1, Fisher and mid-P (Exact22K, for the one table).
+        /// </summary>
+        /// <remarks>
+        /// A table with an empty cell has the estimate 0 and the lower limits 0 if the cell is a or d, and the estimate and the
+        /// upper limits infinite if it is b or c.  A table with an empty row or an empty column is the only table that its totals
+        /// allow: its estimate is given as 0, its limits as 0 and infinity, Fisher's P values as 1, and the mid-P values as a
+        /// half, one sided, and 1, two sided.
+        /// </remarks>
+        /// <param name="host">Where progress is shown.</param>
+        /// <param name="cco">The confidence level.</param>
+        /// <param name="a">The first count of the first row.</param>
+        /// <param name="b">The second count of the first row.</param>
+        /// <param name="c">The first count of the second row.</param>
+        /// <param name="d">The second count of the second row.</param>
+        /// <param name="eor">On return, the estimate.</param>
+        /// <param name="llf">On return, Fisher's lower limit.</param>
+        /// <param name="ulf">On return, Fisher's upper limit.</param>
+        /// <param name="llm">On return, the lower mid-P limit.</param>
+        /// <param name="ulm">On return, the upper mid-P limit.</param>
+        /// <param name="p1f">On return, Fisher's one sided P value.</param>
+        /// <param name="p2f">On return, Fisher's two sided P value.</param>
+        /// <param name="p1m">On return, the one sided mid-P value.</param>
+        /// <param name="p2m">On return, the two sided mid-P value.</param>
+        /// <param name="ierr">On return, 0, or what went wrong, as Exact22K has it; what is returned is then missing.</param>
         public static void OddsRatioCMLE(IProgressBarHost host, double cco, double a, double b, double c, double d, out double eor, out double llf, out double ulf, out double llm, out double ulm, out double p1f, out double p2f, out double p1m, out double p2m, out int ierr)
         {
             eor = Constant.MISSING;
@@ -1180,6 +1287,9 @@ namespace StatsDirect.Builtins
             }
         }
 
+        /// <summary>
+        /// The odds ratio of a 2 by 2 table, a d / (b c): 0 if a d is 0, infinite if b c is 0, and missing if both are.
+        /// </summary>
         public static double OddsRatio(double diseasedExposed, double healthyExposed, double diseasedNotExposed, double healthyNotExposed)
         {
             double ad = diseasedExposed * healthyNotExposed;

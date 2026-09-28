@@ -46,6 +46,30 @@ namespace StatsDirect.Builtins
         /// <remarks></remarks>
         private static void SortName(int cats, Namevar[] cat, int lowerBound) => Array.Sort(cat, lowerBound, cats, new NamevarAscending());
 
+        /// <summary>
+        /// Fisher's exact test of a 2 by 2 table.  The table is arranged so that a is no more than d, and b no more than c, which
+        /// leaves its probabilities as they are; the first count can then be 0.
+        /// </summary>
+        /// <remarks>
+        /// With the totals of the table fixed the first count has the hypergeometric distribution.  The probability that it is 0
+        /// is worked out as a product, and that of each value after it from the value before it; the probabilities of no more than
+        /// each value are added up from 0, and those of no less from the greatest value down, so that neither is taken from 1.
+        /// The one sided P value is of the tail that the first count is in: the upper tail if the count is above its expectation,
+        /// and the lower tail otherwise.  The two sided P value is the sum of the probabilities of the values that are no more
+        /// probable than the value observed (by no more than 1 part in 10^13), and is found as the two tails that they make.  The
+        /// mid-P value is the one sided P value less half the probability of the value observed.
+        /// If the probability that the first count is 0 is below 1e-300 the distribution is not tabulated, and the P values are
+        /// from FisherLarge.
+        /// </remarks>
+        /// <param name="a">The first count of the first row; on return, that of the table as arranged.</param>
+        /// <param name="b">The second count of the first row; on return, that of the table as arranged.</param>
+        /// <param name="c">The first count of the second row; on return, that of the table as arranged.</param>
+        /// <param name="d">The second count of the second row; on return, that of the table as arranged.</param>
+        /// <param name="fault">On return, 0.</param>
+        /// <returns>"tab_a1" to "tab_b2": the table as given; "tab3_a1" to "tab3_c3": the table as arranged, with its totals;
+        /// "exp_a": the expectation of the first count; "tail_1": the tail of the one sided P value; "p_1" and "p_1d": the one
+        /// sided P value and twice it (no more than 1); "tail_2" and "p_2": "(by summation)" and the two sided P value; "mid_p"
+        /// and "mid_p_2": the one sided mid-P value and twice it (no more than 1).</returns>
         public static ParameterBag SFisher(ref int a, ref int b, ref int c, ref int d, ref int fault)
         {
             ParameterBag outputParameters = new();

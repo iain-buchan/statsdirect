@@ -21,6 +21,14 @@ namespace StatsDirect.Builtins
         ///  <param name="xu"></param>
         ///  <remarks>Johnson &amp; Kotz 1969, Ulm in Am J Epidemiol 1990 (131) 373-
         ///  comments by Dobson Stats in Med 1991 (10) 457-</remarks>
+        ///  <remarks>
+        ///  The limits are of the mean of a Poisson count, each over the time at risk: the lower limit is the mean with which as
+        ///  many events or more have the probability alpha / 2, and the upper limit that with which as many or fewer have it.  The
+        ///  lower limit is half the value that chi-square with twice as many degrees of freedom as there are events is below with
+        ///  probability alpha / 2, and 0 if there are no events; the upper limit is half the value that chi-square with 2 more
+        ///  degrees of freedom is below with probability 1 - alpha / 2.  The number of events need not be a whole number.  Both
+        ///  limits are missing if it is below 0.
+        ///  </remarks>
         public static void poisson_ci(double alpha, double events, double tar, out double xl, out double xu)
         {
             int fault;

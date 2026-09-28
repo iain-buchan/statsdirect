@@ -992,6 +992,22 @@ namespace StatsDirect.Numerics
             xu = x[2];
         }
 
+        /// <summary>
+        /// The confidence limits of a proportion of Clopper and Pearson: the lower limit is the proportion with which r or more of
+        /// N has the probability (1 - cco) / 2, and the upper limit that with which r or fewer has it.
+        /// </summary>
+        /// <remarks>
+        /// The limits are from quantiles of the F distribution.  With F the value that F with 2 (N - r + 1) and 2 r degrees of
+        /// freedom is above with probability (1 - cco) / 2, the lower limit is r / (r + (N - r + 1) F); with F that of 2 (r + 1)
+        /// and 2 (N - r) degrees of freedom, the upper limit is (r + 1) F / (N - r + (r + 1) F).  If r is 0 the lower limit is 0,
+        /// and if r is N the upper limit is 1: the interval is then one sided, with the confidence level cco + (1 - cco) / 2.
+        /// </remarks>
+        /// <param name="r">The number with the characteristic.</param>
+        /// <param name="N">The number of observations.</param>
+        /// <param name="pil">On return, the lower limit.</param>
+        /// <param name="piu">On return, the upper limit.</param>
+        /// <param name="cco">The confidence level.</param>
+        /// <param name="warn">On return, what a report says after the limits of a one sided interval, or nothing.</param>
         public static void binci(double r, double N, out double pil, out double piu, double cco, out string warn)
         {
 
